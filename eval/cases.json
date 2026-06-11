@@ -3,6 +3,32 @@
     "name": "hot_loop",
     "source": "tests/binaries/hot_loop.cpp",
     "duration": 30,
+    "expected_functions": ["hot_loop", "warm_loop"],
+    "expected_kinds": ["hot_function", "tail_function", "dominator", "hot_file"],
     "comment": "Tutorial: two named hot loops, ~50/50 split. W1 sanity check."
+  },
+  {
+    "name": "alloc_thrash",
+    "source": "tests/binaries/alloc_thrash.cpp",
+    "duration": 30,
+    "expected_functions": ["alloc_thrash_loop", "flat_loop"],
+    "expected_kinds": ["hot_function", "tail_function", "dominator", "hot_file"],
+    "comment": "Tutorial: alloc_thrash_loop dominates flat_loop on cycles due to malloc churn. Exercises cache-pressure path when --memory-pressure is enabled."
+  },
+  {
+    "name": "string_parse",
+    "source": "tests/binaries/string_parse.cpp",
+    "duration": 30,
+    "expected_functions": ["parse_ints", "count_words"],
+    "expected_kinds": ["hot_function", "tail_function", "dominator", "hot_file"],
+    "comment": "Tutorial: two parser hot functions; also exposes a libc leaf (isspace) in the hot path."
+  },
+  {
+    "name": "branch_miss",
+    "source": "tests/binaries/branch_miss.cpp",
+    "duration": 30,
+    "expected_functions": ["random_branch", "sorted_branch"],
+    "expected_kinds": ["hot_function", "tail_function", "dominator", "hot_file"],
+    "comment": "Tutorial: random_branch dominates sorted_branch due to branch-predictor misses. Clean baseline — should NOT trigger MemoryPressure."
   }
 ]

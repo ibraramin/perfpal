@@ -12,11 +12,33 @@ pub struct FuncRow {
     /// Optional resolved location from `addr2line`. W1 best-effort.
     pub file: Option<String>,
     pub line: Option<u32>,
+    /// Per-event sample count (from `perf report` with `-n`). Always set for
+    /// cycles and cache-misses blocks in W2.
+    pub samples: u64,
+}
+
+/// One event's function table from `perf report --stdio`.
+///
+/// `perf report` with grouped events (e.g. `cycles,cache-misses`) emits one
+/// block per event. Each block has its own sample count and a function
+/// table. We capture both so the heuristics can pick the right one:
+/// heuristics 1-4 use the cycles block, heuristic 5 uses the cache-misses
+/// block.
+#[derive(Debug, Clone)]
+pub struct EventBlock {
+    pub event: String,
+    pub total_samples: u64,
+    pub total_count_approx: u64,
+    pub functions: Vec<FuncRow>,
 }
 
 pub struct RawProfile {
     pub _data_dir: TempDir,
+    /// First (primary) event block — typically cycles:u. Used by heuristics 1-4.
     pub functions: Vec<FuncRow>,
+    /// Per-event blocks. The first entry is the primary cycles block; further
+    /// entries are opt-in extras (cache-misses in W2).
+    pub events: Vec<EventBlock>,
     pub total_samples: u64,
     pub duration_s: f64,
     pub perf_version: String,
@@ -34,6 +56,7 @@ pub fn record_and_parse(
     args: &[String],
     sample_rate_hz: u64,
     duration_s: u64,
+    event_spec: &str,
 ) -> Result<RawProfile> {
     anyhow::ensure!(binary.exists(), "binary does not exist: {}", binary.display());
     anyhow::ensure!(
@@ -44,7 +67,7 @@ pub fn record_and_parse(
     let tmp = TempDir::new().context("create tempdir for perf data")?;
     let data_path = tmp.path().join("perf.data");
 
-    // Step 1: perf record with user-space cycles.
+    // Step 1: perf record with user-space cycles (or grouped events).
     let mut child = Command::new("perf")
         .args([
             "record",
@@ -52,9 +75,9 @@ pub fn record_and_parse(
             &sample_rate_hz.to_string(),
             "-g",
             "-e",
-            "cycles:u",
-            "--output",
         ])
+        .arg(event_spec)
+        .args(["--output"])
         .arg(&data_path)
         .arg("--")
         .arg(binary)
@@ -114,9 +137,12 @@ pub fn record_and_parse(
     }
     let report = String::from_utf8_lossy(&output.stdout);
 
-    let (functions, total_samples) = parse_perf_report(&report);
-    // Resolve file/line for the top functions via addr2line + readelf symbol table.
-    let functions = enrich_with_addr2line(binary, functions);
+    let (mut events, primary_samples) = parse_perf_report_multi(&report);
+    // Enrich every event block with file/line so all heuristics can use it.
+    for b in events.iter_mut() {
+        b.functions = enrich_with_addr2line(binary, std::mem::take(&mut b.functions));
+    }
+    let primary = events.first().map(|e| e.functions.clone()).unwrap_or_default();
 
     let perf_version = Command::new("perf")
         .arg("--version")
@@ -128,8 +154,9 @@ pub fn record_and_parse(
 
     Ok(RawProfile {
         _data_dir: tmp,
-        functions,
-        total_samples,
+        functions: primary,
+        events,
+        total_samples: primary_samples,
         duration_s: elapsed,
         perf_version,
     })
@@ -137,48 +164,84 @@ pub fn record_and_parse(
 
 /// Parse `perf report --stdio -n --no-children -g none` output.
 ///
+/// `perf report` with grouped events emits one function table per event.
+/// Each table is preceded by a header like:
+///     # Samples: 196  of event 'cycles:u'
+///     # Event count (approx.): 576723222
+///
+/// We return one `EventBlock` per event. The first event is treated as
+/// "primary" (typically cycles:u) and its total sample count is the
+/// canonical total for the run.
+///
 /// Each data row looks like:
-///     50.00%  hot_loop  hot_loop  [.] hot_loop(std::vector<int, std::allocator<int> >&) [clone .isra.0]
+///     50.00%      81  hot_loop  hot_loop  [.] hot_loop(std::vector<int, std::allocator<int> >&) [clone .isra.0]
 ///
 /// - Column 1: self-pct
-/// - Column 2: comm (process name)
-/// - Column 3: shared object (DSO)
-/// - Column 4: `[k]` for kernel, `[.]` for user, `[u]` for unknown; rest is the symbol
-///
-/// We capture total samples from the "Samples: NNN" header line if present.
-pub fn parse_perf_report(s: &str) -> (Vec<FuncRow>, u64) {
-    let mut total_samples: u64 = 0;
-    let mut out = Vec::new();
+/// - Column 2: sample count (only with `-n` — we always pass `-n`)
+/// - Column 3: comm (process name)
+/// - Column 4: shared object (DSO)
+/// - Column 5: `[k]` for kernel, `[.]` for user, `[u]` for unknown; rest is the symbol
+pub fn parse_perf_report_multi(s: &str) -> (Vec<EventBlock>, u64) {
+    let mut blocks: Vec<EventBlock> = Vec::new();
+    let mut current: Option<EventBlock> = None;
+    let mut primary_total: u64 = 0;
 
     for line in s.lines() {
-        // Try to capture "Samples: NNN" or "Event count (approx.): NNN"
+        // Event header detection: "# Samples: NNN  of event 'NAME'"
+        // Also capture the "Event count (approx.):" line if it follows.
         if let Some(rest) = line.strip_prefix("# Samples:") {
-            if let Some(n) = rest.split_whitespace().next().and_then(|x| x.parse().ok()) {
-                total_samples = total_samples.max(n);
+            // Flush previous block.
+            if let Some(b) = current.take() {
+                primary_total = primary_total.max(b.total_samples);
+                blocks.push(b);
             }
+            let mut block = EventBlock {
+                event: String::new(),
+                total_samples: 0,
+                total_count_approx: 0,
+                functions: Vec::new(),
+            };
+            // Parse "Samples: N  of event 'NAME'"
+            let after = rest.trim_start();
+            let mut parts = after.split_whitespace();
+            if let Some(n_str) = parts.next() {
+                block.total_samples = n_str.parse().unwrap_or(0);
+            }
+            // Find "of event '...'"
+            if let Some(idx) = after.find("of event '") {
+                let tail = &after[idx + "of event '".len()..];
+                if let Some(end) = tail.find('\'') {
+                    block.event = tail[..end].to_string();
+                }
+            }
+            current = Some(block);
             continue;
         }
         if let Some(rest) = line.strip_prefix("# Event count (approx.):") {
-            if let Some(n) = rest.split_whitespace().next().and_then(|x| x.parse().ok()) {
-                // We prefer "Samples:" if present; this is the fallback.
-                if total_samples == 0 {
-                    total_samples = n;
+            if let Some(b) = current.as_mut() {
+                if let Some(n) = rest.split_whitespace().next().and_then(|x| x.parse().ok()) {
+                    b.total_count_approx = n;
                 }
             }
             continue;
         }
-        // Skip headers, blanks, and comments. Note: data rows start with
-        // leading whitespace (the "    51.69%" padding), so we MUST NOT skip
-        // them just because they begin with whitespace.
+        // Skip blanks and comments.
         if line.trim().is_empty() || line.trim_start().starts_with('#') {
             continue;
         }
-        // Parse the data line.
-        // Format with `-n --no-children`:
-        //   "PERCENT  SAMPLES  COMM  DSO  [k|u|.]  SYMBOL..."
-        // Format without `-n`:
-        //   "PERCENT  COMM  DSO  [k|u|.]  SYMBOL..."
-        // The first field must end with '%'.
+        // Data row.
+        if current.is_none() {
+            // No event header seen yet — start a synthetic one so we still
+            // capture rows from perf variants that omit the header.
+            current = Some(EventBlock {
+                event: "cycles:u".to_string(),
+                total_samples: 0,
+                total_count_approx: 0,
+                functions: Vec::new(),
+            });
+        }
+        // Parse the data line: "PERCENT  SAMPLES  COMM  DSO  [k|u|.]  SYMBOL..."
+        // (With -n, second column is the per-function sample count.)
         let mut parts = line.split_whitespace();
         let pct_str = match parts.next() {
             Some(p) => p,
@@ -191,54 +254,46 @@ pub fn parse_perf_report(s: &str) -> (Vec<FuncRow>, u64) {
             Ok(n) => n,
             Err(_) => continue,
         };
-        // Detect whether the next token is a numeric "samples" column. If so, skip it.
-        let next = parts.next().unwrap_or("");
-        let is_with_n = next.parse::<u64>().is_ok();
-        let mut tokens: Vec<String> = Vec::new();
-        if is_with_n {
-            // skip samples count, then take comm, dso, [bracket], symbol...
-            let comm = parts.next().unwrap_or("");
-            let dso = parts.next().unwrap_or("");
-            let bracket = parts.next().unwrap_or("");
-            if !bracket.starts_with('[') {
-                continue;
-            }
-            let symbol = parts.collect::<Vec<_>>().join(" ");
-            let _ = comm;
-            tokens.push(dso.to_string());
-            tokens.push(symbol);
-        } else {
-            // next was the comm field
-            let comm = next;
-            let dso = parts.next().unwrap_or("");
-            let bracket = parts.next().unwrap_or("");
-            if !bracket.starts_with('[') {
-                continue;
-            }
-            let symbol = parts.collect::<Vec<_>>().join(" ");
-            let _ = comm;
-            tokens.push(dso.to_string());
-            tokens.push(symbol);
-        }
-        if tokens.len() != 2 || tokens[1].is_empty() {
+        // Sample count column.
+        let samples = parts
+            .next()
+            .and_then(|s| s.parse::<u64>().ok())
+            .unwrap_or(0);
+        let comm = parts.next().unwrap_or("");
+        let dso = parts.next().unwrap_or("");
+        let bracket = parts.next().unwrap_or("");
+        if !bracket.starts_with('[') {
             continue;
         }
-        out.push(FuncRow {
-            self_pct: pct,
-            symbol: tokens.remove(1),
-            dso: tokens.remove(0),
-            file: None,
-            line: None,
+        let symbol = parts.collect::<Vec<_>>().join(" ");
+        if symbol.is_empty() {
+            continue;
+        }
+        let _ = comm;
+        if let Some(b) = current.as_mut() {
+            b.functions.push(FuncRow {
+                self_pct: pct,
+                symbol,
+                dso: dso.to_string(),
+                file: None,
+                line: None,
+                samples,
+            });
+        }
+    }
+    if let Some(b) = current.take() {
+        primary_total = primary_total.max(b.total_samples);
+        blocks.push(b);
+    }
+    for b in blocks.iter_mut() {
+        b.functions.sort_by(|a, c| {
+            c.self_pct
+                .partial_cmp(&a.self_pct)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| a.symbol.cmp(&c.symbol))
         });
     }
-    // Sort by self-pct desc, then symbol asc for determinism.
-    out.sort_by(|a, b| {
-        b.self_pct
-            .partial_cmp(&a.self_pct)
-            .unwrap_or(std::cmp::Ordering::Equal)
-            .then_with(|| a.symbol.cmp(&b.symbol))
-    });
-    (out, total_samples)
+    (blocks, primary_total)
 }
 
 /// For each function, attempt to find its file/line by:

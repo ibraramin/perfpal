@@ -6,14 +6,21 @@ use crate::report::{
 };
 use crate::stacks;
 use anyhow::Result;
+use std::collections::BTreeMap;
 use std::path::Path;
 use uuid::Uuid;
 
 pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
+    let event_spec = if args.memory_pressure {
+        "cycles,cache-misses"
+    } else {
+        "cycles:u"
+    };
     eprintln!(
-        "perfpal: profiling {} ({} sample/s) for up to {}s",
+        "perfpal: profiling {} ({} sample/s, events={}) for up to {}s",
         args.binary.display(),
         args.sample_rate,
+        event_spec,
         args.duration
     );
 
@@ -22,9 +29,11 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
         &args.args,
         args.sample_rate,
         args.duration,
+        event_spec,
     )?;
     eprintln!(
-        "perfpal: captured {} functions, total samples={} in {:.2}s",
+        "perfpal: captured {} events, primary {} functions, total samples={} in {:.2}s",
+        raw.events.len(),
         raw.functions.len(),
         raw.total_samples,
         raw.duration_s
@@ -37,6 +46,13 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
     for f in funcs.iter_mut() {
         f.symbol = demangle::demangle(&f.symbol, demangler);
     }
+    // Demangle the other event blocks too (cache-misses) for the memory-pressure heuristic.
+    let mut events = raw.events.clone();
+    for b in events.iter_mut() {
+        for f in b.functions.iter_mut() {
+            f.symbol = demangle::demangle(&f.symbol, demangler);
+        }
+    }
 
     let env = Environment {
         kernel: read_kernel_release(),
@@ -48,7 +64,7 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
         rate_hz: args.sample_rate,
         samples: raw.total_samples,
         duration_s: raw.duration_s,
-        counters: Vec::new(),
+        counters: events.iter().map(|b| b.event.clone()).collect(),
     };
     let workload = Workload {
         name: workload_name(&args.binary, &args.args),
@@ -65,6 +81,8 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
     // W1: stacks is empty. Stack-level data is W2.
     let stacks: Vec<WeightedStack> = Vec::new();
 
+    let bottlenecks = apply_heuristics(&funcs, &events, &args.exclude_prefixes, args.min_self_pct);
+
     let report = Report {
         schema_version: SCHEMA_VERSION,
         session_id: Uuid::new_v4().to_string(),
@@ -74,7 +92,7 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
         sampling,
         hotspots,
         stacks,
-        bottlenecks: apply_heuristics_w1(&funcs, &args.exclude_prefixes, args.min_self_pct),
+        bottlenecks,
     };
 
     let path = report.write_to(&args.output_dir)?;
@@ -92,10 +110,7 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
         );
     }
     if !report.bottlenecks.is_empty() {
-        println!(
-            "\nBottlenecks (heuristic 1: self-time >= {:.2}%):",
-            args.min_self_pct
-        );
+        println!("\nBottlenecks ({}):", report.bottlenecks.len());
         for b in &report.bottlenecks {
             let loc = match (&b.file, b.line) {
                 (Some(f), Some(l)) => format!("{}:{}", f.display(), l),
@@ -110,18 +125,45 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
     Ok(())
 }
 
-fn apply_heuristics_w1(
+fn is_user_code(symbol: &str, excludes: &[String]) -> bool {
+    !excludes.iter().any(|p| symbol.starts_with(p))
+        && !symbol.starts_with("0x")
+        && !symbol.starts_with("[k]")
+        && !symbol.is_empty()
+}
+
+/// Heuristics 1-5 — the bottleneck detection core.
+///
+/// All heuristics read from the function-level table produced by
+/// `perf report --stdio -n --no-children -g none`. We do NOT have per-sample
+/// stacks on this kernel+perf combo, so the heuristics operate on the
+/// collapsed function table.
+///
+/// 1. HotFunction     — top self_pct functions over `min_self_pct` threshold.
+/// 2. TailFunction    — top self_pct user-code functions with resolved
+///                      file/line. This is a "user tail" — the leaf where
+///                      the work actually happens, not a library leaf.
+/// 3. Dominator       — per user file, the top self_pct function. The
+///                      function that "dominates" its file's hotness.
+/// 4. HotFile         — aggregated self_pct by file path. Top files by
+///                      total self_pct.
+/// 5. MemoryPressure  — when a cache-misses event block is present, top
+///                      functions by cache_miss_pct.
+fn apply_heuristics(
     funcs: &[perf_runner::FuncRow],
+    events: &[perf_runner::EventBlock],
     excludes: &[String],
     min_pct: f64,
 ) -> Vec<Bottleneck> {
-    // W1: only heuristic 1 (self-time threshold).
-    let mut out = Vec::new();
+    let mut out: Vec<Bottleneck> = Vec::new();
+
+    // 1. HotFunction — self_pct >= min_pct, user code only.
+    let mut hot_count = 0;
     for f in funcs {
         if f.self_pct < min_pct {
             continue;
         }
-        if excludes.iter().any(|p| f.symbol.starts_with(p)) {
+        if !is_user_code(&f.symbol, excludes) {
             continue;
         }
         out.push(Bottleneck {
@@ -131,12 +173,150 @@ fn apply_heuristics_w1(
             function: f.symbol.clone(),
             metric: "self_pct".into(),
             value: f.self_pct,
-            note: "largest self-time in workload".into(),
+            note: "self-time >= threshold".into(),
         });
-        if out.len() >= 20 {
+        hot_count += 1;
+        if hot_count >= 20 {
             break;
         }
     }
+
+    // 2. TailFunction — user-code top self_pct that we managed to attribute.
+    // A "tail" is a leaf in a hot call chain. We don't have stack data, so
+    // the proxy is: top self_pct functions with a resolved user-code
+    // file/line. The LLM uses this to know "the actual work is here, not
+    // in a library leaf."
+    let mut tail_count = 0;
+    for f in funcs {
+        if f.self_pct < min_pct {
+            continue;
+        }
+        if !is_user_code(&f.symbol, excludes) {
+            continue;
+        }
+        if f.file.is_none() || f.line.is_none() {
+            continue;
+        }
+        // Skip if already emitted as a HotFunction for the same symbol+line.
+        let dup = out.iter().any(|b| {
+            b.kind == BottleneckKind::TailFunction
+                && b.function == f.symbol
+                && b.file.as_ref().map(std::path::PathBuf::as_path) == f.file.as_deref().map(std::path::Path::new)
+                && b.line == f.line
+        });
+        if dup {
+            continue;
+        }
+        out.push(Bottleneck {
+            kind: BottleneckKind::TailFunction,
+            file: f.file.as_ref().map(std::path::PathBuf::from),
+            line: f.line,
+            function: f.symbol.clone(),
+            metric: "self_pct".into(),
+            value: f.self_pct,
+            note: "user-code leaf with file/line attribution".into(),
+        });
+        tail_count += 1;
+        if tail_count >= 5 {
+            break;
+        }
+    }
+
+    // 3. Dominator — per file, the top self_pct function. The function
+    // "dominates" its file's hotness. Skips files without attribution.
+    let mut by_file: BTreeMap<String, &perf_runner::FuncRow> = BTreeMap::new();
+    for f in funcs {
+        if !is_user_code(&f.symbol, excludes) {
+            continue;
+        }
+        let Some(file) = f.file.as_ref() else { continue };
+        match by_file.get(file) {
+            Some(existing) if existing.self_pct >= f.self_pct => {}
+            _ => {
+                by_file.insert(file.clone(), f);
+            }
+        }
+    }
+    let mut dom_entries: Vec<&perf_runner::FuncRow> = by_file.values().copied().collect();
+    dom_entries.sort_by(|a, b| {
+        b.self_pct
+            .partial_cmp(&a.self_pct)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    for f in dom_entries.iter().take(10) {
+        if f.self_pct < min_pct {
+            break;
+        }
+        out.push(Bottleneck {
+            kind: BottleneckKind::Dominator,
+            file: f.file.as_ref().map(std::path::PathBuf::from),
+            line: f.line,
+            function: f.symbol.clone(),
+            metric: "self_pct".into(),
+            value: f.self_pct,
+            note: "top self_pct in its source file".into(),
+        });
+    }
+
+    // 4. HotFile — aggregate self_pct by file. Top files by total self_pct.
+    let mut file_totals: BTreeMap<String, f64> = BTreeMap::new();
+    for f in funcs {
+        if !is_user_code(&f.symbol, excludes) {
+            continue;
+        }
+        let Some(file) = f.file.as_ref() else { continue };
+        *file_totals.entry(file.clone()).or_insert(0.0) += f.self_pct;
+    }
+    let mut file_ranked: Vec<(String, f64)> = file_totals.into_iter().collect();
+    file_ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    for (file, total) in file_ranked.iter().take(10) {
+        if *total < min_pct {
+            break;
+        }
+        out.push(Bottleneck {
+            kind: BottleneckKind::HotFile,
+            file: Some(std::path::PathBuf::from(file)),
+            line: None,
+            function: String::new(),
+            metric: "self_pct_sum".into(),
+            value: *total,
+            note: format!("aggregate self_pct across all functions in {}", file),
+        });
+    }
+
+    // 5. MemoryPressure — when cache-misses event block is present.
+    // Each entry is a top function by cache_miss_pct.
+    let cache_block = events
+        .iter()
+        .find(|b| b.event.contains("cache-misses"));
+    if let Some(b) = cache_block {
+        let mut count = 0;
+        for f in &b.functions {
+            if f.self_pct < min_pct {
+                continue;
+            }
+            if !is_user_code(&f.symbol, excludes) {
+                continue;
+            }
+            out.push(Bottleneck {
+                kind: BottleneckKind::MemoryPressure,
+                file: f.file.as_ref().map(std::path::PathBuf::from),
+                line: f.line,
+                function: f.symbol.clone(),
+                metric: "cache_miss_pct".into(),
+                value: f.self_pct,
+                note: format!(
+                    "cache-misses: {} samples, ~{} misses",
+                    f.samples, b.total_count_approx
+                ),
+            });
+            count += 1;
+            if count >= 10 {
+                break;
+            }
+        }
+    }
+
     out
 }
 

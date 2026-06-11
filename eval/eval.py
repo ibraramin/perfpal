@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """
-W1 eval harness.
+W2 eval harness.
 
 For each case in cases.json:
   1. Build the source into a binary (with debug info + -O2).
-  2. Run `perfpald diagnose` and capture the hotspots.
+  2. Run `perfpald diagnose` and capture the hotspots + bottlenecks.
   3. Run `perf report` and capture the ground-truth top functions.
-  4. Compare: for the top-N expected functions, do they appear in
-     perfpal's report at approximately the same self-pct (within +/- 2%)?
+  4. Compare (set-based, not rank-paired):
+     (a) every expected user function appears in perfpal's hotspots,
+     (b) self_pct for each expected function is within +/- tolerance
+         of perf's value (paired by demangled-name match, not by rank),
+     (c) all expected bottleneck kinds appear in the report.
 
-This is the W1 gate from the plan: "matches perf report ground truth on
-10 OSS binaries within +/- 2% on top-10 functions."
-
-W2 will extend this to check bottleneck identification, not just function ranking.
+Set-based comparison is critical: at high sample rates, two functions
+within ~3% of each other can swap ranks between two independent `perf
+record` runs. Rank-paired comparison would produce false failures.
 """
 from __future__ import annotations
 import json
@@ -29,7 +31,6 @@ BUILD.mkdir(exist_ok=True)
 
 PERFPALD = PKG / "target" / "debug" / "perfpald"
 TOLERANCE_PCT = 2.0   # +/- 2% absolute on self_pct
-TOP_N = 5             # check the top-5 functions
 
 
 def build_case(case: dict, workdir: Path) -> Path:
@@ -44,14 +45,22 @@ def build_case(case: dict, workdir: Path) -> Path:
     return binary
 
 
-def run_perfpald(binary: Path, duration: int, out_dir: Path) -> dict | None:
+def run_perfpald(binary: Path, duration: int, out_dir: Path,
+                 memory_pressure: bool = False) -> dict | None:
     """Run perfpald diagnose on the binary, return parsed report.json or None on failure."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    # Clear stale reports.
     for f in out_dir.glob("report-*.json"):
         f.unlink()
+    cmd = [
+        str(PERFPALD), "diagnose",
+        "--binary", str(binary),
+        "--duration", str(duration),
+        "--output-dir", str(out_dir),
+    ]
+    if memory_pressure:
+        cmd += ["--memory-pressure"]
     proc = subprocess.run(
-        [str(PERFPALD), "diagnose", "--binary", str(binary), "--duration", str(duration), "--output-dir", str(out_dir)],
+        cmd,
         capture_output=True,
         text=True,
         timeout=duration * 3 + 30,
@@ -66,15 +75,7 @@ def run_perfpald(binary: Path, duration: int, out_dir: Path) -> dict | None:
 
 
 def _is_user_symbol(symbol: str) -> bool:
-    """Filter kernel/loader addresses and noisy kernel-module entries.
-
-    perf report --stdio on this kernel surfaces raw addresses like
-    '0xffffffffb46015f0' and kernel-module symbols prefixed with
-    '[k] ' that are noise floor (parasite entries in the user-only
-    cycles:u event). User-code functions we care about are demangled
-    C++/C symbols that don't start with '0x' and don't carry a
-    '[k]' module tag.
-    """
+    """Filter kernel/loader addresses and noisy kernel-module entries."""
     s = symbol.strip()
     if s.startswith("0x") or s.startswith("0X"):
         return False
@@ -117,15 +118,8 @@ def run_perf_ground_truth(binary: Path, duration: int) -> list[tuple[str, float]
                 pct = float(parts[0].rstrip("%"))
             except ValueError:
                 continue
-            # Find the symbol after the [k/.] bracket
             if len(parts) < 5:
                 continue
-            if not parts[-1 - (0 if "[" in parts[3] else 0):][0].startswith("["):
-                # format: pct samples comm dso [k/.] symbol...
-                pass
-            # Symbol is everything from the 4th field onward, skipping the bracket.
-            # With -n: pct samples comm dso [bracket] symbol
-            # Without -n: pct comm dso [bracket] symbol
             if parts[1].isdigit():
                 sym_start = 4
             else:
@@ -137,6 +131,76 @@ def run_perf_ground_truth(binary: Path, duration: int) -> list[tuple[str, float]
                 continue
             out.append((symbol, pct))
         return out
+
+
+def normalize(s: str) -> str:
+    return s.split("+")[0].strip()
+
+
+def names_match(a: str, b: str) -> bool:
+    """Set-based name match tolerating clone suffixes and demangle drift."""
+    an, bn = normalize(a), normalize(b)
+    if an == bn or an.startswith(bn) or bn.startswith(an):
+        return True
+    if len(an) > 8 and (an in bn or bn in an):
+        return True
+    return False
+
+
+def check_case(case: dict) -> tuple[bool, list[str]]:
+    """Run a single case end-to-end. Return (passed, list of failure notes)."""
+    name = case["name"]
+    failures: list[str] = []
+    duration = case.get("duration", 5)
+    expected_funcs = case.get("expected_functions", [])
+    expected_kinds = case.get("expected_kinds", [])
+    memory_pressure = case.get("memory_pressure", False)
+
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        try:
+            binary = build_case(case, td)
+        except Exception as e:
+            return False, [f"build failed: {e}"]
+
+        gt = run_perf_ground_truth(binary, duration)
+        report = run_perfpald(binary, duration, BUILD, memory_pressure=memory_pressure)
+        if not report:
+            return False, ["perfpald returned no report"]
+
+        perfpal_user = [
+            (h["function"], h["self_pct"])
+            for h in report["hotspots"]
+            if _is_user_symbol(h["function"])
+        ]
+        gt_user = [(s, p) for s, p in gt if _is_user_symbol(s)]
+        print(f"  ground truth (user): {[(s[:40], p) for s, p in gt_user[:6]]}")
+        print(f"  perfpal     (user): {[(s[:40], p) for s, p in perfpal_user[:6]]}")
+
+        # Set-based comparison: for each expected function, find it in both
+        # ground truth and perfpal and check the delta.
+        for ef in expected_funcs:
+            gt_match = next(((s, p) for s, p in gt_user if names_match(s, ef)), None)
+            pp_match = next(((s, p) for s, p in perfpal_user if names_match(s, ef)), None)
+            if gt_match is None:
+                failures.append(f"expected function {ef!r} not in perf ground truth")
+                continue
+            if pp_match is None:
+                failures.append(f"expected function {ef!r} not in perfpal hotspots")
+                continue
+            delta = abs(gt_match[1] - pp_match[1])
+            if delta > TOLERANCE_PCT:
+                failures.append(
+                    f"function {ef!r}: pct delta {delta:.2f} > {TOLERANCE_PCT}: gt={gt_match[1]:.2f} pp={pp_match[1]:.2f}"
+                )
+
+        # Bottleneck kind coverage.
+        bottleneck_kinds = {b["kind"] for b in report.get("bottlenecks", [])}
+        for ek in expected_kinds:
+            if ek not in bottleneck_kinds:
+                failures.append(f"expected bottleneck kind {ek!r} not emitted (got {sorted(bottleneck_kinds)})")
+
+    return len(failures) == 0, failures
 
 
 def main():
@@ -151,54 +215,15 @@ def main():
     for case in cases:
         name = case["name"]
         print(f"=== {name} ===")
-        with tempfile.TemporaryDirectory() as td:
-            td = Path(td)
-            try:
-                binary = build_case(case, td)
-            except Exception as e:
-                print(f"  BUILD FAILED: {e}")
-                failed += 1
-                continue
-            duration = case.get("duration", 5)
-            gt = run_perf_ground_truth(binary, duration)
-            report = run_perfpald(binary, duration, BUILD)
-            if not report:
-                print("  PERFPALD FAILED")
-                failed += 1
-                continue
-
-            perfpal_top = [(h["function"], h["self_pct"]) for h in report["hotspots"] if _is_user_symbol(h["function"])][:TOP_N]
-            gt_top = gt[:TOP_N]
-            print(f"  ground truth top-{TOP_N}: {[(s[:40], p) for s, p in gt_top]}")
-            print(f"  perfpal     top-{TOP_N}: {[(s[:40], p) for s, p in perfpal_top]}")
-
-            # Compare function names and pct values.
-            # Allow symbol-name mismatch when one is mangled and the other is demangled
-            # by checking the demangled prefix.
-            def normalize(s: str) -> str:
-                return s.split("+")[0].strip()
-
-            case_pass = True
-            for i, pair in enumerate(zip(gt_top, perfpal_top)):
-                (gt_sym, gt_pct) = pair[0]
-                (pp_sym, pp_pct) = pair[1]
-                gt_n = normalize(gt_sym)
-                pp_n = normalize(pp_sym)
-                if not (gt_n == pp_n or gt_n.startswith(pp_n) or pp_n.startswith(gt_n) or (len(gt_n) > 8 and (gt_n in pp_n or pp_n in gt_n))):
-                    print(f"  rank {i+1}: name mismatch: gt={gt_sym!r} pp={pp_sym!r}")
-                    case_pass = False
-                    continue
-                delta = abs(gt_pct - pp_pct)
-                if delta > TOLERANCE_PCT:
-                    print(f"  rank {i+1}: pct delta {delta:.2f} > {TOLERANCE_PCT}: gt={gt_pct:.2f} pp={pp_pct:.2f}")
-                    case_pass = False
-
-            if case_pass:
-                print("  PASS")
-                passed += 1
-            else:
-                print("  FAIL")
-                failed += 1
+        ok, notes = check_case(case)
+        if ok:
+            print("  PASS")
+            passed += 1
+        else:
+            print("  FAIL")
+            for n in notes:
+                print(f"    - {n}")
+            failed += 1
     print(f"\n{passed} passed, {failed} failed (out of {len(cases)})")
     sys.exit(0 if failed == 0 else 1)
 

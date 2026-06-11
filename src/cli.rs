@@ -34,4 +34,9 @@ pub struct DiagnoseArgs {
     /// Path to a C++ demangler binary. Default: c++filt from PATH.
     #[arg(long)]
     pub demangler: Option<PathBuf>,
+
+    /// Record a second event for memory-pressure analysis (cycles,cache-misses).
+    /// Doubles the per-sample cost and enables heuristic 5.
+    #[arg(long, default_value_t = false)]
+    pub memory_pressure: bool,
 }
