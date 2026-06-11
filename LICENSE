@@ -1,0 +1,50 @@
+Copyright (c) 2026 Perfpal, Inc. All rights reserved.
+
+PROPRIETARY LICENSE
+
+This software and associated documentation files (the "Software") are
+the proprietary and confidential property of Perfpal, Inc. (the
+"Company") and are protected by copyright, trade secret, and other
+intellectual property laws.
+
+1. NO USE WITHOUT PERMISSION
+   No part of the Software may be copied, reproduced, modified, merged,
+   published, distributed, sublicensed, sold, resold, or otherwise
+   transferred, in whole or in part, without the prior written permission
+   of the Company.
+
+2. NO REVERSE ENGINEERING
+   You may not reverse engineer, decompile, disassemble, or otherwise
+   attempt to derive the source code, underlying ideas, algorithms, or
+   structure of the Software, except to the extent expressly permitted
+   by applicable law notwithstanding this limitation.
+
+3. NO CONTRIBUTION LICENSE
+   Nothing in this license grants you any right to submit contributions,
+   patches, or modifications to the Company. Any such submissions, if
+   received, are governed by a separate written Contributor License
+   Agreement.
+
+4. RESERVATION OF RIGHTS
+   All rights not expressly granted herein are reserved by the Company.
+
+5. TERMINATION
+   This license is effective until terminated. The Company may terminate
+   this license at any time, in which case you must destroy all copies
+   of the Software in your possession.
+
+6. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE COMPANY BE LIABLE FOR ANY
+   CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+   CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION
+   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+7. THIRD-PARTY COMPONENTS
+   The Software may include third-party open-source components, which
+   are licensed under their respective licenses. Such licenses are
+   referenced in the NOTICE file, if any, accompanying the Software.
+
+For licensing inquiries, contact: licensing@perfpal.example

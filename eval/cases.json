@@ -1,0 +1,8 @@
+[
+  {
+    "name": "hot_loop",
+    "source": "tests/binaries/hot_loop.cpp",
+    "duration": 30,
+    "comment": "Tutorial: two named hot loops, ~50/50 split. W1 sanity check."
+  }
+]
