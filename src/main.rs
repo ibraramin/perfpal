@@ -4,6 +4,7 @@ mod cli;
 mod config;
 mod demangle;
 mod diagnose;
+mod mcp;
 mod perf_runner;
 mod report;
 mod stacks;
@@ -23,7 +24,7 @@ enum Cmd {
     Diagnose(cli::DiagnoseArgs),
     /// Print an MCP server config snippet for Claude Code / opencode.
     McpPrintConfig,
-    /// Run the MCP server on stdio (placeholder; implemented in W3).
+    /// Run the MCP server on stdio (JSON-RPC 2.0, Content-Length framed).
     Mcp,
 }
 
@@ -32,10 +33,7 @@ fn main() -> Result<()> {
     match cli.cmd {
         Cmd::Diagnose(a) => diagnose::run(a),
         Cmd::McpPrintConfig => mcp_print_config(),
-        Cmd::Mcp => {
-            eprintln!("MCP server not implemented yet (W3 deliverable).");
-            std::process::exit(1);
-        }
+        Cmd::Mcp => mcp::run(),
     }
 }
 

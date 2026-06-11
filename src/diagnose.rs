@@ -11,6 +11,38 @@ use std::path::Path;
 use uuid::Uuid;
 
 pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
+    let (report, path) = run_report(args)?;
+    println!("Top 5 hotspots (self-time):");
+    for h in report.hotspots.iter().take(5) {
+        let loc = match (&h.file, h.line) {
+            (Some(f), Some(l)) => format!("{}:{}", f.display(), l),
+            _ => "<no location>".to_string(),
+        };
+        println!(
+            "  #{:<2} {:6.2}%  {}  ({})",
+            h.rank, h.self_pct, h.function, loc
+        );
+    }
+    if !report.bottlenecks.is_empty() {
+        println!("\nBottlenecks ({}):", report.bottlenecks.len());
+        for b in &report.bottlenecks {
+            let loc = match (&b.file, b.line) {
+                (Some(f), Some(l)) => format!("{}:{}", f.display(), l),
+                _ => "<no location>".to_string(),
+            };
+            println!(
+                "  [{:?}] {} {}  metric={} value={:.2}  {}",
+                b.kind, loc, b.function, b.metric, b.value, b.note
+            );
+        }
+    }
+    eprintln!("perfpal: wrote {}", path.display());
+    Ok(())
+}
+
+/// Run the full pipeline and return the `Report` along with the on-disk path
+/// where it was written. The CLI and the MCP tool both call this.
+pub fn run_report(args: crate::cli::DiagnoseArgs) -> Result<(Report, std::path::PathBuf)> {
     let event_spec = if args.memory_pressure {
         "cycles,cache-misses"
     } else {
@@ -96,33 +128,7 @@ pub fn run(args: crate::cli::DiagnoseArgs) -> Result<()> {
     };
 
     let path = report.write_to(&args.output_dir)?;
-    eprintln!("perfpal: wrote {}", path.display());
-
-    println!("Top 5 hotspots (self-time):");
-    for h in report.hotspots.iter().take(5) {
-        let loc = match (&h.file, h.line) {
-            (Some(f), Some(l)) => format!("{}:{}", f.display(), l),
-            _ => "<no location>".to_string(),
-        };
-        println!(
-            "  #{:<2} {:6.2}%  {}  ({})",
-            h.rank, h.self_pct, h.function, loc
-        );
-    }
-    if !report.bottlenecks.is_empty() {
-        println!("\nBottlenecks ({}):", report.bottlenecks.len());
-        for b in &report.bottlenecks {
-            let loc = match (&b.file, b.line) {
-                (Some(f), Some(l)) => format!("{}:{}", f.display(), l),
-                _ => "<no location>".to_string(),
-            };
-            println!(
-                "  [{:?}] {} {}  metric={} value={:.2}  {}",
-                b.kind, loc, b.function, b.metric, b.value, b.note
-            );
-        }
-    }
-    Ok(())
+    Ok((report, path))
 }
 
 fn is_user_code(symbol: &str, excludes: &[String]) -> bool {

@@ -181,6 +181,21 @@ pub fn record_and_parse(
 /// - Column 3: comm (process name)
 /// - Column 4: shared object (DSO)
 /// - Column 5: `[k]` for kernel, `[.]` for user, `[u]` for unknown; rest is the symbol
+/// Parse a sample count that may carry a K (thousands) or M (millions)
+/// suffix, e.g. "196" -> 196, "6K" -> 6000, "2M" -> 2_000_000.
+fn parse_count_with_suffix(s: &str) -> u64 {
+    if s.is_empty() {
+        return 0;
+    }
+    let (num_part, mult) = match s.chars().last() {
+        Some('K') | Some('k') => (&s[..s.len() - 1], 1_000u64),
+        Some('M') | Some('m') => (&s[..s.len() - 1], 1_000_000u64),
+        Some('G') | Some('g') => (&s[..s.len() - 1], 1_000_000_000u64),
+        _ => (s, 1u64),
+    };
+    num_part.parse::<u64>().map(|n| n * mult).unwrap_or(0)
+}
+
 pub fn parse_perf_report_multi(s: &str) -> (Vec<EventBlock>, u64) {
     let mut blocks: Vec<EventBlock> = Vec::new();
     let mut current: Option<EventBlock> = None;
@@ -201,11 +216,12 @@ pub fn parse_perf_report_multi(s: &str) -> (Vec<EventBlock>, u64) {
                 total_count_approx: 0,
                 functions: Vec::new(),
             };
-            // Parse "Samples: N  of event 'NAME'"
+            // Parse "Samples: N  of event 'NAME'". N may carry a K/M suffix
+            // (e.g. "6K" means 6000) when the count is large.
             let after = rest.trim_start();
             let mut parts = after.split_whitespace();
             if let Some(n_str) = parts.next() {
-                block.total_samples = n_str.parse().unwrap_or(0);
+                block.total_samples = parse_count_with_suffix(n_str);
             }
             // Find "of event '...'"
             if let Some(idx) = after.find("of event '") {
