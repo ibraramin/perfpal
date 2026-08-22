@@ -1,23 +1,19 @@
 # Active Context
 
 ## Current Task
-Phase 0 Discovery COMPLETE for Perfpal. All founder answers confirmed. Formal planning objects created. Awaiting fresh session to execute `mvp-architecture` plan.
+`mvp-architecture` step 1 COMPLETE: **ADR-0001 accepted** (tree-sitter-first + parser-agnostic IR). Founder-approved; @requirements-reviewer APPROVED; @reviewer SHIP with 3 fixes applied. Awaiting commit approval.
 
 ## Recent Decisions
-- All 14 original clarifying questions answered + 5 follow-ups confirmed.
-- MVP language = C (confirmed).
-- Static-analysis-first with runtime bolt-on later (confirmed).
-- Heuristics = prioritized catalog, not exhaustive.
-- LLM-agnostic JSON schema; no vendor lock-in.
-- Output layout: `perfpal-report/` with `metrics.json`, `report.md`, `charts/`.
+- ADR-0001: tree-sitter-first for MVP C scanner; commitment = parser-agnostic IR keyed `(path, name, span)`; resolver tiers syntactic → semantic → dynamic.
+- libclang deferred as additive resolver; hybrid-now rejected as YAGNI.
+- License audit verified: both ecosystems pass the no-copyleft constraint; official `tree-sitter-*` grammars only unless audited.
 
 ## In Progress
-- Phase 0 is DONE. Next: execute `mvp-architecture` plan in a fresh session.
+- Nothing — task boundary reached.
 
 ## Next
-- Start `/new` session.
-- `readPlan mvp-architecture`.
-- Begin Step 1: ADR-0001 parser choice.
+- Commit (founder approval pending): ADR-0001 + state/CHANGELOG updates.
+- Fresh session (`/new`) → plan `mvp-architecture` step 2: heuristic catalog v1 for C (ranked by signal-value vs cost) → founder sign-off.
 
 ## Blockers
-- None. Ready to proceed.
+- None.

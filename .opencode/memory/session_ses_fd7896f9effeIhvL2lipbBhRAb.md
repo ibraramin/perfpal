@@ -110,6 +110,42 @@
 ## Session Memory
 
 ### User Instructions
+- …
+
+### Long Horizon Context
+- …
+
+### Decisions
+- …
+
+### Conclusions
+- …
+
+### Active References
+- …
+
+<existing_memory>
+## Session Memory
+
+### User Instructions
+- …
+
+### Long Horizon Context
+- …
+
+### Decisions
+- …
+
+### Conclusions
+- …
+
+### Active References
+- …
+
+<existing_memory>
+## Session Memory
+
+### User Instructions
 - None captured yet.
 
 ### Long Horizon Context
@@ -275,8 +311,3 @@ F/G
 12. Free to use but can't modify and distribute without my explicit permission (main plan is to be targeteted by a bigger company and sell it). 
 13. Yeah.
 14. Shared foundation logic and C has the most extensive documentation and tons of projects surroinding it already.
-
----
-
-ASSISTANT:
-All 14 answered — locking those in. Two small ambiguities I'll carry as *stated assumptions* for you to confirm at the approval gate: **(a)** MVP language = **C** (inferred from your #14 rationale), **(b)** #7 "Sure" = static-first MVP, designed so runtime-profile ingestion can bolt on later.

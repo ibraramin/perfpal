@@ -1,35 +1,34 @@
 # Handoff — Latest
 
 ## Objective
-Phase 0 Discovery complete for Perfpal. All founder answers confirmed. Formal planning objects created. Ready to execute `mvp-architecture` plan.
+Execute `mvp-architecture` step 1: ADR-0001 parser strategy. **DONE — accepted by founder.** Dual verification passed (@requirements-reviewer APPROVED, @reviewer SHIP + fixes applied).
 
 ## Phase
-phase0-complete / design-plan-ready (mvp-architecture)
+executing mvp-architecture (step 1/7 done)
 
 ## Key Decisions
-- Product form: **CLI only**, output to `perfpal-report/` directory.
-- Audience: **local developers**.
-- Visual: **static charts** exposing **architecture-level issues** (dependency structure, component coupling, hot components).
-- MVP language: **C** (confirmed).
-- MVP scope: **static analysis only**, heuristics only, one language. Runtime profiling architected as future bolt-on.
-- Heuristics: **prioritized catalog** for sign-off, not exhaustive.
-- LLM output: **LLM-agnostic JSON schema** + human-readable `report.md`. No vendor-specific tuning.
-- License: **source-available proprietary**. **No copyleft dependencies**.
-- Target LLM: **undecided / generic**.
-- Output layout: `perfpal-report/` with `metrics.json`, `report.md`, `charts/`.
+- **ADR-0001 ACCEPTED:** tree-sitter-first for the MVP C scanner (core runtime MIT + official `tree-sitter-c` grammar MIT, both vendored with notices).
+- The architectural commitment is the **parser-agnostic IR**: entities keyed `(path, name, span)`; heuristics consume only the IR; resolver tiers `syntactic → semantic → dynamic`; libclang and runtime profiles bolt onto the same seam later.
+- libclang-first rejected (fragile on non-compiling AI-generated code — our core input; ~20× footprint); hybrid-now rejected as YAGNI.
+- License audit verified: **both ecosystems satisfy the no-copyleft constraint**; policy = official `tree-sitter-*` grammars only unless license-audited; Semgrep OSS (LGPL-2.1) is reference-only, never copied.
+- Reviewer fixes applied to the ADR: IR carries preprocessor-macro events; version-pinning guardrail added; footprint claim corrected to ~20×.
 
 ## Risks
-- Parser choice (tree-sitter vs libclang vs hybrid) is the highest-priority architectural fork.
-- No copyleft constraint limits dependency pool; every transitive dep must be audited.
-- Architecture-level visualization for C is hard (headers, preprocessor, implicit dependencies).
-- Static heuristics are approximate; must be framed as "optimization candidates," not ground truth.
-- No formal success criteria; "done" defined by acceptance criteria in spec.
+- tree-sitter-c grammar is C99-based; C11/C17 constructs (`_Generic`, `_Static_assert`, `_Atomic`) may raise ERROR-node rates on AI-generated code — monitor in step 2.
+- No macro expansion at MVP → macro-suspect flags + confidence downgrades (documented in ADR).
+- Name-based call matching scoped file-local at MVP; cross-file edges low-confidence.
+- Session-1 EOL updates were still uncommitted when this session started — folded into this session's commit request.
+
+## Blockers
+- None. Commit approval pending from founder.
 
 ## Next Actions
-1. Start **fresh session** (`/new`).
-2. Read plan `mvp-architecture` via `readPlan`.
-3. Execute Step 1: **ADR-0001 parser choice**.
-4. Continue through remaining 6 steps.
+1. Founder approves commit (see Uncommitted Files).
+2. Start fresh session (`/new`); resume with plan `mvp-architecture`.
+3. Step 2: draft heuristic catalog v1 for C, ranked by signal-value vs implementation cost; present to founder for sign-off.
+4. Steps 3–6: IR + metrics.json schema v1 → perfpal-report/ output contract → ADR-0002 visualization → module architecture doc.
 
 ## Uncommitted Files
-All skeleton files (rules, state, docs, CHANGELOG, todos) remain untracked. No commits yet.
+- `docs/adr/ADR-0001-parser-strategy.md` (new — Accepted)
+- `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`, `CHANGELOG.md` (modified — session-1 EOL updates + this session's ritual)
+- `.opencode/memory/*` (session memory artifacts)

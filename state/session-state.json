@@ -1,6 +1,6 @@
 {
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "phase0-complete / design-plan-ready (mvp-architecture)",
+  "current_phase": "executing mvp-architecture (step 1/7 done: ADR-0001 accepted)",
   "decisions": [
     "Project directory initialized at /home/ibrar/Perfpal.",
     "State skeleton created following AGENTS.md session lifecycle rules.",
@@ -25,21 +25,27 @@
     "CONFIRMED-2: MVP language = C.",
     "CONFIRMED-3: Heuristic scope = prioritized catalog for founder sign-off (NOT literally every heuristic).",
     "CONFIRMED-4: Target LLM = undecided / keep generic. Design LLM-agnostic JSON schema; no vendor-specific tuning.",
-    "CONFIRMED-5: Output layout = 'perfpal-report/' default containing metrics.json, report.md, charts/."
+    "CONFIRMED-5: Output layout = 'perfpal-report/' default containing metrics.json, report.md, charts/.",
+    "Initial skeleton committed as 6bbfafd on main (20 files, 965 insertions).",
+    "SPECS-APPROVED: Founder approved perfpal-core-spec + mvp-architecture plan in session 1. Design gate OPEN — execution may begin next session.",
+    "ADR-0001 ACCEPTED (founder-approved, session 2): parser = tree-sitter-first (core MIT + official tree-sitter-c grammar MIT); architectural commitment = parser-agnostic IR keyed (path,name,span); resolver tiers syntactic→semantic→dynamic; libclang deferred as additive resolver; hybrid-now rejected as YAGNI.",
+    "License audit verified (@librarian): both ecosystems satisfy the no-copyleft constraint; policy = official tree-sitter-* grammars only unless license-audited (community GPL/AGPL grammars verified to exist); Semgrep OSS is LGPL-2.1 — never copy its code into core.",
+    "ADR-0001 reviewer fixes applied: IR carries preprocessor-macro events; version-pinning guardrail added for tree-sitter core + grammar; footprint claim corrected to ~20×."
   ],
   "open_risks": [
     "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
     "License constraint (no copyleft) limits dependency pool; must audit all transitive deps.",
     "Architecture-level visualization for C (dependency structure, component coupling) requires call-graph/module-graph extraction — non-trivial due to headers/preprocessor.",
     "Static analysis heuristics are approximate, not ground truth; must frame outputs as 'optimization candidates' to avoid LLM over-optimization on noisy signals.",
-    "No formal success criteria = harder to define 'done' for MVP; relying on acceptance criteria in spec instead."
+    "No formal success criteria = harder to define 'done' for MVP; relying on acceptance criteria in spec instead.",
+    "tree-sitter-c grammar is C99-based; C11/C17 constructs (_Generic, _Static_assert, _Atomic) common in AI-generated C may raise ERROR-node rates — monitor during heuristic catalog work (step 2)."
   ],
   "blocked_by": [],
   "next_actions": [
-    "Start fresh session with /new",
-    "Read plan 'mvp-architecture' via readPlan",
-    "Execute Step 1: ADR-0001 parser choice (tree-sitter vs libclang vs hybrid)",
-    "Proceed through remaining 6 steps of mvp-architecture plan"
+    "Commit pending changes (awaiting founder approval): docs/adr/ADR-0001-parser-strategy.md + session-1 EOL state updates + CHANGELOG",
+    "Start fresh session (/new); resume with plan mvp-architecture",
+    "Step 2: draft heuristic catalog v1 for C ranked by signal-value vs implementation cost; present ranked list to founder for sign-off",
+    "Steps 3–6 in order: IR + metrics.json schema v1 → perfpal-report/ output contract → ADR-0002 visualization approach → module architecture doc"
   ],
   "artifacts": [
     ".opencode/rules.md",
@@ -52,7 +58,9 @@
     "CHANGELOG.md",
     "todos.md",
     "Planning-toolkit spec: perfpal-core-spec",
-    "Planning-toolkit plan: mvp-architecture"
+    "Planning-toolkit plan: mvp-architecture",
+    "Git commit 6bbfafd (initial skeleton, main)",
+    "docs/adr/ADR-0001-parser-strategy.md (Accepted, founder-approved)"
   ],
-  "last_updated": "2026-08-22T16:00:00Z"
+  "last_updated": "2026-08-22T18:52:20Z"
 }
