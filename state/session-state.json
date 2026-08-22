@@ -1,0 +1,58 @@
+{
+  "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
+  "current_phase": "phase0-complete / design-plan-ready (mvp-architecture)",
+  "decisions": [
+    "Project directory initialized at /home/ibrar/Perfpal.",
+    "State skeleton created following AGENTS.md session lifecycle rules.",
+    "Git repo initialized (no commits yet).",
+    "Previous bootstrap timed out; this is a retry completing research and clarifying questions only.",
+    "MVP languages tentatively C, C++, Python per founder intent; final TBD after answers.",
+    "A1: Product form = CLI only, outputs all artifacts to a directory.",
+    "A2: Target audience = local developers (not SaaS/CI-first).",
+    "B3: Visual output = static charts; form flexible, choose easiest to develop.",
+    "B4: Visual layer must expose architecture-level issues: dependency structure, component coupling, hot components — structural/architectural analysis, not just per-function metric heatmaps.",
+    "C5: C/C++ heuristics = include all sensible performance heuristics (founder: 'add them all if it isn't a huge issue').",
+    "C6: Python heuristics = same policy, include all sensible performance heuristics.",
+    "C7: Static-analysis-first MVP, architected so runtime-profile ingestion (perf/valgrind/cProfile) can bolt on later. [ASSUMPTION — flagged for confirmation]",
+    "D8: LLM output = BOTH raw data (machine-readable) AND human-readable report.",
+    "D9: ONE target LLM only (no multi-LLM format variants).",
+    "E10: MVP = ONE language, heuristics only.",
+    "E11: No formal success criteria needed for now.",
+    "F12: License = source-available proprietary (free to use; modification and redistribution require explicit permission). CONSTRAINT: dependency choices must avoid copyleft (GPL-family) licenses.",
+    "G13: 'tp' = TypeScript confirmed.",
+    "G14: Why C/C++/Python first = shared foundations + C has most extensive documentation. [ASSUMPTION: MVP language = C — flagged for confirmation]",
+    "CONFIRMED-1: MVP is strictly static analysis; architecture designed so runtime-profile ingestion bolts on later without rewrite.",
+    "CONFIRMED-2: MVP language = C.",
+    "CONFIRMED-3: Heuristic scope = prioritized catalog for founder sign-off (NOT literally every heuristic).",
+    "CONFIRMED-4: Target LLM = undecided / keep generic. Design LLM-agnostic JSON schema; no vendor-specific tuning.",
+    "CONFIRMED-5: Output layout = 'perfpal-report/' default containing metrics.json, report.md, charts/."
+  ],
+  "open_risks": [
+    "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
+    "License constraint (no copyleft) limits dependency pool; must audit all transitive deps.",
+    "Architecture-level visualization for C (dependency structure, component coupling) requires call-graph/module-graph extraction — non-trivial due to headers/preprocessor.",
+    "Static analysis heuristics are approximate, not ground truth; must frame outputs as 'optimization candidates' to avoid LLM over-optimization on noisy signals.",
+    "No formal success criteria = harder to define 'done' for MVP; relying on acceptance criteria in spec instead."
+  ],
+  "blocked_by": [],
+  "next_actions": [
+    "Start fresh session with /new",
+    "Read plan 'mvp-architecture' via readPlan",
+    "Execute Step 1: ADR-0001 parser choice (tree-sitter vs libclang vs hybrid)",
+    "Proceed through remaining 6 steps of mvp-architecture plan"
+  ],
+  "artifacts": [
+    ".opencode/rules.md",
+    "state/session-state.json",
+    "state/handoff/latest.md",
+    "docs/activeContext.md",
+    "docs/specs/",
+    "docs/plans/",
+    "docs/adr/",
+    "CHANGELOG.md",
+    "todos.md",
+    "Planning-toolkit spec: perfpal-core-spec",
+    "Planning-toolkit plan: mvp-architecture"
+  ],
+  "last_updated": "2026-08-22T16:00:00Z"
+}
