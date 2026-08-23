@@ -176,11 +176,11 @@ Add a scanner backend + vendored grammar. Both extension costs are already price
 
 libclang joins as an additive resolver per ADR-0001 (deferred, license-clean, viable). Enrichment raises confidence/tier; identity and schema unchanged.
 
-## 6. Implementation-language fork — DEFERRED
+## 6. Implementation-language fork — RESOLVED: Rust
 
-**Decision (founder, 2026-08-23): the choice of implementation language is deferred to implementation planning.** This supersedes ADR-0002's pointer ("implementation language unpinned until step 6") — the fork moves forward instead of being closed here. All modules above are specified language-neutrally so nothing in this doc constrains the choice.
+**Decision (founder, 2026-08-23): Rust.** The fork was deferred to implementation planning (superseding ADR-0002's pointer) and is now closed there against the pre-committed criteria below. All modules above remain specified language-neutrally; the choice constrains syntax and tooling only.
 
-Pre-committed evaluation criteria (any candidate must satisfy all of them; recording them now makes the eventual decision mechanical rather than re-litigated):
+Pre-committed evaluation criteria (any candidate must satisfy all of them; recording them up front made the decision mechanical rather than re-litigated):
 
 1. **Self-contained distribution** — single static binary; end users install nothing else (spec Product Form; ADR-0002 constraint 3). Interpreted runtimes qualify only if frozen/embedded into the shipped binary.
 2. **First-class tree-sitter integration** — official or ecosystem-standard bindings; hand-rolled FFI is a disqualifier for MVP velocity.
@@ -189,14 +189,29 @@ Pre-committed evaluation criteria (any candidate must satisfy all of them; recor
 5. **Cross-platform builds** — Linux/macOS/Windows from one toolchain.
 6. **Dev velocity on string/graph/JSON-heavy code** — Perfpal is a text-munging tool, not a kernel; heavy manual memory management is a real cost.
 
-Candidates carried forward: **Rust, Go, C**. Python is ruled out by default under criterion 1 (unless frozen-binary distribution is accepted at decision time). When decided, the outcome folds into a doc section (founder preference: fold-in, not a standalone ADR) — either an amendment here or the lead section of the implementation plan.
+### Outcome (fold-in, founder-approved 2026-08-23)
 
-## 7. Repository layout (language-neutral)
+| Criterion | Verdict | Basis |
+|---|---|---|
+| 1. Self-contained distribution | PASS | musl fully-static release builds; no runtime install for end users |
+| 2. First-class tree-sitter | PASS | official org-published crates: `tree-sitter` v0.26.x + `tree-sitter-c` v0.24.x (both MIT) — the reference binding |
+| 3. Byte-determinism suitability | PASS | `serde_json` object keys serialize sorted by default (`BTreeMap` backing; `preserve_order` feature must remain OFF — pinned at scaffold and guarded in CI); struct fields in declaration order |
+| 4. No copyleft achievable | PASS | core crates audited `MIT OR Apache-2.0` (serde, serde_json, petgraph, clap, anyhow, thiserror); tree-sitter runtime + grammar MIT |
+| 5. Cross-platform builds | PASS | cargo + `cc`-crate vendored C compiles per-target; cargo-zigbuild covers linux-x86_64/aarch64-musl, macOS x86_64/aarch64, Windows MSVC; existence proof: ast-grep ships this exact matrix on Rust+tree-sitter |
+| 6. Dev velocity (string/graph/JSON) | PASS | petgraph / serde_json / clap cover the text-munging workload |
+
+**Rejected:** Go — official `go-tree-sitter` is cgo-bound (CGO_ENABLED=0 impossible → per-target C cross-toolchain matrix), failing criteria 1+5 via criterion 2's interaction; community smacker binding stale >2 yrs. C — fails criterion 6 outright (manual memory management for string/graph/JSON is the named cost) and makes 1+5 manual labor. Python — remains ruled out under criterion 1; no frozen-binary exception sought.
+
+**Consequences:** repository layout §7 maps to a single Cargo crate with module-per-directory under `src/`; toolchain = stable Rust pinned in CI; CI adds a license audit of the full dependency tree (criterion 4 is a standing obligation, not a one-time check).
+
+## 7. Repository layout (Rust)
 
 Directory names are contractual; nesting below them is not.
 
 ```
 perfpal/
+├── Cargo.toml
+├── Cargo.lock
 ├── src/
 │   ├── cli/            # §3.1
 │   ├── scanner/        # §3.2 — discovery, resolution, recognizer pass

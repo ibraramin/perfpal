@@ -1,6 +1,6 @@
 {
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "executing mvp-architecture (steps 1–6/7 done; step 6 module architecture dual-reviewed, all 8 findings applied; step 7 fold+commit executed same session — commit pending founder approval, then markPlanDone closes the plan)",
+  "current_phase": "executing mvp-implementation (planning complete: language fork RESOLVED=Rust folded into modules.md §6; master plan P0–P6 active; next session starts P0 scaffold)",
   "decisions": [
     "Project directory initialized at /home/ibrar/Perfpal.",
     "State skeleton created following AGENTS.md session lifecycle rules.",
@@ -57,7 +57,10 @@
     "EXTENSION POINTS PINNED (modules.md §5): runtime-profile ingestion = profile adapters (perf/valgrind/cProfile) → dynamic-tier events keyed (path,name,span) merged at IR level (CONFIRMED-1 honored); additional languages = backend + grammar with MINOR-bump schema re-emission (rule_id pattern open + languages widening explicitly minor per schema scan.languages/files[].language descriptions + metrics-json-v1 §5 — reviewer corrected an initial major-bump misreading); semantic resolver additive per ADR-0001.",
     "FOUNDER DECISIONS (session 8): implementation-language fork (Rust/Go/C) DEFERRED to implementation planning — supersedes ADR-0002's 'step 6 decides' pointer; six pre-committed evaluation criteria recorded in modules.md §6 (self-contained single binary, first-class tree-sitter bindings, byte-determinism suitability, no-copyleft transitive closure, cross-platform builds, dev velocity on text-munging); Python ruled out by default on criterion 1 unless frozen-binary accepted; when decided, folds into a doc section, NOT a standalone ADR.",
     "CLI SURFACE v1 DEFINED (modules.md §8): flags <path> positional (default .), -o/--output (default perfpal-report/), --force safety-guard override, --version ('perfpal <v> (metrics schema <sv>)'), --help; exit codes 0 success (findings NEVER affect exit code; zero-C-file scan succeeds with valid empty report, languages:['c'] preserved for minItems:1), 1 usage error, 2 output error incl. safety-guard refusal, 3 internal error=bug; stdout short human summary explicitly NOT a stability contract; stderr diagnostics; pipe-clean no color; discovery skips dot-dirs, does not follow symlinks.",
-    "STEP-6 DUAL REVIEW PASSED (session 8): @requirements-reviewer APPROVED (all verbatim requirements met incl. deferral recorded-not-decided; scope observations non-blocking); @reviewer SHIP-WITH-FIXES — all 8 findings applied (MAJOR: §5.2 language-addition bump corrected major→minor per schema lines 37/71 + metrics-json-v1 §5; determinism table completed with findings[]/stats.functions[]/distributions/include_graph.nodes rows; MINORs: finding_id duplicate-collapse rule, file_count=len(files[]) semantics, discovery rules pinned, test obligations extended — finding_id uniqueness, sort orders, report double-render modulo provenance, exit-code mapping, safety-guard refusal; NITs: stdout example includes failed bucket, aggregator assembles all nine sections)."
+    "STEP-6 DUAL REVIEW PASSED (session 8): @requirements-reviewer APPROVED (all verbatim requirements met incl. deferral recorded-not-decided; scope observations non-blocking); @reviewer SHIP-WITH-FIXES — all 8 findings applied (MAJOR: §5.2 language-addition bump corrected major→minor per schema lines 37/71 + metrics-json-v1 §5; determinism table completed with findings[]/stats.functions[]/distributions/include_graph.nodes rows; MINORs: finding_id duplicate-collapse rule, file_count=len(files[]) semantics, discovery rules pinned, test obligations extended — finding_id uniqueness, sort orders, report double-render modulo provenance, exit-code mapping, safety-guard refusal; NITs: stdout example includes failed bucket, aggregator assembles all nine sections).",
+    "LANGUAGE FORK RESOLVED (session 9, founder-approved): RUST chosen against modules.md §6 six pre-committed criteria — @librarian-verified facts: official org-published crates tree-sitter v0.26.x + tree-sitter-c v0.24.x (both MIT); Go go-tree-sitter is cgo-bound (CGO_ENABLED=0 impossible → per-target C cross-toolchain matrix) and smacker binding stale >2yrs; core Rust crates serde/serde_json/petgraph/clap/anyhow/thiserror all MIT OR Apache-2.0, zero GPL-family. Fold-in recorded in modules.md §6 Outcome table (founder preference honored: no standalone ADR). Go rejected (criteria 1+5 via cgo interaction with criterion 2), C rejected (criterion 6), Python stays ruled out (criterion 1, no frozen-binary exception sought).",
+    "BUILD ORDER SET (session 9): master plan mvp-implementation created and linked to perfpal-core-spec — P0 scaffold (Cargo crate per §7, CI incl. dependency license audit, fixture-IR harness, version+feature pinning incl. serde_json preserve_order OFF) → P1 vertical slice (ir→scanner→analyzer ALLOC-001→schema serializer→aggregator→writer→cli end-to-end + span round-trip tests) → P2 Tier 1 wave A (ALLOC-002, STR-001/002/003, LOOP-001/003, CALL-001) → P3 wave B context-dependent shapes (ALLOC-003, LOOP-002, LOOP-004, CALL-002) → P4 architecture wave (ARCH-001→ARCH-003→ARCH-002 LAST + full aggregator sort orders + determinism tests + charts + reporter) → P5 Tier 2 (MEM-002 first, then TYPE-001/002, MEM-001, LOOP-005–008) → P6 hardening/release (finding_id uniqueness CI, golden dirs, exit-code tests, musl static x86_64/aarch64 + macOS + MSVC). One phase per session; dual-review gate between phases.",
+    "STEP-9 DUAL REVIEW PASSED (session 9): @requirements-reviewer APPROVED (both deliverables verbatim: language decided per §6 criteria + build order Tier1-before-Tier2; zero implementation code; no scope creep); @reviewer SHIP-WITH-FIXES — all 4 findings applied (MINORs: P3 relabeled from 'cost C2' to 'context-dependent shapes' since LOOP-004/CALL-002 are catalog C1; span round-trip + aggregator sort-order determinism tests explicitly scheduled P1/P4; NITs: §7 header '(language-neutral)'→'(Rust)' + Cargo.toml/Cargo.lock added to tree; serde_json preserve_order-OFF guard noted in §6 row 3 + pinned in P0)."
   ],
   "open_risks": [
     "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
@@ -67,14 +70,13 @@
     "No formal success criteria = harder to define 'done' for MVP; relying on acceptance criteria in spec instead.",
     "tree-sitter-c grammar is C99-based; C11/C17 constructs (_Generic, _Static_assert, _Atomic) common in AI-generated C may raise ERROR-node rates — monitor during heuristic catalog work (step 2).",
     "Differentiation claims ('not found in surveyed tools') rest on one librarian survey pass; a deeper tool-source audit would harden them before external messaging.",
-    "Hand-rolled DAG layout quality is unproven against real-world include graphs; MVP bar is 'legible, not pretty' (fixed char-width labels, barycenter ordering, node caps) until a post-MVP Sugiyama upgrade inside the same emitter.",
-    "Implementation-language deferral leaves repo layout (modules.md §7) provisional until the choice lands in implementation planning."
+    "Hand-rolled DAG layout quality is unproven against real-world include graphs; MVP bar is 'legible, not pretty' (fixed char-width labels, barycenter ordering, node caps) until a post-MVP Sugiyama upgrade inside the same emitter."
   ],
   "blocked_by": [],
   "next_actions": [
-    "Founder approves commit → markPlanDone(mvp-architecture): steps 1–7 complete, design phase closes",
-    "Fresh session (/new): implementation planning — decide implementation language per modules.md §6 pre-committed criteria (Rust/Go/C carried forward; Python needs frozen-binary exception), set build order",
-    "Tier 2 heuristics are in MVP scope but build-ordered after Tier 1; revisit effort budget during implementation planning"
+    "Founder approves this session's commit (docs: language fork resolved Rust + master implementation plan)",
+    "Fresh session (/new): start plan mvp-implementation at P0 scaffold — resume with signposts: plan mvp-implementation, commit <hash of this commit>",
+    "P1 vertical slice follows P0 per phase-gate discipline (dual review between phases)"
   ],
   "artifacts": [
     ".opencode/rules.md",
@@ -98,7 +100,10 @@
     "docs/lessons-learned.md (Lessons Learned Log — seeded with LL-001..006 from sessions 1–5)",
     "docs/report/output-contract.md (perfpal-report/ output contract v1 — dual-reviewed, all 18 findings applied)",
     "docs/adr/ADR-0002-visualization.md (Accepted, founder-approved — hand-rolled deterministic SVG emitter + chart set v1; dual-reviewed, all 11 findings applied)",
-    "docs/architecture/modules.md (module architecture v1 — language-neutral pipeline, plugin boundaries, extension points, CLI surface; dual-reviewed, all 8 findings applied)"
+    "docs/architecture/modules.md (module architecture v1 — language-neutral pipeline, plugin boundaries, extension points, CLI surface; dual-reviewed, all 8 findings applied)",
+    "docs/architecture/modules.md §6 amendment (session 9: fork RESOLVED=Rust, outcome fold-in table + rejected candidates + consequences; §7 header/tree updated to Rust crate layout; dual-reviewed, all 4 findings applied)",
+    "Planning-toolkit plan: mvp-implementation (master build plan P0–P6, linked perfpal-core-spec, status active)",
+    "Git commit 94c5c6d (module architecture v1, main)"
   ],
-  "last_updated": "2026-08-23T16:03:32Z"
+  "last_updated": "2026-08-23T18:45:00Z"
 }

@@ -1,0 +1,22 @@
+---
+plan name: mvp-implementation
+plan description: Rust build phases P0–P6
+plan status: active
+---
+
+## Idea
+Master implementation plan for Perfpal MVP in RUST (language fork resolved 2026-08-23 against modules.md §6 pre-committed criteria; fold-in recorded in modules.md §6 Outcome). Builds the language-neutral pipeline (modules.md §3: cli → scanner → analyzer → aggregator → reporter/charts → writer) with tree-sitter-c backend (ADR-0001), all 23 catalog heuristics (catalog-v1: Tier 1 = 15, Tier 2 = 8), metrics.json schema v1 emission (metrics.schema.v1.json), perfpal-report/ output contract (output-contract.md), deterministic SVG chart set v1 (ADR-0002). Build order principle: pipeline-first vertical slice before heuristic volume; function-local heuristics before cross-file/architecture heuristics; within the function-local set, simple call-pattern checks precede multi-node/context-dependent shapes (catalog cost C1/C2 informs but does not strictly gate wave assignment); ARCH-002 (pure aggregation) last of Tier 1. Every phase ends with dual review (@reviewer + @requirements-reviewer) and green tests before the next begins. One phase per session per AGENTS.md lifecycle. Non-goals: runtime-profile ingestion, additional languages, semantic resolver (all pinned extension points, post-MVP).
+
+## Implementation
+- P0 Scaffold: Cargo crate per modules.md §7 layout (src/{cli,scanner/backends/tree-sitter-c,ir,analyzer,aggregator,schema,reporter,charts,writer}), module skeletons with contract stubs, CI (fmt + clippy + test + license audit of dependency tree per §6 criterion 4), tests/fixtures/ir harness structure (parser-free fixture corpus per ADR-0001 guardrail 2), pin tree-sitter + tree-sitter-c versions; pin serde_json default features (`preserve_order` stays OFF — byte-determinism guard per §6 criterion 3).
+- P1 Vertical slice: ir types (IR v1 records/events/spans/ParseHealth per ir-v1.md), scanner backend (lexicographic discovery, dot-dir skip, no symlink follow, span ±1 conversion, quoted-include resolution with angle-bracket external bucketing, MacroEvent recognizer pass, ParseHealth capture), analyzer registry + PERF-C-ALLOC-001 end-to-end, schema serializer + embedded JSON Schema byte-copy, aggregator minimal document assembly, writer atomic swap + safety guard, cli flags/exit codes 0/1/2/3, span round-trip unit tests locking engine-native↔IR conversion (IR §7) → first end-to-end metrics.json from a sample C repo.
+- P2 Tier 1 wave A (function-local, cost C1): ALLOC-002, STR-001, STR-002, STR-003, LOOP-001, LOOP-003, CALL-001 — each as pure IR-view function, parser-free tested against fixture IR, ParseHealth gating + downgrade hooks (macro_origin, error_node_overlap) applied, ascending rule_id execution order.
+- P3 Tier 1 wave B (function-local, context-dependent shapes): ALLOC-003 (realloc linear growth), LOOP-002 (setup/I-O in loop), LOOP-004 (variable-divisor div/mod innermost — catalog C1, grouped here because detection needs loop-hierarchy context), CALL-002 (cyclomatic complexity ≥15 promoted from stat — catalog C1, requires whole-function branch counting).
+- P4 Tier 1 architecture wave (dependency-ordered): ARCH-001 include-graph fan-out/cycles → ARCH-003 cross-file name-based call coupling (confidence locked LOW) → ARCH-002 hot-component aggregation LAST; complete aggregator graphs/components/stats incl. every Principle-2 sort order (+ determinism tests asserting each ownership-table row's order); charts emitter (include-graph.svg, component-coupling.svg, hot-components.svg per ADR-0002, double-render byte-equality tests); reporter report.md fixed template + Appendix A built-in catalog.
+- P5 Tier 2 (8 should-haves): MEM-002 first (cost C1), then TYPE-001, TYPE-002, MEM-001, LOOP-005, LOOP-006, LOOP-007, LOOP-008 — each with documented FP classes and mandatory LOW/MEDIUM confidence floors per catalog-v1 §4.
+- P6 Hardening & release: finding_id uniqueness CI assertion, golden report-directory tests (writer swap behavior), CLI exit-code mapping tests, writer stale-temp cleanup, report.md double-render byte-equality modulo provenance fields, release builds (linux-x86_64/aarch64 musl static, macOS x86_64+aarch64, Windows MSVC), CHANGELOG/versioning.
+
+## Required Specs
+<!-- SPECS_START -->
+- perfpal-core-spec
+<!-- SPECS_END -->

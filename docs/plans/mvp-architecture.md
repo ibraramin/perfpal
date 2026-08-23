@@ -1,7 +1,7 @@
 ---
 plan name: mvp-architecture
 plan description: Parser ADR, heuristics catalog, schema design
-plan status: active
+plan status: done
 ---
 
 ## Idea

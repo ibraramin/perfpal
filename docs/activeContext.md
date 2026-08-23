@@ -1,20 +1,18 @@
 # Active Context
 
 ## Current Task
-`mvp-architecture` steps 6+7 CLOSED: module architecture doc (`docs/architecture/modules.md`) written and dual-reviewed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES — all 8 findings applied); state files folded. Commit pending founder approval → then `markPlanDone` closes the plan and the design phase.
+Implementation planning CLOSED: language fork **RESOLVED = Rust** (fold-in modules.md §6, dual-reviewed); master plan `mvp-implementation` created (P0–P6, linked perfpal-core-spec). Commit pending founder approval.
 
 ## Recent Decisions
-- Module architecture v1: language-neutral pipeline (cli → scanner → analyzer → aggregator → reporter/charts → writer); plugin seams = heuristic registry (IR-only pure functions), scanner backends, resolvers.
-- Implementation-language fork DEFERRED to implementation planning (founder): Rust/Go/C carried forward, six pre-committed criteria in modules.md §6; fold-in recording, no standalone ADR.
-- CLI surface v1: flags (<path>, -o/--output, --force, --version, --help); exit codes 0/1/2/3; findings never affect exit code; stdout not a stability contract.
-- Adding a language = minor-bump schema re-emission (corrected during review).
+- Rust chosen per §6 six pre-committed criteria (@librarian-verified: official tree-sitter v0.26.x / tree-sitter-c v0.24.x crates MIT; Go cgo-bound disqualifies static-binary + cross-compile criteria; core crates MIT OR Apache-2.0).
+- Build order: pipeline-first vertical slice → Tier 1 waves (function-local → architecture, ARCH-002 last) → Tier 2 (MEM-002 first) → hardening/release. One phase per session, dual-review gates.
+- Scaffold pins: serde_json `preserve_order` OFF; dependency license audit in CI; tree-sitter versions pinned.
 
 ## In Progress
 - Nothing — task boundary reached; awaiting commit approval.
 
 ## Next
-- Founder approves commit → markPlanDone(mvp-architecture) → design phase complete.
-- Fresh session: implementation planning (language decision per §6 criteria; Tier 1 build order first).
+- Founder approves commit → fresh session starts `mvp-implementation` **P0 scaffold** (Cargo crate per §7 layout, CI fmt/clippy/test/license-audit, fixture-IR harness, version+feature pinning).
 
 ## Blockers
 - None.
