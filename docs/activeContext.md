@@ -1,19 +1,21 @@
 # Active Context
 
 ## Current Task
-Plan `mvp-implementation` **P0 scaffold COMPLETE** (session 10): Cargo crate per §7, CI (fmt/clippy/test/license-audit, all `--locked` where it matters), fixture-IR harness, exact pins incl. tree-sitter =0.26.13 + tree-sitter-c =0.24.2 link-tested, serde_json preserve_order OFF guarded three ways. Dual review passed (@requirements-reviewer resolved; @reviewer SHIP-WITH-FIXES, all accepted fixes applied). Validation green under pinned toolchain 1.92.0. Commit pending founder approval.
+Plan `mvp-implementation` **P1 vertical slice COMPLETE** (session 11): first end-to-end `metrics.json` from a sample C repo via PERF-C-ALLOC-001. Full pipeline live — ir types (locked span round-trips), scanner (discovery/include-resolution/macro-recognizer/ParseHealth), tree-sitter-c extraction backend, analyzer registry (gating + downgrade hooks + total order), schema serializer + embedded canonical artifact with drift test, aggregator minimal assembly, writer atomic swap + safety guard, cli flags/exit codes 0/1/2/3. Dual review: @requirements-reviewer APPROVED; @reviewer CHANGES_REQUESTED → all 3 MAJOR (M1 single-file scan, M2 is_innermost, M3 statement_role) + 4 MINOR fixed with regression tests; emitted doc independently validated against Draft 2020-12 schema. **71 tests green** under pinned 1.92.0. Commit pending founder approval.
 
 ## Recent Decisions
-- Exact `=` pins + committed Cargo.lock + `--locked` CI = the pin-enforcement mechanism (ADR-0001 G5).
-- Toolchain pinned via rust-toolchain.toml (1.92.0) — §6 "stable Rust pinned in CI" satisfied literally.
-- Reviewer MINOR "gitignore state/" REJECTED: §7 bans *shipping* state/, not committing it (AGENTS.md durable-memory rule).
-- Deferred to P6: GitHub Actions SHA-pinning.
+- Canonical schema artifact = `src/schema/metrics.schema.v1.0.json` (include_str!-embedded, drift test vs docs copy).
+- P1 report dir = metrics.json + bundled schema only; `charts/` created empty; report.md/charts land P4 via writer's generic artifact map.
+- clap parse errors → exit 1 (usage); §8.2 reserves 2 for output errors.
+- is_innermost = nearest enclosing loop nests no other loop anywhere in its body (ir-v1 §3.3); braced loop bodies → statement_role primary.
+- Deferred: m6 unresolved-include graph visibility (ARCH-001/P2); m7 concurrent staging-dir guard + n11–n14 nits (P6).
 
 ## In Progress
 - Nothing — task boundary reached; awaiting commit approval.
 
 ## Next
-- Founder approves commit → fresh session starts **P1 vertical slice** (ir types → scanner backend → analyzer registry + ALLOC-001 → schema serializer → aggregator minimal → writer atomic swap → cli flags/exit codes → span round-trip tests → first end-to-end metrics.json). Resume signposts: plan mvp-implementation, commit \<P0 hash\>.
+- Founder approves commit → fresh session starts **P2 Tier 1 wave A**: ALLOC-002, STR-001/002/003, LOOP-001, LOOP-003, CALL-001 as pure IR-view functions, parser-free fixture tests, gating + downgrade hooks, ascending rule_id order. Resume signposts: plan mvp-implementation, commit \<P1 hash\>.
+- P2 notes: LOOP-003 relies on FIXED statement_role; P3 LOOP-004/006/008 rely on FIXED is_innermost.
 
 ## Blockers
 - None.

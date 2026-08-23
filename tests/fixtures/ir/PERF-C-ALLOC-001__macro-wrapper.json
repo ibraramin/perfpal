@@ -1,0 +1,77 @@
+[
+  {
+    "file": {
+      "path": "src/alloc.h",
+      "language": "c",
+      "loc": {"code": 6, "comment": 1, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [
+      {
+        "kind": "definition",
+        "name": "MY_ALLOC",
+        "path": "src/alloc.h",
+        "span": {"start_line": 3, "start_col": 9, "end_line": 3, "end_col": 33},
+        "pattern_id": null
+      },
+      {
+        "kind": "recognized_pattern",
+        "name": "MY_ALLOC",
+        "path": "src/alloc.h",
+        "span": {"start_line": 3, "start_col": 9, "end_line": 3, "end_col": 33},
+        "pattern_id": "alloc-wrapper"
+      }
+    ],
+    "functions": [
+      {
+        "record": {
+          "id": "src/alloc.h#fill#6:5",
+          "name": "fill",
+          "path": "src/alloc.h",
+          "span": {"start_line": 6, "start_col": 5, "end_line": 11, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int n"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 1,
+          "length_lines": 6
+        },
+        "calls": [
+          {
+            "callee_name": "MY_ALLOC",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "n"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 8, "start_col": 19, "end_line": 8, "end_col": 30},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": true
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "while",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {"start_line": 7, "start_col": 5, "end_line": 10, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      }
+    ]
+  }
+]

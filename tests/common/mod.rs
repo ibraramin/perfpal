@@ -9,8 +9,13 @@
 //! byte-identical across runs — object keys sorted, struct fields in
 //! declaration order.
 
+// Each integration test binary links this module and uses a subset of it.
+#![allow(dead_code)]
+
 use std::fs;
 use std::path::Path;
+
+use perfpal::scanner::FileUnit;
 
 /// Load a fixture from `tests/fixtures/ir/<name>` and parse it as JSON.
 ///
@@ -26,6 +31,20 @@ pub fn load_ir_fixture(name: &str) -> serde_json::Value {
         .unwrap_or_else(|e| panic!("fixture unreadable: {}: {e}", path.display()));
     serde_json::from_str(&raw)
         .unwrap_or_else(|e| panic!("fixture not valid JSON: {}: {e}", path.display()))
+}
+
+/// Load a fixture as TYPED IR (P1 upgrade of the P0 `serde_json::Value`
+/// harness): an array of [`FileUnit`] documents, deserialized with no parser
+/// bound (ADR-0001 guardrail 2).
+///
+/// # Panics
+/// Same contract as [`load_ir_fixture`]; additionally panics when the JSON
+/// does not match the IR v1 shapes.
+#[must_use]
+pub fn load_units_fixture(name: &str) -> Vec<FileUnit> {
+    let value = load_ir_fixture(name);
+    serde_json::from_value(value)
+        .unwrap_or_else(|e| panic!("fixture not valid IR v1 document: {name}: {e}"))
 }
 
 /// Assert that serializing `value` twice yields identical bytes AND that every

@@ -1,36 +1,45 @@
 # Handoff — Latest
 
 ## Objective
-Execute plan `mvp-implementation` phase P0: Cargo crate scaffold per modules.md §7 with CI (fmt/clippy/test/license-audit), parser-free fixture-IR harness, exact version pinning (tree-sitter/tree-sitter-c), serde_json `preserve_order` OFF guard. **DONE — scaffold complete, dual-review passed, all fixes applied, validation fully green.**
+Execute plan `mvp-implementation` phase P1: vertical slice — ir types → scanner backend → analyzer registry + PERF-C-ALLOC-001 → schema serializer + embedded JSON Schema byte-copy → aggregator minimal assembly → writer atomic swap + safety guard → cli flags/exit codes 0/1/2/3 → span round-trip tests → **first end-to-end metrics.json from a sample C repo**. **DONE — dual-review passed, all MAJOR/MINOR fixes applied and verified, 71 tests green.**
 
 ## Phase
-executing mvp-implementation — P0 COMPLETE; next session starts **P1 vertical slice**
+executing mvp-implementation — P1 COMPLETE; next session starts **P2 Tier 1 wave A**
 
 ## Key Decisions
-- **P0 scaffold shipped:** nine contract-stubbed modules (`cli`, `scanner`+`backends/tree_sitter_c`, `ir`, `analyzer`, `aggregator`, `schema`, `reporter`, `charts`, `writer`) each citing its §3.x contract; §7's hyphenated `tree-sitter-c` rendered as Rust module `tree_sitter_c` (mapping noted in backends/mod.rs).
-- **Exact pins (Cargo.toml `=` + committed Cargo.lock):** tree-sitter =0.26.13, tree-sitter-c =0.24.2 (link test proves ABI pair parses a minimal C TU with zero ERROR nodes), serde =1.0.229, serde_json =1.0.151 (default features only), clap =4.6.1 (4.6.6 unavailable via local index at add time — locked 4.6.1 is fine; revisit opportunistically), petgraph =0.8.3, anyhow =1.0.104, thiserror =2.0.20.
-- **Byte-determinism defense-in-depth:** exact serde_json pin + CI grep on Cargo.lock for `preserve_order` + behavioral tests (sorted-key serialization regardless of insertion order).
-- **CI:** fmt --check; clippy `-D warnings` **--locked**; test **--locked**; cargo-deny license audit (deny.toml allowlist bans GPL-family per §6 criterion 4; `LicenseRef-Proprietary` declared for perfpal itself so the audit stays honest). Toolchain pinned via rust-toolchain.toml = 1.92.0 (+ `rust-version = "1.92.0"` in Cargo.toml) — satisfies §6 "stable Rust pinned in CI" literally.
-- **Fixture-IR harness:** tests/fixtures/ir/ corpus (README: `<RULE-ID>__<scenario>.json` naming, ParseHealth fields exercisable parser-free) + tests/common/mod.rs loader/determinism helpers + smoke tests; fixtures/metrics/ and golden/report/ staged as placeholders.
+- **Two fixer waves + one review-fix wave** built the slice: Wave 1 = ir/scanner/backend/analyzer+ALLOC-001; Wave 2 = schema/aggregator/writer/cli; Wave 3 = reviewer fixes.
+- **Schema canonical artifact** lives at `src/schema/metrics.schema.v1.0.json` (embedded via `include_str!`); docs copy kept + byte-equality drift test (founder-approved plan addition).
+- **P1 report dir = metrics.json + bundled schema only; `charts/` created empty; report.md/charts land in P4** via writer's generic `Artifact {rel_path, bytes}` map (no signature change needed).
+- **Exit-code mapping:** clap parse errors → exit 1 (usage), overriding clap's default 2 — modules.md §8.2 reserves 2 for output errors. Panic → 3 via catch_unwind.
+- **is_innermost semantics (review M2 resolution):** nearest enclosing loop exists AND that loop nests no other loop anywhere in its body; events outside loops always false. Matches ir-v1 §3.3 and fixture corpus.
+- **statement_role (M3):** compound_statement transparent when it IS the loop's direct body child — braced `for(…){ foo(); }` is Primary; deeper compounds still bury/guard.
+- **Single-file targets (M1):** rel path = file name ("main.c"); include-resolution root anchors at the file's parent directory.
+- **ALLOC_WRAPPER_PATTERN_ID** shared constant lives in `src/ir/mod.rs` (the seam both backend and analyzer may import).
+- **Unreadable root target dir → usage error exit 1**; nested subdir read failures stay silent-continue (partial discovery is data; documented).
+- **Serializer:** `serde_json::to_string_pretty`; sorted map keys (preserve_order OFF), declaration-order structs.
+- **Wave-1 deviations accepted by reviewer as sound:** IncludeEdge.to_path raw-text-then-resolver-rewrite; macro recognizer in backend (needs preproc_arg source text); wrapper-macro USE sites fire ALLOC-001 capped MEDIUM+macro_suspect; loop-header expressions count toward in_loop_depth.
 
 ## Reviews
-- @requirements-reviewer: **CHANGES_REQUESTED → resolved.** All 7 P0 requirements met; its two open items were the EOL ritual itself (commit + state files — pending founder approval by design); one real nit fixed (stale intra-doc link in backends/mod.rs).
-- @reviewer: **SHIP-WITH-FIXES, zero MAJOR.** Applied: `--locked` on CI clippy/test (lockfile = pin enforcement), toolchain pin file, `rust-version`, doc-mapping note. **Rejected with rationale:** gitignore state/ (§7 says never *shipped*, not never committed; AGENTS.md mandates committing state files — every prior session did). Deferred to P6: Actions SHA-pinning NIT.
+- @requirements-reviewer: **APPROVED.** Every P1 clause + founder-approved addition PRESENT with evidence; no material scope creep (extraction emits all event types — defensible single-pass-walker choice, flagged for transparency only).
+- @reviewer: **CHANGES_REQUESTED → all fixed.** MAJORs: M1 single-file scan ENOTDIR garbage; M2 is_innermost own-subtree bug; M3 statement_role Nested for braced bodies. MINORs fixed: m4 CRLF span off-by-one, m5 multi-declarator globals undercount, m8 crash-window doc, m9 unreadable root dir exit code, m10 magic-string dedup. Each fix has a regression test. Reviewer independently validated emitted metrics.json against the Draft 2020-12 schema with jsonschema — PASS.
+- **Deferred with tracking:** m6 unresolved-include visibility in graphs (lands with ARCH-001/P2), m7 concurrent-run staging-dir guard + n11–n14 nits (P6 hardening).
 
 ## Risks
-- clap locked at 4.6.1 because the local crates.io index lagged clap_derive 4.6.4; harmless now, but if a future dep demands clap ≥4.6.6 the index/cache must be refreshed first.
-- tree-sitter-c C99 grammar vs C11/C17 ERROR-rate risk unchanged; link test now guards the baseline.
-- Hand-rolled DAG layout quality unproven (unchanged, P4 concern).
+- cargo NOT on PATH in fresh shells (`rustup --no-modify-path`): prefix commands with `export PATH="$HOME/.cargo/bin:$PATH"`.
+- Writer rename-aside-then-swap has an inherent crash window between the two renames (previous report lost until next successful run) — documented in code; recovery-on-next-run only.
+- Concurrent perfpal runs can sweep each other's staging dirs (single-process model assumed; guard deferred to P6).
+- Cognitive complexity is a SonarSource-style approximation (else-if chains not specially weighted) — thresholds remain catalog-owned.
+- tree-sitter-c C99 grammar vs C11/C17 ERROR-rate risk unchanged; ParseHealth downgrade hook covers it.
+- clap locked at 4.6.1 (local index lagged 4.6.4+ at pin time); revisit opportunistically.
 
 ## Blockers
 - None.
 
 ## Next Actions
-1. Founder approves commit → fresh session (`/new`) starts `mvp-implementation` **P1 vertical slice**: ir types (IR v1 records/events/spans/ParseHealth), scanner backend (lexicographic discovery, dot-dir skip, no symlink follow, span ±1 conversion, quoted-include resolution, MacroEvent recognizer, ParseHealth capture), analyzer registry + ALLOC-001 end-to-end, schema serializer + embedded JSON Schema byte-copy, aggregator minimal assembly, writer atomic swap + safety guard, cli flags/exit codes 0/1/2/3, span round-trip unit tests → first end-to-end metrics.json from a sample C repo. Resume with: plan mvp-implementation, commit \<P0 hash\>.
+1. Founder approves commit → fresh session (`/new`) starts `mvp-implementation` **P2 Tier 1 wave A**: ALLOC-002, STR-001, STR-002, STR-003, LOOP-001, LOOP-003, CALL-001 — each a pure IR-view function, parser-free tested against fixture IR, ParseHealth gating + downgrade hooks applied, ascending rule_id execution order. Resume with: plan mvp-implementation, commit \<P1 hash\>.
+2. P2 implementer notes: LOOP-003 depends on the FIXED statement_role semantics; LOOP-004/006/008 (P3) depend on the FIXED is_innermost; LOOP-005 wants multi-declarator global capture (fixed in m5). m6 (unresolved includes visible in graphs) rides with ARCH-001.
 
 ## Uncommitted Files (pending founder-approved commit)
-- `Cargo.toml`, `Cargo.lock`, `deny.toml`, `rust-toolchain.toml`, `.gitignore`
-- `.github/workflows/ci.yml`
-- `src/lib.rs`, `src/main.rs`, `src/{cli,scanner,ir,analyzer,aggregator,schema,reporter,charts,writer}/mod.rs`, `src/scanner/backends/mod.rs`, `src/scanner/backends/tree_sitter_c/mod.rs`
-- `tests/common/mod.rs`, `tests/determinism_guard.rs`, `tests/harness_smoke.rs`, `tests/fixtures/ir/{README.md,sample-empty.json}`, `tests/fixtures/metrics/.gitkeep`, `tests/golden/report/.gitkeep`
+- Modified: `src/{ir,scanner,analyzer,aggregator,schema,writer,cli}/mod.rs`, `src/scanner/backends/tree_sitter_c/mod.rs`, `tests/common/mod.rs`
+- New: `src/analyzer/finding.rs`, `src/schema/metrics.schema.v1.0.json`, `tests/{alloc001_fixtures,analyzer_registry,scanner_pipeline,pipeline_e2e}.rs`, `tests/fixtures/ir/PERF-C-ALLOC-001__*.json` (×4), `tests/fixtures/e2e/src/{main.c,util.h}`
 - EOL ritual updates: `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`, `CHANGELOG.md`

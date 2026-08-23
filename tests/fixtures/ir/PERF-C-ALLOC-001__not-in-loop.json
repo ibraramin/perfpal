@@ -1,0 +1,53 @@
+[
+  {
+    "file": {
+      "path": "src/init.c",
+      "language": "c",
+      "loc": {"code": 5, "comment": 0, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/init.c#init_buffer#4:5",
+          "name": "init_buffer",
+          "path": "src/init.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 8, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int n"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 1,
+          "length_lines": 5
+        },
+        "calls": [
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "n"}],
+            "statement_role": "unknown",
+            "conditional_guarded": false,
+            "span": {"start_line": 6, "start_col": 18, "end_line": 6, "end_col": 28},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]
