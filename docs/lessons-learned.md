@@ -59,3 +59,12 @@
 - **Mitigation so far:** ParseHealth/error-region machinery is first-class in IR v1 and metrics.json v1; findings overlapping error regions are capped at MEDIUM confidence by schema `if/then`.
 - **Fallback:** During implementation, measure ERROR-node rates on real AI-generated corpora early; if high, evaluate grammar upgrade (pinned-version policy, ADR-0001 guardrail 5) before blaming heuristics.
 - **Tags:** parsing, tree-sitter, monitoring
+
+### LL-007 — Whole-file write targeted the wrong path (CHANGELOG overwritten)
+- **When:** session 7 · EOL ritual
+- **Category:** process / file operations
+- **What happened:** While batching end-of-session writes, a full-file `write` carrying activeContext content was aimed at `CHANGELOG.md`, silently replacing 24 lines of changelog history. Caught on the next tool result and restored verbatim from an earlier read plus the intended additions; net damage zero.
+- **Root cause:** Multiple whole-file writes prepared in one batch → path/content pairing not re-checked; overwrite semantics mean a wrong path destroys history with no warning.
+- **Fix applied:** Restored CHANGELOG from the session's earlier read + appended new entries; verified via `git diff --stat` (exactly the intended insertions).
+- **Fallback:** Never batch multiple whole-file writes; one write per call with an explicit path↔content check. Prefer `edit` (anchored) over `write` (clobbering) for existing files. Before any whole-file overwrite of a tracked file, confirm its current content was read this session so recovery is possible.
+- **Tags:** process, file-operations, data-loss

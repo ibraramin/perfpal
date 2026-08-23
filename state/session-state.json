@@ -1,6 +1,6 @@
 {
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "executing mvp-architecture (steps 1–4/7 done; step 4 output contract dual-reviewed, all 18 findings applied; next: step 5 ADR-0002 visualization)",
+  "current_phase": "executing mvp-architecture (steps 1–5/7 done; step 5 ADR-0002 dual-reviewed, all 11 findings applied; next: step 6 module architecture)",
   "decisions": [
     "Project directory initialized at /home/ibrar/Perfpal.",
     "State skeleton created following AGENTS.md session lifecycle rules.",
@@ -45,7 +45,13 @@
     "LESSONS-LEARNED LOG ESTABLISHED (session 5): docs/lessons-learned.md — append-only mistake/issue register (LL-NNN entries with category/root-cause/fallback/tags), seeded with 6 entries from sessions 1–5; rule: add an entry whenever a mistake costs more than a few minutes or reveals a systemic gap; consult before similar work.",
     "OUTPUT-CONTRACT v1 DEFINED (session 6): docs/report/output-contract.md — perfpal-report/ layout = metrics.json + bundled schema byte-copy (metrics.schema.v<MAJOR>.<MINOR>.json, full version always, no elided .0) + report.md + charts/; atomic regeneration via rename-aside-then-swap (POSIX rename(2) can't overwrite non-empty dir) + safety guard refusing to replace non-report directories; single version marker = metrics.json schema_version governs the whole directory; chart naming kebab-case [a-z0-9-], no timestamps/counters; chart SET deferred to ADR-0002.",
     "REPORT.MD TEMPLATE (session 6): deterministic sections provenance→parse-health→stats→findings→architecture→appendices A/B; findings sorted severity→confidence(HIGH→LOW)→rule_id→path→start_line→start_col (TOTAL order); every finding cited by exact finding_id for mechanical cross-ref; optional schema fields render n/a or omit their clause; determinism presupposes files[] sorted by path (scanner responsibility); Appendix A descriptions come from reporter's built-in catalog (frozen v1).",
-    "STEP-4 DUAL REVIEW PASSED (session 6): @requirements-reviewer APPROVED (all verbatim requirements + founder additions met, no scope creep, zero implementation code); @reviewer SHIP-WITH-FIXES — all 18 findings applied (MAJOR: findings sort made total via span.start_col tie-break; MINORs: built-in-catalog caveat, optional-field fallback rules, top-10 pinning + tie-break, root_path provenance-only carve-out, markdown-injection escaping, charts/ always created possibly-empty, $id-vs-filename note, schema-discovery mapping rule, stale-temp cleanup, rename mechanism note)."
+    "STEP-4 DUAL REVIEW PASSED (session 6): @requirements-reviewer APPROVED (all verbatim requirements + founder additions met, no scope creep, zero implementation code); @reviewer SHIP-WITH-FIXES — all 18 findings applied (MAJOR: findings sort made total via span.start_col tie-break; MINORs: built-in-catalog caveat, optional-field fallback rules, top-10 pinning + tie-break, root_path provenance-only carve-out, markdown-injection escaping, charts/ always created possibly-empty, $id-vs-filename note, schema-discovery mapping rule, stale-temp cleanup, rename mechanism note).",
+    "ADR-0002 ACCEPTED (founder-approved, session 7): visualization = hand-rolled zero-dependency deterministic SVG emitter; NO external charting/graph-layout/plotting library enters the MVP core. Byte-determinism by construction; self-contained CLI preserved; implementation-language fork (step 6) stays fully open.",
+    "CHART SET v1 FROZEN (ADR-0002): include-graph.svg (file-level DAG from graphs.include_graph, resolved internal edges only), component-coupling.svg (components×components matrix heatmap; call edges folded in with distinct LOW-confidence styling — founder chose folding over a standalone call-graph chart), hot-components.svg (bars ∝ finding_density in rank order). Adding a chart = minor bump; renaming/removing = major.",
+    "FOUNDER Q&A (session 7): (a) own emitter chosen over Graphviz-invoke and hybrid; (b) call-graph folded into coupling matrix, no standalone chart; (c) optional .dot export deferred post-MVP as reversal trigger (madge/deptrac pattern).",
+    "LAYOUT POLICY (ADR-0002): simplified deterministic layered layout — topological layering from sources, barycenter within-layer ordering with sorted tie-breaks, exactly 3 passes, half-up fixed-point rounding; deterministic cycle-breaking (sort edges by (from,to), drop lowest-sorted cycle-closing edge, drop self-loops); full Sugiyama crossing minimization rejected as YAGNI (post-MVP quality upgrade inside same emitter).",
+    "LICENSE AUDIT VERIFIED (session 7, @librarian + @reviewer primary-source checks): no viable chart option is GPL-family; Graphviz relicensing CPL-1.0→EPL-2.0 in progress since 2023 (official page still listed CPL-1.0 at verification time) — invocation would be legal either way but rejected on footprint+determinism; OGDF/igraph GPL-family banned outright; matplotlib embeds timestamps+uuid4 IDs unless configured away (#23693); C has no mature non-copyleft graph-layout library → any library choice would have constrained the step-6 language fork.",
+    "STEP-5 DUAL REVIEW PASSED (session 7): @requirements-reviewer APPROVED (all verbatim requirements met incl. multi-option comparison, dependency-graph+coupling coverage, easiest-to-develop justification, chart-set finalization, zero implementation code); @reviewer SHIP-WITH-FIXES — all 11 findings applied (MAJOR: output-contract §2 tree diagram regression fixed; deterministic cycle-breaking rule added to layout policy; MINORs: components sort order (rank,path_prefix), barycenter pass-count+rounding pinned, Graphviz license date hedged, rust-sugiyama URL corrected to paddison/, empty-input emission rule (chart iff source present+non-empty), byte-diffability claim scoped to charts only; NITs: stats.distributions marked reserved-for-future, C-lib claim softened to 'no mature', resolved-angle parenthetical)."
   ],
   "open_risks": [
     "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
@@ -54,12 +60,13 @@
     "Static analysis heuristics are approximate, not ground truth; must frame outputs as 'optimization candidates' to avoid LLM over-optimization on noisy signals.",
     "No formal success criteria = harder to define 'done' for MVP; relying on acceptance criteria in spec instead.",
     "tree-sitter-c grammar is C99-based; C11/C17 constructs (_Generic, _Static_assert, _Atomic) common in AI-generated C may raise ERROR-node rates — monitor during heuristic catalog work (step 2).",
-    "Differentiation claims ('not found in surveyed tools') rest on one librarian survey pass; a deeper tool-source audit would harden them before external messaging."
+    "Differentiation claims ('not found in surveyed tools') rest on one librarian survey pass; a deeper tool-source audit would harden them before external messaging.",
+    "Hand-rolled DAG layout quality is unproven against real-world include graphs; MVP bar is 'legible, not pretty' (fixed char-width labels, barycenter ordering, node caps) until a post-MVP Sugiyama upgrade inside the same emitter."
   ],
   "blocked_by": [],
   "next_actions": [
-    "Start fresh session (/new); resume with plan mvp-architecture step 5: ADR-0002 visualization approach — compare no-copyleft static chart options (SVG/HTML generation libs) for dependency-graph and coupling/bottleneck maps; choose easiest-to-develop option satisfying pillar 1b; finalize the chart set per output-contract §3 (naming/stability rules already fixed there)",
-    "Step 6 after 5: module architecture doc — scanner → analyzer → reporter pipeline, plugin boundaries, extension points for runtime-profile ingestion + additional languages; CLI surface (stdout/exit codes/flags) belongs there per output-contract §6",
+    "Start fresh session (/new); resume with plan mvp-architecture step 6: module architecture doc — scanner → analyzer → reporter pipeline, plugin boundaries, explicit extension points for runtime-profile ingestion (perf/valgrind/cProfile) and additional languages (C++, Python next); CLI surface (stdout text, exit codes, flag names) belongs here per output-contract §6",
+    "Step 7 after 6: fold all artifacts into state files + handoff + CHANGELOG, request founder commit approval, close out plan mvp-architecture",
     "Tier 2 heuristics are in MVP scope but build-ordered after Tier 1; revisit effort budget during implementation planning"
   ],
   "artifacts": [
@@ -82,7 +89,8 @@
     "docs/schema/metrics.schema.v1.json (metrics.json schema v1.0, Draft 2020-12, dual-reviewed)",
     "docs/schema/metrics-json-v1.md (design rationale + versioning/stability policy)",
     "docs/lessons-learned.md (Lessons Learned Log — seeded with LL-001..006 from sessions 1–5)",
-    "docs/report/output-contract.md (perfpal-report/ output contract v1 — dual-reviewed, all 18 findings applied)"
+    "docs/report/output-contract.md (perfpal-report/ output contract v1 — dual-reviewed, all 18 findings applied)",
+    "docs/adr/ADR-0002-visualization.md (Accepted, founder-approved — hand-rolled deterministic SVG emitter + chart set v1; dual-reviewed, all 11 findings applied)"
   ],
-  "last_updated": "2026-08-23T13:25:34Z"
+  "last_updated": "2026-08-23T15:32:07Z"
 }

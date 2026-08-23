@@ -23,7 +23,7 @@ perfpal-report/
 ├── metrics.json              # raw machine-readable data (schema v1.0)
 ├── metrics.schema.v1.0.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report
-└── charts/                   # static visualizations (set finalized by ADR-0002)
+└── charts/                   # static visualizations (set defined by ADR-0002)
     └── <chart-name>.svg      # e.g. include-graph.svg — naming rules in §3
 ```
 
@@ -44,9 +44,9 @@ Layout rules:
 | Human report | `report.md` | Fixed name. |
 | Charts | `charts/<name>.svg` | `<name>` matches `[a-z0-9]+(-[a-z0-9]+)*` (kebab-case ASCII). No timestamps, counters, or input-derived suffixes — the same chart has the same name across runs so directories can be diffed. |
 
-Chart-set rules (binding until/unless ADR-0002 amends them):
+Chart-set rules (binding; chart set defined by [ADR-0002](../adr/ADR-0002-visualization.md)):
 
-- The **set** of charts is owned by ADR-0002 (step 5); this contract fixes only naming and stability semantics.
+- The **set** of charts is owned by [ADR-0002](../adr/ADR-0002-visualization.md); this contract fixes only naming and stability semantics.
 - Chart presence is **best-effort**: the reporter always creates `charts/` (possibly empty on trivial scans); consumers tolerate its absence, and absence is never an error condition. Chart *content* must satisfy Principle 5 too — no embedded timestamps or non-deterministic layout (ADR-0002 owns how).
 - Consumers must **tolerate unknown files** under `charts/` (forward compatibility: minor bumps may add charts).
 

@@ -1,19 +1,19 @@
 # Active Context
 
 ## Current Task
-`mvp-architecture` step 4 CLOSED: `perfpal-report/` output contract (`docs/report/output-contract.md`) written, dual-reviewed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES — all 18 findings applied). Session boundary reached; commit pending founder approval.
+`mvp-architecture` step 5 CLOSED: ADR-0002 visualization approach (`docs/adr/ADR-0002-visualization.md`) written, dual-reviewed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES — all 11 findings applied). Session boundary reached; commit pending founder approval.
 
 ## Recent Decisions
-- Output contract v1: layout = metrics.json + bundled schema byte-copy (`metrics.schema.v<MAJOR>.<MINOR>.json`) + report.md + charts/; atomic regeneration (rename-aside-then-swap) + safety guard against replacing non-report directories.
-- Single version marker: metrics.json `schema_version` governs the whole report dir; chart naming fixed (kebab-case), chart set deferred to ADR-0002.
-- report.md template: deterministic sections, total finding sort order (severity→confidence→rule_id→path→start_line→start_col), exact `finding_id` cross-referencing, optional-field fallbacks.
+- ADR-0002 ACCEPTED: hand-rolled zero-dependency deterministic SVG emitter; no external chart/graph libs in MVP core; byte-determinism by construction; implementation language stays open for step 6.
+- Chart set v1 frozen: `include-graph.svg` (file DAG), `component-coupling.svg` (matrix heatmap, call edges folded in with LOW-confidence styling), `hot-components.svg` (bars ∝ finding_density). `.dot` export deferred post-MVP (reversal trigger).
+- Layout: simplified deterministic layered layout + barycenter (3 passes, fixed-point rounding); deterministic cycle-breaking; full Sugiyama rejected YAGNI.
 
 ## In Progress
 - Nothing — task boundary reached.
 
 ## Next
-- Fresh session (`/new`) → plan `mvp-architecture` step 5: ADR-0002 visualization approach (no-copyleft static chart tech; finalize chart set per output-contract §3).
-- Step 6: module architecture doc (scanner → analyzer → reporter pipeline; CLI surface).
+- Fresh session (`/new`) → plan `mvp-architecture` step 6: module architecture doc (scanner → analyzer → reporter pipeline; plugin boundaries; runtime-profile + new-language extension points; CLI surface).
+- Step 7: fold artifacts into state files, close out plan.
 
 ## Blockers
 - None.
