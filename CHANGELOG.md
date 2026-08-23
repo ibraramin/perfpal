@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Lessons Learned Log (`docs/lessons-learned.md`): append-only mistake/issue register with fallback guidance per entry; seeded with 6 entries from sessions 1–5 (edit-anchor misplacement, standalone `$def` validation, compressed-notation greppability, closed-enum vs forward-compat tension, bootstrap timeout seams, tree-sitter C11/C17 watch item).
 - IR v1 spec (`docs/architecture/ir-v1.md`): parser-agnostic event-stream representation keyed `(path, name, span)` per ADR-0001 — FileRecord/ParseHealth/IncludeEdge/GlobalVar/StructDef/MacroEvent + FunctionRecord + typed events (Call/Assignment/BinaryOp/Comparison/AccessChain/LoopNode) with shared Shape descriptor; coverage table maps all 23 catalog heuristics to records; confidence-downgrade hooks; extension seams for semantic/dynamic tiers.
 - metrics.json schema v1.0 (`docs/schema/metrics.schema.v1.json`, JSON Schema Draft 2020-12): LLM-agnostic, versioned output contract — mandatory `confidence`+`severity` per finding, resolver-tier tags, macro/error downgrade flags enforced via if/then, deterministic `finding_id` (`rule:path:line:col`, right-split), include/call graphs, hot-component aggregation.
 - metrics.json v1 design & stability doc (`docs/schema/metrics-json-v1.md`): versioning policy (minor = additive incl. new rule_ids via open pattern; major = closed-enum changes, required-field additions, span/identity changes), enum semantics, worked example, LLM-consumption guidance.

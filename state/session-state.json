@@ -41,7 +41,8 @@
     "METRICS.JSON SCHEMA v1.0 DEFINED (session 5): docs/schema/metrics.schema.v1.json (Draft 2020-12) + design doc docs/schema/metrics-json-v1.md — LLM-agnostic; mandatory confidence+severity+resolver_tier+macro_suspect+error_node_overlap+message per finding; deterministic finding_id = rule:path:line:col (parse right-to-left); sections scan/files/stats/findings/graphs(include+call)/components; downgrade caps enforced via if/then; call_graph edge confidence const LOW; C-only language consts.",
     "SCHEMA VERSIONING POLICY (session 5): minor bumps = additive only (rule_id is an OPEN PATTERN, not closed enum — new heuristics/languages never break strict validation; explicit 23-ID list kept in description); major bumps = closed-enum changes (confidence/severity/tier), required-field additions, threshold type widening, span/identity changes; strict-validation caveat documented (older-minor validators may reject newer reports).",
     "STEP-3 DUAL REVIEW PASSED (session 5): @requirements-reviewer APPROVED (all verbatim requirements met, no scope creep); @reviewer SHIP-WITH-FIXES — all 18 findings applied (3 MAJOR: TYPE-001 unimplementable → FunctionRecord.param_types added; doc example threshold:null invalid → omit-if-absent convention; closed rule_id enum vs forward-compat tension → pattern-based rule_id; plus MINOR/NIT: if/then cap enforcement, span end-inclusive convention, LOOP-003 statement_role, STR-001 coverage row, finding_id collision fix via column, optional-section markers, $id naming alignment).",
-    "Step-3 mechanical verification (session 5): 8 checks green — schema meta-valid Draft 2020-12; full sample instance validates; negative tests (macro_suspect+HIGH rejected; call_graph non-LOW rejected); §6 worked example validates; all 23 IDs explicitly documented + pattern accepts future-language IDs; span/language conventions present."
+    "Step-3 mechanical verification (session 5): 8 checks green — schema meta-valid Draft 2020-12; full sample instance validates; negative tests (macro_suspect+HIGH rejected; call_graph non-LOW rejected); §6 worked example validates; all 23 IDs explicitly documented + pattern accepts future-language IDs; span/language conventions present.",
+    "LESSONS-LEARNED LOG ESTABLISHED (session 5): docs/lessons-learned.md — append-only mistake/issue register (LL-NNN entries with category/root-cause/fallback/tags), seeded with 6 entries from sessions 1–5; rule: add an entry whenever a mistake costs more than a few minutes or reveals a systemic gap; consult before similar work."
   ],
   "open_risks": [
     "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
@@ -76,7 +77,8 @@
     "docs/heuristics/catalog-v1.md (v1 — founder-signed-off: Tier 1 MVP set + Tier 2 in scope)",
     "docs/architecture/ir-v1.md (IR v1 — event-stream parser-agnostic representation, dual-reviewed)",
     "docs/schema/metrics.schema.v1.json (metrics.json schema v1.0, Draft 2020-12, dual-reviewed)",
-    "docs/schema/metrics-json-v1.md (design rationale + versioning/stability policy)"
+    "docs/schema/metrics-json-v1.md (design rationale + versioning/stability policy)",
+    "docs/lessons-learned.md (Lessons Learned Log — seeded with LL-001..006 from sessions 1–5)"
   ],
-  "last_updated": "2026-08-23T12:56:29Z"
+  "last_updated": "2026-08-23T13:20:00Z"
 }
