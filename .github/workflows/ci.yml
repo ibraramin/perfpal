@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Byte-determinism guard — serde_json preserve_order must stay OFF
+        run: |
+          if grep -n 'preserve_order' Cargo.lock; then
+            echo "::error::serde_json preserve_order feature leaked into the dependency graph (modules.md §6 row 3)"
+            exit 1
+          fi
+
+      - name: fmt
+        run: cargo fmt --all -- --check
+
+      - name: clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: test
+        run: cargo test --locked
+
+  license-audit:
+    # Standing obligation (modules.md §6 criterion 4): no copyleft (GPL-family)
+    # anywhere in the dependency closure. Runs on every push/PR.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check licenses

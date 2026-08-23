@@ -1,32 +1,36 @@
 # Handoff — Latest
 
 ## Objective
-Close the implementation-planning fork: decide implementation language per modules.md §6 criteria and set build order (Tier 1 before Tier 2). **DONE — Rust resolved (fold-in in modules.md §6), master plan `mvp-implementation` created (P0–P6), dual review passed, all 4 reviewer findings applied.**
+Execute plan `mvp-implementation` phase P0: Cargo crate scaffold per modules.md §7 with CI (fmt/clippy/test/license-audit), parser-free fixture-IR harness, exact version pinning (tree-sitter/tree-sitter-c), serde_json `preserve_order` OFF guard. **DONE — scaffold complete, dual-review passed, all fixes applied, validation fully green.**
 
 ## Phase
-executing mvp-implementation — planning complete; next session starts P0 scaffold
+executing mvp-implementation — P0 COMPLETE; next session starts **P1 vertical slice**
 
 ## Key Decisions
-- **LANGUAGE = RUST** (founder-approved 2026-08-23): passes all six §6 criteria. Verified facts: official org-published crates `tree-sitter` v0.26.x + `tree-sitter-c` v0.24.x (MIT); Go rejected (official go-tree-sitter is cgo-bound → CGO_ENABLED=0 impossible, per-target C cross-toolchain matrix; smacker stale >2yrs); C rejected (criterion 6 dev velocity); Python stays ruled out (criterion 1, no frozen-binary exception sought). Fold-in recorded in modules.md §6 Outcome table — no standalone ADR (founder preference). Core crates audited MIT OR Apache-2.0.
-- **BUILD ORDER = master plan `mvp-implementation`** (linked perfpal-core-spec): P0 scaffold → P1 vertical slice (ALLOC-001 end-to-end + span round-trip tests) → P2 Tier 1 wave A (7 function-local C1: ALLOC-002, STR-001/002/003, LOOP-001/003, CALL-001) → P3 wave B context-dependent shapes (ALLOC-003, LOOP-002, LOOP-004, CALL-002) → P4 architecture wave (ARCH-001→ARCH-003→ARCH-002 LAST; full aggregator sort orders + determinism tests; charts; reporter) → P5 Tier 2 (MEM-002 first, then TYPE-001/002, MEM-001, LOOP-005–008) → P6 hardening/release (musl static x86_64/aarch64, macOS, MSVC). One phase per session; dual-review gate between phases.
-- **Standing obligations pinned at scaffold:** serde_json `preserve_order` OFF (byte-determinism guard), dependency license audit in CI (§6 criterion 4), tree-sitter version pinning (ADR-0001 G5).
+- **P0 scaffold shipped:** nine contract-stubbed modules (`cli`, `scanner`+`backends/tree_sitter_c`, `ir`, `analyzer`, `aggregator`, `schema`, `reporter`, `charts`, `writer`) each citing its §3.x contract; §7's hyphenated `tree-sitter-c` rendered as Rust module `tree_sitter_c` (mapping noted in backends/mod.rs).
+- **Exact pins (Cargo.toml `=` + committed Cargo.lock):** tree-sitter =0.26.13, tree-sitter-c =0.24.2 (link test proves ABI pair parses a minimal C TU with zero ERROR nodes), serde =1.0.229, serde_json =1.0.151 (default features only), clap =4.6.1 (4.6.6 unavailable via local index at add time — locked 4.6.1 is fine; revisit opportunistically), petgraph =0.8.3, anyhow =1.0.104, thiserror =2.0.20.
+- **Byte-determinism defense-in-depth:** exact serde_json pin + CI grep on Cargo.lock for `preserve_order` + behavioral tests (sorted-key serialization regardless of insertion order).
+- **CI:** fmt --check; clippy `-D warnings` **--locked**; test **--locked**; cargo-deny license audit (deny.toml allowlist bans GPL-family per §6 criterion 4; `LicenseRef-Proprietary` declared for perfpal itself so the audit stays honest). Toolchain pinned via rust-toolchain.toml = 1.92.0 (+ `rust-version = "1.92.0"` in Cargo.toml) — satisfies §6 "stable Rust pinned in CI" literally.
+- **Fixture-IR harness:** tests/fixtures/ir/ corpus (README: `<RULE-ID>__<scenario>.json` naming, ParseHealth fields exercisable parser-free) + tests/common/mod.rs loader/determinism helpers + smoke tests; fixtures/metrics/ and golden/report/ staged as placeholders.
 
 ## Reviews
-- @requirements-reviewer: **APPROVED** — both deliverables verbatim (language decided per §6 criteria; build order Tier 1 before Tier 2); zero implementation code; no scope creep.
-- @reviewer: **SHIP-WITH-FIXES** — all 4 applied (MINORs: P3 relabeled from "cost C2" to "context-dependent shapes" since LOOP-004/CALL-002 are catalog C1; span round-trip + aggregator sort-order determinism tests explicitly scheduled P1/P4; NITs: §7 header "(language-neutral)"→"(Rust)" + Cargo.toml/Cargo.lock added to tree; preserve_order-OFF guard noted in §6 row 3).
+- @requirements-reviewer: **CHANGES_REQUESTED → resolved.** All 7 P0 requirements met; its two open items were the EOL ritual itself (commit + state files — pending founder approval by design); one real nit fixed (stale intra-doc link in backends/mod.rs).
+- @reviewer: **SHIP-WITH-FIXES, zero MAJOR.** Applied: `--locked` on CI clippy/test (lockfile = pin enforcement), toolchain pin file, `rust-version`, doc-mapping note. **Rejected with rationale:** gitignore state/ (§7 says never *shipped*, not never committed; AGENTS.md mandates committing state files — every prior session did). Deferred to P6: Actions SHA-pinning NIT.
 
 ## Risks
-- tree-sitter-c C99 grammar vs C11/C17 constructs → ERROR-node monitoring carries into implementation (unchanged).
-- Hand-rolled DAG layout quality unproven on real include graphs; MVP bar "legible not pretty" (unchanged).
-- Cross-file coupling LOW-confidence until semantic resolver tier exists (unchanged).
+- clap locked at 4.6.1 because the local crates.io index lagged clap_derive 4.6.4; harmless now, but if a future dep demands clap ≥4.6.6 the index/cache must be refreshed first.
+- tree-sitter-c C99 grammar vs C11/C17 ERROR-rate risk unchanged; link test now guards the baseline.
+- Hand-rolled DAG layout quality unproven (unchanged, P4 concern).
 
 ## Blockers
 - None.
 
 ## Next Actions
-1. Founder approves commit → fresh session (`/new`) starts `mvp-implementation` **P0 scaffold** (Cargo crate per §7, CI incl. license audit, fixture-IR harness, version/feature pinning). Resume with: plan mvp-implementation, commit \<this hash\>.
+1. Founder approves commit → fresh session (`/new`) starts `mvp-implementation` **P1 vertical slice**: ir types (IR v1 records/events/spans/ParseHealth), scanner backend (lexicographic discovery, dot-dir skip, no symlink follow, span ±1 conversion, quoted-include resolution, MacroEvent recognizer, ParseHealth capture), analyzer registry + ALLOC-001 end-to-end, schema serializer + embedded JSON Schema byte-copy, aggregator minimal assembly, writer atomic swap + safety guard, cli flags/exit codes 0/1/2/3, span round-trip unit tests → first end-to-end metrics.json from a sample C repo. Resume with: plan mvp-implementation, commit \<P0 hash\>.
 
-## Uncommitted Files
-- `docs/architecture/modules.md` (§6 fold-in RESOLVED=Rust + §7 Rust crate layout)
-- `docs/plans/mvp-implementation.md` (new, toolkit-managed)
-- `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`, `CHANGELOG.md` (EOL ritual updates)
+## Uncommitted Files (pending founder-approved commit)
+- `Cargo.toml`, `Cargo.lock`, `deny.toml`, `rust-toolchain.toml`, `.gitignore`
+- `.github/workflows/ci.yml`
+- `src/lib.rs`, `src/main.rs`, `src/{cli,scanner,ir,analyzer,aggregator,schema,reporter,charts,writer}/mod.rs`, `src/scanner/backends/mod.rs`, `src/scanner/backends/tree_sitter_c/mod.rs`
+- `tests/common/mod.rs`, `tests/determinism_guard.rs`, `tests/harness_smoke.rs`, `tests/fixtures/ir/{README.md,sample-empty.json}`, `tests/fixtures/metrics/.gitkeep`, `tests/golden/report/.gitkeep`
+- EOL ritual updates: `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`, `CHANGELOG.md`

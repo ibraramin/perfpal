@@ -1,0 +1,7 @@
+{
+  "_comment": "Placeholder fixture proving the harness mechanics. Real IR v1 documents (ir-v1.md §3 shapes) land here in P1; heuristic fixtures per catalog ID arrive with P2+. Keys are intentionally unsorted to exercise the determinism guard.",
+  "schema_version": "1.0",
+  "files": [],
+  "zebra_last": true,
+  "alpha_first": 1
+}

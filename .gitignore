@@ -1,0 +1,9 @@
+# Rust build artifacts
+/target
+
+# NOTE: Cargo.lock is intentionally TRACKED (exact-pin reproducibility,
+# ADR-0001 G5). Do not add it here.
+
+# Editor/OS noise
+*.swp
+.DS_Store

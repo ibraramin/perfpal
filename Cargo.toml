@@ -1,0 +1,25 @@
+[package]
+name = "perfpal"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92.0" # validated floor; pinned via rust-toolchain.toml (modules.md §6)
+description = "Static-analysis CLI that extracts performance-relevant heuristics from C codebases and emits LLM-consumable metrics."
+license = "LicenseRef-Proprietary"
+publish = false
+# License: source-available proprietary (free to use; modification/redistribution
+# require explicit founder permission). Dependency policy: no copyleft (GPL-family)
+# anywhere in the dependency closure — enforced by CI (`cargo deny check licenses`).
+
+[dependencies]
+anyhow = "=1.0.104"
+clap = { version = "=4.6.1", features = ["derive"] }
+petgraph = "=0.8.3"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151" # default features only; `preserve_order` MUST stay OFF (byte-determinism guard, modules.md §6 row 3)
+thiserror = "=2.0.20"
+tree-sitter = "=0.26.13" # ADR-0001 G5: exact pins for parser runtime + grammar
+tree-sitter-c = "=0.24.2"
+
+[profile.release]
+# Deterministic, reproducible release artifacts (P6 hardening will extend this).
+strip = true

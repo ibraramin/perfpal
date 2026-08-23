@@ -1,0 +1,6 @@
+# Toolchain pin — modules.md §6 consequences: "toolchain = stable Rust pinned in CI."
+# Bump deliberately (new patch releases are not auto-adopted).
+[toolchain]
+channel = "1.92.0"
+profile = "minimal"
+components = ["clippy", "rustfmt"]
