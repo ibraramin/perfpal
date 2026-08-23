@@ -1,6 +1,6 @@
 {
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "executing mvp-architecture (steps 1–3/7 done; step 3 IR + metrics.json schema dual-reviewed and mechanically verified; next: step 4 output contract)",
+  "current_phase": "executing mvp-architecture (steps 1–4/7 done; step 4 output contract dual-reviewed, all 18 findings applied; next: step 5 ADR-0002 visualization)",
   "decisions": [
     "Project directory initialized at /home/ibrar/Perfpal.",
     "State skeleton created following AGENTS.md session lifecycle rules.",
@@ -42,7 +42,10 @@
     "SCHEMA VERSIONING POLICY (session 5): minor bumps = additive only (rule_id is an OPEN PATTERN, not closed enum — new heuristics/languages never break strict validation; explicit 23-ID list kept in description); major bumps = closed-enum changes (confidence/severity/tier), required-field additions, threshold type widening, span/identity changes; strict-validation caveat documented (older-minor validators may reject newer reports).",
     "STEP-3 DUAL REVIEW PASSED (session 5): @requirements-reviewer APPROVED (all verbatim requirements met, no scope creep); @reviewer SHIP-WITH-FIXES — all 18 findings applied (3 MAJOR: TYPE-001 unimplementable → FunctionRecord.param_types added; doc example threshold:null invalid → omit-if-absent convention; closed rule_id enum vs forward-compat tension → pattern-based rule_id; plus MINOR/NIT: if/then cap enforcement, span end-inclusive convention, LOOP-003 statement_role, STR-001 coverage row, finding_id collision fix via column, optional-section markers, $id naming alignment).",
     "Step-3 mechanical verification (session 5): 8 checks green — schema meta-valid Draft 2020-12; full sample instance validates; negative tests (macro_suspect+HIGH rejected; call_graph non-LOW rejected); §6 worked example validates; all 23 IDs explicitly documented + pattern accepts future-language IDs; span/language conventions present.",
-    "LESSONS-LEARNED LOG ESTABLISHED (session 5): docs/lessons-learned.md — append-only mistake/issue register (LL-NNN entries with category/root-cause/fallback/tags), seeded with 6 entries from sessions 1–5; rule: add an entry whenever a mistake costs more than a few minutes or reveals a systemic gap; consult before similar work."
+    "LESSONS-LEARNED LOG ESTABLISHED (session 5): docs/lessons-learned.md — append-only mistake/issue register (LL-NNN entries with category/root-cause/fallback/tags), seeded with 6 entries from sessions 1–5; rule: add an entry whenever a mistake costs more than a few minutes or reveals a systemic gap; consult before similar work.",
+    "OUTPUT-CONTRACT v1 DEFINED (session 6): docs/report/output-contract.md — perfpal-report/ layout = metrics.json + bundled schema byte-copy (metrics.schema.v<MAJOR>.<MINOR>.json, full version always, no elided .0) + report.md + charts/; atomic regeneration via rename-aside-then-swap (POSIX rename(2) can't overwrite non-empty dir) + safety guard refusing to replace non-report directories; single version marker = metrics.json schema_version governs the whole directory; chart naming kebab-case [a-z0-9-], no timestamps/counters; chart SET deferred to ADR-0002.",
+    "REPORT.MD TEMPLATE (session 6): deterministic sections provenance→parse-health→stats→findings→architecture→appendices A/B; findings sorted severity→confidence(HIGH→LOW)→rule_id→path→start_line→start_col (TOTAL order); every finding cited by exact finding_id for mechanical cross-ref; optional schema fields render n/a or omit their clause; determinism presupposes files[] sorted by path (scanner responsibility); Appendix A descriptions come from reporter's built-in catalog (frozen v1).",
+    "STEP-4 DUAL REVIEW PASSED (session 6): @requirements-reviewer APPROVED (all verbatim requirements + founder additions met, no scope creep, zero implementation code); @reviewer SHIP-WITH-FIXES — all 18 findings applied (MAJOR: findings sort made total via span.start_col tie-break; MINORs: built-in-catalog caveat, optional-field fallback rules, top-10 pinning + tie-break, root_path provenance-only carve-out, markdown-injection escaping, charts/ always created possibly-empty, $id-vs-filename note, schema-discovery mapping rule, stale-temp cleanup, rename mechanism note)."
   ],
   "open_risks": [
     "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
@@ -55,8 +58,8 @@
   ],
   "blocked_by": [],
   "next_actions": [
-    "Start fresh session (/new); resume with plan mvp-architecture step 4: perfpal-report/ output contract — exact layout (metrics.json per metrics.schema.v1.json, report.md, charts/), file naming, versioning/stability rules, human-readable report template outline",
-    "Steps 5–6 in order: ADR-0002 visualization approach → module architecture doc",
+    "Start fresh session (/new); resume with plan mvp-architecture step 5: ADR-0002 visualization approach — compare no-copyleft static chart options (SVG/HTML generation libs) for dependency-graph and coupling/bottleneck maps; choose easiest-to-develop option satisfying pillar 1b; finalize the chart set per output-contract §3 (naming/stability rules already fixed there)",
+    "Step 6 after 5: module architecture doc — scanner → analyzer → reporter pipeline, plugin boundaries, extension points for runtime-profile ingestion + additional languages; CLI surface (stdout/exit codes/flags) belongs there per output-contract §6",
     "Tier 2 heuristics are in MVP scope but build-ordered after Tier 1; revisit effort budget during implementation planning"
   ],
   "artifacts": [
@@ -78,7 +81,8 @@
     "docs/architecture/ir-v1.md (IR v1 — event-stream parser-agnostic representation, dual-reviewed)",
     "docs/schema/metrics.schema.v1.json (metrics.json schema v1.0, Draft 2020-12, dual-reviewed)",
     "docs/schema/metrics-json-v1.md (design rationale + versioning/stability policy)",
-    "docs/lessons-learned.md (Lessons Learned Log — seeded with LL-001..006 from sessions 1–5)"
+    "docs/lessons-learned.md (Lessons Learned Log — seeded with LL-001..006 from sessions 1–5)",
+    "docs/report/output-contract.md (perfpal-report/ output contract v1 — dual-reviewed, all 18 findings applied)"
   ],
-  "last_updated": "2026-08-23T13:20:00Z"
+  "last_updated": "2026-08-23T13:25:34Z"
 }

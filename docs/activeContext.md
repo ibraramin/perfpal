@@ -1,18 +1,19 @@
 # Active Context
 
 ## Current Task
-`mvp-architecture` step 3 CLOSED: IR v1 spec + metrics.json schema v1.0 + design/stability doc written, dual-reviewed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES — all 18 findings applied), mechanically verified (8 checks incl. negative tests). Session boundary reached; commit pending founder approval.
+`mvp-architecture` step 4 CLOSED: `perfpal-report/` output contract (`docs/report/output-contract.md`) written, dual-reviewed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES — all 18 findings applied). Session boundary reached; commit pending founder approval.
 
 ## Recent Decisions
-- IR-v1: parser-agnostic event-stream model keyed `(path, name, span)`; spans 1-based with INCLUSIVE ends; coverage table proves all 23 catalog heuristics implementable from records (TYPE-001 via new `param_types`; LOOP-003 via `statement_role`).
-- metrics.json v1.0: mandatory confidence/severity/resolver_tier per finding; downgrade caps enforced by if/then in schema; deterministic `finding_id = rule:path:line:col`; versioning = minor additive (open rule_id pattern) / major breaking.
+- Output contract v1: layout = metrics.json + bundled schema byte-copy (`metrics.schema.v<MAJOR>.<MINOR>.json`) + report.md + charts/; atomic regeneration (rename-aside-then-swap) + safety guard against replacing non-report directories.
+- Single version marker: metrics.json `schema_version` governs the whole report dir; chart naming fixed (kebab-case), chart set deferred to ADR-0002.
+- report.md template: deterministic sections, total finding sort order (severity→confidence→rule_id→path→start_line→start_col), exact `finding_id` cross-referencing, optional-field fallbacks.
 
 ## In Progress
 - Nothing — task boundary reached.
 
 ## Next
-- Fresh session (`/new`) → plan `mvp-architecture` step 4: perfpal-report/ output contract (metrics.json + report.md + charts/, naming, stability rules, report template outline).
-- Steps 5–6: ADR-0002 visualization approach → module architecture doc.
+- Fresh session (`/new`) → plan `mvp-architecture` step 5: ADR-0002 visualization approach (no-copyleft static chart tech; finalize chart set per output-contract §3).
+- Step 6: module architecture doc (scanner → analyzer → reporter pipeline; CLI surface).
 
 ## Blockers
 - None.

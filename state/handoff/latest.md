@@ -1,17 +1,22 @@
 # Handoff — Latest
 
 ## Objective
-Execute `mvp-architecture` step 3: IR + metrics.json schema v1. **DONE — dual review passed, all fixes applied, mechanically verified. Commit pending founder approval.**
+Execute `mvp-architecture` step 4: `perfpal-report/` output contract. **DONE — dual review passed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES, all 18 findings applied). Commit pending founder approval.**
 
 ## Phase
-executing mvp-architecture (steps 1–3/7 done; next: step 4)
+executing mvp-architecture (steps 1–4/7 done; next: step 5 ADR-0002)
 
 ## Key Decisions
-- **IR-v1** (`docs/architecture/ir-v1.md`): parser-agnostic event-stream representation per ADR-0001 — file-level records (FileRecord/ParseHealth/IncludeEdge/GlobalVar/StructDef/MacroEvent) + FunctionRecord + typed events (Call/Assignment/BinaryOp/Comparison/AccessChain/LoopNode) sharing a Shape descriptor; coverage table maps **all 23 catalog heuristics** to records; spans 1-based lines/byte-columns with **INCLUSIVE ends**; confidence-downgrade hooks (macro_origin / cross-file edges / error-region overlap).
-- **metrics.json schema v1.0** (`docs/schema/metrics.schema.v1.json`, Draft 2020-12): LLM-agnostic; mandatory `confidence`+`severity`+`resolver_tier`+`macro_suspect`+`error_node_overlap`+`message` per finding; deterministic `finding_id = rule:path:line:col` (parse right-to-left); sections scan/files/stats/findings/graphs(include+call)/components; downgrade caps enforced via if/then; call_graph edge confidence const LOW; C-only language consts.
-- **Versioning policy**: minor = additive only (`rule_id` is an OPEN PATTERN — new heuristics/languages never break strict validation; explicit 23-ID list in description); major = closed-enum changes, required-field additions, threshold type widening, span/identity changes.
-- **Dual review passed**: @requirements-reviewer APPROVED (verbatim requirements met, no scope creep); @reviewer SHIP-WITH-FIXES — **all 18 findings applied** (3 MAJOR: TYPE-001 gap → `FunctionRecord.param_types`; doc example `threshold:null` invalid → omit-if-absent; closed rule_id enum vs forward-compat tension → pattern-based rule_id).
-- Mechanical verification: 8 checks green incl. negative tests (macro_suspect+HIGH rejected by if/then; call_graph non-LOW rejected).
+- **Output contract v1** (`docs/report/output-contract.md`): `perfpal-report/` = `metrics.json` + bundled schema byte-copy (`metrics.schema.v<MAJOR>.<MINOR>.json`, full version always — no elided `.0`) + `report.md` + `charts/`.
+- **Atomic regeneration**: build in temp sibling dir → rename-aside-then-swap (POSIX `rename(2)` can't overwrite non-empty dirs); stale temp dirs cleaned on next success; **safety guard** refuses replacing a directory that lacks `metrics.json` unless forced.
+- **Single version marker**: metrics.json `schema_version` governs the whole report dir; consumers discover the schema copy by mapping version→filename.
+- **Chart rules**: names kebab-case `[a-z0-9-]`, no timestamps/counters; reporter always creates `charts/` (possibly empty); chart *set* deferred to ADR-0002 (step 5); chart content must be deterministic too.
+- **report.md template**: fixed sections provenance → parse health → stats → findings → architecture → Appendices A/B; findings sorted severity → confidence(HIGH→LOW) → rule_id → path → start_line → start_col (**total order**); every finding cited by exact `finding_id`; optional fields render `n/a` or omit their clause; determinism presupposes scanner emits `files[]` sorted by path; Appendix A descriptions come from the reporter's built-in catalog (frozen v1).
+- **Non-goals**: HTML/PDF/diff/archives/i18n; CLI surface owned by step 6.
+
+## Reviews
+- @requirements-reviewer: **APPROVED** — all 4 verbatim requirements + 3 founder additions met; no scope creep; zero implementation code.
+- @reviewer: **SHIP-WITH-FIXES** — all 18 applied (MAJOR: total sort order via `span.start_col`; MINORs: built-in-catalog caveat, optional-field fallbacks, top-10 pinning, `root_path` provenance-only carve-out, markdown-injection escaping, `$id` note, schema-discovery rule, stale-temp cleanup, rename mechanism).
 
 ## Risks
 - tree-sitter-c C99 grammar vs C11/C17 constructs → ERROR-node monitoring carries into implementation (unchanged).
@@ -22,11 +27,9 @@ executing mvp-architecture (steps 1–3/7 done; next: step 4)
 - None.
 
 ## Next Actions
-1. Start fresh session (`/new`); resume with plan `mvp-architecture` **step 4: perfpal-report/ output contract** — exact layout (metrics.json per metrics.schema.v1.json, report.md, charts/), file naming, versioning/stability rules, human-readable report template outline.
-2. Steps 5–6: ADR-0002 visualization approach → module architecture doc.
+1. Start fresh session (`/new`); resume with plan `mvp-architecture` **step 5: ADR-0002 visualization approach** — no-copyleft static chart tech for dependency-graph/coupling maps; finalize chart set per output-contract §3.
+2. Step 6: module architecture doc (scanner → analyzer → reporter pipeline; CLI surface lives there).
 
 ## Uncommitted Files
-- `docs/architecture/ir-v1.md` (new)
-- `docs/schema/metrics.schema.v1.json` (new)
-- `docs/schema/metrics-json-v1.md` (new)
+- `docs/report/output-contract.md` (new)
 - `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`, `CHANGELOG.md` (EOL ritual updates)
