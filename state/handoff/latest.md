@@ -1,34 +1,28 @@
 # Handoff — Latest
 
 ## Objective
-Execute `mvp-architecture` step 1: ADR-0001 parser strategy. **DONE — accepted by founder.** Dual verification passed (@requirements-reviewer APPROVED, @reviewer SHIP + fixes applied).
+Execute `mvp-architecture` step 2: heuristic catalog v1 for C. **DONE — founder-signed-off and committed.**
 
 ## Phase
-executing mvp-architecture (step 1/7 done)
+executing mvp-architecture (steps 1–2/7 done; next: step 3)
 
 ## Key Decisions
-- **ADR-0001 ACCEPTED:** tree-sitter-first for the MVP C scanner (core runtime MIT + official `tree-sitter-c` grammar MIT, both vendored with notices).
-- The architectural commitment is the **parser-agnostic IR**: entities keyed `(path, name, span)`; heuristics consume only the IR; resolver tiers `syntactic → semantic → dynamic`; libclang and runtime profiles bolt onto the same seam later.
-- libclang-first rejected (fragile on non-compiling AI-generated code — our core input; ~20× footprint); hybrid-now rejected as YAGNI.
-- License audit verified: **both ecosystems satisfy the no-copyleft constraint**; policy = official `tree-sitter-*` grammars only unless license-audited; Semgrep OSS (LGPL-2.1) is reference-only, never copied.
-- Reviewer fixes applied to the ADR: IR carries preprocessor-macro events; version-pinning guardrail added; footprint claim corrected to ~20×.
+- **CATALOG-v1 SIGNED OFF** (founder, "All approved"): Tier 1 (15 heuristics) = MVP set; Tier 2 (8 heuristics) included in MVP scope (build-ordered after Tier 1); §5 deferred/excluded accepted as out-of-scope.
+- Catalog at `docs/heuristics/catalog-v1.md`: ranking model Signal S1–S3 × Cost C1–C3; confidence HIGH/MEDIUM/LOW with macro-suspect/ERROR-node downgrades; every entry `(syntactic)`-tagged with default severity band (hot/warn/info).
+- Differentiation space confirmed: alloc-in-loop, strcat-in-loop, strlen-in-loop, setup/I-O-in-loop not flagged by surveyed mainstream tools.
+- Dual review passed before sign-off: @requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES (all 7 findings applied).
 
 ## Risks
-- tree-sitter-c grammar is C99-based; C11/C17 constructs (`_Generic`, `_Static_assert`, `_Atomic`) may raise ERROR-node rates on AI-generated code — monitor in step 2.
-- No macro expansion at MVP → macro-suspect flags + confidence downgrades (documented in ADR).
-- Name-based call matching scoped file-local at MVP; cross-file edges low-confidence.
-- Session-1 EOL updates were still uncommitted when this session started — folded into this session's commit request.
+- tree-sitter-c C99 grammar vs C11/C17 constructs → ERROR-node monitoring carries into implementation.
+- Cross-file coupling (ARCH-003) LOW-confidence until semantic resolver tier exists.
+- Differentiation claims rest on one librarian survey pass; harden before external messaging.
 
 ## Blockers
-- None. Commit approval pending from founder.
+- None.
 
 ## Next Actions
-1. Founder approves commit (see Uncommitted Files).
-2. Start fresh session (`/new`); resume with plan `mvp-architecture`.
-3. Step 2: draft heuristic catalog v1 for C, ranked by signal-value vs implementation cost; present to founder for sign-off.
-4. Steps 3–6: IR + metrics.json schema v1 → perfpal-report/ output contract → ADR-0002 visualization → module architecture doc.
+1. Start fresh session (`/new`); resume with plan `mvp-architecture` step 3: IR + metrics.json schema v1 — consume stable PERF-C-* IDs, confidence/severity fields, LLM-agnostic versioned schema.
+2. Steps 4–6: perfpal-report/ output contract → ADR-0002 visualization → module architecture doc.
 
 ## Uncommitted Files
-- `docs/adr/ADR-0001-parser-strategy.md` (new — Accepted)
-- `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`, `CHANGELOG.md` (modified — session-1 EOL updates + this session's ritual)
-- `.opencode/memory/*` (session memory artifacts)
+- None expected — session ended with approved commit (see git log for hash).

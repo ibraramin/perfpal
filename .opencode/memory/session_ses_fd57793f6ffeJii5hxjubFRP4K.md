@@ -146,6 +146,42 @@
 ## Session Memory
 
 ### User Instructions
+- …
+
+### Long Horizon Context
+- …
+
+### Decisions
+- …
+
+### Conclusions
+- …
+
+### Active References
+- …
+
+<existing_memory>
+## Session Memory
+
+### User Instructions
+- …
+
+### Long Horizon Context
+- …
+
+### Decisions
+- …
+
+### Conclusions
+- …
+
+### Active References
+- …
+
+<existing_memory>
+## Session Memory
+
+### User Instructions
 - None captured yet.
 
 ### Long Horizon Context
@@ -358,5 +394,3 @@ ASSISTANT:
 **Why this wins for us:** our core input is AI-generated codebases that often don't compile. libclang degrades exactly where our market lives; tree-sitter degrades gracefully everywhere. GitHub code-nav, Semgrep, and ast-grep all validate this class of tooling on tree-sitter.
 
 **The real architectural commitment** (per @oracle): not the parser but the **IR seam** — entities keyed `(path, name, span)`, heuristics consume only the IR, resolver tiers `syntactic → semantic → dynamic`. libclang and perf/valgrind both bolt onto the same seam later without rewrite. Hybrid-now rejected as YAGNI.
-
-**Accepted costs (mitigations in the ADR):** no macro expansion (macro-suspect flags + confidence downgrades), name-based call matching scoped file-local at MVP, text-level include graph (unresolvable/cyclic includes become *findings*, not failures), mandatory `ERROR`-node checks so we never analyze silent misparses.

@@ -1,19 +1,18 @@
 # Active Context
 
 ## Current Task
-`mvp-architecture` step 1 COMPLETE: **ADR-0001 accepted** (tree-sitter-first + parser-agnostic IR). Founder-approved; @requirements-reviewer APPROVED; @reviewer SHIP with 3 fixes applied. Awaiting commit approval.
+`mvp-architecture` step 2 CLOSED: heuristic catalog v1 **founder-signed-off** ("All approved": Tier 1 = MVP set, Tier 2 in scope, §5 exclusions accepted) and committed. Session boundary reached.
 
 ## Recent Decisions
-- ADR-0001: tree-sitter-first for MVP C scanner; commitment = parser-agnostic IR keyed `(path, name, span)`; resolver tiers syntactic → semantic → dynamic.
-- libclang deferred as additive resolver; hybrid-now rejected as YAGNI.
-- License audit verified: both ecosystems pass the no-copyleft constraint; official `tree-sitter-*` grammars only unless audited.
+- Catalog v1 signed off: 15 Tier-1 MVP heuristics + 8 Tier-2 (build-ordered after Tier 1); IDs (`PERF-C-*`) now stable inputs for schema work.
+- Ranking model Signal×Cost; confidence/severity mandatory per finding; all entries `(syntactic)` per ADR-0001.
 
 ## In Progress
 - Nothing — task boundary reached.
 
 ## Next
-- Commit (founder approval pending): ADR-0001 + state/CHANGELOG updates.
-- Fresh session (`/new`) → plan `mvp-architecture` step 2: heuristic catalog v1 for C (ranked by signal-value vs cost) → founder sign-off.
+- Fresh session (`/new`) → plan `mvp-architecture` step 3: IR + metrics.json schema v1 (consume PERF-C-* IDs, confidence/severity, LLM-agnostic versioned schema).
+- Steps 4–6: perfpal-report/ output contract → ADR-0002 visualization → module architecture doc.
 
 ## Blockers
 - None.

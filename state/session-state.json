@@ -1,6 +1,6 @@
 {
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "executing mvp-architecture (step 1/7 done: ADR-0001 accepted)",
+  "current_phase": "executing mvp-architecture (steps 1–2/7 done; catalog v1 FOUNDER-SIGNED-OFF; next: step 3 IR + metrics.json schema)",
   "decisions": [
     "Project directory initialized at /home/ibrar/Perfpal.",
     "State skeleton created following AGENTS.md session lifecycle rules.",
@@ -30,7 +30,13 @@
     "SPECS-APPROVED: Founder approved perfpal-core-spec + mvp-architecture plan in session 1. Design gate OPEN — execution may begin next session.",
     "ADR-0001 ACCEPTED (founder-approved, session 2): parser = tree-sitter-first (core MIT + official tree-sitter-c grammar MIT); architectural commitment = parser-agnostic IR keyed (path,name,span); resolver tiers syntactic→semantic→dynamic; libclang deferred as additive resolver; hybrid-now rejected as YAGNI.",
     "License audit verified (@librarian): both ecosystems satisfy the no-copyleft constraint; policy = official tree-sitter-* grammars only unless license-audited (community GPL/AGPL grammars verified to exist); Semgrep OSS is LGPL-2.1 — never copy its code into core.",
-    "ADR-0001 reviewer fixes applied: IR carries preprocessor-macro events; version-pinning guardrail added for tree-sitter core + grammar; footprint claim corrected to ~20×."
+    "ADR-0001 reviewer fixes applied: IR carries preprocessor-macro events; version-pinning guardrail added for tree-sitter core + grammar; footprint claim corrected to ~20×.",
+    "Session 3 (commit 6b5dda4): ADR-0001 committed to main after founder approval.",
+    "CATALOG-v1 DRAFTED (session 4): docs/heuristics/catalog-v1.md — Tier 1 = 15 MVP must-have heuristics (ALLOC-001/002/003 alloc/free/realloc-in-loop, STR-001/002/003 strcat+strlen+unbounded-copy, LOOP-001–004 nesting/setup-I-O/char-stdio/variable-divisor-div-mod, CALL-001/002 recursion+complexity, ARCH-001/002/003 include-graph+hot-components+coupling); Tier 2 = 8 should-haves (TYPE-001/002 size-model checks, MEM-001/002 sizeof-misuse+memcpy-family, LOOP-005–008 global-writes/fn-ptr-calls/membership-scan/pointer-chasing). All entries tagged (syntactic) per ADR-0001 guardrail.",
+    "Catalog ranking model: Signal S1–S3 × Cost C1–C3 → tiers T1/T2/T3; confidence HIGH/MEDIUM/LOW with macro-suspect + ERROR-node downgrade rules; every finding carries confidence+severity for metrics.json (step 3).",
+    "Differentiation space identified: alloc-in-loop, strcat-in-loop, strlen-in-loop, setup/I-O-in-loop are NOT flagged by surveyed mainstream tools (clang-tidy/cppcheck) — Perfpal's edge for AI-generated codebases.",
+    "Dual review passed on catalog: @requirements-reviewer APPROVED (after fixes: added MEM-002 memcpy-family hotspot + explicit recursion presence-vs-depth note); @reviewer SHIP-WITH-FIXES — all 7 findings applied (LOOP-004 retargeted from literal to variable divisors since compilers strength-reduce constants; per-entry resolver-tier tags; LOOP-005/006 detail blocks added; macro_suspect mechanism tied to ADR curated macro-pattern recognizer; differentiation claims softened to 'not found in surveyed tools'; markdown backtick/format fixes; §2 accounting note completed).",
+    "CATALOG-v1 SIGNED OFF (founder, session 4, 'All approved'): Tier 1 (15 heuristics) approved as the MVP set; Tier 2 (8 heuristics) included in MVP scope; §5 deferred/excluded list accepted as out-of-scope. Catalog IDs are now stable inputs for step 3 schema work."
   ],
   "open_risks": [
     "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
@@ -38,14 +44,14 @@
     "Architecture-level visualization for C (dependency structure, component coupling) requires call-graph/module-graph extraction — non-trivial due to headers/preprocessor.",
     "Static analysis heuristics are approximate, not ground truth; must frame outputs as 'optimization candidates' to avoid LLM over-optimization on noisy signals.",
     "No formal success criteria = harder to define 'done' for MVP; relying on acceptance criteria in spec instead.",
-    "tree-sitter-c grammar is C99-based; C11/C17 constructs (_Generic, _Static_assert, _Atomic) common in AI-generated C may raise ERROR-node rates — monitor during heuristic catalog work (step 2)."
+    "tree-sitter-c grammar is C99-based; C11/C17 constructs (_Generic, _Static_assert, _Atomic) common in AI-generated C may raise ERROR-node rates — monitor during heuristic catalog work (step 2).",
+    "Differentiation claims ('not found in surveyed tools') rest on one librarian survey pass; a deeper tool-source audit would harden them before external messaging."
   ],
   "blocked_by": [],
   "next_actions": [
-    "Commit pending changes (awaiting founder approval): docs/adr/ADR-0001-parser-strategy.md + session-1 EOL state updates + CHANGELOG",
-    "Start fresh session (/new); resume with plan mvp-architecture",
-    "Step 2: draft heuristic catalog v1 for C ranked by signal-value vs implementation cost; present ranked list to founder for sign-off",
-    "Steps 3–6 in order: IR + metrics.json schema v1 → perfpal-report/ output contract → ADR-0002 visualization approach → module architecture doc"
+    "Start fresh session (/new); resume with plan mvp-architecture step 3: IR + metrics.json schema v1 — consume signed-off catalog IDs (PERF-C-*), confidence/severity fields, LLM-agnostic versioned schema",
+    "Steps 4–6 in order: perfpal-report/ output contract → ADR-0002 visualization approach → module architecture doc",
+    "Tier 2 heuristics are in MVP scope but build-ordered after Tier 1; revisit effort budget during implementation planning"
   ],
   "artifacts": [
     ".opencode/rules.md",
@@ -60,7 +66,9 @@
     "Planning-toolkit spec: perfpal-core-spec",
     "Planning-toolkit plan: mvp-architecture",
     "Git commit 6bbfafd (initial skeleton, main)",
-    "docs/adr/ADR-0001-parser-strategy.md (Accepted, founder-approved)"
+    "Git commit 6b5dda4 (ADR-0001 accepted, main)",
+    "docs/adr/ADR-0001-parser-strategy.md (Accepted, founder-approved)",
+    "docs/heuristics/catalog-v1.md (v1 — founder-signed-off: Tier 1 MVP set + Tier 2 in scope)"
   ],
-  "last_updated": "2026-08-22T18:52:20Z"
+  "last_updated": "2026-08-22T20:13:45Z"
 }
