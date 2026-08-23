@@ -1,19 +1,20 @@
 # Active Context
 
 ## Current Task
-`mvp-architecture` step 5 CLOSED: ADR-0002 visualization approach (`docs/adr/ADR-0002-visualization.md`) written, dual-reviewed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES — all 11 findings applied). Session boundary reached; commit pending founder approval.
+`mvp-architecture` steps 6+7 CLOSED: module architecture doc (`docs/architecture/modules.md`) written and dual-reviewed (@requirements-reviewer APPROVED; @reviewer SHIP-WITH-FIXES — all 8 findings applied); state files folded. Commit pending founder approval → then `markPlanDone` closes the plan and the design phase.
 
 ## Recent Decisions
-- ADR-0002 ACCEPTED: hand-rolled zero-dependency deterministic SVG emitter; no external chart/graph libs in MVP core; byte-determinism by construction; implementation language stays open for step 6.
-- Chart set v1 frozen: `include-graph.svg` (file DAG), `component-coupling.svg` (matrix heatmap, call edges folded in with LOW-confidence styling), `hot-components.svg` (bars ∝ finding_density). `.dot` export deferred post-MVP (reversal trigger).
-- Layout: simplified deterministic layered layout + barycenter (3 passes, fixed-point rounding); deterministic cycle-breaking; full Sugiyama rejected YAGNI.
+- Module architecture v1: language-neutral pipeline (cli → scanner → analyzer → aggregator → reporter/charts → writer); plugin seams = heuristic registry (IR-only pure functions), scanner backends, resolvers.
+- Implementation-language fork DEFERRED to implementation planning (founder): Rust/Go/C carried forward, six pre-committed criteria in modules.md §6; fold-in recording, no standalone ADR.
+- CLI surface v1: flags (<path>, -o/--output, --force, --version, --help); exit codes 0/1/2/3; findings never affect exit code; stdout not a stability contract.
+- Adding a language = minor-bump schema re-emission (corrected during review).
 
 ## In Progress
-- Nothing — task boundary reached.
+- Nothing — task boundary reached; awaiting commit approval.
 
 ## Next
-- Fresh session (`/new`) → plan `mvp-architecture` step 6: module architecture doc (scanner → analyzer → reporter pipeline; plugin boundaries; runtime-profile + new-language extension points; CLI surface).
-- Step 7: fold artifacts into state files, close out plan.
+- Founder approves commit → markPlanDone(mvp-architecture) → design phase complete.
+- Fresh session: implementation planning (language decision per §6 criteria; Tier 1 build order first).
 
 ## Blockers
 - None.
