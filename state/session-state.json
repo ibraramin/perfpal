@@ -1,6 +1,6 @@
 {
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "executing mvp-architecture (steps 1–2/7 done; catalog v1 FOUNDER-SIGNED-OFF; next: step 3 IR + metrics.json schema)",
+  "current_phase": "executing mvp-architecture (steps 1–3/7 done; step 3 IR + metrics.json schema dual-reviewed and mechanically verified; next: step 4 output contract)",
   "decisions": [
     "Project directory initialized at /home/ibrar/Perfpal.",
     "State skeleton created following AGENTS.md session lifecycle rules.",
@@ -36,7 +36,12 @@
     "Catalog ranking model: Signal S1–S3 × Cost C1–C3 → tiers T1/T2/T3; confidence HIGH/MEDIUM/LOW with macro-suspect + ERROR-node downgrade rules; every finding carries confidence+severity for metrics.json (step 3).",
     "Differentiation space identified: alloc-in-loop, strcat-in-loop, strlen-in-loop, setup/I-O-in-loop are NOT flagged by surveyed mainstream tools (clang-tidy/cppcheck) — Perfpal's edge for AI-generated codebases.",
     "Dual review passed on catalog: @requirements-reviewer APPROVED (after fixes: added MEM-002 memcpy-family hotspot + explicit recursion presence-vs-depth note); @reviewer SHIP-WITH-FIXES — all 7 findings applied (LOOP-004 retargeted from literal to variable divisors since compilers strength-reduce constants; per-entry resolver-tier tags; LOOP-005/006 detail blocks added; macro_suspect mechanism tied to ADR curated macro-pattern recognizer; differentiation claims softened to 'not found in surveyed tools'; markdown backtick/format fixes; §2 accounting note completed).",
-    "CATALOG-v1 SIGNED OFF (founder, session 4, 'All approved'): Tier 1 (15 heuristics) approved as the MVP set; Tier 2 (8 heuristics) included in MVP scope; §5 deferred/excluded list accepted as out-of-scope. Catalog IDs are now stable inputs for step 3 schema work."
+    "CATALOG-v1 SIGNED OFF (founder, session 4, 'All approved'): Tier 1 (15 heuristics) approved as the MVP set; Tier 2 (8 heuristics) included in MVP scope; §5 deferred/excluded list accepted as out-of-scope. Catalog IDs are now stable inputs for step 3 schema work.",
+    "IR-v1 DEFINED (session 5): docs/architecture/ir-v1.md — parser-agnostic event-stream representation per ADR-0001; file-level records (FileRecord/ParseHealth/IncludeEdge/GlobalVar/StructDef/MacroEvent) + FunctionRecord + typed events (Call/Assignment/BinaryOp/Comparison/AccessChain/LoopNode) sharing a Shape descriptor; coverage table maps all 23 catalog heuristics to records; spans 1-based lines/byte-columns with INCLUSIVE ends; confidence-downgrade hooks (macro_origin, cross-file edges, error-region overlap).",
+    "METRICS.JSON SCHEMA v1.0 DEFINED (session 5): docs/schema/metrics.schema.v1.json (Draft 2020-12) + design doc docs/schema/metrics-json-v1.md — LLM-agnostic; mandatory confidence+severity+resolver_tier+macro_suspect+error_node_overlap+message per finding; deterministic finding_id = rule:path:line:col (parse right-to-left); sections scan/files/stats/findings/graphs(include+call)/components; downgrade caps enforced via if/then; call_graph edge confidence const LOW; C-only language consts.",
+    "SCHEMA VERSIONING POLICY (session 5): minor bumps = additive only (rule_id is an OPEN PATTERN, not closed enum — new heuristics/languages never break strict validation; explicit 23-ID list kept in description); major bumps = closed-enum changes (confidence/severity/tier), required-field additions, threshold type widening, span/identity changes; strict-validation caveat documented (older-minor validators may reject newer reports).",
+    "STEP-3 DUAL REVIEW PASSED (session 5): @requirements-reviewer APPROVED (all verbatim requirements met, no scope creep); @reviewer SHIP-WITH-FIXES — all 18 findings applied (3 MAJOR: TYPE-001 unimplementable → FunctionRecord.param_types added; doc example threshold:null invalid → omit-if-absent convention; closed rule_id enum vs forward-compat tension → pattern-based rule_id; plus MINOR/NIT: if/then cap enforcement, span end-inclusive convention, LOOP-003 statement_role, STR-001 coverage row, finding_id collision fix via column, optional-section markers, $id naming alignment).",
+    "Step-3 mechanical verification (session 5): 8 checks green — schema meta-valid Draft 2020-12; full sample instance validates; negative tests (macro_suspect+HIGH rejected; call_graph non-LOW rejected); §6 worked example validates; all 23 IDs explicitly documented + pattern accepts future-language IDs; span/language conventions present."
   ],
   "open_risks": [
     "Language parsing for C must be robust; choosing between libclang, tree-sitter, or hybrid is the highest-priority architectural decision.",
@@ -49,8 +54,8 @@
   ],
   "blocked_by": [],
   "next_actions": [
-    "Start fresh session (/new); resume with plan mvp-architecture step 3: IR + metrics.json schema v1 — consume signed-off catalog IDs (PERF-C-*), confidence/severity fields, LLM-agnostic versioned schema",
-    "Steps 4–6 in order: perfpal-report/ output contract → ADR-0002 visualization approach → module architecture doc",
+    "Start fresh session (/new); resume with plan mvp-architecture step 4: perfpal-report/ output contract — exact layout (metrics.json per metrics.schema.v1.json, report.md, charts/), file naming, versioning/stability rules, human-readable report template outline",
+    "Steps 5–6 in order: ADR-0002 visualization approach → module architecture doc",
     "Tier 2 heuristics are in MVP scope but build-ordered after Tier 1; revisit effort budget during implementation planning"
   ],
   "artifacts": [
@@ -68,7 +73,10 @@
     "Git commit 6bbfafd (initial skeleton, main)",
     "Git commit 6b5dda4 (ADR-0001 accepted, main)",
     "docs/adr/ADR-0001-parser-strategy.md (Accepted, founder-approved)",
-    "docs/heuristics/catalog-v1.md (v1 — founder-signed-off: Tier 1 MVP set + Tier 2 in scope)"
+    "docs/heuristics/catalog-v1.md (v1 — founder-signed-off: Tier 1 MVP set + Tier 2 in scope)",
+    "docs/architecture/ir-v1.md (IR v1 — event-stream parser-agnostic representation, dual-reviewed)",
+    "docs/schema/metrics.schema.v1.json (metrics.json schema v1.0, Draft 2020-12, dual-reviewed)",
+    "docs/schema/metrics-json-v1.md (design rationale + versioning/stability policy)"
   ],
-  "last_updated": "2026-08-22T20:13:45Z"
+  "last_updated": "2026-08-23T12:56:29Z"
 }
