@@ -1,0 +1,117 @@
+[
+  {
+    "file": {
+      "path": "src/downgrade.c",
+      "language": "c",
+      "loc": {"code": 18, "comment": 0, "blank": 2},
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {
+      "status": "partial",
+      "error_regions": [
+        {"start_line": 7, "start_col": 20, "end_line": 8, "end_col": 5}
+      ],
+      "error_node_count": 1
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/downgrade.c#drain_queue#4:5",
+          "name": "drain_queue",
+          "path": "src/downgrade.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 11, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int n"],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 2,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 8
+        },
+        "calls": [
+          {
+            "callee_name": "drain_queue",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "n"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 7, "start_col": 12, "end_line": 7, "end_col": 26},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "drain_queue",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "n"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 9, "start_col": 12, "end_line": 9, "end_col": 26},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/downgrade.c#macro_walk#14:5",
+          "name": "macro_walk",
+          "path": "src/downgrade.c",
+          "span": {"start_line": 14, "start_col": 5, "end_line": 21, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["node *t"],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 2,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 8
+        },
+        "calls": [
+          {
+            "callee_name": "macro_walk",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "left"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 17, "start_col": 12, "end_line": 17, "end_col": 27},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": true
+          },
+          {
+            "callee_name": "macro_walk",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "right"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 19, "start_col": 12, "end_line": 19, "end_col": 28},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": true
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

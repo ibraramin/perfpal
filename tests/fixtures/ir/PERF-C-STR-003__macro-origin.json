@@ -1,0 +1,116 @@
+[
+  {
+    "file": {
+      "path": "src/strmacro.h",
+      "language": "c",
+      "loc": {"code": 13, "comment": 1, "blank": 2},
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [
+      {
+        "kind": "definition",
+        "name": "MY_STRCPY",
+        "path": "src/strmacro.h",
+        "span": {"start_line": 3, "start_col": 9, "end_line": 3, "end_col": 40},
+        "pattern_id": null
+      },
+      {
+        "kind": "recognized_pattern",
+        "name": "MY_STRCPY",
+        "path": "src/strmacro.h",
+        "span": {"start_line": 3, "start_col": 9, "end_line": 3, "end_col": 40},
+        "pattern_id": "alloc-wrapper"
+      },
+      {
+        "kind": "recognized_pattern",
+        "name": "FMT_WRAP",
+        "path": "src/strmacro.h",
+        "span": {"start_line": 15, "start_col": 12, "end_line": 15, "end_col": 40},
+        "pattern_id": "alloc-wrapper"
+      }
+    ],
+    "functions": [
+      {
+        "record": {
+          "id": "src/strmacro.h#copy_via_macro#6:5",
+          "name": "copy_via_macro",
+          "path": "src/strmacro.h",
+          "span": {"start_line": 6, "start_col": 5, "end_line": 9, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["char *dst", "char *src"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 4
+        },
+        "calls": [
+          {
+            "callee_name": "strcpy",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "dst"},
+              {"kind": "identifier", "name": "src"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 8, "start_col": 9, "end_line": 8, "end_col": 26},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": true
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/strmacro.h#fmt_via_macro#13:5",
+          "name": "fmt_via_macro",
+          "path": "src/strmacro.h",
+          "span": {"start_line": 13, "start_col": 5, "end_line": 17, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["char *buf", "int n"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 5
+        },
+        "calls": [
+          {
+            "callee_name": "sprintf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "buf"},
+              {"kind": "literal", "value": "\"%d\""},
+              {"kind": "identifier", "name": "n"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 15, "start_col": 12, "end_line": 15, "end_col": 39},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,131 @@
+[
+  {
+    "file": {
+      "path": "src/iostr.c",
+      "language": "c",
+      "loc": {"code": 12, "comment": 0, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/iostr.c#load_record#4:5",
+          "name": "load_record",
+          "path": "src/iostr.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 16, "end_col": 6},
+          "param_count": 3,
+          "param_types": ["char *dst", "char *src", "char *name"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 13
+        },
+        "calls": [
+          {
+            "callee_name": "strcpy",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "dst"},
+              {"kind": "identifier", "name": "src"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 5, "start_col": 5, "end_line": 5, "end_col": 22},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "sprintf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "buf"},
+              {"kind": "literal", "value": "\"%d\""},
+              {"kind": "identifier", "name": "n"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 6, "start_col": 5, "end_line": 6, "end_col": 23},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "gets",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "line"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 7, "start_col": 5, "end_line": 7, "end_col": 15},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "scanf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "literal", "value": "\"%s\""},
+              {"kind": "identifier", "name": "name"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 8, "start_col": 5, "end_line": 8, "end_col": 22},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "snprintf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "out"},
+              {"kind": "sizeof"},
+              {"kind": "literal", "value": "\"%s\""},
+              {"kind": "identifier", "name": "name"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 9, "start_col": 5, "end_line": 9, "end_col": 35},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "scanf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "literal", "value": "\"%d\""},
+              {"kind": "identifier", "name": "n"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 10, "start_col": 5, "end_line": 10, "end_col": 17},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

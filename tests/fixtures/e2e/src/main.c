@@ -1,10 +1,15 @@
 /* End-to-end fixture: a tiny C project exercising the full pipeline.
- * `process` allocates inside a loop → exactly one PERF-C-ALLOC-001 finding
- * is expected from it (the wrapped() call goes through no macro in v1 —
- * keep the fixture dependent only on Wave 1 behavior). */
+ * Wave A coverage through the real tree-sitter-c backend:
+ *   - process  → PERF-C-ALLOC-001 (+ PERF-C-ALLOC-002 via free-in-loop
+ *                with same-function alloc co-occurrence)
+ *   - drain    → PERF-C-ALLOC-002 (plain free-in-loop)
+ *   - join     → PERF-C-STR-001 + PERF-C-STR-003 (strcat accumulation
+ *                in a while loop double-fires both string rules)
+ *   - deep_sum → PERF-C-LOOP-001 (triple-nested for) */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "util.h"
 
 int helper(int x) {
@@ -22,7 +27,34 @@ int process(int n) {
     return total + helper(n);
 }
 
+void drain(char **bufs, int n) {
+    for (int i = 0; i < n; ++i) {
+        free(bufs[i]);
+    }
+}
+
+void join(const char *part, int n) {
+    char out[128] = "";
+    int i = 0;
+    while (i < n) {
+        strcat(out, part);
+        ++i;
+    }
+}
+
+int deep_sum(int n) {
+    int acc = 0;
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            for (int k = 0; k < n; ++k) {
+                acc += i + j + k;
+            }
+        }
+    }
+    return acc;
+}
+
 int main(void) {
-    printf("%d\n", process(4));
+    printf("%d %d\n", process(4), deep_sum(2));
     return 0;
 }

@@ -75,6 +75,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Detects: `free()` (and `fclose` on heap-backed handles) directly inside a loop body.
 - Why: paired with ALLOC-001 indicates churn; alone indicates repeated teardown cost.
 - FPs: freeing distinct items per iteration is legitimate — pair with ALLOC-001 co-occurrence to raise signal.
+- Implementation note (P2): `fclose` deferred — heap-backed-handle determination requires type info → semantic tier (post-MVP). Only `free` fires in the syntactic MVP.
 
 **PERF-C-ALLOC-003 — `realloc()` linear growth in loop** `(syntactic)`
 - Detects: `realloc(p, n+1)` / `realloc(p, n+k)` shapes nested in loops (additive growth ⇒ quadratic memmove behavior).

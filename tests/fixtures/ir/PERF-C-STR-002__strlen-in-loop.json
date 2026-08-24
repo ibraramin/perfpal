@@ -1,0 +1,157 @@
+[
+  {
+    "file": {
+      "path": "src/measure.c",
+      "language": "c",
+      "loc": {"code": 22, "comment": 0, "blank": 3},
+      "function_count": 3,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/measure.c#header_len#4:5",
+          "name": "header_len",
+          "path": "src/measure.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 10, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["const char *name"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 7
+        },
+        "calls": [
+          {
+            "callee_name": "strlen",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "name"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 7, "start_col": 16, "end_line": 7, "end_col": 27},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": ["i"],
+            "span": {"start_line": 5, "start_col": 5, "end_line": 9, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      },
+      {
+        "record": {
+          "id": "src/measure.c#grows_each_iter#13:5",
+          "name": "grows_each_iter",
+          "path": "src/measure.c",
+          "span": {"start_line": 13, "start_col": 5, "end_line": 21, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["char *name"],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 2,
+          "max_loop_depth": 2,
+          "alloc_site_count": 0,
+          "length_lines": 9
+        },
+        "calls": [
+          {
+            "callee_name": "strlen",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "name"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 18, "start_col": 13, "end_line": 18, "end_col": 24},
+            "in_loop_depth": 2,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [
+          {
+            "target": {"kind": "identifier", "name": "name"},
+            "scope_class": "local",
+            "span": {"start_line": 16, "start_col": 13, "end_line": 16, "end_col": 25},
+            "in_loop_depth": 2,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": ["i"],
+            "span": {"start_line": 14, "start_col": 5, "end_line": 20, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "kind": "while",
+            "depth": 2,
+            "induction_vars": [],
+            "span": {"start_line": 15, "start_col": 9, "end_line": 19, "end_col": 10},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      },
+      {
+        "record": {
+          "id": "src/measure.c#outside_len#24:5",
+          "name": "outside_len",
+          "path": "src/measure.c",
+          "span": {"start_line": 24, "start_col": 5, "end_line": 28, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["const char *s"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 5
+        },
+        "calls": [
+          {
+            "callee_name": "strlen",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "s"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 26, "start_col": 12, "end_line": 26, "end_col": 22},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

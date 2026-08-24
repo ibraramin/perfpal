@@ -1,0 +1,196 @@
+[
+  {
+    "file": {
+      "path": "src/copyio.c",
+      "language": "c",
+      "loc": {"code": 30, "comment": 0, "blank": 4},
+      "function_count": 4,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/copyio.c#echo_stream#4:5",
+          "name": "echo_stream",
+          "path": "src/copyio.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 11, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["FILE *fp"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 8
+        },
+        "calls": [
+          {
+            "callee_name": "fgetc",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "fp"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 6, "start_col": 14, "end_line": 6, "end_col": 22},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "while",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {"start_line": 5, "start_col": 5, "end_line": 10, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      },
+      {
+        "record": {
+          "id": "src/copyio.c#skip_line#14:5",
+          "name": "skip_line",
+          "path": "src/copyio.c",
+          "span": {"start_line": 14, "start_col": 5, "end_line": 19, "end_col": 6},
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 6
+        },
+        "calls": [
+          {
+            "callee_name": "getchar",
+            "callee_kind": "direct",
+            "args": [],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 16, "start_col": 9, "end_line": 16, "end_col": 17},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "while",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {"start_line": 15, "start_col": 5, "end_line": 18, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      },
+      {
+        "record": {
+          "id": "src/copyio.c#block_read#22:5",
+          "name": "block_read",
+          "path": "src/copyio.c",
+          "span": {"start_line": 22, "start_col": 5, "end_line": 28, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["FILE *fp"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 7
+        },
+        "calls": [
+          {
+            "callee_name": "fread",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "buf"},
+              {"kind": "identifier", "name": "size"},
+              {"kind": "identifier", "name": "count"},
+              {"kind": "identifier", "name": "fp"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 24, "start_col": 9, "end_line": 24, "end_col": 30},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "while",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {"start_line": 23, "start_col": 5, "end_line": 27, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      },
+      {
+        "record": {
+          "id": "src/copyio.c#nested_fgetc#31:5",
+          "name": "nested_fgetc",
+          "path": "src/copyio.c",
+          "span": {"start_line": 31, "start_col": 5, "end_line": 38, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["FILE *fp"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 8
+        },
+        "calls": [
+          {
+            "callee_name": "fgetc",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "fp"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 34, "start_col": 13, "end_line": 34, "end_col": 21},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "while",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {"start_line": 32, "start_col": 5, "end_line": 37, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      }
+    ]
+  }
+]

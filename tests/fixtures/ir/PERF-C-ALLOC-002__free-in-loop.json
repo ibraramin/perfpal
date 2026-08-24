@@ -1,0 +1,117 @@
+[
+  {
+    "file": {
+      "path": "src/mem.c",
+      "language": "c",
+      "loc": {"code": 16, "comment": 0, "blank": 2},
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/mem.c#release_rows#4:5",
+          "name": "release_rows",
+          "path": "src/mem.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 10, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int n"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 7
+        },
+        "calls": [
+          {
+            "callee_name": "free",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "row"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 6, "start_col": 9, "end_line": 6, "end_col": 18},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": ["i"],
+            "span": {"start_line": 5, "start_col": 5, "end_line": 8, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      },
+      {
+        "record": {
+          "id": "src/mem.c#rebuild_rows#13:5",
+          "name": "rebuild_rows",
+          "path": "src/mem.c",
+          "span": {"start_line": 13, "start_col": 5, "end_line": 21, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int n"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 1,
+          "length_lines": 9
+        },
+        "calls": [
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "n"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 15, "start_col": 20, "end_line": 15, "end_col": 29},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "free",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "old"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 17, "start_col": 9, "end_line": 17, "end_col": 18},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "while",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {"start_line": 14, "start_col": 5, "end_line": 19, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -11,8 +11,16 @@ use std::collections::BTreeMap;
 use crate::ir::{ResolverTier, Span};
 use serde::{Deserialize, Serialize};
 
-/// rule_id of the Wave 1 heuristic (catalog-v1 §3 Tier 1).
+/// rule_ids of the Tier 1 heuristics (catalog-v1 §3), one const each so
+/// heuristics and tests share a single spelling across the seam.
 pub const ALLOC_001_RULE_ID: &str = "PERF-C-ALLOC-001";
+pub const ALLOC_002_RULE_ID: &str = "PERF-C-ALLOC-002";
+pub const STR_001_RULE_ID: &str = "PERF-C-STR-001";
+pub const STR_002_RULE_ID: &str = "PERF-C-STR-002";
+pub const STR_003_RULE_ID: &str = "PERF-C-STR-003";
+pub const LOOP_001_RULE_ID: &str = "PERF-C-LOOP-001";
+pub const LOOP_003_RULE_ID: &str = "PERF-C-LOOP-003";
+pub const CALL_001_RULE_ID: &str = "PERF-C-CALL-001";
 
 /// Severity band (report §4 order: hot → warn → info).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

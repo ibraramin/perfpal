@@ -96,6 +96,25 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         assert_eq!(tail, 2, "finding_id must end line:col — {id}");
     }
 
+    // Wave A rules trip through the real tree-sitter-c backend on main.c:
+    // drain's free-in-for (ALLOC-002), join's strcat-in-while (STR-001 and
+    // STR-003 double-fire), deep_sum's triple-nested for (LOOP-001).
+    for rule in [
+        "PERF-C-ALLOC-002",
+        "PERF-C-STR-001",
+        "PERF-C-STR-003",
+        "PERF-C-LOOP-001",
+    ] {
+        let prefix = format!("{rule}:src/main.c:");
+        assert!(
+            findings
+                .iter()
+                .filter_map(|f| f["finding_id"].as_str())
+                .any(|id| id.starts_with(&prefix)),
+            "expected {rule} on src/main.c, got {findings:?}"
+        );
+    }
+
     // Include graph carries the resolved quoted edge main.c → util.h.
     let edges = &doc1["graphs"]["include_graph"]["edges"];
     assert!(

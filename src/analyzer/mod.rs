@@ -39,129 +39,24 @@ pub use finding::{Confidence, Finding, Severity};
 /// (modules.md §3.3). Each entry is a pure function over read-only IR views.
 type HeuristicFn = fn(&[FileUnit]) -> Vec<Finding>;
 
-/// The v1 registry. Adding a heuristic = appending a new entry whose rule_id
-/// sorts into place (open pattern, minor-bump schema policy).
-const REGISTRY: &[HeuristicFn] = &[heuristics::alloc_001];
+/// The v1 registry, DECLARED IN ASCENDING `rule_id` ORDER — execution
+/// order equals declaration order and duplicate collapse is first-wins, so
+/// declaration order is load-bearing (modules.md §3.3). Adding a heuristic
+/// = inserting a new entry whose rule_id sorts into place (open pattern,
+/// minor-bump schema policy):
+/// alloc_001, alloc_002, call_001, loop_001, loop_003, str_001, str_002, str_003.
+const REGISTRY: &[HeuristicFn] = &[
+    heuristics::alloc_001,
+    heuristics::alloc_002,
+    heuristics::call_001,
+    heuristics::loop_001,
+    heuristics::loop_003,
+    heuristics::str_001,
+    heuristics::str_002,
+    heuristics::str_003,
+];
 
-mod heuristics {
-    //! Catalog heuristics (catalog-v1.md). One module-level function each,
-    //! pure over `[FileUnit]`.
-
-    use super::finding::ALLOC_001_RULE_ID;
-    use super::{Confidence, Finding, Severity};
-    use crate::ir::{ALLOC_WRAPPER_PATTERN_ID, CallEvent, CalleeKind, MacroEventKind, ShapeKind};
-    use crate::scanner::FileUnit;
-
-    /// PERF-C-ALLOC-001 — Heap allocation inside loop `(syntactic)`
-    /// (catalog-v1 §3 detail block).
-    ///
-    /// Detects: `malloc`/`calloc`/`realloc`/`aligned_alloc`/`strdup` calls
-    /// nested anywhere inside a loop body (`in_loop_depth ≥ 1`). Default
-    /// HIGH/hot; macro-origin capping is applied centrally (ir-v1.md §5).
-    ///
-    /// Macro policy (catalog detail block): a wrapper-macro USE inside a loop
-    /// IS the alloc site under tree-sitter's no-expansion parse, so calls
-    /// whose callee names a recognized alloc-wrapper macro (`pattern_id =
-    /// [`ALLOC_WRAPPER_PATTERN_ID`] in the same file's MacroEvents) also
-    /// fire — the central hook then caps them at MEDIUM + `macro_suspect`.
-    pub(super) fn alloc_001(units: &[FileUnit]) -> Vec<Finding> {
-        let mut findings = Vec::new();
-        for f in alloc_candidates(units) {
-            let message = format!(
-                "per-iteration heap allocation via '{}' at loop depth {} — \
-                 allocator churn dominates runtime; hoisting or buffer reuse \
-                 is a candidate optimization",
-                f.callee, f.loop_depth
-            );
-            findings.push(Finding {
-                rule_id: ALLOC_001_RULE_ID.to_string(),
-                title: "Heap allocation inside loop".to_string(),
-                message,
-                severity: Severity::Hot,
-                confidence: Confidence::High,
-                resolver_tier: crate::ir::ResolverTier::Syntactic,
-                span: f.span,
-                path: f.path.to_string(),
-                evidence: [
-                    ("callee".to_string(), f.callee.to_string()),
-                    ("loop_depth".to_string(), f.loop_depth.to_string()),
-                    (
-                        "alloc_site_index".to_string(),
-                        f.alloc_site_index.to_string(),
-                    ),
-                ]
-                .into_iter()
-                .collect(),
-                macro_suspect: false,
-                error_node_overlap: false,
-            });
-        }
-        findings
-    }
-
-    /// Internal candidate shape shared by alloc-family heuristics.
-    pub(super) struct AllocCandidate<'a> {
-        pub path: &'a str,
-        pub span: crate::ir::Span,
-        pub callee: &'a str,
-        pub loop_depth: u32,
-        /// 1-based index of this call among the function's alloc-family
-        /// calls (evidence for ALLOC-001/002 pairing downstream).
-        pub alloc_site_index: u32,
-    }
-
-    /// Walk every CallEvent that is an alloc site: a DIRECT alloc-family
-    /// call, or a call whose callee names a recognized alloc-wrapper macro in
-    /// the same file (see [`alloc_001`] doc). Only sites with
-    /// `in_loop_depth ≥ 1` become candidates.
-    pub(super) fn alloc_candidates(units: &[FileUnit]) -> Vec<AllocCandidate<'_>> {
-        let mut out = Vec::new();
-        for unit in units {
-            let wrapper_names: Vec<&str> = unit
-                .macros
-                .iter()
-                .filter(|m| {
-                    m.kind == MacroEventKind::RecognizedPattern
-                        && m.pattern_id.as_deref() == Some(ALLOC_WRAPPER_PATTERN_ID)
-                })
-                .map(|m| m.name.as_str())
-                .collect();
-            for func in &unit.functions {
-                let mut site_index = 0u32;
-                for call in &func.calls {
-                    if !is_alloc_call(call, &wrapper_names) {
-                        continue;
-                    }
-                    site_index += 1;
-                    if call.meta.in_loop_depth >= 1 {
-                        out.push(AllocCandidate {
-                            path: &unit.file.path,
-                            span: call.meta.span,
-                            callee: &call.callee_name,
-                            loop_depth: call.meta.in_loop_depth,
-                            alloc_site_index: site_index,
-                        });
-                    }
-                }
-            }
-        }
-        out
-    }
-
-    const ALLOC_FAMILY: [&str; 5] = ["malloc", "calloc", "realloc", "aligned_alloc", "strdup"];
-
-    fn is_alloc_call(call: &CallEvent, wrapper_names: &[&str]) -> bool {
-        if call.callee_kind != CalleeKind::Direct {
-            return false;
-        }
-        ALLOC_FAMILY.contains(&call.callee_name.as_str())
-            || wrapper_names.contains(&call.callee_name.as_str())
-    }
-
-    // Silence unused-import lint until more alloc heuristics land in P2;
-    // ShapeKind is referenced by upcoming MEM-001 arg-shape matching.
-    const _: Option<ShapeKind> = None;
-}
+mod heuristics;
 
 /// Run the full registry over the IR stream and return findings in the
 /// report §4 total order (modules.md §3.3 / report §4):
