@@ -103,7 +103,7 @@ Each module lists Consumes / Produces / Responsibilities / Non-goals.
 - **Consumes:** IR stream + `findings[]` + provenance from `cli`.
 - **Produces:** the complete `metrics.json` document as schema-typed data (all nine sections: `schema_version`, `tool`, `scan`, `parse_health_summary`, `files`, `stats`, `findings`, `graphs`, `components`).
 - **Responsibilities:**
-  - `graphs.include_graph`: file nodes + resolved internal edges (quoted includes resolving in-repo; angle-bracket includes resolving to in-repo files per ADR-0002 chart policy).
+  - `graphs.include_graph`: file nodes + resolved internal edges (quoted includes resolving in-repo; angle-bracket includes resolving to in-repo files per ADR-0002 chart policy). Founder decision (P4): unresolved QUOTED edges are INCLUDED in metrics.json (`to: null`, `resolved: false` — schema-sanctioned "a finding, not a failure"); angle-unresolved edges stay excluded; the SVG chart remains resolved-internal-only per ADR-0002.
   - `graphs.call_graph`: cross-file name-matched edges, confidence locked LOW (ARCH-003).
   - `components[]`: aggregation by `path_prefix` including `finding_density` and `rank`; sorted `(rank, path_prefix)`.
   - `stats.*`: distributions and totals from FileRecord/FunctionRecord fields.

@@ -196,11 +196,21 @@ pub enum ParseStatus {
 
 /// Include dependency edge (ir-v1.md §3.1).
 ///
-/// Note on lifecycle: the backend fills `to_path` with the RAW include text
-/// and `resolved=false`; the scanner's resolution pass then rewrites quoted
-/// edges (resolved ⇒ repo-relative normalized path; unresolvable ⇒
-/// `to_path: null`, still data-not-error per modules.md Principle 4). Angle
-/// edges stay `to_path: null, resolved: false` (external bucket).
+/// Lifecycle: the backend fills `to_path` with the RAW include text and
+/// `resolved=false`; the scanner's resolution pass then tries the same two
+/// candidates (includer-relative, then repo-root-relative) for BOTH forms:
+/// - Hit (either form): `to_path` rewritten to the repo-relative normalized
+///   path, `resolved=true` — an internal coupling edge. Per ADR-0002 chart
+///   policy, angle-bracket includes resolving to in-repo files count as
+///   internal too.
+/// - Miss on a QUOTED edge: `to_path=null`, `resolved=false` — data, not
+///   error per modules.md Principle 4 (ARCH-001 signal). `to_path: None`
+///   occurs ONLY here.
+/// - Miss on an ANGLE edge: raw include text stays in `to_path`,
+///   `resolved=false` — the external bucket (system headers etc.). Form is
+///   authoritative for bucketing: form=angle ⇒ external EXCEPT when the
+///   target resolves to an in-repo file; form=quoted ⇒ resolved
+///   includer-relative-then-root.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct IncludeEdge {
     pub from_path: String,

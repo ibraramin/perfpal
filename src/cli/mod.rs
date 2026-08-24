@@ -190,14 +190,31 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         PipelineError::Internal(format!("metrics.json serialization failed: {err}"))
     })?;
 
+    // Derived artifacts (modules.md Principle 5): report.md and charts/ are
+    // pure functions of the final document. charts::render applies the
+    // emission rule itself (a chart appears iff its source section is
+    // present and non-empty), so an empty scan yields an empty chart set —
+    // the writer still creates charts/ (output-contract §3).
+    let charts = crate::charts::render(&document);
+    let chart_names: Vec<String> = charts.iter().map(|(name, _)| (*name).to_string()).collect();
+    let report = crate::reporter::render_report(&document, &chart_names);
+
     // writer: atomic directory swap (all writer failures are output errors).
-    let artifacts = [
+    // rel paths use forward slashes; nested entries land in subdirectories.
+    let mut artifacts = vec![
         Artifact::text("metrics.json", json),
         Artifact::text(
             crate::schema::SCHEMA_ARTIFACT_NAME,
             crate::schema::EMBEDDED_SCHEMA,
         ),
+        Artifact::text("report.md", report),
     ];
+    for (name, bytes) in &charts {
+        artifacts.push(Artifact {
+            rel_path: format!("charts/{name}"),
+            bytes: bytes.clone(),
+        });
+    }
     crate::writer::write_report(&args.output, &artifacts, args.force)
         .map_err(|err| PipelineError::Output(err.to_string()))?;
 

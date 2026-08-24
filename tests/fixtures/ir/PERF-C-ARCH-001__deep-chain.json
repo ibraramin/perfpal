@@ -1,0 +1,349 @@
+[
+  {
+    "file": {
+      "path": "chain/n0.c",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n0.c",
+        "to_path": "chain/n1.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n1.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n1.h",
+        "to_path": "chain/n2.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n2.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n2.h",
+        "to_path": "chain/n3.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n3.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n3.h",
+        "to_path": "chain/n4.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n4.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n4.h",
+        "to_path": "chain/n5.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n5.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n5.h",
+        "to_path": "chain/n6.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n6.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n6.h",
+        "to_path": "chain/n7.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n7.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 1,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "chain/n7.h",
+        "to_path": "chain/n8.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 22
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "chain/n8.h",
+      "language": "c",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  }
+]

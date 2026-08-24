@@ -26,11 +26,20 @@
 //! would be equally deterministic but strictly worse for consumers.
 //! No timestamps are generated here — cli owns provenance values.
 //!
-//! P1 scope notes (P4 follow-ups documented at point of use):
-//! - `components[]` omitted (schema-optional; ARCH-002 aggregation lands P4).
-//! - `stats.distributions` omitted (schema-optional; P4 completes it).
-//! - `graphs.call_graph` omitted (schema-optional; ARCH-003 cross-file edges
-//!   land with the P2 heuristic wave).
+//! P4 wave additions (Wave 1): the schema-optional sections gained typed
+//! models matching `metrics.schema.v1.0.json` exactly:
+//! - `graphs.call_graph` ([`CallGraphSection`] / [`CallEdge`], confidence
+//!   locked to `"LOW"` per ADR-0001 name-based matching).
+//! - `components[]` ([`ComponentEntry`] / [`ComponentMetrics`]).
+//! - `stats.distributions` ([`DistributionEntry`]) — reserved-for-future:
+//!   the field exists so the `(metric, bucket)` sort contract is
+//!   implementable/testable, but no producer populates it yet.
+//!
+//! The call_graph and components producers LANDED in P4 (aggregator); the
+//! fields remain `Option<_>` with `skip_serializing_if` because ABSENT is
+//! still the canonical empty form (omit-don't-null) — e.g. scans with no
+//! cross-file edges or single-component repos — not because producers are
+//! pending.
 
 use std::collections::BTreeMap;
 
@@ -77,9 +86,15 @@ pub struct MetricsDocument {
     pub findings: Vec<FindingEntry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub graphs: Option<GraphsSection>,
-    // components[]: schema-OPTIONAL ⇒ omitted in P1. P4 follow-up:
-    // ARCH-002 hot-component aggregation (rank by aggregated metrics,
-    // sorted `(rank, path_prefix)` per modules.md §1) fills this in.
+    /// Hot-component aggregation (PERF-C-ARCH-002). One entry per parent
+    /// directory of the scanned paths; rank composite: finding_density ↓ →
+    /// complexity_sum ↓ → max_loop_depth ↓ → alloc_site_density ↓ →
+    /// path_prefix ↑ (1-based); emission order `(rank, path_prefix)`.
+    /// ARCH-002 asymmetry note: `components[].rank` uses finding_density,
+    /// while the ARCH-002 heuristic ranks IR-only (no density) — they may
+    /// disagree by design.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub components: Option<Vec<ComponentEntry>>,
 }
 
 /// `tool` — provenance of the producing binary.
@@ -145,8 +160,12 @@ pub struct ParseHealthEntry {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StatsSection {
     pub functions: Vec<FunctionStats>,
-    // distributions: schema-OPTIONAL ⇒ omitted in P1. P4 follow-up completes
-    // it; sort contract then: `(metric, bucket)` per modules.md §1.
+    /// Histograms over function-level stats. Schema-optional ⇒ omitted;
+    /// reserved-for-future (session-7 decision) — no producer populates it
+    /// this phase. Sort contract when populated: `(metric, bucket)` per
+    /// modules.md §1.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub distributions: Option<Vec<DistributionEntry>>,
 }
 
 /// One element of `stats.functions[]` — direct lift of the IR
@@ -220,9 +239,95 @@ pub enum ThresholdValue {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct GraphsSection {
     pub include_graph: IncludeGraph,
-    // call_graph: schema-OPTIONAL ⇒ omitted in P1. P2/P4 follow-up:
-    // ARCH-003 cross-file name-matched edges (confidence locked LOW per
-    // ADR-0001) fill this in.
+    /// Cross-file call edges (ARCH-003, confidence locked `"LOW"` per
+    /// ADR-0001). ALWAYS `Some` once assembled — even when `edges` is empty —
+    /// so consumers can rely on the `["edges"]` shape (graphs-always-Some
+    /// precedent).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub call_graph: Option<CallGraphSection>,
+}
+
+/// `graphs.call_graph` — cross-file call edges only (intra-file edges
+/// omitted in v1); name-based matching ⇒ every edge confidence LOW until a
+/// semantic resolver exists (metrics.schema.v1.0.json `call_graph`).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct CallGraphSection {
+    pub edges: Vec<CallEdge>,
+}
+
+/// One element of `call_graph.edges[]`. Field declaration order is
+/// load-bearing: it must match the schema's property order (`from_function`,
+/// `to_name`, `from_path`, `to_path`, `confidence`) because serde serializes
+/// structs in declaration order. `to_path` is REQUIRED by the schema (may be
+/// explicit `null` when unresolved) ⇒ serialized without
+/// `skip_serializing_if`.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct CallEdge {
+    /// Caller function id (stable IR identity).
+    pub from_function: String,
+    /// Callee name as written.
+    pub to_name: String,
+    pub from_path: String,
+    /// Best-match file or `null` when unresolved.
+    pub to_path: Option<String>,
+    /// Schema `const: "LOW"` — name-based matching is LOW by definition
+    /// (ADR-0001). Always `"LOW"`; construct via [`CallEdge::new`].
+    pub confidence: String,
+}
+
+impl CallEdge {
+    /// Constructor hardcoding the schema-const confidence (`"LOW"`).
+    pub fn new(
+        from_function: impl Into<String>,
+        to_name: impl Into<String>,
+        from_path: impl Into<String>,
+        to_path: Option<String>,
+    ) -> Self {
+        Self {
+            from_function: from_function.into(),
+            to_name: to_name.into(),
+            from_path: from_path.into(),
+            to_path,
+            confidence: "LOW".to_string(),
+        }
+    }
+}
+
+/// Hot-component aggregation metrics (PERF-C-ARCH-002). Densities are per
+/// KLOC and schema-typed `number` ⇒ f64; `complexity_sum` is also `number`
+/// in the schema (f64 here), while `max_loop_depth` is `integer` (u32).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ComponentMetrics {
+    pub complexity_sum: f64,
+    /// Alloc sites per KLOC.
+    pub alloc_site_density: f64,
+    pub max_loop_depth: u32,
+    /// Findings per KLOC.
+    pub finding_density: f64,
+}
+
+/// One element of `components[]`. Field declaration order matches the
+/// schema's property order; `finding_count` is schema-OPTIONAL ⇒ omitted
+/// when absent.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ComponentEntry {
+    pub component_id: String,
+    pub path_prefix: String,
+    /// 1 = hottest (schema `minimum: 1`).
+    pub rank: u32,
+    pub metrics: ComponentMetrics,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub finding_count: Option<u32>,
+}
+
+/// One element of `stats.distributions[]` — a histogram bucket over a
+/// function-level stat field (e.g. metric `length_lines`, bucket `"1-10"`).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct DistributionEntry {
+    /// Function stat field name being distributed.
+    pub metric: String,
+    pub bucket: String,
+    pub count: u32,
 }
 
 /// Include dependency graph: every scanned file as a node plus resolved
@@ -239,19 +344,91 @@ pub struct GraphNode {
     pub path: String,
 }
 
-/// Include-graph edge — resolved internal dependencies only.
+/// Include-graph edge. Admission rule (m6, P4 Wave 2b): resolved internal
+/// edges (quoted or angle-in-repo) PLUS unresolved QUOTED edges (`to: null`
+/// — data, not error, modules.md Principle 4). Unresolved ANGLE edges stay
+/// EXCLUDED upstream (external bucket).
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct IncludeEdgeDto {
     pub from: String,
-    /// Resolved repo-relative POSIX path; `null` only for unresolvable edges,
-    /// which are EXCLUDED from the graph in v1 (they live in `files[]`
-    /// include_counts + ARCH-001 findings instead).
-    pub to: String,
+    /// Resolved repo-relative POSIX path; explicit `null` for unresolved
+    /// quoted edges (schema `"type": ["string", "null"]`). Serialized
+    /// WITHOUT `skip_serializing_if` — the null is load-bearing.
+    pub to: Option<String>,
     pub form: crate::ir::IncludeForm,
     pub resolved: bool,
     /// Location of the `#include` directive (report drill-down). Always
     /// present because the IR edge always carries it.
     pub span: Span,
+}
+
+// ---------------------------------------------------------------------------
+// Shared numeric formatting — the SINGLE rounding implementation for every
+// numeric text the tool emits (charts SVG labels/geometry, report.md
+// densities). Both consumers consume schema DTOs, so this lives next to them
+// without a layering violation; the former per-module copies (charts'
+// binary-scaling floor, reporter's private digit method) were unified here.
+// ---------------------------------------------------------------------------
+
+/// Round `value` to `scale` decimal places, HALF-UP **away from zero**
+/// (pinned: -2.5 @0 → -3, 2.5 @0 → 3, 0.125 @2 → 13 i.e. "0.13").
+///
+/// Digit-inspection algorithm: render `|value|` at `scale + 1` decimals
+/// (Rust's float formatting is correctly rounded), then round the trailing
+/// digit half-up into the kept digits. This avoids the binary-representation
+/// drift of naive scaling (`value * factor + 0.5` floors 2.675 @2 to 2.67
+/// because 2.675 is not representable); decimal-representable borderline
+/// values round half-up as pinned. A scaled value of zero never carries a
+/// sign ("-0.00" cannot leak). Inputs whose magnitude fits `i64` after
+/// scaling behave exactly; callers feed small counts/densities only.
+#[must_use]
+pub(crate) fn round_half_up(value: f64, scale: u32) -> i64 {
+    debug_assert!(value.is_finite(), "only finite values reach output text");
+    let width = scale as usize + 1;
+    let rendered = format!("{:.width$}", value.abs(), width = width);
+    let (int_part, frac_part) = rendered.split_once('.').unwrap_or((&rendered, ""));
+    let mut digits = [0u32; 32]; // scale+1 ≤ 32 by contract (call sites use 0..=2)
+    assert!(width <= digits.len(), "scale out of supported range");
+    for (slot, byte) in frac_part.bytes().take(width).enumerate() {
+        digits[slot] = u32::from(byte - b'0');
+    }
+    let mut int_value: i64 = int_part.parse().unwrap_or(0);
+    let mut frac_value: i64 = digits[..width - 1]
+        .iter()
+        .fold(0_i64, |acc, &d| acc * 10 + i64::from(d));
+    if digits[width - 1] >= 5 {
+        frac_value += 1;
+    }
+    let factor = 10_i64.pow(scale);
+    if frac_value >= factor {
+        int_value += 1;
+        frac_value -= factor;
+    }
+    let magnitude = int_value * factor + frac_value;
+    if value.is_sign_negative() && magnitude != 0 {
+        -magnitude
+    } else {
+        magnitude
+    }
+}
+
+/// Format `value` fixed-point at `scale` decimals with HALF-UP rounding
+/// ([`round_half_up`]) — the ONLY way non-integer numbers reach output text
+/// in charts and report.md.
+#[must_use]
+pub(crate) fn format_fixed_point(value: f64, scale: u32) -> String {
+    let scaled = round_half_up(value, scale);
+    if scale == 0 {
+        return scaled.to_string();
+    }
+    // Magnitude-based split: `div_euclid`/`rem_euclid` on a NEGATIVE scaled
+    // value would produce non-canonical text ("-3.32" for -2.68).
+    let factor = 10_i64.pow(scale);
+    let sign = if scaled < 0 { "-" } else { "" };
+    let magnitude = scaled.abs();
+    let int_part = magnitude / factor;
+    let frac = magnitude % factor;
+    format!("{sign}{int_part}.{frac:0width$}", width = scale as usize)
 }
 
 // ---------------------------------------------------------------------------
@@ -387,6 +564,7 @@ mod tests {
                     alloc_site_count: 1,
                     length_lines: 6,
                 }],
+                distributions: None,
             },
             findings: vec![FindingEntry {
                 finding_id: "PERF-C-ALLOC-001:a.c:6:9".to_string(),
@@ -411,7 +589,9 @@ mod tests {
                     }],
                     edges: vec![],
                 },
+                call_graph: None,
             }),
+            components: None,
         }
     }
 
@@ -474,6 +654,172 @@ mod tests {
             "\"call_graph\"",
         ] {
             assert!(!out.contains(absent), "{absent} should be omitted:\n{out}");
+        }
+    }
+
+    /// P4 Wave 1: a fully-populated document serializes with key order
+    /// matching metrics.schema.v1.0.json property order (declaration order is
+    /// load-bearing), and round-trips through `serde_json::Value` with the
+    /// expected structure — including an explicit `null` `to_path` and an
+    /// omitted-when-absent `finding_count`.
+    #[test]
+    fn p4_sections_serialize_in_schema_field_order() {
+        let mut doc = sample_doc();
+        doc.stats.distributions = Some(vec![
+            DistributionEntry {
+                metric: "length_lines".to_string(),
+                bucket: "1-10".to_string(),
+                count: 3,
+            },
+            DistributionEntry {
+                metric: "cyclomatic_complexity".to_string(),
+                bucket: "1-5".to_string(),
+                count: 7,
+            },
+        ]);
+        if let Some(graphs) = doc.graphs.as_mut() {
+            graphs.call_graph = Some(CallGraphSection {
+                edges: vec![CallEdge::new("a.c#fill#4:1", "malloc", "a.c", None)],
+            });
+        }
+        doc.components = Some(vec![
+            ComponentEntry {
+                component_id: "src/net".to_string(),
+                path_prefix: "src/net".to_string(),
+                rank: 1,
+                metrics: ComponentMetrics {
+                    complexity_sum: 42.0,
+                    alloc_site_density: 12.5,
+                    max_loop_depth: 3,
+                    finding_density: 8.25,
+                },
+                finding_count: Some(5),
+            },
+            ComponentEntry {
+                component_id: "src/io".to_string(),
+                path_prefix: "src/io".to_string(),
+                rank: 2,
+                metrics: ComponentMetrics {
+                    complexity_sum: 10.0,
+                    alloc_site_density: 0.0,
+                    max_loop_depth: 1,
+                    finding_density: 2.0,
+                },
+                finding_count: None,
+            },
+        ]);
+
+        let out = to_json(&doc).expect("serialize");
+
+        // Key ORDER must be checked on the text: serde_json::Value sorts map
+        // keys (preserve_order OFF), so it cannot observe declaration order.
+        let pos = |needle: &str, from: usize| {
+            out[from..]
+                .find(needle)
+                .unwrap_or_else(|| panic!("{needle} missing from output:\n{out}"))
+                + from
+        };
+        let start = pos("\"schema_version\"", 0);
+        let tool = pos("\"tool\"", start);
+        let scan = pos("\"scan\"", tool);
+        let files = pos("\"files\"", scan);
+        let stats = pos("\"stats\"", files);
+        let findings = pos("\"findings\"", stats);
+        let graphs = pos("\"graphs\"", findings);
+        let components = pos("\"components\"", graphs);
+        assert!(start < tool && tool < scan && scan < files);
+        assert!(files < stats && stats < findings && findings < graphs && graphs < components);
+
+        // stats: functions before distributions.
+        let functions = pos("\"functions\"", stats);
+        let distributions = pos("\"distributions\"", functions);
+        assert!(functions < distributions);
+
+        // graphs: include_graph before call_graph.
+        let include_graph = pos("\"include_graph\"", graphs);
+        let call_graph = pos("\"call_graph\"", include_graph);
+        assert!(include_graph < call_graph);
+
+        // call edge: exact schema field order.
+        let from_function = pos("\"from_function\"", call_graph);
+        let to_name = pos("\"to_name\"", from_function);
+        let from_path = pos("\"from_path\"", to_name);
+        let to_path = pos("\"to_path\"", from_path);
+        let confidence = pos("\"confidence\"", to_path);
+        assert!(
+            from_function < to_name
+                && to_name < from_path
+                && from_path < to_path
+                && to_path < confidence
+        );
+
+        // Round-trip through serde_json::Value: structure + values.
+        let value: serde_json::Value =
+            serde_json::from_str(&out).expect("output must be valid JSON");
+        let edge = &value["graphs"]["call_graph"]["edges"][0];
+        assert_eq!(edge["from_function"], "a.c#fill#4:1");
+        assert_eq!(edge["to_name"], "malloc");
+        assert_eq!(edge["from_path"], "a.c");
+        assert!(
+            edge["to_path"].is_null(),
+            "unresolved to_path serializes null"
+        );
+        assert_eq!(edge["confidence"], "LOW");
+        assert_eq!(value["stats"]["distributions"][0]["metric"], "length_lines");
+        assert_eq!(value["stats"]["distributions"][0]["bucket"], "1-10");
+        assert_eq!(value["stats"]["distributions"][0]["count"], 3);
+        assert_eq!(
+            value["stats"]["distributions"][1]["metric"],
+            "cyclomatic_complexity"
+        );
+        assert_eq!(value["components"][0]["component_id"], "src/net");
+        assert_eq!(value["components"][0]["rank"], 1);
+        assert_eq!(value["components"][0]["finding_count"], 5);
+        assert_eq!(value["components"][0]["metrics"]["complexity_sum"], 42.0);
+        assert_eq!(
+            value["components"][0]["metrics"]["alloc_site_density"],
+            12.5
+        );
+        assert_eq!(value["components"][0]["metrics"]["max_loop_depth"], 3);
+        assert_eq!(value["components"][0]["metrics"]["finding_density"], 8.25);
+        assert!(
+            value["components"][1].get("finding_count").is_none(),
+            "absent finding_count must be omitted, not null"
+        );
+    }
+
+    /// Empty/minimal document: with every P4 section left `None`, output is
+    /// valid JSON and none of the new optional keys appear at all.
+    #[test]
+    fn minimal_document_still_serializes_without_p4_sections() {
+        let mut doc = sample_doc();
+        doc.stats.distributions = None;
+        if let Some(graphs) = doc.graphs.as_mut() {
+            graphs.call_graph = None;
+        }
+        doc.components = None;
+        let out = to_json(&doc).expect("serialize minimal document");
+        for absent in ["\"call_graph\"", "\"components\"", "\"distributions\""] {
+            assert!(!out.contains(absent), "{absent} should be absent:\n{out}");
+        }
+        let value: serde_json::Value =
+            serde_json::from_str(&out).expect("minimal output must be valid JSON");
+        assert!(value.get("components").is_none());
+        assert!(value["stats"].get("distributions").is_none());
+        assert!(value["graphs"].get("call_graph").is_none());
+    }
+
+    /// The call-edge confidence is the schema `const: "LOW"` — both on the
+    /// struct (constructor hardcodes it) and in serialized form.
+    #[test]
+    fn call_edge_confidence_is_always_low() {
+        let resolved = CallEdge::new("a.c#f#1:1", "g", "a.c", Some("b.c".to_string()));
+        let unresolved = CallEdge::new("a.c#f#1:1", "h", "a.c", None);
+        assert_eq!(resolved.confidence, "LOW");
+        assert_eq!(unresolved.confidence, "LOW");
+        for edge in [resolved, unresolved] {
+            let value = serde_json::to_value(&edge).expect("serialize edge");
+            assert_eq!(value["confidence"], "LOW");
         }
     }
 }

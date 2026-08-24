@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use perfpal::analyzer::{Confidence, Severity, analyze};
-use perfpal::ir::ParseStatus;
+use perfpal::ir::{IncludeForm, ParseStatus};
 use perfpal::scanner::{ScanError, scan};
 
 const LOOP_MALLOC_C: &str = "\
@@ -94,13 +94,82 @@ fn scan_then_analyze_end_to_end() {
         .expect("malloc CallEvent");
     assert_eq!(malloc.meta.in_loop_depth, 1);
 
-    // End-to-end: ALLOC-001 fires through scanner → analyzer.
+    // End-to-end: ALLOC-001 fires through scanner → analyzer, and Wave 2a's
+    // ARCH-001 flags the unresolvable quoted `missing.h` (Info, data not
+    // error) — exactly two findings from this unit set.
     let findings = analyze(&units);
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].rule_id, "PERF-C-ALLOC-001");
-    assert_eq!(findings[0].severity, Severity::Hot);
-    assert_eq!(findings[0].confidence, Confidence::High);
-    assert_eq!(findings[0].path, "a.c");
+    assert_eq!(findings.len(), 2);
+    let alloc001 = findings
+        .iter()
+        .find(|f| f.rule_id == "PERF-C-ALLOC-001")
+        .expect("ALLOC-001 through the real backend");
+    assert_eq!(alloc001.severity, Severity::Hot);
+    assert_eq!(alloc001.confidence, Confidence::High);
+    assert_eq!(alloc001.path, "a.c");
+    let arch001 = findings
+        .iter()
+        .find(|f| f.rule_id == "PERF-C-ARCH-001")
+        .expect("unresolved quoted include surfaced by ARCH-001");
+    assert_eq!(arch001.severity, Severity::Info);
+    assert_eq!(
+        arch001.evidence.get("kind").map(String::as_str),
+        Some("unresolved_include")
+    );
+
+    fs::remove_dir_all(&root).ok();
+}
+
+/// P4 Wave 1 (ADR-0002 chart policy): angle-bracket includes get the SAME
+/// two-candidate resolution as quoted includes. An angle hit on an in-repo
+/// file becomes an internal coupling edge (`resolved:true`, repo-relative
+/// path); an angle miss stays external (raw include text kept,
+/// `resolved:false`). Quoted behavior unchanged.
+#[test]
+fn angle_includes_resolve_when_target_is_in_repo() {
+    let root = temp_root("angle");
+    fs::write(
+        root.join("a.c"),
+        "#include <util.h>\n#include <stdio.h>\n#include \"inc/util.h\"\n\nvoid f(void) {}\n",
+    )
+    .unwrap();
+    // Root-level util.h: target of the angle-bracket include.
+    fs::write(root.join("util.h"), UTIL_H).unwrap();
+    fs::write(root.join("inc/util.h"), UTIL_H).unwrap();
+
+    let units = scan(&root).expect("scan must succeed");
+    let a = units
+        .iter()
+        .find(|u| u.file.path == "a.c")
+        .expect("a.c unit present");
+
+    // (a) Angle hit: util.h exists in the scanned tree → internal coupling.
+    let util = a
+        .includes
+        .iter()
+        .find(|e| e.form == IncludeForm::Angle && e.to_path.as_deref() == Some("util.h"))
+        .expect("angle edge with normalized repo-relative to_path");
+    assert!(
+        util.resolved,
+        "in-repo angle target must resolve:\n{util:?}"
+    );
+
+    // (b) Angle miss: stdio.h absent from the tree → external bucket, raw
+    // text preserved in to_path (never nulled).
+    let stdio = a
+        .includes
+        .iter()
+        .find(|e| e.form == IncludeForm::Angle && e.to_path.as_deref() == Some("stdio.h"))
+        .expect("unresolved angle edge keeps raw include text");
+    assert!(!stdio.resolved, "absent angle target stays external");
+
+    // (c) Quoted behavior unchanged: includer-relative hit resolves.
+    let quoted = a
+        .includes
+        .iter()
+        .find(|e| e.form == IncludeForm::Quoted)
+        .expect("quoted edge present");
+    assert_eq!(quoted.to_path.as_deref(), Some("inc/util.h"));
+    assert!(quoted.resolved);
 
     fs::remove_dir_all(&root).ok();
 }

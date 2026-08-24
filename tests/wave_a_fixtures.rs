@@ -2,23 +2,23 @@
 //! STR-001/002/003, LOOP-001/003, and CALL-001 run against serialized IR
 //! under `tests/fixtures/ir/` with NO tree-sitter binding. Covers detection,
 //! negatives/suppression, and both ir-v1.md §5 downgrade hooks on the new
-//! rules, plus a kitchen-sink synthetic unit tripping all twelve registry
-//! rules in report §4 total order.
+//! rules, plus a kitchen-sink synthetic unit set tripping ALL FIFTEEN
+//! registry rules (Wave 2a added ARCH-001/002/003) in report §4 total order.
 
 mod common;
 
 use std::collections::BTreeSet;
 
 use perfpal::analyzer::finding::{
-    ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ALLOC_003_RULE_ID, CALL_001_RULE_ID, CALL_002_RULE_ID,
-    LOOP_001_RULE_ID, LOOP_002_RULE_ID, LOOP_003_RULE_ID, LOOP_004_RULE_ID, STR_001_RULE_ID,
-    STR_002_RULE_ID, STR_003_RULE_ID,
+    ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ALLOC_003_RULE_ID, ARCH_001_RULE_ID, ARCH_002_RULE_ID,
+    ARCH_003_RULE_ID, CALL_001_RULE_ID, CALL_002_RULE_ID, LOOP_001_RULE_ID, LOOP_002_RULE_ID,
+    LOOP_003_RULE_ID, LOOP_004_RULE_ID, STR_001_RULE_ID, STR_002_RULE_ID, STR_003_RULE_ID,
 };
 use perfpal::analyzer::{Confidence, Finding, Severity, analyze};
 use perfpal::ir::{
     BinaryOpEvent, CallEvent, CalleeKind, EventMeta, FileRecord, FunctionRecord, IncludeCounts,
-    LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, Shape, ShapeKind, Span,
-    StatementRole,
+    IncludeEdge, IncludeForm, LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, Shape,
+    ShapeKind, Span, StatementRole,
 };
 use perfpal::scanner::{FileUnit, FunctionUnit};
 
@@ -562,9 +562,11 @@ fn func(
     }
 }
 
-/// One unit, two functions: `kitchen` nests three loops and trips
-/// ALLOC-001/002/003, STR-001/002/003, LOOP-001/002/003/004; `recurse`
-/// trips CALL-001 and CALL-002.
+/// Two units: `src/kitchen.c` nests three loops and trips ALLOC-001/002/003,
+/// STR-001/002/003, LOOP-001/002/003/004, ARCH-001 (unresolved quoted
+/// include), and ARCH-003 (cross-file call to `helper_fn`); `recurse` trips
+/// CALL-001 and CALL-002. The whole `src` component (complexity_sum 22 ≥ 15)
+/// trips ARCH-002, anchored at the most complex function (`recurse`).
 fn kitchen_units() -> Vec<FileUnit> {
     let path = "src/kitchen.c";
     let mut kitchen_calls = vec![
@@ -597,6 +599,8 @@ fn kitchen_units() -> Vec<FileUnit> {
         ),
         // LOOP-002: unguarded expensive I/O inside the loop nest.
         call("printf", &["fmt"], sp(12, 17, 29), 3, StatementRole::Nested),
+        // ARCH-003: direct call whose name matches only src/helper.c.
+        call("helper_fn", &[], sp(14, 17, 28), 3, StatementRole::Nested),
     ];
     // ALLOC-003 two-part proof requires the realloc SIZE arg (last) to be
     // a Binary shape — `realloc(buf, size + chunk)`.
@@ -664,7 +668,15 @@ fn kitchen_units() -> Vec<FileUnit> {
             include_counts: IncludeCounts::default(),
         },
         parse_health: ParseHealth::default(),
-        includes: Vec::new(),
+        // ARCH-001: unresolvable quoted include (to_path nulled by the
+        // resolver — data, not error).
+        includes: vec![IncludeEdge {
+            from_path: path.to_string(),
+            to_path: None,
+            form: IncludeForm::Quoted,
+            resolved: false,
+            span: sp(1, 1, 20),
+        }],
         global_vars: Vec::new(),
         structs: Vec::new(),
         macros: Vec::new(),
@@ -706,13 +718,60 @@ fn kitchen_units() -> Vec<FileUnit> {
     }]
 }
 
-/// Lexicographic check of the report §4 total order between adjacent pairs:
-/// severity desc → confidence desc → rule_id asc → path asc → line asc → col asc.
+/// ARCH-003 target: `helper_fn` is defined ONLY here, so kitchen's direct
+/// call becomes a cross-file name-matched edge.
+fn helper_unit() -> FileUnit {
+    let path = "src/helper.c";
+    FileUnit {
+        file: FileRecord {
+            path: path.to_string(),
+            language: "c".to_string(),
+            loc: LocCounts::default(),
+            function_count: 1,
+            global_var_count: 0,
+            include_counts: IncludeCounts::default(),
+        },
+        parse_health: ParseHealth::default(),
+        includes: Vec::new(),
+        global_vars: Vec::new(),
+        structs: Vec::new(),
+        macros: Vec::new(),
+        functions: vec![func(
+            "helper_fn",
+            path,
+            Span {
+                start_line: 1,
+                start_col: 5,
+                end_line: 3,
+                end_col: 6,
+            },
+            Vec::new(),
+            Vec::new(),
+        )],
+    }
+}
+
+/// Lexicographic check of the report §4 total order between adjacent pairs,
+/// written against the OUTPUT-CONTRACT §4 SPEC (not the production
+/// comparator): severity hot→warn→info, then confidence HIGH→MEDIUM→LOW,
+/// then rule_id/path/line/col ascending. The severity/confidence keys are
+/// spelled out via explicit rank tables so a future enum-order accident
+/// cannot silently re-invert this check.
 fn adjacently_in_total_order(a: &Finding, b: &Finding) -> bool {
     use std::cmp::Ordering::Equal;
+    let severity_rank = |s: Severity| match s {
+        Severity::Hot => 0,
+        Severity::Warn => 1,
+        Severity::Info => 2,
+    };
+    let confidence_rank = |c: Confidence| match c {
+        Confidence::High => 0,
+        Confidence::Medium => 1,
+        Confidence::Low => 2,
+    };
     (
-        b.severity.cmp(&a.severity),
-        b.confidence.cmp(&a.confidence),
+        severity_rank(a.severity).cmp(&severity_rank(b.severity)),
+        confidence_rank(a.confidence).cmp(&confidence_rank(b.confidence)),
         a.rule_id.cmp(&b.rule_id),
         a.path.cmp(&b.path),
         a.span.start_line.cmp(&b.span.start_line),
@@ -726,6 +785,9 @@ fn kitchen_sink_trips_all_registry_rules_in_total_order() {
         ALLOC_001_RULE_ID,
         ALLOC_002_RULE_ID,
         ALLOC_003_RULE_ID,
+        ARCH_001_RULE_ID,
+        ARCH_002_RULE_ID,
+        ARCH_003_RULE_ID,
         CALL_001_RULE_ID,
         CALL_002_RULE_ID,
         LOOP_001_RULE_ID,
@@ -739,7 +801,9 @@ fn kitchen_sink_trips_all_registry_rules_in_total_order() {
     .into_iter()
     .collect();
 
-    let findings = analyze(&kitchen_units());
+    let mut units = kitchen_units();
+    units.push(helper_unit());
+    let findings = analyze(&units);
     let seen: BTreeSet<&str> = findings.iter().map(|f| f.rule_id.as_str()).collect();
     assert_eq!(
         seen, all_rules,
@@ -790,5 +854,25 @@ fn kitchen_sink_trips_all_registry_rules_in_total_order() {
     assert_eq!(
         call002[0].evidence.get("complexity").map(String::as_str),
         Some("20")
+    );
+    // Wave 2a spot-checks inside the same synthetic unit set.
+    let arch001 = common::by_rule(&findings, ARCH_001_RULE_ID);
+    assert_eq!(arch001.len(), 1, "only the unresolved quoted include fires");
+    assert_eq!(
+        arch001[0].evidence.get("kind").map(String::as_str),
+        Some("unresolved_include")
+    );
+    let arch002 = common::by_rule(&findings, ARCH_002_RULE_ID);
+    assert_eq!(arch002.len(), 1, "src component complexity_sum 22 ≥ 15");
+    assert_eq!(
+        arch002[0].evidence.get("path_prefix").map(String::as_str),
+        Some("src")
+    );
+    assert_eq!(arch002[0].span.start_line, 42, "anchored at recurse");
+    let arch003 = common::by_rule(&findings, ARCH_003_RULE_ID);
+    assert_eq!(arch003.len(), 1, "kitchen → helper_fn cross-file edge");
+    assert_eq!(
+        arch003[0].evidence.get("matched_path").map(String::as_str),
+        Some("src/helper.c")
     );
 }

@@ -1,0 +1,451 @@
+//! Chart-emitter contract tests (ADR-0002 guardrails): byte-determinism by
+//! construction, presence-based emission, XML escaping, deterministic caps
+//! with in-chart truncation markers, HALF-UP rounding locks (in-module), and
+//! distinct LOW-confidence call-edge styling.
+//!
+//! Documents are built programmatically — pure [`MetricsDocument`] values,
+//! no fixtures on disk (charts consume metrics.json structures ONLY,
+//! guardrail 1).
+
+use perfpal::charts::render;
+use perfpal::ir::{IncludeForm, Span};
+use perfpal::schema::{
+    ComponentEntry, ComponentMetrics, GraphNode, GraphsSection, IncludeEdgeDto, IncludeGraph,
+    MetricsDocument, SCHEMA_VERSION, ScanInfo, StatsSection, ToolInfo,
+};
+
+// ---------------------------------------------------------------------------
+// Local document builders
+// ---------------------------------------------------------------------------
+
+fn base_doc() -> MetricsDocument {
+    MetricsDocument {
+        schema_version: SCHEMA_VERSION.to_string(),
+        tool: ToolInfo {
+            name: "perfpal".to_string(),
+            version: "0.1.0".to_string(),
+        },
+        scan: ScanInfo {
+            root_path: ".".to_string(),
+            started_at: "2026-08-24T00:00:00Z".to_string(),
+            duration_ms: None,
+            languages: vec!["c".to_string()],
+            file_count: 0,
+            loc_total: None,
+        },
+        parse_health_summary: None,
+        files: vec![],
+        stats: StatsSection {
+            functions: vec![],
+            distributions: None,
+        },
+        findings: vec![],
+        graphs: None,
+        components: None,
+    }
+}
+
+fn node(path: &str) -> GraphNode {
+    GraphNode {
+        path: path.to_string(),
+    }
+}
+
+fn edge(from: &str, to: &str) -> IncludeEdgeDto {
+    IncludeEdgeDto {
+        from: from.to_string(),
+        to: Some(to.to_string()),
+        form: IncludeForm::Quoted,
+        resolved: true,
+        span: Span::point(1, 1),
+    }
+}
+
+fn unresolved_edge(from: &str) -> IncludeEdgeDto {
+    IncludeEdgeDto {
+        from: from.to_string(),
+        to: None,
+        form: IncludeForm::Quoted,
+        resolved: false,
+        span: Span::point(2, 1),
+    }
+}
+
+fn component(prefix: &str, rank: u32, density: f64) -> ComponentEntry {
+    ComponentEntry {
+        component_id: prefix.to_string(),
+        path_prefix: prefix.to_string(),
+        rank,
+        metrics: ComponentMetrics {
+            complexity_sum: 0.0,
+            alloc_site_density: 0.0,
+            max_loop_depth: 0,
+            finding_density: density,
+        },
+        finding_count: None,
+    }
+}
+
+/// Doc 1: three-node include cycle (a→b→c→a), plus an unresolved quoted edge
+/// that must NOT enter the chart.
+fn cycle_doc() -> MetricsDocument {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![node("a.c"), node("b.c"), node("c.c")],
+            edges: vec![
+                edge("a.c", "b.c"),
+                edge("b.c", "c.c"),
+                edge("c.c", "a.c"),
+                unresolved_edge("a.c"),
+            ],
+        },
+        call_graph: None,
+    });
+    doc
+}
+
+/// Doc 2: 60-node chain — exercises the 50-node cap + truncation marker.
+fn big_doc() -> MetricsDocument {
+    let paths: Vec<String> = (0..60).map(|i| format!("n{i:02}.c")).collect();
+    let mut edges = Vec::new();
+    for pair in paths.windows(2) {
+        edges.push(edge(&pair[0], &pair[1]));
+    }
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: paths.iter().map(|p| node(p)).collect(),
+            edges,
+        },
+        call_graph: None,
+    });
+    doc
+}
+
+/// Doc 3: two components coupled by BOTH a resolved include edge and a
+/// cross-file call edge (distinct styling + mandatory ADR-0001 caveat).
+fn calls_doc() -> MetricsDocument {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![node("src/a/x.c"), node("src/b/y.c")],
+            edges: vec![edge("src/a/x.c", "src/b/y.c")],
+        },
+        call_graph: Some(perfpal::schema::CallGraphSection {
+            edges: vec![perfpal::schema::CallEdge::new(
+                "src/a/x.c#f#1:1",
+                "g",
+                "src/a/x.c",
+                Some("src/b/y.c".to_string()),
+            )],
+        }),
+    });
+    doc.components = Some(vec![component("src/b", 2, 4.0), component("src/a", 1, 8.0)]);
+    doc
+}
+
+/// Doc 4: components whose finding densities are ALL zero.
+fn zero_density_doc() -> MetricsDocument {
+    let mut doc = base_doc();
+    doc.components = Some(vec![
+        component("src/quiet", 1, 0.0),
+        component("src/calmer", 2, 0.0),
+    ]);
+    doc
+}
+
+/// Doc 5: two ROOT-level files including each other, plus one subdir file
+/// for contrast. Root-level endpoints map to the `"."` component prefix —
+/// the coupling matrix MUST count their edges (regression: the chart-local
+/// parent_dir used to return "" for slash-less paths and missed every
+/// root-level endpoint against the aggregator's `"."` axis).
+fn root_level_doc() -> MetricsDocument {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![node("a.c"), node("b.c"), node("src/c.c")],
+            edges: vec![edge("a.c", "b.c"), edge("b.c", "a.c")],
+        },
+        call_graph: None,
+    });
+    doc.components = Some(vec![component(".", 1, 2.0), component("src", 2, 0.0)]);
+    doc
+}
+
+fn svg_of(chart: &[(&'static str, Vec<u8>)], name: &str) -> String {
+    let (_, bytes) = chart
+        .iter()
+        .find(|(file, _)| *file == name)
+        .unwrap_or_else(|| panic!("{name} not emitted"));
+    String::from_utf8(bytes.clone()).expect("SVG must be UTF-8")
+}
+
+// ---------------------------------------------------------------------------
+// 1 + 5. Byte-determinism: rendering each fixture twice ⇒ identical bytes
+// ---------------------------------------------------------------------------
+
+#[test]
+fn double_render_is_byte_identical_across_all_fixtures() {
+    for doc in [
+        cycle_doc(),
+        big_doc(),
+        calls_doc(),
+        zero_density_doc(),
+        root_level_doc(),
+    ] {
+        let first = render(&doc);
+        let second = render(&doc);
+        assert_eq!(first, second, "byte-determinism violated");
+        assert!(!first.is_empty(), "fixture documents must emit charts");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Chart-specific content contracts
+// ---------------------------------------------------------------------------
+
+#[test]
+fn cycle_document_states_deterministic_broken_count() {
+    let out = render(&cycle_doc());
+    let svg = svg_of(&out, "include-graph.svg");
+    assert!(
+        svg.contains("1 cyclic edges broken (see ARCH-001 findings)"),
+        "broken-cycle caption missing:\n{svg}"
+    );
+    // The broken edge (c,a) is NOT drawn: exactly 2 kept lines.
+    assert_eq!(svg.matches("<line ").count(), 2);
+}
+
+#[test]
+fn oversized_graph_is_capped_at_50_with_visible_marker() {
+    let out = render(&big_doc());
+    let svg = svg_of(&out, "include-graph.svg");
+    assert_eq!(
+        svg.matches("<rect ").count(),
+        50,
+        "node cap applied pre-layout"
+    );
+    assert!(
+        svg.contains("&#8230; 10 more files omitted"),
+        "truncation marker missing:\n{svg}"
+    );
+}
+
+#[test]
+fn call_edges_are_distinctly_styled_with_low_confidence_legend() {
+    let out = render(&calls_doc());
+    let svg = svg_of(&out, "component-coupling.svg");
+    assert!(
+        svg.contains("fill=\"#3a3aff\" fill-opacity=\"0.55\""),
+        "call overlay rect missing:\n{svg}"
+    );
+    assert!(
+        svg.contains("call edges are LOW-confidence hypotheses (ADR-0001)"),
+        "mandatory caveat line missing:\n{svg}"
+    );
+}
+
+#[test]
+fn coupling_axis_orders_by_rank_then_prefix_and_counts_both_edges() {
+    let out = render(&calls_doc());
+    let svg = svg_of(&out, "component-coupling.svg");
+    // rank 1 (src/a) label appears before rank 2 (src/b) row label.
+    let a = svg.find(">src/a<").expect("src/a axis label");
+    let b = svg.find(">src/b<").expect("src/b axis label");
+    assert!(a < b, "axis must follow (rank, path_prefix) order");
+
+    // Real cell-VALUE check (the test name promises counting): the
+    // (src/a → src/b) cell sums include(1) + call(1) = 2 = max ⇒ the
+    // darkest ramp fill. A zeroed cell would render pure white instead.
+    assert!(
+        svg.contains("fill=\"#b30000\""),
+        "coupled cell value not rendered at max heat:\n{svg}"
+    );
+}
+
+#[test]
+fn root_level_files_coupling_edges_are_counted() {
+    let out = render(&root_level_doc());
+    let svg = svg_of(&out, "component-coupling.svg");
+    // The "." component is a real axis label.
+    assert!(
+        svg.contains(">.<"),
+        "root-level '.' axis label missing:\n{svg}"
+    );
+    // Both a.c↔b.c edges land in the "." diagonal cell (total 2 = max) ⇒
+    // darkest heat fill. Under the historical ""-for-root parent_dir bug,
+    // every root endpoint missed the bump index and ALL cells stayed white.
+    assert!(
+        svg.contains("fill=\"#b30000\""),
+        "root-level coupling cell not counted:\n{svg}"
+    );
+}
+
+#[test]
+fn phantom_edge_endpoints_neither_render_nor_displace_real_nodes() {
+    // 55-node chain (cap 50): p01..p53 have degree 2, p00/p54 degree 1 —
+    // top-50 keeps p01..p50 ascending, omitting exactly 5. Then MANY real
+    // files include a NON-node target ("version.inc" — resolvable on disk,
+    // but discovery only picks .c/.h so it is absent from nodes[]). Its
+    // degree must NOT count: it must not appear as a node, and the kept
+    // top-50 must be unaffected.
+    let paths: Vec<String> = (0..55).map(|i| format!("p{i:02}.c")).collect();
+    let mut edges: Vec<IncludeEdgeDto> = paths.windows(2).map(|p| edge(&p[0], &p[1])).collect();
+    for p in paths.iter().take(50) {
+        edges.push(edge(p, "version.inc"));
+    }
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: paths.iter().map(|p| node(p)).collect(),
+            edges,
+        },
+        call_graph: None,
+    });
+    let out = render(&doc);
+    let svg = svg_of(&out, "include-graph.svg");
+
+    assert!(
+        !svg.contains("version.inc"),
+        "phantom non-node endpoint rendered as a node:\n{svg}"
+    );
+    assert!(
+        svg.contains("&#8230; 5 more files omitted"),
+        "truncation count wrong (phantom degrees skewed ranking):\n{svg}"
+    );
+    assert!(svg.contains(">p01.c<"), "degree-2 head must be kept");
+    assert!(
+        svg.contains(">p50.c<"),
+        "last degree-2 node by path asc kept"
+    );
+    assert!(
+        !svg.contains(">p51.c<"),
+        "51st-ranked real file must be dropped"
+    );
+    assert!(
+        !svg.contains(">p00.c<"),
+        "degree-1 chain tail must be dropped"
+    );
+}
+
+#[test]
+fn all_zero_densities_render_stub_bars_and_caption() {
+    let out = render(&zero_density_doc());
+    let svg = svg_of(&out, "hot-components.svg");
+    assert!(
+        svg.contains("no findings recorded"),
+        "all-zero caption missing:\n{svg}"
+    );
+    assert!(
+        svg.contains("width=\"2\""),
+        "minimal stub bars expected:\n{svg}"
+    );
+    assert!(svg.contains("1 src/quiet 0.00"));
+    assert!(svg.contains("2 src/calmer 0.00"));
+}
+
+#[test]
+fn hot_components_bar_length_is_proportional_to_max_density() {
+    let mut doc = base_doc();
+    doc.components = Some(vec![
+        component("src/hot", 1, 10.0),
+        component("src/warm", 2, 5.0),
+    ]);
+    let out = render(&doc);
+    let svg = svg_of(&out, "hot-components.svg");
+    assert!(
+        svg.contains("width=\"420\""),
+        "max density = full plot width"
+    );
+    assert!(svg.contains("width=\"210\""), "half density = half width");
+    assert!(!svg.contains("no findings recorded"));
+}
+
+// ---------------------------------------------------------------------------
+// 2. Emission rule: present AND non-empty, else omitted
+// ---------------------------------------------------------------------------
+
+#[test]
+fn empty_document_emits_no_charts() {
+    assert!(render(&base_doc()).is_empty(), "empty doc ⇒ empty output");
+}
+
+#[test]
+fn empty_include_nodes_omit_include_graph_but_keep_component_charts() {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![],
+            edges: vec![],
+        },
+        call_graph: None,
+    });
+    doc.components = Some(vec![component("src/solo", 1, 1.0)]);
+    let out = render(&doc);
+    let names: Vec<&str> = out.iter().map(|(name, _)| *name).collect();
+    assert_eq!(names, ["component-coupling.svg", "hot-components.svg"]);
+}
+
+#[test]
+fn empty_components_omit_component_charts_but_keep_include_graph() {
+    let mut doc = cycle_doc();
+    doc.components = Some(vec![]);
+    let out = render(&doc);
+    let names: Vec<&str> = out.iter().map(|(name, _)| *name).collect();
+    assert_eq!(names, ["include-graph.svg"]);
+}
+
+#[test]
+fn chart_emission_order_is_frozen() {
+    let mut doc = cycle_doc();
+    doc.components = Some(vec![component("src/x", 1, 1.0)]);
+    let out = render(&doc);
+    let names: Vec<&str> = out.iter().map(|(name, _)| *name).collect();
+    assert_eq!(
+        names,
+        [
+            "include-graph.svg",
+            "component-coupling.svg",
+            "hot-components.svg"
+        ]
+    );
+}
+
+// ---------------------------------------------------------------------------
+// 3. XML escaping of hostile label/path text
+// ---------------------------------------------------------------------------
+
+#[test]
+fn hostile_path_is_entity_escaped_in_text_nodes() {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![node("<a>&\"'b.c")],
+            edges: vec![],
+        },
+        call_graph: None,
+    });
+    let out = render(&doc);
+    let svg = svg_of(&out, "include-graph.svg");
+    assert!(
+        svg.contains("&lt;a&gt;&amp;&quot;&#39;b.c"),
+        "hostile path not fully escaped:\n{svg}"
+    );
+    assert!(
+        !svg.contains("<a>&"),
+        "raw unescaped hostile bytes leaked into output:\n{svg}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Determinism across runs (fresh documents, same values)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn identical_documents_render_identically_across_construction() {
+    // Two INDEPENDENT constructions of the same logical document.
+    let a = render(&calls_doc());
+    let b = render(&calls_doc());
+    assert_eq!(a, b);
+}

@@ -2,19 +2,27 @@
 //! pure over `[FileUnit]` — no I/O, no clock, no global state, no
 //! sibling-order dependence (modules.md §4.1).
 //!
-//! Family layout: [`alloc`] (ALLOC-001/002/003), [`call`] (CALL-001/002),
-//! `r#loop` (LOOP-001/002/003/004), [`str`] (STR-001/002/003). Shared
-//! candidate collection and span helpers live here so families stay consistent.
+//! Family layout: [`alloc`] (ALLOC-001/002/003), [`arch`] (ARCH-001/002/003),
+//! [`call`] (CALL-001/002), `r#loop` (LOOP-001/002/003/004), [`str`]
+//! (STR-001/002/003). Shared candidate collection and span helpers live here
+//! so families stay consistent.
 
 mod alloc;
+mod arch;
 mod call;
 mod r#loop;
 mod r#str;
 
 pub(super) use alloc::{alloc_001, alloc_002, alloc_003};
+pub(super) use arch::{arch_001, arch_002, arch_003};
 pub(super) use call::{call_001, call_002};
 pub(super) use r#loop::{loop_001, loop_002, loop_003, loop_004};
 pub(super) use r#str::{str_001, str_002, str_003};
+
+/// Cross-file name-matched call edges (ADR-0001 Syntactic tier): produced by
+/// [`arch_003`] for findings and consumed verbatim by the aggregator for
+/// `graphs.call_graph` (P4 Wave 2b).
+pub(crate) use arch::{CrossFileCallEdge, cross_file_call_edges};
 
 use crate::ir::{
     ALLOC_WRAPPER_PATTERN_ID, CallEvent, CalleeKind, MacroEventKind, ResolverTier, ShapeKind, Span,
@@ -26,6 +34,19 @@ pub(crate) const LOOP_001_MIN_DEPTH: u32 = 3;
 
 /// PERF-C-CALL-002 complexity threshold (catalog default ≥ 15).
 pub(crate) const CALL_002_MIN_COMPLEXITY: u32 = 15;
+
+/// PERF-C-ARCH-001 deep-chain threshold: transitive include depth at or
+/// beyond this fires (catalog default ≥ 8).
+pub(crate) const ARCH_001_MAX_INCLUDE_DEPTH: u32 = 8;
+
+/// PERF-C-ARCH-001 hub threshold: fan-out OR fan-in at or beyond this fires
+/// (catalog default ≥ 12).
+pub(crate) const ARCH_001_HUB_FANOUT: usize = 12;
+
+/// PERF-C-ARCH-002 component floor: the rank-1 component fires only when
+/// its complexity_sum reaches this (catalog default ≥ 15; keeps hello-world
+/// scans clean).
+pub(crate) const ARCH_002_MIN_COMPLEXITY_SUM: u32 = 15;
 
 /// Inclusive containment: `inner` lies fully within `outer`, endpoints
 /// allowed to touch (spans are inclusive on both ends, ir-v1.md §2).

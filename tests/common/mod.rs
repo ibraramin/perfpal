@@ -91,3 +91,54 @@ fn assert_keys_sorted(value: &serde_json::Value) {
         _ => {}
     }
 }
+
+// ---------------------------------------------------------------------------
+// P4 integration determinism helpers (modules.md §7 "double-render modulo
+// provenance"): mask the two provenance fields (`started_at`, `duration_ms`)
+// wherever they surface — JSON in metrics.json, text in report.md.
+// ---------------------------------------------------------------------------
+
+/// Mask `scan.started_at` / `scan.duration_ms` in a metrics.json payload,
+/// returning canonical JSON with both fields nulled.
+#[must_use]
+pub fn mask_metrics_provenance(raw: &str) -> String {
+    let mut value: serde_json::Value = serde_json::from_str(raw).expect("metrics.json parses");
+    value["scan"]["started_at"] = serde_json::Value::Null;
+    value["scan"]["duration_ms"] = serde_json::Value::Null;
+    value.to_string()
+}
+
+/// Mask the provenance surfaces inside report.md: the header blockquote's
+/// `started <RFC3339>` instant and `duration <n> ms` figure. Everything else
+/// is compared verbatim. Hand-rolled (no regex dependency — Cargo.toml is
+/// dependency-frozen). The v1 §5 template emits each marker at most once
+/// (header blockquote), so first-occurrence masking is complete.
+#[must_use]
+pub fn mask_report_provenance(raw: &str) -> String {
+    const STARTED: &str = "started ";
+    const DURATION: &str = "duration ";
+    raw.lines()
+        .map(|line| {
+            let mut masked = line.to_string();
+            // RFC3339 UTC instant ends at the literal 'Z'.
+            if let Some(i) = masked.find(STARTED) {
+                let from = i + STARTED.len();
+                if let Some(z) = masked[from..].find('Z') {
+                    masked.replace_range(from..=from + z, "<MASKED>");
+                }
+            }
+            if let Some(i) = masked.find(DURATION) {
+                let from = i + DURATION.len();
+                let digits = masked[from..]
+                    .chars()
+                    .take_while(char::is_ascii_digit)
+                    .count();
+                if digits > 0 {
+                    masked.replace_range(from..from + digits, "<MASKED>");
+                }
+            }
+            masked
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}

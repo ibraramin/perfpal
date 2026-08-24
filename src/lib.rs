@@ -9,6 +9,7 @@ pub mod aggregator;
 pub mod analyzer;
 pub mod charts;
 pub mod cli;
+pub mod graph;
 pub mod ir;
 pub mod reporter;
 pub mod scanner;

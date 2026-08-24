@@ -44,12 +44,16 @@ type HeuristicFn = fn(&[FileUnit]) -> Vec<Finding>;
 /// declaration order is load-bearing (modules.md §3.3). Adding a heuristic
 /// = inserting a new entry whose rule_id sorts into place (open pattern,
 /// minor-bump schema policy):
-/// alloc_001, alloc_002, alloc_003, call_001, call_002, loop_001, loop_002,
-/// loop_003, loop_004, str_001, str_002, str_003.
+/// alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001,
+/// call_002, loop_001, loop_002, loop_003, loop_004, str_001, str_002,
+/// str_003.
 const REGISTRY: &[HeuristicFn] = &[
     heuristics::alloc_001,
     heuristics::alloc_002,
     heuristics::alloc_003,
+    heuristics::arch_001,
+    heuristics::arch_002,
+    heuristics::arch_003,
     heuristics::call_001,
     heuristics::call_002,
     heuristics::loop_001,
@@ -62,6 +66,11 @@ const REGISTRY: &[HeuristicFn] = &[
 ];
 
 mod heuristics;
+
+/// Cross-file call-edge producer shared with the aggregator's
+/// `graphs.call_graph` assembly (P4 Wave 2b). Same data feeds ARCH-003
+/// findings and the document — one producer, two consumers.
+pub(crate) use heuristics::{CrossFileCallEdge, cross_file_call_edges};
 
 /// Run the full registry over the IR stream and return findings in the
 /// report §4 total order (modules.md §3.3 / report §4):
@@ -158,11 +167,14 @@ fn collapse_duplicates(findings: &mut Vec<Finding>) {
     *findings = kept;
 }
 
-/// Report §4 total order comparator.
+/// Report §4 total order comparator (output-contract §4): severity
+/// hot→warn→info and confidence HIGH→MEDIUM→LOW are the ASCENDING enum
+/// orders ([`Severity`]/[`Confidence`] declare variants in report order),
+/// so every key compares ascending.
 fn total_order(a: &Finding, b: &Finding) -> std::cmp::Ordering {
-    b.severity
-        .cmp(&a.severity)
-        .then(b.confidence.cmp(&a.confidence))
+    a.severity
+        .cmp(&b.severity)
+        .then(a.confidence.cmp(&b.confidence))
         .then(a.rule_id.cmp(&b.rule_id))
         .then(a.path.cmp(&b.path))
         .then(a.span.start_line.cmp(&b.span.start_line))

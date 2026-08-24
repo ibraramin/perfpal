@@ -1,0 +1,91 @@
+[
+  {
+    "file": {
+      "path": "main.c",
+      "language": "c",
+      "loc": {"code": 8, "comment": 0, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "main.c#main#2:5",
+          "name": "main",
+          "path": "main.c",
+          "span": {"start_line": 2, "start_col": 5, "end_line": 8, "end_col": 6},
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 7
+        },
+        "calls": [
+          {
+            "callee_name": "util_init",
+            "callee_kind": "direct",
+            "args": [],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 4, "start_col": 5, "end_line": 4, "end_col": 15},
+            "in_loop_depth": 0,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "file": {
+      "path": "util.c",
+      "language": "c",
+      "loc": {"code": 6, "comment": 0, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "util.c#util_init#2:5",
+          "name": "util_init",
+          "path": "util.c",
+          "span": {"start_line": 2, "start_col": 5, "end_line": 6, "end_col": 6},
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 5
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

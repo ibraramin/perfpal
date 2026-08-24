@@ -1,0 +1,99 @@
+[
+  {
+    "file": {
+      "path": "src/hot/parse.c",
+      "language": "c",
+      "loc": {"code": 100, "comment": 4, "blank": 8},
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/hot/parse.c#parse_big#4:5",
+          "name": "parse_big",
+          "path": "src/hot/parse.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 40, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["char *buf", "int n"],
+          "cyclomatic_complexity": 10,
+          "cognitive_complexity": 8,
+          "max_loop_depth": 2,
+          "alloc_site_count": 2,
+          "length_lines": 37
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/hot/parse.c#parse_small#42:5",
+          "name": "parse_small",
+          "path": "src/hot/parse.c",
+          "span": {"start_line": 42, "start_col": 5, "end_line": 50, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["char *buf"],
+          "cyclomatic_complexity": 8,
+          "cognitive_complexity": 5,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 9
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "file": {
+      "path": "src/cold/misc.c",
+      "language": "c",
+      "loc": {"code": 50, "comment": 2, "blank": 4},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/cold/misc.c#tiny_helper#3:5",
+          "name": "tiny_helper",
+          "path": "src/cold/misc.c",
+          "span": {"start_line": 3, "start_col": 5, "end_line": 8, "end_col": 6},
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 6
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

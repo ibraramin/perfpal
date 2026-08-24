@@ -1,0 +1,48 @@
+[
+  {
+    "file": {
+      "path": "src/orphan.c",
+      "language": "c",
+      "loc": {"code": 5, "comment": 0, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 1, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [
+      {
+        "from_path": "src/orphan.c",
+        "to_path": null,
+        "form": "quoted",
+        "resolved": false,
+        "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 21}
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/orphan.c#lone#3:5",
+          "name": "lone",
+          "path": "src/orphan.c",
+          "span": {"start_line": 3, "start_col": 5, "end_line": 6, "end_col": 6},
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 4
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

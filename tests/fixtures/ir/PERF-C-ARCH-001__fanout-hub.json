@@ -1,0 +1,132 @@
+[
+  {
+    "file": {
+      "path": "hub.c",
+      "language": "c",
+      "loc": {"code": 30, "comment": 0, "blank": 2},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 13, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t01.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t02.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 2, "start_col": 1, "end_line": 2, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t03.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 3, "start_col": 1, "end_line": 3, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t04.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 4, "start_col": 1, "end_line": 4, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t05.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 5, "start_col": 1, "end_line": 5, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t06.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 6, "start_col": 1, "end_line": 6, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t07.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 7, "start_col": 1, "end_line": 7, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t08.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 8, "start_col": 1, "end_line": 8, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t09.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 9, "start_col": 1, "end_line": 9, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t10.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 10, "start_col": 1, "end_line": 10, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t11.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 11, "start_col": 1, "end_line": 11, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t12.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 12, "start_col": 1, "end_line": 12, "end_col": 20}
+      },
+      {
+        "from_path": "hub.c",
+        "to_path": "inc/t13.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 13, "start_col": 1, "end_line": 13, "end_col": 20}
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "hub.c#use_all#15:5",
+          "name": "use_all",
+          "path": "hub.c",
+          "span": {"start_line": 15, "start_col": 5, "end_line": 18, "end_col": 6},
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 4
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

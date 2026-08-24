@@ -12,6 +12,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use perfpal::cli::run_with;
 use perfpal::schema;
 
+mod common;
+
 /// The committed fixture repo (tiny C project with an alloc-in-loop).
 fn fixture_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/e2e")
@@ -68,14 +70,14 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     assert_eq!(doc1["tool"]["name"], "perfpal");
     assert_eq!(doc1["scan"]["languages"], serde_json::json!(["c"]));
 
-    // files[] sorted by path; both fixture files present.
+    // files[] sorted by path; all three fixture files present.
     let paths: Vec<&str> = doc1["files"]
         .as_array()
         .unwrap()
         .iter()
         .map(|f| f["path"].as_str().unwrap())
         .collect();
-    assert_eq!(paths, ["src/main.c", "src/util.h"]);
+    assert_eq!(paths, ["src/main.c", "src/util.c", "src/util.h"]);
     let mut sorted = paths.clone();
     sorted.sort();
     assert_eq!(paths, sorted);
@@ -153,6 +155,133 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         })),
         "resolved include edge missing: {edges}"
     );
+    // P4: util.c joined the graph (node) with its own resolved edge.
+    let ig_nodes = doc1["graphs"]["include_graph"]["nodes"].as_array().unwrap();
+    assert!(
+        ig_nodes.iter().any(|n| n["path"] == "src/util.c"),
+        "src/util.c missing from include-graph nodes: {ig_nodes:?}"
+    );
+    assert!(
+        edges.as_array().is_some_and(|e| e.iter().any(|e| {
+            e["from"] == "src/util.c" && e["to"] == "src/util.h" && e["resolved"] == true
+        })),
+        "resolved include edge util.c → util.h missing: {edges}"
+    );
+
+    // Call graph: the TRUE cross-file pair main() → util_init (defined in
+    // src/util.c, so not file-local). Name-based matching ⇒ confidence LOW.
+    let call_edges = doc1["graphs"]["call_graph"]["edges"]
+        .as_array()
+        .expect("call_graph.edges present");
+    let arch003_edge = call_edges.iter().find(|e| {
+        e["from_function"]
+            .as_str()
+            .is_some_and(|f| f.starts_with("src/main.c#main#"))
+            && e["to_name"] == "util_init"
+    });
+    let arch003_edge = arch003_edge.unwrap_or_else(|| {
+        panic!("expected main→util_init cross-file call edge, got {call_edges:?}")
+    });
+    assert_eq!(arch003_edge["from_path"], "src/main.c");
+    assert_eq!(arch003_edge["to_path"], "src/util.c");
+    assert_eq!(arch003_edge["confidence"], "LOW");
+
+    // components[] present and ranked 1..n in emission order; every entry
+    // carries a non-empty path_prefix (root-level files would map to ".").
+    let components = doc1["components"].as_array().expect("components present");
+    assert!(!components.is_empty(), "components must be non-empty");
+    for (i, c) in components.iter().enumerate() {
+        assert_eq!(c["rank"], serde_json::json!(i + 1), "rank gap: {c}");
+        assert!(
+            c["path_prefix"].as_str().is_some_and(|p| !p.is_empty()),
+            "path_prefix must be a non-empty string: {c}"
+        );
+    }
+
+    // --- Derived artifacts: report.md + charts/ -----------------------------
+    let report_path = out.join("report.md");
+    assert!(report_path.is_file(), "report.md missing");
+    let report1 = fs::read_to_string(&report_path).unwrap();
+
+    // Section headings present, in the fixed §5 template order.
+    let headings = [
+        "# Perfpal Report\n",
+        "## 1. Executive summary\n",
+        "## 2. Scan provenance & parse health\n",
+        "## 3. Codebase statistics\n",
+        "## 4. Findings\n",
+        "## 5. Architecture\n",
+        "## Appendix A. Heuristic reference\n",
+        "## Appendix B. How to read this report\n",
+    ];
+    let mut cursor = 0;
+    for h in headings {
+        let pos = report1[cursor..]
+            .find(h)
+            .unwrap_or_else(|| panic!("heading {h:?} missing or out of order"));
+        cursor += pos + h.len();
+    }
+
+    // The ARCH-003 finding is cited by EXACT finding_id inside §4.
+    let findings = doc1["findings"].as_array().unwrap();
+    let arch003_id = findings
+        .iter()
+        .find(|f| f["rule_id"] == "PERF-C-ARCH-003")
+        .map(|f| f["finding_id"].as_str().unwrap().to_string())
+        .expect("PERF-C-ARCH-003 finding in metrics.json");
+    let sec4 = section(&report1, "## 4. Findings\n", "## 5. Architecture\n");
+    // §4 embeds ids through the reporter's Markdown escaper (pinned set
+    // includes '-' and '.'), so compare against the DE-ESCAPED section.
+    let sec4_plain = sec4.replace('\\', "");
+    assert!(
+        sec4_plain.contains(&arch003_id),
+        "§4 must cite {arch003_id} verbatim"
+    );
+
+    // Appendix A covers EVERY rule_id present in the findings (same
+    // Markdown-escape consideration as §4 — compare de-escaped).
+    let appendix_a = section(&report1, "## Appendix A.", "## Appendix B.").replace('\\', "");
+    for rule_id in findings
+        .iter()
+        .filter_map(|f| f["rule_id"].as_str())
+        .collect::<std::collections::BTreeSet<_>>()
+    {
+        assert!(
+            appendix_a.contains(rule_id),
+            "Appendix A must cover {rule_id}"
+        );
+    }
+
+    // charts/: exactly the emission-rule-expected set — all three charts,
+    // because include-graph nodes AND components are non-empty here.
+    let charts_dir = out.join("charts");
+    let mut chart_files: Vec<String> = fs::read_dir(&charts_dir)
+        .unwrap()
+        .flatten()
+        .filter_map(|e| e.file_name().into_string().ok())
+        .collect();
+    chart_files.sort();
+    chart_files.retain(|n| n.ends_with(".svg"));
+    assert_eq!(
+        chart_files,
+        vec![
+            "component-coupling.svg".to_string(),
+            "hot-components.svg".to_string(),
+            "include-graph.svg".to_string()
+        ],
+        "chart set must match the emission rule exactly"
+    );
+    let mut svg_bytes1 = std::collections::BTreeMap::new();
+    for name in &chart_files {
+        let bytes = fs::read(charts_dir.join(name)).unwrap();
+        let text = String::from_utf8(bytes.clone()).expect("SVG is UTF-8");
+        assert!(text.starts_with("<svg"), "{name} must start with <svg>");
+        assert!(
+            text.trim_end().ends_with("</svg>"),
+            "{name} must end with </svg>"
+        );
+        svg_bytes1.insert(name.clone(), bytes);
+    }
 
     // --- Second run into the SAME directory (swap path) ---------------------
     let code = run_with(argv(&[
@@ -162,19 +291,41 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     ]));
     assert_eq!(code, 0);
     let raw2 = fs::read_to_string(&metrics_path).unwrap();
+    let report2 = fs::read_to_string(&report_path).unwrap();
 
     // Byte-equality modulo provenance: mask started_at/duration_ms, compare.
-    let mask = |raw: &str| {
-        let mut v: serde_json::Value = serde_json::from_str(raw).unwrap();
-        v["scan"]["started_at"] = serde_json::Value::Null;
-        v["scan"]["duration_ms"] = serde_json::Value::Null;
-        v
-    };
+    let mask = common::mask_metrics_provenance;
     assert_eq!(
         mask(&raw1),
         mask(&raw2),
         "two runs over identical input diverged beyond provenance"
     );
+
+    // report.md: byte-equality modulo the SAME provenance fields, which
+    // surface in the header blockquote (`started <RFC3339>`,
+    // `duration <n> ms`).
+    assert_eq!(
+        common::mask_report_provenance(&report1),
+        common::mask_report_provenance(&report2),
+        "report.md diverged beyond provenance between runs"
+    );
+
+    // SVGs: byte-identical UNMASKED across runs (no provenance inside).
+    for name in &chart_files {
+        let bytes2 = fs::read(charts_dir.join(name)).unwrap();
+        assert_eq!(
+            svg_bytes1[name.as_str()],
+            bytes2,
+            "{name} not byte-stable across runs"
+        );
+    }
+}
+
+/// Slice `text` from the END of the `start` marker up to the `end` marker.
+fn section<'a>(text: &'a str, start: &str, end: &str) -> &'a str {
+    let s = text.find(start).expect("section start marker") + start.len();
+    let e = s + text[s..].find(end).expect("section end marker");
+    &text[s..e]
 }
 
 #[test]

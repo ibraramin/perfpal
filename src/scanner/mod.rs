@@ -14,10 +14,12 @@
 //!   record `scan.languages: ["c"]`.
 //! - Parse via the bound backend; capture ParseHealth (status, error regions,
 //!   error node count).
-//! - Quoted-include resolution against the filesystem (includer-relative
-//!   first, then repo-root-relative); angle-bracket includes bucketed external
-//!   (ADR-0001); unresolvable quoted includes emit `IncludeEdge{resolved:false}`
-//!   — ARCH-001 signal, not an error.
+//! - Include resolution against the filesystem (includer-relative first,
+//!   then repo-root-relative) for quoted AND angle-bracket edges (ADR-0002:
+//!   angle hits on in-repo files are internal coupling); unresolvable quoted
+//!   includes emit `IncludeEdge{resolved:false, to_path:null}` — ARCH-001
+//!   signal, not an error; unresolvable angle includes keep the raw include
+//!   text in `to_path` with `resolved:false` (external bucket).
 //! - Curated macro-pattern recognizer pass → MacroEvents (implemented inside
 //!   the backend, which owns the source text; see `backends::tree_sitter_c`).
 //! - Engine-native span → IR span conversion happens at this boundary
@@ -219,10 +221,14 @@ fn failed_unit(rel_path: &str) -> FileUnit {
     }
 }
 
-/// Quoted-include resolution against the filesystem (modules.md §3.2):
-/// includer-relative first, then repo-root-relative. Angle-bracket edges are
-/// bucketed external (`resolved=false`, `to_path=null`). Unresolvable quoted
-/// edges keep `resolved=false` with `to_path=null` — data, not error.
+/// Include-edge resolution against the filesystem (modules.md §3.2; ADR-0002
+/// chart policy): BOTH quoted and angle-bracket edges are resolved with the
+/// same two candidates — includer-relative first, then repo-root-relative.
+/// A hit rewrites `to_path` to the repo-relative POSIX path and sets
+/// `resolved=true` (angle hits count as internal coupling per ADR-0002). A
+/// miss keeps the edge as data, not error: quoted ⇒ `to_path=null`
+/// (`resolved=false`, ARCH-001 signal); angle ⇒ raw include text preserved in
+/// `to_path` with `resolved=false` (external bucket).
 ///
 /// The backend leaves raw include text in `to_path`; this pass replaces it
 /// with the resolved repo-relative POSIX path or `None`.
@@ -232,10 +238,9 @@ fn resolve_includes(unit: &mut FileUnit, root: &Path, rel_path: &str) {
         None => String::new(),
     };
     for edge in &mut unit.includes {
-        if edge.form != IncludeForm::Quoted {
-            continue; // angle ⇒ external bucket, untouched
-        }
-        let raw = edge.to_path.clone().unwrap_or_default();
+        let Some(raw) = edge.to_path.clone() else {
+            continue;
+        };
         let candidates = [
             join_normalized(&includer_dir, &raw),
             join_normalized("", &raw),
@@ -244,9 +249,22 @@ fn resolve_includes(unit: &mut FileUnit, root: &Path, rel_path: &str) {
             let abs = root.join(candidate.replace('/', std::path::MAIN_SEPARATOR_STR));
             if abs.is_file() { Some(candidate) } else { None }
         });
-        let resolved = resolved_rel.is_some();
-        edge.to_path = resolved_rel;
-        edge.resolved = resolved;
+        match resolved_rel {
+            Some(rel) => {
+                // In-repo target (quoted OR angle): internal coupling edge.
+                edge.to_path = Some(rel);
+                edge.resolved = true;
+            }
+            None => {
+                if edge.form == IncludeForm::Quoted {
+                    // Unresolvable quoted: ARCH-001 signal, not an error.
+                    edge.to_path = None;
+                    edge.resolved = false;
+                }
+                // Unresolvable angle: external bucket — keep the raw include
+                // text in `to_path`, `resolved=false` (unchanged semantics).
+            }
+        }
     }
 }
 

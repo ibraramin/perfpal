@@ -1,21 +1,21 @@
 # Active Context
 
 ## Current Task
-Plan `mvp-implementation` **P3 Tier 1 wave B COMPLETE** (session 13): 4 heuristics as pure IR-view functions completing the function-local Tier 1 set — ALLOC-003 (realloc linear growth; two-part additivity proof: last arg Binary AND `'+'` span-contained in call; n*2 doubling stays silent; pointer-arith first-arg suppressed), LOOP-002 (18-name I/O family in loops; Hot→Warn when conditional_guarded), LOOP-004 (variable-divisor `/`/`%` innermost via scanner-fixed is_innermost; literal divisors skipped by design; Sizeof/Unary constant-foldable divisors documented accepted FP), CALL-002 (complexity ≥15 stat-promotion, Warn/HIGH, stat retained). AllocCandidate resolver_tier unified (alloc_001 hardcoded tier removed). REGISTRY re-sorted ascending → 12 entries. Zero extraction growth. 9 parser-free fixtures + wave_b suite (10 tests) + kitchen-sink all-12-rules total-order + e2e proof of all 4 rules through real backend (CALL-002 asserted against computed value). Dual review: @requirements-reviewer APPROVED (zero scope creep); @reviewer SHIP-WITH-FIXES zero Critical/MAJOR → both MINORs fixed per founder decisions. **99 tests green** under pinned 1.92.0. Commit pending founder approval.
+Plan `mvp-implementation` **P4 architecture wave COMPLETE** (session 14): 3 ARCH heuristics as pure IR-view functions completing the 15-rule Tier 1 registry — ARCH-001 (include-graph cycles via deterministic `break_cycles` shared with charts, deep chains ≥8, hubs fan-out/in ≥12, unresolved-quoted; Warn band), ARCH-003 (cross-file name-based call coupling: file-local-first, Direct-only, smallest-path ambiguity rule, per-edge Info/LOW locked by schema), ARCH-002 LAST (hot-component aggregation: rank-1 component only via IR-only composite complexity_sum↓→loop_depth↓→alloc_density↓→prefix↑, floor 15, Hot/HIGH anchored at highest-complexity function). Aggregator completed: call_graph (LOW const, aggregator-owned re-sort), components[] (per-dir, founder-approved 4-key+prefix rank composite), m6 admission (unresolved quoted edges as data `to:null`). Charts emitter: 3 byte-deterministic SVGs per ADR-0002 (cycle-break/topo/barycenter×3/half-up, XML escape, cap N=50, emit-iff-non-empty). Reporter: report.md §5 template (8 sections, stable severity partition preserving document order, Markdown escaper, Appendix A frozen catalog, double-render modulo provenance). CLI now emits the full `perfpal-report/` layout (metrics.json + bundled schema + report.md + charts/*.svg). Review-fix wave fixed both MAJORs (total_order direction inverted-since-P1; coupling root-edge drop) + 5 MINORs (phantom caps, deep-chain/hub collision, unified HALF-UP formatter in schema, §3 language totals, docs). Dual review: @requirements-reviewer APPROVED (7/7 clauses, 5/5 founder decisions, zero scope creep); @reviewer CHANGES_REQUESTED → fixes → **re-review APPROVE** (gates independently re-run, e2e output schema-valid). **163 tests green** under pinned 1.92.0. Commit pending founder approval.
 
 ## Recent Decisions
-- ALLOC-003 additivity = span-contained `'+'` BinaryOpEvent + last-arg-Binary conjunct (Shape carries no operator; founder-approved both rounds).
-- AllocCandidate.resolver_tier unification included in P3 (sanctioned nit; behavior-preserving).
-- LOOP-004 constant-foldable divisors (Sizeof/Unary) documented as accepted FP class rather than code-excluded (founder choice; Info severity anyway).
-- Wave-B tests in new `tests/wave_b_fixtures.rs`; kitchen-sink extended in place to 12 rules.
-- Downgrade hooks stayed central; macro-origin inheritance proven on LOOP-002 fixture.
+- Founder-approved P4 gate: m6 unresolved-quoted-in-document; per-dir components + density-led rank; ARCH-002 rank-1 IR-only floor 15; ARCH-003 per-edge findings; chart cap N=50.
+- break_cycles = directed reachability (union-find wrong on DAG diamonds); self-loops broken + visible.
+- Scanner resolves angle includes in-repo (ADR-0002 internal-edge policy).
+- Unified digit-based HALF-UP formatter lives in `schema::{round_half_up,format_fixed_point}`; charts/reporter consume it.
+- total_order comparator corrected to contract direction (hot→warn→info, HIGH→MEDIUM→LOW) — was inverted since P1.
 
 ## In Progress
 - Nothing — task boundary reached; awaiting commit approval.
 
 ## Next
-- Founder approves commit → fresh session starts **P4 architecture wave**: ARCH-001 include-graph fan-out/cycles → ARCH-003 cross-file name-based call coupling (LOW confidence locked) → ARCH-002 hot-component aggregation LAST; aggregator graphs/components/stats complete with determinism tests; charts emitter (3 SVGs per ADR-0002, double-render byte-equality); reporter report.md template + Appendix A. Resume signposts: plan mvp-implementation, commit \<P3 hash\>.
-- P4 notes: IncludeEdge.resolved flag ready (m6 graph-visibility decision lands here); call_graph confidence const LOW; charts follow ADR-0002 layout policy; aggregator owns all sort orders per modules.md §1.
+- Founder approves commit → fresh session starts **P5 Tier 2**: MEM-002 first, then TYPE-001, TYPE-002, MEM-001, LOOP-005–008 (documented FP classes, LOW/MEDIUM confidence floors per catalog-v1 §4). Resume signposts: plan mvp-implementation, commit \<P4 hash\>.
+- P5 notes: verify backend Shape/access-chain coverage for sizeof/memcpy rules BEFORE writing them; kitchen-sink extends toward 23-rule order; distributions stays reserved-for-future.
 
 ## Blockers
 - None.

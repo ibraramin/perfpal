@@ -135,16 +135,19 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Detects: per-file include fan-out/fan-in, deep include chains, cyclic includes — from `#include` directive scan.
 - Why: architecture-level coupling signal; hub headers force monolithic rebuilds and indicate god-components. Core input for the dependency-structure visualization.
 - Note: angle-bracket vs quoted includes separated; system headers excluded from coupling edges.
+- Implementation note (P4): thresholds `ARCH_001_MAX_INCLUDE_DEPTH=8`, `ARCH_001_HUB_FANOUT=12`. Sub-case severities: cycles Warn/HIGH, deep-chain Warn/MEDIUM, hub Warn/MEDIUM, unresolved-quoted Info/MEDIUM. Internal edges = resolved quoted + angle-in-repo (ADR-0002 policy). Cycle detection = deterministic `break_cycles` (sort `(from,to)`, drop the lowest-sorted cycle-closing edge, self-loops broken) shared with the chart emitter. Unresolved raw target name is unavailable (the resolver nulls `to_path`) — accepted limitation. Hub fan-in-only anchor = synthetic line-1 span.
 
 **PERF-C-ARCH-002 — Hot-component aggregation (pillar 1b)** `(syntactic)`
 - Detects: files/components ranked by aggregated metrics (complexity sum, alloc-site density, max loop depth, finding density).
 - Why: turns per-function noise into architecture-level bottleneck ranking — the "hot components" view required by the spec.
 - Pure aggregation over other outputs; no independent detection logic.
+- Implementation note (P4): IR-only composite `complexity_sum ↓ → max_loop_depth ↓ → alloc_site_density ↓ → path_prefix ↑` (`finding_density` EXCLUDED — heuristic purity: heuristics cannot see sibling findings). Floor `ARCH_002_MIN_COMPLEXITY_SUM=15` keeps trivial scans clean. Rank-1 component only (full-composite ties would co-fire but `path_prefix` uniqueness makes them unreachable). Anchored at the highest-complexity function. NOTE asymmetry: `components[].rank` (aggregator) DOES use `finding_density`, so rank-1 there may differ from the ARCH-002 pick — accepted, documented.
 
 **PERF-C-ARCH-003 — Cross-file call coupling (name-based)** `(syntactic)`
 - Detects: call-graph edges between functions in different files via name matching (file-local matches first, per ADR-0001 resolver tiers).
 - Why: enables component coupling heatmap; explicit LOW confidence until semantic resolver exists.
 - FPs: same-name static functions in different TUs; duplicate symbol names across vendored deps.
+- Implementation note (P4): per-edge Info/LOW findings. File-local matches suppress (ADR-0001 tiers). Direct `callee_kind` only. Multi-definition ambiguity → lexicographically smallest path (single edge). Dedup per `(caller function, callee name)` keeping the earliest span. Static same-name FP class stands (catalog-documented above). Confidence locked LOW by schema.
 
 ---
 

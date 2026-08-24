@@ -1,0 +1,50 @@
+[
+  {
+    "file": {
+      "path": "a.h",
+      "language": "c",
+      "loc": {"code": 2, "comment": 0, "blank": 0},
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 1, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [
+      {
+        "from_path": "a.h",
+        "to_path": "b.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 14}
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "b.h",
+      "language": "c",
+      "loc": {"code": 2, "comment": 0, "blank": 0},
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 1, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [
+      {
+        "from_path": "b.h",
+        "to_path": "a.h",
+        "form": "quoted",
+        "resolved": true,
+        "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 14}
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  }
+]

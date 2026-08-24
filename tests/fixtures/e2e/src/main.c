@@ -10,7 +10,9 @@
  *   - grow     → PERF-C-ALLOC-003 (additive realloc in loop)
  *   - report   → PERF-C-LOOP-002 (printf inside loop)
  *   - deep_sum → PERF-C-LOOP-004 (variable-divisor / in innermost loop)
- *   - dispatch → PERF-C-CALL-002 (cyclomatic complexity ≥ 15) */
+ *   - dispatch → PERF-C-CALL-002 (cyclomatic complexity ≥ 15)
+ * Cross-file (P4): main() calls util_init() defined in src/util.c —
+ *   PERF-C-ARCH-003 cross-file call edge + call_graph edge. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,5 +104,6 @@ int main(void) {
     printf("%s\n", grow(buf, 4, 8));
     report(2);
     printf("%d\n", dispatch(5, 7, 3));
+    printf("%d\n", util_init(21));
     return 0;
 }
