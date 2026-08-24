@@ -99,11 +99,17 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     // Wave A rules trip through the real tree-sitter-c backend on main.c:
     // drain's free-in-for (ALLOC-002), join's strcat-in-while (STR-001 and
     // STR-003 double-fire), deep_sum's triple-nested for (LOOP-001).
+    // Wave B rules on the same file: grow's additive realloc-in-loop
+    // (ALLOC-003), report's printf-in-loop (LOOP-002), deep_sum's
+    // variable-divisor division in the innermost loop (LOOP-004).
     for rule in [
         "PERF-C-ALLOC-002",
         "PERF-C-STR-001",
         "PERF-C-STR-003",
         "PERF-C-LOOP-001",
+        "PERF-C-ALLOC-003",
+        "PERF-C-LOOP-002",
+        "PERF-C-LOOP-004",
     ] {
         let prefix = format!("{rule}:src/main.c:");
         assert!(
@@ -114,6 +120,30 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
             "expected {rule} on src/main.c, got {findings:?}"
         );
     }
+
+    // CALL-002 threshold check against the ACTUAL computed metric: read
+    // dispatch's cyclomatic complexity from stats.functions[] first, then
+    // require the finding only because the real backend counted ≥ 15.
+    let functions = doc1["stats"]["functions"].as_array().unwrap();
+    let dispatch = functions
+        .iter()
+        .find(|f| f["name"] == "dispatch")
+        .expect("dispatch in stats.functions[]");
+    let complexity = dispatch["cyclomatic_complexity"].as_u64().unwrap();
+    assert!(
+        complexity >= 15,
+        "fixture drift: dispatch complexity {complexity} fell below the \
+         CALL-002 threshold — extend the branch chain"
+    );
+    let call002_prefix = "PERF-C-CALL-002:src/main.c:";
+    assert!(
+        findings
+            .iter()
+            .filter_map(|f| f["finding_id"].as_str())
+            .any(|id| id.starts_with(call002_prefix)),
+        "expected PERF-C-CALL-002 on src/main.c (dispatch complexity \
+         {complexity}), got {findings:?}"
+    );
 
     // Include graph carries the resolved quoted edge main.c → util.h.
     let edges = &doc1["graphs"]["include_graph"]["edges"];

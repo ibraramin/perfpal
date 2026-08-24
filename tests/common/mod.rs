@@ -15,7 +15,14 @@
 use std::fs;
 use std::path::Path;
 
+use perfpal::analyzer::Finding;
 use perfpal::scanner::FileUnit;
+
+/// All findings of one rule, preserving document order.
+#[must_use]
+pub fn by_rule<'a>(findings: &'a [Finding], rule_id: &str) -> Vec<&'a Finding> {
+    findings.iter().filter(|f| f.rule_id == rule_id).collect()
+}
 
 /// Load a fixture from `tests/fixtures/ir/<name>` and parse it as JSON.
 ///

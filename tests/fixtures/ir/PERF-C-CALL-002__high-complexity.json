@@ -1,0 +1,61 @@
+[
+  {
+    "file": {
+      "path": "src/dispatch.c",
+      "language": "c",
+      "loc": {"code": 30, "comment": 0, "blank": 2},
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/dispatch.c#mega_dispatch#4:5",
+          "name": "mega_dispatch",
+          "path": "src/dispatch.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 22, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int cmd"],
+          "cyclomatic_complexity": 16,
+          "cognitive_complexity": 15,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 19
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/dispatch.c#tiny_helper#25:5",
+          "name": "tiny_helper",
+          "path": "src/dispatch.c",
+          "span": {"start_line": 25, "start_col": 5, "end_line": 29, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int x"],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 2,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 5
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

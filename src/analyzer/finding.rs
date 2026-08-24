@@ -15,12 +15,16 @@ use serde::{Deserialize, Serialize};
 /// heuristics and tests share a single spelling across the seam.
 pub const ALLOC_001_RULE_ID: &str = "PERF-C-ALLOC-001";
 pub const ALLOC_002_RULE_ID: &str = "PERF-C-ALLOC-002";
+pub const ALLOC_003_RULE_ID: &str = "PERF-C-ALLOC-003";
 pub const STR_001_RULE_ID: &str = "PERF-C-STR-001";
 pub const STR_002_RULE_ID: &str = "PERF-C-STR-002";
 pub const STR_003_RULE_ID: &str = "PERF-C-STR-003";
 pub const LOOP_001_RULE_ID: &str = "PERF-C-LOOP-001";
+pub const LOOP_002_RULE_ID: &str = "PERF-C-LOOP-002";
 pub const LOOP_003_RULE_ID: &str = "PERF-C-LOOP-003";
+pub const LOOP_004_RULE_ID: &str = "PERF-C-LOOP-004";
 pub const CALL_001_RULE_ID: &str = "PERF-C-CALL-001";
+pub const CALL_002_RULE_ID: &str = "PERF-C-CALL-002";
 
 /// Severity band (report §4 order: hot → warn → info).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

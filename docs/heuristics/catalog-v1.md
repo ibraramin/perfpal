@@ -81,6 +81,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Detects: `realloc(p, n+1)` / `realloc(p, n+k)` shapes nested in loops (additive growth ⇒ quadratic memmove behavior).
 - Why: classic O(n²) growth pattern; doubling-growth is the fix.
 - FPs: ring-buffer style fixed-size realloc; confidence MEDIUM by default.
+- Implementation note (P3): two-part additivity proof = (1) the realloc call's LAST argument (the size) is a `Binary` shape — kills the first-arg pointer-arithmetic FP `realloc(p + 1, n)` — AND (2) a `+` BinaryOpEvent whose span lies fully inside the realloc call span; multiplicative growth (`n*2`) is excluded — it IS the documented fix, not the finding.
 
 **PERF-C-STR-001 — String accumulation in loop** `(syntactic)`
 - Detects: `strcat`/`strncat` with destination reused across loop iterations.
@@ -106,6 +107,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Detects: `printf`-family, `fopen`/`fclose`/`open`/`close`/`read`/`write`, `getenv`, `system`, regex-compilation calls nested in loops.
 - Why: syscall/format-parse churn per iteration; hoisting is the standard fix. No equivalent C check found in surveyed tools — differentiation item.
 - FPs: intentionally interleaved logging; severity lowered when call is in conditional branch inside loop.
+- Implementation note (P3): exact family = printf, fprintf, sprintf, snprintf, vprintf, vfprintf, vsprintf, vsnprintf, fopen, freopen, fclose, open, close, read, write, getenv, system, regcomp. Lowering hook: `conditional_guarded=true` ⇒ Warn (default Hot).
 
 **PERF-C-LOOP-003 — Char-wise stdio loop** `(syntactic)`
 - Detects: `fgetc`/`getc`/`getchar`/`fputc`/`putc` as the primary statement of a loop body.
@@ -116,6 +118,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Detects: `/` or `%` whose divisor is a non-literal expression, inside the innermost loop body. Literal divisors are skipped by design.
 - Why: integer division latency (~20+ cycles); compilers strength-reduce *constant* divisors via magic-number multiply-shift (powers of two via shift), but *variable* divisors defeat those transforms and pay real division per iteration.
 - FPs: divisor and dividend both loop-invariant (whole expression hoistable) — rare in hot inner loops; info-level only.
+- Implementation note (P3): literal-divisor skip is by design (constant divisors are compiler strength-reduced); `is_innermost` is scanner-fixed per event, no heuristic-side nesting recomputation. Accepted FP class: constant-foldable non-literal divisors (`ShapeKind::Sizeof` e.g. `sizeof(int)`; `ShapeKind::Unary` over literals e.g. `-1`) DO fire by design at Info severity — the syntactic tier cannot prove constantness generally.
 
 **PERF-C-CALL-001 — Direct recursion** `(syntactic)`
 - Detects: function body contains a call to its own name.
@@ -126,6 +129,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 **PERF-C-CALL-002 — High cyclomatic complexity** `(syntactic)`
 - Detects: branch-count complexity above threshold (default ≥ 15), reported per function.
 - Why: pillar-1a stat promoted to finding when extreme; correlates with unpredictable branches and untestable hot paths.
+- Implementation note (P3): threshold 15 (`CALL_002_MIN_COMPLEXITY`); the stat remains in `stats.functions[]` — this is a promotion, not a move.
 
 **PERF-C-ARCH-001 — Include-graph fan-out / cycles (pillar 1b)** `(syntactic)`
 - Detects: per-file include fan-out/fan-in, deep include chains, cyclic includes — from `#include` directive scan.

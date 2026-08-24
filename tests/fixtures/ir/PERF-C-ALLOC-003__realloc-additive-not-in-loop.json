@@ -1,0 +1,64 @@
+[
+  {
+    "file": {
+      "path": "src/grow.c",
+      "language": "c",
+      "loc": {"code": 10, "comment": 0, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/grow.c#grow_once#4:5",
+          "name": "grow_once",
+          "path": "src/grow.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 8, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["char *buf", "int n"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 1,
+          "length_lines": 5
+        },
+        "calls": [
+          {
+            "callee_name": "realloc",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "buf"}, {"kind": "binary", "name": null}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 6, "start_col": 11, "end_line": 6, "end_col": 38},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [
+          {
+            "op": "+",
+            "left": {"kind": "identifier", "name": "len"},
+            "right": {"kind": "identifier", "name": "chunk"},
+            "span": {"start_line": 6, "start_col": 23, "end_line": 6, "end_col": 36},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

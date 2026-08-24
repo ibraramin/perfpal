@@ -2,25 +2,30 @@
 //! pure over `[FileUnit]` — no I/O, no clock, no global state, no
 //! sibling-order dependence (modules.md §4.1).
 //!
-//! Family layout: [`alloc`] (ALLOC-001/002), [`call`] (CALL-001),
-//! `r#loop` (LOOP-001/003), [`str`] (STR-001/002/003). Shared candidate
-//! collection and span helpers live here so families stay consistent.
+//! Family layout: [`alloc`] (ALLOC-001/002/003), [`call`] (CALL-001/002),
+//! `r#loop` (LOOP-001/002/003/004), [`str`] (STR-001/002/003). Shared
+//! candidate collection and span helpers live here so families stay consistent.
 
 mod alloc;
 mod call;
 mod r#loop;
 mod r#str;
 
-pub(super) use alloc::{alloc_001, alloc_002};
-pub(super) use call::call_001;
-pub(super) use r#loop::{loop_001, loop_003};
+pub(super) use alloc::{alloc_001, alloc_002, alloc_003};
+pub(super) use call::{call_001, call_002};
+pub(super) use r#loop::{loop_001, loop_002, loop_003, loop_004};
 pub(super) use r#str::{str_001, str_002, str_003};
 
-use crate::ir::{ALLOC_WRAPPER_PATTERN_ID, CallEvent, CalleeKind, MacroEventKind, ShapeKind, Span};
+use crate::ir::{
+    ALLOC_WRAPPER_PATTERN_ID, CallEvent, CalleeKind, MacroEventKind, ResolverTier, ShapeKind, Span,
+};
 use crate::scanner::FileUnit;
 
 /// PERF-C-LOOP-001 nesting threshold (catalog default ≥ 3).
 pub(crate) const LOOP_001_MIN_DEPTH: u32 = 3;
+
+/// PERF-C-CALL-002 complexity threshold (catalog default ≥ 15).
+pub(crate) const CALL_002_MIN_COMPLEXITY: u32 = 15;
 
 /// Inclusive containment: `inner` lies fully within `outer`, endpoints
 /// allowed to touch (spans are inclusive on both ends, ir-v1.md §2).
@@ -38,6 +43,9 @@ pub(super) struct AllocCandidate<'a> {
     /// 1-based index of this call among the function's alloc-family
     /// calls (evidence for ALLOC-001/002 pairing downstream).
     pub alloc_site_index: u32,
+    /// Resolver tier carried by the source event (ir-v1.md §2) — findings
+    /// built from this candidate inherit it instead of hardcoding a tier.
+    pub resolver_tier: ResolverTier,
 }
 
 /// Walk every CallEvent that is an alloc site: a DIRECT alloc-family
@@ -70,6 +78,7 @@ pub(super) fn alloc_candidates(units: &[FileUnit]) -> Vec<AllocCandidate<'_>> {
                         callee: &call.callee_name,
                         loop_depth: call.meta.in_loop_depth,
                         alloc_site_index: site_index,
+                        resolver_tier: call.meta.resolver_tier,
                     });
                 }
             }
@@ -96,4 +105,20 @@ pub(super) fn first_arg_identifier(args: &[crate::ir::Shape]) -> Option<&str> {
         return None;
     }
     first.name.as_deref()
+}
+
+/// Schema token for a [`ShapeKind`] (serde snake_case spelling, ir-v1.md
+/// §3.4) — used as evidence text so findings stay byte-deterministic.
+pub(super) fn shape_kind_token(kind: ShapeKind) -> &'static str {
+    match kind {
+        ShapeKind::Literal => "literal",
+        ShapeKind::Identifier => "identifier",
+        ShapeKind::Call => "call",
+        ShapeKind::Subscript => "subscript",
+        ShapeKind::MemberAccess => "member_access",
+        ShapeKind::Unary => "unary",
+        ShapeKind::Binary => "binary",
+        ShapeKind::Sizeof => "sizeof",
+        ShapeKind::Other => "other",
+    }
 }

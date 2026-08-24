@@ -1,0 +1,105 @@
+[
+  {
+    "file": {
+      "path": "src/report.c",
+      "language": "c",
+      "loc": {"code": 22, "comment": 0, "blank": 3},
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/report.c#dump_rows#4:5",
+          "name": "dump_rows",
+          "path": "src/report.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 12, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["int n"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 1,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 9
+        },
+        "calls": [
+          {
+            "callee_name": "printf",
+            "callee_kind": "direct",
+            "args": [{"kind": "literal", "value": "%d"}, {"kind": "identifier", "name": "i"}],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "span": {"start_line": 6, "start_col": 9, "end_line": 6, "end_col": 24},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": ["i"],
+            "span": {"start_line": 5, "start_col": 5, "end_line": 11, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      },
+      {
+        "record": {
+          "id": "src/report.c#log_if_verbose#15:5",
+          "name": "log_if_verbose",
+          "path": "src/report.c",
+          "span": {"start_line": 15, "start_col": 5, "end_line": 25, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["int verbose", "int n"],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 3,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 11
+        },
+        "calls": [
+          {
+            "callee_name": "getenv",
+            "callee_kind": "direct",
+            "args": [{"kind": "literal", "value": "VERBOSE"}],
+            "statement_role": "nested",
+            "conditional_guarded": true,
+            "span": {"start_line": 19, "start_col": 13, "end_line": 19, "end_col": 30},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "while",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {"start_line": 17, "start_col": 5, "end_line": 24, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      }
+    ]
+  }
+]

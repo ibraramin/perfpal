@@ -2,7 +2,7 @@
 //! STR-001/002/003, LOOP-001/003, and CALL-001 run against serialized IR
 //! under `tests/fixtures/ir/` with NO tree-sitter binding. Covers detection,
 //! negatives/suppression, and both ir-v1.md §5 downgrade hooks on the new
-//! rules, plus a kitchen-sink synthetic unit tripping all eight registry
+//! rules, plus a kitchen-sink synthetic unit tripping all twelve registry
 //! rules in report §4 total order.
 
 mod common;
@@ -10,20 +10,17 @@ mod common;
 use std::collections::BTreeSet;
 
 use perfpal::analyzer::finding::{
-    ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, CALL_001_RULE_ID, LOOP_001_RULE_ID, LOOP_003_RULE_ID,
-    STR_001_RULE_ID, STR_002_RULE_ID, STR_003_RULE_ID,
+    ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ALLOC_003_RULE_ID, CALL_001_RULE_ID, CALL_002_RULE_ID,
+    LOOP_001_RULE_ID, LOOP_002_RULE_ID, LOOP_003_RULE_ID, LOOP_004_RULE_ID, STR_001_RULE_ID,
+    STR_002_RULE_ID, STR_003_RULE_ID,
 };
 use perfpal::analyzer::{Confidence, Finding, Severity, analyze};
 use perfpal::ir::{
-    CallEvent, CalleeKind, EventMeta, FileRecord, FunctionRecord, IncludeCounts, LocCounts,
-    LoopKind, LoopNode, ParseHealth, ResolverTier, Shape, ShapeKind, Span, StatementRole,
+    BinaryOpEvent, CallEvent, CalleeKind, EventMeta, FileRecord, FunctionRecord, IncludeCounts,
+    LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, Shape, ShapeKind, Span,
+    StatementRole,
 };
 use perfpal::scanner::{FileUnit, FunctionUnit};
-
-/// All findings of one rule, preserving document order.
-fn by_rule<'a>(findings: &'a [Finding], rule_id: &str) -> Vec<&'a Finding> {
-    findings.iter().filter(|f| f.rule_id == rule_id).collect()
-}
 
 // ===========================================================================
 // PERF-C-ALLOC-002 — deallocation inside loop
@@ -33,7 +30,7 @@ fn by_rule<'a>(findings: &'a [Finding], rule_id: &str) -> Vec<&'a Finding> {
 fn free_in_loop_warns_and_cooccurrence_escalates_to_hot() {
     let units = common::load_units_fixture("PERF-C-ALLOC-002__free-in-loop.json");
     let findings = analyze(&units);
-    let alloc002 = by_rule(&findings, ALLOC_002_RULE_ID);
+    let alloc002 = common::by_rule(&findings, ALLOC_002_RULE_ID);
     assert_eq!(
         alloc002.len(),
         2,
@@ -84,7 +81,7 @@ fn free_not_in_loop_stays_silent() {
 fn alloc002_finding_id_uses_rule_path_line_col() {
     let units = common::load_units_fixture("PERF-C-ALLOC-002__free-in-loop.json");
     let findings = analyze(&units);
-    let f = by_rule(&findings, ALLOC_002_RULE_ID)[0];
+    let f = common::by_rule(&findings, ALLOC_002_RULE_ID)[0];
     assert_eq!(
         f.finding_id(),
         format!(
@@ -102,7 +99,7 @@ fn alloc002_finding_id_uses_rule_path_line_col() {
 fn strcat_and_strncat_in_loop_fire_hot_with_dest_evidence() {
     let units = common::load_units_fixture("PERF-C-STR-001__strcat-in-loop.json");
     let findings = analyze(&units);
-    let str001 = by_rule(&findings, STR_001_RULE_ID);
+    let str001 = common::by_rule(&findings, STR_001_RULE_ID);
     assert_eq!(str001.len(), 2, "strcat and strncat variants both fire");
 
     let strcat = str001
@@ -134,7 +131,7 @@ fn strcat_not_in_loop_emits_no_str_001() {
     let units = common::load_units_fixture("PERF-C-STR-001__strcat-not-in-loop.json");
     let findings = analyze(&units);
     assert!(
-        by_rule(&findings, STR_001_RULE_ID).is_empty(),
+        common::by_rule(&findings, STR_001_RULE_ID).is_empty(),
         "accumulation outside any loop must not fire STR-001"
     );
 }
@@ -147,7 +144,7 @@ fn strcat_not_in_loop_emits_no_str_001() {
 fn strlen_in_loop_fires_for_unreassigned_identifier() {
     let units = common::load_units_fixture("PERF-C-STR-002__strlen-in-loop.json");
     let findings = analyze(&units);
-    let str002 = by_rule(&findings, STR_002_RULE_ID);
+    let str002 = common::by_rule(&findings, STR_002_RULE_ID);
     assert_eq!(
         str002.len(),
         1,
@@ -188,7 +185,7 @@ fn reassignment_suppression_and_outside_loop_stay_silent() {
 fn unbounded_family_fires_anywhere_without_loop() {
     let units = common::load_units_fixture("PERF-C-STR-003__unbounded-family.json");
     let findings = analyze(&units);
-    let str003 = by_rule(&findings, STR_003_RULE_ID);
+    let str003 = common::by_rule(&findings, STR_003_RULE_ID);
     assert_eq!(str003.len(), 4, "strcpy, sprintf, gets, scanf(%s) fire");
 
     let callees: Vec<&str> = str003
@@ -227,7 +224,7 @@ fn bounded_variants_and_non_string_formats_stay_silent() {
         "snprintf is bounded — outside the family"
     );
     assert_eq!(
-        by_rule(&findings, STR_003_RULE_ID)
+        common::by_rule(&findings, STR_003_RULE_ID)
             .iter()
             .filter(|f| f.evidence.get("callee").map(String::as_str) == Some("scanf"))
             .count(),
@@ -251,7 +248,7 @@ fn bounded_variants_and_non_string_formats_stay_silent() {
 fn macro_origin_downgrades_str_003_to_medium() {
     let units = common::load_units_fixture("PERF-C-STR-003__macro-origin.json");
     let findings = analyze(&units);
-    let str003 = by_rule(&findings, STR_003_RULE_ID);
+    let str003 = common::by_rule(&findings, STR_003_RULE_ID);
     assert_eq!(str003.len(), 2, "both macro-tainted calls still fire");
     for f in &str003 {
         assert_eq!(
@@ -299,7 +296,7 @@ fn error_region_overlap_downgrades_loop_001_to_medium() {
 fn depth_three_nest_fires_once_per_maximal_entry() {
     let units = common::load_units_fixture("PERF-C-LOOP-001__deep-nest.json");
     let findings = analyze(&units);
-    let loop001 = by_rule(&findings, LOOP_001_RULE_ID);
+    let loop001 = common::by_rule(&findings, LOOP_001_RULE_ID);
     assert_eq!(
         loop001.len(),
         1,
@@ -327,7 +324,7 @@ fn depth_three_nest_fires_once_per_maximal_entry() {
 fn char_io_primary_statement_fires_info_medium() {
     let units = common::load_units_fixture("PERF-C-LOOP-003__char-io-primary.json");
     let findings = analyze(&units);
-    let loop003 = by_rule(&findings, LOOP_003_RULE_ID);
+    let loop003 = common::by_rule(&findings, LOOP_003_RULE_ID);
     assert_eq!(loop003.len(), 2, "braced fgetc + unbraced getchar fire");
     let callees: Vec<&str> = loop003
         .iter()
@@ -352,7 +349,7 @@ fn fread_and_non_primary_role_stay_silent() {
             .all(|f| f.evidence.get("callee").map(String::as_str) != Some("fread")),
         "buffered fread is the optimization target, not a finding"
     );
-    let nested_line_34 = by_rule(&findings, LOOP_003_RULE_ID)
+    let nested_line_34 = common::by_rule(&findings, LOOP_003_RULE_ID)
         .iter()
         .any(|f| f.span.start_line == 34);
     assert!(
@@ -369,7 +366,7 @@ fn fread_and_non_primary_role_stay_silent() {
 fn two_self_call_sites_yield_one_finding_at_earliest() {
     let units = common::load_units_fixture("PERF-C-CALL-001__direct-recursion.json");
     let findings = analyze(&units);
-    let call001 = by_rule(&findings, CALL_001_RULE_ID);
+    let call001 = common::by_rule(&findings, CALL_001_RULE_ID);
     assert_eq!(call001.len(), 1, "one finding per function, not per site");
     let f = call001[0];
     assert_eq!(f.severity, Severity::Info);
@@ -394,7 +391,7 @@ fn non_recursive_and_indirect_only_stay_silent() {
     let units = common::load_units_fixture("PERF-C-CALL-001__direct-recursion.json");
     let findings = analyze(&units);
     assert_eq!(
-        by_rule(&findings, CALL_001_RULE_ID).len(),
+        common::by_rule(&findings, CALL_001_RULE_ID).len(),
         1,
         "sum_pair (no self-call) and indirect_spin (indirect-only) stay silent"
     );
@@ -410,7 +407,7 @@ fn non_recursive_and_indirect_only_stay_silent() {
 fn call_001_downgrade_hooks_fire_independently() {
     let units = common::load_units_fixture("PERF-C-CALL-001__downgrade-hooks.json");
     let findings = analyze(&units);
-    let call001 = by_rule(&findings, CALL_001_RULE_ID);
+    let call001 = common::by_rule(&findings, CALL_001_RULE_ID);
     assert_eq!(
         call001.len(),
         2,
@@ -473,7 +470,7 @@ fn call_001_downgrade_hooks_fire_independently() {
 }
 
 // ===========================================================================
-// Kitchen sink — all eight rules from one synthetic unit set, total order
+// Kitchen sink — all twelve rules from one synthetic unit set, total order
 // ===========================================================================
 
 /// Point-ish span helper (cols chosen so containment stays plausible).
@@ -525,6 +522,16 @@ fn loop_node(kind: LoopKind, depth: u32, span: Span) -> LoopNode {
     }
 }
 
+/// Binary-op event with an identifier right operand (LOOP-004 kitchen input).
+fn binop(op: &str, span: Span, divisor: &str) -> BinaryOpEvent {
+    BinaryOpEvent {
+        meta: meta(span, 0),
+        op: op.to_string(),
+        left: Shape::identifier("acc"),
+        right: Shape::identifier(divisor),
+    }
+}
+
 fn func(
     name: &str,
     path: &str,
@@ -556,10 +563,11 @@ fn func(
 }
 
 /// One unit, two functions: `kitchen` nests three loops and trips
-/// ALLOC-001/002, STR-001/002/003, LOOP-001/003; `recurse` trips CALL-001.
+/// ALLOC-001/002/003, STR-001/002/003, LOOP-001/002/003/004; `recurse`
+/// trips CALL-001 and CALL-002.
 fn kitchen_units() -> Vec<FileUnit> {
     let path = "src/kitchen.c";
-    let kitchen_calls = vec![
+    let mut kitchen_calls = vec![
         call("malloc", &["n"], sp(5, 17, 27), 3, StatementRole::Nested),
         call("free", &["old"], sp(6, 17, 26), 3, StatementRole::Nested),
         call(
@@ -578,6 +586,37 @@ fn kitchen_units() -> Vec<FileUnit> {
             StatementRole::Nested,
         ),
         call("fgetc", &["fp"], sp(10, 17, 24), 3, StatementRole::Primary),
+        // ALLOC-003: additive growth — the `+` binop below sits INSIDE
+        // this call span (cols 28–38 within 17–45).
+        call(
+            "realloc",
+            &["buf", "size"],
+            sp(11, 17, 45),
+            3,
+            StatementRole::Nested,
+        ),
+        // LOOP-002: unguarded expensive I/O inside the loop nest.
+        call("printf", &["fmt"], sp(12, 17, 29), 3, StatementRole::Nested),
+    ];
+    // ALLOC-003 two-part proof requires the realloc SIZE arg (last) to be
+    // a Binary shape — `realloc(buf, size + chunk)`.
+    if let Some(realloc) = kitchen_calls
+        .iter_mut()
+        .find(|c| c.callee_name == "realloc")
+        && let Some(size_arg) = realloc.args.last_mut()
+    {
+        size_arg.kind = ShapeKind::Binary;
+    }
+    let kitchen_binops = vec![
+        // ALLOC-003 additivity proof: contained in the realloc call span.
+        BinaryOpEvent {
+            meta: meta(sp(11, 28, 38), 3),
+            op: "+".to_string(),
+            left: Shape::identifier("size"),
+            right: Shape::identifier("chunk"),
+        },
+        // LOOP-004: variable-divisor division, innermost loop.
+        binop("/", sp(13, 17, 24), "n"),
     ];
     let kitchen_loops = vec![
         loop_node(
@@ -630,30 +669,39 @@ fn kitchen_units() -> Vec<FileUnit> {
         structs: Vec::new(),
         macros: Vec::new(),
         functions: vec![
-            func(
-                "kitchen",
-                path,
-                Span {
-                    start_line: 1,
-                    start_col: 5,
-                    end_line: 41,
-                    end_col: 6,
-                },
-                kitchen_calls,
-                kitchen_loops,
-            ),
-            func(
-                "recurse",
-                path,
-                Span {
-                    start_line: 42,
-                    start_col: 5,
-                    end_line: 45,
-                    end_col: 6,
-                },
-                recurse_calls,
-                Vec::new(),
-            ),
+            {
+                let mut kitchen = func(
+                    "kitchen",
+                    path,
+                    Span {
+                        start_line: 1,
+                        start_col: 5,
+                        end_line: 41,
+                        end_col: 6,
+                    },
+                    kitchen_calls,
+                    kitchen_loops,
+                );
+                kitchen.binary_ops = kitchen_binops;
+                kitchen
+            },
+            {
+                // CALL-002: complexity far above the threshold of 15.
+                let mut recurse = func(
+                    "recurse",
+                    path,
+                    Span {
+                        start_line: 42,
+                        start_col: 5,
+                        end_line: 45,
+                        end_col: 6,
+                    },
+                    recurse_calls,
+                    Vec::new(),
+                );
+                recurse.record.cyclomatic_complexity = 20;
+                recurse
+            },
         ],
     }]
 }
@@ -677,9 +725,13 @@ fn kitchen_sink_trips_all_registry_rules_in_total_order() {
     let all_rules: BTreeSet<&str> = [
         ALLOC_001_RULE_ID,
         ALLOC_002_RULE_ID,
+        ALLOC_003_RULE_ID,
         CALL_001_RULE_ID,
+        CALL_002_RULE_ID,
         LOOP_001_RULE_ID,
+        LOOP_002_RULE_ID,
         LOOP_003_RULE_ID,
+        LOOP_004_RULE_ID,
         STR_001_RULE_ID,
         STR_002_RULE_ID,
         STR_003_RULE_ID,
@@ -705,16 +757,38 @@ fn kitchen_sink_trips_all_registry_rules_in_total_order() {
 
     // Spot-check the multi-finding families behave as designed here too.
     assert_eq!(
-        by_rule(&findings, STR_003_RULE_ID).len(),
+        common::by_rule(&findings, STR_003_RULE_ID).len(),
         2,
         "strcat + strcpy"
     );
     assert_eq!(
-        by_rule(&findings, ALLOC_002_RULE_ID)[0]
+        common::by_rule(&findings, ALLOC_002_RULE_ID)[0]
             .evidence
             .get("alloc_cooccurrence")
             .map(String::as_str),
         Some("true"),
         "malloc + free share the kitchen function"
+    );
+    // Wave B spot-checks inside the same synthetic unit.
+    let alloc003 = common::by_rule(&findings, ALLOC_003_RULE_ID);
+    assert_eq!(alloc003.len(), 1, "only the additive realloc fires");
+    assert_eq!(
+        alloc003[0].evidence.get("growth").map(String::as_str),
+        Some("additive")
+    );
+    let loop002 = common::by_rule(&findings, LOOP_002_RULE_ID);
+    assert_eq!(loop002.len(), 1, "unguarded printf");
+    assert_eq!(loop002[0].severity, Severity::Hot);
+    let loop004 = common::by_rule(&findings, LOOP_004_RULE_ID);
+    assert_eq!(loop004.len(), 1, "variable-divisor division");
+    assert_eq!(
+        loop004[0].evidence.get("divisor_kind").map(String::as_str),
+        Some("identifier")
+    );
+    let call002 = common::by_rule(&findings, CALL_002_RULE_ID);
+    assert_eq!(call002.len(), 1, "recurse complexity 20 ≥ 15");
+    assert_eq!(
+        call002[0].evidence.get("complexity").map(String::as_str),
+        Some("20")
     );
 }

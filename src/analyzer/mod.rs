@@ -44,13 +44,18 @@ type HeuristicFn = fn(&[FileUnit]) -> Vec<Finding>;
 /// declaration order is load-bearing (modules.md §3.3). Adding a heuristic
 /// = inserting a new entry whose rule_id sorts into place (open pattern,
 /// minor-bump schema policy):
-/// alloc_001, alloc_002, call_001, loop_001, loop_003, str_001, str_002, str_003.
+/// alloc_001, alloc_002, alloc_003, call_001, call_002, loop_001, loop_002,
+/// loop_003, loop_004, str_001, str_002, str_003.
 const REGISTRY: &[HeuristicFn] = &[
     heuristics::alloc_001,
     heuristics::alloc_002,
+    heuristics::alloc_003,
     heuristics::call_001,
+    heuristics::call_002,
     heuristics::loop_001,
+    heuristics::loop_002,
     heuristics::loop_003,
+    heuristics::loop_004,
     heuristics::str_001,
     heuristics::str_002,
     heuristics::str_003,
