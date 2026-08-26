@@ -11,8 +11,9 @@ use std::collections::BTreeMap;
 use crate::ir::{ResolverTier, Span};
 use serde::{Deserialize, Serialize};
 
-/// rule_ids of the Tier 1 heuristics (catalog-v1 §3), one const each so
-/// heuristics and tests share a single spelling across the seam.
+/// rule_ids of the catalog heuristics (catalog-v1 §3 Tier 1 + §4 Tier 2),
+/// one const each so heuristics and tests share a single spelling across
+/// the seam.
 pub const ALLOC_001_RULE_ID: &str = "PERF-C-ALLOC-001";
 pub const ALLOC_002_RULE_ID: &str = "PERF-C-ALLOC-002";
 pub const ALLOC_003_RULE_ID: &str = "PERF-C-ALLOC-003";
@@ -28,6 +29,15 @@ pub const LOOP_003_RULE_ID: &str = "PERF-C-LOOP-003";
 pub const LOOP_004_RULE_ID: &str = "PERF-C-LOOP-004";
 pub const CALL_001_RULE_ID: &str = "PERF-C-CALL-001";
 pub const CALL_002_RULE_ID: &str = "PERF-C-CALL-002";
+/// Tier 2 rule ids (catalog-v1 §4).
+pub const MEM_001_RULE_ID: &str = "PERF-C-MEM-001";
+pub const MEM_002_RULE_ID: &str = "PERF-C-MEM-002";
+pub const TYPE_001_RULE_ID: &str = "PERF-C-TYPE-001";
+pub const TYPE_002_RULE_ID: &str = "PERF-C-TYPE-002";
+pub const LOOP_005_RULE_ID: &str = "PERF-C-LOOP-005";
+pub const LOOP_006_RULE_ID: &str = "PERF-C-LOOP-006";
+pub const LOOP_007_RULE_ID: &str = "PERF-C-LOOP-007";
+pub const LOOP_008_RULE_ID: &str = "PERF-C-LOOP-008";
 
 /// Severity band (report §4 order: hot → warn → info).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

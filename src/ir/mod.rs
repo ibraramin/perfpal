@@ -255,6 +255,12 @@ pub struct StructMember {
     /// Best-effort integer array dimension (`int name[16]` ⇒ `Some(16)`),
     /// feeding the approximate size model (TYPE-001/002).
     pub array_dim_literal: Option<u64>,
+    /// Declarator carries at least one pointer star (`char *p`) — recorded
+    /// explicitly because declarator stars never reach `type_text`
+    /// (additive v1 field; `#[serde(default)]` keeps older documents
+    /// deserializing unchanged). Feeds the LP64 size model (TYPE-001/002).
+    #[serde(default)]
+    pub is_pointer: bool,
 }
 
 /// Struct definition (ir-v1.md §3.1). `name` is the tag name, `""` if anonymous.
@@ -376,6 +382,12 @@ pub struct Shape {
     pub index_ident: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub depth: Option<u32>,
+    /// Raw source text of a `sizeof` operand, parens stripped as written
+    /// (`sizeof(p)` ⇒ `"p"`, `sizeof(struct S)` ⇒ `"struct S"`; additive v1
+    /// field — `Option` keeps older documents deserializing unchanged).
+    /// Feeds MEM-001 sizeof-misuse classification.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sizeof_operand: Option<String>,
 }
 
 impl Shape {

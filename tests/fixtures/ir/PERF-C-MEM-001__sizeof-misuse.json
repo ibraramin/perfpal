@@ -1,0 +1,181 @@
+[
+  {
+    "file": {
+      "path": "src/alloc.c",
+      "language": "c",
+      "loc": {"code": 24, "comment": 0, "blank": 1},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/alloc.c#make#4:5",
+          "name": "make",
+          "path": "src/alloc.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 22, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["int count", "struct item *it"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 7,
+          "length_lines": 19
+        },
+        "calls": [
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "binary"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 5, "start_col": 13, "end_line": 5, "end_col": 40},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "binary"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 8, "start_col": 13, "end_line": 8, "end_col": 48},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "sizeof", "sizeof_operand": "sizeof(int)"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 11, "start_col": 13, "end_line": 11, "end_col": 36},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "calloc",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "count"},
+              {"kind": "binary"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 14, "start_col": 13, "end_line": 14, "end_col": 44},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "literal", "value": "64"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 17, "start_col": 13, "end_line": 17, "end_col": 26},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "binary"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 18, "start_col": 13, "end_line": 18, "end_col": 50},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "malloc",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "sizeof", "sizeof_operand": "int"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 21, "start_col": 13, "end_line": 21, "end_col": 30},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [
+          {
+            "op": "*",
+            "left": {"kind": "identifier", "name": "count"},
+            "right": {"kind": "sizeof", "sizeof_operand": "it"},
+            "span": {"start_line": 5, "start_col": 20, "end_line": 5, "end_col": 39},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "op": "*",
+            "left": {"kind": "sizeof", "sizeof_operand": "int"},
+            "right": {"kind": "sizeof", "sizeof_operand": "char"},
+            "span": {"start_line": 8, "start_col": 20, "end_line": 8, "end_col": 47},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "op": "/",
+            "left": {"kind": "identifier", "name": "count"},
+            "right": {"kind": "sizeof", "sizeof_operand": "long"},
+            "span": {"start_line": 14, "start_col": 26, "end_line": 14, "end_col": 43},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "op": "*",
+            "left": {"kind": "identifier", "name": "count"},
+            "right": {"kind": "sizeof", "sizeof_operand": "struct item"},
+            "span": {"start_line": 18, "start_col": 20, "end_line": 18, "end_col": 49},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

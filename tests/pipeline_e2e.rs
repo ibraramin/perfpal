@@ -147,6 +147,36 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
          {complexity}), got {findings:?}"
     );
 
+    // P5 Tier 2 through the real backend: weigh's by-value struct Big
+    // (TYPE-001) and clone_row's pointer-param sizeof misuse (MEM-001).
+    for rule in ["PERF-C-TYPE-001", "PERF-C-MEM-001"] {
+        let prefix = format!("{rule}:src/main.c:");
+        assert!(
+            findings
+                .iter()
+                .filter_map(|f| f["finding_id"].as_str())
+                .any(|id| id.starts_with(&prefix)),
+            "expected {rule} on src/main.c, got {findings:?}"
+        );
+    }
+    // The real-backend sizeof operand must classify as the flagship
+    // misuse class — this is the end-to-end lock on Shape.sizeof_operand
+    // extraction feeding MEM-001.
+    let mem001 = findings
+        .iter()
+        .find(|f| {
+            f["finding_id"]
+                .as_str()
+                .is_some_and(|id| id.starts_with("PERF-C-MEM-001:src/main.c:"))
+        })
+        .expect("MEM-001 finding on src/main.c");
+    assert_eq!(
+        mem001["evidence"]["misuse"].as_str(),
+        Some("pointer_param_sizeof"),
+        "real-backend sizeof(row) with pointer-typed row must classify \
+         as pointer_param_sizeof, got {mem001}"
+    );
+
     // Include graph carries the resolved quoted edge main.c → util.h.
     let edges = &doc1["graphs"]["include_graph"]["edges"];
     assert!(

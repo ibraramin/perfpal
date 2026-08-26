@@ -1,0 +1,101 @@
+[
+  {
+    "file": {
+      "path": "src/types.c",
+      "language": "c",
+      "loc": {"code": 20, "comment": 0, "blank": 2},
+      "function_count": 3,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [
+      {
+        "name": "Big",
+        "path": "src/types.c",
+        "span": {"start_line": 3, "start_col": 5, "end_line": 7, "end_col": 6},
+        "members": [
+          {"name": "name", "type_text": "char", "array_dim_literal": 32},
+          {"name": "id", "type_text": "long", "array_dim_literal": null},
+          {"name": "flags", "type_text": "int", "array_dim_literal": null}
+        ]
+      },
+      {
+        "name": "Small",
+        "path": "src/types.c",
+        "span": {"start_line": 9, "start_col": 5, "end_line": 10, "end_col": 6},
+        "members": [
+          {"name": "c", "type_text": "char", "array_dim_literal": null}
+        ]
+      }
+    ],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/types.c#process_big#12:5",
+          "name": "process_big",
+          "path": "src/types.c",
+          "span": {"start_line": 12, "start_col": 5, "end_line": 14, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["struct Big b"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 3
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/types.c#inspect#16:5",
+          "name": "inspect",
+          "path": "src/types.c",
+          "span": {"start_line": 16, "start_col": 5, "end_line": 17, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["struct Small s"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 2
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/types.c#peek#19:5",
+          "name": "peek",
+          "path": "src/types.c",
+          "span": {"start_line": 19, "start_col": 5, "end_line": 21, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["struct Big *b"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 3
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

@@ -45,8 +45,9 @@ type HeuristicFn = fn(&[FileUnit]) -> Vec<Finding>;
 /// = inserting a new entry whose rule_id sorts into place (open pattern,
 /// minor-bump schema policy):
 /// alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001,
-/// call_002, loop_001, loop_002, loop_003, loop_004, str_001, str_002,
-/// str_003.
+/// call_002, loop_001, loop_002, loop_003, loop_004, loop_005, loop_006,
+/// loop_007, loop_008, mem_001, mem_002, str_001, str_002, str_003,
+/// type_001, type_002.
 const REGISTRY: &[HeuristicFn] = &[
     heuristics::alloc_001,
     heuristics::alloc_002,
@@ -60,9 +61,17 @@ const REGISTRY: &[HeuristicFn] = &[
     heuristics::loop_002,
     heuristics::loop_003,
     heuristics::loop_004,
+    heuristics::loop_005,
+    heuristics::loop_006,
+    heuristics::loop_007,
+    heuristics::loop_008,
+    heuristics::mem_001,
+    heuristics::mem_002,
     heuristics::str_001,
     heuristics::str_002,
     heuristics::str_003,
+    heuristics::type_001,
+    heuristics::type_002,
 ];
 
 mod heuristics;

@@ -1,0 +1,94 @@
+[
+  {
+    "file": {
+      "path": "src/dispatch.c",
+      "language": "c",
+      "loc": {"code": 10, "comment": 1, "blank": 2},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/dispatch.c#dispatch#4:1",
+          "name": "dispatch",
+          "path": "src/dispatch.c",
+          "span": {"start_line": 4, "start_col": 1, "end_line": 12, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["op_fn handler", "int v"],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 2,
+          "max_loop_depth": 2,
+          "alloc_site_count": 0,
+          "length_lines": 9
+        },
+        "calls": [
+          {
+            "callee_name": "handler",
+            "callee_kind": "indirect",
+            "args": [{"kind": "identifier", "name": "v"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 7, "start_col": 13, "end_line": 7, "end_col": 24},
+            "in_loop_depth": 2,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "handler",
+            "callee_kind": "indirect",
+            "args": [{"kind": "identifier", "name": "v"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 10, "start_col": 5, "end_line": 10, "end_col": 16},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "callee_name": "compute",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "v"}],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 11, "start_col": 5, "end_line": 11, "end_col": 16},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": ["i"],
+            "span": {"start_line": 5, "start_col": 5, "end_line": 9, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "kind": "for",
+            "depth": 2,
+            "induction_vars": ["j"],
+            "span": {"start_line": 6, "start_col": 9, "end_line": 8, "end_col": 10},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      }
+    ]
+  }
+]

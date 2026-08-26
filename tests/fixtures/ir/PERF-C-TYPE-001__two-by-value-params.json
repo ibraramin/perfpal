@@ -1,0 +1,63 @@
+[
+  {
+    "file": {
+      "path": "src/pair.c",
+      "language": "c",
+      "loc": {"code": 12, "comment": 0, "blank": 2},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [
+      {
+        "name": "Big",
+        "path": "src/pair.c",
+        "span": {"start_line": 3, "start_col": 5, "end_line": 7, "end_col": 6},
+        "members": [
+          {"name": "name", "type_text": "char", "array_dim_literal": 32},
+          {"name": "id", "type_text": "long", "array_dim_literal": null},
+          {"name": "flags", "type_text": "int", "array_dim_literal": null}
+        ]
+      },
+      {
+        "name": "Wide",
+        "path": "src/pair.c",
+        "span": {"start_line": 9, "start_col": 5, "end_line": 15, "end_col": 6},
+        "members": [
+          {"name": "tag", "type_text": "char", "array_dim_literal": 8},
+          {"name": "a", "type_text": "long", "array_dim_literal": null},
+          {"name": "b", "type_text": "long", "array_dim_literal": null},
+          {"name": "c", "type_text": "long", "array_dim_literal": null},
+          {"name": "d", "type_text": "long", "array_dim_literal": null}
+        ]
+      }
+    ],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/pair.c#move_both#17:5",
+          "name": "move_both",
+          "path": "src/pair.c",
+          "span": {"start_line": 17, "start_col": 5, "end_line": 19, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["struct Big a", "struct Wide b"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 3
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

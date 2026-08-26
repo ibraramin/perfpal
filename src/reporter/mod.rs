@@ -42,9 +42,10 @@ const MD_ESCAPE_CHARS: &[char] = &[
 ];
 
 /// Frozen v1 heuristic catalog (read-code-first transcription of
-/// docs/heuristics/catalog-v1.md §3 titles + one-line "Detects" summaries).
-/// FROZEN for v1: supplies Appendix A descriptions ONLY — never invent
-/// wording here; catalog changes flow from the doc, not the reverse.
+/// docs/heuristics/catalog-v1.md §3 + §4 titles and one-line "Detects"
+/// summaries). FROZEN for v1: supplies Appendix A descriptions ONLY —
+/// never invent wording here; catalog changes flow from the doc, not the
+/// reverse.
 const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-C-ALLOC-001",
@@ -120,6 +121,46 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
         "PERF-C-ARCH-003",
         "Cross-file call coupling (name-based)",
         "Detects cross-file call edges via name matching — LOW confidence until a semantic resolver tier exists.",
+    ),
+    (
+        "PERF-C-TYPE-001",
+        "Large struct passed by value",
+        "Detects struct-typed by-value parameters whose TU-defined struct reaches the approximate-size floor (LOW confidence — no real type layout at MVP).",
+    ),
+    (
+        "PERF-C-TYPE-002",
+        "Struct member ordering (padding candidate)",
+        "Detects struct definitions whose naive aligned layout wastes padding versus the packed member sum beyond the threshold.",
+    ),
+    (
+        "PERF-C-MEM-001",
+        "sizeof-misuse shapes in allocation args",
+        "Detects malloc(x * sizeof(ptr)) and sizeof misplacement shapes in allocation arguments — wrong-size allocations.",
+    ),
+    (
+        "PERF-C-MEM-002",
+        "Block copy/set family in loop (`memcpy`/`memmove`/`memset`)",
+        "Detects memcpy/memmove/memset calls with non-literal size arguments inside loop bodies; warn when innermost.",
+    ),
+    (
+        "PERF-C-LOOP-005",
+        "Global variable written inside loop",
+        "Detects assignment to a file-scope/global identifier inside a loop body (name-based scope classification, MEDIUM confidence).",
+    ),
+    (
+        "PERF-C-LOOP-006",
+        "Indirect call via function pointer in innermost loop",
+        "Detects calls through function-pointer variables inside innermost loop bodies (LOW confidence without type info).",
+    ),
+    (
+        "PERF-C-LOOP-007",
+        "Linear membership scan nested in loop",
+        "Detects comparison-against-array-element-indexed-by-outer-counter shapes — hand-rolled O(n²) lookup.",
+    ),
+    (
+        "PERF-C-LOOP-008",
+        "Pointer-chasing chain in innermost loop",
+        "Detects member-access chains of depth ≥ 3 inside innermost loop bodies — pointer-chasing cache-miss candidates.",
     ),
 ];
 

@@ -3,21 +3,28 @@
 //! sibling-order dependence (modules.md §4.1).
 //!
 //! Family layout: [`alloc`] (ALLOC-001/002/003), [`arch`] (ARCH-001/002/003),
-//! [`call`] (CALL-001/002), `r#loop` (LOOP-001/002/003/004), [`str`]
-//! (STR-001/002/003). Shared candidate collection and span helpers live here
-//! so families stay consistent.
+//! [`call`] (CALL-001/002), `r#loop` (LOOP-001..008), [`mem`]
+//! (MEM-001/002), [`str`] (STR-001/002/003), `r#type` (TYPE-001/002).
+//! Shared candidate collection and span helpers live here so families stay
+//! consistent.
 
 mod alloc;
 mod arch;
 mod call;
 mod r#loop;
+mod mem;
 mod r#str;
+mod r#type;
 
 pub(super) use alloc::{alloc_001, alloc_002, alloc_003};
 pub(super) use arch::{arch_001, arch_002, arch_003};
 pub(super) use call::{call_001, call_002};
-pub(super) use r#loop::{loop_001, loop_002, loop_003, loop_004};
+pub(super) use r#loop::{
+    loop_001, loop_002, loop_003, loop_004, loop_005, loop_006, loop_007, loop_008,
+};
+pub(super) use mem::{mem_001, mem_002};
 pub(super) use r#str::{str_001, str_002, str_003};
+pub(super) use r#type::{type_001, type_002};
 
 /// Cross-file name-matched call edges (ADR-0001 Syntactic tier): produced by
 /// [`arch_003`] for findings and consumed verbatim by the aggregator for
@@ -47,6 +54,29 @@ pub(crate) const ARCH_001_HUB_FANOUT: usize = 12;
 /// its complexity_sum reaches this (catalog default ≥ 15; keeps hello-world
 /// scans clean).
 pub(crate) const ARCH_002_MIN_COMPLEXITY_SUM: u32 = 15;
+
+/// PERF-C-TYPE-001 by-value struct size floor (LP64 estimated bytes): a
+/// passed-by-value struct whose TU-defined estimate reaches this fires
+/// (founder-approved floor of 32 — four 8-byte words; smaller structs are
+/// cheaper to copy than to reference).
+pub(crate) const TYPE_001_MIN_SIZE_BYTES: u64 = 32;
+
+/// PERF-C-TYPE-002 padding-waste floor (bytes): the naive aligned layout
+/// must waste at least this much versus the packed member sum before
+/// reordering is worth surfacing. Derived from the catalog's "padding
+/// candidate" wording with no numeric default: one full 8-byte LP64 word —
+/// anything smaller is not actionable member reordering.
+pub(crate) const TYPE_002_MIN_PADDING_BYTES: u64 = 8;
+
+/// PERF-C-LOOP-007 nesting floor: membership-scan comparisons below this
+/// depth lack the outer×inner iteration product that makes O(n²) lookups
+/// hurt (catalog: "nested in loop").
+pub(crate) const LOOP_007_MIN_DEPTH: u32 = 2;
+
+/// PERF-C-LOOP-008 chain-depth floor: member/subscript chains shorter than
+/// this rarely cross enough pointers to be cache-miss candidates (catalog:
+/// depth ≥ 3, `a->b->c->d`).
+pub(crate) const LOOP_008_MIN_CHAIN_DEPTH: usize = 3;
 
 /// Inclusive containment: `inner` lies fully within `outer`, endpoints
 /// allowed to touch (spans are inclusive on both ends, ir-v1.md §2).

@@ -1,14 +1,21 @@
-//! Loop-family heuristics (catalog-v1 §3 Tier 1):
-//! PERF-C-LOOP-001/002/003/004.
+//! Loop-family heuristics (catalog-v1 §3 Tier 1 + §4 Tier 2):
+//! PERF-C-LOOP-001..008.
 
 use crate::analyzer::finding::{
-    LOOP_001_RULE_ID, LOOP_002_RULE_ID, LOOP_003_RULE_ID, LOOP_004_RULE_ID,
+    LOOP_001_RULE_ID, LOOP_002_RULE_ID, LOOP_003_RULE_ID, LOOP_004_RULE_ID, LOOP_005_RULE_ID,
+    LOOP_006_RULE_ID, LOOP_007_RULE_ID, LOOP_008_RULE_ID,
 };
 use crate::analyzer::{Confidence, Finding, Severity};
-use crate::ir::{BinaryOpEvent, CalleeKind, LoopNode, ShapeKind, StatementRole};
+use crate::ir::{
+    BinaryOpEvent, CalleeKind, ComparisonEvent, LoopNode, ResolverTier, ScopeClass, Shape,
+    ShapeKind, Span, StatementRole,
+};
 use crate::scanner::FileUnit;
 
-use super::{LOOP_001_MIN_DEPTH, shape_kind_token, span_contains};
+use super::{
+    LOOP_001_MIN_DEPTH, LOOP_007_MIN_DEPTH, LOOP_008_MIN_CHAIN_DEPTH, shape_kind_token,
+    span_contains,
+};
 
 /// Character-wise stdio family (LOOP-003).
 const CHAR_IO_FAMILY: [&str; 5] = ["fgetc", "getc", "getchar", "fputc", "putc"];
@@ -259,4 +266,316 @@ fn is_variable_division(binop: &BinaryOpEvent) -> bool {
     (binop.op == "/" || binop.op == "%")
         && binop.meta.is_innermost
         && binop.right.kind != ShapeKind::Literal
+}
+
+/// PERF-C-LOOP-005 — Global variable written inside loop
+/// (catalog-v1 §4 Tier 2).
+///
+/// Fires per [`AssignmentEvent`] whose target is classified
+/// [`ScopeClass::Global`] (name-based file-scope classification, MEDIUM by
+/// construction) at `in_loop_depth ≥ 1` — a potential loop-invariant store
+/// or shared-state contention signal.
+///
+/// DEDUP: one finding per `(target identifier, enclosing-loop span)` pair,
+/// anchored at the EARLIEST qualifying assignment span — a global written N
+/// times inside the SAME loop body yields ONE finding; a second global or a
+/// different enclosing loop yields its own. Documented FP class: accumulator
+/// updates that legitimately belong in the loop stay flagged (Info band
+/// keeps them candidate-grade). Framing rule: optimization candidate, never
+/// bug/unsafe.
+pub(crate) fn loop_005(units: &[FileUnit]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for unit in units {
+        for func in &unit.functions {
+            // Group qualifying assignments by (target ident, innermost
+            // enclosing-loop span), keeping the EARLIEST member span, its
+            // depth, and its resolver tier. Insertion order preserves
+            // document determinism.
+            let mut groups: Vec<Loop005Group> = Vec::new();
+            for assignment in &func.assignments {
+                if assignment.scope_class != ScopeClass::Global
+                    || assignment.meta.in_loop_depth == 0
+                    || assignment.target.kind != ShapeKind::Identifier
+                {
+                    continue;
+                }
+                let Some(target) = assignment.target.name.clone() else {
+                    continue;
+                };
+                let Some(enclosing) = innermost_enclosing_loop(&func.loops, &assignment.meta.span)
+                else {
+                    continue;
+                };
+                if let Some(group) = groups
+                    .iter_mut()
+                    .find(|g| g.target == target && g.loop_span == enclosing.span)
+                {
+                    if (
+                        assignment.meta.span.start_line,
+                        assignment.meta.span.start_col,
+                    ) < (group.anchor.start_line, group.anchor.start_col)
+                    {
+                        group.anchor = assignment.meta.span;
+                        group.loop_depth = assignment.meta.in_loop_depth;
+                        group.resolver_tier = assignment.meta.resolver_tier;
+                    }
+                } else {
+                    groups.push(Loop005Group {
+                        target,
+                        loop_span: enclosing.span,
+                        anchor: assignment.meta.span,
+                        loop_depth: assignment.meta.in_loop_depth,
+                        resolver_tier: assignment.meta.resolver_tier,
+                    });
+                }
+            }
+            for group in groups {
+                findings.push(Finding {
+                    rule_id: LOOP_005_RULE_ID.to_string(),
+                    title: "Global variable written inside loop".to_string(),
+                    message: format!(
+                        "global '{}' is stored every iteration at loop \
+                         depth {} — hoisting the write out of the loop or \
+                         caching it in a local is a candidate optimization",
+                        group.target, group.loop_depth
+                    ),
+                    severity: Severity::Info,
+                    confidence: Confidence::Medium,
+                    resolver_tier: group.resolver_tier,
+                    span: group.anchor,
+                    path: unit.file.path.clone(),
+                    evidence: [
+                        ("target".to_string(), group.target),
+                        ("loop_depth".to_string(), group.loop_depth.to_string()),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    macro_suspect: false,
+                    error_node_overlap: false,
+                });
+            }
+        }
+    }
+    findings
+}
+
+/// PERF-C-LOOP-006 — Indirect call via function pointer in innermost loop
+/// (catalog-v1 §4 Tier 2).
+///
+/// Fires per [`CallEvent`] with `callee_kind == Indirect` at
+/// `in_loop_depth ≥ 1` AND `is_innermost == true` — indirect calls inhibit
+/// inlining and hurt branch prediction worst where they run every iteration.
+/// One finding per call event. Confidence LOW is mandatory (no type info
+/// confirming the callee really is a function pointer); documented FP class:
+/// dispatch-table patterns are idiomatic and often intentional. Framing
+/// rule: optimization candidate, never bug/unsafe.
+pub(crate) fn loop_006(units: &[FileUnit]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for unit in units {
+        for func in &unit.functions {
+            for call in &func.calls {
+                if call.callee_kind != CalleeKind::Indirect
+                    || !call.meta.is_innermost
+                    || call.meta.in_loop_depth == 0
+                {
+                    continue;
+                }
+                findings.push(Finding {
+                    rule_id: LOOP_006_RULE_ID.to_string(),
+                    title: "Indirect call via function pointer in innermost loop".to_string(),
+                    message: format!(
+                        "indirect call through '{}' runs in the innermost \
+                         loop at depth {} — resolving the target once \
+                         outside the loop or replacing the pointer \
+                         dispatch with a direct call is a candidate \
+                         optimization",
+                        call.callee_name, call.meta.in_loop_depth
+                    ),
+                    severity: Severity::Info,
+                    confidence: Confidence::Low,
+                    resolver_tier: call.meta.resolver_tier,
+                    span: call.meta.span,
+                    path: unit.file.path.clone(),
+                    evidence: [
+                        ("callee".to_string(), call.callee_name.clone()),
+                        (
+                            "loop_depth".to_string(),
+                            call.meta.in_loop_depth.to_string(),
+                        ),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    macro_suspect: false,
+                    error_node_overlap: false,
+                });
+            }
+        }
+    }
+    findings
+}
+
+/// PERF-C-LOOP-007 — Linear membership scan nested in loop
+/// (catalog-v1 §4 Tier 2).
+///
+/// Fires per [`ComparisonEvent`] at `in_loop_depth ≥ LOOP_007_MIN_DEPTH`
+/// where ONE side is a Subscript shape whose
+/// `index_ident` matches ANY induction var of a loop span-containing the
+/// comparison AND the OTHER side is NOT a literal shape — the hand-rolled
+/// O(n²) lookup shape (`arr[j] == key` inside a doubly nested loop).
+///
+/// The non-literal guard excludes sentinel/bounds idioms (`arr[j] == '\0'`)
+/// BY DESIGN. Candidate-grade only: comparing against another array element
+/// is legitimate, but comparing against a known-sentinel VARIABLE is not
+/// distinguishable syntactically — that residual FP class stands (catalog
+/// note). One finding per comparison span. Confidence LOW mandatory.
+pub(crate) fn loop_007(units: &[FileUnit]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for unit in units {
+        for func in &unit.functions {
+            for cmp in &func.comparisons {
+                let Some((sub, index_ident)) = membership_sides(cmp, &func.loops) else {
+                    continue;
+                };
+                let mut evidence = Vec::new();
+                if let Some(root) = sub.name.clone() {
+                    evidence.push(("root".to_string(), root));
+                }
+                evidence.push(("index_ident".to_string(), index_ident.to_string()));
+                evidence.push(("loop_depth".to_string(), cmp.meta.in_loop_depth.to_string()));
+                findings.push(Finding {
+                    rule_id: LOOP_007_RULE_ID.to_string(),
+                    title: "Linear membership scan nested in loop".to_string(),
+                    message: format!(
+                        "element lookup compared against a non-literal at \
+                         loop depth {} re-scans linearly on every outer \
+                         iteration — precomputing a hash set / lookup \
+                         table or sorting plus bisecting is a candidate \
+                         optimization",
+                        cmp.meta.in_loop_depth
+                    ),
+                    severity: Severity::Info,
+                    confidence: Confidence::Low,
+                    resolver_tier: cmp.meta.resolver_tier,
+                    span: cmp.meta.span,
+                    path: unit.file.path.clone(),
+                    evidence: evidence.into_iter().collect(),
+                    macro_suspect: false,
+                    error_node_overlap: false,
+                });
+            }
+        }
+    }
+    findings
+}
+
+/// LOOP-007 gate: at [`LOOP_007_MIN_DEPTH`] or deeper, one side a Subscript
+/// indexed by an induction var of an enclosing loop, the other side not a
+/// literal. Returns `(subscript_side, index_ident)` with the LEFT side
+/// preferred when both qualify — the index identifier is part of the gate
+/// proof, so callers never see a missing index.
+fn membership_sides<'a>(
+    cmp: &'a ComparisonEvent,
+    loops: &'a [LoopNode],
+) -> Option<(&'a Shape, &'a str)> {
+    if cmp.meta.in_loop_depth < LOOP_007_MIN_DEPTH {
+        return None;
+    }
+    let induced = |sub: &'a Shape| -> Option<&'a str> {
+        if sub.kind != ShapeKind::Subscript {
+            return None;
+        }
+        let idx = sub.index_ident.as_deref()?;
+        loops
+            .iter()
+            .filter(|l| span_contains(&l.span, &cmp.meta.span))
+            .any(|l| l.induction_vars.iter().any(|v| v == idx))
+            .then_some(idx)
+    };
+    match (induced(&cmp.left), induced(&cmp.right)) {
+        (Some(idx), _) if cmp.right.kind != ShapeKind::Literal => Some((&cmp.left, idx)),
+        (_, Some(idx)) if cmp.left.kind != ShapeKind::Literal => Some((&cmp.right, idx)),
+        _ => None,
+    }
+}
+
+/// PERF-C-LOOP-008 — Pointer-chasing chain in innermost loop
+/// (catalog-v1 §4 Tier 2).
+///
+/// Fires per [`AccessChainEvent`] with chain depth ≥
+/// [`LOOP_008_MIN_CHAIN_DEPTH`] at `in_loop_depth ≥ 1` AND
+/// `is_innermost == true` — repeated pointer dereferences per iteration are
+/// cache-miss candidates. One finding per chain span. Documented FP class
+/// (catalog-mandated): dispatch through ops/vtable-style tables
+/// (`ctx->ops->fn`) is idiomatic C design, not a defect — severity stays
+/// Info with MEDIUM confidence and this class documented. Framing rule:
+/// optimization candidate, never bug/unsafe.
+pub(crate) fn loop_008(units: &[FileUnit]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for unit in units {
+        for func in &unit.functions {
+            for chain in &func.access_chains {
+                if chain.elements.len() < LOOP_008_MIN_CHAIN_DEPTH
+                    || !chain.meta.is_innermost
+                    || chain.meta.in_loop_depth == 0
+                {
+                    continue;
+                }
+                findings.push(Finding {
+                    rule_id: LOOP_008_RULE_ID.to_string(),
+                    title: "Pointer-chasing chain in innermost loop".to_string(),
+                    message: format!(
+                        "'{}' dereference chain of depth {} executes in \
+                         the innermost loop — caching intermediate \
+                         pointers or flattening the structure is a \
+                         candidate optimization",
+                        chain.root,
+                        chain.elements.len()
+                    ),
+                    severity: Severity::Info,
+                    confidence: Confidence::Medium,
+                    resolver_tier: chain.meta.resolver_tier,
+                    span: chain.meta.span,
+                    path: unit.file.path.clone(),
+                    evidence: [
+                        ("root".to_string(), chain.root.clone()),
+                        ("chain_depth".to_string(), chain.elements.len().to_string()),
+                        (
+                            "loop_depth".to_string(),
+                            chain.meta.in_loop_depth.to_string(),
+                        ),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    macro_suspect: false,
+                    error_node_overlap: false,
+                });
+            }
+        }
+    }
+    findings
+}
+
+/// LOOP-005 dedup group: one finding per `(target identifier, enclosing-loop
+/// span)` pair, anchored at the earliest qualifying assignment span.
+struct Loop005Group {
+    target: String,
+    loop_span: Span,
+    anchor: Span,
+    loop_depth: u32,
+    resolver_tier: ResolverTier,
+}
+
+/// Innermost (deepest) loop whose span contains `span`; ties on depth break
+/// to the earlier start position for determinism.
+fn innermost_enclosing_loop<'a>(loops: &'a [LoopNode], span: &Span) -> Option<&'a LoopNode> {
+    loops
+        .iter()
+        .filter(|l| span_contains(&l.span, span))
+        .min_by_key(|l| {
+            (
+                std::cmp::Reverse(l.depth),
+                l.span.start_line,
+                l.span.start_col,
+            )
+        })
 }

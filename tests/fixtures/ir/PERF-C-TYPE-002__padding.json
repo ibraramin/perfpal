@@ -1,0 +1,47 @@
+[
+  {
+    "file": {
+      "path": "src/layout.c",
+      "language": "c",
+      "loc": {"code": 10, "comment": 0, "blank": 1},
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [
+      {
+        "name": "Wasteful",
+        "path": "src/layout.c",
+        "span": {"start_line": 3, "start_col": 5, "end_line": 8, "end_col": 6},
+        "members": [
+          {"name": "a", "type_text": "char", "array_dim_literal": null},
+          {"name": "b", "type_text": "long", "array_dim_literal": null},
+          {"name": "c", "type_text": "char", "array_dim_literal": null},
+          {"name": "d", "type_text": "long", "array_dim_literal": null}
+        ]
+      },
+      {
+        "name": "Tight",
+        "path": "src/layout.c",
+        "span": {"start_line": 10, "start_col": 5, "end_line": 13, "end_col": 6},
+        "members": [
+          {"name": "first", "type_text": "long", "array_dim_literal": null},
+          {"name": "second", "type_text": "long", "array_dim_literal": null}
+        ]
+      },
+      {
+        "name": "Solo",
+        "path": "src/layout.c",
+        "span": {"start_line": 15, "start_col": 5, "end_line": 17, "end_col": 6},
+        "members": [
+          {"name": "only", "type_text": "long", "array_dim_literal": null}
+        ]
+      }
+    ],
+    "macros": [],
+    "functions": []
+  }
+]

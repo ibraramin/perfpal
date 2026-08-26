@@ -56,7 +56,11 @@ GlobalVar {
 
 StructDef {
   name, path, span          // tag name; "" if anonymous
-  members: [{name, type_text, array_dim_literal}]   // array_dim_literal = int|null (approximate size model, TYPE-001/002)
+  members: [{name, type_text, array_dim_literal, is_pointer}]
+                            // array_dim_literal = int|null (approximate size model, TYPE-001/002)
+                            // is_pointer = bool (additive, default false): declarator carries a
+                            // pointer star; stars never reach type_text, so the size model needs
+                            // the explicit flag (TYPE-001/002)
 }
 
 MacroEvent {
@@ -141,8 +145,19 @@ Shape {
   value?                    // literal value when kind = literal
   index_ident?              // subscript index identifier when kind = subscript
   depth?                    // chain depth when kind = member_access
+  sizeof_operand?           // raw source text of a sizeof operand, parens stripped as written
+                            // (`sizeof(p)` ⇒ "p", `sizeof(struct S)` ⇒ "struct S") — additive,
+                            // MEM-001 input; absent on non-sizeof shapes
 }
 ```
+
+Additive-change note (P5 Wave A): `Shape.sizeof_operand` and
+`StructMember.is_pointer` are ADDITIVE v1 fields — both optional/defaulted
+on the wire (`Option` / `#[serde(default)]`), so documents written before
+them deserialize unchanged. They add detection fidelity (MEM-001 operand
+classification; TYPE-001/002 pointer-member sizing) without touching any
+existing field's meaning; the minor-bump schema policy (open rule_id
+pattern) covers them.
 
 This one vocabulary is what keeps the IR event-stream-shaped instead of AST-shaped: heuristics pattern-match over typed events + shapes, never over parser node types.
 

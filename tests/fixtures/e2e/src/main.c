@@ -12,7 +12,12 @@
  *   - deep_sum → PERF-C-LOOP-004 (variable-divisor / in innermost loop)
  *   - dispatch → PERF-C-CALL-002 (cyclomatic complexity ≥ 15)
  * Cross-file (P4): main() calls util_init() defined in src/util.c —
- *   PERF-C-ARCH-003 cross-file call edge + call_graph edge. */
+ *   PERF-C-ARCH-003 cross-file call edge + call_graph edge.
+ * P5 Tier 2 coverage:
+ *   - weigh     → PERF-C-TYPE-001 (by-value struct Big, LP64 estimate 48
+ *                 ≥ the 32-byte floor)
+ *   - clone_row → PERF-C-MEM-001 (malloc(n * sizeof(row)) sizes the
+ *                 pointer param, not the pointee — pointer_param_sizeof) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,6 +101,21 @@ int dispatch(int cmd, int a, int b) {
     while (a > b) { --a; }
     do { ++b; } while (b < a);
     return cmd;
+}
+
+/* P5 Tier 2 end-to-end subjects. */
+struct Big {
+    char name[32];
+    long id;
+    int tag;
+};
+
+int weigh(struct Big b) {
+    return (int)b.id + b.tag;
+}
+
+void *clone_row(void *row, size_t n) {
+    return memcpy(malloc(n * sizeof(row)), row, n);
 }
 
 int main(void) {

@@ -410,10 +410,16 @@ fn struct_def(node: Node<'_>, path: &str, source: &[u8]) -> Option<StructDef> {
                     .and_then(|d| leftmost_identifier(d, source))
                     .unwrap_or_default();
                 let array_dim_literal = decl.and_then(|d| array_dimension(d, source));
+                // Pointerness lives in the DECLARATOR (pointer_declarator
+                // wrappers), never in the `type` field text — record it
+                // explicitly so the TYPE-001/002 size model sees `char *p`
+                // as an 8-byte member (ir-v1.md §3.1 additive field).
+                let is_pointer = decl.is_some_and(|d| subtree_has_kind(d, "pointer_declarator"));
                 members.push(StructMember {
                     name: member_name,
                     type_text,
                     array_dim_literal,
+                    is_pointer,
                 });
             }
             if !cursor.goto_next_sibling() {
@@ -1026,10 +1032,38 @@ impl<'a> FuncScan<'a> {
                 kind: ShapeKind::Binary,
                 ..Shape::default()
             },
-            "sizeof_expression" => Shape {
-                kind: ShapeKind::Sizeof,
-                ..Shape::default()
-            },
+            "sizeof_expression" => {
+                // Operand text AS WRITTEN, parens stripped (`sizeof(p)` ⇒
+                // "p", `sizeof(struct S)` ⇒ "struct S", `sizeof *p` ⇒ "*p").
+                // tree-sitter-c gives TWO CST shapes here:
+                //   sizeof <expr>        → [sizeof, expr]
+                //   sizeof(<expr|type>)  → [sizeof, "(", inner, ")"]
+                // An expression operand arrives PRE-wrapped as a
+                // parenthesized_expression (its paren tokens live inside
+                // it), while the type-descriptor form exposes bare paren
+                // tokens at THIS level — child(1) "(" means the operand is
+                // child(2). The shape itself stays a bare Sizeof; the
+                // parenthesized-unwrapping at the `parenthesized_expression`
+                // arm below is untouched (ir-v1.md §3.4 additive field,
+                // MEM-001 input).
+                let operand = match node.child(1).map(|c| c.kind()) {
+                    Some("(") => node.child(2),
+                    _ => node.child(1),
+                };
+                let sizeof_operand = operand.map(|operand| {
+                    let inner = if operand.kind() == "parenthesized_expression" {
+                        operand.child(1).unwrap_or(operand)
+                    } else {
+                        operand
+                    };
+                    text(inner, self.source).to_string()
+                });
+                Shape {
+                    kind: ShapeKind::Sizeof,
+                    sizeof_operand,
+                    ..Shape::default()
+                }
+            }
             "parenthesized_expression" => node
                 .child(1)
                 .map(|inner| self.shape_of(inner))
@@ -1390,15 +1424,65 @@ int process(int n, char *buf) {
 
     #[test]
     fn struct_def_members_and_array_dims_extracted() {
-        let src =
-            "struct Item {\n    int id;\n    char name[16];\n};\nint main(void) { return 0; }\n";
+        let src = concat!(
+            "struct Item {\n",
+            "    int id;\n",
+            "    char name[16];\n",
+            "    char *alias;\n",
+            "};\n",
+            "int main(void) { return 0; }\n",
+        );
         let ex = extract("s.c", src.as_bytes());
         assert_eq!(ex.structs.len(), 1);
         let def = &ex.structs[0];
         assert_eq!(def.name, "Item");
-        assert_eq!(def.members.len(), 2);
+        assert_eq!(def.members.len(), 3);
         assert_eq!(def.members[0].name, "id");
+        assert!(!def.members[0].is_pointer, "plain member is not a pointer");
         assert_eq!(def.members[1].array_dim_literal, Some(16));
+        assert!(!def.members[1].is_pointer);
+        assert_eq!(def.members[2].name, "alias");
+        assert!(
+            def.members[2].is_pointer,
+            "declarator star must set is_pointer (stars never reach type_text)"
+        );
+    }
+
+    /// `Shape.sizeof_operand` (additive ir-v1.md §3.4 field): raw operand
+    /// text AS WRITTEN with one level of parens stripped — the MEM-001
+    /// input. Locks the tree-sitter extraction so a grammar/index
+    /// regression cannot silently disable operand classification.
+    #[test]
+    fn sizeof_operand_records_operand_text() {
+        let src = concat!(
+            "void f(void *p) {\n",
+            "    void *a = malloc(sizeof(p));\n",
+            "    void *b = malloc(sizeof(struct S));\n",
+            "    void *c = malloc(sizeof *p);\n",
+            "    void *d = malloc(16);\n",
+            "}\n",
+        );
+        let ex = extract("s.c", src.as_bytes());
+        let f = ex.functions.first().expect("function f");
+        let operand_at = |line: u32| {
+            f.calls
+                .iter()
+                .find(|c| c.meta.span.start_line == line)
+                .and_then(|c| c.args.last())
+                .and_then(|arg| arg.sizeof_operand.clone())
+        };
+        assert_eq!(operand_at(2).as_deref(), Some("p"), "parens stripped");
+        assert_eq!(operand_at(3).as_deref(), Some("struct S"));
+        assert_eq!(
+            operand_at(4).as_deref(),
+            Some("*p"),
+            "unparenthesized operand kept as written"
+        );
+        assert_eq!(
+            operand_at(5),
+            None,
+            "non-sizeof argument carries no sizeof_operand"
+        );
     }
 
     /// ir-v1.md §7: engine-native ↔ IR span round-trip locked BOTH directions
