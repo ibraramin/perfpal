@@ -11,6 +11,44 @@ use perfpal::analyzer::finding::{
 };
 use perfpal::analyzer::{Confidence, Severity, analyze};
 
+// ---------------------------------------------------------------------------
+// Fixture-derived expectation helpers
+//
+// Expected spans are DERIVED from the raw fixture JSON (via the untyped
+// loader) instead of hardcoded literals — editing a fixture's span flips the
+// test instead of leaving a stale magic number.
+// ---------------------------------------------------------------------------
+
+/// First document of a fixture array (the corpus files are single-document).
+fn fixture_doc(fixture: &serde_json::Value) -> &serde_json::Value {
+    fixture
+        .as_array()
+        .and_then(|docs| docs.first())
+        .expect("fixture holds at least one IR document")
+}
+
+/// `start_line` of the FIRST function-level binary_op matching `pred`.
+fn binop_start_line(fixture: &serde_json::Value, pred: impl Fn(&serde_json::Value) -> bool) -> u32 {
+    fixture_doc(fixture)["functions"]
+        .as_array()
+        .and_then(|fns| fns.first())
+        .and_then(|f| f["binary_ops"].as_array())
+        .and_then(|ops| ops.iter().find(|b| pred(b)))
+        .and_then(|b| b["span"]["start_line"].as_u64())
+        .map(|l| u32::try_from(l).expect("line fits u32"))
+        .expect("fixture must contain the referenced binary_op")
+}
+
+/// `start_line` of the function record named `name`.
+fn record_start_line(fixture: &serde_json::Value, name: &str) -> u32 {
+    fixture_doc(fixture)["functions"]
+        .as_array()
+        .and_then(|fns| fns.iter().find(|f| f["record"]["name"] == name))
+        .and_then(|f| f["record"]["span"]["start_line"].as_u64())
+        .map(|l| u32::try_from(l).expect("line fits u32"))
+        .expect("fixture must contain the referenced function record")
+}
+
 // ===========================================================================
 // PERF-C-ALLOC-003 — realloc linear growth in loop
 // ===========================================================================
@@ -163,6 +201,13 @@ fn variable_divisor_innermost_div_and_mod_fire_info() {
          non-innermost stay silent in the same fixture"
     );
 
+    // Expectations derived from the fixture itself (op `/`, identifier
+    // divisor `count`) — no magic line literal.
+    let fixture = common::load_ir_fixture("PERF-C-LOOP-004__var-divisor-innermost.json");
+    let div_line = binop_start_line(&fixture, |b| {
+        b["op"] == "/" && b["right"]["name"] == "count"
+    });
+
     let div = loop004
         .iter()
         .find(|f| f.evidence.get("op").map(String::as_str) == Some("/"))
@@ -177,7 +222,10 @@ fn variable_divisor_innermost_div_and_mod_fire_info() {
         div.evidence.get("divisor").map(String::as_str),
         Some("count")
     );
-    assert_eq!(div.span.start_line, 8, "anchored at the binop span");
+    assert_eq!(
+        div.span.start_line, div_line,
+        "anchored at the binop span (derived from fixture)"
+    );
 
     let modulo = loop004
         .iter()
@@ -193,17 +241,24 @@ fn variable_divisor_innermost_div_and_mod_fire_info() {
 fn literal_divisor_and_non_innermost_stay_silent() {
     let units = common::load_units_fixture("PERF-C-LOOP-004__var-divisor-innermost.json");
     let findings = analyze(&units);
+    // Expectations derived from the fixture itself: the literal-divisor
+    // `/` and the non-innermost `%` lines come from the raw JSON.
+    let fixture = common::load_ir_fixture("PERF-C-LOOP-004__var-divisor-innermost.json");
+    let literal_line = binop_start_line(&fixture, |b| {
+        b["op"] == "/" && b["right"]["kind"] == "literal"
+    });
+    let non_innermost_line = binop_start_line(&fixture, |b| b["is_innermost"] == false);
     assert!(
         findings
             .iter()
-            .all(|f| { f.rule_id != LOOP_004_RULE_ID || f.span.start_line != 12 }),
-        "literal divisor `x / 2` skipped by design (line 12)"
+            .all(|f| { f.rule_id != LOOP_004_RULE_ID || f.span.start_line != literal_line }),
+        "literal divisor `x / 2` skipped by design (fixture line {literal_line})"
     );
     assert!(
         findings
             .iter()
-            .all(|f| { f.rule_id != LOOP_004_RULE_ID || f.span.start_line != 15 }),
-        "non-innermost `%` skipped (line 15)"
+            .all(|f| { f.rule_id != LOOP_004_RULE_ID || f.span.start_line != non_innermost_line }),
+        "non-innermost `%` skipped (fixture line {non_innermost_line})"
     );
 }
 
@@ -230,5 +285,12 @@ fn complexity_at_threshold_fires_warn_high_once_per_function() {
     );
     assert_eq!(f.evidence.get("complexity").map(String::as_str), Some("16"));
     assert_eq!(f.evidence.get("threshold").map(String::as_str), Some("15"));
-    assert_eq!(f.span.start_line, 4, "anchored at the record span");
+    // Expected anchor derived from the fixture's own record span — no
+    // magic line literal.
+    let fixture = common::load_ir_fixture("PERF-C-CALL-002__high-complexity.json");
+    let record_line = record_start_line(&fixture, "mega_dispatch");
+    assert_eq!(
+        f.span.start_line, record_line,
+        "anchored at the record span (derived from fixture)"
+    );
 }

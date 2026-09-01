@@ -142,11 +142,22 @@ pub fn run_with<I: IntoIterator<Item = OsString>>(argv: I) -> i32 {
         }
     };
 
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run_pipeline(&args)));
+    guarded(&args.output.display().to_string(), || run_pipeline(&args))
+}
+
+/// Panic-catch seam around one pipeline pass (testable extraction of the
+/// exact behavior [`run_with`] had inline): `Ok(summary)` prints the stdout
+/// summary and exits 0; `Err(err)` prints the diagnostic and maps through
+/// [`exit_code`]; an unwound panic prints the internal-error line and exits
+/// 3 (§8.2). Private — the exit-3 path is locked by a `#[cfg(test)]` unit
+/// test below, the least-surface option (integration tests cover 0/1/2
+/// through [`run_with`], where panics cannot be triggered naturally).
+fn guarded(output_dir: &str, f: impl FnOnce() -> Result<RunSummary, PipelineError>) -> i32 {
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
 
     match result {
         Ok(Ok(summary)) => {
-            print!("{}", summary.render(&args.output.display().to_string()));
+            print!("{}", summary.render(output_dir));
             0
         }
         Ok(Err(err)) => {
@@ -296,6 +307,38 @@ mod tests {
         assert_eq!(exit_code(&PipelineError::Usage("x".into())), 1);
         assert_eq!(exit_code(&PipelineError::Output("x".into())), 2);
         assert_eq!(exit_code(&PipelineError::Internal("x".into())), 3);
+    }
+
+    #[test]
+    fn guarded_maps_ok_err_and_panic_to_contract_codes() {
+        // The panic→3 path cannot occur naturally through run_with, so the
+        // guarded seam is exercised directly (§8.2 internal-error row).
+        let empty = RunSummary {
+            files: 0,
+            ok: 0,
+            partial: 0,
+            failed: 0,
+            findings: 0,
+            hot: 0,
+            warn: 0,
+            info: 0,
+        };
+        assert_eq!(guarded("perfpal-report", || Ok(empty)), 0);
+        assert_eq!(
+            guarded("perfpal-report", || Err(PipelineError::Usage("x".into()))),
+            1
+        );
+        assert_eq!(
+            guarded("perfpal-report", || Err(PipelineError::Output("x".into()))),
+            2
+        );
+        assert_eq!(
+            guarded("perfpal-report", || -> Result<RunSummary, PipelineError> {
+                panic!("boom")
+            }),
+            3,
+            "an unwound panic must map to the internal-error exit code"
+        );
     }
 
     #[test]

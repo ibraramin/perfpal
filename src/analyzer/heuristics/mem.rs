@@ -44,6 +44,7 @@ pub(crate) fn mem_002(units: &[FileUnit]) -> Vec<Finding> {
                 }
                 let innermost = call.meta.is_innermost;
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: MEM_002_RULE_ID.to_string(),
                     title: "Block copy/set family in loop".to_string(),
                     message: format!(
@@ -153,6 +154,7 @@ pub(crate) fn mem_001(units: &[FileUnit]) -> Vec<Finding> {
                     continue;
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: MEM_001_RULE_ID.to_string(),
                     title: "sizeof misuse in allocation argument".to_string(),
                     message: format!(

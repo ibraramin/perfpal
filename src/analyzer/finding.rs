@@ -77,6 +77,13 @@ pub struct Finding {
     pub macro_suspect: bool,
     /// ir-v1.md §5 hook 3: error-region overlap downgrade applied.
     pub error_node_overlap: bool,
+    /// Catalog threshold that fired, as `(name, value)` — e.g.
+    /// `("min_nesting_depth", 3)` for LOOP-001. `None` for rules with no
+    /// configurable threshold (the schema field is omitted on lift).
+    /// Analyzer-internal: never serialized on `Finding` itself — the
+    /// aggregator lifts it into `schema::Threshold`.
+    #[serde(skip)]
+    pub threshold: Option<(&'static str, u32)>,
 }
 
 impl Finding {

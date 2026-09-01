@@ -208,7 +208,8 @@ pub struct FindingEntry {
     pub macro_suspect: bool,
     /// ir-v1.md §5 hook 3: error-region overlap caps confidence ≤ MEDIUM.
     pub error_node_overlap: bool,
-    /// Schema-optional; no v1 heuristic emits one yet ⇒ always omitted.
+    /// Schema-optional; LOOP-001 (`min_nesting_depth`) and CALL-002
+    /// (`min_complexity`) populate it — rules without a threshold omit it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub threshold: Option<Threshold>,
     pub message: String,
@@ -465,7 +466,10 @@ pub fn finding_entry(finding: &Finding, symbol: Option<String>) -> FindingEntry 
         resolver_tier: finding.resolver_tier,
         macro_suspect: finding.macro_suspect,
         error_node_overlap: finding.error_node_overlap,
-        threshold: None,
+        threshold: finding.threshold.map(|(name, value)| Threshold {
+            name: name.to_string(),
+            value: ThresholdValue::Number(f64::from(value)),
+        }),
         message: finding.message.clone(),
         evidence: finding.evidence.clone(),
     }

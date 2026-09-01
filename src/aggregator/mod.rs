@@ -525,6 +525,7 @@ mod tests {
 
     fn finding(path: &str, line: u32, col: u32) -> Finding {
         Finding {
+            threshold: None,
             rule_id: "PERF-C-ALLOC-001".to_string(),
             title: "Heap allocation inside loop".to_string(),
             message: "candidate".to_string(),

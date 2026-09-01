@@ -8,17 +8,25 @@ on:
 env:
   CARGO_TERM_COLOR: never
 
+# Supply-chain posture (P6): every action pinned to a full commit SHA.
+# Bump by resolving the tag to a new commit — never re-point at a moving ref.
+# dtolnay/rust-toolchain has no version tags; pin its master-branch HEAD
+# (the repo documents full-length master SHAs as the supported pin form).
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
-      - uses: dtolnay/rust-toolchain@stable
+      # master HEAD at pin time; installs rust-toolchain.toml's pinned toolchain
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
           components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v2
+      # v2.9.2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
 
       - name: Byte-determinism guard — serde_json preserve_order must stay OFF
         run: |
@@ -41,12 +49,15 @@ jobs:
     # anywhere in the dependency closure. Runs on every push/PR.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
 
-      - uses: Swatinem/rust-cache@v2
+      # v2.9.2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
 
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      # v2.1.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25
         with:
           command: check licenses

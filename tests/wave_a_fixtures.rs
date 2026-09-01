@@ -18,13 +18,6 @@ use perfpal::analyzer::finding::{
     STR_003_RULE_ID, TYPE_001_RULE_ID, TYPE_002_RULE_ID,
 };
 use perfpal::analyzer::{Confidence, Finding, Severity, analyze};
-use perfpal::ir::{
-    AccessChainEvent, AssignmentEvent, BinaryOpEvent, CallEvent, CalleeKind, ComparisonEvent,
-    EventMeta, FileRecord, FunctionRecord, GlobalVar, IncludeCounts, IncludeEdge, IncludeForm,
-    LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, ScopeClass, Shape, ShapeKind, Span,
-    StatementRole, StorageClass, StructDef, StructMember,
-};
-use perfpal::scanner::{FileUnit, FunctionUnit};
 
 // ===========================================================================
 // PERF-C-ALLOC-002 — deallocation inside loop
@@ -244,6 +237,53 @@ fn bounded_variants_and_non_string_formats_stay_silent() {
     }
 }
 
+#[test]
+fn non_format_arg_pct_s_stays_silent() {
+    // `scanf(name, "%s")`: the format-POSITION argument (index 0 for
+    // scanf) is a non-literal identifier, so there is no string-literal
+    // format to inspect — the "%s" literal riding in a NON-format
+    // argument must not fire STR-003.
+    let units = common::load_units_fixture("PERF-C-STR-003__pct-s-non-format-arg.json");
+    let findings = analyze(&units);
+    assert!(
+        common::by_rule(&findings, STR_003_RULE_ID).is_empty(),
+        "%s in a non-format argument must stay silent — format-position \
+         gate, got {findings:?}"
+    );
+}
+
+#[test]
+fn fscanf_and_sscanf_format_positions_fire() {
+    // Format-position mapping per C11 §7.21.6: `scanf` → arg 0,
+    // `fscanf`/`sscanf` → arg 1. The arg-1 branch is behavior-bearing and
+    // was previously uncovered (P6 review finding).
+    let units = common::load_units_fixture("PERF-C-STR-003__scanf-format-positions.json");
+    let findings = analyze(&units);
+    let str003 = common::by_rule(&findings, STR_003_RULE_ID);
+    assert_eq!(
+        str003.len(),
+        2,
+        "fscanf(\"%s\", …) and sscanf(…, \"%s\", …) fire via their arg-1 \
+         format literal, got {findings:?}"
+    );
+    let callees: Vec<&str> = str003
+        .iter()
+        .filter_map(|f| f.evidence.get("callee").map(String::as_str))
+        .collect();
+    assert_eq!(
+        callees,
+        ["fscanf", "sscanf"],
+        "document order follows start_line within the tie-broken total order"
+    );
+    for f in &str003 {
+        assert_eq!(
+            f.evidence.get("format").map(String::as_str),
+            Some("%s"),
+            "the arg-1 literal is the recognized format"
+        );
+    }
+}
+
 // ===========================================================================
 // Downgrade hooks (ir-v1.md §5) on the new rules
 // ===========================================================================
@@ -362,6 +402,19 @@ fn fread_and_non_primary_role_stay_silent() {
     );
 }
 
+#[test]
+fn char_io_outside_loop_stays_silent() {
+    // Primary-statement fgetc OUTSIDE any loop (depth 0): LOOP-003's
+    // catalog contract is char-stdio IN a loop — must stay silent.
+    let units = common::load_units_fixture("PERF-C-LOOP-003__char-io-outside-loop.json");
+    let findings = analyze(&units);
+    assert!(
+        common::by_rule(&findings, LOOP_003_RULE_ID).is_empty(),
+        "primary char-stdio outside any loop must not fire LOOP-003, \
+         got {findings:?}"
+    );
+}
+
 // ===========================================================================
 // PERF-C-CALL-001 — direct recursion
 // ===========================================================================
@@ -476,440 +529,10 @@ fn call_001_downgrade_hooks_fire_independently() {
 // ===========================================================================
 // Kitchen sink — all twelve rules from one synthetic unit set, total order
 // ===========================================================================
-
-/// Point-ish span helper (cols chosen so containment stays plausible).
-fn sp(line: u32, sc: u32, ec: u32) -> Span {
-    Span {
-        start_line: line,
-        start_col: sc,
-        end_line: line,
-        end_col: ec,
-    }
-}
-
-fn meta(span: Span, depth: u32) -> EventMeta {
-    EventMeta {
-        span,
-        in_loop_depth: depth,
-        is_innermost: true,
-        resolver_tier: ResolverTier::Syntactic,
-        macro_origin: false,
-    }
-}
-
-fn call(callee: &str, args: &[&str], span: Span, depth: u32, role: StatementRole) -> CallEvent {
-    CallEvent {
-        meta: meta(span, depth),
-        callee_name: callee.to_string(),
-        callee_kind: CalleeKind::Direct,
-        args: args
-            .iter()
-            .map(|name| Shape {
-                kind: ShapeKind::Identifier,
-                name: Some((*name).to_string()),
-                ..Shape::default()
-            })
-            .collect(),
-        statement_role: role,
-        conditional_guarded: false,
-    }
-}
-
-fn loop_node(kind: LoopKind, depth: u32, span: Span) -> LoopNode {
-    LoopNode {
-        kind,
-        depth,
-        induction_vars: Vec::new(),
-        span,
-        resolver_tier: ResolverTier::Syntactic,
-        macro_origin: false,
-    }
-}
-
-/// Binary-op event with an identifier right operand (LOOP-004 kitchen input).
-fn binop(op: &str, span: Span, divisor: &str) -> BinaryOpEvent {
-    BinaryOpEvent {
-        meta: meta(span, 0),
-        op: op.to_string(),
-        left: Shape::identifier("acc"),
-        right: Shape::identifier(divisor),
-    }
-}
-
-fn func(
-    name: &str,
-    path: &str,
-    span: Span,
-    calls: Vec<CallEvent>,
-    loops: Vec<LoopNode>,
-) -> FunctionUnit {
-    FunctionUnit {
-        record: FunctionRecord {
-            id: format!("{path}#{name}#{}:{}", span.start_line, span.start_col),
-            name: name.to_string(),
-            path: path.to_string(),
-            span,
-            param_count: 0,
-            param_types: Vec::new(),
-            cyclomatic_complexity: 1,
-            cognitive_complexity: 0,
-            max_loop_depth: loops.iter().map(|l| l.depth).max().unwrap_or(0),
-            alloc_site_count: 0,
-            length_lines: span.end_line - span.start_line + 1,
-        },
-        calls,
-        assignments: Vec::new(),
-        binary_ops: Vec::new(),
-        comparisons: Vec::new(),
-        access_chains: Vec::new(),
-        loops,
-    }
-}
-
-/// Two units: `src/kitchen.c` nests three loops and trips ALLOC-001/002/003,
-/// STR-001/002/003, LOOP-001..008 (global-var store, indirect call, induced
-/// subscript comparison, and deep access chain all sit in the innermost
-/// loop), MEM-001 (pointer-param sizeof) + MEM-002 (non-literal memcpy
-/// size), TYPE-001 (`struct Big b` by value) + TYPE-002 (`Loose` padding),
-/// ARCH-001 (unresolved quoted include), and ARCH-003 (cross-file call to
-/// `helper_fn`); `recurse` trips CALL-001 and CALL-002. The whole `src`
-/// component (complexity_sum 22 ≥ 15) trips ARCH-002, anchored at the most
-/// complex function (`recurse`).
-fn kitchen_units() -> Vec<FileUnit> {
-    let path = "src/kitchen.c";
-    let mut kitchen_calls = vec![
-        call("malloc", &["n"], sp(5, 17, 27), 3, StatementRole::Nested),
-        call("free", &["old"], sp(6, 17, 26), 3, StatementRole::Nested),
-        call(
-            "strcat",
-            &["buf", "part"],
-            sp(7, 17, 33),
-            3,
-            StatementRole::Nested,
-        ),
-        call("strlen", &["buf"], sp(8, 17, 27), 3, StatementRole::Nested),
-        call(
-            "strcpy",
-            &["dst", "src"],
-            sp(9, 17, 34),
-            3,
-            StatementRole::Nested,
-        ),
-        call("fgetc", &["fp"], sp(10, 17, 24), 3, StatementRole::Primary),
-        // ALLOC-003: additive growth — the `+` binop below sits INSIDE
-        // this call span (cols 28–38 within 17–45).
-        call(
-            "realloc",
-            &["buf", "size"],
-            sp(11, 17, 45),
-            3,
-            StatementRole::Nested,
-        ),
-        // LOOP-002: unguarded expensive I/O inside the loop nest.
-        call("printf", &["fmt"], sp(12, 17, 29), 3, StatementRole::Nested),
-        // ARCH-003: direct call whose name matches only src/helper.c.
-        call("helper_fn", &[], sp(14, 17, 28), 3, StatementRole::Nested),
-    ];
-    // ALLOC-003 two-part proof requires the realloc SIZE arg (last) to be
-    // a Binary shape — `realloc(buf, size + chunk)`.
-    if let Some(realloc) = kitchen_calls
-        .iter_mut()
-        .find(|c| c.callee_name == "realloc")
-        && let Some(size_arg) = realloc.args.last_mut()
-    {
-        size_arg.kind = ShapeKind::Binary;
-    }
-    // LOOP-006: INDIRECT call in the innermost loop (direct-only gates on
-    // LOOP-002/003 and CALL-001 keep every other rule silent here).
-    kitchen_calls.push(CallEvent {
-        meta: meta(sp(15, 17, 26), 3),
-        callee_name: "cb".to_string(),
-        callee_kind: CalleeKind::Indirect,
-        args: Vec::new(),
-        statement_role: StatementRole::Nested,
-        conditional_guarded: false,
-    });
-    // MEM-001: malloc(n * sizeof(p)) with `p` a pointer-typed kitchen
-    // parameter — the flagship pointer_param_sizeof misuse class.
-    kitchen_calls.push(CallEvent {
-        meta: meta(sp(19, 17, 40), 3),
-        callee_name: "malloc".to_string(),
-        callee_kind: CalleeKind::Direct,
-        args: vec![
-            Shape::identifier("n"),
-            Shape {
-                kind: ShapeKind::Sizeof,
-                sizeof_operand: Some("p".to_string()),
-                ..Shape::default()
-            },
-        ],
-        statement_role: StatementRole::Nested,
-        conditional_guarded: false,
-    });
-    // MEM-002: memcpy with a non-literal byte count in the innermost loop.
-    kitchen_calls.push(call(
-        "memcpy",
-        &["dst", "src", "len"],
-        sp(20, 17, 42),
-        3,
-        StatementRole::Nested,
-    ));
-    let kitchen_binops = vec![
-        // ALLOC-003 additivity proof: contained in the realloc call span.
-        BinaryOpEvent {
-            meta: meta(sp(11, 28, 38), 3),
-            op: "+".to_string(),
-            left: Shape::identifier("size"),
-            right: Shape::identifier("chunk"),
-        },
-        // LOOP-004: variable-divisor division, innermost loop.
-        binop("/", sp(13, 17, 24), "n"),
-    ];
-    // LOOP-005: file-scope store inside the innermost loop.
-    let kitchen_assignments = vec![AssignmentEvent {
-        meta: meta(sp(16, 17, 30), 3),
-        target: Shape::identifier("g_sink"),
-        scope_class: ScopeClass::Global,
-    }];
-    // LOOP-007: arr[j] == key at depth 3 with j an induction var of the
-    // innermost loop (set below) — hand-rolled O(n²) lookup shape.
-    let kitchen_comparisons = vec![ComparisonEvent {
-        meta: meta(sp(17, 17, 31), 3),
-        left: Shape {
-            kind: ShapeKind::Subscript,
-            name: Some("arr".to_string()),
-            index_ident: Some("j".to_string()),
-            ..Shape::default()
-        },
-        right: Shape::identifier("key"),
-    }];
-    // LOOP-008: depth-3 member chain off `p` in the innermost loop.
-    let kitchen_chains = vec![AccessChainEvent {
-        meta: meta(sp(18, 17, 40), 3),
-        root: "p".to_string(),
-        elements: vec![
-            Shape {
-                kind: ShapeKind::MemberAccess,
-                name: Some("ctx".to_string()),
-                depth: Some(1),
-                ..Shape::default()
-            },
-            Shape {
-                kind: ShapeKind::MemberAccess,
-                name: Some("ops".to_string()),
-                depth: Some(2),
-                ..Shape::default()
-            },
-            Shape {
-                kind: ShapeKind::MemberAccess,
-                name: Some("flags".to_string()),
-                depth: Some(3),
-                ..Shape::default()
-            },
-        ],
-    }];
-    let mut kitchen_loops = vec![
-        loop_node(
-            LoopKind::For,
-            1,
-            Span {
-                start_line: 2,
-                start_col: 5,
-                end_line: 40,
-                end_col: 6,
-            },
-        ),
-        loop_node(
-            LoopKind::For,
-            2,
-            Span {
-                start_line: 3,
-                start_col: 9,
-                end_line: 39,
-                end_col: 10,
-            },
-        ),
-        loop_node(
-            LoopKind::For,
-            3,
-            Span {
-                start_line: 4,
-                start_col: 13,
-                end_line: 38,
-                end_col: 14,
-            },
-        ),
-    ];
-    // LOOP-007 needs `j` among the innermost loop's induction vars.
-    kitchen_loops[2].induction_vars = vec!["j".to_string()];
-    let recurse_calls = vec![
-        call("recurse", &["a"], sp(43, 5, 15), 0, StatementRole::Primary),
-        call("recurse", &["b"], sp(44, 5, 15), 0, StatementRole::Primary),
-    ];
-    vec![FileUnit {
-        file: FileRecord {
-            path: path.to_string(),
-            language: "c".to_string(),
-            loc: LocCounts::default(),
-            function_count: 2,
-            global_var_count: 1,
-            include_counts: IncludeCounts::default(),
-        },
-        parse_health: ParseHealth::default(),
-        // ARCH-001: unresolvable quoted include (to_path nulled by the
-        // resolver — data, not error).
-        includes: vec![IncludeEdge {
-            from_path: path.to_string(),
-            to_path: None,
-            form: IncludeForm::Quoted,
-            resolved: false,
-            span: sp(1, 1, 20),
-        }],
-        // LOOP-005 plausibility: the name-classified global exists.
-        global_vars: vec![GlobalVar {
-            name: "g_sink".to_string(),
-            path: path.to_string(),
-            span: sp(1, 22, 30),
-            storage: StorageClass::None,
-        }],
-        // TYPE-001/002 inputs (see struct comments below).
-        structs: kitchen_structs(path),
-        macros: Vec::new(),
-        functions: vec![
-            {
-                let mut kitchen = func(
-                    "kitchen",
-                    path,
-                    Span {
-                        start_line: 1,
-                        start_col: 5,
-                        end_line: 41,
-                        end_col: 6,
-                    },
-                    kitchen_calls,
-                    kitchen_loops,
-                );
-                kitchen.binary_ops = kitchen_binops;
-                kitchen.assignments = kitchen_assignments;
-                kitchen.comparisons = kitchen_comparisons;
-                kitchen.access_chains = kitchen_chains;
-                // MEM-001 flagship + TYPE-001 inputs: `p` is the pointer
-                // param named by sizeof(p); `struct Big b` passes by value.
-                kitchen.record.param_count = 3;
-                kitchen.record.param_types = vec![
-                    "int n".to_string(),
-                    "char *p".to_string(),
-                    "struct Big b".to_string(),
-                ];
-                kitchen
-            },
-            {
-                // CALL-002: complexity far above the threshold of 15.
-                let mut recurse = func(
-                    "recurse",
-                    path,
-                    Span {
-                        start_line: 42,
-                        start_col: 5,
-                        end_line: 45,
-                        end_col: 6,
-                    },
-                    recurse_calls,
-                    Vec::new(),
-                );
-                recurse.record.cyclomatic_complexity = 20;
-                recurse
-            },
-        ],
-    }]
-}
-
-/// TYPE-001/002 inputs in the kitchen unit:
-/// - `Big` (char[32] + long): by-value estimate 40 bytes ≥ the 32-byte
-///   floor, zero padding — trips TYPE-001 only;
-/// - `Loose` (char/long/char): aligned estimate 24 vs packed sum 10 wastes
-///   14 bytes ≥ floor 8 — trips TYPE-002 only.
-fn kitchen_structs(path: &str) -> Vec<StructDef> {
-    vec![
-        StructDef {
-            name: "Big".to_string(),
-            path: path.to_string(),
-            span: sp(45, 5, 6),
-            members: vec![
-                StructMember {
-                    name: "buf".to_string(),
-                    type_text: "char".to_string(),
-                    array_dim_literal: Some(32),
-                    is_pointer: false,
-                },
-                StructMember {
-                    name: "tag".to_string(),
-                    type_text: "long".to_string(),
-                    array_dim_literal: None,
-                    is_pointer: false,
-                },
-            ],
-        },
-        StructDef {
-            name: "Loose".to_string(),
-            path: path.to_string(),
-            span: sp(50, 5, 6),
-            members: vec![
-                StructMember {
-                    name: "a".to_string(),
-                    type_text: "char".to_string(),
-                    array_dim_literal: None,
-                    is_pointer: false,
-                },
-                StructMember {
-                    name: "l".to_string(),
-                    type_text: "long".to_string(),
-                    array_dim_literal: None,
-                    is_pointer: false,
-                },
-                StructMember {
-                    name: "c".to_string(),
-                    type_text: "char".to_string(),
-                    array_dim_literal: None,
-                    is_pointer: false,
-                },
-            ],
-        },
-    ]
-}
-
-/// ARCH-003 target: `helper_fn` is defined ONLY here, so kitchen's direct
-/// call becomes a cross-file name-matched edge.
-fn helper_unit() -> FileUnit {
-    let path = "src/helper.c";
-    FileUnit {
-        file: FileRecord {
-            path: path.to_string(),
-            language: "c".to_string(),
-            loc: LocCounts::default(),
-            function_count: 1,
-            global_var_count: 0,
-            include_counts: IncludeCounts::default(),
-        },
-        parse_health: ParseHealth::default(),
-        includes: Vec::new(),
-        global_vars: Vec::new(),
-        structs: Vec::new(),
-        macros: Vec::new(),
-        functions: vec![func(
-            "helper_fn",
-            path,
-            Span {
-                start_line: 1,
-                start_col: 5,
-                end_line: 3,
-                end_col: 6,
-            },
-            Vec::new(),
-            Vec::new(),
-        )],
-    }
-}
+//
+// The synthetic all-23-rule unit set lives in `tests/common/mod.rs`
+// (`kitchen_units` + `helper_unit`) so the P6 finding-id uniqueness gate
+// (tests/p6_hardening.rs) reuses the exact same corpus.
 
 /// Lexicographic check of the report §4 total order between adjacent pairs,
 /// written against the OUTPUT-CONTRACT §4 SPEC (not the production
@@ -969,8 +592,8 @@ fn kitchen_sink_trips_all_registry_rules_in_total_order() {
     .into_iter()
     .collect();
 
-    let mut units = kitchen_units();
-    units.push(helper_unit());
+    let mut units = common::kitchen_units();
+    units.push(common::helper_unit());
     let findings = analyze(&units);
     let seen: BTreeSet<&str> = findings.iter().map(|f| f.rule_id.as_str()).collect();
     assert_eq!(

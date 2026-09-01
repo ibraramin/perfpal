@@ -113,6 +113,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Detects: `fgetc`/`getc`/`getchar`/`fputc`/`putc` as the primary statement of a loop body.
 - Why: per-byte libc locking overhead vs block reads (`fread`/`fwrite`).
 - FPs: state machines requiring byte-at-a-time parsing.
+- Implementation note (P6): explicit depth guard — fires only at `in_loop_depth ≥ 1`; a primary-statement char-stdio call outside any loop stays silent.
 
 **PERF-C-LOOP-004 — Integer div/mod with variable divisor in innermost loop** `(syntactic)`
 - Detects: `/` or `%` whose divisor is a non-literal expression, inside the innermost loop body. Literal divisors are skipped by design.

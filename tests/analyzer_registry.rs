@@ -25,7 +25,8 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
         meta: EventMeta {
             span,
             in_loop_depth: loop_depth,
-            is_innermost: true,
+            // Scanner contract: never innermost outside any loop.
+            is_innermost: loop_depth >= 1,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
         },
@@ -127,7 +128,8 @@ fn call_event(callee: &str, line: u32, loop_depth: u32) -> CallEvent {
                 end_col: 20,
             },
             in_loop_depth: loop_depth,
-            is_innermost: true,
+            // Scanner contract: never innermost outside any loop.
+            is_innermost: loop_depth >= 1,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
         },

@@ -73,6 +73,7 @@ pub(crate) fn loop_001(units: &[FileUnit]) -> Vec<Finding> {
                     .unwrap_or(LOOP_001_MIN_DEPTH)
                     .max(LOOP_001_MIN_DEPTH);
                 findings.push(Finding {
+                    threshold: Some(("min_nesting_depth", LOOP_001_MIN_DEPTH)),
                     rule_id: LOOP_001_RULE_ID.to_string(),
                     title: "Deeply nested loops".to_string(),
                     message: format!(
@@ -104,7 +105,8 @@ pub(crate) fn loop_001(units: &[FileUnit]) -> Vec<Finding> {
 /// PERF-C-LOOP-003 — Character-wise stdio as primary loop-body statement
 /// (catalog-v1 §3 Tier 1). Byte-at-a-time stdio calls that ARE the loop
 /// body's primary statement signal a per-character processing pattern;
-/// buffered block reads are the optimization candidate.
+/// buffered block reads are the optimization candidate. Loop-gated:
+/// `in_loop_depth ≥ 1` — primary char-stdio outside any loop stays silent.
 pub(crate) fn loop_003(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
@@ -113,10 +115,12 @@ pub(crate) fn loop_003(units: &[FileUnit]) -> Vec<Finding> {
                 if call.callee_kind != CalleeKind::Direct
                     || !CHAR_IO_FAMILY.contains(&call.callee_name.as_str())
                     || call.statement_role != StatementRole::Primary
+                    || call.meta.in_loop_depth == 0
                 {
                     continue;
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: LOOP_003_RULE_ID.to_string(),
                     title: "Character-wise stdio in loop".to_string(),
                     message: format!(
@@ -172,6 +176,7 @@ pub(crate) fn loop_002(units: &[FileUnit]) -> Vec<Finding> {
                 }
                 let guarded = call.conditional_guarded;
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: LOOP_002_RULE_ID.to_string(),
                     title: "Expensive setup or I/O call inside loop".to_string(),
                     message: format!(
@@ -236,6 +241,7 @@ pub(crate) fn loop_004(units: &[FileUnit]) -> Vec<Finding> {
                     evidence.push(("divisor".to_string(), name));
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: LOOP_004_RULE_ID.to_string(),
                     title: "Variable-divisor division in innermost loop".to_string(),
                     message: format!(
@@ -331,6 +337,7 @@ pub(crate) fn loop_005(units: &[FileUnit]) -> Vec<Finding> {
             }
             for group in groups {
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: LOOP_005_RULE_ID.to_string(),
                     title: "Global variable written inside loop".to_string(),
                     message: format!(
@@ -381,6 +388,7 @@ pub(crate) fn loop_006(units: &[FileUnit]) -> Vec<Finding> {
                     continue;
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: LOOP_006_RULE_ID.to_string(),
                     title: "Indirect call via function pointer in innermost loop".to_string(),
                     message: format!(
@@ -443,6 +451,7 @@ pub(crate) fn loop_007(units: &[FileUnit]) -> Vec<Finding> {
                 evidence.push(("index_ident".to_string(), index_ident.to_string()));
                 evidence.push(("loop_depth".to_string(), cmp.meta.in_loop_depth.to_string()));
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: LOOP_007_RULE_ID.to_string(),
                     title: "Linear membership scan nested in loop".to_string(),
                     message: format!(
@@ -521,6 +530,7 @@ pub(crate) fn loop_008(units: &[FileUnit]) -> Vec<Finding> {
                     continue;
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: LOOP_008_RULE_ID.to_string(),
                     title: "Pointer-chasing chain in innermost loop".to_string(),
                     message: format!(

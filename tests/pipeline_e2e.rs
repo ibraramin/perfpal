@@ -146,6 +146,33 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         "expected PERF-C-CALL-002 on src/main.c (dispatch complexity \
          {complexity}), got {findings:?}"
     );
+    // P6 threshold lift: CALL-002 findings carry their fired threshold as
+    // a schema name/value pair (metrics-json-v1 $defs.threshold).
+    let call002_threshold_names: Vec<&str> = findings
+        .iter()
+        .filter(|f| {
+            f["finding_id"]
+                .as_str()
+                .unwrap_or("")
+                .starts_with(call002_prefix)
+        })
+        .filter_map(|f| f["threshold"]["name"].as_str())
+        .collect();
+    assert_eq!(
+        call002_threshold_names,
+        vec!["min_complexity"; call002_threshold_names.len()],
+        "every CALL-002 finding lifts threshold min_complexity"
+    );
+    assert!(
+        findings
+            .iter()
+            .filter(|f| f["finding_id"]
+                .as_str()
+                .unwrap_or("")
+                .starts_with(call002_prefix))
+            .all(|f| f["threshold"]["value"].as_f64() == Some(15.0)),
+        "CALL-002 threshold value must be the catalog default 15"
+    );
 
     // P5 Tier 2 through the real backend: weigh's by-value struct Big
     // (TYPE-001) and clone_row's pointer-param sizeof misuse (MEM-001).

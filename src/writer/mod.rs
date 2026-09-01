@@ -20,7 +20,15 @@
 //!   `metrics.json` unless forced — user data is never silently destroyed
 //!   ([`WriterError::SafetyGuard`], cli maps to exit 2).
 //! - Stale-temp cleanup: temp/aside directories from crashed runs are swept
-//!   on the next successful run (output-contract §2).
+//!   on the next successful run (output-contract §2). Concurrency rule (m7):
+//!   staging dirs whose pid suffix is OUR process id are crashed-run
+//!   leftovers and are ALWAYS swept; foreign-pid staging dirs belong to a
+//!   possibly still-running perfpal and are swept only after the grace
+//!   period (`PERFPAL_STALE_GRACE_SECS`, default 3600 s) has elapsed since
+//!   their last modification — a concurrent run is never nuked mid-write.
+//!   Entries whose metadata cannot be read are skipped with a warning
+//!   rather than treated as stale: destroying a live directory on a
+//!   metadata hiccup is worse than leaving one extra temp dir behind.
 //! - Encoding enforcement: every text artifact UTF-8, LF line endings,
 //!   trailing newline ([`WriterError::Encoding`] otherwise).
 //! - `charts/` created empty from day one (output-contract §3: the reporter
@@ -32,6 +40,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::{Duration, SystemTime};
 
 /// One staged artifact: bytes plus their path INSIDE the report directory
 /// (`"metrics.json"`, `"metrics.schema.v1.0.json"`, `"charts/x.svg"` in P4).
@@ -77,6 +86,24 @@ pub enum WriterError {
 /// entries matching either prefix are swept on the next successful run.
 const TEMP_PREFIX: &str = ".perfpal-report.tmp-";
 const ASIDE_PREFIX: &str = ".perfpal-report.aside-";
+
+/// Environment knob for the concurrent-run sweep grace period (m7): a
+/// foreign-pid staging dir is swept only once it is at least this many
+/// seconds old. Absent or unparseable value ⇒ [`DEFAULT_STALE_GRACE_SECS`].
+const STALE_GRACE_ENV: &str = "PERFPAL_STALE_GRACE_SECS";
+/// Default grace: one hour. A concurrently running perfpal that has been
+/// writing within the last hour is never treated as a crashed leftover.
+const DEFAULT_STALE_GRACE_SECS: u64 = 3600;
+
+/// Grace period for the stale sweep, from the environment.
+fn stale_grace() -> Duration {
+    Duration::from_secs(
+        std::env::var(STALE_GRACE_ENV)
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+            .unwrap_or(DEFAULT_STALE_GRACE_SECS),
+    )
+}
 
 /// Write the staged artifacts into `target` atomically (see module docs).
 ///
@@ -140,7 +167,11 @@ pub fn write_report(target: &Path, artifacts: &[Artifact], force: bool) -> Resul
     // rename-aside-then-swap. Crash window: a crash between the two renames
     // loses the previous report (parked at `aside`) until the next run —
     // see the doc comment on [`write_report`]. Handled failures roll back.
+    // An own-pid aside leftover from an earlier crash in this same process
+    // (or after pid reuse) would block `rename(target → aside)`, so it is
+    // removed first — own-pid leftovers are always stale (m7).
     let aside_taken = if target.exists() {
+        let _ = fs::remove_dir_all(&aside);
         if let Err(e) = fs::rename(target, &aside) {
             let _ = fs::remove_dir_all(&temp);
             return Err(io_ctx(format!("setting aside old {}", target.display()), e));
@@ -222,23 +253,84 @@ fn stage(temp: &Path, artifacts: &[Artifact]) -> Result<(), WriterError> {
 }
 
 /// Remove temp/aside directories left by crashed runs (next-successful-run
-/// cleanup, output-contract §2). Best-effort: a stuck entry is reported to
-/// stderr but never fails the run that just succeeded.
+/// cleanup, output-contract §2), with the m7 concurrent-run guard:
+///
+/// - own-pid staging dirs are crashed leftovers of THIS process — always
+///   swept immediately;
+/// - foreign-pid staging dirs belong to a possibly still-running perfpal —
+///   swept only when `now - modified >= grace` (grace from
+///   `PERFPAL_STALE_GRACE_SECS`, default 3600 s), so a concurrently running
+///   process is never nuked mid-write;
+/// - entries whose metadata (existence or mtime) cannot be read are SKIPPED
+///   with a stderr warning, never treated as stale — a metadata hiccup must
+///   not destroy a live directory.
+///
+/// Best-effort overall: a stuck entry is reported to stderr but never fails
+/// the run that just succeeded.
 fn sweep_stale(parent: &Path) {
+    let now = SystemTime::now();
+    let self_pid = std::process::id();
+    let grace = stale_grace();
     let Ok(entries) = fs::read_dir(parent) else {
         return;
     };
     for entry in entries.flatten() {
         let name = entry.file_name();
         let Some(name) = name.to_str() else { continue };
-        let stale = name.starts_with(TEMP_PREFIX) || name.starts_with(ASIDE_PREFIX);
-        if stale && let Err(err) = fs::remove_dir_all(entry.path()) {
+        if !(name.starts_with(TEMP_PREFIX) || name.starts_with(ASIDE_PREFIX)) {
+            continue;
+        }
+        let modified = match entry.metadata().and_then(|meta| meta.modified()) {
+            Ok(mtime) => mtime,
+            Err(err) => {
+                eprintln!(
+                    "perfpal: warning: skipping staging dir {} in stale sweep \
+                     (metadata unavailable: {err})",
+                    entry.path().display()
+                );
+                continue;
+            }
+        };
+        if should_sweep(name, modified, now, self_pid, grace)
+            && let Err(err) = fs::remove_dir_all(entry.path())
+        {
             eprintln!(
                 "perfpal: warning: could not remove stale temp dir {}: {err}",
                 entry.path().display()
             );
         }
     }
+}
+
+/// Pure sweep decision for one staging-dir entry (m7 concurrent-run guard).
+///
+/// Semantics:
+/// - `name` must carry a staging prefix; anything else is never swept.
+/// - a suffix that parses to `self_pid` is an OWN leftover → ALWAYS swept.
+/// - any other suffix — including unparseable/non-numeric ones — is treated
+///   as FOREIGN → swept iff `now - modified >= grace`. A `modified` in the
+///   future (clock skew) counts as age zero, i.e. fresh.
+///
+/// Metadata READ failures are not decided here: [`sweep_stale`] skips those
+/// entries with a warning before ever calling this function.
+fn should_sweep(
+    name: &str,
+    modified: SystemTime,
+    now: SystemTime,
+    self_pid: u32,
+    grace: Duration,
+) -> bool {
+    let suffix = if let Some(s) = name.strip_prefix(TEMP_PREFIX) {
+        s
+    } else if let Some(s) = name.strip_prefix(ASIDE_PREFIX) {
+        s
+    } else {
+        return false;
+    };
+    if suffix.parse::<u32>() == Ok(self_pid) {
+        return true;
+    }
+    now.duration_since(modified).unwrap_or_default() >= grace
 }
 
 fn parent_of(target: &Path) -> PathBuf {
@@ -390,17 +482,163 @@ mod tests {
 
     #[test]
     fn stale_temp_dirs_are_swept_on_next_successful_run() {
+        // Env-free by design (P6 review fix): mutating
+        // PERFPAL_STALE_GRACE_SECS here would race sibling tests' concurrent
+        // write_report → stale_grace() env reads (setenv/getenv is UB under
+        // concurrency on glibc). Own-pid rules are grace-independent, and the
+        // grace-0 foreign sweep is locked end-to-end in
+        // tests/writer_concurrency.rs — nothing is lost by dropping the
+        // mutation.
         let root = tmp_root("sweep");
         let target = root.join("report");
-        let crashed_temp = root.join(format!("{TEMP_PREFIX}999999"));
-        let crashed_aside = root.join(format!("{ASIDE_PREFIX}999999"));
-        fs::create_dir_all(crashed_temp.join("junk")).unwrap();
-        fs::create_dir_all(&crashed_aside).unwrap();
+
+        // Own-pid leftover: ALWAYS swept, regardless of grace (m7).
+        let own_temp = root.join(format!("{TEMP_PREFIX}{}", std::process::id()));
+        fs::create_dir_all(own_temp.join("junk")).unwrap();
+
+        // Foreign-pid leftovers with fresh mtimes: SURVIVE under the default
+        // grace — a concurrently running perfpal is not nuked mid-write.
+        let foreign_temp = root.join(format!("{TEMP_PREFIX}999999"));
+        let foreign_aside = root.join(format!("{ASIDE_PREFIX}999999"));
+        fs::create_dir_all(foreign_temp.join("junk")).unwrap();
+        fs::create_dir_all(&foreign_aside).unwrap();
 
         write_report(&target, &artifacts(), false).expect("write succeeds");
 
-        assert!(!crashed_temp.exists(), "stale temp survived");
-        assert!(!crashed_aside.exists(), "stale aside survived");
+        assert!(!own_temp.exists(), "own-pid leftover must be swept at once");
+        assert!(
+            foreign_temp.exists(),
+            "fresh foreign-pid temp must survive the default grace"
+        );
+        assert!(
+            foreign_aside.exists(),
+            "fresh foreign-pid aside must survive the default grace"
+        );
+    }
+
+    #[test]
+    fn should_sweep_decision_matrix() {
+        let now = SystemTime::now();
+        let grace = Duration::from_secs(3600);
+        let pid = std::process::id();
+        let fresh = now - Duration::from_secs(1);
+        let old = now - Duration::from_secs(2 * 3600);
+        let exact = now - grace;
+
+        // Own pid: ALWAYS swept, even fresh, either prefix.
+        assert!(should_sweep(
+            &format!("{TEMP_PREFIX}{pid}"),
+            fresh,
+            now,
+            pid,
+            grace
+        ));
+        assert!(should_sweep(
+            &format!("{ASIDE_PREFIX}{pid}"),
+            fresh,
+            now,
+            pid,
+            grace
+        ));
+        // Foreign pid: fresh survives, old is swept.
+        assert!(!should_sweep(
+            &format!("{TEMP_PREFIX}12345"),
+            fresh,
+            now,
+            pid,
+            grace
+        ));
+        assert!(should_sweep(
+            &format!("{TEMP_PREFIX}12345"),
+            old,
+            now,
+            pid,
+            grace
+        ));
+        // Unparseable suffix: treated as foreign (fresh ⇒ survive).
+        assert!(!should_sweep(
+            &format!("{TEMP_PREFIX}junk"),
+            fresh,
+            now,
+            pid,
+            grace
+        ));
+        assert!(should_sweep(
+            &format!("{ASIDE_PREFIX}junk"),
+            old,
+            now,
+            pid,
+            grace
+        ));
+        // Grace boundary: age exactly == grace ⇒ swept (>=, not >).
+        assert!(should_sweep(
+            &format!("{TEMP_PREFIX}12345"),
+            exact,
+            now,
+            pid,
+            grace
+        ));
+        // Zero grace sweeps every foreign dir regardless of mtime.
+        assert!(should_sweep(
+            &format!("{TEMP_PREFIX}12345"),
+            fresh,
+            now,
+            pid,
+            Duration::ZERO
+        ));
+        // Clock skew (mtime in the future) counts as age zero ⇒ survive.
+        assert!(!should_sweep(
+            &format!("{TEMP_PREFIX}12345"),
+            now + Duration::from_secs(60),
+            now,
+            pid,
+            grace
+        ));
+        // Non-staging names are never swept by the decision function.
+        assert!(!should_sweep("perfpal-report", old, now, pid, grace));
+        assert!(!should_sweep(
+            ".perfpal-report.other-12345",
+            old,
+            now,
+            pid,
+            grace
+        ));
+    }
+
+    #[test]
+    fn regeneration_over_valid_report_swaps_cleanly() {
+        // Golden-flow swap lock (modules.md §7): a pre-existing VALID report
+        // is replaced in place, with no aside dirs left behind and staging
+        // dirs swept. Mid-failure rollback stays documented-only (no fault
+        // injection here).
+        let root = tmp_root("regen");
+        let target = root.join("report");
+        write_report(&target, &artifacts(), false).expect("seed a valid report");
+
+        // Own-pid crashed staging leftover from a previous run.
+        let leftover = root.join(format!("{TEMP_PREFIX}{}", std::process::id()));
+        fs::create_dir_all(leftover.join("junk")).unwrap();
+
+        let v2 = vec![Artifact::text("metrics.json", "{\n  \"v\": 2\n}")];
+        write_report(&target, &v2, false).expect("rewrite succeeds");
+
+        assert_eq!(
+            fs::read_to_string(target.join("metrics.json")).unwrap(),
+            "{\n  \"v\": 2\n}\n",
+            "target must hold the NEW content after the swap"
+        );
+        assert!(!leftover.exists(), "own-pid staging leftover must be swept");
+        let siblings: Vec<String> = fs::read_dir(&root)
+            .unwrap()
+            .flatten()
+            .filter_map(|e| e.file_name().into_string().ok())
+            .collect();
+        assert!(
+            siblings
+                .iter()
+                .all(|n| !n.starts_with(TEMP_PREFIX) && !n.starts_with(ASIDE_PREFIX)),
+            "no aside/temp dirs may remain after a clean swap: {siblings:?}"
+        );
     }
 
     #[test]

@@ -37,7 +37,7 @@
             "conditional_guarded": false,
             "span": {"start_line": 4, "start_col": 5, "end_line": 4, "end_col": 15},
             "in_loop_depth": 0,
-            "is_innermost": true,
+            "is_innermost": false,
             "resolver_tier": "syntactic",
             "macro_origin": false
           }

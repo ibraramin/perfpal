@@ -1,7 +1,7 @@
 ---
 plan name: mvp-implementation
 plan description: Rust build phases P0–P6
-plan status: active
+plan status: done
 ---
 
 ## Idea

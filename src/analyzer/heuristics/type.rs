@@ -62,6 +62,7 @@ pub(crate) fn type_001(units: &[FileUnit]) -> Vec<Finding> {
                 .collect::<Vec<_>>()
                 .join(", ");
             findings.push(Finding {
+                threshold: None,
                 rule_id: TYPE_001_RULE_ID.to_string(),
                 title: "Large struct passed by value".to_string(),
                 message: format!(
@@ -130,6 +131,7 @@ pub(crate) fn type_002(units: &[FileUnit]) -> Vec<Finding> {
                 continue;
             }
             findings.push(Finding {
+                threshold: None,
                 rule_id: TYPE_002_RULE_ID.to_string(),
                 title: "Struct member ordering (padding candidate)".to_string(),
                 message: format!(

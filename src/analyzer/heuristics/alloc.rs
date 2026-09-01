@@ -17,9 +17,9 @@ use super::{AllocCandidate, alloc_candidates, span_contains};
 ///
 /// Macro policy (catalog detail block): a wrapper-macro USE inside a loop
 /// IS the alloc site under tree-sitter's no-expansion parse, so calls
-/// whose callee names a recognized alloc-wrapper macro (`pattern_id =
-/// `ALLOC_WRAPPER_PATTERN_ID`` in the same file's MacroEvents) also
-/// fire — the central hook then caps them at MEDIUM + `macro_suspect`.
+/// whose callee names a recognized alloc-wrapper macro
+/// (`pattern_id = ALLOC_WRAPPER_PATTERN_ID` in the same file's MacroEvents)
+/// also fire — the central hook then caps them at MEDIUM + `macro_suspect`.
 pub(crate) fn alloc_001(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for f in alloc_candidates(units) {
@@ -30,6 +30,7 @@ pub(crate) fn alloc_001(units: &[FileUnit]) -> Vec<Finding> {
             f.callee, f.loop_depth
         );
         findings.push(Finding {
+            threshold: None,
             rule_id: ALLOC_001_RULE_ID.to_string(),
             title: "Heap allocation inside loop".to_string(),
             message,
@@ -99,6 +100,7 @@ pub(crate) fn alloc_002(units: &[FileUnit]) -> Vec<Finding> {
                     evidence.push(("alloc_cooccurrence".to_string(), "true".to_string()));
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: ALLOC_002_RULE_ID.to_string(),
                     title: "Deallocation inside loop".to_string(),
                     message,
@@ -177,6 +179,7 @@ pub(crate) fn alloc_003(units: &[FileUnit]) -> Vec<Finding> {
                     continue;
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: ALLOC_003_RULE_ID.to_string(),
                     title: "Realloc linear growth in loop".to_string(),
                     message: format!(

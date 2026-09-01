@@ -33,6 +33,7 @@ pub(crate) fn call_001(units: &[FileUnit]) -> Vec<Finding> {
                 .min_by_key(|c| (c.meta.span.start_line, c.meta.span.start_col))
                 .expect("non-empty by the guard above");
             findings.push(Finding {
+                threshold: None,
                 rule_id: CALL_001_RULE_ID.to_string(),
                 title: "Direct recursion".to_string(),
                 message: format!(
@@ -79,6 +80,7 @@ pub(crate) fn call_002(units: &[FileUnit]) -> Vec<Finding> {
                 continue;
             }
             findings.push(Finding {
+                threshold: Some(("min_complexity", CALL_002_MIN_COMPLEXITY)),
                 rule_id: CALL_002_RULE_ID.to_string(),
                 title: "High cyclomatic complexity".to_string(),
                 message: format!(

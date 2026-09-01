@@ -111,6 +111,7 @@ pub(crate) fn arch_001(units: &[FileUnit]) -> Vec<Finding> {
             .copied()
             .unwrap_or_default();
         findings.push(Finding {
+            threshold: None,
             rule_id: ARCH_001_RULE_ID.to_string(),
             title: "Include-graph cycle".to_string(),
             message: format!(
@@ -189,6 +190,7 @@ pub(crate) fn arch_001(units: &[FileUnit]) -> Vec<Finding> {
             .copied()
             .unwrap_or_default();
         findings.push(Finding {
+            threshold: None,
             rule_id: ARCH_001_RULE_ID.to_string(),
             title: "Deep include chain".to_string(),
             message: format!(
@@ -274,6 +276,7 @@ pub(crate) fn arch_001(units: &[FileUnit]) -> Vec<Finding> {
             Span::point(1, 1)
         };
         findings.push(Finding {
+            threshold: None,
             rule_id: ARCH_001_RULE_ID.to_string(),
             title: "Include hub".to_string(),
             message: format!(
@@ -306,6 +309,7 @@ pub(crate) fn arch_001(units: &[FileUnit]) -> Vec<Finding> {
                 continue;
             }
             findings.push(Finding {
+                threshold: None,
                 rule_id: ARCH_001_RULE_ID.to_string(),
                 title: "Unresolved quoted include".to_string(),
                 message: format!(
@@ -464,6 +468,7 @@ pub(crate) fn arch_002(units: &[FileUnit]) -> Vec<Finding> {
             .get(&component.path_prefix)
             .expect("component with functions has an anchor");
         findings.push(Finding {
+            threshold: None,
             rule_id: ARCH_002_RULE_ID.to_string(),
             title: "Hot component".to_string(),
             message: format!(
@@ -610,6 +615,7 @@ pub(crate) fn arch_003(units: &[FileUnit]) -> Vec<Finding> {
     cross_file_call_edges(units)
         .into_iter()
         .map(|edge| Finding {
+            threshold: None,
             rule_id: ARCH_003_RULE_ID.to_string(),
             title: "Cross-file call coupling".to_string(),
             message: format!(

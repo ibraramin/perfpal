@@ -7,9 +7,9 @@ independent of grammar version drift.
 
 ## Format
 
-Each file is one serialized IR v1 document (shapes per `docs/architecture/ir-v1.md` §3).
-Strict typing arrives with the IR types in P1; until then the harness
-(`tests/common/mod.rs`) treats fixtures as `serde_json::Value`.
+Each file is one serialized IR v1 document (shapes per `docs/architecture/ir-v1.md` §3);
+the harness (`tests/common/mod.rs`) loads fixtures as typed IR — a
+`Vec<FileUnit>` deserialized with no parser bound.
 
 Naming: `<RULE-ID>__<scenario>.json` for heuristic fixtures
 (e.g. `ALLOC-001__malloc-in-for-loop.json`); free-form names for pipeline

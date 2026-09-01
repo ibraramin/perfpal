@@ -68,3 +68,13 @@
 - **Fix applied:** Restored CHANGELOG from the session's earlier read + appended new entries; verified via `git diff --stat` (exactly the intended insertions).
 - **Fallback:** Never batch multiple whole-file writes; one write per call with an explicit path↔content check. Prefer `edit` (anchored) over `write` (clobbering) for existing files. Before any whole-file overwrite of a tracked file, confirm its current content was read this session so recovery is possible.
 - **Tags:** process, file-operations, data-loss
+
+
+### LL-008 — Mid-structure edit anchor glued two bullets and duplicated a section
+- **When:** session 16 · P6 CHANGELOG edit (caught by @reviewer rev-1; fixed via script rebuild)
+- **Category:** tooling / editing discipline
+- **What happened:** While inserting the P6 CHANGELOG entries, the edit's `oldString` ended mid-bullet (`- **P5 review-fix wave**:`) and the `newString` ended with a different bullet's label (`- **P5 Tier 2 wave**`). The old bullet's continuation text survived the replacement and fused with the new tail — producing one corrupted hybrid bullet AND a duplicate `### Added` section heading. Not caught at edit time; caught only by the independent reviewer pass.
+- **Root cause:** Replacement boundaries did not respect document structure: an anchor that consumes a bullet's opening but not its body, combined with a replacement that introduces a new structural boundary (a section heading), guaranteed a merge. No post-edit structural verification (heading inventory) was run.
+- **Fix applied:** Rebuilt the region via a line-prefix-based script (asserting unique anchors), restoring the P5 review-fix bullet under `### Fixed` and merging to a single `### Added`; verified via `git diff HEAD -- CHANGELOG.md` showing additions-only (nothing lost) — confirmed by rev-2 re-review.
+- **Fallback:** Never end an edit's `oldString`/`newString` inside a bullet or between a heading and its body — anchor on complete structural units (whole bullet, heading boundaries included). After any multi-section doc edit, mechanically verify the heading inventory (`grep -n '^### '`); for large relocations prefer a scripted rebuild with uniqueness assertions over hand text-matching.
+- **Tags:** editing, documentation, verification, reviews

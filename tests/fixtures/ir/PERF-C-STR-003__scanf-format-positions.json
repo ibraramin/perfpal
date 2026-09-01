@@ -1,0 +1,95 @@
+[
+  {
+    "file": {
+      "path": "src/fmtpositions.c",
+      "language": "c",
+      "loc": {"code": 12, "comment": 0, "blank": 1},
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/fmtpositions.c#read_row#3:5",
+          "name": "read_row",
+          "path": "src/fmtpositions.c",
+          "span": {"start_line": 3, "start_col": 5, "end_line": 7, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["FILE *stream", "char *buf"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 5
+        },
+        "calls": [
+          {
+            "callee_name": "fscanf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "stream"},
+              {"kind": "literal", "value": "\"%s\""},
+              {"kind": "identifier", "name": "buf"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 5, "start_col": 5, "end_line": 5, "end_col": 32},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/fmtpositions.c#read_field#9:5",
+          "name": "read_field",
+          "path": "src/fmtpositions.c",
+          "span": {"start_line": 9, "start_col": 5, "end_line": 13, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["char *input", "char *out"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 5
+        },
+        "calls": [
+          {
+            "callee_name": "sscanf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "input"},
+              {"kind": "literal", "value": "\"%s\""},
+              {"kind": "identifier", "name": "out"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 11, "start_col": 5, "end_line": 11, "end_col": 33},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

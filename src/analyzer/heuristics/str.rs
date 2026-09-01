@@ -38,6 +38,7 @@ pub(crate) fn str_001(units: &[FileUnit]) -> Vec<Finding> {
                     continue;
                 };
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: STR_001_RULE_ID.to_string(),
                     title: "String accumulation in loop".to_string(),
                     message: format!(
@@ -97,6 +98,7 @@ pub(crate) fn str_002(units: &[FileUnit]) -> Vec<Finding> {
                     continue;
                 }
                 findings.push(Finding {
+                    threshold: None,
                     rule_id: STR_002_RULE_ID.to_string(),
                     title: "strlen() recomputed in loop".to_string(),
                     message: format!(
@@ -181,10 +183,20 @@ pub(crate) fn str_003(units: &[FileUnit]) -> Vec<Finding> {
                 if UNBOUNDED_COPY_FAMILY.contains(&name) {
                     emit_unbounded(&mut findings, unit, call, None);
                 } else if SCANF_FAMILY.contains(&name) {
-                    let format_literal = call.args.iter().find_map(|a| {
-                        let raw = a.value.as_deref()?;
-                        strip_quotes(raw).contains("%s").then(|| strip_quotes(raw))
-                    });
+                    // Format-POSITION contract (catalog): only the format
+                    // argument is inspected — `scanf` at index 0, `fscanf`
+                    // and `sscanf` at index 1 (the leading FILE*/buffer
+                    // shifts the format one slot). A `%s` riding in a
+                    // non-format argument never fires.
+                    let format_index: usize = if name == "scanf" { 0 } else { 1 };
+                    let format_literal = call
+                        .args
+                        .get(format_index)
+                        .filter(|a| a.kind == ShapeKind::Literal)
+                        .and_then(|a| {
+                            let raw = a.value.as_deref()?;
+                            strip_quotes(raw).contains("%s").then(|| strip_quotes(raw))
+                        });
                     if let Some(format_text) = format_literal {
                         emit_unbounded(&mut findings, unit, call, Some(format_text));
                     }
@@ -220,6 +232,7 @@ fn emit_unbounded(
         evidence.push(("format".to_string(), format_text.to_string()));
     }
     findings.push(Finding {
+        threshold: None,
         rule_id: STR_003_RULE_ID.to_string(),
         title: "Unbounded string operation".to_string(),
         message,
