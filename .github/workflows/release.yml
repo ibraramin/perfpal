@@ -14,7 +14,8 @@ on:
   push:
     tags: ["v*"]
 
-# Least privilege: no job needs write access to the repository.
+# Least privilege: workflow default is `contents: read`; only the `publish`
+# job escalates to `contents: write` (job-scoped) to create the GitHub Release.
 permissions:
   contents: read
 
@@ -144,7 +145,14 @@ jobs:
         run: |
           ls -la dist
           (cd dist && sha256sum -c ./*.sha256)
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "perfpal ${GITHUB_REF_NAME}" \
-            --generate-notes \
-            dist/*
+          # Re-run safe: if the release already exists (e.g. a previous attempt
+          # created it but failed mid-upload), clobber-upload instead of
+          # create-or-die. The checksum gate above runs in both paths.
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload --clobber "${GITHUB_REF_NAME}" dist/*
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "perfpal ${GITHUB_REF_NAME}" \
+              --generate-notes \
+              dist/*
+          fi
