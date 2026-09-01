@@ -137,6 +137,10 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          # No checkout step in this job — gh needs the repo target explicitly
+          # (it otherwise resolves it from git-remote context and dies with
+          # "fatal: not a git repository").
+          GH_REPO: ${{ github.repository }}
         run: |
           ls -la dist
           (cd dist && sha256sum -c ./*.sha256)
