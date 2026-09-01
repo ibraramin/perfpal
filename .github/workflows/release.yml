@@ -116,3 +116,31 @@ jobs:
             target/x86_64-pc-windows-msvc/release/perfpal-x86_64-pc-windows-msvc.exe
             target/x86_64-pc-windows-msvc/release/perfpal-x86_64-pc-windows-msvc.sha256
           if-no-files-found: error
+
+  publish:
+    # Creates the GitHub Release from the build artifacts (the first tag run,
+    # v0.1.0 at 696ce67, validated builds but had no publish job — assets stayed
+    # workflow-artifacts-only; gap closed here).
+    # Job-scoped contents: write overrides the workflow-level contents: read.
+    needs: [build-unix, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # v4.3.0 — merges all per-target artifacts into one flat dist/ directory
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          merge-multiple: true
+          path: dist
+
+      # Defense-in-depth: re-verify every checksum inside CI before publishing.
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la dist
+          (cd dist && sha256sum -c ./*.sha256)
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "perfpal ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            dist/*
