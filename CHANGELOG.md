@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Release pipeline publication**: `publish` job in `.github/workflows/release.yml` (tag-triggered) — needs-gated on all five build jobs, job-scoped `contents: write` (workflow default stays `read`), `actions/download-artifact` v4.3.0 (SHA-pinned) merging per-target artifacts into one flat `dist/`, in-CI `sha256sum -c` re-verification of every binary before publishing, and re-run-safe publication (`gh release view` → `upload --clobber`, else `create` — a partially-uploaded release now recovers instead of dying on `already_exists`). First GitHub execution of `ci.yml` + `release.yml`; GitHub Release `v0.1.0` published with 10 verified assets (5 target binaries + 5 `.sha256`, all checksums OK; musl binary smoke-tested: exit 0, 15 findings, full report tree).
+
+### Fixed
+- `ci.yml`: `dtolnay/rust-toolchain` requires an explicit `toolchain` input — the pinned action does NOT auto-read `rust-toolchain.toml` (verified in the action source); both uses now pass `toolchain: "1.92.0"`, mirroring `rust-toolchain.toml` and `release.yml`. Found by the first-ever GitHub Actions run (`'toolchain' is a required input`); local runs never hit it because rustup resolves the toml directly.
+- `release.yml`: publish step failed with `fatal: not a git repository` because the job deliberately has no checkout — `GH_REPO` now pins the repository target explicitly.
+
+## [0.1.0] - 2026-09-01
+
 ### Fixed
 - **P6 detection nits**: STR-003 `scanf`-family `%s` detection now inspects ONLY the format-position argument (`scanf`→arg 0, `fscanf`/`sscanf`→arg 1) instead of scanning all call args — a `%s` literal in a non-format argument no longer false-fires; a non-literal format position stays silent (negative fixture `PERF-C-STR-003__pct-s-non-format-arg.json`). LOOP-003 char-stdio now fires only at `in_loop_depth ≥ 1` per its catalog contract (primary-statement char-stdio OUTSIDE any loop no longer emits; negative fixture `PERF-C-LOOP-003__char-io-outside-loop.json`).
 - **P6 test-contract fixes**: kitchen-sink/registry test helpers derive `is_innermost: depth >= 1` (depth-0 events are never innermost — scanner-contract faithful; 3 ARCH-003 JSON fixtures reconciled, behavior-neutral); wave_b negative tests derive expected line numbers from the loaded fixture JSON instead of hardcoded literals (editing a fixture span flips the test); broken nested-backtick rustdoc in `heuristics/alloc.rs` fixed; stale "fixtures as `serde_json::Value`" wording replaced with typed-IR wording in `tests/fixtures/ir/README.md` + `tests/common/mod.rs`.
