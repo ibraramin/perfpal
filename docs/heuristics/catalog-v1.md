@@ -97,6 +97,8 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Detects: calls to `strcpy`, `strcat`, `sprintf`, `gets`, `scanf("%s…")`.
 - Why: unbounded memory ops; primarily safety but also unbounded-latency hotspots. Grounded in clang-tidy/cppcheck analogues.
 - Note: frame output as "unbounded operation" not "bug" (static-analysis framing rule).
+- Implementation note (P6): format-string matching is a quote-stripped literal `contains("%s")` check with the format position fixed — `scanf` → arg 0, `fscanf`/`sscanf` → arg 1; a non-literal format argument stays silent.
+- Implementation note (post-v0.1.0 hardening): accepted syntactic-tier FP/noise classes — an escaped-percent sequence such as `%%s` can false-fire the `contains('%s')` substring check; format arguments assembled by string concatenation or other non-Literal shapes stay silent (conservative direction: prefers missing a candidate over inventing one). Both are candidates for the semantic resolver tier per ADR-0001.
 
 **PERF-C-LOOP-001 — Deep loop nesting (≥3)** `(syntactic)`
 - Detects: loop nesting depth ≥ 3.

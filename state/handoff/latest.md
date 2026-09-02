@@ -1,40 +1,37 @@
 # Handoff — Latest
 
 ## Objective
-Post-MVP session (session 17): founder chose **"Tag v0.1.0 + remote"** — publish the repo, push main, tag `v0.1.0`, and exercise `ci.yml` + `release.yml` for real (they had never executed on GitHub). DONE: repo published (private), both pipelines validated by execution through a diagnose→fix→re-tag loop, GitHub Release **`perfpal v0.1.0`** published with 10 verified assets. Dual review reconciled (@reviewer SHIP-WITH-FIXES → both MINORs applied; @requirements-reviewer items closed with direct evidence, zero scope creep). Ritual commit pending founder approval.
+Post-MVP session 18: founder chose the **housekeeping batch** (plan `housekeeping-batch`, linked to `perfpal-core-spec`) over semantic resolver / runtime-profile ingestion / C++-Python backends / release follow-ups — rationale: the published repo had no LICENSE and no README (identity debt before heavy engineering tiers). DONE: `LICENSE` (PolyForm Strict 1.0.0 verbatim + `Copyright (c) 2026 ibraramin`), `README.md` (full read-code-first pass), STR-003 accepted-FP note (catalog §3 detail block), `docs/schema/stats-distributions-proposal.md` (Proposed-not-accepted), CHANGELOG entries, reviewer fixes applied, gates green (206/206). Dual review passed; awaiting founder ritual-commit approval.
 
 ## Phase
-POST-MVP — MVP **released** as v0.1.0 (tag `f368133`). Plan `mvp-implementation` remains COMPLETE.
+POST-MVP — v0.1.0 released (tag `f368133`); housekeeping batch landed on main (uncommitted, pending founder approval). Plan `housekeeping-batch` complete pending commit; `mvp-implementation` remains COMPLETE.
 
 ## Key Decisions
-- **Repo conflict (founder: "reuse + preserve old"):** `ibraramin/perfpal` already existed (private) holding an old `perfpald` MCP prototype (3 commits, Jun 2026). Prototype preserved on branch `legacy/perfpald-prototype` (at `2f32378`) BEFORE force-push; main force-pushed lease-protected (`2f32378...b79b0d1`). Visibility = **private** (no LICENSE file yet — codify terms before going public).
-- **First-execution finding #1 (ci.yml):** `dtolnay/rust-toolchain@6c977a6` requires an explicit `toolchain` input — it does **NOT** auto-read `rust-toolchain.toml` (reviewer verified in action.yml source: `required: true`, no fallback). Fixed by `toolchain: "1.92.0"` at both uses (commit `696ce67`). CI then GREEN (check + license-audit, run 33566525470).
-- **First-execution finding #2 (release.yml):** P6 authored no publish job — first tag run built all 5 targets but left assets as workflow-artifacts-only. `publish` job added (commit `c336cc8`): `needs: [build-unix, build-windows]`, job-scoped `contents: write`, `download-artifact` v4.3.0 SHA `d3f86a1…` (live-verified) with `merge-multiple`, in-CI `sha256sum -c` before publishing.
-- **First-execution finding #3:** `gh release create` died `fatal: not a git repository` (publish job has no checkout → no git context). Fixed with `GH_REPO: ${{ github.repository }}` (commit `02e1e77`). Run 33567514518 fully GREEN → release published.
-- **Review fixes (commit `f368133`):** stale "least privilege" header corrected; publish made re-run-safe (`gh release view` → `upload --clobber`, else `create`; checksum gate in both paths). Final re-tag validated the new re-run branch for real (run 33568277020 green, 10 assets re-verified).
-- **Tag re-point discipline:** GitHub runs the workflow file from the commit the tag points at → each fix required re-pointing `v0.1.0` (`696ce67→c336cc8→02e1e77→f368133`).
-- **Binary reproducibility observed (not a spec violation):** musl x86_64/aarch64 + aarch64-darwin byte-IDENTICAL across independent runs; x86_64-darwin + windows-msvc DIFFER (MSVC embeds link timestamps unless `/Brepro`; darwin-x64 cause uninvestigated). Perfpal's determinism guarantees cover charts/metrics artifacts, never release binaries.
-- **Published binary smoke test:** musl release binary scanned `tests/fixtures/e2e` → exit 0, 15 findings, full report tree — matches the P6 local smoke test exactly.
+- **Milestone selection (founder):** housekeeping batch first — cheapest, zero code risk, closes release debt; heavy tiers (semantic resolver per ADR-0001 is the highest-value next) ride on a clean documented baseline.
+- **LICENSE (founder-approved):** PolyForm Strict v1.0.0 verbatim; canonical source = `polyformproject/polyform-licenses` tag `1.0.0` raw fetch (polyformproject.org + SPDX direct URLs 404'd). @reviewer byte-diffed the file against canonical: only the appended copyright footer differs. Matches F12 exactly. Repo stays private. Cargo.toml license field STAYS `LicenseRef-Proprietary` this batch (deny.toml allowlist untouched); SPDX alignment = recorded follow-up.
+- **docs-writer lane:** doc-1 failed (timeout → session error, unrecoverable); doc-2 fresh dispatch succeeded, wrote README.md + proposal with all claims code-verified. doc-2 doc-vs-code discrepancies honored code-side: `--output` default `perfpal-report` (no slash), positional `<path>` = single `.c`/`.h` file per code docs, exit 3 also covers metrics.json serialization failure.
+- **Review-fix wave (orchestrator-direct, all applied):** (1) README determinism rescoped — `metrics.json`+`report.md` byte-identical EXCEPT run-provenance (`started_at`/`duration_ms` live INSIDE metrics.json; only charts are unconditionally byte-identical); (2) README angle-include policy corrected (in-repo angle-bracket hits ARE internal coupling per ADR-0002 + scanner unit test; only unresolvable angle includes bucket external); (3) README license grant corrected (PolyForm Strict = **noncommercial** use; commercial use requires permission); (4) proposal string-sort counter-example fixed (`"10-14" < "5-9"`, not `< "1-4"`); (5) CHANGELOG `§4` → `§3` location fix; (6) NITs: "catalog v1 defines 23 heuristics" wording, clap-color scoping, Changed bullet covers both STR-003 note lines.
 
 ## Reviews
-- @reviewer: **SHIP-WITH-FIXES** (zero Critical/MAJOR; 2 MINOR applied in `f368133`, 2 NITs accepted: toolchain pin mirrored 5×, debug `ls` kept). Independently verified: dtolnay action source, pin SHAs, fail-fast→no-partial-publish job graph, token scoping, quoted tag expansion, Windows `.sha256` format compatibility.
-- @requirements-reviewer: **CHANGES_REQUESTED** solely on sandbox-unverifiable runtime items — all closed with direct evidence: `private=true`, exact tag message, tag target `f368133`, legacy branch at `2f32378`, release with 10 assets. **Zero scope creep.**
+- @reviewer: **SHIP-WITH-FIXES** (2 MAJOR, 2 MINOR, 4 NIT — all applied or dispositioned). Verified independently: LICENSE byte-diff vs canonical upstream ✓; README flags/defaults/exit codes vs `src/cli/mod.rs` ✓; 23-heuristic table vs catalog ✓ (all thresholds 3/8/12/15/32, LOOP-007 ≥2, LOOP-008 ≥3 correct); release asset pattern vs `release.yml` ✓; proposal grounding vs shipped comparator ✓; scope discipline (only intended files + `.opencode/**` noise) ✓.
+- @requirements-reviewer: **CHANGES_REQUESTED** → both items closed: (a) STR-003 note landed in the **§3 detail block**, not the plan's literal "§4" — §4 is the Tier-2 section; §3 is the only coherent home for a Tier-1 rule's note. **Founder acknowledgment requested at commit time** (substance fully delivered: both FP classes + conservative framing present). (b) State files regenerated (this ritual). Zero scope creep; Cargo.toml non-change ruled defensible.
 
 ## Risks
-- Release binaries x86_64-darwin + windows-msvc not byte-reproducible across runs (post-MVP: `/Brepro`, darwin-x64 investigation).
-- Node.js-20 deprecation warnings on all pinned actions (forced to Node 24) — informational; bump pins post-MVP.
-- Toolchain `1.92.0` mirrored in 5 places with no CI drift guard (reviewer NIT, accepted).
-- Tag was re-pointed 3× during validation — early fetchers hold a stale tag (harmless, no consumers; avoid once consumers exist).
-- No LICENSE file while repo is private — blocker only if visibility changes.
+- modules.md §8 CLI doc drift vs code (found by README pass): output default slash, positional scope, exit-3 serialization — README follows code; modules.md amendment = follow-up.
+- Plan-wording slip (§4 vs §3) carried into the batch idea — surfaced, not silently relocated.
+- All prior session-17 risks remain (binary reproducibility scoping, Node-20 warnings, toolchain-pin mirroring, private-repo LICENSE → now RESOLVED by this batch).
 
 ## Blockers
 - None.
 
 ## Next Actions
-1. Founder approves ritual commit → commit state/handoff/activeContext/CHANGELOG updates only (the 4 workflow commits `696ce67`/`c336cc8`/`02e1e77`/`f368133` are already pushed). Suggested message: `chore: session 17 — MVP released as v0.1.0; ci/release pipelines validated on GitHub; state + docs + changelog ritual`.
-2. Post-MVP paths (founder picks): semantic resolver tier (ADR-0001); runtime-profile ingestion adapters (CONFIRMED-1); housekeeping batch (docs-writer README/docs, STR-003 catalog notes, stats.distributions proposal, LICENSE); C++/Python backend; release follow-ups (Node-24 pins, reproducible builds, toolchain drift guard).
-3. Fresh session (`/new`) signposts: **MVP RELEASED as v0.1.0** (tag `f368133`, github.com/ibraramin/perfpal private); read state/session-state.json + state/handoff/latest.md + docs/activeContext.md FIRST.
+1. Founder acknowledges the §3 placement + approves the ritual commit. Suggested message: `docs: post-release housekeeping — PolyForm Strict LICENSE, README, STR-003 accepted-FP note, stats.distributions proposal`.
+2. Commit files: `LICENSE`, `README.md`, `docs/schema/stats-distributions-proposal.md`, `docs/heuristics/catalog-v1.md`, `CHANGELOG.md`, `docs/plans/housekeeping-batch.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`. EXCLUDE `.opencode/**` (session noise).
+3. Follow-ups (next sessions): Cargo.toml license → `PolyForm-Strict-1.0.0` (+ deny.toml allowlist); modules.md §8 doc-drift amendment; stats.distributions activation = MINOR bump when the proposal is accepted.
+4. Remaining milestones (founder picks): **semantic resolver tier (ADR-0001 — recommended next, highest engineering value)**, runtime-profile ingestion (CONFIRMED-1), C++/Python backend, release follow-ups.
+5. Fresh session (`/new`) signposts: **housekeeping batch LANDED** (dual review passed, gates 206/206); read state/session-state.json + state/handoff/latest.md + docs/activeContext.md FIRST.
 
 ## Uncommitted Files (pending founder-approved ritual commit)
-- Modified: `state/session-state.json` (append-only: 6 decisions, 6 risks, 3 actions, 5 artifacts, phase), `state/handoff/latest.md` (regenerated), `docs/activeContext.md`, `CHANGELOG.md` ([Unreleased] → [0.1.0] - 2026-09-01 + new Unreleased section)
-- EXCLUDE from commit: `.opencode/memory/**` (session noise)
+- Added: `LICENSE`, `README.md`, `docs/schema/stats-distributions-proposal.md`, `docs/plans/housekeeping-batch.md`
+- Modified: `docs/heuristics/catalog-v1.md` (STR-003 note block only), `CHANGELOG.md` ([Unreleased] Added/Changed), `state/session-state.json` (append-only), `state/handoff/latest.md` (regenerated), `docs/activeContext.md` (regenerated)
+- EXCLUDE from commit: `.opencode/memory/**` + `.opencode/rules.md`, `.opencode/spec.md` (session-tooling noise)

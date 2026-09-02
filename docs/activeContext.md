@@ -1,19 +1,20 @@
 # Active Context
 
 ## Current Task
-Session 17 (post-MVP): **MVP RELEASED as v0.1.0.** Repo published to github.com/ibraramin/perfpal (private) after founder chose "reuse + preserve old" for the pre-existing perfpald MCP prototype (preserved on `legacy/perfpald-prototype` at `2f32378`; main lease-protected force-push). `ci.yml` + `release.yml` validated by first-ever real execution through a diagnose→fix→re-tag loop: (1) dtolnay/rust-toolchain needs an explicit `toolchain` input (does NOT auto-read rust-toolchain.toml — action.yml verified) → `696ce67`; (2) P6 authored no publish job → added (`c336cc8`: needs-gated, job-scoped `contents: write`, download-artifact v4.3.0 pinned, in-CI sha256 re-verification); (3) `gh release create` without git context → `GH_REPO` env (`02e1e77`); (4) reviewer MINORs: re-run-safe publish (`view`→`upload --clobber`, else `create`) + header accuracy (`f368133`). GitHub Release **"perfpal v0.1.0"** live: 10 assets (5 binaries + 5 .sha256), all checksums OK, published musl binary smoke-tested (exit 0, 15 findings, full report tree). Tag re-pointed per fix (GitHub runs the workflow from the tagged commit) → final target `f368133` = main tip. Cross-run binary checksums: musl ×2 + aarch64-darwin byte-identical; x86_64-darwin + windows-msvc differ (MSVC timestamps / darwin-x64 cause unknown) — documented, not a spec violation.
+Session 18 (post-MVP): **housekeeping batch executed and reviewed.** Deliverables: `LICENSE` (PolyForm Strict 1.0.0 verbatim, canonical source `polyformproject/polyform-licenses` tag `1.0.0`; @reviewer byte-diffed — only the copyright footer differs; `Copyright (c) 2026 ibraramin`), `README.md` (read-code-first via docs-writer: install from release assets, quickstart, CLI + exit codes verified against `src/cli/mod.rs`, 23-heuristic tables, output-contract summary, determinism scope, license section), STR-003 accepted-FP note (catalog-v1.md **§3** detail block: `%%s` escaped-percent false-fire + non-Literal concatenated format args silent/conservative + P6 format-position rule), `docs/schema/stats-distributions-proposal.md` (Proposed-not-accepted: complexity `[1,5,10,15,25,50,∞)` + loop-depth `[0,1,2,3,4,5,∞)` histograms, catalog constants 15/3 as edges, MINOR-bump activation; schema untouched). Gates green: clippy clean, **206/206 tests**. Review-fix wave applied: README determinism rescoped (metrics.json/report.md byte-identical except run-provenance; charts unconditionally), angle-include policy corrected (in-repo angle hits = internal coupling per ADR-0002), license grant corrected (PolyForm Strict = noncommercial use), proposal sort-example fixed, CHANGELOG §3 location fix + NITs.
 
 ## Recent Decisions
-- Private visibility (no LICENSE file yet — codify terms before going public).
-- Publish job re-run-safe per reviewer (partial-release recovery path validated by the final re-tag run 33568277020).
-- Determinism scope reaffirmed: charts/metrics artifacts only; release binaries never claimed bit-reproducible.
+- Milestone (founder): housekeeping batch over semantic resolver/ingestion/backends/follow-ups — release debt first, zero code risk.
+- LICENSE = PolyForm Strict 1.0.0 (founder-approved); repo stays private; Cargo.toml stays `LicenseRef-Proprietary` this batch (SPDX alignment = follow-up).
+- README follows CODE where modules.md §8 drifted (output default `perfpal-report`, single-file positional, exit-3 serialization).
 
 ## In Progress
-- Nothing — task boundary reached; awaiting ritual-commit approval.
+- Nothing — task boundary reached; awaiting founder acknowledgment of the §3 note placement + ritual-commit approval.
 
 ## Next
-- Founder approves ritual commit → `chore: session 17 — MVP released as v0.1.0; ci/release pipelines validated on GitHub; state + docs + changelog ritual` (files in `state/handoff/latest.md` §Uncommitted Files; exclude `.opencode/memory/**`).
-- Fresh session (`/new`): founder picks the next milestone — semantic resolver tier (ADR-0001), runtime-profile ingestion adapters (CONFIRMED-1), housekeeping batch (docs-writer pass, STR-003 notes, stats.distributions proposal, LICENSE), C++/Python backend, or release follow-ups (Node-24 pins, reproducible builds, toolchain drift guard). Signposts: **MVP RELEASED as v0.1.0 (tag f368133)**; read state files first.
+- Founder approves commit: `docs: post-release housekeeping — PolyForm Strict LICENSE, README, STR-003 accepted-FP note, stats.distributions proposal` (files in `state/handoff/latest.md` §Uncommitted Files; exclude `.opencode/**`).
+- Follow-ups: Cargo.toml license → `PolyForm-Strict-1.0.0` (+ deny.toml), modules.md §8 doc-drift amendment, stats.distributions activation (MINOR bump) on proposal acceptance.
+- Fresh session (`/new`): founder picks next milestone — semantic resolver tier (ADR-0001, recommended: retires ARCH-003 name-edge FPs + fclose/STR-003 limits), runtime-profile ingestion (CONFIRMED-1), C++/Python backend, release follow-ups.
 
 ## Blockers
 - None.
