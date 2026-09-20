@@ -87,54 +87,37 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
         ParseStatus::Partial
     };
 
-    // Pass 1 over translation_unit children: file-level records. Globals are
-    // collected before functions so event scope classification (LOOP-005,
-    // name-based) can consult them regardless of declaration order.
+    // Pass 1: file-level records, recursing through preprocessor
+    // conditionals (`walk_file_level` stops at `function_definition`, whose
+    // body is function-local scope). Globals are collected before functions
+    // so event scope classification (LOOP-005, name-based) can consult them
+    // regardless of declaration order.
     let mut includes = Vec::new();
     let mut global_vars = Vec::new();
     let mut structs = Vec::new();
     let mut macros = Vec::new();
-    {
-        let mut cursor = root.walk();
-        if cursor.goto_first_child() {
-            loop {
-                let node = cursor.node();
-                match node.kind() {
-                    "preproc_include" => includes.push(include_edge(node, path, source)),
-                    "preproc_def" | "preproc_function_def" => {
-                        push_macro_events(node, path, source, &mut macros);
-                    }
-                    "struct_specifier" => {
-                        if let Some(def) = struct_def(node, path, source) {
-                            structs.push(def);
-                        }
-                    }
-                    "declaration" => collect_global_vars(node, path, source, &mut global_vars),
-                    _ => {}
-                }
-                if !cursor.goto_next_sibling() {
-                    break;
-                }
+    walk_file_level(root, &mut |node| match node.kind() {
+        "preproc_include" => includes.push(include_edge(node, path, source)),
+        "preproc_def" | "preproc_function_def" => {
+            push_macro_events(node, path, source, &mut macros);
+        }
+        "struct_specifier" => {
+            if let Some(def) = struct_def(node, path, source) {
+                structs.push(def);
             }
         }
-    }
+        "declaration" => collect_global_vars(node, path, source, &mut global_vars),
+        _ => {}
+    });
 
-    // Pass 2: functions (which need macros + globals from pass 1).
+    // Pass 2: functions (which need macros + globals from pass 1). Same
+    // recursion, likewise stopping at each `function_definition` visited.
     let mut functions = Vec::new();
-    {
-        let mut cursor = root.walk();
-        if cursor.goto_first_child() {
-            loop {
-                let node = cursor.node();
-                if node.kind() == "function_definition" {
-                    functions.push(function_unit(node, path, source, &macros, &global_vars));
-                }
-                if !cursor.goto_next_sibling() {
-                    break;
-                }
-            }
+    walk_file_level(root, &mut |node| {
+        if node.kind() == "function_definition" {
+            functions.push(function_unit(node, path, source, &macros, &global_vars));
         }
-    }
+    });
 
     // Comment lines anywhere in the file (including inside function bodies)
     // feed the LOC stat.
@@ -228,6 +211,28 @@ fn walk(cursor: &mut tree_sitter::TreeCursor, visit: &mut impl FnMut(Node<'_>)) 
         }
         if !cursor.goto_next_sibling() {
             break;
+        }
+    }
+}
+
+/// Recursive file-level walk: visits every node EXCEPT that it does not
+/// descend into `function_definition` subtrees (their bodies are
+/// function-local scope, handled by the function pass). This makes
+/// file-level declarations nested in preprocessor conditionals
+/// (`preproc_ifdef` guards — the everyday header shape) visible; the old
+/// direct-children-of-translation_unit walk dropped them.
+fn walk_file_level(node: Node<'_>, visit: &mut impl FnMut(Node<'_>)) {
+    visit(node);
+    if node.kind() == "function_definition" {
+        return;
+    }
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            walk_file_level(cursor.node(), visit);
+            if !cursor.goto_next_sibling() {
+                break;
+            }
         }
     }
 }
@@ -390,13 +395,22 @@ fn calls_alloc_family(body: &str) -> bool {
     })
 }
 
-/// Top-level `struct Name { … };` definitions (tag name; anonymous ⇒ "").
+/// NAMED file-level `struct` definitions, reached wherever the recursive
+/// file-level walk finds them: bare top-level/guarded `struct S { … };`,
+/// inside a `declaration` (`struct S { … } v;`), a `typedef struct Named { … } X;`,
+/// or a nested definition. Anonymous structs (`typedef struct { … } X;`, inline
+/// struct-typed members) are SKIPPED: they carry no tag name, so they cannot be
+/// referenced by name and any finding about them would be unattributable
+/// (`struct ''`).
 fn struct_def(node: Node<'_>, path: &str, source: &[u8]) -> Option<StructDef> {
     let body = node.child_by_field_name("body")?;
     let name = node
         .child_by_field_name("name")
         .map(|n| text(n, source).to_string())
         .unwrap_or_default();
+    if name.is_empty() {
+        return None;
+    }
     let mut members = Vec::new();
     let mut cursor = body.walk();
     if cursor.goto_first_child() {
@@ -1675,5 +1689,166 @@ int process(int n, char *buf) {
         assert_eq!(storage_of("e"), StorageClass::Extern);
         assert_eq!(storage_of("f"), StorageClass::Extern);
         assert_eq!(ex.file.global_var_count, 6);
+    }
+
+    // --- Guarded-header regression locks (recursive file-level walk) ---
+
+    /// The everyday guarded-header shape: an `#include` nested in
+    /// `#ifndef`/`#define`/`#endif` must still be collected.
+    #[test]
+    fn guarded_include_collected() {
+        let src = "#ifndef T_H\n#define T_H\n#include \"u.h\"\n#endif\n";
+        let ex = extract("t.h", src.as_bytes());
+        assert_eq!(ex.includes.len(), 1);
+        assert_eq!(ex.includes[0].form, IncludeForm::Quoted);
+        assert_eq!(ex.includes[0].to_path.as_deref(), Some("u.h"));
+        assert_eq!(ex.file.include_counts.quoted, 1);
+        assert!(
+            ex.macros
+                .iter()
+                .any(|m| m.kind == MacroEventKind::Definition && m.name == "T_H")
+        );
+    }
+
+    /// A function-like alloc wrapper inside a guard still yields both the
+    /// definition events and the curated `recognized_pattern` event.
+    #[test]
+    fn guarded_alloc_wrapper_define_collected() {
+        let src = "#ifndef M_H\n#define M_H\n#define WRAP(sz) malloc(sz)\n#endif\n";
+        let ex = extract("m.h", src.as_bytes());
+        for name in ["M_H", "WRAP"] {
+            assert!(
+                ex.macros
+                    .iter()
+                    .any(|m| m.kind == MacroEventKind::Definition && m.name == name),
+                "missing definition event for {name}"
+            );
+        }
+        let pattern = ex
+            .macros
+            .iter()
+            .find(|m| m.kind == MacroEventKind::RecognizedPattern && m.name == "WRAP")
+            .expect("WRAP recognized pattern");
+        assert_eq!(
+            pattern.pattern_id.as_deref(),
+            Some(ALLOC_WRAPPER_PATTERN_ID)
+        );
+    }
+
+    /// A guarded `struct` must still be extracted with its members.
+    #[test]
+    fn guarded_struct_extracted() {
+        let src = "#ifndef G_H\n#define G_H\nstruct Padded { char tag; double value; int count; };\n#endif\n";
+        let ex = extract("g.h", src.as_bytes());
+        assert_eq!(ex.structs.len(), 1);
+        assert_eq!(ex.structs[0].name, "Padded");
+        assert_eq!(ex.structs[0].members.len(), 3);
+    }
+
+    /// Guarded globals keep their storage classes and count.
+    #[test]
+    fn guarded_globals_collected_with_storage() {
+        let src = "#ifndef GLO_H\n#define GLO_H\nstatic long acc;\nextern int shared;\n#endif\n";
+        let ex = extract("glo.h", src.as_bytes());
+        let names: Vec<_> = ex.global_vars.iter().map(|g| g.name.as_str()).collect();
+        assert_eq!(names, ["acc", "shared"]);
+        assert_eq!(ex.global_vars[0].storage, StorageClass::Static);
+        assert_eq!(ex.global_vars[1].storage, StorageClass::Extern);
+        assert_eq!(ex.file.global_var_count, 2);
+    }
+
+    /// Pass 2 (functions) must also see definitions nested in guards.
+    #[test]
+    fn guarded_function_definition_collected() {
+        let src = "#ifdef _WIN32\nint win_only(void) { return 1; }\n#endif\nint always(void) { return 0; }\n";
+        let ex = extract("f.c", src.as_bytes());
+        let names: Vec<_> = ex
+            .functions
+            .iter()
+            .map(|f| f.record.name.as_str())
+            .collect();
+        assert_eq!(names, ["win_only", "always"]);
+        assert_eq!(ex.file.function_count, 2);
+    }
+
+    /// Recursion descends through arbitrarily nested conditionals.
+    #[test]
+    fn doubly_nested_guard_include_collected() {
+        let src = "#ifdef A\n#ifdef B\n#include \"deep.h\"\n#endif\n#endif\n";
+        let ex = extract("deep.h", src.as_bytes());
+        assert_eq!(ex.includes.len(), 1);
+        assert_eq!(ex.includes[0].to_path.as_deref(), Some("deep.h"));
+    }
+
+    /// Negative lock on the stop boundary: a guarded FILE-level global IS
+    /// collected (the fix), while declarations/structs inside a
+    /// `function_definition` body are NOT (their scope is function-local).
+    #[test]
+    fn function_local_declaration_and_struct_not_collected() {
+        let src = concat!(
+            "#ifndef X_H\n",
+            "#define X_H\n",
+            "static int g;\n",
+            "#endif\n",
+            "void f(void) {\n",
+            " int local = 1;\n",
+            " struct Local { int a; char b; };\n",
+            " (void)local;\n",
+            "}\n",
+        );
+        let ex = extract("x.h", src.as_bytes());
+        let names: Vec<_> = ex.global_vars.iter().map(|g| g.name.as_str()).collect();
+        assert_eq!(names, ["g"], "guarded file-level global IS collected");
+        assert!(
+            ex.structs.is_empty(),
+            "function-local struct must not leak past the stop boundary"
+        );
+        assert_eq!(ex.file.function_count, 1);
+    }
+
+    /// Unguarded regression: the recursion must not change the everyday
+    /// top-level file shape.
+    #[test]
+    fn unguarded_file_level_records_still_collected() {
+        let src = "#include \"u.h\"\n#define D 1\nstruct S { int a; };\nstatic int g;\n";
+        let ex = extract("u.c", src.as_bytes());
+        assert_eq!(ex.includes.len(), 1);
+        assert_eq!(ex.structs.len(), 1);
+        assert_eq!(ex.global_vars.len(), 1);
+        assert!(
+            ex.macros
+                .iter()
+                .any(|m| m.kind == MacroEventKind::Definition && m.name == "D")
+        );
+    }
+
+    /// Anonymous structs carry no tag name, so they are skipped rather than
+    /// emitted as an unattributable `struct ''`. Covers the `typedef struct
+    /// { … } X;` idiom and an inline anonymous struct-typed member.
+    #[test]
+    fn anonymous_struct_skipped() {
+        let typedef_anon = "typedef struct { char tag; double value; int count; } TAnon;\n";
+        assert!(
+            extract("a.c", typedef_anon.as_bytes()).structs.is_empty(),
+            "namespace-less typedef struct must not produce a nameless StructDef"
+        );
+
+        let nested_anon = "struct Bag { struct { char a; double b; int c; } data; int n; };\n";
+        let ex = extract("b.c", nested_anon.as_bytes());
+        let names: Vec<_> = ex.structs.iter().map(|s| s.name.as_str()).collect();
+        assert_eq!(names, ["Bag"], "only the named outer struct is collected");
+    }
+
+    /// Approved breadth lock: the recursive file-level walk also reaches NAMED
+    /// structs that the old direct-children walk missed — inside a `typedef`
+    /// and nested in another struct body.
+    #[test]
+    fn named_struct_in_typedef_and_nested_collected() {
+        let src =
+            "typedef struct Named { int a; } X;\nstruct Outer { struct Inner { int b; } in; };\n";
+        let ex = extract("n.c", src.as_bytes());
+        let names: Vec<_> = ex.structs.iter().map(|s| s.name.as_str()).collect();
+        // Preorder: the typedef'd struct, then the outer, then its nested inner.
+        assert_eq!(names, ["Named", "Outer", "Inner"]);
     }
 }

@@ -3,6 +3,7 @@
  *
  * Expected findings:
  *   PERF-C-ARCH-001  info   unresolved quoted includes (the twelve missing_* headers)
+ *                           — plus the include cycle reported under cycle_b.h
  *   PERF-C-ARCH-003  info   three cross-file call edges to 01_ and 03_ — LOW by
  *                           name matching; MEDIUM when built against the semantic
  *                           tier with libclang present
@@ -12,26 +13,26 @@
  * its highest-complexity function, which lives in 05_recursion_complexity.c —
  * see that file.
  *
- * Two ARCH-001 sub-cases are deliberately planted here but do NOT currently fire.
- * Both are real scanner limitations, not corpus mistakes:
+ * Two ARCH-001 sub-cases are deliberately planted here:
  *
- *   1. CYCLE — cycle_a.h <-> cycle_b.h is a true include cycle, but each header
- *      guards its #include inside #ifndef/#endif, and the scanner's file-level
- *      pass only walks DIRECT children of the translation unit. Guarded includes
- *      (plus guarded #define/#struct/global declarations) are therefore invisible.
- *      Remove the guards and the cycle finding appears. This is the most common
- *      header shape in real C code, so the impact is broad.
+ *   1. CYCLE — cycle_a.h <-> cycle_b.h is a true include cycle. Both headers
+ *      guard their #include inside #ifndef/#endif; the scanner's recursive
+ *      file-level pass collects guarded content, so the cycle DOES report as
+ *      PERF-C-ARCH-001 (warn / HIGH confidence). The anchor is the lowest-sorted
+ *      broken edge (cycle_b.h -> cycle_a.h), so the finding is listed under
+ *      cycle_b.h, not here.
  *
- *   2. HUB FAN-OUT — the threshold (>= 12) counts DISTINCT RESOLVED include
- *      targets. Unresolved quoted includes do not count, and this file resolves
- *      only 2 (perf_common.h, cycle_a.h).
+ *   2. HUB FAN-OUT — planted but does NOT fire. The threshold (>= 12) counts
+ *      DISTINCT RESOLVED include targets. Unresolved quoted includes do not
+ *      count, and this file resolves only 2 (perf_common.h, cycle_a.h).
  */
 
 #include "perf_common.h"        /* real internal header */
 #include "cycle_a.h"            /* real header, one half of the cycle */
 
 /* Deliberately unresolved quoted includes: they exercise the
- * unresolved-quoted sub-case and push this file's fan-out to hub territory. */
+ * unresolved-quoted sub-case. Note they do NOT count toward the hub fan-out
+ * threshold, which sums distinct RESOLVED targets only. */
 #include "missing_alpha.h"
 #include "missing_beta.h"
 #include "missing_gamma.h"
