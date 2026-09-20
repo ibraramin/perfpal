@@ -1,20 +1,22 @@
 # Active Context
 
 ## Current Task
-Sessions 19–20 (post-MVP): **semantic-resolver milestone COMPLETE and reviewed.** Deliverables: `src/resolver/` (clang-sys 1.9.1 runtime/dlopen behind default-OFF `semantic-clang`; USR maps + fopen/literal visitor; explicit-root signature), tier mutations (`CallEvent.semantic`, `FunctionRecord.resolver_tier`, `ParseHealth.resolver`), ARCH-003 resolved edges (Info/MEDIUM/semantic), ALLOC-002 proven-fclose (Warn/MEDIUM, no escalation — founder verdict), STR-003 resolved formats, kind-matched `apply_upgrade_hooks` gate, schema v1.1 minor, CI feature job, 6-target release matrix (musl syntactic-only BY DESIGN), LOOP-004 deferred with record. Gates green first-hand: **238 default / 243 feature**, fmt + clippy both configs, deny ok, goldens idempotent. Dual review + re-review APPROVE.
+Session 21 (second task): **`examples/` demo corpus delivered, reviewed, and landing in this commit.** 10 issue-dense C programs + 3 supporting headers (894 lines) exercising the whole catalog — all 23 rules fire (82 findings default: 16 hot / 24 warn / 42 info; 84 with `semantic-clang` + libclang). Every program documents its own expected findings, verified against real output; deliberate silent controls confirm the false-positive guards. Step-by-step usage instructions delivered in chat.
+
+Building it found a **real scanner defect**: file-level declarations nested in preprocessor conditionals are invisible (`src/scanner/backends/tree_sitter_c/mod.rs` Pass 1 walks only direct children of `translation_unit`), so guarded `#include`/`#define`/`struct`/globals are dropped — affecting ARCH-001 cycles/hub/deep-chain, `macro_suspect` hooks, TYPE-001/002, LOOP-005.
 
 ## Recent Decisions
-- Milestone/distribution/scope (founder): semantic resolver; darwin+win+gnu ON, musl OFF; 3 named + LOOP-004 stretch-or-defer; no feature spec; execution + fix-wave approvals via question tool.
-- fclose = Warn/MEDIUM no escalation (reviewer taxonomy argument beat B2 mirror-free HIGH; founder-approved).
-- Gate = kind-matched + containment + default-deny; record-tier disjunct dropped; `total_order`/message NITs rejected (fail loudly, test-only).
-- EOL tail: libclang-absence probe fix (proven red), parser-free resolved ARCH-003 fixtures, README `--version` 1.1.
+- Corpus shape: one program per family, dense, self-documenting; fidelity over tidiness (the non-reporting include cycle is kept and documented as the defect's repro).
+- 12 reviewer items fixed (false-silence claims, severity contradictions, ARCH attribution, LOOP-004 labels on unmodelled compound assignments → rewritten to binary form, size comments, missing prototype).
+- Founder: commit corpus + ritual together; **next session = fix the guarded-content bug**.
+- Instructions stay in chat (requirements-reviewer: sufficient; durable README recommended-not-required).
 
 ## In Progress
-- Nothing — task boundary reached; awaiting founder ritual-commit approval (message + file list in `state/handoff/latest.md`).
+- Nothing — task boundary reached; ritual commit pending approval to execute (already approved by founder: `Yes — ritual + commit`).
 
 ## Next
-- Founder picks next milestone: LOOP-004 constness follow-up, runtime-profile ingestion (CONFIRMED-1), C++/Python backend, release follow-ups, stats.distributions activation, housekeeping follow-ups.
-- Fresh session (`/new`): semantic-resolver LANDED, plan DONE; read state files FIRST.
+- **Next session (`/new`): fix the guarded-content scanner bug** — recursive Pass 1 walk + regression tests (guarded include/define/struct/global + guarded cycle); then retire the corpus caveats and update expected-findings lists (ARCH-001 gains 2 cycle findings).
+- Optional: `examples/README.md`; corpus extension to make ARCH-001 hub fan-out fire.
 
 ## Blockers
 - None.
