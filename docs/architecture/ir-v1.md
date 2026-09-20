@@ -40,6 +40,14 @@ ParseHealth {               // one per file; consulted before ANY scoring
   status: ok | partial | failed
   error_regions: [span…]    // tree-sitter ERROR / unrecovered regions
   error_node_count: int
+  resolver?: absent | ok | failed
+                            // semantic-resolver outcome (ADDITIVE v1.1,
+                            // plan `semantic-resolver`): absent = resolver
+                            // disabled/unavailable; ok = libclang parsed the
+                            // TU; failed = TU-level libclang failure. Optional
+                            // on the wire (`Option` + `#[serde(default)]`,
+                            // omitted when None) — never deletes/degrades
+                            // syntactic results (modules.md §4.3)
 }
 
 IncludeEdge {
@@ -158,6 +166,29 @@ them deserialize unchanged. They add detection fidelity (MEM-001 operand
 classification; TYPE-001/002 pointer-member sizing) without touching any
 existing field's meaning; the minor-bump schema policy (open rule_id
 pattern) covers them.
+
+Additive-change note (semantic-resolver Wave A, 2026-09-02):
+`ParseHealth.resolver` is an ADDITIVE v1 field in the same pattern —
+`Option<ResolverHealth>` with `#[serde(default, skip_serializing_if)]`, so
+pre-resolver documents deserialize unchanged and `None` is OMITTED on the
+wire (omit-don't-null). It is pure honesty reporting from the resolver seam
+(modules.md §4.3): heuristic-visible state, identity keys `(path, name,
+span)`, and record shapes are untouched. Schema surface: optional
+`parse_health.resolver` in metrics.schema.v1.1.json (minor bump,
+metrics-json-v1.md §5).
+
+Additive-change note (semantic-resolver Wave B2, 2026-09-05):
+`CallSemantic.fopened_handle` and `CallSemantic.literal_args` are ADDITIVE
+v1 fields in the same pattern — `bool` / `Vec<(u32, String)>` with
+`#[serde(default, skip_serializing_if)]`, so documents written before them
+deserialize unchanged and absent facts stay off the wire
+(omit-don't-null). They are IR-internal enrichment proven by the resolver
+seam (fopen-assigned `FILE *` handles; single-string-literal format
+initializers): identity keys `(path, name, span)` and record shapes are
+untouched, and no metrics.json DTO changes (evidence keys are open maps;
+findings carry what output needs). Invariant: the resolver sets
+`Some(CallSemantic)` only when at least one fact is proven — never an
+empty struct — which the analyzer's `apply_upgrade_hooks` gate depends on.
 
 This one vocabulary is what keeps the IR event-stream-shaped instead of AST-shaped: heuristics pattern-match over typed events + shapes, never over parser node types.
 

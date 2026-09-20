@@ -517,7 +517,10 @@ pub(crate) fn arch_002(units: &[FileUnit]) -> Vec<Finding> {
 // PERF-C-ARCH-003 — cross-file call coupling
 // ===========================================================================
 
-/// One name-matched cross-file call edge. The aggregator consumes
+/// One cross-file call edge (plan `semantic-resolver` Wave B1): either a
+/// RESOLVED edge (semantic fact via the resolver's USR-based maps —
+/// confidence MEDIUM, no name ambiguity at all) or the legacy name-based
+/// fallback (confidence LOW). The aggregator consumes
 /// [`cross_file_call_edges`] verbatim for `graphs.call_graph`, so this
 /// shape is contract: plain data, deterministic construction, no
 /// finding-specific fields.
@@ -531,22 +534,42 @@ pub(crate) struct CrossFileCallEdge {
     pub call_span: Span,
     /// Callee identifier text (Direct calls only).
     pub callee_name: String,
-    /// Matched definition file (lexicographically smallest non-local).
+    /// Matched definition file: the RESOLVED site for semantic edges, the
+    /// lexicographically smallest non-local name match otherwise.
     pub to_path: String,
+    /// True when the edge is backed by a semantic fact (USR-based).
+    pub resolved: bool,
+    /// Edge confidence: MEDIUM for resolved edges (no compile DB, partial
+    /// TUs — never HIGH), LOW for the name-based fallback.
+    pub confidence: Confidence,
 }
 
-/// Build cross-file name-matched call edges (ADR-0001 resolver tiers: v1 is
-/// name-based Syntactic; file-local-first).
+/// Build cross-file call edges (ADR-0001 resolver tiers: semantic facts
+/// first, name-based fallback second — tier discrimination retires the
+/// same-name FP class for resolved calls).
 ///
-/// Algorithm: map every FunctionRecord name → its definition paths across
-/// ALL units; per unit, collect the same-file name set. Walk each function's
-/// DIRECT calls in span order; a call whose callee is defined in the SAME
-/// file is skipped (file-local-first per ADR-0001). Otherwise the target is
-/// the lexicographically SMALLEST other-file definition path — ambiguity is
-/// resolved deterministically rather than guessed semantically (documented
-/// catalog limitation; semantic resolution is a later tier). Duplicates
-/// collapse per `(from_function_id, callee_name)` keeping the EARLIEST call
-/// span. Output is sorted `(from_function_id, callee_name, call_span)`.
+/// Algorithm:
+/// 1. RESOLVED pass — a DIRECT call carrying `semantic.resolved_definition`
+///    whose site is cross-file and internal (facts are only produced for
+///    internal sites by the resolver; macro-origin and error-overlapped
+///    calls are stripped there, and refused defensively here too) emits an
+///    edge to the TRUE site path with confidence MEDIUM. Dedup per
+///    `(from_function_id, callee_name, target_path)` keeping the EARLIEST
+///    call span.
+/// 2. NAME-BASED fallback — ONLY for calls without facts (or whose facts
+///    were gated): the lexicographically SMALLEST other-file definition
+///    path, confidence LOW (documented catalog limitation — an unverified
+///    hypothesis). Dedup per `(from_function_id, callee_name)` keeping the
+///    EARLIEST call span; suppressed when a resolved edge already covers the
+///    same `(caller, callee, target)` triple (the resolved edge supersedes).
+///    A caller may legitimately emit BOTH a resolved edge and different
+///    name-based edges for the same callee name to different targets.
+/// 3. File-local-first (ADR-0001): same-file definitions never produce
+///    edges — for either tier.
+///
+/// USR-based resolution means multi-same-name ambiguity cannot occur for
+/// resolved calls: no name matching happens at all on that path.
+/// Output is sorted `(from_function_id, callee_name, call_span)`.
 pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge> {
     // name → all definition paths (sorted sets ⇒ deterministic min).
     let mut defs: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
@@ -557,8 +580,14 @@ pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge
                 .insert(func.record.path.as_str());
         }
     }
+    let internal: BTreeSet<&str> = units.iter().map(|u| u.file.path.as_str()).collect();
 
-    let mut edges: Vec<CrossFileCallEdge> = Vec::new();
+    // Resolved edges: (from_function_id, callee_name, target_path) →
+    // earliest (span, from_path). Name-based edges:
+    // (from_function_id, callee_name) → earliest (span, from_path, target).
+    let mut resolved_edges: BTreeMap<(String, String, String), (Span, String)> = BTreeMap::new();
+    let mut name_edges: BTreeMap<(String, String), (Span, String, String)> = BTreeMap::new();
+
     for unit in units {
         let local_names: BTreeSet<&str> = unit
             .functions
@@ -570,32 +599,92 @@ pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge
             // Span order makes "earliest wins" well-defined regardless of
             // backend emission order.
             calls.sort_by_key(|c| (c.meta.span.start_line, c.meta.span.start_col));
-            let mut seen_pairs: BTreeSet<&str> = BTreeSet::new();
             for call in calls {
                 if call.callee_kind != CalleeKind::Direct {
                     continue;
                 }
                 let name = call.callee_name.as_str();
                 if local_names.contains(name) {
-                    continue; // file-local-first (ADR-0001)
+                    continue; // file-local-first (ADR-0001), either tier
                 }
+                // RESOLVED branch — defensive even against future fact
+                // shapes: macro-origin calls never carry trusted facts.
+                if !call.meta.macro_origin
+                    && let Some(site) = call
+                        .semantic
+                        .as_ref()
+                        .and_then(|s| s.resolved_definition.as_ref())
+                    && site.path != func.record.path
+                    && internal.contains(site.path.as_str())
+                {
+                    let key = (func.record.id.clone(), name.to_string(), site.path.clone());
+                    match resolved_edges.get(&key) {
+                        Some((span, _)) if *span <= call.meta.span => {}
+                        _ => {
+                            resolved_edges.insert(key, (call.meta.span, func.record.path.clone()));
+                        }
+                    }
+                    continue; // facts consume the call — no fallback
+                }
+                // NAME-BASED fallback (no facts / gated facts).
                 let Some(targets) = defs.get(name) else {
                     continue;
                 };
                 let Some(target) = targets.iter().find(|p| **p != func.record.path) else {
                     continue;
                 };
-                if seen_pairs.insert(name) {
-                    edges.push(CrossFileCallEdge {
-                        from_function_id: func.record.id.clone(),
-                        from_path: func.record.path.clone(),
-                        call_span: call.meta.span,
-                        callee_name: name.to_string(),
-                        to_path: (*target).to_string(),
-                    });
+                let key = (func.record.id.clone(), name.to_string());
+                match name_edges.get(&key) {
+                    Some((span, _, _)) if *span <= call.meta.span => {}
+                    _ => {
+                        name_edges.insert(
+                            key,
+                            (
+                                call.meta.span,
+                                func.record.path.clone(),
+                                (*target).to_string(),
+                            ),
+                        );
+                    }
                 }
             }
         }
+    }
+
+    let resolved_triples: BTreeSet<(String, String, String)> =
+        resolved_edges.keys().cloned().collect();
+    let mut edges: Vec<CrossFileCallEdge> = Vec::new();
+    for ((from_function_id, callee_name, to_path), (call_span, from_path)) in resolved_edges {
+        edges.push(CrossFileCallEdge {
+            from_function_id,
+            from_path,
+            call_span,
+            callee_name,
+            to_path,
+            resolved: true,
+            confidence: Confidence::Medium,
+        });
+    }
+    for ((from_function_id, callee_name), (call_span, from_path, to_path)) in name_edges {
+        // Supersede check: a resolved edge covering the same
+        // (caller, callee, target) triple wins; only DIFFERENT targets
+        // coexist legitimately.
+        if resolved_triples.contains(&(
+            from_function_id.clone(),
+            callee_name.clone(),
+            to_path.clone(),
+        )) {
+            continue;
+        }
+        edges.push(CrossFileCallEdge {
+            from_function_id,
+            from_path,
+            call_span,
+            callee_name,
+            to_path,
+            resolved: false,
+            confidence: Confidence::Low,
+        });
     }
     edges.sort_by(|a, b| {
         a.from_function_id
@@ -608,36 +697,64 @@ pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge
 
 /// PERF-C-ARCH-003 — cross-file call coupling (catalog-v1 §3 Tier 1).
 ///
-/// ONE Info finding per [`cross_file_call_edge`], anchored at the call
-/// site. Confidence is LOCKED LOW by schema policy (cross-file name matches
-/// are hypotheses; the central hooks may only cap downward from there).
+/// ONE Info finding per [`cross_file_call_edge`], anchored at the call site.
+/// RESOLVED edges (semantic fact) carry confidence MEDIUM and
+/// `resolver_tier: semantic` — USR-based, so the same-name FP class is
+/// retired for them; the name-based fallback keeps the legacy LOW-confidence
+/// hypothesis framing (the central hooks may only cap downward from there).
 pub(crate) fn arch_003(units: &[FileUnit]) -> Vec<Finding> {
     cross_file_call_edges(units)
         .into_iter()
-        .map(|edge| Finding {
-            threshold: None,
-            rule_id: ARCH_003_RULE_ID.to_string(),
-            title: "Cross-file call coupling".to_string(),
-            message: format!(
-                "call to '{}' matches a definition in '{}' by name only — \
-                 LOW-confidence hypothesis pending semantic resolution; \
-                 confirming the match (or co-locating hot callees) is a \
-                 candidate optimization",
-                edge.callee_name, edge.to_path
-            ),
-            severity: Severity::Info,
-            confidence: Confidence::Low,
-            resolver_tier: ResolverTier::Syntactic,
-            span: edge.call_span,
-            path: edge.from_path,
-            evidence: [
-                ("callee_name".to_string(), edge.callee_name),
-                ("matched_path".to_string(), edge.to_path),
-            ]
-            .into_iter()
-            .collect(),
-            macro_suspect: false,
-            error_node_overlap: false,
+        .map(|edge| {
+            let (message, confidence, tier, evidence) = if edge.resolved {
+                (
+                    format!(
+                        "call to '{}' resolves to its definition in '{}' via \
+                         the semantic resolver — cross-file coupling confirmed \
+                         at MEDIUM confidence (no compile database, partial \
+                         parses); co-locating hot callees remains a candidate \
+                         optimization",
+                        edge.callee_name, edge.to_path
+                    ),
+                    edge.confidence,
+                    ResolverTier::Semantic,
+                    vec![
+                        ("callee_name".to_string(), edge.callee_name.clone()),
+                        ("matched_path".to_string(), edge.to_path.clone()),
+                        ("resolved".to_string(), "true".to_string()),
+                    ],
+                )
+            } else {
+                (
+                    format!(
+                        "call to '{}' matches a definition in '{}' by name only \
+                         — LOW-confidence hypothesis pending semantic \
+                         resolution; confirming the match (or co-locating hot \
+                         callees) is a candidate optimization",
+                        edge.callee_name, edge.to_path
+                    ),
+                    edge.confidence,
+                    ResolverTier::Syntactic,
+                    vec![
+                        ("callee_name".to_string(), edge.callee_name.clone()),
+                        ("matched_path".to_string(), edge.to_path.clone()),
+                    ],
+                )
+            };
+            Finding {
+                threshold: None,
+                rule_id: ARCH_003_RULE_ID.to_string(),
+                title: "Cross-file call coupling".to_string(),
+                message,
+                severity: Severity::Info,
+                confidence,
+                resolver_tier: tier,
+                span: edge.call_span,
+                path: edge.from_path,
+                evidence: evidence.into_iter().collect(),
+                macro_suspect: false,
+                error_node_overlap: false,
+            }
         })
         .collect()
 }

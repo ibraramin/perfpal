@@ -3,7 +3,7 @@
 
 use crate::analyzer::finding::{ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ALLOC_003_RULE_ID};
 use crate::analyzer::{Confidence, Finding, Severity};
-use crate::ir::{CallEvent, CalleeKind, ShapeKind};
+use crate::ir::{CallEvent, CalleeKind, ResolverTier, ShapeKind};
 use crate::scanner::FileUnit;
 
 use super::{AllocCandidate, alloc_candidates, span_contains};
@@ -65,23 +65,34 @@ pub(crate) fn alloc_001(units: &[FileUnit]) -> Vec<Finding> {
 /// allocate-per-iteration + free-per-iteration escalates the finding to Hot
 /// with evidence `alloc_cooccurrence=true`.
 ///
-/// Deferral note: the catalog detail block also lists "`fclose` on
-/// heap-backed handles" as detected, but heap-backedness of a `FILE *`
-/// handle is not syntactically decidable at MVP (no type info on the
-/// syntactic tier). Only `free` fires here; `fclose` detection is deferred
-/// to the semantic resolver tier (post-MVP per the ADR-0001 extension path).
+/// Wave B2 (plan `semantic-resolver`) retires the catalog's "`fclose` on
+/// heap-backed handles" deferral for the proven case: a DIRECT `fclose()`
+/// call at `in_loop_depth ≥ 1` whose handle the resolver proved
+/// fopen-assigned (`CallEvent.semantic.fopened_handle`) fires at
+/// Warn/MEDIUM ALWAYS — `resolver_tier: Semantic`, the `callee` identity
+/// key (carrying `fclose`, so the finding stays distinguishable from
+/// `free`), and NO escalation path: a balanced open-per-iteration +
+/// close-per-iteration is not hoistable, so same-function `fopen` pairing
+/// never escalates. MEDIUM rationale (founder verdict): the documented
+/// per-iteration-pairing FP class applies — a proven handle closed once per
+/// iteration is still per-iteration teardown churn worth surfacing, but the
+/// pairing shape overstates HIGH. Unknown/param-handle `fclose` stays silent
+/// (no fact ⇒ no fire — conservative).
+///
+/// Accepted FP class (consistent with the existing malloc/free acceptance):
+/// a properly paired open-per-iteration + close-per-iteration still fires —
+/// the rule surfaces per-iteration teardown churn, not a leak/double-close
+/// verdict.
 pub(crate) fn alloc_002(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
         let candidates = alloc_candidates(std::slice::from_ref(unit));
         for func in &unit.functions {
             for call in &func.calls {
-                if !is_free_in_loop(call) {
+                let fclose_proven = is_fclose_of_fopened(call);
+                if !is_free_in_loop(call) && !fclose_proven {
                     continue;
                 }
-                let cooccurrence = candidates
-                    .iter()
-                    .any(|c: &AllocCandidate<'_>| span_contains(&func.record.span, &c.span));
                 let message = format!(
                     "deallocation via '{}' at loop depth {} — repeated \
                      frees per iteration; hoisting the free or \
@@ -89,6 +100,37 @@ pub(crate) fn alloc_002(units: &[FileUnit]) -> Vec<Finding> {
                      optimization",
                     call.callee_name, call.meta.in_loop_depth
                 );
+                if fclose_proven {
+                    // Proven-fclose: Warn/MEDIUM always, no co-occurrence
+                    // escalation and no `alloc_cooccurrence` key (no dead
+                    // data — the `callee` key carries the fclose identity).
+                    findings.push(Finding {
+                        threshold: None,
+                        rule_id: ALLOC_002_RULE_ID.to_string(),
+                        title: "Deallocation inside loop".to_string(),
+                        message,
+                        severity: Severity::Warn,
+                        confidence: Confidence::Medium,
+                        resolver_tier: ResolverTier::Semantic,
+                        span: call.meta.span,
+                        path: unit.file.path.clone(),
+                        evidence: vec![
+                            ("callee".to_string(), call.callee_name.clone()),
+                            (
+                                "loop_depth".to_string(),
+                                call.meta.in_loop_depth.to_string(),
+                            ),
+                        ]
+                        .into_iter()
+                        .collect(),
+                        macro_suspect: false,
+                        error_node_overlap: false,
+                    });
+                    continue;
+                }
+                let cooccurrence = candidates
+                    .iter()
+                    .any(|c: &AllocCandidate<'_>| span_contains(&func.record.span, &c.span));
                 let mut evidence = vec![
                     ("callee".to_string(), call.callee_name.clone()),
                     (
@@ -127,6 +169,17 @@ fn is_free_in_loop(call: &CallEvent) -> bool {
     call.callee_kind == CalleeKind::Direct
         && call.callee_name == "free"
         && call.meta.in_loop_depth >= 1
+}
+
+/// Wave B2 proven-handle gate: DIRECT `fclose` at `in_loop_depth ≥ 1` (the
+/// SAME depth gate as [`is_free_in_loop`]) whose handle the resolver proved
+/// fopen-assigned. The fact — not the callee name alone — is the fire
+/// condition, so unknown/param handles stay silent.
+fn is_fclose_of_fopened(call: &CallEvent) -> bool {
+    call.callee_kind == CalleeKind::Direct
+        && call.callee_name == "fclose"
+        && call.meta.in_loop_depth >= 1
+        && call.semantic.as_ref().is_some_and(|s| s.fopened_handle)
 }
 
 /// PERF-C-ALLOC-003 — `realloc()` linear growth in loop `(syntactic)`

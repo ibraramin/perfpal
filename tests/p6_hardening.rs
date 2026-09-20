@@ -41,7 +41,7 @@ fn golden_dir() -> PathBuf {
 /// compared byte-exact (verified by `regenerate_goldens`).
 const GOLDEN_ARTIFACTS: [&str; 6] = [
     "metrics.json",
-    "metrics.schema.v1.0.json",
+    "metrics.schema.v1.1.json",
     "report.md",
     "charts/include-graph.svg",
     "charts/component-coupling.svg",
@@ -238,7 +238,7 @@ fn regenerate_goldens() {
         "charts/include-graph.svg",
         "charts/component-coupling.svg",
         "charts/hot-components.svg",
-        "metrics.schema.v1.0.json",
+        "metrics.schema.v1.1.json",
     ] {
         let text = fs::read_to_string(golden.join(name)).expect(name);
         assert!(
@@ -287,10 +287,20 @@ fn report_matches_committed_goldens() {
         };
         let equal = match name {
             // Masked text comparison for the provenance-bearing artifacts.
+            // The resolver field is neutralized on BOTH sides (feature builds
+            // legitimately produce "ok" vs the goldens' default-build
+            // "absent" — see common::mask_golden_resolver), as are the Wave
+            // B1 resolved-edge deltas (MEDIUM resolved ARCH-003 finding +
+            // call-graph edge rewritten to name-based form + §4 re-sort —
+            // see common::mask_golden_semantic).
             "metrics.json" => {
                 let actual = String::from_utf8(actual).expect("metrics.json is UTF-8");
                 let expected = String::from_utf8(expected).expect("golden is UTF-8");
-                common::mask_golden_metrics(&actual) == common::mask_golden_metrics(&expected)
+                let actual = common::mask_golden_metrics(&actual);
+                let expected = common::mask_golden_metrics(&expected);
+                let actual = common::mask_golden_semantic(&actual);
+                let expected = common::mask_golden_semantic(&expected);
+                common::mask_golden_resolver(&actual) == common::mask_golden_resolver(&expected)
             }
             "report.md" => {
                 let actual = String::from_utf8(actual).expect("report.md is UTF-8");

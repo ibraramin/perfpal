@@ -76,6 +76,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Why: paired with ALLOC-001 indicates churn; alone indicates repeated teardown cost.
 - FPs: freeing distinct items per iteration is legitimate — pair with ALLOC-001 co-occurrence to raise signal.
 - Implementation note (P2): `fclose` deferred — heap-backed-handle determination requires type info → semantic tier (post-MVP). Only `free` fires in the syntactic MVP.
+- Implementation note (Wave B2, plan `semantic-resolver` — RETIRES the P2 `fclose` deferral above for the proven case): proven-`fclose` semantics — a DIRECT `fclose()` at `in_loop_depth ≥ 1` whose handle the resolver proved fopen-assigned (enclosing-function fopen set: `fopen`/`freopen`/`fdopen`-assigned `Identifier` arg0, `FILE`-type proof with a declared-non-`FILE` veto) fires at Warn/MEDIUM, `resolver_tier: semantic`, with the `callee` identity key (carrying `fclose`, so the finding stays distinguishable from `free`) and NO co-occurrence escalation. MEDIUM rationale (founder verdict): the documented per-iteration-pairing FP class applies — a proven handle closed once per iteration is still per-iteration teardown churn worth surfacing, but the pairing shape overstates HIGH; a balanced open-per-iteration + close-per-iteration is not hoistable, so same-function `fopen` pairing never escalates to Hot. Unknown/param-handle `fclose` stays silent (no fact ⇒ no fire — conservative). Accepted FP class: open-per-iteration + close-per-iteration pairs still fire (per-iteration teardown churn, consistent with the malloc/free acceptance above).
 
 **PERF-C-ALLOC-003 — `realloc()` linear growth in loop** `(syntactic)`
 - Detects: `realloc(p, n+1)` / `realloc(p, n+k)` shapes nested in loops (additive growth ⇒ quadratic memmove behavior).
@@ -99,6 +100,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Note: frame output as "unbounded operation" not "bug" (static-analysis framing rule).
 - Implementation note (P6): format-string matching is a quote-stripped literal `contains("%s")` check with the format position fixed — `scanf` → arg 0, `fscanf`/`sscanf` → arg 1; a non-literal format argument stays silent.
 - Implementation note (post-v0.1.0 hardening): accepted syntactic-tier FP/noise classes — an escaped-percent sequence such as `%%s` can false-fire the `contains('%s')` substring check; format arguments assembled by string concatenation or other non-Literal shapes stay silent (conservative direction: prefers missing a candidate over inventing one). Both are candidates for the semantic resolver tier per ADR-0001.
+- Implementation note (Wave B2, plan `semantic-resolver`): identifier format args resolving to single string literals via single-assignment proof (one write, proven literal value) now fire on the scanf-family branch at Warn/HIGH/`resolver_tier: semantic` with additive evidence `resolved_format: "true"` — the resolved value replays the identical `%s` check. Still silent (unchanged behavior, conservative — never invents content): adjacent-concatenated literals, multi-write variables, unknown handles.
 
 **PERF-C-LOOP-001 — Deep loop nesting (≥3)** `(syntactic)`
 - Detects: loop nesting depth ≥ 3.
@@ -122,6 +124,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Why: integer division latency (~20+ cycles); compilers strength-reduce *constant* divisors via magic-number multiply-shift (powers of two via shift), but *variable* divisors defeat those transforms and pay real division per iteration.
 - FPs: divisor and dividend both loop-invariant (whole expression hoistable) — rare in hot inner loops; info-level only.
 - Implementation note (P3): literal-divisor skip is by design (constant divisors are compiler strength-reduced); `is_innermost` is scanner-fixed per event, no heuristic-side nesting recomputation. Accepted FP class: constant-foldable non-literal divisors (`ShapeKind::Sizeof` e.g. `sizeof(int)`; `ShapeKind::Unary` over literals e.g. `-1`) DO fire by design at Info severity — the syntactic tier cannot prove constantness generally.
+- Implementation note (plan `semantic-resolver` Wave B2): resolver constness proofs DEFERRED to a follow-up session (budget call); syntactic behavior unchanged — the accepted-FP class above still fires by design.
 
 **PERF-C-CALL-001 — Direct recursion** `(syntactic)`
 - Detects: function body contains a call to its own name.
@@ -151,6 +154,7 @@ Note: **function length** is deliberately a *stat*, not a standalone finding —
 - Why: enables component coupling heatmap; explicit LOW confidence until semantic resolver exists.
 - FPs: same-name static functions in different TUs; duplicate symbol names across vendored deps.
 - Implementation note (P4): per-edge Info/LOW findings. File-local matches suppress (ADR-0001 tiers). Direct `callee_kind` only. Multi-definition ambiguity → lexicographically smallest path (single edge). Dedup per `(caller function, callee name)` keeping the earliest span. Static same-name FP class stands (catalog-documented above). Confidence locked LOW by schema.
+- Implementation note (Wave B1, plan `semantic-resolver`): resolved-edge semantics — a DIRECT call carrying resolver-proven `semantic.resolved_definition` (USR-based true-callee resolution to a cross-file internal site) emits a resolved edge to the TRUE site path at Info/MEDIUM/`resolver_tier: semantic` with additive evidence `resolved: "true"`. MEDIUM (never HIGH) rationale: no compile database + partial-TU parses. Tier discrimination retires the same-name-static-across-TUs FP class for resolved calls (no name matching happens on the resolved path at all); the name-based fallback keeps the legacy LOW-confidence hypothesis framing, dedups per `(from_function_id, callee_name)` keeping the earliest span (vs `(from_function_id, callee_name, target)` for resolved edges), and is suppressed only where a resolved edge covers the same (caller, callee, target) triple — a caller may legitimately emit both a resolved edge and different-target name-based edges. File-local-first suppression applies to either tier. Schema v1.1 widens `call_graph.edges[].confidence` to oneOf LOW/MEDIUM/HIGH (v1.0 documents still validate).
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.json",
-  "title": "Perfpal metrics.json schema v1.0",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.1.json",
+  "title": "Perfpal metrics.json schema v1.1",
   "description": "Versioned, LLM-agnostic output of a Perfpal static scan (MVP language: C). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0",
+      "const": "1.1",
       "description": "Schema version of this document. MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
@@ -101,7 +101,11 @@
                 "items": { "$ref": "#/$defs/span" },
                 "description": "Unparseable regions; reported, never analyzed as fiction."
               },
-              "error_node_count": { "type": "integer", "minimum": 0 }
+              "error_node_count": { "type": "integer", "minimum": 0 },
+              "resolver": {
+                "enum": ["absent", "ok", "failed"],
+                "description": "Semantic-resolver outcome for this file (ADDITIVE v1.1; optional — omitted by producers without resolver support, so v1.0-style documents validate unchanged). absent = resolver disabled/unavailable; ok = libclang parsed the translation unit; failed = libclang reported a TU-level failure. Never deletes or degrades syntactic results."
+              }
             }
           }
         }
@@ -210,7 +214,14 @@
                   "to_name": { "type": "string", "description": "Callee name as written." },
                   "from_path": { "type": "string" },
                   "to_path": { "type": ["string", "null"], "description": "Best-match file or null when unresolved." },
-                  "confidence": { "const": "LOW", "description": "Name-based matching is LOW by definition until a semantic resolver exists (ADR-0001)." }
+                  "confidence": {
+                    "oneOf": [
+                      { "const": "LOW" },
+                      { "const": "MEDIUM" },
+                      { "const": "HIGH" }
+                    ],
+                    "description": "ADDITIVE v1.1 widening from v1.0's const \"LOW\": name-based matching is LOW until the semantic resolver upgrades unambiguous edges (ADR-0001); v1.0 documents (all-LOW) still validate unchanged."
+                  }
                 }
               }
             }

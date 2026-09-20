@@ -7,7 +7,9 @@ mod common;
 
 use perfpal::analyzer::finding::{ARCH_001_RULE_ID, ARCH_002_RULE_ID, ARCH_003_RULE_ID};
 use perfpal::analyzer::{Confidence, Severity, analyze};
-use perfpal::ir::{FileRecord, IncludeEdge, IncludeForm, LocCounts, ParseHealth, Span};
+use perfpal::ir::{
+    FileRecord, IncludeEdge, IncludeForm, LocCounts, ParseHealth, ResolverTier, Span,
+};
 use perfpal::scanner::FileUnit;
 
 /// Synthetic unit with only include directives (no functions needed for
@@ -292,5 +294,47 @@ fn ambiguous_name_resolves_to_smallest_definition_path() {
         arch003[0].evidence.get("matched_path").map(String::as_str),
         Some("a.c"),
         "ambiguity resolves to the lexicographically smallest path"
+    );
+}
+
+/// Parser-free Wave B1 lock (ADR-0001 guardrail 2): a USR-resolved call
+/// beats the name-based fallback — the lexicographically smaller `a.c`
+/// decoy loses to the semantically proven `util.c` target, and the finding
+/// upgrades to MEDIUM/semantic.
+#[test]
+fn resolved_edge_upgrades_to_medium_and_beats_lexicographic_decoy() {
+    let units = common::load_units_fixture("PERF-C-ARCH-003__resolved-edge.json");
+    let findings = analyze(&units);
+    let arch003 = common::by_rule(&findings, ARCH_003_RULE_ID);
+    assert_eq!(
+        arch003.len(),
+        1,
+        "resolved edge replaces the name hypothesis"
+    );
+    let f = arch003[0];
+    assert_eq!(f.confidence, Confidence::Medium);
+    assert_eq!(f.resolver_tier, ResolverTier::Semantic);
+    assert_eq!(
+        f.evidence.get("matched_path").map(String::as_str),
+        Some("util.c"),
+        "USR resolution must beat the lexicographically smaller a.c decoy"
+    );
+    assert_eq!(f.evidence.get("resolved").map(String::as_str), Some("true"));
+    assert!(
+        f.message.contains("resolves to its definition"),
+        "resolved framing required — {}",
+        f.message
+    );
+}
+
+/// File-local-first (ADR-0001) suppresses even fact-carrying calls: a
+/// same-file resolution is not a cross-file edge.
+#[test]
+fn resolved_file_local_call_stays_silent() {
+    let units = common::load_units_fixture("PERF-C-ARCH-003__resolved-file-local.json");
+    let findings = analyze(&units);
+    assert!(
+        common::by_rule(&findings, ARCH_003_RULE_ID).is_empty(),
+        "same-file definition must suppress the edge even with facts"
     );
 }

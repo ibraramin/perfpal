@@ -54,6 +54,13 @@ Semver-inspired `MAJOR.MINOR`:
 - **Rule of thumb:** if an old consumer reading a new report can misinterpret data → major bump; if it can only miss new information → minor bump.
 - **Strictness caveat:** strict validation against an *older* minor schema is guaranteed only until that minor's field set changes — i.e., a v1.0 validator may reject a v1.1 report containing newly added fields. Consumers wanting forward tolerance should validate structurally (required fields + types) rather than with `additionalProperties: false`.
 
+**Minor bump v1.0 → v1.1 (2026-09-02, plan `semantic-resolver` Wave A).** Two additive changes, both backward-compatible (v1.0 documents validate unchanged under the v1.1 schema):
+
+1. **`files[].parse_health.resolver`** — new OPTIONAL field, enum `absent | ok | failed`, recording the semantic (libclang) resolver's per-file outcome (modules.md §4.3). Omitted entirely by producers without a resolver outcome (so v1.0-style `parse_health` objects validate unchanged); `absent` = resolver disabled/unavailable; `ok` = libclang parsed the translation unit; `failed` = libclang reported a TU-level failure. Never deletes or degrades syntactic results.
+2. **`graphs.call_graph.edges[].confidence`** — widened from `const "LOW"` to oneOf `["LOW", "MEDIUM", "HIGH"]`. Widening is additive: every v1.0 document (all-LOW) still validates. Wave A producers still emit only `"LOW"`; the semantic tier's unambiguous-resolution upgrades consume the widened set in Wave B (ADR-0001 conservative-upgrade rule).
+
+The schema artifact was re-emitted as `metrics.schema.v1.1.json` (the v1.0 copy, `metrics.schema.v1.json`, is kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.1 name.
+
 ## 6. Worked example
 
 ```json

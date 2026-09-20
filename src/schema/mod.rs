@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.1.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -27,7 +27,7 @@
 //! No timestamps are generated here — cli owns provenance values.
 //!
 //! P4 wave additions (Wave 1): the schema-optional sections gained typed
-//! models matching `metrics.schema.v1.0.json` exactly:
+//! models matching the canonical schema of their version exactly:
 //! - `graphs.call_graph` ([`CallGraphSection`] / [`CallEdge`], confidence
 //!   locked to `"LOW"` per ADR-0001 name-based matching).
 //! - `components[]` ([`ComponentEntry`] / [`ComponentMetrics`]).
@@ -46,27 +46,35 @@ use std::collections::BTreeMap;
 use serde::Serialize;
 
 use crate::analyzer::{Confidence, Finding, Severity};
-use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
+use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.json
+/// Schema version of emitted documents (metrics.schema.v1.1.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
-pub const SCHEMA_VERSION: &str = "1.0";
+///
+/// v1.0 → v1.1 (2026-09-02, minor/additive): (a) `files[].parse_health`
+/// gained the OPTIONAL `resolver` field (enum `absent|ok|failed`, omitted by
+/// producers without resolver support — old outputs validate unchanged);
+/// (b) `graphs.call_graph.edges[].confidence` widened from `const "LOW"` to
+/// oneOf `["LOW","MEDIUM","HIGH"]` for the semantic tier (Wave B; widening is
+/// additive — v1.0 documents still validate).
+pub const SCHEMA_VERSION: &str = "1.1";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.0"` ⇒ `metrics.schema.v1.0.json`, never an elided `.0`. Kept as a
+/// `"1.1"` ⇒ `metrics.schema.v1.1.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.0.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.1.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.1.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.0.json");
+/// the two cannot drift. The v1.0 docs copy (`metrics.schema.v1.json`) is
+/// kept as history.
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.1.json");
 
 // ---------------------------------------------------------------------------
-// Document model — nine sections, field-for-field vs metrics.schema.v1.json
+// Document model — nine sections, field-for-field vs the canonical schema
 // ---------------------------------------------------------------------------
 
 /// The complete metrics.json document (modules.md §3.4 aggregator output).
@@ -132,7 +140,7 @@ pub struct ParseHealthSummary {
 }
 
 /// One element of `files[]` — per-file baseline stats, no severity/confidence
-/// by design (metrics.schema.v1.json `files.items.description`).
+/// by design (canonical schema `files.items.description`).
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct FileEntry {
     /// Repo-relative POSIX path.
@@ -147,13 +155,19 @@ pub struct FileEntry {
 }
 
 /// Per-file `parse_health` object. `error_regions` is schema-optional ⇒
-/// omitted when the file has none (the common case stays lean).
+/// omitted when the file has none (the common case stays lean). `resolver`
+/// is schema-optional (additive v1.1) ⇒ omitted when the producing binary
+/// had no semantic-resolver outcome for the file.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ParseHealthEntry {
     pub status: ParseStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_regions: Option<Vec<Span>>,
     pub error_node_count: u32,
+    /// Additive v1.1: semantic-resolver outcome (`absent|ok|failed`),
+    /// lifted verbatim from the IR `ParseHealth.resolver` honesty field.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolver: Option<ResolverHealth>,
 }
 
 /// `stats` — baseline measurements, always emitted, never findings.
@@ -250,7 +264,7 @@ pub struct GraphsSection {
 
 /// `graphs.call_graph` — cross-file call edges only (intra-file edges
 /// omitted in v1); name-based matching ⇒ every edge confidence LOW until a
-/// semantic resolver exists (metrics.schema.v1.0.json `call_graph`).
+/// semantic resolver exists (canonical schema `call_graph`).
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct CallGraphSection {
     pub edges: Vec<CallEdge>,
@@ -271,25 +285,47 @@ pub struct CallEdge {
     pub from_path: String,
     /// Best-match file or `null` when unresolved.
     pub to_path: Option<String>,
-    /// Schema `const: "LOW"` — name-based matching is LOW by definition
-    /// (ADR-0001). Always `"LOW"`; construct via [`CallEdge::new`].
+    /// Schema v1.1 widened to oneOf `["LOW","MEDIUM","HIGH"]` (additive —
+    /// v1.0 `const "LOW"` documents still validate). In Wave A the value is
+    /// always `"LOW"`: name-based matching (ADR-0001); the semantic resolver
+    /// raises it in Wave B. Construct via [`CallEdge::new`].
     pub confidence: String,
 }
 
 impl CallEdge {
-    /// Constructor hardcoding the schema-const confidence (`"LOW"`).
+    /// Constructor hardcoding the schema-const confidence (`"LOW"`): the
+    /// name-based fallback (ADR-0001). Resolved edges use
+    /// [`CallEdge::with_confidence`].
     pub fn new(
         from_function: impl Into<String>,
         to_name: impl Into<String>,
         from_path: impl Into<String>,
         to_path: Option<String>,
     ) -> Self {
+        Self::with_confidence(from_function, to_name, from_path, to_path, Confidence::Low)
+    }
+
+    /// Constructor carrying the edge's own confidence (semantic-resolver
+    /// Wave B1): MEDIUM for resolved (USR-backed) edges, LOW for the
+    /// name-based fallback — serialized as its schema token.
+    pub fn with_confidence(
+        from_function: impl Into<String>,
+        to_name: impl Into<String>,
+        from_path: impl Into<String>,
+        to_path: Option<String>,
+        confidence: Confidence,
+    ) -> Self {
+        let token = match confidence {
+            Confidence::High => "HIGH",
+            Confidence::Medium => "MEDIUM",
+            Confidence::Low => "LOW",
+        };
         Self {
             from_function: from_function.into(),
             to_name: to_name.into(),
             from_path: from_path.into(),
             to_path,
-            confidence: "LOW".to_string(),
+            confidence: token.to_string(),
         }
     }
 }
@@ -487,11 +523,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.1.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.0.json drifted from \
-             docs/schema/metrics.schema.v1.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.1.json drifted from \
+             docs/schema/metrics.schema.v1.1.json — re-copy the canonical artifact"
         );
     }
 
@@ -553,6 +589,7 @@ mod tests {
                     status: ParseStatus::Ok,
                     error_regions: None,
                     error_node_count: 0,
+                    resolver: None,
                 },
             }],
             stats: StatsSection {
@@ -662,7 +699,7 @@ mod tests {
     }
 
     /// P4 Wave 1: a fully-populated document serializes with key order
-    /// matching metrics.schema.v1.0.json property order (declaration order is
+    /// matching the canonical schema property order (declaration order is
     /// load-bearing), and round-trips through `serde_json::Value` with the
     /// expected structure — including an explicit `null` `to_path` and an
     /// omitted-when-absent `finding_count`.

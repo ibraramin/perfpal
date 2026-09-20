@@ -19,6 +19,21 @@ serde_json = "=1.0.151" # default features only; `preserve_order` MUST stay OFF 
 thiserror = "=2.0.20"
 tree-sitter = "=0.26.13" # ADR-0001 G5: exact pins for parser runtime + grammar
 tree-sitter-c = "=0.24.2"
+# Optional semantic-resolver engine (ADR-0001 deferred tier). Gated behind the
+# `semantic-clang` cargo feature (default OFF — musl release targets cannot
+# dlopen, so the feature stays OFF there by design). `runtime` = lazy dlopen
+# via libloading: the binary builds and runs WITHOUT libclang present
+# (graceful absence is a first-class path); licenses (Apache-2.0/MIT) are in
+# the deny.toml allowlist.
+clang-sys = { version = "=1.9.1", optional = true, default-features = false, features = [
+    "runtime",
+] }
+
+[features]
+# Semantic resolver tier (libclang enrichment, plan `semantic-resolver`).
+# Default OFF everywhere; darwin x2 + windows-msvc + new gnu release targets
+# pass it, musl x2 do not (static musl cannot dlopen).
+semantic-clang = ["dep:clang-sys"]
 
 [profile.release]
 # Deterministic, reproducible release artifacts (P6 hardening will extend this).

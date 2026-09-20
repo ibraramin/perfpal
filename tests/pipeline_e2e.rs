@@ -36,6 +36,21 @@ fn argv(args: &[&str]) -> Vec<std::ffi::OsString> {
         .collect()
 }
 
+/// Whether libclang can actually be loaded in this environment. Feature
+/// builds without an installed libclang degrade to the syntactic tier, and
+/// build-variant expectations must follow the degraded path (graceful
+/// absence is first-class — cf. tests/resolver_health.rs).
+#[cfg(feature = "semantic-clang")]
+fn libclang_loadable() -> bool {
+    clang_sys::load().is_ok()
+}
+
+/// Without the feature there is no libclang to load, ever.
+#[cfg(not(feature = "semantic-clang"))]
+fn libclang_loadable() -> bool {
+    false
+}
+
 #[test]
 fn full_pipeline_writes_valid_report_and_is_deterministic() {
     let out = temp_dir("happy").join("perfpal-report");
@@ -58,15 +73,16 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
 
     // Bundled schema is a byte-copy of the canonical artifact.
     let bundled = fs::read(out.join(schema::SCHEMA_ARTIFACT_NAME)).expect("bundled schema");
-    let canonical =
-        fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join("docs/schema/metrics.schema.v1.json"))
-            .expect("canonical schema");
+    let canonical = fs::read(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("docs/schema/metrics.schema.v1.1.json"),
+    )
+    .expect("canonical schema");
     assert_eq!(bundled, canonical, "bundled schema drifted from docs copy");
 
     // Document shape.
     let raw1 = fs::read_to_string(&metrics_path).unwrap();
     let doc1: serde_json::Value = serde_json::from_str(&raw1).expect("metrics.json parses");
-    assert_eq!(doc1["schema_version"], "1.0");
+    assert_eq!(doc1["schema_version"], "1.1");
     assert_eq!(doc1["tool"]["name"], "perfpal");
     assert_eq!(doc1["scan"]["languages"], serde_json::json!(["c"]));
 
@@ -241,7 +257,17 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     });
     assert_eq!(arch003_edge["from_path"], "src/main.c");
     assert_eq!(arch003_edge["to_path"], "src/util.c");
-    assert_eq!(arch003_edge["confidence"], "LOW");
+    // Build-variant confidence: the default build matches by name only
+    // (LOW); a `semantic-clang` feature build WITH a loadable libclang
+    // confirms main()→util_init via USR pairing (resolved, MEDIUM); without
+    // libclang it degrades to the name-based LOW path (graceful absence is
+    // a first-class path, never a failure).
+    let expected_confidence = if cfg!(feature = "semantic-clang") && libclang_loadable() {
+        "MEDIUM"
+    } else {
+        "LOW"
+    };
+    assert_eq!(arch003_edge["confidence"], expected_confidence);
 
     // components[] present and ranked 1..n in emission order; every entry
     // carries a non-empty path_prefix (root-level files would map to ".").

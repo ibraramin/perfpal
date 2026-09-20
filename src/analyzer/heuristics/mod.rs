@@ -23,6 +23,10 @@ pub(super) use r#loop::{
     loop_001, loop_002, loop_003, loop_004, loop_005, loop_006, loop_007, loop_008,
 };
 pub(super) use mem::{mem_001, mem_002};
+/// Wave B2 (plan `semantic-resolver`): the resolver's literal-args mutation
+/// pass reuses the scanf family/position contract — single source of truth,
+/// never duplicated.
+pub(crate) use r#str::scanf_format_index;
 pub(super) use r#str::{str_001, str_002, str_003};
 pub(super) use r#type::{type_001, type_002};
 

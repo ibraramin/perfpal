@@ -170,6 +170,7 @@ fn parse_health_entry(health: &crate::ir::ParseHealth) -> ParseHealthEntry {
             Some(health.error_regions.clone())
         },
         error_node_count: health.error_node_count,
+        resolver: health.resolver,
     }
 }
 
@@ -240,15 +241,18 @@ fn include_graph(units: &[FileUnit]) -> IncludeGraph {
     IncludeGraph { nodes, edges }
 }
 
-/// One [`CrossFileCallEdge`] lifted into its schema shape; the constructor
-/// hardcodes the schema-const confidence `"LOW"` (ADR-0001 name-based
-/// matching).
+/// One [`CrossFileCallEdge`] lifted into its schema shape. The confidence is
+/// DYNAMIC as of the semantic-resolver Wave B1: MEDIUM for resolved (USR-
+/// backed) edges, LOW for the name-based fallback — the v1.1 schema widened
+/// `call_graph.edges[].confidence` to oneOf LOW/MEDIUM/HIGH exactly for this
+/// (metrics-json-v1.md §5; v1.0 all-LOW documents still validate).
 fn call_edge_from(edge: CrossFileCallEdge) -> CallEdge {
-    CallEdge::new(
+    CallEdge::with_confidence(
         edge.from_function_id,
         edge.callee_name,
         edge.from_path,
         Some(edge.to_path),
+        edge.confidence,
     )
 }
 
@@ -520,6 +524,7 @@ mod tests {
             args: vec![],
             statement_role: StatementRole::Unknown,
             conditional_guarded: false,
+            semantic: None,
         }
     }
 

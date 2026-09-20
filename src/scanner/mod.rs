@@ -216,6 +216,7 @@ fn failed_unit(rel_path: &str) -> FileUnit {
             status: ParseStatus::Failed,
             error_regions: Vec::new(),
             error_node_count: 0,
+            resolver: None,
         },
         ..FileUnit::default()
     }

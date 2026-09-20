@@ -1,0 +1,133 @@
+[
+  {
+    "file": {
+      "path": "src/input.c",
+      "language": "c",
+      "loc": {"code": 20, "comment": 0, "blank": 2},
+      "function_count": 3,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/input.c#read_user#3:5",
+          "name": "read_user",
+          "path": "src/input.c",
+          "span": {"start_line": 3, "start_col": 5, "end_line": 8, "end_col": 6},
+          "param_count": 1,
+          "param_types": ["char *buf"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 6
+        },
+        "calls": [
+          {
+            "callee_name": "scanf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "fmt"},
+              {"kind": "identifier", "name": "buf"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 5, "start_col": 5, "end_line": 5, "end_col": 22},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "semantic": {"literal_args": [[0, "%s"]]}
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/input.c#read_field#10:5",
+          "name": "read_field",
+          "path": "src/input.c",
+          "span": {"start_line": 10, "start_col": 5, "end_line": 15, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["FILE *stream", "char *buf"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 6
+        },
+        "calls": [
+          {
+            "callee_name": "fscanf",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "stream"},
+              {"kind": "identifier", "name": "row_fmt"},
+              {"kind": "identifier", "name": "buf"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 12, "start_col": 5, "end_line": 12, "end_col": 34},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "semantic": {"literal_args": [[1, "name:%s"]]}
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {
+          "id": "src/input.c#copy_name#17:5",
+          "name": "copy_name",
+          "path": "src/input.c",
+          "span": {"start_line": 17, "start_col": 5, "end_line": 22, "end_col": 6},
+          "param_count": 2,
+          "param_types": ["char *dst", "char *src"],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 6
+        },
+        "calls": [
+          {
+            "callee_name": "strcpy",
+            "callee_kind": "direct",
+            "args": [
+              {"kind": "identifier", "name": "dst"},
+              {"kind": "identifier", "name": "src"}
+            ],
+            "statement_role": "primary",
+            "conditional_guarded": false,
+            "span": {"start_line": 19, "start_col": 5, "end_line": 19, "end_col": 22},
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

@@ -3,7 +3,7 @@
 
 use crate::analyzer::finding::{STR_001_RULE_ID, STR_002_RULE_ID, STR_003_RULE_ID};
 use crate::analyzer::{Confidence, Finding, Severity};
-use crate::ir::{CallEvent, CalleeKind, ShapeKind};
+use crate::ir::{CallEvent, CalleeKind, ResolverTier, ShapeKind};
 use crate::scanner::FileUnit;
 
 use super::{first_arg_identifier, span_contains};
@@ -17,6 +17,18 @@ const UNBOUNDED_COPY_FAMILY: [&str; 4] = ["strcpy", "strcat", "sprintf", "gets"]
 /// Formatted-input family (STR-003) — fires only with an unbounded `%s`
 /// conversion in a string-literal format argument.
 const SCANF_FAMILY: [&str; 3] = ["scanf", "fscanf", "sscanf"];
+
+/// Format-POSITION contract (catalog): the format argument index per callee —
+/// `scanf` at index 0, `fscanf` and `sscanf` at index 1 (the leading FILE*/
+/// buffer shifts the format one slot). Returns `None` for non-family
+/// callees. Single source of truth for [`str_003`] and the resolver's
+/// literal-args mutation pass.
+pub(crate) fn scanf_format_index(callee_name: &str) -> Option<usize> {
+    if !SCANF_FAMILY.contains(&callee_name) {
+        return None;
+    }
+    Some(if callee_name == "scanf" { 0 } else { 1 })
+}
 
 /// PERF-C-STR-001 — String accumulation in loop (catalog-v1 §3 Tier 1).
 ///
@@ -171,6 +183,15 @@ fn strlen_reassigned(func: &crate::scanner::FunctionUnit, call: &CallEvent, iden
 /// `strcpy`/`strcat`/`sprintf`/`gets`, or `scanf`/`fscanf`/`sscanf` whose
 /// string-literal format argument carries an unbounded `%s` conversion.
 /// Framing rule (catalog): optimization candidate, never bug/unsafe.
+///
+/// Wave B2 (plan `semantic-resolver`): the scanf-family branch ALSO fires
+/// when the format argument is a non-`Literal` shape whose index the
+/// resolver proved to a string-literal value (`CallEvent.semantic.
+/// literal_args`). The resolved VALUE replays the IDENTICAL `%s` check (no
+/// quote stripping — values arrive unquoted) with otherwise identical
+/// finding construction at `resolver_tier: semantic` plus additive evidence
+/// `resolved_format: "true"`. Never invents content: unresolvable
+/// identifiers stay silent (existing behavior).
 pub(crate) fn str_003(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
@@ -181,14 +202,10 @@ pub(crate) fn str_003(units: &[FileUnit]) -> Vec<Finding> {
                 }
                 let name = call.callee_name.as_str();
                 if UNBOUNDED_COPY_FAMILY.contains(&name) {
-                    emit_unbounded(&mut findings, unit, call, None);
-                } else if SCANF_FAMILY.contains(&name) {
-                    // Format-POSITION contract (catalog): only the format
-                    // argument is inspected — `scanf` at index 0, `fscanf`
-                    // and `sscanf` at index 1 (the leading FILE*/buffer
-                    // shifts the format one slot). A `%s` riding in a
-                    // non-format argument never fires.
-                    let format_index: usize = if name == "scanf" { 0 } else { 1 };
+                    emit_unbounded(&mut findings, unit, call, None, false);
+                } else if let Some(format_index) = scanf_format_index(name) {
+                    // Literal path (syntactic tier): inspect the format
+                    // argument in place.
                     let format_literal = call
                         .args
                         .get(format_index)
@@ -198,7 +215,25 @@ pub(crate) fn str_003(units: &[FileUnit]) -> Vec<Finding> {
                             strip_quotes(raw).contains("%s").then(|| strip_quotes(raw))
                         });
                     if let Some(format_text) = format_literal {
-                        emit_unbounded(&mut findings, unit, call, Some(format_text));
+                        emit_unbounded(&mut findings, unit, call, Some(format_text), false);
+                    } else if call
+                        .args
+                        .get(format_index)
+                        .is_some_and(|a| a.kind != ShapeKind::Literal)
+                        && let Some(resolved) = call
+                            .semantic
+                            .as_ref()
+                            .and_then(|s| {
+                                s.literal_args
+                                    .iter()
+                                    .find(|(idx, _)| *idx as usize == format_index)
+                            })
+                            .map(|(_, value)| value.as_str())
+                        && resolved.contains("%s")
+                    {
+                        // Resolved path (semantic tier): the format argument
+                        // is a non-literal shape proven to a literal value.
+                        emit_unbounded(&mut findings, unit, call, Some(resolved), true);
                     }
                 }
             }
@@ -208,12 +243,16 @@ pub(crate) fn str_003(units: &[FileUnit]) -> Vec<Finding> {
 }
 
 /// Push one STR-003 finding; `format_text` carries the matched `%s`
-/// literal for the scanf family.
+/// literal for the scanf family. `resolved` marks the Wave B2
+/// resolver-proven path: tier `Semantic` + additive
+/// `resolved_format: "true"` evidence; confidence/severity are otherwise
+/// identical to the literal path.
 fn emit_unbounded(
     findings: &mut Vec<Finding>,
     unit: &FileUnit,
     call: &CallEvent,
     format_text: Option<&str>,
+    resolved: bool,
 ) {
     let name = call.callee_name.as_str();
     let message = match format_text {
@@ -231,6 +270,9 @@ fn emit_unbounded(
     if let Some(format_text) = format_text {
         evidence.push(("format".to_string(), format_text.to_string()));
     }
+    if resolved {
+        evidence.push(("resolved_format".to_string(), "true".to_string()));
+    }
     findings.push(Finding {
         threshold: None,
         rule_id: STR_003_RULE_ID.to_string(),
@@ -238,7 +280,11 @@ fn emit_unbounded(
         message,
         severity: Severity::Warn,
         confidence: Confidence::High,
-        resolver_tier: call.meta.resolver_tier,
+        resolver_tier: if resolved {
+            ResolverTier::Semantic
+        } else {
+            call.meta.resolver_tier
+        },
         span: call.meta.span,
         path: unit.file.path.clone(),
         evidence: evidence.into_iter().collect(),

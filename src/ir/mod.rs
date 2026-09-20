@@ -182,6 +182,33 @@ pub struct ParseHealth {
     pub error_regions: Vec<Span>,
     /// Total count of ERROR/missing nodes, including nested ones.
     pub error_node_count: u32,
+    /// Semantic-resolver outcome for this file (plan `semantic-resolver`,
+    /// modules.md §4.3). ADDITIVE v1 field, optional on the wire
+    /// (`Option` + `#[serde(default)]` — documents written before it
+    /// deserialize unchanged; same pattern as `Shape.sizeof_operand`,
+    /// ir-v1.md §3.4 additive note). `None` on the wire is OMITTED
+    /// (omit-don't-null); heuristic-visible state is NEVER touched by the
+    /// resolver — this field is pure honesty reporting.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolver: Option<ResolverHealth>,
+}
+
+/// Outcome of the semantic (libclang) resolver for one file (modules.md
+/// §4.3 resolver seam; ADR-0001 tier model). Serialized lowercase to match
+/// `ParseStatus` conventions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ResolverHealth {
+    /// The resolver never ran for this file: the `semantic-clang` feature is
+    /// off, libclang could not be loaded, or the resolver stage was skipped.
+    /// Honest absence is reported in ALL builds — never a silent gap.
+    Absent,
+    /// libclang parsed the translation unit successfully (`CXError_Success`).
+    Ok,
+    /// libclang reported a TU-level failure (`CXError_Failure`/`Crashed`/
+    /// `ASTReadError`). Syntactic results are NEVER deleted or degraded on
+    /// this path (enrich-only, never delete).
+    Failed,
 }
 
 /// Parse outcome (ir-v1.md §3.1).
@@ -320,6 +347,15 @@ pub struct FunctionRecord {
     /// malloc-family call sites in the body.
     pub alloc_site_count: u32,
     pub length_lines: u32,
+    /// Semantic-resolver tier of this record (plan `semantic-resolver`
+    /// Wave B1). ADDITIVE v1 field with `#[serde(default)]` — documents
+    /// written before it deserialize unchanged (default `Syntactic`).
+    /// Written ONLY by the resolver, and only on unambiguous resolution of a
+    /// definition whose span does not overlap its file's error regions.
+    /// Heuristics that consume it set their findings' own `resolver_tier`;
+    /// nothing copies this tier blindly.
+    #[serde(default)]
+    pub resolver_tier: ResolverTier,
 }
 
 /// Resolver tier tag carried by every event (ir-v1.md §2). v1 emits only
@@ -439,6 +475,55 @@ pub struct CallEvent {
     pub statement_role: StatementRole,
     /// Call sits inside a conditional branch within the loop (LOOP-002 hint).
     pub conditional_guarded: bool,
+    /// Semantic fact attached by the resolver (plan `semantic-resolver`
+    /// Wave B1). ADDITIVE v1 field, optional on the wire — documents written
+    /// before it deserialize unchanged; `None` is OMITTED (omit-don't-null).
+    /// IR-internal enrichment: it must NOT surface in metrics.json DTOs
+    /// (evidence fields carry what output needs); heuristics that consume it
+    /// set the finding's own `resolver_tier`/`confidence`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic: Option<CallSemantic>,
+}
+
+/// Semantic facts about one call (ir-v1.md §3.3, additive v1). Extensible:
+/// Wave B2 added further proof fields (`fopened_handle`, `literal_args`)
+/// following the same serde-default pattern; future waves append additional
+/// members the same way.
+///
+/// INVARIANT (the analyzer's `apply_upgrade_hooks` gate depends on it): the
+/// resolver sets `Some(CallSemantic)` ONLY when at least one fact is proven
+/// — never an empty struct.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CallSemantic {
+    /// Unambiguous USR-based resolution of the call to its definition.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolved_definition: Option<ResolvedSite>,
+    /// Wave B2: the call is `fclose(handle)` where `handle` is proven
+    /// fopen-assigned in the enclosing function (a `FILE *` variable
+    /// initialized or assigned from `fopen`/`freopen`/`fdopen`).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub fopened_handle: bool,
+    /// Wave B2: `(format_arg_index, literal_value)` pairs resolving
+    /// non-literal format arguments to their single-string-literal
+    /// initializers. Values arrive with quotes ALREADY removed (raw source
+    /// text minus the surrounding `"` pair; escapes unprocessed).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub literal_args: Vec<(u32, String)>,
+}
+
+/// Serde predicate for `skip_serializing_if` on additive `bool` facts:
+/// `false` is the absent state and stays off the wire.
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
+/// A resolved definition site (additive v1). Paths are repo-relative POSIX
+/// for in-repo sites; the resolver only produces facts for internal scanned
+/// files (never system headers), so consumers may key on the path directly.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResolvedSite {
+    pub path: String,
+    pub span: Span,
 }
 
 /// Assignment event (ir-v1.md §3.3).

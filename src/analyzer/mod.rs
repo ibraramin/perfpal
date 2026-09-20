@@ -17,8 +17,12 @@
 //! gating is applied CENTRALLY after candidate collection so no heuristic can
 //! forget it: findings overlapping an error region are capped at MEDIUM and
 //! flagged `error_node_overlap` — downgraded, never silently dropped
-//! (modules.md Principle 3). Parser-free testing against tests/fixtures/ir/
-//! per ADR-0001 guardrail 2.
+//! (modules.md Principle 3). Symmetrically, semantic upgrades pass through a
+//! central consistency gate ([`apply_upgrade_hooks`], plan
+//! `semantic-resolver` Wave B1): a finding may claim
+//! `resolver_tier: semantic` only when the IR stream carries backing facts at
+//! its source. Parser-free testing against tests/fixtures/ir/ per ADR-0001
+//! guardrail 2.
 //!
 //! Hard seam rule (ADR-0001 guardrail 1): this module imports ONLY
 //! `crate::ir` (+ `crate::scanner`'s IR-stream container types) — zero
@@ -29,10 +33,11 @@
 
 use std::collections::BTreeMap;
 
-use crate::ir::{MacroEventKind, ParseStatus};
+use crate::ir::{MacroEventKind, ParseStatus, ResolverTier};
 use crate::scanner::FileUnit;
 
 pub mod finding;
+use finding::{ALLOC_002_RULE_ID, ARCH_003_RULE_ID, STR_003_RULE_ID};
 pub use finding::{Confidence, Finding, Severity};
 
 /// Registry of heuristics, executed in ascending `rule_id` order
@@ -79,7 +84,9 @@ mod heuristics;
 /// Cross-file call-edge producer shared with the aggregator's
 /// `graphs.call_graph` assembly (P4 Wave 2b). Same data feeds ARCH-003
 /// findings and the document — one producer, two consumers.
-pub(crate) use heuristics::{CrossFileCallEdge, cross_file_call_edges};
+/// (`scanf_format_index` is additionally re-exported for the semantic
+/// resolver's Wave B2 literal-args pass — one contract, two consumers.)
+pub(crate) use heuristics::{CrossFileCallEdge, cross_file_call_edges, scanf_format_index};
 
 /// Run the full registry over the IR stream and return findings in the
 /// report §4 total order (modules.md §3.3 / report §4):
@@ -94,9 +101,78 @@ pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
         .collect();
 
     apply_downgrade_hooks(units, &mut findings);
+    apply_upgrade_hooks(units, &mut findings);
     collapse_duplicates(&mut findings);
     findings.sort_by(total_order);
     findings
+}
+
+/// Central semantic CONSISTENCY GATE (plan `semantic-resolver` Wave B1),
+/// mirroring [`apply_downgrade_hooks`] placement (before dedup + sort), but
+/// conservative in the upgrade direction: any finding that claims
+/// `resolver_tier == Semantic` must be BACKED by a kind-matched semantic
+/// fact at its source — a `CallEvent.semantic` fact on a call whose span
+/// CONTAINS the finding span's start point, in the finding's file, where the
+/// fact kind matches the finding's rule class:
+/// - `PERF-C-ARCH-003` requires `resolved_definition.is_some()`;
+/// - `PERF-C-ALLOC-002` requires `fopened_handle == true`;
+/// - `PERF-C-STR-003` requires `!literal_args.is_empty()`.
+///   Any other rule_id claiming Semantic is UNBACKED by construction
+///   (default-deny: future rules emitting semantic findings must extend this
+///   match). Unbacked findings are REVERTED to `Syntactic` with a confidence
+///   floor of LOW.
+///
+/// The `FunctionRecord.resolver_tier` is deliberately NOT consulted here: it
+/// reports the definition-side contract honestly (ir-v1) but never backs a
+/// finding on its own. The downgrade hooks ([`apply_downgrade_hooks`]) and
+/// the resolver's error-region gating keep the weaker `intersects()`
+/// overlap check (conservative direction) — only this gate uses the
+/// strictly stronger start-point containment.
+///
+/// Heuristics are expected to emit only backed findings; this single choke
+/// point makes all future upgrade logic safe — a heuristic can never claim
+/// semantic authority the IR stream does not carry (defensive, never a
+/// behavior change for well-formed candidates).
+fn apply_upgrade_hooks(units: &[FileUnit], findings: &mut [Finding]) {
+    for finding in findings.iter_mut() {
+        if finding.resolver_tier != ResolverTier::Semantic {
+            continue;
+        }
+        let backed = units
+            .iter()
+            .find(|u| u.file.path == finding.path)
+            .is_some_and(|unit| {
+                unit.functions.iter().any(|f| {
+                    f.calls.iter().any(|c| {
+                        let Some(semantic) = c.semantic.as_ref() else {
+                            return false;
+                        };
+                        let kind_matches = match finding.rule_id.as_str() {
+                            ARCH_003_RULE_ID => semantic.resolved_definition.is_some(),
+                            ALLOC_002_RULE_ID => semantic.fopened_handle,
+                            STR_003_RULE_ID => !semantic.literal_args.is_empty(),
+                            // Default-deny: no other rule may claim
+                            // Semantic without extending this match.
+                            _ => false,
+                        };
+                        kind_matches && span_contains_point(&c.meta.span, &finding.span)
+                    })
+                })
+            });
+        if !backed {
+            finding.resolver_tier = ResolverTier::Syntactic;
+            finding.confidence = Confidence::Low;
+        }
+    }
+}
+
+/// Start-point containment for the upgrade gate: the backing call's span
+/// must CONTAIN the finding span's start point (strictly stronger than
+/// [`crate::ir::Span::intersects`]: a call span merely touching the finding
+/// span's edge does not back it).
+fn span_contains_point(outer: &crate::ir::Span, inner: &crate::ir::Span) -> bool {
+    (outer.start_line, outer.start_col) <= (inner.start_line, inner.start_col)
+        && (inner.start_line, inner.start_col) <= (outer.end_line, outer.end_col)
 }
 
 /// Central downgrade hooks (ir-v1.md §5), applied uniformly:
@@ -188,4 +264,267 @@ fn total_order(a: &Finding, b: &Finding) -> std::cmp::Ordering {
         .then(a.path.cmp(&b.path))
         .then(a.span.start_line.cmp(&b.span.start_line))
         .then(a.span.start_col.cmp(&b.span.start_col))
+}
+
+#[cfg(test)]
+mod tests {
+    //! Parser-free gate proofs (plan `semantic-resolver` Wave B2):
+    //! [`apply_upgrade_hooks`] reverts `Semantic` findings without backing
+    //! facts and keeps backed ones — the choke point every heuristic's
+    //! semantic claims pass through.
+
+    use super::*;
+    use crate::ir::{
+        CallEvent, CalleeKind, EventMeta, FileRecord, FunctionRecord, LocCounts, Span,
+        StatementRole,
+    };
+    use crate::scanner::{FileUnit, FunctionUnit};
+
+    fn gate_span() -> Span {
+        Span {
+            start_line: 10,
+            start_col: 5,
+            end_line: 10,
+            end_col: 20,
+        }
+    }
+
+    fn gate_call_at(span: Span, semantic: Option<crate::ir::CallSemantic>) -> CallEvent {
+        CallEvent {
+            meta: EventMeta {
+                span,
+                in_loop_depth: 1,
+                is_innermost: true,
+                resolver_tier: ResolverTier::Syntactic,
+                macro_origin: false,
+            },
+            callee_name: "fclose".to_string(),
+            callee_kind: CalleeKind::Direct,
+            args: Vec::new(),
+            statement_role: StatementRole::Nested,
+            conditional_guarded: false,
+            semantic,
+        }
+    }
+
+    fn gate_unit(semantic: Option<crate::ir::CallSemantic>) -> FileUnit {
+        gate_unit_with(semantic, gate_span())
+    }
+
+    fn gate_unit_with(semantic: Option<crate::ir::CallSemantic>, call_span: Span) -> FileUnit {
+        let record_span = Span {
+            start_line: 1,
+            start_col: 1,
+            end_line: 30,
+            end_col: 1,
+        };
+        FileUnit {
+            file: FileRecord {
+                path: "src/a.c".to_string(),
+                language: "c".to_string(),
+                loc: LocCounts::default(),
+                function_count: 1,
+                global_var_count: 0,
+                include_counts: Default::default(),
+            },
+            parse_health: Default::default(),
+            includes: Vec::new(),
+            global_vars: Vec::new(),
+            structs: Vec::new(),
+            macros: Vec::new(),
+            functions: vec![FunctionUnit {
+                record: FunctionRecord {
+                    id: "src/a.c#drain#1:1".to_string(),
+                    name: "drain".to_string(),
+                    path: "src/a.c".to_string(),
+                    span: record_span,
+                    ..FunctionRecord::default()
+                },
+                calls: vec![gate_call_at(call_span, semantic)],
+                assignments: Vec::new(),
+                binary_ops: Vec::new(),
+                comparisons: Vec::new(),
+                access_chains: Vec::new(),
+                loops: Vec::new(),
+            }],
+        }
+    }
+
+    fn semantic_finding() -> Finding {
+        finding_for_rule("PERF-C-ALLOC-002")
+    }
+
+    fn finding_for_rule(rule_id: &str) -> Finding {
+        Finding {
+            threshold: None,
+            rule_id: rule_id.to_string(),
+            title: "probe".to_string(),
+            message: "probe".to_string(),
+            severity: Severity::Warn,
+            confidence: Confidence::High,
+            resolver_tier: ResolverTier::Semantic,
+            span: gate_span(),
+            path: "src/a.c".to_string(),
+            evidence: Default::default(),
+            macro_suspect: false,
+            error_node_overlap: false,
+        }
+    }
+
+    #[test]
+    fn unbacked_semantic_finding_reverts_to_syntactic_low() {
+        let units = vec![gate_unit(None)];
+        let mut findings = vec![semantic_finding()];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
+        assert_eq!(findings[0].confidence, Confidence::Low);
+    }
+
+    #[test]
+    fn call_semantic_fact_backs_the_finding_at_its_span() {
+        // KIND-MATCHED over fact kinds: a `fopened_handle` fact backs an
+        // ALLOC-002 finding…
+        let units = vec![gate_unit(Some(crate::ir::CallSemantic {
+            resolved_definition: None,
+            fopened_handle: true,
+            literal_args: Vec::new(),
+        }))];
+        let mut findings = vec![semantic_finding()];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Semantic);
+        assert_eq!(findings[0].confidence, Confidence::High);
+    }
+
+    #[test]
+    fn resolved_definition_backs_arch003() {
+        // …a `resolved_definition` fact backs an ARCH-003 finding…
+        let units = vec![gate_unit(Some(crate::ir::CallSemantic {
+            resolved_definition: Some(crate::ir::ResolvedSite {
+                path: "src/b.c".to_string(),
+                span: gate_span(),
+            }),
+            fopened_handle: false,
+            literal_args: Vec::new(),
+        }))];
+        let mut findings = vec![finding_for_rule("PERF-C-ARCH-003")];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Semantic);
+        assert_eq!(findings[0].confidence, Confidence::High);
+    }
+
+    #[test]
+    fn literal_args_fact_backs_the_finding_at_its_span() {
+        // …and a `literal_args` fact backs a STR-003 finding the same way.
+        let units = vec![gate_unit(Some(crate::ir::CallSemantic {
+            resolved_definition: None,
+            fopened_handle: false,
+            literal_args: vec![(0, "%s".to_string())],
+        }))];
+        let mut findings = vec![{
+            let mut f = semantic_finding();
+            f.rule_id = "PERF-C-STR-003".to_string();
+            f
+        }];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Semantic);
+        assert_eq!(findings[0].confidence, Confidence::High);
+    }
+
+    #[test]
+    fn semantic_record_tier_alone_never_backs() {
+        // The definition-side record tier is honest contract reporting, not
+        // gate backing: a Semantic ARCH-003 finding in a Semantic-record
+        // function WITHOUT any call fact still reverts.
+        let mut units = vec![gate_unit(None)];
+        units[0].functions[0].record.resolver_tier = ResolverTier::Semantic;
+        let mut findings = vec![finding_for_rule("PERF-C-ARCH-003")];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
+        assert_eq!(findings[0].confidence, Confidence::Low);
+    }
+
+    #[test]
+    fn wrong_kind_fact_does_not_back() {
+        // A fact of the wrong kind is unbacked even at the exact span: an
+        // ALLOC-002 finding backed only by `literal_args`…
+        let units = vec![gate_unit(Some(crate::ir::CallSemantic {
+            resolved_definition: None,
+            fopened_handle: false,
+            literal_args: vec![(0, "%s".to_string())],
+        }))];
+        let mut findings = vec![semantic_finding()];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
+        assert_eq!(findings[0].confidence, Confidence::Low);
+
+        // …and a STR-003 finding backed only by `fopened_handle`.
+        let units = vec![gate_unit(Some(crate::ir::CallSemantic {
+            resolved_definition: None,
+            fopened_handle: true,
+            literal_args: Vec::new(),
+        }))];
+        let mut findings = vec![finding_for_rule("PERF-C-STR-003")];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
+        assert_eq!(findings[0].confidence, Confidence::Low);
+    }
+
+    #[test]
+    fn unknown_rule_id_is_default_deny() {
+        // No other rule may claim Semantic without extending the gate's
+        // match — even a kind-plausible fact does not back it.
+        let units = vec![gate_unit(Some(crate::ir::CallSemantic {
+            resolved_definition: None,
+            fopened_handle: true,
+            literal_args: Vec::new(),
+        }))];
+        let mut findings = vec![finding_for_rule("PERF-C-LOOP-001")];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
+        assert_eq!(findings[0].confidence, Confidence::Low);
+    }
+
+    #[test]
+    fn merely_touching_fact_span_does_not_back() {
+        // The backing call's span must CONTAIN the finding start: a call at
+        // 10:20–10:30 touches the finding span (10:5–10:20) at its end edge —
+        // `intersects()` is true — but does not contain the start point, so
+        // the finding reverts.
+        let touching = Span {
+            start_line: 10,
+            start_col: 20,
+            end_line: 10,
+            end_col: 30,
+        };
+        assert!(
+            touching.intersects(&gate_span()),
+            "test setup: the spans must still intersect (the old check)"
+        );
+        let units = vec![gate_unit_with(
+            Some(crate::ir::CallSemantic {
+                resolved_definition: None,
+                fopened_handle: true,
+                literal_args: Vec::new(),
+            }),
+            touching,
+        )];
+        let mut findings = vec![semantic_finding()];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
+        assert_eq!(findings[0].confidence, Confidence::Low);
+    }
+
+    #[test]
+    fn syntactic_findings_pass_through_untouched() {
+        let units = vec![gate_unit(None)];
+        let mut findings = vec![{
+            let mut f = semantic_finding();
+            f.resolver_tier = ResolverTier::Syntactic;
+            f.confidence = Confidence::High;
+            f
+        }];
+        apply_upgrade_hooks(&units, &mut findings);
+        assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
+        assert_eq!(findings[0].confidence, Confidence::High);
+    }
 }

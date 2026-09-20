@@ -69,6 +69,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
                 status: ParseStatus::Failed,
                 error_regions: Vec::new(),
                 error_node_count: 0,
+                resolver: None,
             },
             includes: Vec::new(),
             global_vars: Vec::new(),
@@ -173,6 +174,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
             status,
             error_regions,
             error_node_count,
+            resolver: None,
         },
         includes,
         global_vars,
@@ -655,6 +657,7 @@ fn function_unit(
         max_loop_depth: scan.max_loop_depth,
         alloc_site_count: scan.alloc_site_count,
         length_lines,
+        resolver_tier: ResolverTier::default(),
     };
     FunctionUnit {
         record,
@@ -882,6 +885,7 @@ impl<'a> FuncScan<'a> {
             args,
             statement_role,
             conditional_guarded,
+            semantic: None,
         });
     }
 

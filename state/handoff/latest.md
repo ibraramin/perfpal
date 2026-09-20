@@ -1,37 +1,40 @@
 # Handoff — Latest
 
 ## Objective
-Post-MVP session 18: founder chose the **housekeeping batch** (plan `housekeeping-batch`, linked to `perfpal-core-spec`) over semantic resolver / runtime-profile ingestion / C++-Python backends / release follow-ups — rationale: the published repo had no LICENSE and no README (identity debt before heavy engineering tiers). DONE: `LICENSE` (PolyForm Strict 1.0.0 verbatim + `Copyright (c) 2026 ibraramin`), `README.md` (full read-code-first pass), STR-003 accepted-FP note (catalog §3 detail block), `docs/schema/stats-distributions-proposal.md` (Proposed-not-accepted), CHANGELOG entries, reviewer fixes applied, gates green (206/206). Dual review passed; awaiting founder ritual-commit approval.
+Post-MVP sessions 19–20: founder chose the **semantic resolver tier (ADR-0001)** over runtime-profile ingestion / C++-Python backends / release follow-ups. DONE: plan `semantic-resolver` COMPLETE (status done) — libclang enrichment via default-OFF cargo feature `semantic-clang` (clang-sys 1.9.1 runtime/dlopen); ARCH-003 true-callee resolution (Info/MEDIUM/semantic, same-name FP class retired); ALLOC-002 proven-`fclose` (Warn/MEDIUM, no escalation — founder verdict over B2's mirror-free HIGH); STR-003 resolved-format identifiers; LOOP-004 constness DEFERRED to a follow-up (recorded, zero partial code); schema v1.0→v1.1 MINOR bump (additive only); 6-target release matrix (musl OFF byte-identical, gnu NEW, darwin x2 + win ON); gates green first-hand (238 default / 243 feature, fmt + clippy both configs + deny ok, goldens idempotent). Dual review + re-review APPROVE; awaiting founder ritual-commit approval.
 
 ## Phase
-POST-MVP — v0.1.0 released (tag `f368133`); housekeeping batch landed on main (uncommitted, pending founder approval). Plan `housekeeping-batch` complete pending commit; `mvp-implementation` remains COMPLETE.
+POST-MVP — v0.1.0 released (tag `f368133`); housekeeping batch landed (`a84c1f0`); semantic-resolver milestone landed on main as uncommitted working tree (pending founder approval). Plan `semantic-resolver` DONE; `mvp-implementation` + `housekeeping-batch` remain COMPLETE.
 
 ## Key Decisions
-- **Milestone selection (founder):** housekeeping batch first — cheapest, zero code risk, closes release debt; heavy tiers (semantic resolver per ADR-0001 is the highest-value next) ride on a clean documented baseline.
-- **LICENSE (founder-approved):** PolyForm Strict v1.0.0 verbatim; canonical source = `polyformproject/polyform-licenses` tag `1.0.0` raw fetch (polyformproject.org + SPDX direct URLs 404'd). @reviewer byte-diffed the file against canonical: only the appended copyright footer differs. Matches F12 exactly. Repo stays private. Cargo.toml license field STAYS `LicenseRef-Proprietary` this batch (deny.toml allowlist untouched); SPDX alignment = recorded follow-up.
-- **docs-writer lane:** doc-1 failed (timeout → session error, unrecoverable); doc-2 fresh dispatch succeeded, wrote README.md + proposal with all claims code-verified. doc-2 doc-vs-code discrepancies honored code-side: `--output` default `perfpal-report` (no slash), positional `<path>` = single `.c`/`.h` file per code docs, exit 3 also covers metrics.json serialization failure.
-- **Review-fix wave (orchestrator-direct, all applied):** (1) README determinism rescoped — `metrics.json`+`report.md` byte-identical EXCEPT run-provenance (`started_at`/`duration_ms` live INSIDE metrics.json; only charts are unconditionally byte-identical); (2) README angle-include policy corrected (in-repo angle-bracket hits ARE internal coupling per ADR-0002 + scanner unit test; only unresolvable angle includes bucket external); (3) README license grant corrected (PolyForm Strict = **noncommercial** use; commercial use requires permission); (4) proposal string-sort counter-example fixed (`"10-14" < "5-9"`, not `< "1-4"`); (5) CHANGELOG `§4` → `§3` location fix; (6) NITs: "catalog v1 defines 23 heuristics" wording, clap-color scoping, Changed bullet covers both STR-003 note lines.
+- **Milestone + distribution + scope (founder, question tool):** semantic resolver; darwin x2 + windows + NEW gnu carry the feature, musl stays syntactic-only BY DESIGN (musl dlopen impossible — librarian-verified, bindgen#2360 precedent); 3 named retirements + LOOP-004 stretch-or-defer; no feature spec.
+- **Resolver rules:** conservative unambiguous-only enrichment; USRs internal-only (never in identity/output — reviewer-verified); macro_origin + error-region gating; `Some(CallSemantic)`-only-when-proven; explicit-root signature (scan global removed in review-fix).
+- **Confidence verdicts:** resolved ARCH-003 = MEDIUM (no compile db, partial TUs); proven-fclose = Warn/MEDIUM no escalation (reviewer taxonomy argument: documented FP class ⇒ MEDIUM; balanced open→close not hoistable) — founder-approved over B2's mirror-free HIGH.
+- **Gate design:** `apply_upgrade_hooks` = kind-matched (rule↔fact) + start-point containment + default-deny; record-tier disjunct dropped as pure liability (reviewer MAJOR → accepted).
+- **Rejections with rationale (documented):** `total_order`-reuse + message-constructor NITs (fail loudly, test-only); downgrade/error-region `intersects()` untouched (conservative direction correct).
+- **EOL tail (orchestrator-direct):** proved feature-without-libclang e2e failure → `libclang_loadable()` probe; parser-free resolved-edge + file-local ARCH-003 fixtures (guardrail-2 completeness); README `--version` 1.0→1.1.
+- **Session-infra lesson:** a revived specialist session vanished from the tracker with work landed but broken — orchestrator verified gates directly and rescued the tail; always re-verify landed-but-unreported work.
 
 ## Reviews
-- @reviewer: **SHIP-WITH-FIXES** (2 MAJOR, 2 MINOR, 4 NIT — all applied or dispositioned). Verified independently: LICENSE byte-diff vs canonical upstream ✓; README flags/defaults/exit codes vs `src/cli/mod.rs` ✓; 23-heuristic table vs catalog ✓ (all thresholds 3/8/12/15/32, LOOP-007 ≥2, LOOP-008 ≥3 correct); release asset pattern vs `release.yml` ✓; proposal grounding vs shipped comparator ✓; scope discipline (only intended files + `.opencode/**` noise) ✓.
-- @requirements-reviewer: **CHANGES_REQUESTED** → both items closed: (a) STR-003 note landed in the **§3 detail block**, not the plan's literal "§4" — §4 is the Tier-2 section; §3 is the only coherent home for a Tier-1 rule's note. **Founder acknowledgment requested at commit time** (substance fully delivered: both FP classes + conservative framing present). (b) State files regenerated (this ritual). Zero scope creep; Cargo.toml non-change ruled defensible.
+- @reviewer: **CHANGES_REQUESTED** (gate kind-agnosticism, fclose Hot/HIGH, intersects touching, scan_root, strip terminator; release/CI verified no-action; USR rule holds; schema additive-only; unsafe confined to FFI boundary) → fix wave → **re-review APPROVE, all 5 CLOSED** (negatives genuine; free path untouched; 10/10 resolver_health RUN with libclang).
+- @requirements-reviewer: **CHANGES_REQUESTED** (README x-gaps only — 6-target table, v1.1 refs, tier wordings; all clauses a–w PRESENT, no scope creep) → closed (verified: table, refs, `--version` 1.1, qualifications).
 
 ## Risks
-- modules.md §8 CLI doc drift vs code (found by README pass): output default slash, positional scope, exit-3 serialization — README follows code; modules.md amendment = follow-up.
-- Plan-wording slip (§4 vs §3) carried into the batch idea — surfaced, not silently relocated.
-- All prior session-17 risks remain (binary reproducibility scoping, Node-20 warnings, toolchain-pin mirroring, private-repo LICENSE → now RESOLVED by this batch).
+- release.yml 6-target matrix + feature builds NEVER executed on GitHub — first v* tag validates (gnu job, darwin/win flags, musl byte-identity, publish merge).
+- libclang version diversity untested (local 22.1 + CI apt only); darwin/Windows discovery paths never exercised (graceful Absent fallback).
+- libclang-22-shaped visitor heuristics (FILE spelling, single-token literals); conservative-silent direction bounds risk.
 
 ## Blockers
 - None.
 
 ## Next Actions
-1. Founder acknowledges the §3 placement + approves the ritual commit. Suggested message: `docs: post-release housekeeping — PolyForm Strict LICENSE, README, STR-003 accepted-FP note, stats.distributions proposal`.
-2. Commit files: `LICENSE`, `README.md`, `docs/schema/stats-distributions-proposal.md`, `docs/heuristics/catalog-v1.md`, `CHANGELOG.md`, `docs/plans/housekeeping-batch.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`. EXCLUDE `.opencode/**` (session noise).
-3. Follow-ups (next sessions): Cargo.toml license → `PolyForm-Strict-1.0.0` (+ deny.toml allowlist); modules.md §8 doc-drift amendment; stats.distributions activation = MINOR bump when the proposal is accepted.
-4. Remaining milestones (founder picks): **semantic resolver tier (ADR-0001 — recommended next, highest engineering value)**, runtime-profile ingestion (CONFIRMED-1), C++/Python backend, release follow-ups.
-5. Fresh session (`/new`) signposts: **housekeeping batch LANDED** (dual review passed, gates 206/206); read state/session-state.json + state/handoff/latest.md + docs/activeContext.md FIRST.
+1. Founder approves the ritual commit. Suggested message: `feat: semantic resolver tier (ADR-0001) — libclang enrichment via default-OFF semantic-clang; ARCH-003 resolved edges, ALLOC-002 proven-fclose Warn/MEDIUM, STR-003 resolved-formats; schema v1.1 minor; 6-target release matrix; LOOP-004 deferred (238/243 tests)`.
+2. Commit files (see §Uncommitted Files; EXCLUDE `.opencode/**` session noise).
+3. Remaining milestones (founder picks): LOOP-004 constness follow-up, runtime-profile ingestion (CONFIRMED-1), C++/Python backend, release follow-ups, stats.distributions activation, housekeeping follow-ups (Cargo SPDX, modules §8).
+4. Fresh session (`/new`) signposts: **semantic-resolver LANDED** (dual review + re-review APPROVE, gates 238/243); plan `semantic-resolver` DONE; read state files FIRST.
 
 ## Uncommitted Files (pending founder-approved ritual commit)
-- Added: `LICENSE`, `README.md`, `docs/schema/stats-distributions-proposal.md`, `docs/plans/housekeeping-batch.md`
-- Modified: `docs/heuristics/catalog-v1.md` (STR-003 note block only), `CHANGELOG.md` ([Unreleased] Added/Changed), `state/session-state.json` (append-only), `state/handoff/latest.md` (regenerated), `docs/activeContext.md` (regenerated)
-- EXCLUDE from commit: `.opencode/memory/**` + `.opencode/rules.md`, `.opencode/spec.md` (session-tooling noise)
+- Added: `src/resolver/`, `src/schema/metrics.schema.v1.1.json`, `docs/schema/metrics.schema.v1.1.json`, `tests/resolver_health.rs`, `tests/semantic_b2.rs`, `tests/golden/report/metrics.schema.v1.1.json`, `tests/fixtures/ir/PERF-C-ALLOC-002__fclose-in-loop.json`, `PERF-C-ALLOC-002__fclose-not-proven.json`, `PERF-C-STR-003__resolved-format{,-negative}.json`, `PERF-C-ARCH-003__resolved-edge.json`, `PERF-C-ARCH-003__resolved-file-local.json`, `docs/plans/semantic-resolver.md`
+- Modified: `Cargo.toml`, `Cargo.lock`, `src/{lib,ir,scanner,scanner/backends/tree_sitter_c,analyzer,analyzer/heuristics/{mod,arch,alloc,str},aggregator,schema,reporter,cli}/mod.rs` (aggregator unit-test helper + schema/DTO lifts; heuristics = arch/alloc/str only), `docs/{architecture/{modules,ir-v1},heuristics/catalog-v1,schema/metrics-json-v1}.md`, `docs/plans/housekeeping-batch.md` (status active→done), `tests/{common/mod,arch_fixtures,pipeline_e2e,p6_hardening,analyzer_registry,reporter_render}.rs`, `tests/golden/report/{metrics.json,report.md}` (v1.1 regen), `.github/workflows/{ci,release}.yml`, `README.md`, `CHANGELOG.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`
+- Deleted: `tests/golden/report/metrics.schema.v1.0.json` (replaced by v1.1 byte-copy)
+- EXCLUDE from commit: `.opencode/**` (session-tooling noise)

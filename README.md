@@ -14,12 +14,13 @@ Perfpal is a static-analysis CLI that scans C codebases for performance-relevant
 
 Perfpal is not published to crates.io (`publish = false` in `Cargo.toml`). It ships as release assets from the private repository `github.com/ibraramin/perfpal`; because the repo is private, releases are visible only to repository collaborators.
 
-Release assets follow the naming pattern `perfpal-<rust-target>[.exe]` with a sibling `<name>.sha256` checksum file. The v0.1.0 release (`perfpal v0.1.0`) ships ten assets — five target binaries and five checksums:
+Release assets follow the naming pattern `perfpal-<rust-target>[.exe]` with a sibling `<name>.sha256` checksum file. The current release matrix ships twelve assets — six target binaries and six checksums (the v0.1.0 release shipped ten: the five targets below minus `gnu`, which joined post-v0.1.0 as the Linux semantic-tier vehicle):
 
 | Asset | Platform |
 |---|---|
 | `perfpal-x86_64-unknown-linux-musl` + `perfpal-x86_64-unknown-linux-musl.sha256` | Linux x86-64, statically linked (musl) |
 | `perfpal-aarch64-unknown-linux-musl` + `perfpal-aarch64-unknown-linux-musl.sha256` | Linux arm64, statically linked (musl) |
+| `perfpal-x86_64-unknown-linux-gnu` + `perfpal-x86_64-unknown-linux-gnu.sha256` | Linux x86-64, glibc (semantic-tier vehicle) |
 | `perfpal-x86_64-apple-darwin` + `perfpal-x86_64-apple-darwin.sha256` | macOS x86-64 |
 | `perfpal-aarch64-apple-darwin` + `perfpal-aarch64-apple-darwin.sha256` | macOS arm64 (Apple Silicon) |
 | `perfpal-x86_64-pc-windows-msvc.exe` + `perfpal-x86_64-pc-windows-msvc.sha256` | Windows x86-64 (MSVC) |
@@ -31,6 +32,8 @@ gh release download v0.1.0 --repo ibraramin/perfpal --pattern 'perfpal-x86_64-un
 chmod +x perfpal-x86_64-unknown-linux-musl
 sha256sum -c perfpal-x86_64-unknown-linux-musl.sha256
 ```
+
+Post-v0.1.0 (plan `semantic-resolver`), the release matrix grows to six targets: `x86_64-unknown-linux-gnu` joins as the Linux semantic-tier vehicle (`perfpal-x86_64-unknown-linux-gnu` + checksum, same naming pattern). The gnu, both darwin, and Windows-MSVC builds compile with the default-OFF `semantic-clang` cargo feature and activate the semantic tier when libclang is installed (`LIBCLANG_PATH`); without libclang they degrade gracefully to the syntactic tier. The musl x86_64/aarch64 builds stay syntactic-only by design (static musl cannot dlopen) and remain fully functional.
 
 To build from source instead:
 
@@ -60,8 +63,8 @@ A completed scan leaves exactly this layout (default `perfpal-report/`):
 
 ```
 perfpal-report/
-├── metrics.json              # raw machine-readable data (schema v1.0)
-├── metrics.schema.v1.0.json  # byte-copy of the exact schema for this schema_version
+├── metrics.json              # raw machine-readable data (schema v1.1)
+├── metrics.schema.v1.1.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report
 └── charts/                   # static visualizations (set defined by ADR-0002)
     └── <chart-name>.svg      # e.g. include-graph.svg
@@ -76,7 +79,7 @@ The chart set is `include-graph.svg`, `component-coupling.svg`, and `hot-compone
 | `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h` file |
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
-| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.1.0 (metrics schema 1.0)`), exit 0 |
+| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.1.0 (metrics schema 1.1)`), exit 0 |
 | `-h`, `--help` | — | — | Usage text, exit 0 |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.
@@ -92,7 +95,7 @@ stdout carries the short plain-text summary shown above; all diagnostics, warnin
 
 ## Heuristics
 
-Perfpal's catalog v1 defines 23 heuristics, all on the syntactic resolver tier. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
+Perfpal's catalog v1 defines 23 heuristics, all of which fire on the syntactic resolver tier. On `semantic-clang` builds with libclang present, proven semantic facts upgrade findings above their catalog defaults — resolved ARCH-003 cross-file edges report MEDIUM instead of LOW (the syntactic tier stays LOW); without libclang every build degrades gracefully to the syntactic tier. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
 
 Thresholds are named constants documented in the catalog (`docs/heuristics/catalog-v1.md`) and are not runtime-configurable.
 
@@ -110,7 +113,7 @@ Thresholds are named constants documented in the catalog (`docs/heuristics/catal
 |---|---|---|---|---|
 | `PERF-C-ARCH-001` | Include-graph fan-out/fan-in hubs (≥12), deep include chains (≥8), cyclic includes, unresolvable quoted includes | warn | HIGH | 1 |
 | `PERF-C-ARCH-002` | Hot-component aggregation — files/components ranked by a composite of complexity sum, max loop depth, and alloc-site density | hot | HIGH | 1 |
-| `PERF-C-ARCH-003` | Cross-file call-graph edges from name matching (confidence locked LOW until a semantic resolver exists) | info | LOW | 1 |
+| `PERF-C-ARCH-003` | Cross-file call-graph edges from name matching (confidence locked LOW on the syntactic tier; `semantic-clang` builds with libclang report USR-resolved edges at MEDIUM/semantic) | info | LOW | 1 |
 
 ### CALL — function-level signals
 
@@ -158,7 +161,7 @@ Thresholds are named constants documented in the catalog (`docs/heuristics/catal
 
 - **One scan → one directory.** A completed report directory contains exactly the artifacts of that run; nothing stale survives.
 - **`metrics.json` is the source of truth.** `report.md` and `charts/` are derived artifacts — pure functions of `metrics.json` (plus the reporter's frozen built-in catalog for Appendix A). If they ever disagree, `metrics.json` wins.
-- **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory; there is no separate report-format version. The bundled `metrics.schema.v1.0.json` is a byte-copy of the exact schema for that version (its `$id` is the canonical URI, not the local filename — a mismatch is expected).
+- **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory; there is no separate report-format version. The bundled `metrics.schema.v1.1.json` is a byte-copy of the exact schema for that version (its `$id` is the canonical URI, not the local filename — a mismatch is expected).
 - **Atomic regeneration.** The report is built in a temporary sibling directory and swapped into place (rename-aside-then-swap). A crashed or interrupted run leaves the previous complete report intact; stale temp directories are removed on the next successful run.
 - **Safety guard.** If the target directory exists and does not contain `metrics.json`, Perfpal refuses to replace it unless `--force` is given — user data is never silently destroyed.
 - **Encoding and paths.** All text artifacts are UTF-8, LF line endings, trailing newline. Paths are repo-relative POSIX paths reused verbatim; embedded paths/titles/messages are escaped so scanned filenames cannot inject Markdown or XML.

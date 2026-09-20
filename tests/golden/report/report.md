@@ -1,5 +1,5 @@
 # Perfpal Report
-> schema_version 1\.0 · perfpal 0\.1\.0 · scanned <ROOT>
+> schema_version 1\.1 · perfpal 0\.1\.0 · scanned <ROOT>
 > started <MASKED> · duration <MASKED> ms · 3 files
 
 ## 1. Executive summary
@@ -122,12 +122,6 @@ Top files by code LOC:
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: divisor=d, divisor\_kind=identifier, op=/
 
-#### Cross\-file call coupling  (`PERF\-C\-ARCH\-003:src/main\.c:127:20`)
-- Location: `src/main\.c:127` (main)
-- Message: call to 'util\_init' matches a definition in 'src/util\.c' by name only — LOW\-confidence hypothesis pending semantic resolution; confirming the match \(or co\-locating hot callees\) is a candidate optimization
-- Confidence: LOW · Severity: info · Resolver tier: syntactic
-- Evidence: callee\_name=util\_init, matched\_path=src/util\.c
-
 ## 5. Architecture
 [Include graph — internal #include dependencies between scanned files.](charts/include-graph.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
@@ -163,4 +157,4 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 **Severity** bands (`hot`, `warn`, `info`) rank expected runtime or architecture impact: review `hot` findings first, schedule `warn`, and treat `info` as context signal feeding aggregation.
 **Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
 Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
-For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.0.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.
+For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.1.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.

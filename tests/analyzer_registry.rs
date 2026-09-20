@@ -35,6 +35,7 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
         args: Vec::new(),
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
+        semantic: None,
     };
     FileUnit {
         file: FileRecord {
@@ -63,6 +64,7 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 max_loop_depth: loop_depth,
                 alloc_site_count: 1,
                 length_lines: 1,
+                resolver_tier: ResolverTier::default(),
             },
             calls: vec![call],
             assignments: Vec::new(),
@@ -138,6 +140,7 @@ fn call_event(callee: &str, line: u32, loop_depth: u32) -> CallEvent {
         args: Vec::new(),
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
+        semantic: None,
     }
 }
 
@@ -185,6 +188,7 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                     .unwrap_or(0),
                 alloc_site_count: 0,
                 length_lines: last_line + 10,
+                resolver_tier: ResolverTier::default(),
             },
             calls,
             assignments: Vec::new(),

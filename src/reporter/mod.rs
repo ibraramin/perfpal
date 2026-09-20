@@ -536,12 +536,13 @@ fn render_appendix_b(out: &mut String) {
          purely syntactic tier (`resolver_tier: syntactic`) — no macro \
          expansion, no type resolution.\n",
     );
-    out.push_str(
+    out.push_str(&format!(
         "For programmatic consumption, read `metrics.json` — the source of \
          truth — and validate it against the bundled schema \
-         `metrics.schema.v1.0.json` shipped alongside it. Where this report \
-         and `metrics.json` ever disagree, `metrics.json` wins.\n\n",
-    );
+         `{}` shipped alongside it. Where this report and \
+         `metrics.json` ever disagree, `metrics.json` wins.\n\n",
+        crate::schema::SCHEMA_ARTIFACT_NAME
+    ));
 }
 
 // ---------------------------------------------------------------------------

@@ -12,6 +12,7 @@ pub mod cli;
 pub mod graph;
 pub mod ir;
 pub mod reporter;
+pub mod resolver;
 pub mod scanner;
 pub mod schema;
 pub mod writer;

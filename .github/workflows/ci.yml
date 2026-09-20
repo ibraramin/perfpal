@@ -47,6 +47,41 @@ jobs:
       - name: test
         run: cargo test --locked
 
+  # Semantic-resolver feature gate (plan `semantic-resolver`): the
+  # `semantic-clang` cargo feature (default OFF everywhere else) must stay
+  # green WITH libclang present (ubuntu libclang-dev) AND degrade gracefully
+  # without it. Real-parse tests run only under PERFPAL_SEMANTIC_TESTS=1;
+  # they skip with a note when libclang is unavailable — never fail.
+  semantic-features:
+    runs-on: ubuntu-latest
+    steps:
+      # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      # master HEAD at pin time; same explicit-toolchain requirement as the
+      # `check` job above (the action does NOT auto-read rust-toolchain.toml).
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
+        with:
+          toolchain: "1.92.0"
+          components: rustfmt, clippy
+
+      # v2.9.2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+
+      - name: Install libclang (semantic-resolver runtime dependency)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev
+
+      - name: fmt
+        run: cargo fmt --all -- --check
+
+      - name: clippy (feature build)
+        run: cargo clippy --locked --all-targets --features semantic-clang -- -D warnings
+
+      - name: test (feature build, real libclang parses)
+        run: PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang
+
   license-audit:
     # Standing obligation (modules.md §6 criterion 4): no copyleft (GPL-family)
     # anywhere in the dependency closure. Runs on every push/PR.

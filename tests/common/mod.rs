@@ -202,7 +202,10 @@ pub fn mask_report_provenance(raw: &str) -> String {
 
 /// Golden metrics.json masking: `started_at`/`duration_ms` → null (as
 /// [`mask_metrics_provenance`]) AND `scan.root_path` → the literal
-/// `"<ROOT>"`. Everything else is byte-canonical JSON.
+/// `"<ROOT>"`. Everything else is byte-canonical JSON — INCLUDING
+/// `parse_health.resolver` ("absent" on the default build), which is
+/// neutralized only at COMPARISON time via [`mask_golden_resolver`] so the
+/// committed goldens keep the honest default-build value.
 #[must_use]
 pub fn mask_golden_metrics(raw: &str) -> String {
     let mut value: serde_json::Value = serde_json::from_str(raw).expect("metrics.json parses");
@@ -212,10 +215,119 @@ pub fn mask_golden_metrics(raw: &str) -> String {
     value.to_string()
 }
 
+/// Comparison-time neutralizer for `files[].parse_health.resolver`: the
+/// committed goldens are produced by the DEFAULT build (`"absent"`), while a
+/// `semantic-clang` feature build legitimately produces `"ok"`. Both sides of
+/// the golden comparison go through this so the feature build compares clean;
+/// the exact default-build value stays locked by tests/resolver_health.rs.
+#[must_use]
+pub fn mask_golden_resolver(masked_metrics: &str) -> String {
+    let mut value: serde_json::Value =
+        serde_json::from_str(masked_metrics).expect("masked metrics.json parses");
+    if let Some(files) = value["files"].as_array_mut() {
+        for file in files {
+            file["parse_health"]["resolver"] = serde_json::Value::String("<RESOLVER>".to_string());
+        }
+    }
+    value.to_string()
+}
+
+/// Comparison-time neutralizer for Wave B1 resolved-edge deltas: the
+/// committed goldens are produced by the DEFAULT build (name-based ARCH-003,
+/// LOW), while a `semantic-clang` feature build legitimately emits a
+/// MEDIUM-confidence resolved finding + MEDIUM call-graph edge for the same
+/// call site. Both sides of the golden comparison go through this:
+/// - `findings[]`: a `PERF-C-ARCH-003` finding carrying
+///   `evidence.resolved == "true"` is rewritten to its name-based form
+///   (confidence LOW, tier syntactic, message rebuilt byte-exact from
+///   `callee_name`/`matched_path`, `resolved` key dropped);
+/// - `findings[]` are then re-sorted by the §4 total order
+///   (severity hot→warn→info, confidence HIGH→MEDIUM→LOW, rule_id → path →
+///   start_line → start_col per output-contract.md §4), restoring the slot
+///   the upgraded finding vacated — a stable no-op on the already-sorted
+///   default side;
+/// - `graphs.call_graph.edges[]`: confidence MEDIUM → LOW (default builds
+///   never emit above LOW).
+///
+/// The exact default-build values stay locked by arch_fixtures.rs +
+/// pipeline_e2e.rs; the resolved behavior by tests/resolver_health.rs.
+#[must_use]
+pub fn mask_golden_semantic(masked_metrics: &str) -> String {
+    let mut value: serde_json::Value =
+        serde_json::from_str(masked_metrics).expect("masked metrics.json parses");
+    if let Some(findings) = value["findings"].as_array_mut() {
+        for finding in findings.iter_mut() {
+            let resolved_arch003 = finding["rule_id"] == "PERF-C-ARCH-003"
+                && finding["evidence"]["resolved"] == "true";
+            if resolved_arch003 {
+                let callee = finding["evidence"]["callee_name"]
+                    .as_str()
+                    .unwrap_or("<unknown>")
+                    .to_string();
+                let matched = finding["evidence"]["matched_path"]
+                    .as_str()
+                    .unwrap_or("<unknown>")
+                    .to_string();
+                finding["confidence"] = serde_json::Value::String("LOW".to_string());
+                finding["resolver_tier"] = serde_json::Value::String("syntactic".to_string());
+                finding["message"] = serde_json::Value::String(format!(
+                    "call to '{callee}' matches a definition in '{matched}' by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization"
+                ));
+                if let Some(evidence) = finding["evidence"].as_object_mut() {
+                    evidence.remove("resolved");
+                }
+            }
+        }
+        let rank_severity = |s: &str| match s {
+            "hot" => 0,
+            "warn" => 1,
+            _ => 2,
+        };
+        let rank_confidence = |c: &str| match c {
+            "HIGH" => 0,
+            "MEDIUM" => 1,
+            _ => 2,
+        };
+        let sort_key = |f: &serde_json::Value| {
+            (
+                rank_severity(f["severity"].as_str().unwrap_or("")),
+                rank_confidence(f["confidence"].as_str().unwrap_or("")),
+                f["rule_id"].as_str().unwrap_or("").to_string(),
+                f["path"].as_str().unwrap_or("").to_string(),
+                f["span"]["start_line"].as_u64().unwrap_or(0),
+                f["span"]["start_col"].as_u64().unwrap_or(0),
+            )
+        };
+        findings.sort_by_key(|a| sort_key(a));
+    }
+    if let Some(edges) = value["graphs"]["call_graph"]["edges"].as_array_mut() {
+        for edge in edges.iter_mut() {
+            if edge["confidence"] == "MEDIUM" {
+                edge["confidence"] = serde_json::Value::String("LOW".to_string());
+            }
+        }
+    }
+    value.to_string()
+}
+
 /// Golden report.md masking: the [`mask_report_provenance`] surfaces
 /// (`started <RFC3339>`, `duration <n> ms`) PLUS every literal occurrence
 /// of the absolute scan `root` → `"<ROOT>"` (the header blockquote and the
-/// §2 "Scan root" line are the only surfaces, per the §5 template).
+/// §2 "Scan root" line are the only surfaces, per the §5 template) PLUS the
+/// Wave B1 ARCH-003 §4 block strip: a `semantic-clang` feature build
+/// legitimately renders the resolved finding (MEDIUM/semantic/resolved
+/// evidence) at a DIFFERENT §4 position than the default build's name-based
+/// block, so string-level normalization cannot restore order — the whole
+/// block (header `#### Cross\-file call coupling` through the next blank
+/// line, or the next `#### ` finding header defensively) is dropped on BOTH
+/// sides. The header terminator is explicit (`"#### "` with the trailing
+/// space, pushed back onto the output) IN ADDITION to the blank-line rule —
+/// a future evidence line containing a blank line ends the skip at that
+/// blank line exactly as before, and only a real finding header (never a
+/// `#`-starting evidence line) can end it otherwise, so neither
+/// over-stripping nor under-stripping is possible.
+/// ARCH-003 §4 rendering stays locked by arch_fixtures.rs + pipeline_e2e.rs
+/// (name-based) and tests/resolver_health.rs (resolved variant).
 /// Backslash→slash normalization is applied to the SEARCH PATH ONLY (never
 /// to the document, which legitimately contains Markdown escapes), so the
 /// comparison is separator-agnostic.
@@ -228,7 +340,27 @@ pub fn mask_golden_report(raw: &str, root: &str) -> String {
             masked = masked.replace(needle, "<ROOT>");
         }
     }
-    masked
+    let mut kept: Vec<&str> = Vec::new();
+    let mut skipping_arch003 = false;
+    for line in masked.lines() {
+        if line.starts_with("#### Cross\\-file call coupling") {
+            skipping_arch003 = true;
+            continue;
+        }
+        if skipping_arch003 {
+            if line.trim().is_empty() || line.starts_with("#### ") {
+                skipping_arch003 = false;
+                // The terminating blank line belongs to the stripped block;
+                // a finding header line belongs to the document.
+                if line.starts_with("#### ") {
+                    kept.push(line);
+                }
+            }
+            continue;
+        }
+        kept.push(line);
+    }
+    kept.join("\n")
 }
 
 // ---------------------------------------------------------------------------
@@ -276,6 +408,7 @@ fn call(callee: &str, args: &[&str], span: Span, depth: u32, role: StatementRole
             .collect(),
         statement_role: role,
         conditional_guarded: false,
+        semantic: None,
     }
 }
 
@@ -325,6 +458,7 @@ fn func(
             max_loop_depth: loops.iter().map(|l| l.depth).max().unwrap_or(0),
             alloc_site_count: 0,
             length_lines: span.end_line - span.start_line + 1,
+            resolver_tier: ResolverTier::Syntactic,
         },
         calls,
         assignments: Vec::new(),
@@ -453,6 +587,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
         args: Vec::new(),
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
+        semantic: None,
     });
     // MEM-001: malloc(n * sizeof(p)) with `p` a pointer-typed kitchen
     // parameter — the flagship pointer_param_sizeof misuse class.
@@ -470,6 +605,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
         ],
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
+        semantic: None,
     });
     // MEM-002: memcpy with a non-literal byte count in the innermost loop.
     kitchen_calls.push(call(

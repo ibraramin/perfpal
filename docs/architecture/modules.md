@@ -160,7 +160,7 @@ A backend implements one interface: *given (path, source bytes), emit that langu
 
 ### 4.3 Resolvers (future)
 
-Resolvers sit between scanner and analyzer: they consume the IR stream and enrich it (types, true scopes, resolved callees), raising tier tags and confidence. They never change identity keys `(path, name, span)` or record shapes (IR §6). The semantic (libclang) and dynamic (runtime-profile) tiers both plug in here — one seam, three sources (ADR-0001).
+Resolvers sit between scanner and analyzer: they consume the IR stream and enrich it (types, true scopes, resolved callees), raising tier tags and confidence. They never change identity keys `(path, name, span)` or record shapes (IR §6). The semantic (libclang) and dynamic (runtime-profile) tiers both plug in here — one seam, three sources (ADR-0001). The semantic tier is REALIZED by plan `semantic-resolver` — see §5.3 for the as-built contract (musl constraint, per-target matrix, conservative-upgrade rule).
 
 ## 5. Extension points (explicitly not built in v1)
 
@@ -172,9 +172,18 @@ Profile adapters (perf / valgrind / cProfile) translate tool-specific output int
 
 Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.json](../schema/metrics.schema.v1.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language.
 
-### 5.3 Semantic resolver
+### 5.3 Semantic resolver — REALIZED (plan `semantic-resolver`, waves A–B2)
 
-libclang joins as an additive resolver per ADR-0001 (deferred, license-clean, viable). Enrichment raises confidence/tier; identity and schema unchanged.
+libclang joins as an additive resolver per ADR-0001 (license-clean: `clang-sys` 1.9.1 Apache-2.0 + libloading, both inside the `deny.toml` allowlist; viable: libclang parses non-compiling TUs partially — `CXErrorCode` + diagnostics + `CXTranslationUnit_KeepGoing` — fitting the ParseHealth philosophy of enriching only verified facts, never deleting). Enrichment runs as a post-backend pass between scanner and analyzer (mirroring the `resolve_includes` pattern) over deterministic `BTreeMap` map builders (USR→definition-site map, call-span→USR map, per-function facts); it raises confidence/tier, while identity keys `(path, name, span)` and record shapes stay unchanged (§4.3).
+
+- **musl constraint (BY DESIGN).** Static musl cannot dlopen (libc stubs it to failure); dynamic musl cannot load a glibc-built libclang. The capability is therefore gated behind the default-OFF cargo feature `semantic-clang` (optional `clang-sys` dependency, `runtime` mode = lazy dlopen via libloading, `LIBCLANG_PATH` discovery). musl release targets build WITHOUT the feature: musl binaries are byte-identical to a resolver-less build and fully functional at the syntactic tier. Feature builds without libclang present degrade gracefully (per-file `ParseHealth.resolver = absent`; tier stays syntactic) — the KeepGoing partial-TU philosophy.
+- **Per-target matrix (founder-approved).** Release builds for `x86_64-apple-darwin` + `aarch64-apple-darwin` + `x86_64-pc-windows-msvc` + `x86_64-unknown-linux-gnu` (the Linux semantic-tier vehicle, added via cargo-zigbuild as the 6th release target) pass `--features semantic-clang` and activate the semantic tier when libclang is installed (`LIBCLANG_PATH`); without libclang they run the syntactic tier. `x86_64-unknown-linux-musl` + `aarch64-unknown-linux-musl` stay syntactic-only. See `.github/workflows/release.yml` + the README install section.
+- **Conservative-upgrade rule.** Tier/facts are set ONLY on unambiguous resolution: `CallEvent.semantic` (`Some` only when at least one of `resolved_definition` / `fopened_handle` / `literal_args` is proven — the `Some`-only-when-proven invariant), the definition's `FunctionRecord.resolver_tier = Semantic`, and finding-level upgrades. Ambiguous same-name targets keep the syntactic path; macro-origin and error-region-overlapped calls are gated out on both the resolver and consumer sides. The analyzer's central `apply_upgrade_hooks` gate (mirroring `apply_downgrade_hooks`, running pre-dedup) reverts any `Semantic`-tier finding lacking backing facts at its span.
+- **USR-internal rule.** USRs are internal decl↔def pairing keys only (the map types are deliberately not `Serialize`); they never enter IR identity, findings, or output (ADR-0001 identity rule).
+- **Single-run assumption.** The resolver re-reads sources from disk via the scanner's recorded scan root; enrichment assumes the tree is unchanged between scan and resolve.
+- **Schema.** v1.1 ([metrics-json-v1.md §5](../schema/metrics-json-v1.md)): optional `files[].parse_health.resolver` + `graphs.call_graph.edges[].confidence` widened from const `"LOW"` to oneOf `["LOW", "MEDIUM", "HIGH"]` (additive widening; old reports still validate).
+
+Wave B retirements: ARCH-003 resolved edges (Info/MEDIUM/semantic, USR-based true-callee resolution); ALLOC-002 proven-fclose (Warn/HIGH/semantic, exact free semantics incl. escalation); STR-003 resolved-format (Warn/HIGH/semantic + `resolved_format` evidence). LOOP-004 resolver constness proofs DEFERRED to a follow-up session (budget call; syntactic behavior unchanged).
 
 ## 6. Implementation-language fork — RESOLVED: Rust
 

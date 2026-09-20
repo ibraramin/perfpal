@@ -36,7 +36,7 @@ use crate::writer::Artifact;
 /// <schema_version>)`. clap renders `{name} {version}`, so this constant
 /// carries everything after the binary name. The suffix literal is locked to
 /// [`crate::schema::SCHEMA_VERSION`] by a unit test below.
-const VERSION_SUFFIX: &str = concat!(env!("CARGO_PKG_VERSION"), " (metrics schema ", "1.0", ")");
+const VERSION_SUFFIX: &str = concat!(env!("CARGO_PKG_VERSION"), " (metrics schema ", "1.1", ")");
 
 /// Validated invocation options (modules.md §8.1 flag table).
 #[derive(Debug, Parser)]
@@ -177,8 +177,20 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     let started = SystemTime::now();
 
     // scanner: discovery + IR stream (usage error only if target unreadable).
-    let units =
+    let mut units =
         crate::scanner::scan(&args.path).map_err(|err| PipelineError::Usage(err.to_string()))?;
+
+    // resolver: semantic enrichment seam (modules.md §4.3) — Wave A records
+    // only ParseHealth.resolver; identity/heuristic-visible state untouched.
+    // Explicit-root contract: the resolver re-reads sources from disk, so the
+    // caller threads the canonicalized scan target (the same value the
+    // scanner anchors discovery on — the scan above already proved it
+    // canonicalizes, so this cannot fail here).
+    let scan_root = args
+        .path
+        .canonicalize()
+        .unwrap_or_else(|_| args.path.clone());
+    crate::resolver::resolve(&mut units, &scan_root);
 
     // analyzer: heuristics in report §4 total order.
     let findings = crate::analyzer::analyze(&units);
@@ -344,7 +356,7 @@ mod tests {
     #[test]
     fn version_suffix_carries_schema_version() {
         assert!(
-            VERSION_SUFFIX.contains("(metrics schema 1.0)"),
+            VERSION_SUFFIX.contains("(metrics schema 1.1)"),
             "--version payload must name the metrics schema version"
         );
         assert_eq!(

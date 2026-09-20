@@ -1,7 +1,7 @@
 ---
 plan name: housekeeping-batch
 plan description: License, docs, catalog, schema proposal
-plan status: active
+plan status: done
 ---
 
 ## Idea

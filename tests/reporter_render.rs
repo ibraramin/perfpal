@@ -31,6 +31,7 @@ fn ok_health() -> ParseHealthEntry {
         status: ParseStatus::Ok,
         error_regions: None,
         error_node_count: 0,
+        resolver: None,
     }
 }
 
