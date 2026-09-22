@@ -9,17 +9,23 @@
 //!   symlinks not followed (v1); per-file failures become `ParseHealth{failed}`
 //!   records, never run aborts (total target failure = [`ScanError`], which
 //!   cli maps to exit 1).
-//! - Language detection by extension: `.c`/`.h` are C in v1; others skipped
-//!   silently. `scan.file_count` = `len(files[])`; zero-C-file scans still
-//!   record `scan.languages: ["c"]`.
+//! - Language detection by extension: `.c`/`.h` are C and `.rs` is Rust in v1;
+//!   others skipped silently. `scan.file_count` = `len(files[])`.
 //! - Parse via the bound backend; capture ParseHealth (status, error regions,
 //!   error node count).
-//! - Include resolution against the filesystem (includer-relative first,
+//! - **C** include resolution against the filesystem (includer-relative first,
 //!   then repo-root-relative) for quoted AND angle-bracket edges (ADR-0002:
 //!   angle hits on in-repo files are internal coupling); unresolvable quoted
 //!   includes emit `IncludeEdge{resolved:false, to_path:null}` — ARCH-001
 //!   signal, not an error; unresolvable angle includes keep the raw include
 //!   text in `to_path` with `resolved:false` (external bucket).
+//! - **Rust** module-edge resolution is MODULE-dir-relative (reviews N1 +
+//!   round-4), not file-dir-relative: `src/a.rs` + `mod b;` looks under
+//!   `src/a/`, while a crate-root file (`lib.rs`/`main.rs`, `mod.rs`, or a
+//!   direct child of `src/bin`/`examples`/`tests`/`benches`, matched by
+//!   trailing segment for workspace packages) uses its own directory. Only
+//!   `mod` declarations are resolved; `use` edges keep their raw `::` path
+//!   with `resolved=false` (founder decision), and angle edges stay raw.
 //! - Curated macro-pattern recognizer pass → MacroEvents (implemented inside
 //!   the backend, which owns the source text; see `backends::tree_sitter_c`).
 //! - Engine-native span → IR span conversion happens at this boundary
@@ -77,6 +83,13 @@ pub enum ScanError {
     UnreadableTarget(PathBuf),
 }
 
+/// Source language selected by extension (plan `rust-backend` R1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LanguageKind {
+    C,
+    Rust,
+}
+
 /// Scan a target path (directory or single `.c`/`.h` file) into the IR stream.
 ///
 /// Determinism (modules.md §1): discovered files are emitted in lexicographic
@@ -122,22 +135,26 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
 
     let mut units = Vec::with_capacity(entries.len());
     for (rel, abs) in &entries {
+        // Directory discovery admits only known extensions, so `language_of`
+        // is always `Some` there. A single-file target is taken as-is, and an
+        // unknown extension keeps the pre-R1 default of C.
+        let lang = language_of(rel).unwrap_or(LanguageKind::C);
         let unit = match fs::read(abs) {
             Ok(source) => {
-                let mut unit = extract_unit(rel, &source);
-                resolve_includes(&mut unit, &include_root, rel);
+                let mut unit = extract_unit(rel, &source, lang);
+                resolve_includes(&mut unit, &include_root, rel, lang);
                 unit
             }
-            Err(_) => failed_unit(rel),
+            Err(_) => failed_unit(rel, lang),
         };
         units.push(unit);
     }
     Ok(units)
 }
 
-/// Recursively discover C sources under `root`. Skips dot-prefixed
-/// directories, does not follow symlinks, keeps only `.c`/`.h` files
-/// (modules.md §3.2); other extensions are skipped silently.
+/// Recursively discover sources under `root`. Skips dot-prefixed directories,
+/// does not follow symlinks, keeps only known-language files (`.c`/`.h`/`.rs`,
+/// modules.md §3.2); other extensions are skipped silently.
 fn discover(root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut stack = vec![root.to_path_buf()];
@@ -160,7 +177,7 @@ fn discover(root: &Path) -> Vec<PathBuf> {
                 if !name.starts_with('.') {
                     stack.push(path);
                 }
-            } else if is_c_source(name) {
+            } else if language_of(name).is_some() {
                 out.push(path);
             }
         }
@@ -168,11 +185,16 @@ fn discover(root: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Language detection by extension: `.c` and `.h` are C in v1.
-fn is_c_source(file_name: &str) -> bool {
-    Path::new(file_name)
-        .extension()
-        .is_some_and(|ext| ext == "c" || ext == "h")
+/// Language detection by extension: `.c`/`.h` are C, `.rs` is Rust.
+fn language_of(file_name: &str) -> Option<LanguageKind> {
+    let ext = Path::new(file_name).extension()?;
+    if ext == "rs" {
+        Some(LanguageKind::Rust)
+    } else if ext == "c" || ext == "h" {
+        Some(LanguageKind::C)
+    } else {
+        None
+    }
 }
 
 /// Repo-relative POSIX path string.
@@ -185,9 +207,12 @@ fn rel_posix(root: &Path, path: &Path) -> String {
         .join("/")
 }
 
-/// Extract one file's IR via the bound backend (tree-sitter-c in v1).
-fn extract_unit(rel_path: &str, source: &[u8]) -> FileUnit {
-    let ex = backends::tree_sitter_c::extract(rel_path, source);
+/// Extract one file's IR via the backend bound to its language.
+fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
+    let ex = match lang {
+        LanguageKind::C => backends::tree_sitter_c::extract(rel_path, source),
+        LanguageKind::Rust => backends::tree_sitter_rust::extract(rel_path, source),
+    };
     FileUnit {
         file: ex.file,
         parse_health: ex.parse_health,
@@ -202,11 +227,14 @@ fn extract_unit(rel_path: &str, source: &[u8]) -> FileUnit {
 /// Per-file read failure → `ParseHealth{failed}` record, never an abort
 /// (modules.md §3.2). Structural fields stay empty: there is nothing honest
 /// to report about an unreadable file.
-fn failed_unit(rel_path: &str) -> FileUnit {
+fn failed_unit(rel_path: &str, lang: LanguageKind) -> FileUnit {
     FileUnit {
         file: FileRecord {
             path: rel_path.to_string(),
-            language: "c".to_string(),
+            language: match lang {
+                LanguageKind::C => "c".to_string(),
+                LanguageKind::Rust => "rust".to_string(),
+            },
             loc: Default::default(),
             function_count: 0,
             global_var_count: 0,
@@ -223,8 +251,18 @@ fn failed_unit(rel_path: &str) -> FileUnit {
 }
 
 /// Include-edge resolution against the filesystem (modules.md §3.2; ADR-0002
-/// chart policy): BOTH quoted and angle-bracket edges are resolved with the
-/// same two candidates — includer-relative first, then repo-root-relative.
+/// chart policy). C keeps its shipped behavior ([`resolve_c_edges`]); Rust
+/// resolves `Quoted` module edges to `.rs`/`mod.rs` files
+/// ([`resolve_rust_edges`]).
+fn resolve_includes(unit: &mut FileUnit, root: &Path, rel_path: &str, lang: LanguageKind) {
+    match lang {
+        LanguageKind::C => resolve_c_edges(unit, root, rel_path),
+        LanguageKind::Rust => resolve_rust_edges(unit, root, rel_path),
+    }
+}
+
+/// C include resolution: BOTH quoted and angle-bracket edges are resolved with
+/// the same two candidates — includer-relative first, then repo-root-relative.
 /// A hit rewrites `to_path` to the repo-relative POSIX path and sets
 /// `resolved=true` (angle hits count as internal coupling per ADR-0002). A
 /// miss keeps the edge as data, not error: quoted ⇒ `to_path=null`
@@ -233,11 +271,8 @@ fn failed_unit(rel_path: &str) -> FileUnit {
 ///
 /// The backend leaves raw include text in `to_path`; this pass replaces it
 /// with the resolved repo-relative POSIX path or `None`.
-fn resolve_includes(unit: &mut FileUnit, root: &Path, rel_path: &str) {
-    let includer_dir = match rel_path.rsplit_once('/') {
-        Some((dir, _)) => dir.to_string(),
-        None => String::new(),
-    };
+fn resolve_c_edges(unit: &mut FileUnit, root: &Path, rel_path: &str) {
+    let includer_dir = includer_dir(rel_path);
     for edge in &mut unit.includes {
         let Some(raw) = edge.to_path.clone() else {
             continue;
@@ -267,6 +302,103 @@ fn resolve_includes(unit: &mut FileUnit, root: &Path, rel_path: &str) {
             }
         }
     }
+}
+
+/// Rust module-edge resolution (plan `rust-backend` R1; reviews m2 + N1 +
+/// round-4): resolves `mod` DECLARATIONS only, module-dir-relative (see
+/// [`module_dir`]) — `src/a.rs` + `mod b;` → `src/a/b.rs` / `src/a/b/mod.rs`
+/// (rustc: a bare `src/b.rs` is error[E0583]). Inline-module nesting is carried
+/// as a `/`-joined path prefix (`mod outer { mod inner; }` → raw
+/// `outer/inner`), so its candidates are `<module_dir>/outer/inner.rs` /
+/// `<module_dir>/outer/inner/mod.rs`.
+///
+/// Internal `use` edges (raw contains `::`) are CLASSIFIED but NOT resolved
+/// (founder decision, round-4): they keep their raw `::` path with
+/// `resolved=false` (they never match a file; R3 owns module-graph semantics).
+/// A `mod` miss yields `to_path=null`, `resolved=false`. `Angle` edges
+/// (external crates) are left untouched (raw name, unresolved).
+fn resolve_rust_edges(unit: &mut FileUnit, root: &Path, rel_path: &str) {
+    let module_dir = module_dir(rel_path);
+    for edge in &mut unit.includes {
+        if edge.form != IncludeForm::Quoted {
+            continue;
+        }
+        let Some(raw) = edge.to_path.clone() else {
+            continue;
+        };
+        // `use` path (not a `mod` declaration): preserved raw + unresolved.
+        if raw.contains("::") {
+            continue;
+        }
+        let candidates = [
+            join_normalized(&module_dir, &format!("{raw}.rs")),
+            join_normalized(&module_dir, &format!("{raw}/mod.rs")),
+        ];
+        let resolved_rel = candidates.into_iter().find(|candidate| {
+            root.join(candidate.replace('/', std::path::MAIN_SEPARATOR_STR))
+                .is_file()
+        });
+        match resolved_rel {
+            Some(rel) => {
+                edge.to_path = Some(rel);
+                edge.resolved = true;
+            }
+            None => {
+                edge.to_path = None;
+                edge.resolved = false;
+            }
+        }
+    }
+}
+
+/// Repo-relative directory of `rel_path` (empty for a root-level file).
+fn includer_dir(rel_path: &str) -> String {
+    match rel_path.rsplit_once('/') {
+        Some((dir, _)) => dir.to_string(),
+        None => String::new(),
+    }
+}
+
+/// Rust module directory for `rel_path` (reviews N1 + round-3 + round-4).
+/// Matches rustc: a CRATE-ROOT file resolves its submodules in its OWN
+/// (containing) directory, while a submodule file `<dir>/<stem>.rs` owns the
+/// `<dir>/<stem>/` subdirectory.
+///
+/// A path is a crate root when either:
+/// 1. its file stem is `lib`/`main` (crate roots) or `mod` (a directory module
+///    file, `mod.rs`), or
+/// 2. it is a DIRECT child of a Cargo crate-root directory — `src/bin`,
+///    `examples`, `tests`, `benches`. This is matched by TRAILING SEGMENT so
+///    nested/workspace packages work too (`crates/foo/src/bin/bar.rs`,
+///    `crates/foo/tests/x.rs`; see `is_crate_root_dir`).
+///
+/// Examples: `src/lib.rs` → `src`; `src/a/mod.rs` → `src/a`; `src/a.rs` →
+/// `src/a`; `src/bin/foo.rs` → `src/bin`; `tests/x.rs` → `tests`;
+/// `tests/common/mod.rs` → `tests/common`; `crates/foo/src/bin/bar.rs` →
+/// `crates/foo/src/bin`; `src/bin/foo/bar.rs` → `src/bin/foo/bar`. A repo-root
+/// `foo.rs` (single-file target) → `foo`.
+fn module_dir(rel_path: &str) -> String {
+    let (dir, file) = match rel_path.rsplit_once('/') {
+        Some((dir, file)) => (dir, file),
+        None => ("", rel_path),
+    };
+    let stem = file.strip_suffix(".rs").unwrap_or(file);
+    if matches!(stem, "lib" | "main" | "mod") || is_crate_root_dir(dir) {
+        dir.to_string()
+    } else if dir.is_empty() {
+        stem.to_string()
+    } else {
+        format!("{dir}/{stem}")
+    }
+}
+
+/// Whether `dir` is (or ends with) a Cargo crate-root directory. Segment-based
+/// so workspace layouts (`crates/foo/src/bin`) are recognized.
+fn is_crate_root_dir(dir: &str) -> bool {
+    const CRATE_ROOT_DIRS: [&str; 4] = ["src/bin", "examples", "tests", "benches"];
+    CRATE_ROOT_DIRS
+        .iter()
+        .any(|root| dir == *root || dir.ends_with(&format!("/{root}")))
 }
 
 /// Join an include target onto a base directory and lexically normalize the

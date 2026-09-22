@@ -43,7 +43,16 @@ G5 note: the exact pin is the deliverable of this phase, and it is deliberate �
 
 ## 3. Node-kind mapping table (R1 extraction plan)
 
-Column 2 names the IR record/event/shape the kind is intended to produce. Every row is **not yet implemented**; R1 is the implementation pass. Where a Rust kind and its C counterpart differ meaningfully, the note says so. Where a field name is deliberately not asserted, the row says the field details are to be confirmed against `node-types.json` at R1.
+> **Status: IMPLEMENTED in R1** (`src/scanner/backends/tree_sitter_rust/`).
+> The table below is the plan this implementation followed; see §8 for the
+> founder-approved decisions that resolved each open item. Explicit R1 gaps:
+> `union_item`/`enum_item` are **skipped entirely** (no IR record; R2/R3 work),
+> `use` leaf paths are emitted as include edges but are **unresolved** in R1
+> (`::` never matches a file; R3 owns module-graph semantics), every Rust
+> `FunctionRecord` carries `alloc_site_count = 0` and every event
+> `macro_origin = false` (R3 owns the allocation/macro families).
+
+Column 2 names the IR record/event/shape the kind is intended to produce. Where a Rust kind and its C counterpart differ meaningfully, the note says so. Where a field name is deliberately not asserted, the row says the field details are to be confirmed against `node-types.json` at R1.
 
 Target contract recap ([ir-v1.md §3](./ir-v1.md)): `FileRecord`, `ParseHealth`, `IncludeEdge`, `GlobalVar`, `StructDef`, `MacroEvent`, `FunctionRecord`/`FunctionUnit`, and the typed events (`CallEvent`, `AssignmentEvent`, `BinaryOpEvent`, `ComparisonEvent`, `AccessChainEvent`, `LoopNode`) over the shared `Shape` descriptor. Spans convert at the boundary exactly as in the C backend (`ir_span`/`from_native`, +1 on entry / −1 on exit) and grammar node kinds never leak past it ([modules.md §4.2](./modules.md), [ir-v1.md §2](./ir-v1.md)).
 
@@ -233,3 +242,76 @@ These are recorded so R1/R2/R3 decide them explicitly; none is guessed above.
 - The exact sub-node layout of `use_declaration` path expressions beyond the field names listed (fan-out enumeration for `use a::{b, c}`) is deferred to R1; only the field names above were read from `node-types.json`.
 - `IncludeEdge.form` semantics for Rust, `CalleeKind` for method/scoped/turbofish callees, `LoopKind` for `loop_expression`, and the enum/union/tuple-struct IR targets are **unresolved by design** — listed as open items, not asserted.
 - `tree-sitter-rust`'s `node-types.json` was read at the pinned crate version (`0.24.2`); a future grammar upgrade may change kinds/fields and would require a node-types diff review per ADR-0001 guardrail G5.
+
+## 8. R1 implementation notes
+
+Phase R1 landed `src/scanner/backends/tree_sitter_rust/`, hoisted a single
+`Extraction` into `src/scanner/backends/mod.rs` (shared by both backends), and
+added extension-based language dispatch (`.rs` → Rust, `.c`/`.h` → C) with a
+Rust include/module resolution pass in `src/scanner/mod.rs`. The founder
+approved eight decisions that resolve the §7 open items; they are implemented
+exactly as follows.
+
+| Id | Decision | Resolution |
+|---|---|---|
+| **D1** | `IncludeEdge.form` mapping | Internal module paths (`crate::`/`self::`/`super::`, plus bare `mod foo;`) → `Quoted`; everything else (`std`/`core`/`alloc`/any crate name/`extern crate`) → `Angle`. `to_path` is the full `::`-joined path text for `use`, the module/crate name for `mod`/`extern crate`. `use` leaves never match a file, so they stay unresolved in R1 (R3 owns module-graph semantics); wildcard leaves drop the trailing `::*`. |
+| **D2** | Callee classification | `identifier`/`scoped_identifier`/`field_expression`/`generic_function` as the `function` field → `Direct`; anything else → `Indirect`; missing `function` → `Unknown`. `callee_name` is the final segment (`scoped_identifier`→`name`, `field_expression`→`field`, `generic_function`→recurse). Documented FP class: closure-field invocation (`self.callback()`) classifies `Direct`. |
+| **D3** | `LoopKind` coverage | `loop_expression` maps to the additive `LoopKind::Loop` variant (serializes `"loop"`); recorded in [ir-v1.md](./ir-v1.md). No other IR change. |
+| **D4** | Structs | `struct_item` → `StructDef` (named members from `field_declaration_list`); tuple structs (`ordered_field_declaration_list`) → `StructDef` with synthetic positional member names `"0"`, `"1"`, …. `union_item`/`enum_item` are skipped entirely — R2/R3 work. |
+| **D5** | Signatures | `function_signature_item` (body-less trait method) is skipped, mirroring C where prototypes are not functions. |
+| **D6** | let / assignment | `let_declaration` is NOT an `AssignmentEvent`; `assignment_expression` and `compound_assignment_expr` ARE. `scope_class` is `Global` iff the target root identifier is a collected `static`/`const` name, `Param` iff a parameter name (including `self`), else `Local`; a non-identifier target is `Unknown`. |
+| **D7** | Macros | `macro_definition` → `MacroEvent { kind: Definition }`; every `macro_invocation` (including inside function bodies — gathered by a whole-tree pass) → `MacroEvent { kind: Use }`, no expansion. |
+| **D8** | Stats honesty | `FunctionRecord.alloc_site_count = 0` and every event's `macro_origin = false` for Rust; R3 owns the allocation family and `token_tree` bodies are opaque. |
+
+Additional implementation notes:
+
+- **Parser honesty.** `extract` is total; `set_language` failure or a `None`
+  parse yields `ParseHealth { status: failed, .. }` with an empty
+  `language: "rust"` file record. Otherwise zero `ERROR`/missing nodes → `ok`,
+  any → `partial` with outermost error regions and a total error-node count.
+- **Recursive file-level walk.** `walk_file_level` stops descending at
+  `function_item` bodies but DOES descend into `impl_item`/`trait_item`/
+  `mod_item` bodies and `declaration_list`s, so methods and nested-module items
+  are collected while function-local items stay function-local. Associated
+  `const`/`static` items inside an `impl`/`trait` body are excluded from the
+  file-level `GlobalVar` set (they are not module globals; R1 review M1).
+- **Rust module resolution (reviews m2 + N1 + rounds 3–4).** Resolves `mod`
+  DECLARATIONS only. MODULE-dir-relative, matching rustc: a submodule file
+  `<dir>/<stem>.rs` owns the `<dir>/<stem>/` subdirectory, so `src/a.rs` +
+  `mod b;` → `src/a/b.rs` or `src/a/b/mod.rs` (a bare `src/b.rs` is
+  error[E0583]). CRATE-ROOT files instead resolve submodules in their
+  CONTAINING directory: `lib.rs`/`main.rs`, any `mod.rs` module file, and any
+  DIRECT child of the Cargo crate-root directories
+  `src/bin`/`examples`/`tests`/`benches` — matched by TRAILING SEGMENT so
+  nested/workspace packages work too (`crates/foo/src/bin/bar.rs` + `mod baz;`
+  → `crates/foo/src/bin/baz.rs`; `crates/foo/tests/x.rs` + `mod common;` →
+  `crates/foo/tests/common/mod.rs`; `src/bin/foo.rs` + `mod bar;` →
+  `src/bin/bar.rs`, NOT `src/bin/foo/bar.rs`). A `mod` miss yields
+  `to_path=null`, `resolved=false` (data, not error).
+  - **Inline modules:** nested `mod` declarations carry a `/`-joined prefix
+    (`mod outer { mod inner; }` → raw `outer/inner`; never `::`), resolved as
+    `<module_dir>/outer/inner.rs` / `<module_dir>/outer/inner/mod.rs`.
+  - **`use` edges (founder decision)**: internal `use` paths are CLASSIFIED but
+    NOT resolved — they keep their raw `::` path with `resolved=false`
+    (`use crate::util::helper` stays `Quoted`, `to_path="crate::util::helper"`).
+    Only `Angle` (external) edges are also left unresolved with raw text kept.
+  - Repo-root single-file targets (`foo.rs`) are ambiguous (not under a known
+    crate-root dir), so the file-stem rule applies: `foo` → `foo/`.
+- **Complexity formula.** cyclomatic = `1 + {if_expression, each match_arm,
+  each loop, &&, ||, try_expression}`; cognitive = `if_expression` / loops /
+  `try_expression` cost `1 + nesting` and increase nesting, while `match_arm`
+  and `&&`/`||` cost a flat `1`.
+- **Attributes.** `#[...]`/`#![...]` are ordinary siblings, not wrappers; the
+  annotated item always extracts (locked by tests), and both arms of a
+  `#[cfg(...)]` pair present in source are extracted since the predicate is
+  opaque (honest limitation, §4).
+- **Known limitation — crate-root directory detection is a path-suffix
+  approximation (R1 review, accepted).** A directory whose final segment is
+  `src/bin`/`examples`/`tests`/`benches` is treated as a Cargo crate-root
+  directory, so a module directory that literally ends in one of those names
+  (e.g. `src/tests/`) is mis-classified as a crate root (false negative:
+  `<dir>/<stem>/` submodules missed; false positive: a sibling `<dir>/<stem>.rs`
+  matched). Distinguishing the two needs Cargo.toml-aware package-root
+  detection, which is deferred to R3 (module-graph work). No R1 test exercises
+  this layout.
+

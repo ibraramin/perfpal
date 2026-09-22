@@ -1,20 +1,21 @@
 # Active Context
 
 ## Current Task
-Session 24: plan `rust-backend` **R0** — grammar pin + pinned-pair link test + backend design doc. **Complete**; commit pending founder approval.
+Session 25: plan `rust-backend` **R1** — Rust scanner backend + extension dispatch + R0 open-item resolution. **Complete**; dual review passed after 4 fix rounds; gates 292 green; commit pending founder approval.
 
 ## Recent Decisions
-- Pinned `tree-sitter-rust = "=0.24.2"` (MIT, official tree-sitter org); ABI **15 ∈ runtime `tree-sitter 0.26.13` window [13,15]** (primary-source verified: `api.h` + the grammar's `parser.c`).
-- `tree-sitter-language` stays **transitive** (single shared lock entry `0.1.7`) — no direct dep (founder-approved; supersedes the plan line's literal mention).
-- `tests/rust_grammar_link.rs` = the standalone pinned-pair link test (ABI-window assert + zero-ERROR representative TU parse + malformed-source non-vacuity guard).
-- `docs/architecture/rust-backend.md` = the R0 mapping/design doc; **no new ADR** (IR contract unchanged; `modules.md` §5.2 is the sanctioned extension point).
-- Dual review passed: `@reviewer` SHIP-WITH-FIXES (0 Critical / 0 Major, all 5 nits applied), `@requirements-reviewer` APPROVED.
+- Founder approved R1 plan + all 8 R0 open-item resolutions (D1–D8), incl. additive `LoopKind::Loop`, enum/union skipped, `use` edges unresolved.
+- `Extraction` hoisted to `src/scanner/backends/mod.rs` (shared; C backend unchanged).
+- Extension dispatch `.rs`→Rust / `.c`/`.h`→C via `LanguageKind`/`language_of`; `FileRecord.language="rust"`.
+- Rust `mod` resolution is module-dir-relative for submodule files, containing-dir for crate roots (`lib.rs`/`main.rs`/`mod.rs` + direct children of `src/bin`/`examples`/`tests`/`benches`, trailing-segment match for workspaces) — **verified empirically with rustc 1.92**.
+- **Founder decision:** internal `use` edges keep their raw `::` path (`resolved=false`) instead of being nulled — preserves the R3 module-graph signal.
+- Dual review: reviewer final **APPROVE**; requirements-reviewer all clauses PRESENT (gates confirmed 292/292 by orchestrator → APPROVED).
 
 ## In Progress
-- Nothing — R0 boundary reached; commit pending.
+- Nothing — R1 boundary reached; commit pending.
 
 ## Next
-- **Next session (`/new`) = plan `rust-backend` R1** (`src/scanner/backends/tree_sitter_rust/` + language dispatch). Read state files + `readPlan rust-backend` FIRST. Resolve the R0 open items (IncludeEdge.form, CalleeKind, LoopKind).
+- **Next session (`/new`) = plan `rust-backend` R2** (schema MINOR 1.1 → 1.2: widen `scan.languages` + `files[].language` to admit `"rust"`, re-emit schema + embedded copy + drift test, regenerate goldens). Read state files + `readPlan rust-backend` FIRST.
 
 ## Blockers
 - None.

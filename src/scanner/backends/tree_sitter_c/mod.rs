@@ -22,6 +22,7 @@
 
 use tree_sitter::{Node, Parser};
 
+pub use super::Extraction;
 pub use crate::ir::ALLOC_WRAPPER_PATTERN_ID;
 use crate::ir::{
     CallEvent, CalleeKind, ComparisonEvent, FileRecord, GlobalVar, IncludeCounts, IncludeEdge,
@@ -34,18 +35,6 @@ use crate::scanner::FunctionUnit;
 /// malloc-family callees recognized by the curated wrapper pattern
 /// (catalog-v1 §3, PERF-C-ALLOC-001 detect set).
 pub const ALLOC_FAMILY: [&str; 5] = ["malloc", "calloc", "realloc", "aligned_alloc", "strdup"];
-
-/// Everything one C source file yields across the IR boundary.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Extraction {
-    pub file: FileRecord,
-    pub parse_health: ParseHealth,
-    pub includes: Vec<IncludeEdge>,
-    pub global_vars: Vec<GlobalVar>,
-    pub structs: Vec<StructDef>,
-    pub macros: Vec<MacroEvent>,
-    pub functions: Vec<FunctionUnit>,
-}
 
 /// Extract one file's IR records/events from parsed C source.
 ///

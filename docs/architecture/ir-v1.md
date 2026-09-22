@@ -137,7 +137,10 @@ AccessChainEvent {
 }
 
 LoopNode {
-  kind: for | while | do
+  kind: for | while | do | loop
+                            // `loop` is Rust's unconditional `loop_expression`
+                            // (ADDITIVE variant, plan `rust-backend` R1); the C
+                            // backend never emits it
   depth                     // nesting depth (LOOP-001 threshold, default ≥ 3)
   induction_vars: [string]  // syntactic best-effort for-loop induction identifiers (feeds LOOP-007)
   span                      // loops are records too: they anchor nesting chains
@@ -191,6 +194,17 @@ findings carry what output needs). Invariant: the resolver sets
 empty struct — which the analyzer's `apply_upgrade_hooks` gate depends on.
 
 This one vocabulary is what keeps the IR event-stream-shaped instead of AST-shaped: heuristics pattern-match over typed events + shapes, never over parser node types.
+
+Additive-change note (rust-backend R1, 2026-09-22):
+`LoopKind::Loop` is an ADDITIVE enum variant — Rust's unconditional
+`loop {}` expression, serialized `"loop"` by the existing
+`#[serde(rename_all = "lowercase")]`. It follows the same
+backwards-compatible pattern as the additive fields above: C-produced
+documents never contain it, pre-Rust consumers that do not match on it are
+unaffected, and no existing variant's meaning changes. It is the only IR
+change the Rust scanner backend (R1) makes; the rest of the Rust scope is a
+new parser backend plus extension-based language dispatch, both behind the
+unchanged record model of §3.
 
 ## 4. Coverage check — every catalog heuristic maps to IR records
 

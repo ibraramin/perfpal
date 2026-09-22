@@ -1,41 +1,39 @@
 # Handoff — Latest
 
 ## Objective
-Session 24: plan `rust-backend` **R0** — pin the Rust grammar, prove the pinned pair links/parses, and write the backend design doc. No backend module, no `src/` change, no schema bump, no heuristics.
+Session 25: plan `rust-backend` **R1** — Rust scanner backend `src/scanner/backends/tree_sitter_rust/`, extension-based language dispatch (`.rs`→rust, `.c`/`.h`→c), `FileRecord.language = "rust"`, mirrored ParseHealth ERROR/missing semantics, attribute-sibling skip/consume, and resolution of the R0 §7 open items.
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ (R1 next)** · `beta-release` (not started).
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ / R1 ✅ (R2 next)** · `beta-release` (not started).
 
 ## Version snapshot
-- **Released: `v0.1.0`** (tag, target `f368133`). `Cargo.toml` = `0.1.0`. `metrics.json` schema = **1.1**. Languages = **C only** (Rust lands R1–R3; schema 1.2 at R2).
-- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix (`5643737`) + roadmap re-plan (`ac97ecd`) + R0 (this session, uncommitted).
+- **Released: `v0.1.0`** (tag, target `f368133`). `Cargo.toml` = `0.1.0`. `metrics.json` schema = **1.1**. Languages declared = **C only** (Rust extraction lands R1; **schema 1.2 widening is R2**).
+- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix (`5643737`) + roadmap re-plan (`ac97ecd`) + R0 (`fc5c270`) + R1 (this session, uncommitted).
 
 ## Key Decisions
-- R0 pinned `tree-sitter-rust = "=0.24.2"` (official tree-sitter-org grammar, MIT) per ADR-0001 guardrail G5. **ABI 15 ∈ runtime window [13,15]** — verified from primary sources (`api.h` + the grammar's `parser.c`).
-- **`tree-sitter-language` kept transitive-only** (founder-approved; supersedes the plan line's literal "+ tree-sitter-language 0.1") — the lock resolves one shared `0.1.7` feeding the runtime and both grammars.
-- The link test is a **standalone `tests/rust_grammar_link.rs`** (backend-independent), hardened with an explicit ABI-window assert.
-- `docs/architecture/rust-backend.md` records the node-kind mapping (from the grammar's bundled `node-types.json`), the cfg/attribute sibling rule (the C guarded-content defect does **not** recur), the `token_tree` macro blind spot, and syntactic-tier-only scope. **No new ADR** — the IR contract is unchanged and modules.md §5.2 is the sanctioned extension point.
-- Dual review passed: `@reviewer` SHIP-WITH-FIXES (0 Critical / 0 Major; all 5 doc/test nits applied), `@requirements-reviewer` APPROVED (all clauses present; scope boundary clean).
-
-## Open items handed to R1 (rust-backend.md §7)
-`IncludeEdge.form` mapping for use/mod; `CalleeKind` for method/scoped/turbofish callees; `LoopKind` for `loop_expression`; enum/union/tuple-struct IR targets; `function_signature_item`; `let_declaration` scope classification; macro-invocation events; any additive receiver/trait field (only if provably needed → R2 minor).
+- **R1 approval gate (founder):** approved the plan + all 8 R0 open-item resolutions as recommended.
+- **D1** `use`/`mod` internal → `Quoted`, external → `Angle`; `to_path` = full `::` path (use) / name (mod). **D2** `identifier`/`scoped_identifier`/`field_expression`/`generic_function` → `Direct`, else `Indirect`, name = final segment. **D3** additive `LoopKind::Loop` for `loop_expression` (ir-v1.md amended, schema-neutral). **D4** `struct_item`→`StructDef` (+ tuple synthetics `"0"`,`"1"`), union/enum skipped. **D5** `function_signature_item` skipped. **D6** `let` not an assignment; assignment/compound are; scope-classed. **D7** macro definitions + every invocation → `MacroEvent` (no expansion). **D8** `alloc_site_count=0`, `macro_origin=false`.
+- **`Extraction` hoisted** to `src/scanner/backends/mod.rs` (single source of truth); C backend consumes it unchanged (`pub use` re-export preserves the old path).
+- **Rust `mod` resolution (empirically rustc-verified):** crate-root file → containing dir; submodule file → `<dir>/<stem>`. Crate roots = `lib.rs`/`main.rs`/`mod.rs` + direct children of `src/bin`/`examples`/`tests`/`benches` (trailing-segment match so workspace packages work). Inline modules carry a `/`-joined prefix.
+- **Founder decision (Major 2):** internal `use` edges are **preserved raw + `resolved=false`** (not nulled) — the R3 module-graph signal. Angle edges keep raw too.
+- **Dual review:** `@reviewer` round-1 SHIP-WITH-FIXES (0 Critical; M1 associated const/static + m1–m5, n1–n2) → fixes; a fresh reviewer round found 2 Majors (nested-package crate roots; `use`-edge nulling) → fixes → **final fresh reviewer APPROVE**. `@requirements-reviewer`: all clauses PRESENT, scope clean; its only blocker was sandbox-unverifiable gates → orchestrator confirmed 292/292 → **APPROVED**.
 
 ## Risks
-- **Rust grammar-pin drift:** doc claims are read from `node-types.json` @ `tree-sitter-rust 0.24.2`; a grammar bump changes kinds/fields and **requires** a node-types diff review (ADR-0001 G5).
-- `tree-sitter-language` is **not** exact-pinned (transitive; the committed lockfile is the guard — a deliberate `cargo update` could move it within `0.1.x`).
-- Rust is **syntactic-tier only**; `cfg_if!`/`macro_rules!` bodies are a documented blind spot.
-- Carried: beta tag visibility (attestations on private repos), ARCH-001 hub-fanout corpus sub-case still non-firing, Node-24 action pins, x64-darwin/msvc binary reproducibility, toolchain `1.92.0` mirrored in 5 places.
+- **Crate-root detection is a path-suffix approximation** (accepted, documented in `rust-backend.md` §8): a module dir literally named `src/tests/` is mis-classified; proper fix needs Cargo.toml-aware package-root detection → R3.
+- Internal `use` edges now carry raw `::` paths unresolved → metrics.json `include_graph` admits Quoted edges; watch at R2/R3 (no R1 test drives the schema path).
+- Rust blind spots: `token_tree` bodies invisible; enum/union/tuple-struct IR deferred; `alloc_site_count`/`macro_origin` inert until R3; `#[path = "..."]` not honored.
+- Carried: Rust grammar-pin drift (node-types diff review on any bump), `tree-sitter-language` transitive-not-pinned, beta tag visibility, ARCH-001 hub-fanout corpus sub-case still non-firing, Node-24 action pins, x64-darwin/msvc binary reproducibility, toolchain `1.92.0` mirrored in 5 places.
 
 ## Blockers
 - None.
 
 ## Next Actions
-1. Founder approves the R0 commit → commit the working tree (see Uncommitted Files; **EXCLUDE `.opencode/**`**).
-2. **Next session (`/new`) = plan `rust-backend` R1** — create `src/scanner/backends/tree_sitter_rust/` + extension-based language dispatch. Read `state/session-state.json` + `state/handoff/latest.md` + `docs/activeContext.md` FIRST, then `readPlan rust-backend`.
-3. Then R2 (schema 1.2) → R3 (`PERF-RS-*` heuristics) → R4 (dogfood + `examples-rust/`) → R5 (tests/gates/version `0.2.0`) → R6 (docs/close-out) → plan `beta-release`.
+1. Founder approves the R1 commit → commit the working tree (see Uncommitted Files; **EXCLUDE `.opencode/**`**).
+2. **Next session (`/new`) = plan `rust-backend` R2** — schema MINOR 1.1 → 1.2: widen `scan.languages` + `files[].language` to admit `"rust"`, re-emit `docs/schema/metrics.schema.v1.2.json` + embedded byte-copy + drift test, regenerate the golden report tree, keep v1.1 validating. Consider deriving the aggregator's hardcoded `scan.languages: ["c"]` (`src/aggregator/mod.rs:139`) from the scanned files.
+3. Then R3 (`PERF-RS-*` heuristics + Rust `use`-graph + alloc family + enum/union decisions) → R4 (dogfood + `examples-rust/`) → R5 (tests/gates/version `0.2.0`) → R6 (docs/close-out) → plan `beta-release`.
 
 ## Uncommitted Files
-- **Added:** `tests/rust_grammar_link.rs`, `docs/architecture/rust-backend.md`
-- **Modified:** `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md`, `docs/activeContext.md`, `state/session-state.json`, `state/handoff/latest.md`
+- **Added:** `src/scanner/backends/tree_sitter_rust/` (backend module), `tests/rust_backend.rs`
+- **Modified:** `src/ir/mod.rs` (additive `LoopKind::Loop`), `src/scanner/mod.rs` (dispatch + Rust resolution), `src/scanner/backends/mod.rs` (hoisted `Extraction`), `src/scanner/backends/tree_sitter_c/mod.rs` (consume hoisted `Extraction` + re-export), `docs/architecture/rust-backend.md` (§3 implemented + §8 R1 notes), `docs/architecture/ir-v1.md` (`LoopKind::Loop` amendment), `CHANGELOG.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`
 - **EXCLUDE:** `.opencode/**` (session-tooling noise)
-- Working tree otherwise clean at `ac97ecd`.
+- Gate status: `fmt --check` clean · `clippy -D warnings --all-targets` clean · **292 tests green** (baseline 254) · `cargo build --features semantic-clang` clean.

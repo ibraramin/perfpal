@@ -579,12 +579,18 @@ pub struct AccessChainEvent {
 }
 
 /// Loop kind (ir-v1.md §3.3 LoopNode).
+///
+/// ADDITIVE v1 variant (plan `rust-backend`, phase R1): `Loop` is Rust's
+/// unconditional `loop {}` (`loop_expression`). Additive enum variants are the
+/// same serde-defaulted backwards-compatible pattern as additive fields; the
+/// `rename_all = "lowercase"` keeps the wire value `"loop"`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LoopKind {
     For,
     While,
     Do,
+    Loop,
 }
 
 /// Loop record — loops anchor nesting chains (ir-v1.md §3.3).
