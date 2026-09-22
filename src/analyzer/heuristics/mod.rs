@@ -7,6 +7,9 @@
 //! (MEM-001/002), [`str`] (STR-001/002/003), `r#type` (TYPE-001/002).
 //! Shared candidate collection and span helpers live here so families stay
 //! consistent.
+//!
+//! [`rust`] mirrors the FULL 23-rule catalog onto Rust idioms (R3 waves C1
+//! structural + C2 API-name families).
 
 mod alloc;
 mod arch;
@@ -16,6 +19,12 @@ mod mem;
 mod r#str;
 mod r#type;
 
+/// Rust (`PERF-RS-*`) heuristic families (plan `rust-backend` R3 workstreams
+/// C1 + C2): the FULL 23-rule catalog mirrored onto Rust idioms (structural
+/// subset in C1, API-name families in C2). The registry runs these only over
+/// `language == "rust"` units.
+pub(super) mod rust;
+
 pub(super) use alloc::{alloc_001, alloc_002, alloc_003};
 pub(super) use arch::{arch_001, arch_002, arch_003};
 pub(super) use call::{call_001, call_002};
@@ -23,12 +32,20 @@ pub(super) use r#loop::{
     loop_001, loop_002, loop_003, loop_004, loop_005, loop_006, loop_007, loop_008,
 };
 pub(super) use mem::{mem_001, mem_002};
+pub(super) use rust::{
+    rust_alloc_001, rust_alloc_002, rust_alloc_003, rust_arch_001, rust_arch_002, rust_arch_003,
+    rust_call_001, rust_call_002, rust_loop_001, rust_loop_002, rust_loop_003, rust_loop_004,
+    rust_loop_005, rust_loop_006, rust_loop_007, rust_loop_008, rust_mem_001, rust_mem_002,
+    rust_str_001, rust_str_002, rust_str_003, rust_type_001, rust_type_002,
+};
 /// Wave B2 (plan `semantic-resolver`): the resolver's literal-args mutation
 /// pass reuses the scanf family/position contract — single source of truth,
 /// never duplicated.
 pub(crate) use r#str::scanf_format_index;
 pub(super) use r#str::{str_001, str_002, str_003};
-pub(super) use r#type::{type_001, type_002};
+/// Shared language-parameterized LP64 layout model — reused by the Rust
+/// TYPE family so both backends' size arithmetic is byte-identical.
+pub(super) use r#type::{estimate_struct_size_with, type_001, type_002};
 
 /// Cross-file name-matched call edges (ADR-0001 Syntactic tier): produced by
 /// [`arch_003`] for findings and consumed verbatim by the aggregator for

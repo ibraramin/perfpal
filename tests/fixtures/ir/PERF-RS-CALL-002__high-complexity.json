@@ -1,0 +1,30 @@
+[
+  {
+    "file": {"path": "src/dispatch.rs", "language": "rust", "loc": {"code": 40, "comment": 0, "blank": 0}, "function_count": 2, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/dispatch.rs#branchy#3:1", "name": "branchy", "path": "src/dispatch.rs", "span": {"start_line": 3, "start_col": 1, "end_line": 22, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 15, "cognitive_complexity": 12, "max_loop_depth": 1, "alloc_site_count": 0, "length_lines": 20},
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {"id": "src/dispatch.rs#mild#25:1", "name": "mild", "path": "src/dispatch.rs", "span": {"start_line": 25, "start_col": 1, "end_line": 34, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 14, "cognitive_complexity": 10, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 10},
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

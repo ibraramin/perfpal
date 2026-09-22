@@ -33,9 +33,13 @@
 //!   [`LoopKind::Loop`] variant; no other IR change.
 //! - **D4 structs.** `struct_item` ⇒ [`StructDef`] (named members from
 //!   `field_declaration_list`); tuple structs (`ordered_field_declaration_list`)
-//!   ⇒ `StructDef` with synthetic positional member names `"0"`, `"1"`, …
-//!   `union_item` and `enum_item` are SKIPPED entirely (mirroring C's
-//!   union/enum posture) — R2/R3 work.
+//!   ⇒ `StructDef` with synthetic positional member names `"0"`, `"1"`, ….
+//!   R3 extends this: `union_item` ⇒ `StructDef { kind: Union }` (members from
+//!   its `field_declaration_list`), `enum_item` ⇒ `StructDef { kind: Enum }`
+//!   with NO members (variants are not layout fields; a size/padding heuristic
+//!   must inspect `kind == Struct`), and `StructMember.is_pointer` /
+//!   `array_dim_literal` are derived from the member `type` (`&T`/`*const T`,
+//!   `[u8; 16]`).
 //! - **D5 signatures.** `function_signature_item` (body-less trait method) is
 //!   SKIPPED, mirroring C where prototypes are not functions.
 //! - **D6 bindings.** `let_declaration` is NOT an assignment event;
@@ -46,9 +50,14 @@
 //! - **D7 macros.** `macro_definition` ⇒ `MacroEvent { kind: Definition }`;
 //!   every `macro_invocation` ⇒ `MacroEvent { kind: Use, name: <macro field> }`
 //!   with NO expansion.
-//! - **D8 stats.** `FunctionRecord.alloc_site_count` is always `0` and every
-//!   event's `macro_origin` is always `false` for Rust: R3 owns the allocation
-//!   family, and macro bodies are opaque (see the blind spot below).
+//! - **D8 stats (extended by R3).** `alloc_site_count` now counts Rust
+//!   allocation-family call sites ([`RUST_ALLOC_FAMILY`]: qualified
+//!   constructors, method-only names, and `vec!`/`format!` macro invocations);
+//!   `macro_origin` is wired for every event type + `LoopNode` (span intersects
+//!   a recognized wrapper, or `callee_name` equals a local `macro_rules!`
+//!   definition name). Each `macro_invocation` additionally yields a
+//!   function-attached `CallEvent { is_macro: true }` (the macro-as-call
+//!   surface) alongside its D7 `MacroEvent { kind: Use }`.
 //!
 //! # Documented blind spot (`token_tree`)
 //!
@@ -72,11 +81,11 @@ use tree_sitter::{Node, Parser};
 
 use super::Extraction;
 use crate::ir::{
-    AccessChainEvent, AssignmentEvent, BinaryOpEvent, CallEvent, CalleeKind, ComparisonEvent,
-    EventMeta, FileRecord, FunctionRecord, GlobalVar, IncludeCounts, IncludeEdge, IncludeForm,
-    LocCounts, LoopKind, LoopNode, MacroEvent, MacroEventKind, NativePoint, ParseHealth,
-    ParseStatus, ResolverTier, ScopeClass, Shape, ShapeKind, Span, StatementRole, StorageClass,
-    StructDef, StructMember,
+    ALLOC_WRAPPER_PATTERN_ID, AccessChainEvent, AssignmentEvent, BinaryOpEvent, CallEvent,
+    CalleeKind, ComparisonEvent, EventMeta, FileRecord, FunctionRecord, GlobalVar, IncludeCounts,
+    IncludeEdge, IncludeForm, LocCounts, LoopKind, LoopNode, MacroEvent, MacroEventKind,
+    NativePoint, ParseHealth, ParseStatus, RUST_ALLOC_FAMILY, ResolverTier, ScopeClass, Shape,
+    ShapeKind, Span, StatementRole, StorageClass, StructDef, StructKind, StructMember,
 };
 use crate::scanner::FunctionUnit;
 
@@ -142,6 +151,10 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
                     to_path: Some(mod_edge_raw(node, name, source)),
                     form: IncludeForm::Quoted,
                     resolved: false,
+                    // Rust `mod`-declaration edge: still emitted and still
+                    // drives `RustModuleMap`/`use` resolution, but
+                    // `PERF-RS-ARCH-001` excludes it (import graph only).
+                    is_mod: true,
                     span: ir_span(node, source),
                 });
             }
@@ -153,6 +166,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
                     to_path: Some(text(name, source).to_string()),
                     form: IncludeForm::Angle,
                     resolved: false,
+                    is_mod: false,
                     span: ir_span(node, source),
                 });
             }
@@ -164,12 +178,49 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
             push_global(node, path, source, StorageClass::None, &mut global_vars)
         }
         "struct_item" => {
-            if let Some(def) = struct_def(node, path, source) {
+            if let Some(def) = type_def(node, StructKind::Struct, path, source) {
+                structs.push(def);
+            }
+        }
+        "union_item" => {
+            if let Some(def) = type_def(node, StructKind::Union, path, source) {
+                structs.push(def);
+            }
+        }
+        "enum_item" => {
+            // Enum variants are NOT layout members: the record is emitted with
+            // `kind = Enum` and NO members, so a size/padding heuristic can
+            // exclude it by inspecting `kind` (documented on `StructKind`).
+            if let Some(def) = type_def(node, StructKind::Enum, path, source) {
                 structs.push(def);
             }
         }
         _ => {}
     });
+
+    // Macro events (D7 + R3 recognizer): definitions, recognized alloc
+    // wrappers, and EVERY invocation (including inside function bodies) are
+    // gathered over the whole tree in source order. This runs BEFORE the
+    // function pass so macro-origin classification can consult the gathered
+    // definition names + recognized-pattern spans.
+    let mut macros = Vec::new();
+    let mut macro_cursor = root.walk();
+    walk(&mut macro_cursor, &mut |node| match node.kind() {
+        "macro_definition" | "macro_invocation" => {
+            push_macro_event(node, path, source, &mut macros)
+        }
+        _ => {}
+    });
+    let macro_names: Vec<String> = macros
+        .iter()
+        .filter(|m| m.kind == MacroEventKind::Definition)
+        .map(|m| m.name.clone())
+        .collect();
+    let pattern_spans: Vec<Span> = macros
+        .iter()
+        .filter(|m| m.kind == MacroEventKind::RecognizedPattern)
+        .map(|m| m.span)
+        .collect();
 
     // Pass 2: functions. Every `function_item` reachable at file level or
     // inside an `impl_item`/`trait_item`/`mod_item` body is a unit; body-less
@@ -178,20 +229,15 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
     let global_names: Vec<String> = global_vars.iter().map(|g| g.name.clone()).collect();
     walk_file_level(root, &mut |node| {
         if node.kind() == "function_item" {
-            functions.push(function_unit(node, path, source, &global_names));
+            functions.push(function_unit(
+                node,
+                path,
+                source,
+                &global_names,
+                &macro_names,
+                &pattern_spans,
+            ));
         }
-    });
-
-    // Macro events (D7): definitions and EVERY invocation (including inside
-    // function bodies) are gathered over the whole tree in source order; the
-    // file-level walk alone would miss invocations nested in bodies.
-    let mut macros = Vec::new();
-    let mut macro_cursor = root.walk();
-    walk(&mut macro_cursor, &mut |node| match node.kind() {
-        "macro_definition" | "macro_invocation" => {
-            push_macro_event(node, path, source, &mut macros)
-        }
-        _ => {}
     });
 
     // Comment lines anywhere in the file (including inside function bodies)
@@ -419,6 +465,7 @@ fn push_use_edges(node: Node<'_>, path: &str, source: &[u8], out: &mut Vec<Inclu
             form: use_edge_form(&raw),
             to_path: Some(raw),
             resolved: false,
+            is_mod: false,
             span,
         });
     }
@@ -482,13 +529,29 @@ fn flatten_use(node: Node<'_>, prefix: &str, source: &[u8], out: &mut Vec<String
 }
 
 fn join_path(prefix: &str, segment: &str) -> String {
+    // C1: normalize raw identifiers in every `::`-separated segment so a
+    // `use crate::r#loop::X` edge carries `crate::loop::X` (module resolution
+    // operates on bare names; `r#loop` was a guaranteed resolution miss).
+    let prefix = strip_raw_idents(prefix);
+    let segment = strip_raw_idents(segment);
     if prefix.is_empty() {
-        segment.to_string()
+        segment
     } else if segment.is_empty() {
-        prefix.to_string()
+        prefix
     } else {
         format!("{prefix}::{segment}")
     }
+}
+
+/// C1: strip a leading `r#` from each `::`-separated segment of a path, so
+/// raw identifiers (`r#type`/`r#loop`/`r#str`) normalize to their bare names
+/// for module resolution. Idempotent and harmless on paths with no raw
+/// identifiers (`r#` can only appear at a segment start).
+fn strip_raw_idents(path: &str) -> String {
+    path.split("::")
+        .map(|segment| segment.strip_prefix("r#").unwrap_or(segment))
+        .collect::<Vec<_>>()
+        .join("::")
 }
 
 /// D1 form classification: internal module paths are `Quoted`, everything else
@@ -516,12 +579,14 @@ fn mod_edge_raw(node: Node<'_>, name: Node<'_>, source: &[u8]) -> String {
         if parent.kind() == "mod_item"
             && let Some(outer_name) = parent.child_by_field_name("name")
         {
-            segments.push(text(outer_name, source).to_string());
+            // C1: a raw-identifier module (`mod r#loop;`) must yield its bare
+            // name so `<module_dir>/loop.rs` is probed, not `r#loop.rs`.
+            segments.push(strip_raw_idents(text(outer_name, source)));
         }
         current = parent.parent();
     }
     segments.reverse();
-    segments.push(text(name, source).to_string());
+    segments.push(strip_raw_idents(text(name, source)));
     segments.join("/")
 }
 
@@ -544,30 +609,100 @@ fn push_global(
     });
 }
 
-/// D7: macro definition / invocation → [`MacroEvent`] (never expanded).
+/// D7 + R3 recognizer: macro definition / invocation → [`MacroEvent`] (never
+/// expanded). A `macro_definition` always yields a `Definition` event; when
+/// the raw source of any `macro_rule.right` token tree calls an alloc-family
+/// constructor/method, a SECOND event `RecognizedPattern` with
+/// [`ALLOC_WRAPPER_PATTERN_ID`] is emitted (mirrors the C backend's
+/// `#define`-body recognizer). Every `macro_invocation` yields a `Use` event.
 fn push_macro_event(node: Node<'_>, path: &str, source: &[u8], out: &mut Vec<MacroEvent>) {
-    let (kind, name_node) = match node.kind() {
-        "macro_definition" => (MacroEventKind::Definition, node.child_by_field_name("name")),
-        "macro_invocation" => (MacroEventKind::Use, node.child_by_field_name("macro")),
-        _ => return,
-    };
-    let Some(name_node) = name_node else {
-        return;
-    };
-    out.push(MacroEvent {
-        kind,
-        name: text(name_node, source).to_string(),
-        path: path.to_string(),
-        span: ir_span(node, source),
-        pattern_id: None,
-    });
+    match node.kind() {
+        "macro_definition" => {
+            let Some(name_node) = node.child_by_field_name("name") else {
+                return;
+            };
+            let name = text(name_node, source).to_string();
+            let span = ir_span(node, source);
+            out.push(MacroEvent {
+                kind: MacroEventKind::Definition,
+                name: name.clone(),
+                path: path.to_string(),
+                span,
+                pattern_id: None,
+            });
+            if macro_body_calls_alloc_family(node, source) {
+                out.push(MacroEvent {
+                    kind: MacroEventKind::RecognizedPattern,
+                    name,
+                    path: path.to_string(),
+                    span,
+                    pattern_id: Some(ALLOC_WRAPPER_PATTERN_ID.to_string()),
+                });
+            }
+        }
+        "macro_invocation" => {
+            let Some(name_node) = node.child_by_field_name("macro") else {
+                return;
+            };
+            out.push(MacroEvent {
+                kind: MacroEventKind::Use,
+                name: text(name_node, source).to_string(),
+                path: path.to_string(),
+                span: ir_span(node, source),
+                pattern_id: None,
+            });
+        }
+        _ => {}
+    }
 }
 
-/// D4: named `struct_item` → [`StructDef`]. Named members come from
-/// `field_declaration_list`; tuple structs (`ordered_field_declaration_list`)
-/// get synthetic positional names `"0"`, `"1"`, …. `union_item`/`enum_item`
-/// are skipped entirely.
-fn struct_def(node: Node<'_>, path: &str, source: &[u8]) -> Option<StructDef> {
+/// Does any `macro_rule.right` token tree of `def` call an alloc-family
+/// constructor/method (name then optional whitespace then `(`)? This mirrors
+/// the C backend's `calls_alloc_family` matcher over `#define` bodies; the
+/// token tree is opaque text, so a raw-text scan is the only option.
+fn macro_body_calls_alloc_family(def: Node<'_>, source: &[u8]) -> bool {
+    let mut cursor = def.walk();
+    if cursor.goto_first_child() {
+        loop {
+            if cursor.node().kind() == "macro_rule"
+                && let Some(right) = cursor.node().child_by_field_name("right")
+                && calls_alloc_family(text(right, source))
+            {
+                return true;
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    false
+}
+
+/// Minimal curated matcher: does `body` contain `<alloc-name>(`?
+fn calls_alloc_family(body: &str) -> bool {
+    RUST_ALLOC_FAMILY.all().any(|fam| {
+        let mut search = 0usize;
+        while let Some(pos) = body[search..].find(fam) {
+            let abs = search + pos;
+            let after = &body[abs + fam.len()..];
+            let starts_call = after.strip_prefix('(').is_some()
+                || after.chars().next().is_some_and(|c| c.is_whitespace())
+                    && after.trim_start().starts_with('(');
+            if starts_call {
+                return true;
+            }
+            search = abs + fam.len();
+        }
+        false
+    })
+}
+
+/// R3 D4: a `struct_item` / `union_item` / `enum_item` → [`StructDef`] with
+/// the matching [`StructKind`]. Named members come from `field_declaration_list`
+/// (or a union's required one); tuple structs (`ordered_field_declaration_list`)
+/// get synthetic positional names `"0"`, `"1"`, …. Enums carry NO members
+/// (variants are not layout fields).
+fn type_def(node: Node<'_>, kind: StructKind, path: &str, source: &[u8]) -> Option<StructDef> {
     let name = node
         .child_by_field_name("name")
         .map(|n| text(n, source).to_string())
@@ -576,64 +711,106 @@ fn struct_def(node: Node<'_>, path: &str, source: &[u8]) -> Option<StructDef> {
         return None;
     }
     let mut members = Vec::new();
-    if let Some(body) = node.child_by_field_name("body") {
-        match body.kind() {
-            "field_declaration_list" => {
-                let mut cursor = body.walk();
-                if cursor.goto_first_child() {
-                    loop {
-                        let field = cursor.node();
-                        if field.kind() == "field_declaration" {
-                            let member_name = field
-                                .child_by_field_name("name")
-                                .map(|n| text(n, source).to_string())
-                                .unwrap_or_default();
-                            let type_text = field
-                                .child_by_field_name("type")
-                                .map(|t| text(t, source).to_string())
-                                .unwrap_or_default();
-                            members.push(StructMember {
-                                name: member_name,
-                                type_text,
-                                array_dim_literal: None,
-                                is_pointer: false,
-                            });
-                        }
-                        if !cursor.goto_next_sibling() {
-                            break;
-                        }
-                    }
-                }
-            }
-            "ordered_field_declaration_list" => {
-                let mut position = 0u32;
-                let mut cursor = body.walk();
-                if cursor.goto_first_child() {
-                    loop {
-                        if cursor.field_name() == Some("type") {
-                            members.push(StructMember {
-                                name: position.to_string(),
-                                type_text: text(cursor.node(), source).to_string(),
-                                array_dim_literal: None,
-                                is_pointer: false,
-                            });
-                            position += 1;
-                        }
-                        if !cursor.goto_next_sibling() {
-                            break;
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
+    if kind != StructKind::Enum
+        && let Some(body) = node.child_by_field_name("body")
+    {
+        collect_members(body, source, &mut members);
     }
     Some(StructDef {
         name,
         path: path.to_string(),
         span: ir_span(node, source),
         members,
+        kind,
     })
+}
+
+/// Collect named members from a `field_declaration_list` or positional
+/// members from an `ordered_field_declaration_list` (tuple structs).
+fn collect_members(body: Node<'_>, source: &[u8], members: &mut Vec<StructMember>) {
+    match body.kind() {
+        "field_declaration_list" => {
+            let mut cursor = body.walk();
+            if cursor.goto_first_child() {
+                loop {
+                    let field = cursor.node();
+                    if field.kind() == "field_declaration" {
+                        let member_name = field
+                            .child_by_field_name("name")
+                            .map(|n| text(n, source).to_string())
+                            .unwrap_or_default();
+                        let type_node = field.child_by_field_name("type");
+                        let type_text = type_node
+                            .map(|t| text(t, source).to_string())
+                            .unwrap_or_default();
+                        let (is_pointer, array_dim_literal) = member_flags(type_node, source);
+                        members.push(StructMember {
+                            name: member_name,
+                            type_text,
+                            array_dim_literal,
+                            is_pointer,
+                        });
+                    }
+                    if !cursor.goto_next_sibling() {
+                        break;
+                    }
+                }
+            }
+        }
+        "ordered_field_declaration_list" => {
+            let mut position = 0u32;
+            let mut cursor = body.walk();
+            if cursor.goto_first_child() {
+                loop {
+                    if cursor.field_name() == Some("type") {
+                        let type_node = cursor.node();
+                        let (is_pointer, array_dim_literal) = member_flags(Some(type_node), source);
+                        members.push(StructMember {
+                            name: position.to_string(),
+                            type_text: text(type_node, source).to_string(),
+                            array_dim_literal,
+                            is_pointer,
+                        });
+                        position += 1;
+                    }
+                    if !cursor.goto_next_sibling() {
+                        break;
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// D4 member derivations: `is_pointer` is true for a `reference_type` (`&T`)
+/// or `pointer_type` (`*const T`); `array_dim_literal` is the parsed length
+/// of an `array_type` whose length is an `integer_literal` (`[u8; 16]` ⇒
+/// `Some(16)`), `None` otherwise (e.g. a const-generic length).
+fn member_flags(type_node: Option<Node<'_>>, source: &[u8]) -> (bool, Option<u64>) {
+    let Some(t) = type_node else {
+        return (false, None);
+    };
+    let is_pointer = matches!(t.kind(), "reference_type" | "pointer_type");
+    (is_pointer, array_dim_literal(t, source))
+}
+
+/// Best-effort integer array dimension from an `array_type` (`[u8; 16]`).
+fn array_dim_literal(node: Node<'_>, source: &[u8]) -> Option<u64> {
+    if node.kind() != "array_type" {
+        return None;
+    }
+    let length = node
+        .child_by_field_name("length")
+        .or_else(|| node.named_child(1))?;
+    if length.kind() != "integer_literal" {
+        return None;
+    }
+    text(length, source)
+        .trim()
+        .replace('_', "")
+        .parse::<u64>()
+        .ok()
 }
 
 /// Count of parameters in a `parameter`/`self_parameter` list, plus the
@@ -728,6 +905,8 @@ fn function_unit(
     path: &str,
     source: &[u8],
     global_names: &[String],
+    macro_names: &[String],
+    pattern_spans: &[Span],
 ) -> FunctionUnit {
     let name = fdef
         .child_by_field_name("name")
@@ -746,6 +925,8 @@ fn function_unit(
 
     let mut scan = FuncScan {
         source,
+        macro_names,
+        pattern_spans,
         param_names: &params.names,
         global_names,
         loop_depth: 0,
@@ -753,6 +934,7 @@ fn function_unit(
         nesting: 0,
         cyclomatic: 1,
         cognitive: 0,
+        alloc_site_count: 0,
         calls: Vec::new(),
         assignments: Vec::new(),
         binary_ops: Vec::new(),
@@ -775,8 +957,9 @@ fn function_unit(
         cyclomatic_complexity: scan.cyclomatic,
         cognitive_complexity: scan.cognitive,
         max_loop_depth: scan.max_loop_depth,
-        // D8: R3 owns the allocation family; no Rust alloc_site_count yet.
-        alloc_site_count: 0,
+        // R3: Rust allocation-family call sites (qualified constructors,
+        // method-only members, and `vec!`/`format!` macro invocations).
+        alloc_site_count: scan.alloc_site_count,
         length_lines,
         resolver_tier: ResolverTier::default(),
     };
@@ -812,6 +995,11 @@ fn loop_kind(kind: &str) -> Option<LoopKind> {
 ///   bodies; match_arm and short-circuit operators cost a flat 1.
 struct FuncScan<'a> {
     source: &'a [u8],
+    /// `macro_rules!` definition names in the file (R3 macro-origin input).
+    macro_names: &'a [String],
+    /// Spans of recognized alloc-wrapper macro definitions (R3 macro-origin
+    /// input).
+    pattern_spans: &'a [Span],
     param_names: &'a [String],
     global_names: &'a [String],
     loop_depth: u32,
@@ -819,6 +1007,7 @@ struct FuncScan<'a> {
     nesting: u32,
     cyclomatic: u32,
     cognitive: u32,
+    alloc_site_count: u32,
     calls: Vec<CallEvent>,
     assignments: Vec<AssignmentEvent>,
     binary_ops: Vec<BinaryOpEvent>,
@@ -858,6 +1047,17 @@ impl FuncScan<'_> {
                 self.emit_call(node);
                 self.visit_children(node);
             }
+            "macro_invocation" => {
+                // R3 macro-as-call surface: the invocation is emitted as BOTH
+                // a file-level `MacroEvent { kind: Use }` (D7, gathered over
+                // the whole tree) and a function-attached `CallEvent` with
+                // `is_macro = true` here. The duplication is deliberate:
+                // call-family heuristics consume CallEvents, macro-honesty
+                // consumes MacroEvents. The arguments live in an opaque
+                // `token_tree`, so `args` stays empty.
+                self.emit_macro_call(node);
+                self.visit_children(node);
+            }
             "assignment_expression" | "compound_assignment_expr" => {
                 self.emit_assignment(node);
                 self.visit_children(node);
@@ -895,6 +1095,7 @@ impl FuncScan<'_> {
         self.cyclomatic += 1;
         self.cognitive += 1 + self.nesting;
         let span = ir_span(node, self.source);
+        let macro_origin = self.macro_origin_of(&span, "");
         let induction_vars = if kind == LoopKind::For {
             node.child_by_field_name("pattern")
                 .map(|p| pattern_identifiers(p, self.source))
@@ -908,7 +1109,7 @@ impl FuncScan<'_> {
             induction_vars,
             span,
             resolver_tier: ResolverTier::Syntactic,
-            macro_origin: false, // D8
+            macro_origin,
         });
         self.loop_depth = depth;
         self.nesting += 1;
@@ -928,7 +1129,8 @@ impl FuncScan<'_> {
                 self.cognitive += 1;
             }
             "==" | "!=" | "<" | ">" | "<=" | ">=" => {
-                let meta = self.meta_for(node);
+                let meta =
+                    self.meta_for(node, self.macro_origin_of(&ir_span(node, self.source), ""));
                 let left = node.child_by_field_name("left").map(|n| self.shape_of(n));
                 let right = node.child_by_field_name("right").map(|n| self.shape_of(n));
                 if let (Some(left), Some(right)) = (left, right) {
@@ -936,7 +1138,8 @@ impl FuncScan<'_> {
                 }
             }
             "+" | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" => {
-                let meta = self.meta_for(node);
+                let meta =
+                    self.meta_for(node, self.macro_origin_of(&ir_span(node, self.source), ""));
                 let left = node.child_by_field_name("left").map(|n| self.shape_of(n));
                 let right = node.child_by_field_name("right").map(|n| self.shape_of(n));
                 if let (Some(left), Some(right)) = (left, right) {
@@ -955,15 +1158,26 @@ impl FuncScan<'_> {
 
     fn emit_call(&mut self, node: Node<'_>) {
         let callee = node.child_by_field_name("function");
-        let (callee_kind, callee_name) = match callee {
-            None => (CalleeKind::Unknown, String::new()),
+        let (callee_kind, callee_name, callee_path) = match callee {
+            None => (CalleeKind::Unknown, String::new(), None),
             Some(c) => match c.kind() {
-                "identifier" | "scoped_identifier" | "field_expression" | "generic_function" => {
-                    (CalleeKind::Direct, final_callee_name(c, self.source))
-                }
-                _ => (CalleeKind::Indirect, text(c, self.source).to_string()),
+                "identifier" | "scoped_identifier" | "field_expression" | "generic_function" => (
+                    CalleeKind::Direct,
+                    final_callee_name(c, self.source),
+                    Some(callee_path_of(c, self.source)),
+                ),
+                _ => (
+                    CalleeKind::Indirect,
+                    text(c, self.source).to_string(),
+                    Some(text(c, self.source).to_string()),
+                ),
             },
         };
+        if callee_kind == CalleeKind::Direct
+            && RUST_ALLOC_FAMILY.matches_site(callee_path.as_deref(), &callee_name, false)
+        {
+            self.alloc_site_count += 1;
+        }
         let args = node
             .child_by_field_name("arguments")
             .map(|arglist| {
@@ -984,12 +1198,45 @@ impl FuncScan<'_> {
             })
             .unwrap_or_default();
         let (statement_role, conditional_guarded) = call_position(node);
-        let meta = self.meta_for(node);
+        let macro_origin = self.macro_origin_of(&ir_span(node, self.source), &callee_name);
+        let meta = self.meta_for(node, macro_origin);
         self.calls.push(CallEvent {
             meta,
             callee_name,
             callee_kind,
+            callee_path,
+            is_macro: false,
             args,
+            statement_role,
+            conditional_guarded,
+            semantic: None,
+        });
+    }
+
+    /// R3 macro-as-call: emit a `CallEvent` for a `macro_invocation` with
+    /// `is_macro = true`, `callee_kind = Direct`, `callee_name` = final
+    /// segment of the `macro` path, `callee_path` = full macro path text, and
+    /// empty `args` (the token tree is opaque). See the call site in
+    /// [`FuncScan::visit`] for the deliberate MacroEvent+CallEvent duplication.
+    fn emit_macro_call(&mut self, node: Node<'_>) {
+        let Some(macro_node) = node.child_by_field_name("macro") else {
+            return;
+        };
+        let callee_name = final_callee_name(macro_node, self.source);
+        let callee_path = Some(text(macro_node, self.source).to_string());
+        if RUST_ALLOC_FAMILY.matches_site(callee_path.as_deref(), &callee_name, true) {
+            self.alloc_site_count += 1;
+        }
+        let (statement_role, conditional_guarded) = call_position(node);
+        let macro_origin = self.macro_origin_of(&ir_span(node, self.source), &callee_name);
+        let meta = self.meta_for(node, macro_origin);
+        self.calls.push(CallEvent {
+            meta,
+            callee_name,
+            callee_kind: CalleeKind::Direct,
+            callee_path,
+            is_macro: true,
+            args: Vec::new(),
             statement_role,
             conditional_guarded,
             semantic: None,
@@ -1002,7 +1249,7 @@ impl FuncScan<'_> {
         };
         let target = self.shape_of(left);
         let scope_class = self.classify_target(&target);
-        let meta = self.meta_for(node);
+        let meta = self.meta_for(node, self.macro_origin_of(&ir_span(node, self.source), ""));
         self.assignments.push(AssignmentEvent {
             meta,
             target,
@@ -1026,7 +1273,7 @@ impl FuncScan<'_> {
         if elements.len() < 2 {
             return;
         }
-        let meta = self.meta_for(node);
+        let meta = self.meta_for(node, self.macro_origin_of(&ir_span(node, self.source), ""));
         self.access_chains.push(AccessChainEvent {
             meta,
             root,
@@ -1085,13 +1332,22 @@ impl FuncScan<'_> {
         }
     }
 
-    fn meta_for(&self, node: Node<'_>) -> EventMeta {
+    /// R3 macro-origin detection (mirrors the C backend): true iff the event
+    /// span intersects a recognized alloc-wrapper span, OR the event's
+    /// `callee_name` equals a `macro_rules!` definition name in the file
+    /// (wrapper USE site). Non-call events pass `""` and match on span only.
+    fn macro_origin_of(&self, span: &Span, callee_name: &str) -> bool {
+        self.pattern_spans.iter().any(|ps| ps.intersects(span))
+            || (!callee_name.is_empty() && self.macro_names.iter().any(|m| m == callee_name))
+    }
+
+    fn meta_for(&self, node: Node<'_>, macro_origin: bool) -> EventMeta {
         EventMeta {
             span: ir_span(node, self.source),
             in_loop_depth: self.loop_depth,
             is_innermost: is_innermost_event(node),
             resolver_tier: ResolverTier::Syntactic,
-            macro_origin: false, // D8: token_tree blindness + R3 owns macro family
+            macro_origin,
         }
     }
 
@@ -1152,6 +1408,20 @@ fn chain_depth(node: Node<'_>) -> u32 {
             .child_by_field_name("value")
             .map_or(1, |base| 1 + chain_depth(base)),
         _ => 0,
+    }
+}
+
+/// D2/R3 full callee path text: `identifier` text, the `::`-joined
+/// `scoped_identifier` text, the `<base>.<field>` `field_expression` text,
+/// and for `generic_function` the underlying function's path WITHOUT the
+/// turbofish (`foo::<T>()` ⇒ `"foo"`).
+fn callee_path_of(node: Node<'_>, source: &[u8]) -> String {
+    match node.kind() {
+        "generic_function" => node
+            .child_by_field_name("function")
+            .map(|f| callee_path_of(f, source))
+            .unwrap_or_else(|| text(node, source).to_string()),
+        _ => text(node, source).to_string(),
     }
 }
 
@@ -1588,7 +1858,10 @@ fn process(p: &Point, n: i32, items: &[i32]) -> i32 {
             .unwrap();
         assert_eq!(guarded.meta.in_loop_depth, 0);
         assert!(!guarded.meta.is_innermost);
-        assert!(!guarded.meta.macro_origin, "D8: macro_origin always false");
+        assert!(
+            !guarded.meta.macro_origin,
+            "log_value is neither inside a recognized wrapper nor named by a local macro_definition"
+        );
     }
 
     #[test]
@@ -1732,15 +2005,53 @@ fn process(p: &Point, n: i32, items: &[i32]) -> i32 {
         assert!(ex.includes.iter().all(|e| e.form == IncludeForm::Quoted));
     }
 
-    /// m5 (D4): `union_item` / `enum_item` are skipped entirely.
+    /// D4 (extended by R3): `struct_item`/`union_item`/`enum_item` all produce
+    /// a `StructDef`, discriminated by `kind`.
     #[test]
-    fn union_and_enum_items_are_skipped() {
+    fn struct_union_enum_emit_struct_def_with_kind() {
         let ex = extract(
             "unions.rs",
             b"union U { a: i32, b: f32 }\nenum E { A, B(i32) }\nstruct S { x: i32 }\n",
         );
-        let names: Vec<&str> = ex.structs.iter().map(|s| s.name.as_str()).collect();
-        assert_eq!(names, ["S"], "only named structs produce StructDef");
+        let kinds: Vec<(&str, StructKind)> = ex
+            .structs
+            .iter()
+            .map(|s| (s.name.as_str(), s.kind))
+            .collect();
+        assert_eq!(
+            kinds,
+            [
+                ("U", StructKind::Union),
+                ("E", StructKind::Enum),
+                ("S", StructKind::Struct)
+            ]
+        );
+        let union = ex.structs.iter().find(|s| s.name == "U").unwrap();
+        assert_eq!(union.members.len(), 2, "union members from field list");
+        let enumeration = ex.structs.iter().find(|s| s.name == "E").unwrap();
+        assert!(
+            enumeration.members.is_empty(),
+            "enum variants are not layout members"
+        );
+    }
+
+    /// D4 (R3): member pointer/array derivation for named + tuple members.
+    #[test]
+    fn member_flags_derive_pointer_and_array_dim() {
+        let src = concat!(
+            "struct S { a: &str, b: *const u8, c: [u8; 16], d: [u8; N] }\n",
+            "struct P(&'static str, *const T, [i64; 4]);\n",
+        );
+        let ex = extract("flags.rs", src.as_bytes());
+        let s = ex.structs.iter().find(|s| s.name == "S").unwrap();
+        assert!(s.members[0].is_pointer, "&str is a reference");
+        assert!(s.members[1].is_pointer, "*const u8 is a pointer");
+        assert_eq!(s.members[2].array_dim_literal, Some(16));
+        assert_eq!(s.members[3].array_dim_literal, None, "non-literal length");
+        let p = ex.structs.iter().find(|s| s.name == "P").unwrap();
+        assert!(p.members[0].is_pointer);
+        assert!(p.members[1].is_pointer);
+        assert_eq!(p.members[2].array_dim_literal, Some(4));
     }
 
     /// m3: a nested item `fn` body is not attributed to the enclosing fn.

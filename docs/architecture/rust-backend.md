@@ -43,14 +43,18 @@ G5 note: the exact pin is the deliverable of this phase, and it is deliberate �
 
 ## 3. Node-kind mapping table (R1 extraction plan)
 
-> **Status: IMPLEMENTED in R1** (`src/scanner/backends/tree_sitter_rust/`).
-> The table below is the plan this implementation followed; see §8 for the
-> founder-approved decisions that resolved each open item. Explicit R1 gaps:
-> `union_item`/`enum_item` are **skipped entirely** (no IR record; R2/R3 work),
-> `use` leaf paths are emitted as include edges but are **unresolved** in R1
-> (`::` never matches a file; R3 owns module-graph semantics), every Rust
-> `FunctionRecord` carries `alloc_site_count = 0` and every event
-> `macro_origin = false` (R3 owns the allocation/macro families).
+> **Status: IMPLEMENTED (R1) and EXTENDED by R3**
+> (`src/scanner/backends/tree_sitter_rust/`). The table below is the plan this
+> implementation followed; see §8 for the founder-approved decisions that
+> resolved each R1 open item and §9 for the R3 extensions. **R3 closed the R1
+> gaps noted in earlier revisions:** `union_item` → `StructDef { kind: Union }`
+> and `enum_item` → `StructDef { kind: Enum }` are now emitted (no members for
+> enums), internal `use` edges now RESOLVE to files via the module-path map
+> (unresolved internal edges normalize to `to_path=None`), `alloc_site_count`
+> is computed from the shared `RUST_ALLOC_FAMILY`, `macro_origin` is wired for
+> every event type + `LoopNode`, and every `macro_invocation` additionally
+> yields a function-attached `CallEvent { is_macro: true }` (the approved
+> macro-as-call surface). `CallEvent.callee_path` is populated for Rust.
 
 Column 2 names the IR record/event/shape the kind is intended to produce. Where a Rust kind and its C counterpart differ meaningfully, the note says so. Where a field name is deliberately not asserted, the row says the field details are to be confirmed against `node-types.json` at R1.
 
@@ -240,7 +244,7 @@ These are recorded so R1/R2/R3 decide them explicitly; none is guessed above.
 **Unverified / needs-review items in this document (explicit):**
 
 - The exact sub-node layout of `use_declaration` path expressions beyond the field names listed (fan-out enumeration for `use a::{b, c}`) is deferred to R1; only the field names above were read from `node-types.json`.
-- `IncludeEdge.form` semantics for Rust, `CalleeKind` for method/scoped/turbofish callees, `LoopKind` for `loop_expression`, and the enum/union/tuple-struct IR targets are **unresolved by design** — listed as open items, not asserted.
+- `IncludeEdge.form` semantics for Rust, `CalleeKind` for method/scoped/turbofish callees, `LoopKind` for `loop_expression`, and the enum/union/tuple-struct IR targets were listed here as R0 open items; **all four were resolved by the R1 founder decisions (§8 D1–D4) and the enum/union targets were completed by R3 (§9)**. This subsection is retained as the R0-era record.
 - `tree-sitter-rust`'s `node-types.json` was read at the pinned crate version (`0.24.2`); a future grammar upgrade may change kinds/fields and would require a node-types diff review per ADR-0001 guardrail G5.
 
 ## 8. R1 implementation notes
@@ -254,14 +258,14 @@ exactly as follows.
 
 | Id | Decision | Resolution |
 |---|---|---|
-| **D1** | `IncludeEdge.form` mapping | Internal module paths (`crate::`/`self::`/`super::`, plus bare `mod foo;`) → `Quoted`; everything else (`std`/`core`/`alloc`/any crate name/`extern crate`) → `Angle`. `to_path` is the full `::`-joined path text for `use`, the module/crate name for `mod`/`extern crate`. `use` leaves never match a file, so they stay unresolved in R1 (R3 owns module-graph semantics); wildcard leaves drop the trailing `::*`. |
+| **D1** | `IncludeEdge.form` mapping | Internal module paths (`crate::`/`self::`/`super::`, plus bare `mod foo;`) → `Quoted`; everything else (`std`/`core`/`alloc`/any crate name/`extern crate`) → `Angle`. `to_path` is the full `::`-joined path text for `use`, the module/crate name for `mod`/`extern crate`; wildcard leaves drop the trailing `::*`. **R3 update:** internal `use` paths are now RESOLVED to the owning `.rs` file via the module-path→file map (`src/scanner/mod.rs::resolve_rust_use_edges`); a hit rewrites `to_path` and sets `resolved=true`, a miss normalizes to `to_path=null, resolved=false` (superseding R1's raw-`::` retention). `Angle` (external) edges are untouched. |
 | **D2** | Callee classification | `identifier`/`scoped_identifier`/`field_expression`/`generic_function` as the `function` field → `Direct`; anything else → `Indirect`; missing `function` → `Unknown`. `callee_name` is the final segment (`scoped_identifier`→`name`, `field_expression`→`field`, `generic_function`→recurse). Documented FP class: closure-field invocation (`self.callback()`) classifies `Direct`. |
 | **D3** | `LoopKind` coverage | `loop_expression` maps to the additive `LoopKind::Loop` variant (serializes `"loop"`); recorded in [ir-v1.md](./ir-v1.md). No other IR change. |
-| **D4** | Structs | `struct_item` → `StructDef` (named members from `field_declaration_list`); tuple structs (`ordered_field_declaration_list`) → `StructDef` with synthetic positional member names `"0"`, `"1"`, …. `union_item`/`enum_item` are skipped entirely — R2/R3 work. |
+| **D4** | Structs | `struct_item` → `StructDef { kind: Struct }` (named members from `field_declaration_list`); tuple structs (`ordered_field_declaration_list`) → `StructDef` with synthetic positional member names `"0"`, `"1"`, …. **R3 update:** `union_item` → `StructDef { kind: Union }` (members from its `field_declaration_list`) and `enum_item` → `StructDef { kind: Enum }` with **no members** (variants are not layout fields); `StructMember.is_pointer` and `array_dim_literal` are derived from the member `type` (`&T`/`*const T`, `[u8; 16]`). |
 | **D5** | Signatures | `function_signature_item` (body-less trait method) is skipped, mirroring C where prototypes are not functions. |
 | **D6** | let / assignment | `let_declaration` is NOT an `AssignmentEvent`; `assignment_expression` and `compound_assignment_expr` ARE. `scope_class` is `Global` iff the target root identifier is a collected `static`/`const` name, `Param` iff a parameter name (including `self`), else `Local`; a non-identifier target is `Unknown`. |
 | **D7** | Macros | `macro_definition` → `MacroEvent { kind: Definition }`; every `macro_invocation` (including inside function bodies — gathered by a whole-tree pass) → `MacroEvent { kind: Use }`, no expansion. |
-| **D8** | Stats honesty | `FunctionRecord.alloc_site_count = 0` and every event's `macro_origin = false` for Rust; R3 owns the allocation family and `token_tree` bodies are opaque. |
+| **D8** | Stats honesty | **R1:** `FunctionRecord.alloc_site_count = 0` and every event's `macro_origin = false` for Rust — superseded by R3. **R3 update:** `alloc_site_count` counts Rust allocation-family call sites via the shared `RUST_ALLOC_FAMILY` matcher (qualified constructors, method-only names, `vec!`/`format!` macro invocations), and `macro_origin` is wired for every event type + `LoopNode` (span intersects a recognized wrapper, or `callee_name` equals a local `macro_rules!` name). Each `macro_invocation` additionally yields a function-attached `CallEvent { is_macro: true }` alongside its D7 `MacroEvent { kind: Use }`; `token_tree` bodies remain opaque. |
 
 Additional implementation notes:
 
@@ -291,10 +295,15 @@ Additional implementation notes:
   - **Inline modules:** nested `mod` declarations carry a `/`-joined prefix
     (`mod outer { mod inner; }` → raw `outer/inner`; never `::`), resolved as
     `<module_dir>/outer/inner.rs` / `<module_dir>/outer/inner/mod.rs`.
-  - **`use` edges (founder decision)**: internal `use` paths are CLASSIFIED but
-    NOT resolved — they keep their raw `::` path with `resolved=false`
-    (`use crate::util::helper` stays `Quoted`, `to_path="crate::util::helper"`).
-    Only `Angle` (external) edges are also left unresolved with raw text kept.
+  - **`use` edges (R1 founder decision, superseded by R3):** internal `use`
+    paths were CLASSIFIED but NOT resolved in R1 — they kept their raw `::`
+    path with `resolved=false` (`use crate::util::helper` stayed `Quoted`,
+    `to_path="crate::util::helper"`). **R3 resolves them** against the
+    module-path→file map (longest FILE-backed module prefix; `crate`/`self`/
+    leading `super` semantics; an intra-file import resolves to `None`), so a
+    hit rewrites `to_path`/`resolved=true` and a miss NORMALIZES to
+    `to_path=null, resolved=false`. `Angle` (external) edges remain unresolved
+    with raw text kept.
   - Repo-root single-file targets (`foo.rs`) are ambiguous (not under a known
     crate-root dir), so the file-stem rule applies: `foo` → `foo/`.
 - **Complexity formula.** cyclomatic = `1 + {if_expression, each match_arm,
@@ -305,20 +314,134 @@ Additional implementation notes:
   annotated item always extracts (locked by tests), and both arms of a
   `#[cfg(...)]` pair present in source are extracted since the predicate is
   opaque (honest limitation, §4).
-- **Known limitation — crate-root directory detection is a path-suffix
-  approximation (R1 review, accepted).** A directory whose final segment is
-  `src/bin`/`examples`/`tests`/`benches` is treated as a Cargo crate-root
-  directory, so a module directory that literally ends in one of those names
-  (e.g. `src/tests/`) is mis-classified as a crate root (false negative:
-  `<dir>/<stem>/` submodules missed; false positive: a sibling `<dir>/<stem>.rs`
-  matched). Distinguishing the two needs Cargo.toml-aware package-root
-  detection, which is deferred to R3 (module-graph work). No R1 test exercises
-  this layout.
+- **Known limitation — crate-root directory detection (R1 path-suffix
+  approximation; R3 Cargo.toml-aware).** R1 treated any directory whose final
+  segment is `src/bin`/`examples`/`tests`/`benches` as a Cargo crate-root
+  directory, mis-classifying a module directory literally ending in one of
+  those names (e.g. `src/tests/`). R3 replaces this with Cargo.toml-aware
+  package discovery (`RustModuleContext::discover`/`discover_packages`): when
+  at least one `Cargo.toml` is discoverable under the scan root, crate-root
+  directories are matched EXACTLY against each package's default target
+  layouts (`<pkg>/src/bin`, `<pkg>/examples`, `<pkg>/tests`, `<pkg>/benches`),
+  and `lib.rs`/`main.rs` under `<pkg>/src` are crate roots by the file-stem
+  rule. **The R1 path-suffix test is retained as a FALLBACK** when no
+  manifest is discoverable (isolated-subdirectory scans). Remaining accepted
+  limitations: custom `[lib] path` / `[[bin]] path` overrides are out of scope;
+  manifest discovery is a bounded walk (depth 12) that skips dot-directories,
+  symlinks, `target` and `node_modules`.
 
 **R2 schema note (plan `rust-backend` R2).** The metrics.json schema MINOR bump
 1.1 → 1.2 admits `"rust"` in both `scan.languages` and `files[].language`
-(widened from `const "c"` to `enum ["c","rust"]`); internal `use` edges remain
-raw `::` paths with `resolved=false` (metrics.json `include_graph` admits
-`Quoted` edges, so they are carried as unresolved internal edges, exactly as in
-R1), and Rust module-graph semantics are still R3.
+(widened from `const "c"` to `enum ["c","rust"]`). At R2, internal `use` edges
+were still raw `::` paths with `resolved=false`; **R3 now resolves them** (see
+§8/§9), and metrics.json `include_graph` admits `Quoted` edges, so an
+unresolved internal edge is carried as data with `to:null`.
+
+## 9. R3 implementation notes
+
+Phase R3 completed the Rust tier: the scanner extensions (workstreams A + B),
+the analyzer's Rust heuristics + language-tagged registry (C), and the reporter
+catalog extension (D). The rule descriptions live in the new companion catalog
+[`docs/heuristics/rust-catalog.md`](../heuristics/rust-catalog.md); this section
+records the implementation surface and the founder decisions behind it.
+
+### 9.1 Workstream A — additive IR + Rust backend
+
+- **Additive IR.** `StructKind { Struct(default), Union, Enum }` +
+  `StructDef.kind`; `CallEvent.callee_path: Option<String>` (full callee path
+  text) and `CallEvent.is_macro: bool` (true for Rust macro-invocation call
+  events); and the shared `RUST_ALLOC_FAMILY` (`RustAllocFamily`: 12 qualified
+  constructors, 5 method names, 2 macros = 19 curated names) in `src/ir/mod.rs`.
+  Both fields are `#[serde(default, ...)]` additive v1 — see
+  [ir-v1.md](./ir-v1.md) for the additive-change note, and §9.3 for the
+  no-schema-bump rationale.
+- **Backend.** `alloc_site_count` is computed per function via
+  `RUST_ALLOC_FAMILY::matches_site`; a `RecognizedPattern` `MacroEvent`
+  (`ALLOC_WRAPPER_PATTERN_ID`) is emitted for `macro_rules!` bodies whose
+  `macro_rule.right` token text calls an alloc-family name; `macro_origin` is
+  wired for every event type + `LoopNode` (span intersects a recognized pattern
+  OR `callee_name` equals a local `macro_rules!` definition name); union/enum
+  `StructDef`s are emitted with `kind`; `StructMember.is_pointer` /
+  `array_dim_literal` are derived from the member type; and each
+  `macro_invocation` emits a function-attached `CallEvent { is_macro: true }`
+  (the approved macro-as-call surface) alongside its D7 `MacroEvent`.
+
+### 9.2 Workstream B — Rust module graph
+
+- `use` edges now resolve to files: a module-path→file map is built from
+  resolved `mod` edges + crate roots, keyed per crate-root FILE (each lib/bin/
+  test/example is an independent `crate::` namespace), and an internal `use` is
+  resolved by the LONGEST module prefix that maps to a file; a miss normalizes
+  to `to_path=None, resolved=false`.
+- Crate-root detection is now Cargo.toml-aware (`RustModuleContext::discover` /
+  `discover_packages`): package roots are the directories containing a
+  `Cargo.toml`, and crate-root dirs are matched exactly against Cargo's default
+  target layouts. The R1 path-suffix approximation is retained as the fallback
+  when no manifest is discoverable (see §8).
+
+### 9.3 Founder decisions
+
+| Decision | Resolution |
+|---|---|
+| **Language tagging** | The registry is language-tagged (`analyzer::analyze`): C rules run only on non-`"rust"` units, Rust rules only on `"rust"` units. `cross_file_call_edges` is keyed by `(language, name)` so a whole-program call can never emit a cross-language edge. |
+| **All-23 mirroring** | Every C family's intent is mirrored as `PERF-RS-*` (23 ids), with **honest reframing** documented per rule where Rust has no direct analogue (`reserve` growth, `unsafe` unbounded ops, char/byte iteration, `size_of`-as-element-count, no-explicit-size block copy, `repr(Rust)` reordering). |
+| **`CallEvent.callee_path`** | ADDITIVE (`Option` + serde default, omit-don't-null); the C backend leaves it `None`, the Rust backend populates the full callee path. |
+| **`StructDef.kind`** | ADDITIVE (`StructKind`, default `Struct`); enums carry no members so a size/padding heuristic must inspect `kind == Struct`. |
+| **Use-edge resolution + crate root** | Internal `use` edges resolve (superseding R1's raw-`::` retention); unresolved internal edges normalize to null; crate-root detection is Cargo.toml-aware with the R1 suffix fallback kept. |
+| **Macro surface** | Every `macro_invocation` yields BOTH a `MacroEvent { kind: Use }` (honesty) and a function-attached `CallEvent { is_macro: true }` with empty `args` (call-family heuristics). |
+
+**IR-only, no schema bump.** `StructKind`/`StructDef.kind`,
+`CallEvent.callee_path`, `CallEvent.is_macro` and `RUST_ALLOC_FAMILY` are
+IR-internal: they are not serialized into `metrics.json`, so no schema re-emission
+is required (the additive serde-default pattern keeps pre-Rust documents
+deserializing unchanged — [ir-v1.md](./ir-v1.md)).
+
+### 9.4 Workstream C — analyzer
+
+- **Language-tagged registry** (see §9.3): `analyzer::analyze` groups units once
+  by `FileRecord.language`, then hands each entry only its slice.
+- **All 23 `PERF-RS-*` rules** are implemented as pure IR views under
+  `src/analyzer/heuristics/rust/{alloc,arch,call,loop,mem,str,type}.rs`, with
+  rule-id consts in `src/analyzer/finding.rs`.
+- `cross_file_call_edges` (`src/analyzer/heuristics/arch.rs`) is
+  **language-scoped** for both the resolved-site internal check and the
+  name-based definition map.
+- **RS-ARCH-001 sub-cases:** cycles / deep chains / hubs only, over the
+  **`use` import graph**. Internal edges are
+  `resolved && to_path.is_some() && !IncludeEdge.is_mod`; the `is_mod`
+  discriminator (IR-only additive field, serde-default) marks the edges emitted
+  by bare `mod child;` declarations, which are still emitted and still drive
+  `RustModuleMap`/`use` resolution (module structure lives in `include_graph`
+  data). Counting `mod` declarations would make every ordinary parent/child
+  module pair look cyclic: `mod child;` yields parent→child while the child's
+  `use super::…` yields child→parent (N1), and it inflated hub fan-out and
+  deep-chain depth. C has no such asymmetry — its `#include` graph is
+  import-only, which Rust's rule now mirrors. The C rule's
+  fourth sub-case — Info/MEDIUM findings for unresolved internal `mod`/`use`
+  edges (`kind=unresolved_include`) — is **intentionally NOT mirrored**: the
+  longest-file-backed-prefix resolver cannot resolve crate-root items
+  (`use crate::Config;`), inline-module items, or modules behind the
+  raw-identifier class, so ordinary rustc-resolvable Rust produced a
+  false-positive finding stream. Unresolved internal edges remain in
+  `include_graph` as data (`to:null`, `resolved=false`) but emit no finding.
+
+### 9.5 Workstream D — reporter
+
+The reporter's frozen `HEURISTIC_CATALOG_V1` was extended to **all 46 rule ids**
+(23 C + 23 Rust) with language-neutral prose, fixing the Appendix A `panic!` on
+an uncataloged Rust rule id; a completeness lock derives the expected set
+DIRECTLY from the analyzer registry (`analyzer::registered_rule_ids`), so a
+registry entry whose rule id is not cataloged fails the lock instead of reaching
+the panic.
+
+### 9.6 Remaining accepted limitations
+
+- **`token_tree` blind spot** (unchanged, §5): macro-generated items remain
+  invisible; only the invocation event itself is visible.
+- **No Rust semantic resolver** (§6): RS-ARCH-003's resolved branch is
+  unreachable; the C resolver's confidence upgrades have no Rust equivalent.
+- **D2 callee classification**: closure-field / trait-object method calls
+  through a field classify `Direct`, so RS-LOOP-006 does not see them.
+- **Crate-root overrides**: custom `[lib] path` / `[[bin]] path` are out of
+  scope; manifest discovery is a bounded walk (depth 12).
 

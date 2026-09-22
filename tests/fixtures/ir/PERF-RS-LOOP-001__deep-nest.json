@@ -1,0 +1,38 @@
+[
+  {
+    "file": {"path": "src/grid.rs", "language": "rust", "loc": {"code": 24, "comment": 0, "blank": 2}, "function_count": 2, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/grid.rs#flatten_quad#4:1", "name": "flatten_quad", "path": "src/grid.rs", "span": {"start_line": 4, "start_col": 1, "end_line": 16, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 5, "cognitive_complexity": 6, "max_loop_depth": 4, "alloc_site_count": 0, "length_lines": 13},
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 5, "start_col": 5, "end_line": 15, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false},
+          {"kind": "for", "depth": 2, "induction_vars": ["j"], "span": {"start_line": 6, "start_col": 9, "end_line": 14, "end_col": 10}, "resolver_tier": "syntactic", "macro_origin": false},
+          {"kind": "for", "depth": 3, "induction_vars": ["k"], "span": {"start_line": 7, "start_col": 13, "end_line": 13, "end_col": 14}, "resolver_tier": "syntactic", "macro_origin": false},
+          {"kind": "for", "depth": 4, "induction_vars": ["m"], "span": {"start_line": 8, "start_col": 17, "end_line": 12, "end_col": 18}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      },
+      {
+        "record": {"id": "src/grid.rs#pair_loop#19:1", "name": "pair_loop", "path": "src/grid.rs", "span": {"start_line": 19, "start_col": 1, "end_line": 26, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 3, "cognitive_complexity": 3, "max_loop_depth": 2, "alloc_site_count": 0, "length_lines": 8},
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 20, "start_col": 5, "end_line": 25, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false},
+          {"kind": "for", "depth": 2, "induction_vars": ["j"], "span": {"start_line": 21, "start_col": 9, "end_line": 24, "end_col": 10}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      }
+    ]
+  }
+]

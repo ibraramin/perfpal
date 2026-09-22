@@ -1,43 +1,47 @@
 # Handoff — Latest
 
 ## Objective
-Session 26: plan `rust-backend` **R2** — metrics.json schema MINOR bump **1.1 → 1.2** admitting `"rust"`: widen `scan.languages` + `files[].language` to `enum ["c","rust"]`, derive `scan.languages` from scanned files, re-emit `docs/schema/metrics.schema.v1.2.json` + embedded byte-copy + drift test, regenerate the golden report tree, keep v1.1 as history/validating, carry the R1 `use`-edge note.
+Session 27: plan `rust-backend` **R3** — the Rust language tier analyzed end-to-end: full 23-rule `PERF-RS-*` heuristic catalog with a **language-tagged registry**, Rust `use`-graph resolution (+ Cargo.toml-aware crate-root detection), the Rust allocation family (+ `macro_rules!` wrapper recognizer + `macro_origin`), and the enum/union/tuple-struct IR decisions. **Complete**; dual review APPROVED (final round 3/3); commit pending founder approval.
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ / R1 ✅ / R2 ✅ (R3 next)** · `beta-release` (not started).
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ / R1 ✅ / R2 ✅ / R3 ✅ (R4 next)** · `beta-release` (not started).
 
 ## Version snapshot
 - **Released: `v0.1.0`** (tag, target `f368133`). `Cargo.toml` = `0.1.0` (R5 owns the 0.2.0 bump).
-- **`metrics.json` schema = 1.2** (was 1.1). Languages **admitted = C + Rust**; `scan.languages` is now the sorted-unique set of scanned files (`["c"]` for a C-only tree; `["c","rust"]` on a zero-file scan).
-- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + **R2 (this session, uncommitted)**.
+- **`metrics.json` schema = 1.2 — UNCHANGED by R3** (no schema bump: every R3 IR addition is IR-only, never serialized into the document).
+- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + R2 + **R3 (this session, uncommitted)**.
 
 ## Key Decisions
-- **R2 approval gate (founder, question tool):** (D-A) `scan.languages` **derives** from scanned files (sorted-unique `BTreeSet`), zero-file scan → supported set `["c","rust"]` (minItems:1 preserved); (D-B) **full docs sweep** in R2; (D-C) **add a Rust end-to-end schema lock**.
-- Schema delta vs v1.1 = exactly **6 hunks / 7 lines** (metadata trio + `schema_version.const` + `scan.languages.items` + its description + `files[].language` + its description). `rule_id` pattern untouched (`PERF-RS-*` is R3). Loosening is backward-compatible for `"c"`-valued docs (with the version marker updated); a v1.1 *strict* validator rejects a rust-valued doc (documented strictness caveat).
-- `SUPPORTED_LANGUAGES: &[&str] = &["c","rust"]` in `src/scanner/mod.rs` is the **empty-scan fallback only** — per-file tokens are still owned by each backend (divergence risk documented, not a single source of truth).
-- v1.1 (`docs/` + `src/schema/`) **retained as history**; the golden tree's v1.1 artifact was removed (writer emits only the current artifact).
-- **R1 note carried:** internal Rust `use` edges remain raw `::` paths with `resolved=false`; v1.2 admits the `"rust"` token but Rust module-graph semantics stay R3.
-- **Dual review:** `@reviewer` SHIP-WITH-FIXES with **ZERO code defects** (1 Major + Minors, all doc-fidelity) → fix wave → **rev-2 closure APPROVE** (all 13 closed, no new issues). `@requirements-reviewer` **APPROVED** (11/11 clauses, scope clean, no R3 leakage); its only unverified items were sandbox gates → orchestrator ran them live.
+- **R3 approval gate (founder, question tool — all "recommended"):** (1) execute **all** of R3 in staged waves; (2) mirror **all 23** families with **honest reframing**; (3) **language-tagged registry** (`PERF-C-*` C-only / `PERF-RS-*` Rust-only); (4) add a lightweight **macro-as-call surface**; (5) additive `StructDef.kind` + union/enum + pointer/array-dim derivation **and** resolve `use` edges + **Cargo.toml-aware crate-root detection**.
+- **WS-A (IR + backend):** additive `StructKind{struct,union,enum}` + `StructDef.kind`; `CallEvent.callee_path: Option<String>` + `CallEvent.is_macro: bool`; shared `RUST_ALLOC_FAMILY` (19 names, `matches_site`). Rust backend now computes `alloc_site_count`, recognizes alloc-wrapper `macro_rules!` bodies (`RecognizedPattern`), wires `macro_origin` (span-intersects-recognized OR callee-name-equals-local-macro-def), emits union/enum `StructDef`s, derives `is_pointer`/`array_dim_literal`, and emits a function-attached macro-as-call `CallEvent`.
+- **WS-B (module graph):** `use` edges resolve to files via a module-path→file map (longest **FILE-backed** prefix; `crate`/`self`/`leading super`); unresolved internal `use` → `to_path=null, resolved=false` (supersedes R1 raw-`::` retention); **Cargo.toml-aware** crate-root detection with the R1 suffix heuristic as no-manifest fallback; `r#` raw-identifier prefixes stripped.
+- **WS-C (analyzer):** `RuleLanguage`-tagged registry; `analyze` groups units once by language and passes each rule only its slice; `cross_file_call_edges` keyed by `(language, name)`; **23 `PERF-RS-*` rules** in `src/analyzer/heuristics/rust/`.
+- **WS-D (reporter):** catalog extended to **46 ids**; `RegistryEntry.rule_id` + `registered_rule_ids()` drive a registry-derived completeness lock; language-neutral architecture prose + include-graph caption.
+- **N1 fix:** additive IR-only `IncludeEdge.is_mod` — `PERF-RS-ARCH-001` runs over the **`use` import graph only** (`mod` declarations excluded; they still drive resolution and stay in `include_graph` data).
+- **Dual review:** `@reviewer` 1 CHANGES_REQUESTED (C1 raw-ident module resolution + M1 ARCH-001 unresolved FP / M2 reporter lock binding / M3 single-file target) → fix → 2 CHANGES_REQUESTED (**N1** parent/child false cycles, pre-existing) → fix → **3 APPROVE**. `@requirements-reviewer` **APPROVED** (8/8 clauses, scope clean). Orchestrator-direct: `is_mod` added to `ir-v1.md`.
 
 ## Risks
-- **`SUPPORTED_LANGUAGES` vs backend tokens can drift** — adding a language needs both updated; only the empty-scan fallback reads the const (doc-noted, not enforced).
-- **No CI JSON-Schema validation** of emitted documents — v1.2 rust-language validation is asserted structurally by tests only (post-beta hardening candidate).
-- Carried: Rust `use` edges unresolved raw `::` (R3); crate-root path-suffix approximation (R3); `token_tree` blind spot; `alloc_site_count`/`macro_origin` inert until R3; enum/union/tuple-struct IR deferred; grammar-pin drift; `tree-sitter-language` transitive; x64-darwin/msvc binary reproducibility; toolchain `1.92.0` mirrored in 5 places.
-- Pre-existing doc nits (R6): `stats-distributions-proposal.md` + dated `roadmap.md` snapshot name v1.1 as hypothetical; `docs/website/scope-and-content.md` still says schema v1.1 (separate-repo contract).
+- **Rust is syntactic-tier only** — no semantic resolver (libclang is C-only); `cfg_if!`/`macro_rules!` `token_tree` bodies stay opaque (macro-generated items invisible).
+- **`PERF-RS-ARCH-001` = `use`-import graph only** — module structure lives in `include_graph` data; deep-chain/hub reflect imports, not module nesting.
+- **Rust `use` resolution is an approximation** — custom Cargo.toml `[lib] path`/`[[bin]] path` layouts out of scope; crate-root-item/inline-module imports stay unresolved; **no `unresolved_include` finding** for Rust (intentional FP-class removal).
+- **Curated Rust name-lists** (syntactic): `clone` excluded from `RUST_ALLOC_FAMILY`; `+=` accumulation invisible; RS-MEM-002 has no explicit size arg; RS-TYPE-002 carries a `repr(Rust)` auto-reorder caveat; RS-LOOP-006 closure-field calls classify `Direct`.
+- Carried: grammar-pin drift (node-types diff needed on any bump); `tree-sitter-language` transitive; x64-darwin/msvc binary reproducibility; toolchain `1.92.0` mirrored in 5 places.
+- Pre-existing doc nits (R6): `stats-distributions-proposal.md` + dated `roadmap.md` snapshot name v1.1; `docs/website/scope-and-content.md` still says schema v1.1.
 
 ## Blockers
 - None.
 
 ## Next Actions
-1. Founder approves the R2 commit → commit the working tree (see Uncommitted Files; **EXCLUDE `.opencode/**`**).
-2. **Next session (`/new`) = plan `rust-backend` R3** — full Rust heuristic catalog with `PERF-RS-*` rule ids (mirror each C family's intent to Rust idioms), Rust `use`-graph resolution semantics (ARCH-001 cycles/fan-out; resolve the raw `::` edges carried since R1), the Rust allocation family (`+ macro_origin` wrapper recognizer), and the enum/union/tuple-struct IR decisions deferred from R1/R2.
-3. Then R4 (dogfood + `examples-rust/`) → R5 (tests/gates + crate version `0.2.0`) → R6 (docs/close-out) → plan `beta-release`.
+1. Founder approves the R3 commit → commit the working tree (see Uncommitted Files; **EXCLUDE `.opencode/**`**).
+2. **Next session (`/new`) = plan `rust-backend` R4** — dogfood (run the binary over Perfpal's own `src/`, publish the report, triage findings) + `examples-rust/` corpus.
+3. Then R5 (tests/gates + crate version `0.2.0`) → R6 (docs/close-out) → plan `beta-release` (`0.2.0-beta.1`).
 
 ## Uncommitted Files
-- **Added:** `docs/schema/metrics.schema.v1.2.json`, `src/schema/metrics.schema.v1.2.json`, `tests/golden/report/metrics.schema.v1.2.json`, `tests/schema_1_2.rs`
-- **Deleted:** `tests/golden/report/metrics.schema.v1.1.json`
-- **Modified (code):** `src/scanner/mod.rs` (`SUPPORTED_LANGUAGES`), `src/aggregator/mod.rs` (`scan_languages()`), `src/schema/mod.rs` (version consts/embedded/drift test), `src/cli/mod.rs` (`VERSION_SUFFIX`/about), `src/lib.rs`, `src/charts/mod.rs`, `Cargo.toml` (description)
-- **Modified (tests):** `tests/p6_hardening.rs`, `tests/pipeline_e2e.rs`, `tests/resolver_health.rs`, `tests/exit_code_matrix.rs`, `tests/rust_backend.rs`, `tests/golden/report/{metrics.json,report.md}`
-- **Modified (docs/state):** `README.md`, `CHANGELOG.md`, `docs/architecture/{modules.md,rust-backend.md}`, `docs/report/output-contract.md`, `docs/roadmap.md`, `docs/schema/metrics-json-v1.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`
+- **Added (code):** `src/analyzer/heuristics/rust/` (`mod.rs`, `alloc.rs`, `str.rs`, `loop.rs`, `call.rs`, `arch.rs`, `mem.rs`, `type.rs`)
+- **Added (docs):** `docs/heuristics/rust-catalog.md`
+- **Added (tests):** `tests/rust_wave_c1.rs`, `tests/rust_wave_c2.rs`, `tests/rust_backend_r3.rs`, `tests/rust_module_graph.rs`, `tests/reporter_rust.rs`, `tests/mixed_language_e2e.rs`, and 25 `tests/fixtures/ir/PERF-RS-*.json`
+- **Modified (code):** `src/ir/mod.rs`, `src/scanner/mod.rs`, `src/scanner/backends/tree_sitter_rust/mod.rs`, `src/scanner/backends/tree_sitter_c/mod.rs`, `src/analyzer/mod.rs`, `src/analyzer/finding.rs`, `src/analyzer/heuristics/{mod,arch,type}.rs`, `src/reporter/mod.rs`, `src/aggregator/mod.rs`, `src/resolver/mod.rs` (compiler-required literal sites only)
+- **Modified (tests):** `tests/common/mod.rs`, `tests/analyzer_registry.rs`, `tests/arch_fixtures.rs`, `tests/reporter_render.rs`, `tests/rust_backend.rs`, `tests/schema_1_2.rs`, `tests/golden/report/report.md` (language-neutral prose)
+- **Modified (docs/state):** `docs/architecture/rust-backend.md` (§3/§8 corrections + §9), `docs/architecture/ir-v1.md` (R3 additive note incl. `is_mod`), `README` untouched (R6), `CHANGELOG.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`
 - **EXCLUDE:** `.opencode/**` (session-tooling noise)
-- **Gate status:** `fmt --check` clean · `clippy -D warnings --all-targets` clean (default + `semantic-clang`) · **299 tests default / 304 feature green** · golden regen **idempotent** · 3 schema copies `cmp`-identical.
+- **Gate status:** `fmt --check` clean · `clippy -D warnings --all-targets` clean (default + `semantic-clang`) · **361 tests default / 366 semantic green, 0 fail** · golden report comparator green + regen idempotent · 3 schema copies `cmp`-identical · dogfood `src` → `PERF-RS-ARCH-001` = 5 hub-only (0 cycles)

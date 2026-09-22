@@ -1,0 +1,40 @@
+[
+  {
+    "file": {"path": "src/drops.rs", "language": "rust", "loc": {"code": 26, "comment": 0, "blank": 0}, "function_count": 2, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/drops.rs#drops_only#1:1", "name": "drops_only", "path": "src/drops.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 10, "end_col": 2}, "param_count": 1, "param_types": ["Vec<u8>"], "cyclomatic_complexity": 2, "cognitive_complexity": 2, "max_loop_depth": 1, "alloc_site_count": 0, "length_lines": 10},
+        "calls": [
+          {"span": {"start_line": 5, "start_col": 9, "end_line": 5, "end_col": 16}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "drop", "callee_kind": "direct", "callee_path": "drop", "is_macro": false, "args": [{"kind": "identifier", "name": "x"}], "statement_role": "primary", "conditional_guarded": false},
+          {"span": {"start_line": 8, "start_col": 5, "end_line": 8, "end_col": 12}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "drop", "callee_kind": "direct", "callee_path": "drop", "is_macro": false, "args": [{"kind": "identifier", "name": "y"}], "statement_role": "unknown", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 3, "start_col": 5, "end_line": 7, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      },
+      {
+        "record": {"id": "src/drops.rs#drop_with_alloc#12:1", "name": "drop_with_alloc", "path": "src/drops.rs", "span": {"start_line": 12, "start_col": 1, "end_line": 25, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 2, "cognitive_complexity": 2, "max_loop_depth": 1, "alloc_site_count": 1, "length_lines": 14},
+        "calls": [
+          {"span": {"start_line": 15, "start_col": 9, "end_line": 15, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "new", "callee_kind": "direct", "callee_path": "Vec::new", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 16, "start_col": 9, "end_line": 16, "end_col": 16}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "drop", "callee_kind": "direct", "callee_path": "drop", "is_macro": false, "args": [{"kind": "identifier", "name": "buf"}], "statement_role": "primary", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 14, "start_col": 5, "end_line": 18, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      }
+    ]
+  }
+]

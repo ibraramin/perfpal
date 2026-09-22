@@ -1,0 +1,20 @@
+[
+  {
+    "file": {"path": "src/small.rs", "language": "rust", "loc": {"code": 16, "comment": 0, "blank": 0}, "function_count": 2, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/small.rs#a#1:1", "name": "a", "path": "src/small.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 8, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 5, "cognitive_complexity": 4, "max_loop_depth": 1, "alloc_site_count": 0, "length_lines": 8},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      },
+      {
+        "record": {"id": "src/small.rs#b#11:1", "name": "b", "path": "src/small.rs", "span": {"start_line": 11, "start_col": 1, "end_line": 16, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 4, "cognitive_complexity": 3, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 6},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  }
+]

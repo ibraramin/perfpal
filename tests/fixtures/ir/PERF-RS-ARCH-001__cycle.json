@@ -1,0 +1,24 @@
+[
+  {
+    "file": {"path": "src/a.rs", "language": "rust", "loc": {"code": 4, "comment": 0, "blank": 0}, "function_count": 0, "global_var_count": 0, "include_counts": {"quoted": 1, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [
+      {"from_path": "src/a.rs", "to_path": "src/b.rs", "form": "quoted", "resolved": true, "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 18}}
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {"path": "src/b.rs", "language": "rust", "loc": {"code": 4, "comment": 0, "blank": 0}, "function_count": 0, "global_var_count": 0, "include_counts": {"quoted": 1, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [
+      {"from_path": "src/b.rs", "to_path": "src/a.rs", "form": "quoted", "resolved": true, "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 18}}
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  }
+]

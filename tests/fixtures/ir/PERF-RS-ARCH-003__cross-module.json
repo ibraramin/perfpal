@@ -1,0 +1,42 @@
+[
+  {
+    "file": {"path": "src/main.rs", "language": "rust", "loc": {"code": 14, "comment": 0, "blank": 0}, "function_count": 2, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/main.rs#caller#3:1", "name": "caller", "path": "src/main.rs", "span": {"start_line": 3, "start_col": 1, "end_line": 9, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 7},
+        "calls": [
+          {"span": {"start_line": 5, "start_col": 5, "end_line": 5, "end_col": 16}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "helper_fn", "callee_kind": "direct", "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 6, "start_col": 5, "end_line": 6, "end_col": 15}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "local_fn", "callee_kind": "direct", "args": [], "statement_role": "nested", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {"id": "src/main.rs#local_fn#11:1", "name": "local_fn", "path": "src/main.rs", "span": {"start_line": 11, "start_col": 1, "end_line": 13, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 3},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  },
+  {
+    "file": {"path": "src/util.rs", "language": "rust", "loc": {"code": 4, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/util.rs#helper_fn#1:1", "name": "helper_fn", "path": "src/util.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 3, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 3},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  }
+]

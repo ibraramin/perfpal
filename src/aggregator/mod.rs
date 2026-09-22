@@ -509,6 +509,7 @@ mod tests {
             to_path: to.map(str::to_string),
             form: IncludeForm::Quoted,
             resolved,
+            is_mod: false,
             span: Span::point(1, 1),
         }
     }
@@ -525,6 +526,7 @@ mod tests {
             to_path: Some(raw_target.to_string()),
             form: IncludeForm::Angle,
             resolved: false,
+            is_mod: false,
             span: Span::point(1, 1),
         }
     }
@@ -537,6 +539,8 @@ mod tests {
             },
             callee_name: callee.to_string(),
             callee_kind: CalleeKind::Direct,
+            callee_path: None,
+            is_macro: false,
             args: vec![],
             statement_role: StatementRole::Unknown,
             conditional_guarded: false,

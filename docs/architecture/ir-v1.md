@@ -54,6 +54,12 @@ IncludeEdge {
   from_path, to_path        // to_path = null when unresolvable (finding, not failure)
   form: quoted | angle      // angle ⇒ "external" bucket, excluded from internal coupling
   resolved: bool
+  is_mod: bool              // ADDITIVE (default false, plan `rust-backend` R3):
+                            // true = a Rust `mod foo;` DECLARATION edge; false = a
+                            // `use` import edge or a C `#include`. Lets a Rust
+                            // module-graph heuristic consume the `use` import graph
+                            // only — `mod` declaration edges are not imports and
+                            // create parent↔child asymmetry (see PERF-RS-ARCH-001).
   span
 }
 
@@ -64,6 +70,13 @@ GlobalVar {
 
 StructDef {
   name, path, span          // tag name; "" if anonymous
+  kind: struct | union | enum
+                            // ADDITIVE (default struct, plan `rust-backend` R3):
+                            // only `struct` is a layout-member aggregate; `union`
+                            // reuses the member model; `enum` carries NO members
+                            // (variants are not layout fields) — a size/padding
+                            // heuristic must check `kind == struct` before summing
+                            // members. The C backend always emits `struct`.
   members: [{name, type_text, array_dim_literal, is_pointer}]
                             // array_dim_literal = int|null (approximate size model, TYPE-001/002)
                             // is_pointer = bool (additive, default false): declarator carries a
@@ -103,11 +116,21 @@ All events carry: `span`, `in_loop_depth` (0 = not in loop), `is_innermost` (ins
 
 ```
 CallEvent {
-  callee_name               // textual name at call site
+  callee_name               // textual name at call site (final segment)
   callee_kind: direct | indirect | unknown
                             // direct = named function; indirect = called through a
                             // non-function-name expression (function-pointer candidate, LOOP-006);
                             // unknown = unresolvable shape
+  callee_path?              // ADDITIVE (plan `rust-backend` R3): FULL callee path text at the
+                            // call site (e.g. `Vec::with_capacity`, `Box::new`, `x.clone`,
+                            // `std::fs::read`); `Option` + serde default, omitted when None.
+                            // The C backend leaves it None (no path concept); the Rust backend
+                            // populates it — the API-name rule families match curated names
+                            // against this path where a qualified spelling is needed.
+  is_macro: bool            // ADDITIVE (plan `rust-backend` R3, default false): true only for
+                            // Rust macro-invocation call events (the approved macro-as-call
+                            // surface); a macro name is matched only when this is true, so a
+                            // plain function named `vec`/`format` is never counted.
   args: [Shape…]            // ALLOC family (callee ∈ alloc set), MEM-001 sizeof shapes,
                             // MEM-002 size-arg literalness, LOOP-002/003 callee membership
   statement_role: primary | nested | unknown
@@ -205,6 +228,33 @@ unaffected, and no existing variant's meaning changes. It is the only IR
 change the Rust scanner backend (R1) makes; the rest of the Rust scope is a
 new parser backend plus extension-based language dispatch, both behind the
 unchanged record model of §3.
+
+Additive-change note (rust-backend R3, 2026-09-22):
+`StructKind` + `StructDef.kind`, `CallEvent.callee_path`,
+`CallEvent.is_macro` and `IncludeEdge.is_mod` are ADDITIVE v1 surface in the
+same pattern as the fields above. `StructKind` is a serde-defaulted enum
+(`Struct` = the C backend's only kind, `Union`/`Enum` produced by the Rust
+backend); `callee_path` is `Option<String>` with `#[serde(default,
+skip_serializing_if)]` (omit-don't-null; the C backend leaves it `None`);
+`is_macro` is `bool` with `#[serde(default)]` (default false = a real call);
+`is_mod` is `bool` with `#[serde(default)]` (default false; the Rust backend
+sets it on `mod foo;` declaration edges so module-graph heuristics can consume
+the `use` import graph only — see `PERF-RS-ARCH-001`).
+Two further points:
+
+- **`RUST_ALLOC_FAMILY`** (`src/ir/mod.rs`) is a shared producer/consumer
+  const — a `RustAllocFamily` of 12 qualified constructor paths, 5 method
+  names and 2 macro names, with `matches_site(callee_path, callee_name,
+  is_macro)` and `all()`. The Rust scanner backend uses it to compute
+  `FunctionRecord.alloc_site_count` and to recognize alloc-wrapper macro
+  bodies; the Rust ALLOC heuristics use it to match call sites — one constant,
+  so stats and findings count the SAME sites. `clone` is deliberately
+  excluded (noise control; accepted false negative).
+- **IR-only, no schema bump.** None of this surface is serialized into
+  `metrics.json`: it is internal enrichment consumed by the analyzer, not a
+  document DTO. Identity keys `(path, name, span)` and record shapes are
+  untouched, and the serde-default pattern keeps documents written before it
+  deserializing unchanged.
 
 ## 4. Coverage check — every catalog heuristic maps to IR records
 

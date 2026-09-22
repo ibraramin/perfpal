@@ -1,0 +1,45 @@
+[
+  {
+    "file": {"path": "src/tree.rs", "language": "rust", "loc": {"code": 30, "comment": 0, "blank": 0}, "function_count": 3, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/tree.rs#walk#3:1", "name": "walk", "path": "src/tree.rs", "span": {"start_line": 3, "start_col": 1, "end_line": 12, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 2, "cognitive_complexity": 1, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 10},
+        "calls": [
+          {"span": {"start_line": 5, "start_col": 5, "end_line": 5, "end_col": 14}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "walk", "callee_kind": "direct", "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 7, "start_col": 9, "end_line": 7, "end_col": 18}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "other", "callee_kind": "direct", "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 9, "start_col": 9, "end_line": 9, "end_col": 18}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "walk", "callee_kind": "direct", "args": [], "statement_role": "nested", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {"id": "src/tree.rs#spin#15:1", "name": "spin", "path": "src/tree.rs", "span": {"start_line": 15, "start_col": 1, "end_line": 20, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 6},
+        "calls": [
+          {"span": {"start_line": 17, "start_col": 5, "end_line": 17, "end_col": 14}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "spin", "callee_kind": "indirect", "args": [], "statement_role": "nested", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      },
+      {
+        "record": {"id": "src/tree.rs#plain#23:1", "name": "plain", "path": "src/tree.rs", "span": {"start_line": 23, "start_col": 1, "end_line": 25, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 3},
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

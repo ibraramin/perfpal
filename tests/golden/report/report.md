@@ -123,7 +123,7 @@ Top files by code LOC:
 - Evidence: divisor=d, divisor\_kind=identifier, op=/
 
 ## 5. Architecture
-[Include graph — internal #include dependencies between scanned files.](charts/include-graph.svg)
+[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
 [Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
 
@@ -133,7 +133,7 @@ Component ranking (hottest first):
 |---|---|---:|---:|
 | src | src | 1 | 147.06 |
 
-The include graph reflects resolved internal `#include` edges between scanned files; unresolved quoted includes are retained as data, and external (system) headers are excluded from coupling edges.
+The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).
 
 ## Appendix A. Heuristic reference

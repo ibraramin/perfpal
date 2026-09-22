@@ -244,6 +244,17 @@ pub struct IncludeEdge {
     pub to_path: Option<String>,
     pub form: IncludeForm,
     pub resolved: bool,
+    /// Rust `mod`-declaration discriminator: `true` for the edge emitted by a
+    /// bare `mod foo;` declaration, `false` for every `use` directive and for
+    /// C `#include` (which has no declaration/reverse-declaration asymmetry).
+    /// `use` edges and `mod` edges are both kept in `includes` because module
+    /// resolution and `RustModuleMap` read
+    /// them directly; `PERF-RS-ARCH-001` filters this flag to operate on the
+    /// import (`use`) graph only. Additive IR-only field (the aggregator's
+    /// `include_graph` DTO does not serialize it), so `#[serde(default)]`
+    /// keeps older documents deserializing unchanged.
+    #[serde(default)]
+    pub is_mod: bool,
     pub span: Span,
 }
 
@@ -290,6 +301,25 @@ pub struct StructMember {
     pub is_pointer: bool,
 }
 
+/// Kind of a type definition carried by [`StructDef`] (plan `rust-backend`
+/// R3). ADDITIVE v1 field with `#[serde(default)]`: documents written before
+/// it deserialize as [`StructKind::Struct`] (the C backend's only kind), so
+/// no schema change is needed.
+///
+/// Only [`StructKind::Struct`] is a layout-member aggregate. `Union` (Rust
+/// `union`) reuses the member model; `Enum` deliberately carries NO members
+/// because enum variants are not layout fields — a size/padding heuristic
+/// must inspect `kind == Struct` before summing members, or it would compute
+/// wrong sums.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StructKind {
+    #[default]
+    Struct,
+    Union,
+    Enum,
+}
+
 /// Struct definition (ir-v1.md §3.1). `name` is the tag name, `""` if anonymous.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StructDef {
@@ -297,6 +327,11 @@ pub struct StructDef {
     pub path: String,
     pub span: Span,
     pub members: Vec<StructMember>,
+    /// `Struct` / `Union` / `Enum` discriminator (additive v1, default
+    /// `Struct`, omitted from the wire only by defaulting). See
+    /// [`StructKind`].
+    #[serde(default)]
+    pub kind: StructKind,
 }
 
 /// Macro recognizer event kind (ir-v1.md §3.1).
@@ -314,6 +349,82 @@ pub enum MacroEventKind {
 /// share one constant across the seam; infrastructure is extensible — new
 /// patterns append new ids, never rename existing ones.
 pub const ALLOC_WRAPPER_PATTERN_ID: &str = "alloc-wrapper";
+
+/// Curated Rust allocation family (plan `rust-backend` R3) — the shared
+/// producer/consumer source that lives beside [`ALLOC_WRAPPER_PATTERN_ID`].
+///
+/// The three groups have DIFFERENT matching semantics, hence three fields
+/// instead of one flat list:
+/// - [`RustAllocFamily::qualified`] — full `Type::method` / `Module::fn`
+///   paths, matched against [`CallEvent::callee_path`];
+/// - [`RustAllocFamily::methods`] — bare method names, matched against
+///   [`CallEvent::callee_name`];
+/// - [`RustAllocFamily::macros`] — macro names, matched against
+///   `callee_name` only when [`CallEvent::is_macro`] (so a plain function
+///   named `vec` is never counted).
+///
+/// `clone` is DELIBERATELY excluded (noise control): cloning is ubiquitous
+/// and not by itself allocation pressure. This is an accepted
+/// false-negative in the alloc-site count, documented per the R3 brief.
+#[derive(Debug, Clone, Copy)]
+pub struct RustAllocFamily {
+    pub qualified: &'static [&'static str],
+    pub methods: &'static [&'static str],
+    pub macros: &'static [&'static str],
+}
+
+impl RustAllocFamily {
+    /// Every curated name (all three groups), for raw-text wrapper-body
+    /// scanning by the macro recognizer.
+    pub fn all(&self) -> impl Iterator<Item = &'static str> + '_ {
+        self.qualified
+            .iter()
+            .chain(self.methods)
+            .chain(self.macros)
+            .copied()
+    }
+
+    /// Whether one call site belongs to the alloc family.
+    #[must_use]
+    pub fn matches_site(
+        &self,
+        callee_path: Option<&str>,
+        callee_name: &str,
+        is_macro: bool,
+    ) -> bool {
+        if is_macro {
+            return self.macros.contains(&callee_name);
+        }
+        self.qualified.iter().any(|q| callee_path == Some(*q))
+            || self.methods.contains(&callee_name)
+    }
+}
+
+/// The curated Rust allocation family (see [`RustAllocFamily`]).
+pub const RUST_ALLOC_FAMILY: RustAllocFamily = RustAllocFamily {
+    qualified: &[
+        "Box::new",
+        "Rc::new",
+        "Arc::new",
+        "Vec::new",
+        "Vec::with_capacity",
+        "String::new",
+        "String::with_capacity",
+        "VecDeque::new",
+        "HashMap::new",
+        "HashSet::new",
+        "BTreeMap::new",
+        "BTreeSet::new",
+    ],
+    methods: &[
+        "to_vec",
+        "to_owned",
+        "to_string",
+        "collect",
+        "with_capacity",
+    ],
+    macros: &["vec", "format"],
+};
 
 /// Macro event (ir-v1.md §3.1). `pattern_id` is set when
 /// `kind = recognized_pattern` (curated recognizer id, e.g.
@@ -471,6 +582,20 @@ pub struct CallEvent {
     pub meta: EventMeta,
     pub callee_name: String,
     pub callee_kind: CalleeKind,
+    /// FULL callee path text at the call site (e.g. `Vec::with_capacity`,
+    /// `Box::new`, `x.clone`, `std::fs::read`) — the qualified path, not just
+    /// the final segment `callee_name` carries. ADDITIVE v1 field: `Option` +
+    /// `#[serde(default, skip_serializing_if)]`, so documents written before
+    /// it deserialize unchanged and `None` is OMITTED on the wire
+    /// (omit-don't-null). The C backend leaves it `None` (no path concept);
+    /// the Rust backend populates it (plan `rust-backend` R3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub callee_path: Option<String>,
+    /// True only for Rust macro-invocation call events (the approved
+    /// macro-as-call surface, plan `rust-backend` R3). ADDITIVE v1 field with
+    /// `#[serde(default)]` — defaults to `false`, a real (non-macro) call.
+    #[serde(default)]
+    pub is_macro: bool,
     pub args: Vec<Shape>,
     pub statement_role: StatementRole,
     /// Call sits inside a conditional branch within the loop (LOOP-002 hint).

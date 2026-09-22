@@ -1326,6 +1326,8 @@ mod tests {
             },
             callee_name: callee.to_string(),
             callee_kind: CalleeKind::Direct,
+            callee_path: None,
+            is_macro: false,
             args,
             statement_role: StatementRole::Nested,
             conditional_guarded: false,

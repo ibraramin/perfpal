@@ -1,0 +1,34 @@
+[
+  {
+    "file": {"path": "src/app.rs", "language": "rust", "loc": {"code": 40, "comment": 0, "blank": 0}, "function_count": 2, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/app.rs#f1#1:1", "name": "f1", "path": "src/app.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 20, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 10, "cognitive_complexity": 8, "max_loop_depth": 2, "alloc_site_count": 0, "length_lines": 20},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      },
+      {
+        "record": {"id": "src/app.rs#f2#23:1", "name": "f2", "path": "src/app.rs", "span": {"start_line": 23, "start_col": 1, "end_line": 40, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 8, "cognitive_complexity": 6, "max_loop_depth": 1, "alloc_site_count": 0, "length_lines": 18},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  },
+  {
+    "file": {"path": "src/util.rs", "language": "rust", "loc": {"code": 10, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/util.rs#g#1:1", "name": "g", "path": "src/util.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 8, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 4, "cognitive_complexity": 3, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 8},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  }
+]

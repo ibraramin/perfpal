@@ -566,21 +566,37 @@ pub(crate) struct CrossFileCallEdge {
 ///    name-based edges for the same callee name to different targets.
 /// 3. File-local-first (ADR-0001): same-file definitions never produce
 ///    edges — for either tier.
+/// 4. LANGUAGE-SCOPED (plan `rust-backend` R3 C1): both the resolved-site
+///    internal check and the name-based definition map key on the caller's
+///    `FileRecord.language`, so a Rust unit slice can never match a C
+///    definition (or vice versa) even when the aggregator calls this with
+///    the whole mixed unit set.
 ///
 /// USR-based resolution means multi-same-name ambiguity cannot occur for
 /// resolved calls: no name matching happens at all on that path.
 /// Output is sorted `(from_function_id, callee_name, call_span)`.
 pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge> {
-    // name → all definition paths (sorted sets ⇒ deterministic min).
-    let mut defs: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    // (language, name) → all definition paths (sorted sets ⇒ deterministic
+    // min). LANGUAGE-SCOPED (plan `rust-backend` R3 workstream C1): a C call
+    // may only match a C definition and a Rust call only a Rust definition,
+    // so the aggregator's whole-program call (all units) can never emit a
+    // cross-language edge. With C-only inputs this keying is byte-identical
+    // to the previous name-only map.
+    let mut defs: BTreeMap<(&str, &str), BTreeSet<&str>> = BTreeMap::new();
     for unit in units {
+        let language = unit.file.language.as_str();
         for func in &unit.functions {
-            defs.entry(func.record.name.as_str())
+            defs.entry((language, func.record.name.as_str()))
                 .or_default()
                 .insert(func.record.path.as_str());
         }
     }
-    let internal: BTreeSet<&str> = units.iter().map(|u| u.file.path.as_str()).collect();
+    // Internal (scannable) sites keyed by `(language, path)`: a resolved fact
+    // may only cross between files of the SAME language.
+    let internal: BTreeSet<(&str, &str)> = units
+        .iter()
+        .map(|u| (u.file.language.as_str(), u.file.path.as_str()))
+        .collect();
 
     // Resolved edges: (from_function_id, callee_name, target_path) →
     // earliest (span, from_path). Name-based edges:
@@ -615,7 +631,7 @@ pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge
                         .as_ref()
                         .and_then(|s| s.resolved_definition.as_ref())
                     && site.path != func.record.path
-                    && internal.contains(site.path.as_str())
+                    && internal.contains(&(unit.file.language.as_str(), site.path.as_str()))
                 {
                     let key = (func.record.id.clone(), name.to_string(), site.path.clone());
                     match resolved_edges.get(&key) {
@@ -626,8 +642,10 @@ pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge
                     }
                     continue; // facts consume the call — no fallback
                 }
-                // NAME-BASED fallback (no facts / gated facts).
-                let Some(targets) = defs.get(name) else {
+                // NAME-BASED fallback (no facts / gated facts), scoped to the
+                // CALLER's language so same-named definitions in the other
+                // language never match.
+                let Some(targets) = defs.get(&(unit.file.language.as_str(), name)) else {
                     continue;
                 };
                 let Some(target) = targets.iter().find(|p| **p != func.record.path) else {

@@ -1,0 +1,28 @@
+[
+  {
+    "file": {"path": "src/lookup.rs", "language": "rust", "loc": {"code": 16, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/lookup.rs#contains_key#3:1", "name": "contains_key", "path": "src/lookup.rs", "span": {"start_line": 3, "start_col": 1, "end_line": 15, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 4, "cognitive_complexity": 4, "max_loop_depth": 2, "alloc_site_count": 0, "length_lines": 13},
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [
+          {"span": {"start_line": 6, "start_col": 13, "end_line": 6, "end_col": 26}, "in_loop_depth": 2, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "left": {"kind": "subscript", "name": "arr", "index_ident": "j"}, "right": {"kind": "identifier", "name": "key"}},
+          {"span": {"start_line": 7, "start_col": 13, "end_line": 7, "end_col": 26}, "in_loop_depth": 2, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "left": {"kind": "subscript", "name": "arr", "index_ident": "k"}, "right": {"kind": "identifier", "name": "key"}},
+          {"span": {"start_line": 4, "start_col": 9, "end_line": 4, "end_col": 18}, "in_loop_depth": 1, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "left": {"kind": "identifier", "name": "x"}, "right": {"kind": "identifier", "name": "y"}}
+        ],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 4, "start_col": 5, "end_line": 13, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false},
+          {"kind": "for", "depth": 2, "induction_vars": ["j"], "span": {"start_line": 5, "start_col": 9, "end_line": 12, "end_col": 10}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      }
+    ]
+  }
+]

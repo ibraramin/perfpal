@@ -28,7 +28,7 @@ use crate::ir::{
     CallEvent, CalleeKind, ComparisonEvent, FileRecord, GlobalVar, IncludeCounts, IncludeEdge,
     IncludeForm, LocCounts, LoopKind, LoopNode, MacroEvent, MacroEventKind, NativePoint,
     ParseHealth, ParseStatus, ResolverTier, ScopeClass, Shape, ShapeKind, Span, StatementRole,
-    StorageClass, StructDef, StructMember,
+    StorageClass, StructDef, StructKind, StructMember,
 };
 use crate::scanner::FunctionUnit;
 
@@ -329,6 +329,7 @@ fn include_edge(node: Node<'_>, path: &str, source: &[u8]) -> IncludeEdge {
         to_path: Some(raw),
         form,
         resolved: false,
+        is_mod: false,
         span: ir_span(node, source),
     }
 }
@@ -437,6 +438,7 @@ fn struct_def(node: Node<'_>, path: &str, source: &[u8]) -> Option<StructDef> {
         path: path.to_string(),
         span: ir_span(node, source),
         members,
+        kind: StructKind::Struct,
     })
 }
 
@@ -885,6 +887,11 @@ impl<'a> FuncScan<'a> {
             meta,
             callee_name,
             callee_kind,
+            // C has no path/macro-call distinction: the C backend leaves
+            // `callee_path` absent and `is_macro` false (additive fields,
+            // plan `rust-backend` R3 populate the Rust backend only).
+            callee_path: None,
+            is_macro: false,
             args,
             statement_role,
             conditional_guarded,

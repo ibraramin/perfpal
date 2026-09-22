@@ -41,11 +41,21 @@ const MD_ESCAPE_CHARS: &[char] = &[
     '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '<', '>', '&',
 ];
 
-/// Frozen v1 heuristic catalog (read-code-first transcription of
+/// Heuristic catalog (read-code-first transcription of
 /// docs/heuristics/catalog-v1.md §3 + §4 titles and one-line "Detects"
-/// summaries). FROZEN for v1: supplies Appendix A descriptions ONLY —
-/// never invent wording here; catalog changes flow from the doc, not the
-/// reverse.
+/// summaries, EXTENDED for the Rust `PERF-RS-*` families added by plan
+/// `rust-backend` R3 from their implemented rule functions and rustdocs).
+/// Supplies Appendix A descriptions ONLY — never invent wording here; the
+/// catalog follows the rules/doc, not the reverse.
+///
+/// The C (`PERF-C-*`) entries are FROZEN v1 wording (unchanged). The Rust
+/// (`PERF-RS-*`) entries cover BOTH languages' rule ids and transcribe each
+/// rule's ACTUAL implemented detection, carrying an explicit "REFRAMED for
+/// Rust" clause wherever the rule is an honest re-mapping of the C intent
+/// (no `realloc`/char-stdio, `unsafe`-only unbounded ops, `size_of` as an
+/// element count, default `repr(Rust)` field reordering). A completeness
+/// lock in this module's tests asserts the catalog covers exactly the 46
+/// rule ids the analyzer registry can emit.
 const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-C-ALLOC-001",
@@ -161,6 +171,127 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
         "PERF-C-LOOP-008",
         "Pointer-chasing chain in innermost loop",
         "Detects member-access chains of depth ≥ 3 inside innermost loop bodies — pointer-chasing cache-miss candidates.",
+    ),
+    // -----------------------------------------------------------------------
+    // Rust (`PERF-RS-*`) entries (plan `rust-backend` R3 workstream D1),
+    // ascending rule_id. Titles match each rule's emitted finding title;
+    // descriptions transcribe the implemented detection, with explicit
+    // "REFRAMED for Rust" clauses for the honest re-mappings.
+    // -----------------------------------------------------------------------
+    (
+        "PERF-RS-ALLOC-001",
+        "Heap allocation inside loop (Rust)",
+        "Detects Rust allocation sites — qualified constructors (`Box::new`/`Rc::new`/`Arc::new`/`Vec::new`/`String::new`/collection `new`/`with_capacity`), methods (`to_vec`/`to_owned`/`to_string`/`collect`/`with_capacity`), and the `vec!`/`format!` macros — nested inside a loop body (allocator churn).",
+    ),
+    (
+        "PERF-RS-ALLOC-002",
+        "Deallocation inside loop (Rust)",
+        "Detects a direct `drop` call inside a loop body (allocator churn pairing; escalated to hot when the same function also allocates in a loop).",
+    ),
+    (
+        "PERF-RS-ALLOC-003",
+        "Growable-buffer additive growth in loop (Rust)",
+        "REFRAMED for Rust (no `realloc`): detects additive `reserve`/`reserve_exact` capacity growth inside a loop — the `realloc(p, n+k)` analogue; multiplicative capacity growth is the fix, not the finding.",
+    ),
+    (
+        "PERF-RS-ARCH-001",
+        "Module-graph fan-out / cycles (Rust)",
+        "Detects module fan-out/fan-in, deep module chains, cyclic module edges, and unresolved internal `mod`/`use` edges from resolved Rust module edges.",
+    ),
+    (
+        "PERF-RS-ARCH-002",
+        "Hot-component aggregation (Rust)",
+        "Ranks Rust component directories by aggregated metrics (complexity sum, alloc-site density, max loop depth) — the hottest component only.",
+    ),
+    (
+        "PERF-RS-ARCH-003",
+        "Cross-module call coupling (Rust)",
+        "Detects cross-file/module call edges via name matching — LOW confidence, upgraded to MEDIUM when a semantic resolver fact resolves the definition.",
+    ),
+    (
+        "PERF-RS-CALL-001",
+        "Direct recursion (Rust)",
+        "Detects a function body containing a direct call to its own name (presence-only; recursion depth is post-MVP).",
+    ),
+    (
+        "PERF-RS-CALL-002",
+        "High cyclomatic complexity (Rust)",
+        "Detects branch-count complexity above threshold (default ≥ 15), reported per function.",
+    ),
+    (
+        "PERF-RS-LOOP-001",
+        "Deeply nested loops (Rust)",
+        "Detects loop nesting depth ≥ 3 — O(n^k) candidate zones and primary input to hotspot maps.",
+    ),
+    (
+        "PERF-RS-LOOP-002",
+        "Expensive setup or I/O call inside loop (Rust)",
+        "Detects Rust I/O/setup work nested in loops — `println!`/`print!`-family macros, reader/writer/socket methods (`read_to_string`/`write_all`/`flush`/`recv`/`send`), and `File`/`fs`/`Command`/`TcpStream`/`env` setup calls; lowered to warn when conditionally guarded.",
+    ),
+    (
+        "PERF-RS-LOOP-003",
+        "Character-wise processing in loop (Rust)",
+        "REFRAMED for Rust (no char stdio): detects char/byte-at-a-time iterator or reader methods (`chars`/`bytes`/`char_indices`/`byte_indices`/`read_byte`) as the primary statement of a loop body.",
+    ),
+    (
+        "PERF-RS-LOOP-004",
+        "Variable-divisor division in innermost loop (Rust)",
+        "Detects / or % with a non-literal divisor inside the innermost loop body (literal divisors skipped by design).",
+    ),
+    (
+        "PERF-RS-LOOP-005",
+        "Global variable written inside loop (Rust)",
+        "Detects assignment to a Rust `static`/`const`-backed identifier inside a loop body (name-based scope classification, MEDIUM confidence).",
+    ),
+    (
+        "PERF-RS-LOOP-006",
+        "Indirect call in innermost loop (Rust)",
+        "Detects indirect (function-pointer/trait-object) calls inside innermost loop bodies (LOW confidence; field-method/closure dispatch is classified direct and not seen).",
+    ),
+    (
+        "PERF-RS-LOOP-007",
+        "Linear membership scan nested in loop (Rust)",
+        "Detects a comparison against a subscript indexed by an enclosing loop's induction variable — hand-rolled O(n²) membership scan.",
+    ),
+    (
+        "PERF-RS-LOOP-008",
+        "Member-chain dereference in innermost loop (Rust)",
+        "Detects field/index access chains of depth ≥ 3 inside innermost loop bodies — pointer/lifetime-chasing cache-miss candidates.",
+    ),
+    (
+        "PERF-RS-MEM-001",
+        "size_of passed as an element count (Rust)",
+        "REFRAMED for Rust: detects `Vec::with_capacity`/`String::with_capacity` receiving a `size_of`/`size_of_val` byte count where an element count is expected (over-reserves by the element size).",
+    ),
+    (
+        "PERF-RS-MEM-002",
+        "Block copy/clone in loop (Rust)",
+        "REFRAMED for Rust (no explicit size argument): detects block-copy/clone methods (`copy_from_slice`/`copy_nonoverlapping`/`extend_from_slice`/`clone`/`to_vec`) inside loops — warn in the innermost loop, info otherwise.",
+    ),
+    (
+        "PERF-RS-STR-001",
+        "String accumulation in loop (Rust)",
+        "Detects `push_str`/`push` accumulation into a bare-identifier receiver inside a loop (repeated growth/reallocation; `push` also matches non-string containers).",
+    ),
+    (
+        "PERF-RS-STR-002",
+        "Length query recomputed in loop (Rust)",
+        "Detects `len`/`is_empty`/`capacity` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop.",
+    ),
+    (
+        "PERF-RS-STR-003",
+        "Unbounded unsafe memory operation (Rust)",
+        "REFRAMED for Rust (memory-safe by default): detects the unsafe unbounded-op family (`copy_nonoverlapping`/`copy`/`from_raw_parts`/`from_utf8_unchecked`/`set_len`) anywhere — unchecked-length surfaces.",
+    ),
+    (
+        "PERF-RS-TYPE-001",
+        "Large struct passed by value (Rust)",
+        "Detects a bare-named struct parameter whose LP64 estimate reaches the approximate-size floor (LOW confidence — no real type layout); one finding per function aggregating qualifying parameters.",
+    ),
+    (
+        "PERF-RS-TYPE-002",
+        "Struct field ordering (padding candidate, Rust)",
+        "Detects struct definitions whose declared-order aligned layout wastes padding versus the packed member sum beyond the threshold — but default `repr(Rust)` may reorder fields automatically, so this is a lower-confidence candidate (check `#[repr(C)]`/FFI).",
     ),
 ];
 
@@ -479,9 +610,11 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
     }
 
     out.push_str(
-        "The include graph reflects resolved internal `#include` edges between \
-         scanned files; unresolved quoted includes are retained as data, and \
-         external (system) headers are excluded from coupling edges.\n",
+        "The dependency graph reflects resolved internal include/module edges \
+         between scanned files — C `#include` directives and Rust `mod`/`use` \
+         module paths; unresolved internal edges are retained as data, and \
+         external (system headers/crates) dependencies are excluded from \
+         coupling edges.\n",
     );
     out.push_str(
         "Standing caveat: cross-file call edges are LOW confidence until a \
@@ -578,7 +711,8 @@ fn group_by_metric(entries: &[DistributionEntry]) -> Vec<(&str, Vec<&Distributio
 fn chart_caption(stem: &str) -> String {
     match stem {
         "include-graph" => {
-            "Include graph — internal #include dependencies between scanned files.".to_string()
+            "Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files."
+                .to_string()
         }
         "component-coupling" => {
             "Component coupling — cross-file call edges between components.".to_string()
@@ -669,5 +803,79 @@ mod tests {
         assert_eq!(format_fixed_point(-2.675, 2), "-2.68");
         // Negative-zero guarantee: "-0.00" must never leak.
         assert_eq!(format_fixed_point(-0.001, 2), "0.00");
+    }
+
+    /// Completeness lock (plan `rust-backend` R3 workstream D1): the catalog
+    /// must cover EXACTLY the rule ids the analyzer registry can emit (23
+    /// `PERF-C-*` + 23 `PERF-RS-*`), so a newly added heuristic cannot
+    /// silently reintroduce the Appendix A `panic!` on an uncataloged
+    /// rule_id. The expected set is derived FROM the registry
+    /// ([`crate::analyzer::registered_rule_ids`]) — an id added to `REGISTRY`
+    /// without a catalog entry now fails THIS test instead of passing a
+    /// hand-maintained duplicate. Every catalog entry also has a non-empty
+    /// title/description.
+    #[test]
+    fn catalog_covers_every_registry_rule_id() {
+        // Authoritative: the registry's own rule ids, in declaration order.
+        let registry_ids: Vec<&'static str> = crate::analyzer::registered_rule_ids().collect();
+        assert_eq!(registry_ids.len(), 46, "expected 23 C + 23 Rust ids");
+
+        // The registry declares its entries in ascending rule_id order
+        // (the C block, then the `PERF-RS-*` block) — declaration order is
+        // the load-bearing first-wins duplicate-collapse contract
+        // (modules.md §3.3), so lock it globally with one comparison.
+        let mut globally_sorted = registry_ids.clone();
+        globally_sorted.sort_unstable();
+        assert_eq!(
+            registry_ids, globally_sorted,
+            "REGISTRY must declare entries in ascending rule_id order"
+        );
+
+        // No duplicate registry rule ids.
+        let mut deduped = registry_ids.clone();
+        deduped.sort_unstable();
+        deduped.dedup();
+        assert_eq!(
+            deduped.len(),
+            registry_ids.len(),
+            "duplicate registry rule_id"
+        );
+
+        let catalog_ids: Vec<&str> = HEURISTIC_CATALOG_V1.iter().map(|(id, _, _)| *id).collect();
+        assert_eq!(catalog_ids.len(), 46, "catalog entry count drifted");
+
+        // Every catalog entry carries a non-empty title and description.
+        for (id, title, description) in HEURISTIC_CATALOG_V1 {
+            assert!(!title.is_empty(), "empty title for {id}");
+            assert!(!description.is_empty(), "empty description for {id}");
+        }
+
+        // No duplicate rule ids in the catalog.
+        let mut deduped_catalog = catalog_ids.clone();
+        deduped_catalog.sort_unstable();
+        deduped_catalog.dedup();
+        assert_eq!(
+            deduped_catalog.len(),
+            catalog_ids.len(),
+            "duplicate catalog rule_id"
+        );
+
+        let expected: BTreeSet<&str> = registry_ids.iter().copied().collect();
+        let actual: BTreeSet<&str> = catalog_ids.iter().copied().collect();
+        assert_eq!(
+            actual, expected,
+            "catalog must cover exactly the registered rule ids"
+        );
+
+        // The Rust block is appended in ascending rule_id order (the C block
+        // keeps its frozen catalog-v1 doc order).
+        let rs_ids: Vec<&str> = catalog_ids
+            .iter()
+            .copied()
+            .filter(|id| id.starts_with("PERF-RS-"))
+            .collect();
+        let mut rs_sorted = rs_ids.clone();
+        rs_sorted.sort_unstable();
+        assert_eq!(rs_ids, rs_sorted, "PERF-RS-* catalog entries not ascending");
     }
 }

@@ -21,7 +21,7 @@ use perfpal::ir::{
     AccessChainEvent, AssignmentEvent, BinaryOpEvent, CallEvent, CalleeKind, ComparisonEvent,
     EventMeta, FileRecord, FunctionRecord, GlobalVar, IncludeCounts, IncludeEdge, IncludeForm,
     LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, ScopeClass, Shape, ShapeKind, Span,
-    StatementRole, StorageClass, StructDef, StructMember,
+    StatementRole, StorageClass, StructDef, StructKind, StructMember,
 };
 use perfpal::scanner::{FileUnit, FunctionUnit};
 
@@ -398,6 +398,9 @@ fn call(callee: &str, args: &[&str], span: Span, depth: u32, role: StatementRole
         meta: meta(span, depth),
         callee_name: callee.to_string(),
         callee_kind: CalleeKind::Direct,
+        // Synthetic C-fixture calls: no path/macro distinction (additive R3).
+        callee_path: None,
+        is_macro: false,
         args: args
             .iter()
             .map(|name| Shape {
@@ -495,6 +498,7 @@ fn kitchen_structs(path: &str) -> Vec<StructDef> {
                     is_pointer: false,
                 },
             ],
+            kind: StructKind::Struct,
         },
         StructDef {
             name: "Loose".to_string(),
@@ -520,6 +524,7 @@ fn kitchen_structs(path: &str) -> Vec<StructDef> {
                     is_pointer: false,
                 },
             ],
+            kind: StructKind::Struct,
         },
     ]
 }
@@ -584,6 +589,8 @@ pub fn kitchen_units() -> Vec<FileUnit> {
         meta: meta(sp(15, 17, 26), 3),
         callee_name: "cb".to_string(),
         callee_kind: CalleeKind::Indirect,
+        callee_path: None,
+        is_macro: false,
         args: Vec::new(),
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
@@ -595,6 +602,8 @@ pub fn kitchen_units() -> Vec<FileUnit> {
         meta: meta(sp(19, 17, 40), 3),
         callee_name: "malloc".to_string(),
         callee_kind: CalleeKind::Direct,
+        callee_path: None,
+        is_macro: false,
         args: vec![
             Shape::identifier("n"),
             Shape {
@@ -725,6 +734,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
             to_path: None,
             form: IncludeForm::Quoted,
             resolved: false,
+            is_mod: false,
             span: sp(1, 1, 20),
         }],
         // LOOP-005 plausibility: the name-classified global exists.

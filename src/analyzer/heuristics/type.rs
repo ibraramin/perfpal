@@ -196,11 +196,24 @@ fn by_value_struct_tag(param: &str) -> Option<&str> {
 /// Naive aligned-layout size estimate (LP64): each member rounds the
 /// offset up to its alignment (size clamped to 1..=8), then the total
 /// rounds up to the maximum member alignment (tail padding).
-fn estimate_struct_size(def: &StructDef) -> u64 {
+pub(super) fn estimate_struct_size(def: &StructDef) -> u64 {
+    estimate_struct_size_with(def, member_size)
+}
+
+/// Language-parameterized core of [`estimate_struct_size`]: identical
+/// alignment arithmetic, with the per-member byte size injected so the Rust
+/// rules (`heuristics::rust::r#type`) can reuse the SAME layout model over
+/// Rust type text (plan `rust-backend` R3 workstream C1) instead of
+/// duplicating it. `size_of` MUST return bytes under the same LP64
+/// conventions (pointer/reference = 8, `i32`/`f32` = 4, …).
+pub(crate) fn estimate_struct_size_with(
+    def: &StructDef,
+    size_of: impl Fn(&StructMember) -> u64,
+) -> u64 {
     let mut offset = 0u64;
     let mut max_align = 1u64;
     for member in &def.members {
-        let size = member_size(member);
+        let size = size_of(member);
         let align = size.clamp(1, 8);
         offset += (align - offset % align) % align;
         offset += size;

@@ -504,7 +504,7 @@ fn architecture_renders_links_only_for_emitted_charts() {
     let report = render_report(&doc, &charts);
     let arch = section(&report, "## 5. Architecture", "## Appendix A.");
 
-    assert!(arch.contains("[Include graph — internal #include dependencies between scanned files.](charts/include-graph.svg)"));
+    assert!(arch.contains("[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)"));
     assert!(arch.contains("](charts/hot-components.svg)"));
     assert!(
         !arch.contains("component-coupling"),

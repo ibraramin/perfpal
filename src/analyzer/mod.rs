@@ -37,47 +37,292 @@ use crate::ir::{MacroEventKind, ParseStatus, ResolverTier};
 use crate::scanner::FileUnit;
 
 pub mod finding;
-use finding::{ALLOC_002_RULE_ID, ARCH_003_RULE_ID, STR_003_RULE_ID};
+use finding::{ALLOC_002_RULE_ID, ARCH_003_RULE_ID, RS_ARCH_003_RULE_ID, STR_003_RULE_ID};
 pub use finding::{Confidence, Finding, Severity};
 
 /// Registry of heuristics, executed in ascending `rule_id` order
 /// (modules.md §3.3). Each entry is a pure function over read-only IR views.
 type HeuristicFn = fn(&[FileUnit]) -> Vec<Finding>;
 
-/// The v1 registry, DECLARED IN ASCENDING `rule_id` ORDER — execution
+/// Language an entry runs on (plan `rust-backend` R3 workstream C1):
+/// `PERF-C-*` rules must never run on Rust files and vice versa — a
+/// name-based C rule (ALLOC/STR/ARCH) would otherwise fire on same-named Rust
+/// constructs in a mixed scan. Grouping is by `FileRecord.language`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RuleLanguage {
+    C,
+    Rust,
+}
+
+/// One registry entry: the language slice it is handed, its rule id (the
+/// single spelling every catalog/Appendix-A lookup keys on), and its function.
+pub(crate) struct RegistryEntry {
+    language: RuleLanguage,
+    /// Read by [`registered_rule_ids`] — the registry→catalog completeness
+    /// seam consumed by the reporter lock (test-only consumer today).
+    #[cfg_attr(not(test), allow(dead_code))]
+    rule_id: &'static str,
+    f: HeuristicFn,
+}
+
+/// The registry, DECLARED IN ASCENDING `rule_id` ORDER ACROSS BOTH LANGUAGES
+/// (all `PERF-C-*` ascending, then all `PERF-RS-*` ascending) — execution
 /// order equals declaration order and duplicate collapse is first-wins, so
 /// declaration order is load-bearing (modules.md §3.3). Adding a heuristic
 /// = inserting a new entry whose rule_id sorts into place (open pattern,
-/// minor-bump schema policy):
-/// alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001,
+/// minor-bump schema policy).
+///
+/// C: alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001,
 /// call_002, loop_001, loop_002, loop_003, loop_004, loop_005, loop_006,
 /// loop_007, loop_008, mem_001, mem_002, str_001, str_002, str_003,
 /// type_001, type_002.
-const REGISTRY: &[HeuristicFn] = &[
-    heuristics::alloc_001,
-    heuristics::alloc_002,
-    heuristics::alloc_003,
-    heuristics::arch_001,
-    heuristics::arch_002,
-    heuristics::arch_003,
-    heuristics::call_001,
-    heuristics::call_002,
-    heuristics::loop_001,
-    heuristics::loop_002,
-    heuristics::loop_003,
-    heuristics::loop_004,
-    heuristics::loop_005,
-    heuristics::loop_006,
-    heuristics::loop_007,
-    heuristics::loop_008,
-    heuristics::mem_001,
-    heuristics::mem_002,
-    heuristics::str_001,
-    heuristics::str_002,
-    heuristics::str_003,
-    heuristics::type_001,
-    heuristics::type_002,
+/// Rust (waves C1 structural + C2 API-name) — the FULL 23-rule catalog,
+/// ascending: alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003,
+/// call_001, call_002, loop_001, loop_002, loop_003, loop_004, loop_005,
+/// loop_006, loop_007, loop_008, mem_001, mem_002, str_001, str_002, str_003,
+/// type_001, type_002.
+const REGISTRY: &[RegistryEntry] = &[
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::ALLOC_001_RULE_ID,
+        f: heuristics::alloc_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::ALLOC_002_RULE_ID,
+        f: heuristics::alloc_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::ALLOC_003_RULE_ID,
+        f: heuristics::alloc_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::ARCH_001_RULE_ID,
+        f: heuristics::arch_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::ARCH_002_RULE_ID,
+        f: heuristics::arch_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::ARCH_003_RULE_ID,
+        f: heuristics::arch_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::CALL_001_RULE_ID,
+        f: heuristics::call_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::CALL_002_RULE_ID,
+        f: heuristics::call_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_001_RULE_ID,
+        f: heuristics::loop_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_002_RULE_ID,
+        f: heuristics::loop_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_003_RULE_ID,
+        f: heuristics::loop_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_004_RULE_ID,
+        f: heuristics::loop_004,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_005_RULE_ID,
+        f: heuristics::loop_005,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_006_RULE_ID,
+        f: heuristics::loop_006,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_007_RULE_ID,
+        f: heuristics::loop_007,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::LOOP_008_RULE_ID,
+        f: heuristics::loop_008,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::MEM_001_RULE_ID,
+        f: heuristics::mem_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::MEM_002_RULE_ID,
+        f: heuristics::mem_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::STR_001_RULE_ID,
+        f: heuristics::str_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::STR_002_RULE_ID,
+        f: heuristics::str_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::STR_003_RULE_ID,
+        f: heuristics::str_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::TYPE_001_RULE_ID,
+        f: heuristics::type_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::C,
+        rule_id: finding::TYPE_002_RULE_ID,
+        f: heuristics::type_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_ALLOC_001_RULE_ID,
+        f: heuristics::rust_alloc_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_ALLOC_002_RULE_ID,
+        f: heuristics::rust_alloc_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_ALLOC_003_RULE_ID,
+        f: heuristics::rust_alloc_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_ARCH_001_RULE_ID,
+        f: heuristics::rust_arch_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_ARCH_002_RULE_ID,
+        f: heuristics::rust_arch_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_ARCH_003_RULE_ID,
+        f: heuristics::rust_arch_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_CALL_001_RULE_ID,
+        f: heuristics::rust_call_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_CALL_002_RULE_ID,
+        f: heuristics::rust_call_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_001_RULE_ID,
+        f: heuristics::rust_loop_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_002_RULE_ID,
+        f: heuristics::rust_loop_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_003_RULE_ID,
+        f: heuristics::rust_loop_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_004_RULE_ID,
+        f: heuristics::rust_loop_004,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_005_RULE_ID,
+        f: heuristics::rust_loop_005,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_006_RULE_ID,
+        f: heuristics::rust_loop_006,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_007_RULE_ID,
+        f: heuristics::rust_loop_007,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_LOOP_008_RULE_ID,
+        f: heuristics::rust_loop_008,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_MEM_001_RULE_ID,
+        f: heuristics::rust_mem_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_MEM_002_RULE_ID,
+        f: heuristics::rust_mem_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_STR_001_RULE_ID,
+        f: heuristics::rust_str_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_STR_002_RULE_ID,
+        f: heuristics::rust_str_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_STR_003_RULE_ID,
+        f: heuristics::rust_str_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_TYPE_001_RULE_ID,
+        f: heuristics::rust_type_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Rust,
+        rule_id: finding::RS_TYPE_002_RULE_ID,
+        f: heuristics::rust_type_002,
+    },
 ];
+
+/// The registered rule ids in DECLARATION ORDER (ascending rule_id across both
+/// languages: the C block then the `PERF-RS-*` block). Exposed so the reporter's
+/// catalog-completeness lock can derive its expected set FROM the registry
+/// instead of a hand-maintained duplicate; a registry entry whose rule id is
+/// not cataloged then fails the lock rather than reaching Appendix A.
+#[cfg_attr(not(test), allow(dead_code))]
+pub(crate) fn registered_rule_ids() -> impl Iterator<Item = &'static str> {
+    REGISTRY.iter().map(|entry| entry.rule_id)
+}
 
 mod heuristics;
 
@@ -93,13 +338,45 @@ pub(crate) use heuristics::{CrossFileCallEdge, cross_file_call_edges, scanf_form
 /// severity → confidence → rule_id → path → start_line → start_col.
 #[must_use]
 pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
+    // Language gating (plan `rust-backend` R3 workstream C1): the registry is
+    // language-tagged, so each entry must receive ONLY the units for its own
+    // language — otherwise a name-based C rule (ALLOC/STR/ARCH) would fire on
+    // same-named Rust constructs in a mixed scan. The units are partitioned
+    // ONCE here into two owned slices (a single deep clone of every
+    // `FileUnit`); the alternative — handing each rule the full borrowed set
+    // and repeating the language filter inside all 46 rules — trades that one
+    // upfront clone for 46 per-rule passes over the units. The upfront split
+    // is paid once per `analyze` call and keeps every rule a pure,
+    // language-homogeneous IR view. Any language other than `"rust"`
+    // (including `"c"`) lands in the C bucket, matching the scanner's C
+    // fallback default.
+    let mut c_units: Vec<FileUnit> = Vec::new();
+    let mut rust_units: Vec<FileUnit> = Vec::new();
+    for unit in units {
+        if unit.file.language == "rust" {
+            rust_units.push(unit.clone());
+        } else {
+            c_units.push(unit.clone());
+        }
+    }
+
     // Heuristics run in ascending rule_id = REGISTRY declaration order;
     // candidates keep emission order for deterministic duplicate collapse.
-    let mut findings: Vec<Finding> = REGISTRY
-        .iter()
-        .flat_map(|heuristic| heuristic(units))
-        .collect();
+    let mut findings: Vec<Finding> = Vec::new();
+    for entry in REGISTRY {
+        let slice: &[FileUnit] = match entry.language {
+            RuleLanguage::C => &c_units,
+            RuleLanguage::Rust => &rust_units,
+        };
+        if slice.is_empty() {
+            continue;
+        }
+        findings.extend((entry.f)(slice));
+    }
 
+    // Downgrade/upgrade hooks and duplicate collapse keep the FULL unit set
+    // and the full findings (they look up a finding's file by path, so the
+    // language split must not narrow their view).
     apply_downgrade_hooks(units, &mut findings);
     apply_upgrade_hooks(units, &mut findings);
     collapse_duplicates(&mut findings);
@@ -114,7 +391,8 @@ pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
 /// fact at its source — a `CallEvent.semantic` fact on a call whose span
 /// CONTAINS the finding span's start point, in the finding's file, where the
 /// fact kind matches the finding's rule class:
-/// - `PERF-C-ARCH-003` requires `resolved_definition.is_some()`;
+/// - `PERF-C-ARCH-003` / `PERF-RS-ARCH-003` require
+///   `resolved_definition.is_some()`;
 /// - `PERF-C-ALLOC-002` requires `fopened_handle == true`;
 /// - `PERF-C-STR-003` requires `!literal_args.is_empty()`.
 ///   Any other rule_id claiming Semantic is UNBACKED by construction
@@ -149,6 +427,11 @@ fn apply_upgrade_hooks(units: &[FileUnit], findings: &mut [Finding]) {
                         };
                         let kind_matches = match finding.rule_id.as_str() {
                             ARCH_003_RULE_ID => semantic.resolved_definition.is_some(),
+                            // Same cross-file-resolution contract mirrored for
+                            // Rust (no Rust resolver exists yet, so no Rust
+                            // edge can currently claim Semantic — defensively
+                            // kind-matched rather than default-denied).
+                            RS_ARCH_003_RULE_ID => semantic.resolved_definition.is_some(),
                             ALLOC_002_RULE_ID => semantic.fopened_handle,
                             STR_003_RULE_ID => !semantic.literal_args.is_empty(),
                             // Default-deny: no other rule may claim
@@ -300,6 +583,8 @@ mod tests {
             },
             callee_name: "fclose".to_string(),
             callee_kind: CalleeKind::Direct,
+            callee_path: None,
+            is_macro: false,
             args: Vec::new(),
             statement_role: StatementRole::Nested,
             conditional_guarded: false,

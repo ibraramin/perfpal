@@ -37,6 +37,7 @@ fn resolved_include(from: &str, to: &str, line: u32) -> IncludeEdge {
         to_path: Some(to.to_string()),
         form: IncludeForm::Quoted,
         resolved: true,
+        is_mod: false,
         span: Span {
             start_line: line,
             start_col: 1,

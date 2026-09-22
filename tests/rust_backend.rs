@@ -466,15 +466,17 @@ fn crate_root_src_bin_does_not_resolve_under_stem_dir() {
     fs::remove_dir_all(&root).ok();
 }
 
-/// Round-4 Major 2 (founder decision): internal `use` edges are classified but
-/// NOT resolved — they keep their raw `::` path with `resolved=false`.
+/// R3 supersedes the Round-4 Major 2 founder decision: internal `use` edges now
+/// resolve to the file owning the longest module prefix (`crate::util::helper`
+/// → `src/util.rs`), and an unresolvable internal `use` normalizes to
+/// `to_path=None, resolved=false` (no raw `::` retention).
 #[test]
-fn internal_use_edges_keep_raw_path_and_stay_unresolved() {
-    let root = temp_root("use-raw");
+fn internal_use_edges_resolve_to_owning_module_file() {
+    let root = temp_root("use-resolve");
     fs::create_dir_all(root.join("src")).unwrap();
     fs::write(
         root.join("src/lib.rs"),
-        "use crate::util::helper;\nfn lib_fn() {}\n",
+        "mod util;\nuse crate::util::helper;\nuse crate::nope::missing;\nfn lib_fn() {}\n",
     )
     .unwrap();
     fs::write(root.join("src/util.rs"), "pub fn helper() {}\n").unwrap();
@@ -484,17 +486,22 @@ fn internal_use_edges_keep_raw_path_and_stay_unresolved() {
         .iter()
         .find(|u| u.file.path == "src/lib.rs")
         .expect("lib unit");
-    let edge = lib
+
+    // `use crate::util::helper` → the file owning module `util`.
+    let util = lib
         .includes
         .iter()
-        .find(|e| e.form == IncludeForm::Quoted)
-        .expect("internal use edge");
-    assert_eq!(
-        edge.to_path.as_deref(),
-        Some("crate::util::helper"),
-        "raw use path is preserved, not nulled"
+        .find(|e| e.resolved && e.to_path.as_deref() == Some("src/util.rs"))
+        .expect("crate::util::helper resolves to src/util.rs");
+    assert_eq!(util.form, IncludeForm::Quoted);
+
+    // Unresolvable internal use normalizes to null + unresolved.
+    assert!(
+        lib.includes
+            .iter()
+            .any(|e| e.form == IncludeForm::Quoted && !e.resolved && e.to_path.is_none()),
+        "crate::nope::missing normalizes to to_path=None, resolved=false"
     );
-    assert!(!edge.resolved);
 
     fs::remove_dir_all(&root).ok();
 }

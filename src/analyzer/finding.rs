@@ -39,6 +39,38 @@ pub const LOOP_006_RULE_ID: &str = "PERF-C-LOOP-006";
 pub const LOOP_007_RULE_ID: &str = "PERF-C-LOOP-007";
 pub const LOOP_008_RULE_ID: &str = "PERF-C-LOOP-008";
 
+/// Rust (`PERF-RS-*`) rule ids (plan `rust-backend` R3 workstreams C1 + C2),
+/// mirroring the C families' intent on Rust idioms. Each const is the single
+/// spelling shared by the heuristic and its tests across the seam.
+///
+/// Coverage is now the FULL 23-rule Rust catalog: the structural subset
+/// (LOOP-001/004/005/007/008, CALL-001/002, ARCH-001/002/003, TYPE-001/002,
+/// wave C1) plus the API-name families (ALLOC-001/002/003, STR-001/002/003,
+/// LOOP-002/003/006, MEM-001/002, wave C2).
+pub const RS_ALLOC_001_RULE_ID: &str = "PERF-RS-ALLOC-001";
+pub const RS_ALLOC_002_RULE_ID: &str = "PERF-RS-ALLOC-002";
+pub const RS_ALLOC_003_RULE_ID: &str = "PERF-RS-ALLOC-003";
+pub const RS_ARCH_001_RULE_ID: &str = "PERF-RS-ARCH-001";
+pub const RS_ARCH_002_RULE_ID: &str = "PERF-RS-ARCH-002";
+pub const RS_ARCH_003_RULE_ID: &str = "PERF-RS-ARCH-003";
+pub const RS_CALL_001_RULE_ID: &str = "PERF-RS-CALL-001";
+pub const RS_CALL_002_RULE_ID: &str = "PERF-RS-CALL-002";
+pub const RS_LOOP_001_RULE_ID: &str = "PERF-RS-LOOP-001";
+pub const RS_LOOP_002_RULE_ID: &str = "PERF-RS-LOOP-002";
+pub const RS_LOOP_003_RULE_ID: &str = "PERF-RS-LOOP-003";
+pub const RS_LOOP_004_RULE_ID: &str = "PERF-RS-LOOP-004";
+pub const RS_LOOP_005_RULE_ID: &str = "PERF-RS-LOOP-005";
+pub const RS_LOOP_006_RULE_ID: &str = "PERF-RS-LOOP-006";
+pub const RS_LOOP_007_RULE_ID: &str = "PERF-RS-LOOP-007";
+pub const RS_LOOP_008_RULE_ID: &str = "PERF-RS-LOOP-008";
+pub const RS_MEM_001_RULE_ID: &str = "PERF-RS-MEM-001";
+pub const RS_MEM_002_RULE_ID: &str = "PERF-RS-MEM-002";
+pub const RS_STR_001_RULE_ID: &str = "PERF-RS-STR-001";
+pub const RS_STR_002_RULE_ID: &str = "PERF-RS-STR-002";
+pub const RS_STR_003_RULE_ID: &str = "PERF-RS-STR-003";
+pub const RS_TYPE_001_RULE_ID: &str = "PERF-RS-TYPE-001";
+pub const RS_TYPE_002_RULE_ID: &str = "PERF-RS-TYPE-002";
+
 /// Severity band (report §4 order: hot → warn → info).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
