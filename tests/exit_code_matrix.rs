@@ -4,7 +4,7 @@
 //! | # | Case                                        | Argv / setup                                          | Expected | Contract |
 //! |---|---------------------------------------------|-------------------------------------------------------|----------|----------|
 //! | 1 | Happy path                                  | scan tests/fixtures/e2e into fresh temp output         | 0        | §8.2 row 0 — report written; findings are data |
-//! | 2 | Empty-dir scan (zero C files)               | empty temp dir as target                               | 0        | §8.2 row 0 + modules.md Principle 4 — valid empty report, `languages: ["c"]` |
+//! | 2 | Empty-dir scan (zero files)                 | empty temp dir as target                               | 0        | §8.2 row 0 + modules.md Principle 4 — valid empty report, `languages: ["c","rust"]` |
 //! | 3 | `--help`                                    | `--help`                                               | 0        | §8.1 flag table — usage text, exit 0 |
 //! | 4 | `--version`                                 | `--version`                                            | 0        | §8.1 flag table — version payload, exit 0 |
 //! | 5 | Unknown flag                                | `--definitely-not-a-flag`                              | 1        | §8.2 row 1 — usage error (clap's default 2 is remapped) |
@@ -71,8 +71,8 @@ fn case1_happy_path_exit_0() {
 
 #[test]
 fn case2_empty_dir_scan_exit_0_with_valid_empty_report() {
-    // §8.2 row 0 + Principle 4: a zero-C-file scan succeeds with a valid
-    // empty report (`languages: ["c"]`).
+    // §8.2 row 0 + Principle 4: a zero-file scan succeeds with a valid
+    // empty report (`languages: ["c","rust"]` — the supported set).
     let root = temp_dir("empty");
     let target = root.join("no-c-files-here");
     fs::create_dir_all(&target).expect("empty scan target");
@@ -82,11 +82,11 @@ fn case2_empty_dir_scan_exit_0_with_valid_empty_report() {
         out.to_string_lossy().as_ref(),
         target.to_string_lossy().as_ref(),
     ]));
-    assert_eq!(code, 0, "zero-C-file scan must succeed (Principle 4)");
+    assert_eq!(code, 0, "zero-file scan must succeed (Principle 4)");
     let doc: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(out.join("metrics.json")).unwrap())
             .expect("valid empty report");
-    assert_eq!(doc["scan"]["languages"], serde_json::json!(["c"]));
+    assert_eq!(doc["scan"]["languages"], serde_json::json!(["c", "rust"]));
     assert_eq!(doc["scan"]["file_count"], 0);
     cleanup(&root);
 }

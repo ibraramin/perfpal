@@ -83,6 +83,12 @@ pub enum ScanError {
     UnreadableTarget(PathBuf),
 }
 
+/// Supported language set, in canonical order, used for the empty-scan
+/// `scan.languages` fallback (aggregator). Per-file language tokens are
+/// emitted by each backend (and `failed_unit`); a new language must update
+/// those backends AND this const — nothing enforces that in lockstep.
+pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "rust"];
+
 /// Source language selected by extension (plan `rust-backend` R1).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum LanguageKind {
@@ -90,7 +96,7 @@ enum LanguageKind {
     Rust,
 }
 
-/// Scan a target path (directory or single `.c`/`.h` file) into the IR stream.
+/// Scan a target path (directory or single `.c`/`.h`/`.rs` file) into the IR stream.
 ///
 /// Determinism (modules.md §1): discovered files are emitted in lexicographic
 /// order of their repo-relative POSIX paths; dot-prefixed directories are

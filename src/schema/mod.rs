@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.1.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.2.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -48,7 +48,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.1.json
+/// Schema version of emitted documents (metrics.schema.v1.2.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
 ///
@@ -58,20 +58,23 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// (b) `graphs.call_graph.edges[].confidence` widened from `const "LOW"` to
 /// oneOf `["LOW","MEDIUM","HIGH"]` for the semantic tier (Wave B; widening is
 /// additive — v1.0 documents still validate).
-pub const SCHEMA_VERSION: &str = "1.1";
+///
+/// v1.1 → v1.2 (2026-09-22, minor/additive): `scan.languages` +
+/// `files[].language` widened from const "c" to enum ["c","rust"] (language
+/// addition; v1.1 documents still validate).
+pub const SCHEMA_VERSION: &str = "1.2";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.1"` ⇒ `metrics.schema.v1.1.json`, never an elided `.0`. Kept as a
+/// `"1.2"` ⇒ `metrics.schema.v1.2.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.1.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.2.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.1.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.2.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift. The v1.0 docs copy (`metrics.schema.v1.json`) is
-/// kept as history.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.1.json");
+/// the two cannot drift. The v1.1 + v1.0 docs copies are kept as history.
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.2.json");
 
 // ---------------------------------------------------------------------------
 // Document model — nine sections, field-for-field vs the canonical schema
@@ -122,8 +125,10 @@ pub struct ScanInfo {
     pub started_at: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration_ms: Option<u64>,
-    /// Exactly `["c"]` in v1 (schema `minItems: 1` holds even on zero-C-file
-    /// scans; modules.md §3.2).
+    /// Sorted-unique languages of the scanned files (derived by the
+    /// aggregator, modules.md §3.2/§3.4). On a zero-file scan this is the
+    /// supported set `["c","rust"]` so schema `minItems: 1` holds
+    /// (semantics: "languages scanned for").
     pub languages: Vec<String>,
     pub file_count: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -145,7 +150,7 @@ pub struct ParseHealthSummary {
 pub struct FileEntry {
     /// Repo-relative POSIX path.
     pub path: String,
-    /// `"c"` in v1.
+    /// `"c"` or `"rust"` (schema 1.2 admits both).
     pub language: String,
     pub loc: LocCounts,
     pub function_count: u32,
@@ -523,11 +528,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.1.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.2.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.1.json drifted from \
-             docs/schema/metrics.schema.v1.1.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.2.json drifted from \
+             docs/schema/metrics.schema.v1.2.json — re-copy the canonical artifact"
         );
     }
 

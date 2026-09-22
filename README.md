@@ -1,10 +1,10 @@
 # Perfpal
 
-Perfpal is a static-analysis CLI that scans C codebases for performance-relevant patterns and writes a self-contained `perfpal-report/` directory: a versioned, LLM-consumable `metrics.json`, a human-readable `report.md`, and three deterministic SVG architecture charts. It is built for AI-generated codebases — high file volume, frequently non-compiling trees, missing headers and build configuration — where a compiler-based pipeline is often not viable. Parsing runs on a tree-sitter syntactic tier (ADR-0001): no build flags, compile database, or macro expansion are required. All output is framed as **optimization candidates for review, never certainties**.
+Perfpal is a static-analysis CLI that scans C and Rust codebases for performance-relevant patterns and writes a self-contained `perfpal-report/` directory: a versioned, LLM-consumable `metrics.json`, a human-readable `report.md`, and three deterministic SVG architecture charts. It is built for AI-generated codebases — high file volume, frequently non-compiling trees, missing headers and build configuration — where a compiler-based pipeline is often not viable. Parsing runs on a tree-sitter syntactic tier (ADR-0001): no build flags, compile database, or macro expansion are required. All output is framed as **optimization candidates for review, never certainties**.
 
 ## How it works
 
-- **Scan** — recursive discovery of `.c`/`.h` files in lexicographic order (dot-directories skipped, symlinks not followed), parsed by the bundled `tree-sitter-c` backend. Parse health (ok / partial / failed) is captured per file; quoted includes are resolved against the filesystem, and in-repo angle-bracket hits also count as internal coupling (ADR-0002); unresolvable angle-bracket includes are bucketed as external.
+- **Scan** — recursive discovery in lexicographic order (dot-directories skipped, symlinks not followed): `.c`/`.h` files are parsed by the bundled `tree-sitter-c` backend and `.rs` files by the bundled `tree-sitter-rust` backend. Rust files are already discovered, extracted, and carried into `metrics.json`; the Rust heuristic set (`PERF-RS-*`) and full Rust module-graph semantics arrive in R3. Parse health (ok / partial / failed) is captured per file; quoted includes are resolved against the filesystem, and in-repo angle-bracket hits also count as internal coupling (ADR-0002); unresolvable angle-bracket includes are bucketed as external.
 - **Analyze** — 23 catalog heuristics (`PERF-C-*`) run as pure functions over the parser-agnostic IR. Every finding carries mandatory `confidence` and `severity`; documented downgrade hooks (macro origin, parse-error overlap, name-based cross-file matching) cap confidence and set flags instead of silently dropping or trusting data.
 - **Aggregate** — the include graph, the cross-file call graph (name-based, confidence locked LOW), component ranking, and per-function statistics are assembled into one `metrics.json` document with every sort order explicitly owned.
 - **Render** — `report.md` is rendered from a fixed template; the three SVG charts are pure functions of `metrics.json` structures and are byte-deterministic.
@@ -45,7 +45,7 @@ The toolchain is pinned to Rust 1.92.0 (`rust-toolchain.toml`).
 
 ## Quickstart
 
-Scan a directory (a single `.c`/`.h` file also works):
+Scan a directory (a single `.c`/`.h`/`.rs` file also works):
 
 ```
 $ perfpal path/to/your-c-project
@@ -63,8 +63,8 @@ A completed scan leaves exactly this layout (default `perfpal-report/`):
 
 ```
 perfpal-report/
-├── metrics.json              # raw machine-readable data (schema v1.1)
-├── metrics.schema.v1.1.json  # byte-copy of the exact schema for this schema_version
+├── metrics.json              # raw machine-readable data (schema v1.2)
+├── metrics.schema.v1.2.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report
 └── charts/                   # static visualizations (set defined by ADR-0002)
     └── <chart-name>.svg      # e.g. include-graph.svg
@@ -76,10 +76,10 @@ The chart set is `include-graph.svg`, `component-coupling.svg`, and `hot-compone
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
-| `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h` file |
+| `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs` file |
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
-| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.1.0 (metrics schema 1.1)`), exit 0 |
+| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.1.0 (metrics schema 1.2)`), exit 0 |
 | `-h`, `--help` | — | — | Usage text, exit 0 |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.
@@ -88,7 +88,7 @@ stdout carries the short plain-text summary shown above; all diagnostics, warnin
 
 | Code | Meaning |
 |---|---|
-| `0` | Success — report written. Findings never affect the exit code (they are data). Zero-C-file scans succeed with a valid empty report. |
+| `0` | Success — report written. Findings never affect the exit code (they are data). Zero-file scans succeed with a valid empty report (`scan.languages` = the supported set `["c","rust"]`). |
 | `1` | Usage error — unknown flag; missing/unreadable target path. |
 | `2` | Output error — cannot create output dir; safety-guard refusal without `--force`; disk/write failure. |
 | `3` | Internal error — unexpected panic/crash, always a bug (this also covers a `metrics.json` serialization failure). |
@@ -161,7 +161,7 @@ Thresholds are named constants documented in the catalog (`docs/heuristics/catal
 
 - **One scan → one directory.** A completed report directory contains exactly the artifacts of that run; nothing stale survives.
 - **`metrics.json` is the source of truth.** `report.md` and `charts/` are derived artifacts — pure functions of `metrics.json` (plus the reporter's frozen built-in catalog for Appendix A). If they ever disagree, `metrics.json` wins.
-- **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory; there is no separate report-format version. The bundled `metrics.schema.v1.1.json` is a byte-copy of the exact schema for that version (its `$id` is the canonical URI, not the local filename — a mismatch is expected).
+- **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory; there is no separate report-format version. The bundled `metrics.schema.v1.2.json` is a byte-copy of the exact schema for that version (its `$id` is the canonical URI, not the local filename — a mismatch is expected).
 - **Atomic regeneration.** The report is built in a temporary sibling directory and swapped into place (rename-aside-then-swap). A crashed or interrupted run leaves the previous complete report intact; stale temp directories are removed on the next successful run.
 - **Safety guard.** If the target directory exists and does not contain `metrics.json`, Perfpal refuses to replace it unless `--force` is given — user data is never silently destroyed.
 - **Encoding and paths.** All text artifacts are UTF-8, LF line endings, trailing newline. Paths are repo-relative POSIX paths reused verbatim; embedded paths/titles/messages are escaped so scanned filenames cannot inject Markdown or XML.
@@ -180,7 +180,7 @@ This claim covers the report directory only. Release binaries make no bit-for-bi
 - `docs/architecture/modules.md` — module decomposition, determinism ownership, CLI surface (§8)
 - `docs/report/output-contract.md` — the `perfpal-report/` directory contract
 - `docs/heuristics/catalog-v1.md` — the full 23-rule catalog with thresholds and false-positive classes
-- `docs/schema/metrics-json-v1.md` + `docs/schema/metrics.schema.v1.json` — the `metrics.json` data contract and versioning policy
+- `docs/schema/metrics-json-v1.md` + `docs/schema/metrics.schema.v1.2.json` — the `metrics.json` data contract and versioning policy
 - `docs/adr/ADR-0001-parser-strategy.md` — tree-sitter-first behind a parser-agnostic IR
 - `docs/adr/ADR-0002-visualization.md` — the deterministic SVG chart set
 - `CHANGELOG.md` — release history

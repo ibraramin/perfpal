@@ -19,6 +19,7 @@
    | `finding_id` construction & uniqueness | analyzer | `rule:path:line:col`, column disambiguates collisions |
    | Graph/component iteration order | aggregator | edges by `(from, to)`; components by `(rank, path_prefix)` |
    | `graphs.include_graph.nodes` order | aggregator | nodes sorted by path |
+   | `scan.languages` order & membership | aggregator | sorted-unique over `files[].language` (`BTreeSet`); supported set `["c","rust"]` on a zero-file scan |
    | `findings[]` array order | analyzer | report §4 total order: severity → confidence → rule_id → path → start_line → start_col |
    | `stats.functions[]` order | aggregator | `(path, span.start_line, span.start_col)` |
    | `stats.distributions[]` order | aggregator | `(metric, bucket)` |
@@ -27,7 +28,7 @@
    | Artifact names & layout | writer | output-contract §3 |
 
 3. **Parse honesty.** `ParseHealth` is consulted before any scoring; findings overlapping error regions are downgraded and flagged (`error_node_overlap`), never silently dropped or silently trusted (IR §5, ADR-0001).
-4. **Findings, not failures.** Unresolvable includes, include cycles, partial parses, and zero-C-file scans are *data* — they produce findings, flags, or a valid empty report. They never fail the run (exit-code contract, §8).
+4. **Findings, not failures.** Unresolvable includes, include cycles, partial parses, and zero-file scans are *data* — they produce findings, flags, or a valid empty report. They never fail the run (exit-code contract, §8).
 5. **Derived artifacts are pure functions.** `report.md` and `charts/` are pure functions of the final `metrics.json` document (+ the reporter's frozen built-in catalog for Appendix A descriptions). If any derived artifact disagrees with `metrics.json`, `metrics.json` wins (output-contract Principle 2).
 6. **Language-neutral boundaries.** Module boundaries are defined by data contracts, not by an implementation language. Any language satisfying §6's pre-committed criteria can implement every module as specified.
 7. **Optimization-candidate framing.** All human-facing text (report prose, stdout summary) frames outputs as candidates for review, never certainties.
@@ -84,7 +85,7 @@ Each module lists Consumes / Produces / Responsibilities / Non-goals.
 - **Produces:** the complete IR stream (file-level records, FunctionRecords, events — IR §3) in deterministic order.
 - **Responsibilities:**
   - Recursive file discovery with lexicographically sorted emission; hidden directories (dot-prefixed) are skipped and symlinks are not followed in v1; per-file read/parse failures become `ParseHealth{failed}` records, never run aborts (total discovery failure of the target itself is a usage error, exit 1).
-  - Language detection by extension: `.c` and `.h` are C in v1; other extensions are skipped silently (the v1 schema has no field for skipped-file counts). `scan.file_count` = number of scanned C files = `len(files[])`; a zero-C-file scan still records `scan.languages: ["c"]` (schema `minItems: 1`).
+  - Language detection by extension: `.c` and `.h` are C and `.rs` is Rust in v1; other extensions are skipped silently (the v1 schema has no field for skipped-file counts). `scan.file_count` = number of scanned files = `len(files[])`. `scan.languages` is DERIVED by the aggregator as the sorted-unique set of `files[].language`; a zero-file scan records the supported set `scan.languages: ["c","rust"]` (schema `minItems: 1` holds; semantics = "languages scanned for").
   - Parse via the bound backend; capture `ParseHealth` (status, error regions, error node count).
   - Quoted-include resolution against the filesystem (includer-relative first); angle-bracket includes bucketed external (ADR-0001); unresolvable quoted includes emit `IncludeEdge{resolved: false}` — ARCH-001 signal, not an error.
   - Curated macro-pattern recognizer pass → `MacroEvent`s.
@@ -154,7 +155,7 @@ Each heuristic is a pure function over IR views:
 
 A backend implements one interface: *given (path, source bytes), emit that language's IR records/events.*
 
-- v1 ships exactly one backend: `tree-sitter-c` (official grammar, MIT, pinned version per ADR-0001 guardrail 5).
+- v1 ships two backends: `tree-sitter-c` (`.c`/`.h`) and `tree-sitter-rust` (`.rs`) — both official grammars, MIT, pinned versions per ADR-0001 guardrail 5.
 - Backends convert spans at the boundary and never leak node kinds past it.
 - New languages = new backends + grammar vendoring per the ADR-0001 license policy (official `tree-sitter-*` repos unless individually audited). No analyzer, aggregator, or reporter changes required — see §5.2 for the schema caveat.
 
@@ -170,7 +171,7 @@ Profile adapters (perf / valgrind / cProfile) translate tool-specific output int
 
 ### 5.2 Additional languages (C++, Python next)
 
-Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.json](../schema/metrics.schema.v1.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language.
+Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.2.json](../schema/metrics.schema.v1.2.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission has already landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2).
 
 ### 5.3 Semantic resolver — REALIZED (plan `semantic-resolver`, waves A–B2)
 
@@ -181,7 +182,7 @@ libclang joins as an additive resolver per ADR-0001 (license-clean: `clang-sys` 
 - **Conservative-upgrade rule.** Tier/facts are set ONLY on unambiguous resolution: `CallEvent.semantic` (`Some` only when at least one of `resolved_definition` / `fopened_handle` / `literal_args` is proven — the `Some`-only-when-proven invariant), the definition's `FunctionRecord.resolver_tier = Semantic`, and finding-level upgrades. Ambiguous same-name targets keep the syntactic path; macro-origin and error-region-overlapped calls are gated out on both the resolver and consumer sides. The analyzer's central `apply_upgrade_hooks` gate (mirroring `apply_downgrade_hooks`, running pre-dedup) reverts any `Semantic`-tier finding lacking backing facts at its span.
 - **USR-internal rule.** USRs are internal decl↔def pairing keys only (the map types are deliberately not `Serialize`); they never enter IR identity, findings, or output (ADR-0001 identity rule).
 - **Single-run assumption.** The resolver re-reads sources from disk via the scanner's recorded scan root; enrichment assumes the tree is unchanged between scan and resolve.
-- **Schema.** v1.1 ([metrics-json-v1.md §5](../schema/metrics-json-v1.md)): optional `files[].parse_health.resolver` + `graphs.call_graph.edges[].confidence` widened from const `"LOW"` to oneOf `["LOW", "MEDIUM", "HIGH"]` (additive widening; old reports still validate).
+- **Schema.** v1.2 (current; [metrics-json-v1.md §5](../schema/metrics-json-v1.md)): optional `files[].parse_health.resolver` + `graphs.call_graph.edges[].confidence` widened from const `"LOW"` to oneOf `["LOW", "MEDIUM", "HIGH"]` (additive v1.1 widening; old reports still validate), plus the v1.2 `scan.languages` / `files[].language` language widening.
 
 Wave B retirements: ARCH-003 resolved edges (Info/MEDIUM/semantic, USR-based true-callee resolution); ALLOC-002 proven-fclose (Warn/HIGH/semantic, exact free semantics incl. escalation); STR-003 resolved-format (Warn/HIGH/semantic + `resolved_format` evidence). LOOP-004 resolver constness proofs DEFERRED to a follow-up session (budget call; syntactic behavior unchanged).
 
@@ -263,7 +264,7 @@ Explicitly out of MVP (post-MVP list): include/exclude path filters, config file
 
 | Code | Meaning | Examples |
 |---|---|---|
-| `0` | Success — report written. Findings never affect the exit code (they are data, Principle 4). Zero-C-file scans succeed with a valid empty report. | |
+| `0` | Success — report written. Findings never affect the exit code (they are data, Principle 4). Zero-file scans succeed with a valid empty report. | |
 | `1` | Usage error | unknown flag; missing/unreadable target path |
 | `2` | Output error | cannot create output dir; safety-guard refusal without `--force`; disk/write failure |
 | `3` | Internal error | unexpected panic/crash — always a bug |

@@ -42,7 +42,7 @@ use std::collections::BTreeMap;
 
 use crate::analyzer::{CrossFileCallEdge, Finding, cross_file_call_edges};
 use crate::ir::{FunctionRecord, IncludeForm};
-use crate::scanner::FileUnit;
+use crate::scanner::{FileUnit, SUPPORTED_LANGUAGES};
 use crate::schema::{
     self, CallEdge, CallGraphSection, ComponentEntry, ComponentMetrics, DistributionEntry,
     FileEntry, FindingEntry, GraphNode, GraphsSection, IncludeEdgeDto, IncludeGraph,
@@ -136,7 +136,7 @@ pub fn assemble(
             root_path: provenance.root_path.clone(),
             started_at: provenance.started_at.clone(),
             duration_ms: Some(provenance.duration_ms),
-            languages: vec!["c".to_string()],
+            languages: scan_languages(units),
             file_count: units.len().min(u32::MAX as usize) as u32,
             loc_total,
         },
@@ -171,6 +171,22 @@ fn parse_health_entry(health: &crate::ir::ParseHealth) -> ParseHealthEntry {
         },
         error_node_count: health.error_node_count,
         resolver: health.resolver,
+    }
+}
+
+/// `scan.languages`: sorted-unique languages of the scanned files (BTreeSet =>
+/// deterministic; owner: aggregator per modules.md §1), or SUPPORTED_LANGUAGES
+/// on a zero-file scan (schema minItems:1 — "languages scanned for").
+fn scan_languages(units: &[FileUnit]) -> Vec<String> {
+    let set: std::collections::BTreeSet<&str> =
+        units.iter().map(|u| u.file.language.as_str()).collect();
+    if set.is_empty() {
+        SUPPORTED_LANGUAGES
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect()
+    } else {
+        set.into_iter().map(str::to_string).collect()
     }
 }
 
@@ -686,7 +702,7 @@ mod tests {
     #[test]
     fn zero_file_scan_yields_valid_empty_document() {
         let doc = assemble(&[], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c"]);
+        assert_eq!(doc.scan.languages, ["c", "rust"]);
         assert_eq!(doc.scan.file_count, 0);
         assert!(doc.files.is_empty());
         assert!(doc.findings.is_empty());
@@ -715,6 +731,37 @@ mod tests {
             "components must be Some(empty), got {:?}",
             doc.components
         );
+    }
+
+    /// `scan.languages` derives from the scanned files: C-only → `["c"]`,
+    /// Rust-only → `["rust"]` (D-A, plan `rust-backend` R2).
+    #[test]
+    fn scan_languages_derive_from_single_language_units() {
+        let c_doc = assemble(&[unit("a.c")], &[], &prov());
+        assert_eq!(c_doc.scan.languages, ["c"]);
+
+        let mut rust = unit("a.rs");
+        rust.file.language = "rust".to_string();
+        let rust_doc = assemble(&[rust], &[], &prov());
+        assert_eq!(rust_doc.scan.languages, ["rust"]);
+    }
+
+    /// Mixed C+Rust → sorted-unique `["c","rust"]`, deterministic regardless
+    /// of unit order (fed in REVERSE to prove the BTreeSet sorts).
+    #[test]
+    fn scan_languages_mixed_c_and_rust_are_sorted_unique() {
+        let mut rust = unit("a.rs");
+        rust.file.language = "rust".to_string();
+        let doc = assemble(&[rust, unit("a.c")], &[], &prov());
+        assert_eq!(doc.scan.languages, ["c", "rust"]);
+    }
+
+    /// Zero-file scan → the supported set (schema `minItems: 1` preserved;
+    /// semantics = "languages scanned for").
+    #[test]
+    fn scan_languages_empty_scan_uses_supported_set() {
+        let doc = assemble(&[], &[], &prov());
+        assert_eq!(doc.scan.languages, ["c", "rust"]);
     }
 
     /// call_graph assembly: a genuine cross-file Direct call maps field-for-

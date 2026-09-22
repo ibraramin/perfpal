@@ -202,7 +202,7 @@ fn resolved_pairs(edges: &[IncludeEdgeDto]) -> Vec<(String, String)> {
 ///
 /// Edge pairs are FIRST filtered to endpoints present in the node set: an
 /// include can resolve to a real file that is not a scanned chart node
-/// (discovery only picks `.c`/`.h`, e.g. a `version.inc`) — counting such
+/// (discovery only picks `.c`/`.h`/`.rs`, e.g. a `version.inc`) — counting such
 /// phantom endpoints would let them displace real files in the degree
 /// ranking, render as nodes, and skew the truncation count.
 fn cap_nodes(nodes: &[String], pairs: &[(String, String)]) -> (Vec<String>, usize) {

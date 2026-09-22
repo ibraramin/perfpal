@@ -200,11 +200,11 @@ fn no_enrichment_facts_without_feature() {
 }
 
 /// Full-pipeline proof on the DEFAULT build (validation item 8): metrics.json
-/// carries schema_version 1.1 and `files[].parse_health.resolver = "absent"`,
-/// and the bundled schema uses the full v1.1 artifact name.
+/// carries schema_version 1.2 and `files[].parse_health.resolver = "absent"`,
+/// and the bundled schema uses the full v1.2 artifact name.
 #[test]
 #[cfg(not(feature = "semantic-clang"))]
-fn e2e_metrics_show_schema_1_1_and_absent_resolver() {
+fn e2e_metrics_show_schema_1_2_and_absent_resolver() {
     let out = temp_dir("e2e11").join("perfpal-report");
     let code = run_with(argv(&[
         "--output",
@@ -214,7 +214,7 @@ fn e2e_metrics_show_schema_1_1_and_absent_resolver() {
     assert_eq!(code, 0, "pipeline over the e2e fixture must succeed");
     let raw = fs::read_to_string(out.join("metrics.json")).expect("metrics.json present");
     let doc: serde_json::Value = serde_json::from_str(&raw).expect("metrics.json parses");
-    assert_eq!(doc["schema_version"], "1.1");
+    assert_eq!(doc["schema_version"], "1.2");
     let files = doc["files"].as_array().expect("files[] present");
     assert!(!files.is_empty());
     for file in files {
@@ -223,21 +223,21 @@ fn e2e_metrics_show_schema_1_1_and_absent_resolver() {
             "default build must emit honest resolver absence"
         );
     }
-    assert!(out.join("metrics.schema.v1.1.json").is_file());
-    assert!(!out.join("metrics.schema.v1.0.json").exists());
+    assert!(out.join("metrics.schema.v1.2.json").is_file());
+    assert!(!out.join("metrics.schema.v1.1.json").exists());
 }
 
 /// NEGATIVE TEST (metrics-json-v1.md §5 minor-bump policy): a v1.0-style
 /// document — `parse_health` WITHOUT the `resolver` field — must still
-/// validate under the v1.1 schema. The repo carries no runtime JSON-Schema
+/// validate under the v1.2 schema. The repo carries no runtime JSON-Schema
 /// validator dependency, so the validation contract is asserted
-/// structurally against the embedded canonical v1.1 schema: `resolver` is
+/// structurally against the embedded canonical v1.2 schema: `resolver` is
 /// optional (not in `required`), its enum is exactly the documented set, the
 /// v1.0-shaped object's keys all exist as schema properties (no
 /// `additionalProperties` violation possible), and the widened call-edge
 /// confidence still accepts every v1.0 value.
 #[test]
-fn v1_0_style_parse_health_still_validates_under_v1_1_schema() {
+fn v1_0_style_parse_health_still_validates_under_v1_2_schema() {
     let schema: serde_json::Value =
         serde_json::from_str(perfpal::schema::EMBEDDED_SCHEMA).expect("embedded schema parses");
 
@@ -259,7 +259,7 @@ fn v1_0_style_parse_health_still_validates_under_v1_1_schema() {
     assert_eq!(tokens, ["absent", "ok", "failed"]);
 
     // (3) a v1.0-style parse_health object (no resolver) only uses keys the
-    // v1.1 schema declares — so `additionalProperties: false` cannot reject
+    // v1.2 schema declares — so `additionalProperties: false` cannot reject
     // it; and omitting the optional `resolver` cannot violate `required`.
     let v1_style = serde_json::json!({
         "status": "ok",

@@ -3,8 +3,10 @@
 //! (`scanner::backends::tree_sitter_rust::extract`) and the extension-based
 //! dispatch of `scanner::scan` over a temp directory.
 //!
-//! Deliberately does NOT run the schema/writer path over Rust (metrics.json
-//! `language` stays `const "c"` until R2).
+//! Deliberately does NOT run the schema/writer path over Rust: R1 stopped at
+//! the scanner seam. That restriction is historical — R2 has since widened
+//! the schema (`scan.languages` / `files[].language` admit `"rust"`), and the
+//! schema/writer path over Rust is locked by `tests/schema_1_2.rs`.
 
 use std::fs;
 use std::path::PathBuf;

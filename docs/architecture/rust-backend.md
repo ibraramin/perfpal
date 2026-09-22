@@ -2,7 +2,7 @@
 
 - **Status:** v1 draft — plan `rust-backend`, phase R0 research deliverable (grammar pin + node-kind mapping + cfg/attribute rules + macro blind spot). No backend module, no schema change, and no heuristics are implemented by this document.
 - **Audience:** Rust backend implementers (R1) and schema authors (R2). The node-kind tables below are an *extraction plan*, not a description of running code.
-- **Grounding:** [ADR-0001](../adr/ADR-0001-parser-strategy.md) (parser-agnostic IR, exact-pin guardrail G5, license policy), [modules.md](./modules.md) §4.2 (scanner-backend interface), §5.2 (sanctioned language-addition extension point), §5.3 (semantic resolver — C-only), §6 (Rust decision), [ir-v1.md](./ir-v1.md) (the record/event seam this mapping targets), [metrics.schema.v1.1.json](../schema/metrics.schema.v1.1.json) (language consts to widen at R2), `src/scanner/backends/tree_sitter_c/mod.rs` (the shipped backend whose interface and ParseHealth contract the Rust backend mirrors).
+- **Grounding:** [ADR-0001](../adr/ADR-0001-parser-strategy.md) (parser-agnostic IR, exact-pin guardrail G5, license policy), [modules.md](./modules.md) §4.2 (scanner-backend interface), §5.2 (sanctioned language-addition extension point), §5.3 (semantic resolver — C-only), §6 (Rust decision), [ir-v1.md](./ir-v1.md) (the record/event seam this mapping targets), [metrics.schema.v1.2.json](../schema/metrics.schema.v1.2.json) (language consts; widened at R2), `src/scanner/backends/tree_sitter_c/mod.rs` (the shipped backend whose interface and ParseHealth contract the Rust backend mirrors).
 - **Grammar authority:** every node-kind name and field name below is taken from the grammar's generated `node-types.json` for the pinned crate (`tree-sitter-rust` 0.24.2, 169 named kinds). Nothing here is invented; where a field name matters to the mapping and was not read, the row says so instead of guessing.
 
 ---
@@ -234,7 +234,7 @@ These are recorded so R1/R2/R3 decide them explicitly; none is guessed above.
 6. **`function_signature_item` (R1).** Decide whether a body-less trait method emits a `FunctionRecord` (with no events) or nothing.
 7. **`let_declaration` and scope classification (R1).** Decide how Rust local bindings feed `AssignmentEvent.scope_class` and LOOP-005-style heuristics (Rust has no C global-vs-param name model).
 8. **Macro invocation events (R1).** Decide whether `macro_invocation` sites emit `MacroEvent { kind: use }` for honesty, given `token_tree` opacity (§5).
-9. **Schema 1.2 minor re-emission (R2).** Widen `scan.languages` and `files[].language` (const `"c"` today in [metrics.schema.v1.1.json](../schema/metrics.schema.v1.1.json)) to admit `"rust"`; re-emit the embedded byte-copy and drift test; keep v1.1 documents validating.
+9. **Schema 1.2 minor re-emission (R2) — LANDED.** `scan.languages` and `files[].language` were widened from `const "c"` to `enum ["c","rust"]`; the embedded byte-copy + drift test were re-emitted as [metrics.schema.v1.2.json](../schema/metrics.schema.v1.2.json); the v1.1 field set remains valid under v1.2 with the version marker updated (see §8).
 10. **`PERF-RS-*` heuristic mapping (R3).** Mirror each C family's intent to Rust idioms — allocation/churn (`Box`/`Vec`/`String`/`Rc` + clone/reserve), string building (`format!`/`push_str`/capacity), loops (nesting, I/O or expensive setup in loops, char-wise string work, variable-divisor arithmetic), recursion/complexity, memory/sizeof analogues (`size_of`, field-layout/padding via `field_declaration_list`, large-struct-by-value), membership scans, pointer/lifetime-chain depth analogues, and architecture (module `use` graph cycles/fan-out, hot components, cross-module call coupling). The `token_tree` blind spot (§5) and accepted false-positive classes must be documented alongside the mapping.
 
 **Unverified / needs-review items in this document (explicit):**
@@ -314,4 +314,11 @@ Additional implementation notes:
   matched). Distinguishing the two needs Cargo.toml-aware package-root
   detection, which is deferred to R3 (module-graph work). No R1 test exercises
   this layout.
+
+**R2 schema note (plan `rust-backend` R2).** The metrics.json schema MINOR bump
+1.1 → 1.2 admits `"rust"` in both `scan.languages` and `files[].language`
+(widened from `const "c"` to `enum ["c","rust"]`); internal `use` edges remain
+raw `::` paths with `resolved=false` (metrics.json `include_graph` admits
+`Quoted` edges, so they are carried as unresolved internal edges, exactly as in
+R1), and Rust module-graph semantics are still R3.
 

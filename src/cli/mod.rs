@@ -9,8 +9,8 @@
 //! duration; map stage failures to exit codes (§8.2: 0 success / 1 usage /
 //! 2 output incl. safety-guard refusal / 3 internal bug); print the stdout
 //! summary (explicitly NOT a stability contract). Findings NEVER affect the
-//! exit code — they are data (modules.md Principle 4); a zero-C-file scan
-//! succeeds with a valid empty report (`languages: ["c"]`).
+//! exit code — they are data (modules.md Principle 4); a zero-file scan
+//! succeeds with a valid empty report (`languages: ["c","rust"]`).
 //!
 //! Panic policy: the pipeline runs under [`std::panic::catch_unwind`]; an
 //! unexpected panic maps to exit 3 with a plain diagnostic — no Rust
@@ -36,17 +36,17 @@ use crate::writer::Artifact;
 /// <schema_version>)`. clap renders `{name} {version}`, so this constant
 /// carries everything after the binary name. The suffix literal is locked to
 /// [`crate::schema::SCHEMA_VERSION`] by a unit test below.
-const VERSION_SUFFIX: &str = concat!(env!("CARGO_PKG_VERSION"), " (metrics schema ", "1.1", ")");
+const VERSION_SUFFIX: &str = concat!(env!("CARGO_PKG_VERSION"), " (metrics schema ", "1.2", ")");
 
 /// Validated invocation options (modules.md §8.1 flag table).
 #[derive(Debug, Parser)]
 #[command(
     name = "perfpal",
-    about = "Static-analysis scan of a C codebase emitting an LLM-consumable metrics report.",
+    about = "Static-analysis scan of a C/Rust codebase emitting an LLM-consumable metrics report.",
     version = VERSION_SUFFIX
 )]
 pub struct Args {
-    /// Scan target: directory or single `.c`/`.h` file.
+    /// Scan target: directory or single `.c`/`.h`/`.rs` file.
     #[arg(value_name = "PATH", default_value = ".")]
     pub path: PathBuf,
     /// Report directory; internal layout fixed by output-contract §2.
@@ -356,7 +356,7 @@ mod tests {
     #[test]
     fn version_suffix_carries_schema_version() {
         assert!(
-            VERSION_SUFFIX.contains("(metrics schema 1.1)"),
+            VERSION_SUFFIX.contains("(metrics schema 1.2)"),
             "--version payload must name the metrics schema version"
         );
         assert_eq!(

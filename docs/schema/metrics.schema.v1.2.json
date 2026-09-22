@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.1.json",
-  "title": "Perfpal metrics.json schema v1.1",
-  "description": "Versioned, LLM-agnostic output of a Perfpal static scan (MVP language: C). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.2.json",
+  "title": "Perfpal metrics.json schema v1.2",
+  "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, Rust). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.1",
+      "const": "1.2",
       "description": "Schema version of this document. MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
@@ -32,9 +32,9 @@
         "duration_ms": { "type": "integer", "minimum": 0 },
         "languages": {
           "type": "array",
-          "items": { "const": "c" },
+          "items": { "enum": ["c", "rust"] },
           "minItems": 1,
-          "description": "Languages scanned; exactly [\"c\"] in MVP (spec: MVP locked to C). Widening is a minor-bump schema re-emission."
+          "description": "Languages scanned — the sorted-unique set of files[].language (or the supported set [\"c\",\"rust\"] on a zero-file scan); widening is a minor-bump schema re-emission."
         },
         "file_count": { "type": "integer", "minimum": 0 },
         "loc_total": {
@@ -68,7 +68,7 @@
         "additionalProperties": false,
         "properties": {
           "path": { "type": "string", "description": "Repo-relative POSIX path." },
-          "language": { "const": "c", "description": "MVP locked to C; widening is a minor-bump schema re-emission." },
+          "language": { "enum": ["c", "rust"], "description": "Scanned file language (schema 1.2 admits c and rust); widening is a minor-bump schema re-emission." },
           "loc": {
             "type": "object",
             "required": ["code", "comment", "blank"],

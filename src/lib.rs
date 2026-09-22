@@ -1,5 +1,5 @@
 //! Perfpal — static-analysis CLI extracting performance-relevant heuristics
-//! from C codebases; emits LLM-consumable metrics (`metrics.json` schema v1),
+//! from C and Rust codebases; emits LLM-consumable metrics (`metrics.json` schema v1),
 //! a human report, and deterministic SVG charts.
 //!
 //! Module layout is contractual: `docs/architecture/modules.md` §7.

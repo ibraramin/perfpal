@@ -59,4 +59,4 @@ Attractive, eye-catching showcase site covering the **full scope** (shipped + pl
 
 ## Versioning
 - `0.1.0` released → `0.2.0` (Rust backend, unreleased) → **`0.2.0-beta.1`** (official beta, prerelease) → later betas/GA as scoped.
-- `metrics.json` schema follows its own `MAJOR.MINOR` (currently 1.1; Rust backend → 1.2 minor).
+- `metrics.json` schema follows its own `MAJOR.MINOR` (currently **1.2** — the Rust backend schema MINOR bump has landed; see `docs/schema/metrics-json-v1.md` §5).

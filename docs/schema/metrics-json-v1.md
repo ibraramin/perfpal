@@ -1,6 +1,6 @@
 # Perfpal — metrics.json v1: Design & Stability Contract
 
-- **Status:** v1 draft — plan `mvp-architecture`, step 3. Formal schema: [`metrics.schema.v1.json`](./metrics.schema.v1.json) (JSON Schema Draft 2020-12). Internal representation: [`docs/architecture/ir-v1.md`](../architecture/ir-v1.md). Heuristic IDs: [`docs/heuristics/catalog-v1.md`](../heuristics/catalog-v1.md).
+- **Status:** v1 draft — plan `mvp-architecture`, step 3. Formal schema: [`metrics.schema.v1.2.json`](./metrics.schema.v1.2.json) (JSON Schema Draft 2020-12). Internal representation: [`docs/architecture/ir-v1.md`](../architecture/ir-v1.md). Heuristic IDs: [`docs/heuristics/catalog-v1.md`](../heuristics/catalog-v1.md).
 - **Audience:** consumers of Perfpal output — humans, tooling, and any LLM. The schema is deliberately **LLM-agnostic**: no vendor fields, no prompt-specific tuning (spec CONFIRMED-4).
 
 ---
@@ -43,7 +43,7 @@ Only `schema_version`, `tool`, `scan`, `files`, `stats`, `findings` are schema-r
 
 Semver-inspired `MAJOR.MINOR`:
 
-- **Minor bumps (v1.x): additive only.** New optional fields, new `rule_id`s (the schema uses an open `pattern`, not a closed enum — new heuristics/languages never break strict validation), new evidence keys, new optional graph/component fields. The schema file is re-emitted per minor version (`metrics.schema.v1.1.json`) so validation stays exact.
+- **Minor bumps (v1.x): additive only.** New optional fields, new `rule_id`s (the schema uses an open `pattern`, not a closed enum — new heuristics/languages never break strict validation), new evidence keys, new optional graph/component fields. The schema file is re-emitted per minor version (`metrics.schema.v<MAJOR>.<MINOR>.json`) so validation stays exact.
 - **Major bumps (v2+): anything breaking**, explicitly including:
   - removing or renaming fields;
   - changing the **closed enums** (`confidence`, `severity`, `resolver_tier`) in either direction;
@@ -60,6 +60,13 @@ Semver-inspired `MAJOR.MINOR`:
 2. **`graphs.call_graph.edges[].confidence`** — widened from `const "LOW"` to oneOf `["LOW", "MEDIUM", "HIGH"]`. Widening is additive: every v1.0 document (all-LOW) still validates. Wave A producers still emit only `"LOW"`; the semantic tier's unambiguous-resolution upgrades consume the widened set in Wave B (ADR-0001 conservative-upgrade rule).
 
 The schema artifact was re-emitted as `metrics.schema.v1.1.json` (the v1.0 copy, `metrics.schema.v1.json`, is kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.1 name.
+
+**Minor bump v1.1 → v1.2 (2026-09-22, plan `rust-backend` R2).** Two additive widenings. The v1.1 FIELD SET remains valid under v1.2 with the version marker updated to `"1.2"`; the widening is backward-compatible for `"c"`-valued documents (a document whose `schema_version` stays `"1.1"` does not match the v1.2 `const`, so it must be re-marked, not re-shaped):
+
+1. **`scan.languages`** — item schema widened from `const "c"` to `enum ["c","rust"]`, and the value is now *derived from the scanned files*: the sorted-unique set of `files[].language` (deterministic `BTreeSet` order). A zero-file scan emits the supported set `["c","rust"]` (`minItems: 1` preserved; semantics = "languages scanned for").
+2. **`files[].language`** — widened from `const "c"` to `enum ["c","rust"]`, admitting Rust scanned files.
+
+The schema artifact was re-emitted as `metrics.schema.v1.2.json` (the v1.1 and v1.0 copies are kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.2 name.
 
 ## 6. Worked example
 

@@ -20,8 +20,8 @@ Default output directory is `perfpal-report/` in the current working directory. 
 
 ```
 perfpal-report/
-├── metrics.json              # raw machine-readable data (schema v1.0)
-├── metrics.schema.v1.0.json  # byte-copy of the exact schema for this schema_version
+├── metrics.json              # raw machine-readable data (schema v1.2)
+├── metrics.schema.v1.2.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report
 └── charts/                   # static visualizations (set defined by ADR-0002)
     └── <chart-name>.svg      # e.g. include-graph.svg — naming rules in §3
@@ -40,7 +40,7 @@ Layout rules:
 | Artifact | Name | Stability rule |
 |---|---|---|
 | Raw data | `metrics.json` | Fixed name. |
-| Schema copy | `metrics.schema.v<MAJOR>.<MINOR>.json` | Full version always — `schema_version: "1.0"` ⇒ `metrics.schema.v1.0.json` (no elided `.0`; avoids ambiguity between "v1" = 1.0 vs the 1.x series). The file is a byte-copy of the canonical schema artifact for that version, per the per-minor re-emission policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). |
+| Schema copy | `metrics.schema.v<MAJOR>.<MINOR>.json` | Full version always — `schema_version: "1.2"` ⇒ `metrics.schema.v1.2.json` (no elided `.0`; avoids ambiguity between "v1" = 1.0 vs the 1.x series). The file is a byte-copy of the canonical schema artifact for that version, per the per-minor re-emission policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). |
 | Human report | `report.md` | Fixed name. |
 | Charts | `charts/<name>.svg` | `<name>` matches `[a-z0-9]+(-[a-z0-9]+)*` (kebab-case ASCII). No timestamps, counters, or input-derived suffixes — the same chart has the same name across runs so directories can be diffed. |
 
@@ -60,7 +60,7 @@ The directory inherits the [metrics.json versioning policy](../schema/metrics-js
   - Treat unknown files anywhere in the directory as ignorable, not errors.
   - Treat `charts/` as advisory visualization; never parse data out of SVGs — use `metrics.json`.
   - Pin the exact minor schema when strict-validating (see strictness caveat in [metrics-json-v1.md §5](../schema/metrics-json-v1.md)).
-  - Discover the bundled schema by mapping `schema_version` to its filename (`"1.1"` ⇒ `metrics.schema.v1.1.json`).
+  - Discover the bundled schema by mapping `schema_version` to its filename (`"1.2"` ⇒ `metrics.schema.v1.2.json`).
 - **Consumption entry points:** humans start at `report.md`; LLMs/tooling start at `metrics.json` (raw), using `report.md` as a guided tour. Both paths must lead to consistent conclusions because of Principle 2.
 
 ## 5. `report.md` template outline
