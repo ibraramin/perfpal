@@ -1,7 +1,7 @@
 # Handoff — Latest
 
 ## Objective
-Session 27: plan `rust-backend` **R3** — the Rust language tier analyzed end-to-end: full 23-rule `PERF-RS-*` heuristic catalog with a **language-tagged registry**, Rust `use`-graph resolution (+ Cargo.toml-aware crate-root detection), the Rust allocation family (+ `macro_rules!` wrapper recognizer + `macro_origin`), and the enum/union/tuple-struct IR decisions. **Complete**; dual review APPROVED (final round 3/3); commit pending founder approval.
+Session 27: plan `rust-backend` **R3** — the Rust language tier analyzed end-to-end: full 23-rule `PERF-RS-*` heuristic catalog with a **language-tagged registry**, Rust `use`-graph resolution (+ Cargo.toml-aware crate-root detection), the Rust allocation family (+ `macro_rules!` wrapper recognizer + `macro_origin`), and the enum/union/tuple-struct IR decisions. **Complete and COMMITTED as `b775bbc`**; dual review APPROVED (final round 3/3).
 
 ## Phase
 POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ / R1 ✅ / R2 ✅ / R3 ✅ (R4 next)** · `beta-release` (not started).
@@ -9,7 +9,7 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 ## Version snapshot
 - **Released: `v0.1.0`** (tag, target `f368133`). `Cargo.toml` = `0.1.0` (R5 owns the 0.2.0 bump).
 - **`metrics.json` schema = 1.2 — UNCHANGED by R3** (no schema bump: every R3 IR addition is IR-only, never serialized into the document).
-- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + R2 + **R3 (this session, uncommitted)**.
+- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + R2 + **R3 (`b775bbc`)**.
 
 ## Key Decisions
 - **R3 approval gate (founder, question tool — all "recommended"):** (1) execute **all** of R3 in staged waves; (2) mirror **all 23** families with **honest reframing**; (3) **language-tagged registry** (`PERF-C-*` C-only / `PERF-RS-*` Rust-only); (4) add a lightweight **macro-as-call surface**; (5) additive `StructDef.kind` + union/enum + pointer/array-dim derivation **and** resolve `use` edges + **Cargo.toml-aware crate-root detection**.
@@ -32,16 +32,15 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 - None.
 
 ## Next Actions
-1. Founder approves the R3 commit → commit the working tree (see Uncommitted Files; **EXCLUDE `.opencode/**`**).
-2. **Next session (`/new`) = plan `rust-backend` R4** — dogfood (run the binary over Perfpal's own `src/`, publish the report, triage findings) + `examples-rust/` corpus.
-3. Then R5 (tests/gates + crate version `0.2.0`) → R6 (docs/close-out) → plan `beta-release` (`0.2.0-beta.1`).
+1. R3 **committed** as `b775bbc` (64 files; `.opencode/**` excluded). Proceed to R4.
+2. **Next session (`/new`) = plan `rust-backend` R4** — dogfood (run the binary over Perfpal's own `src/`, publish the report, triage findings vs accepted FP classes) + `examples-rust/` corpus (mirror `examples/` density + silent controls; verify every `PERF-RS-*` rule fires against real output). Read state files + `readPlan rust-backend` FIRST.
+3. Then R5 (tests/gates + crate version `0.1.0 → 0.2.0`) → R6 (docs/close-out) → plan `beta-release` (`0.2.0-beta.1`).
 
-## Uncommitted Files
+## R3 Change Set (committed `b775bbc`)
 - **Added (code):** `src/analyzer/heuristics/rust/` (`mod.rs`, `alloc.rs`, `str.rs`, `loop.rs`, `call.rs`, `arch.rs`, `mem.rs`, `type.rs`)
 - **Added (docs):** `docs/heuristics/rust-catalog.md`
 - **Added (tests):** `tests/rust_wave_c1.rs`, `tests/rust_wave_c2.rs`, `tests/rust_backend_r3.rs`, `tests/rust_module_graph.rs`, `tests/reporter_rust.rs`, `tests/mixed_language_e2e.rs`, and 25 `tests/fixtures/ir/PERF-RS-*.json`
 - **Modified (code):** `src/ir/mod.rs`, `src/scanner/mod.rs`, `src/scanner/backends/tree_sitter_rust/mod.rs`, `src/scanner/backends/tree_sitter_c/mod.rs`, `src/analyzer/mod.rs`, `src/analyzer/finding.rs`, `src/analyzer/heuristics/{mod,arch,type}.rs`, `src/reporter/mod.rs`, `src/aggregator/mod.rs`, `src/resolver/mod.rs` (compiler-required literal sites only)
 - **Modified (tests):** `tests/common/mod.rs`, `tests/analyzer_registry.rs`, `tests/arch_fixtures.rs`, `tests/reporter_render.rs`, `tests/rust_backend.rs`, `tests/schema_1_2.rs`, `tests/golden/report/report.md` (language-neutral prose)
-- **Modified (docs/state):** `docs/architecture/rust-backend.md` (§3/§8 corrections + §9), `docs/architecture/ir-v1.md` (R3 additive note incl. `is_mod`), `README` untouched (R6), `CHANGELOG.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`
-- **EXCLUDE:** `.opencode/**` (session-tooling noise)
-- **Gate status:** `fmt --check` clean · `clippy -D warnings --all-targets` clean (default + `semantic-clang`) · **361 tests default / 366 semantic green, 0 fail** · golden report comparator green + regen idempotent · 3 schema copies `cmp`-identical · dogfood `src` → `PERF-RS-ARCH-001` = 5 hub-only (0 cycles)
+- **Modified (docs/state):** `docs/architecture/rust-backend.md` (§3/§8 corrections + §9), `docs/architecture/ir-v1.md` (R3 additive note incl. `is_mod`), `CHANGELOG.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`
+- **Gate status at commit:** `fmt --check` clean · `clippy -D warnings --all-targets` clean (default + `semantic-clang`) · **361 tests default / 366 semantic green, 0 fail** · golden report comparator green + regen idempotent · 3 schema copies `cmp`-identical · dogfood `src` → `PERF-RS-ARCH-001` = 5 hub-only (0 cycles)
