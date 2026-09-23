@@ -1,0 +1,25 @@
+[
+  {
+    "file": {"path": "neg/setup_global.rs", "language": "rust", "loc": {"code": 6, "comment": 0, "blank": 1}, "function_count": 1, "global_var_count": 1, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [
+      {"name": "G", "path": "neg/setup_global.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 1}, "storage": "static"}
+    ],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "neg/setup_global.rs#init#3:1", "name": "init", "path": "neg/setup_global.rs", "span": {"start_line": 3, "start_col": 1, "end_line": 6, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 4},
+        "calls": [],
+        "assignments": [
+          {"span": {"start_line": 4, "start_col": 5, "end_line": 4, "end_col": 10}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "target": {"kind": "identifier", "name": "G"}, "scope_class": "global"}
+        ],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

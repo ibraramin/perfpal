@@ -1,6 +1,6 @@
 [package]
 name = "perfpal"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.92.0" # validated floor; pinned via rust-toolchain.toml (modules.md §6)
 description = "Static-analysis CLI that extracts performance-relevant heuristics from C and Rust codebases and emits LLM-consumable metrics."

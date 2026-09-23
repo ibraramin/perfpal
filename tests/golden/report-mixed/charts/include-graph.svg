@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="470" height="252" viewBox="0 0 470 252">
+<g stroke="#999999" stroke-width="1">
+<line x1="210" y1="99" x2="260" y2="55"/>
+<line x1="210" y1="143" x2="260" y2="55"/>
+</g>
+<g font-family="monospace" font-size="11">
+<rect x="40" y="40" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="59">src/lib.rs</text>
+<rect x="40" y="84" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="103">src/main.c</text>
+<rect x="40" y="128" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="147">src/util.c</text>
+<rect x="260" y="40" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="265" y="59">src/util.h</text>
+</g>
+</svg>

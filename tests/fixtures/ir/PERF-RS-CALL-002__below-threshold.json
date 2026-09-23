@@ -1,0 +1,16 @@
+[
+  {
+    "file": {"path": "neg/mild.rs", "language": "rust", "loc": {"code": 10, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "neg/mild.rs#mild#1:1", "name": "mild", "path": "neg/mild.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 10, "end_col": 2}, "param_count": 1, "param_types": ["i32"], "cyclomatic_complexity": 14, "cognitive_complexity": 10, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 10},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  }
+]

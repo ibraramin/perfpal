@@ -1,0 +1,23 @@
+[
+  {
+    "file": {"path": "neg/setup_alloc.rs", "language": "rust", "loc": {"code": 6, "comment": 0, "blank": 1}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "neg/setup_alloc.rs#make#1:1", "name": "make", "path": "neg/setup_alloc.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 6, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 1, "length_lines": 6},
+        "calls": [
+          {"span": {"start_line": 4, "start_col": 9, "end_line": 4, "end_col": 20}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "new", "callee_kind": "direct", "callee_path": "Vec::new", "is_macro": false, "args": [], "statement_role": "unknown", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  }
+]

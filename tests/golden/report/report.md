@@ -1,5 +1,5 @@
 # Perfpal Report
-> schema_version 1\.2 · perfpal 0\.1\.0 · scanned <ROOT>
+> schema_version 1\.2 · perfpal 0\.2\.0 · scanned <ROOT>
 > started <MASKED> · duration <MASKED> ms · 3 files
 
 ## 1. Executive summary
@@ -9,7 +9,7 @@
 - Deallocation inside loop (PERF\-C\-ALLOC\-002:src/main\.c:37:9)
 
 ## 2. Scan provenance & parse health
-- Tool: perfpal 0\.1\.0
+- Tool: perfpal 0\.2\.0
 - Scan root: `<ROOT>`
 - Files scanned: 3
 

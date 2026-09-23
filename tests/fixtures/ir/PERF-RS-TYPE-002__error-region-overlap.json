@@ -1,0 +1,17 @@
+[
+  {
+    "file": {"path": "neg/err_layout.rs", "language": "rust", "loc": {"code": 6, "comment": 0, "blank": 1}, "function_count": 0, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "partial", "error_regions": [{"start_line": 3, "start_col": 5, "end_line": 3, "end_col": 30}], "error_node_count": 1},
+    "includes": [],
+    "global_vars": [],
+    "structs": [
+      {"name": "Loose", "path": "neg/err_layout.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 5, "end_col": 2}, "members": [
+        {"name": "a", "type_text": "u8", "array_dim_literal": null, "is_pointer": false},
+        {"name": "b", "type_text": "i64", "array_dim_literal": null, "is_pointer": false},
+        {"name": "c", "type_text": "u8", "array_dim_literal": null, "is_pointer": false}
+      ], "kind": "struct"}
+    ],
+    "macros": [],
+    "functions": []
+  }
+]

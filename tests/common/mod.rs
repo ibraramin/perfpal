@@ -100,6 +100,37 @@ fn assert_keys_sorted(value: &serde_json::Value) {
 }
 
 // ---------------------------------------------------------------------------
+// Hermetic corpus snapshots. `scanner::discover` does not skip Cargo's
+// `target/` build directory, so scanning a live crate root would silently
+// inflate the scan the moment someone runs `cargo build` in it. These helpers
+// snapshot a corpus into a tempdir with `target/` excluded at every depth;
+// relative paths are preserved exactly, so a snapshot scan is byte-identical
+// to a live-tree scan modulo the (masked) absolute root.
+// ---------------------------------------------------------------------------
+
+/// Recursively copy `from` into `to`, skipping any directory whose name equals
+/// `excluded_dir` at every depth.
+///
+/// # Panics
+/// Panics if the source cannot be read or a file cannot be copied — a broken
+/// corpus is a test-authoring bug, not a runtime condition.
+pub fn copy_tree_excluding(from: &Path, to: &Path, excluded_dir: &str) {
+    fs::create_dir_all(to).expect("create copy dir");
+    for entry in fs::read_dir(from).expect("read source tree").flatten() {
+        let src = entry.path();
+        let dst = to.join(entry.file_name());
+        if src.is_dir() {
+            if entry.file_name().to_str() == Some(excluded_dir) {
+                continue;
+            }
+            copy_tree_excluding(&src, &dst, excluded_dir);
+        } else {
+            fs::copy(&src, &dst).expect("copy tree file");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // m7 stale-sweep grace env: PERFPAL_STALE_GRACE_SECS is process-global, and
 // cargo runs a test binary's tests in parallel threads, so every mutation is
 // serialized through a global mutex. Call `set_stale_grace_env` and HOLD the
@@ -310,12 +341,37 @@ pub fn mask_golden_semantic(masked_metrics: &str) -> String {
     value.to_string()
 }
 
+/// Markdown metacharacter set escaped by the reporter's `escape_md`
+/// (`src/reporter/mod.rs::MD_ESCAPE_CHARS`). Duplicated here because the
+/// helper is private to the crate and the golden masker must reproduce the
+/// escaping to neutralize ABSOLUTE scan roots whose characters get
+/// backslash-escaped in report.md (e.g. `-` in `e2e-mixed`, `examples-rust`).
+/// If the reporter's pinned set ever changes, `regenerate_goldens`' `<ROOT>`
+/// sentinel assertion fails loudly.
+const MD_ESCAPE_CHARS: &[char] = &[
+    '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '<', '>', '&',
+];
+
+/// Reproduce `escape_md` for the absolute-root needle.
+fn markdown_escaped(input: &str) -> String {
+    let mut out = String::with_capacity(input.len() + 8);
+    for c in input.chars() {
+        if MD_ESCAPE_CHARS.contains(&c) {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    out
+}
+
 /// Golden report.md masking: the [`mask_report_provenance`] surfaces
 /// (`started <RFC3339>`, `duration <n> ms`) PLUS every literal occurrence
 /// of the absolute scan `root` → `"<ROOT>"` (the header blockquote and the
 /// §2 "Scan root" line are the only surfaces, per the §5 template) PLUS the
-/// Wave B1 ARCH-003 §4 block strip: a `semantic-clang` feature build
-/// legitimately renders the resolved finding (MEDIUM/semantic/resolved
+/// Markdown-ESCAPED form of the root (the reporter runs every embedded path
+/// through `escape_md`, so e.g. `…/e2e-mixed` appears as `…/e2e\-mixed`)
+/// PLUS the Wave B1 ARCH-003 §4 block strip: a `semantic-clang` feature
+/// build legitimately renders the resolved finding (MEDIUM/semantic/resolved
 /// evidence) at a DIFFERENT §4 position than the default build's name-based
 /// block, so string-level normalization cannot restore order — the whole
 /// block (header `#### Cross\-file call coupling` through the next blank
@@ -334,8 +390,10 @@ pub fn mask_golden_semantic(masked_metrics: &str) -> String {
 #[must_use]
 pub fn mask_golden_report(raw: &str, root: &str) -> String {
     let forward = root.replace('\\', "/");
+    let escaped = markdown_escaped(root);
+    let escaped_forward = markdown_escaped(&forward);
     let mut masked = mask_report_provenance(raw);
-    for needle in [root, &forward] {
+    for needle in [root, &forward, &escaped, &escaped_forward] {
         if !needle.is_empty() {
             masked = masked.replace(needle, "<ROOT>");
         }

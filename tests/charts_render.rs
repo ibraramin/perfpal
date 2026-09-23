@@ -23,7 +23,7 @@ fn base_doc() -> MetricsDocument {
         schema_version: SCHEMA_VERSION.to_string(),
         tool: ToolInfo {
             name: "perfpal".to_string(),
-            version: "0.1.0".to_string(),
+            version: "0.2.0".to_string(),
         },
         scan: ScanInfo {
             root_path: ".".to_string(),
