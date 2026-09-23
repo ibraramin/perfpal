@@ -158,6 +158,7 @@ A backend implements one interface: *given (path, source bytes), emit that langu
 - v1 ships two backends: `tree-sitter-c` (`.c`/`.h`) and `tree-sitter-rust` (`.rs`) — both official grammars, MIT, pinned versions per ADR-0001 guardrail 5.
 - Backends convert spans at the boundary and never leak node kinds past it.
 - New languages = new backends + grammar vendoring per the ADR-0001 license policy (official `tree-sitter-*` repos unless individually audited). No analyzer, aggregator, or reporter changes required — see §5.2 for the schema caveat.
+- **Close-out (plan `rust-backend`, R0–R5).** Both backends are live in the shipped tree — C ships 23 `PERF-C-*` rules, Rust ships 23 `PERF-RS-*` rules, and the Rust `mod`/`use` module graph resolves with Cargo.toml-aware crate roots. The Rust tier is syntactic-only (§5.3's libclang resolver is C-only). Design record: [`rust-backend.md`](./rust-backend.md); Rust rule catalog: [`rust-catalog.md`](../heuristics/rust-catalog.md).
 
 ### 4.3 Resolvers (future)
 
@@ -171,7 +172,7 @@ Profile adapters (perf / valgrind / cProfile) translate tool-specific output int
 
 ### 5.2 Additional languages (C++, Python next)
 
-Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.2.json](../schema/metrics.schema.v1.2.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission has already landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2).
+Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.2.json](../schema/metrics.schema.v1.2.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission has already landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2). The Rust backend itself landed end-to-end in plan `rust-backend` (R0–R5): both backends are live, and the Rust rule set (23 `PERF-RS-*` rules) ships alongside the C set.
 
 ### 5.3 Semantic resolver — REALIZED (plan `semantic-resolver`, waves A–B2)
 

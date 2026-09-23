@@ -37,7 +37,7 @@ G5 note: the exact pin is the deliverable of this phase, and it is deliberate �
 
 **ABI window.** The pinned runtime's C header (`include/tree_sitter/api.h`) declares `TREE_SITTER_LANGUAGE_VERSION 15` and `TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION 13` — i.e. the runtime accepts language ABI **13..=15**. The Rust grammar's generated parser (`src/parser.c`) declares `LANGUAGE_VERSION 15` and sets `.abi_version = LANGUAGE_VERSION`. **15 ∈ [13, 15] ⇒ the pinned pair is ABI-compatible.** `parser.set_language(...)` fails only on ABI mismatch, which is precisely what the CI guard detects.
 
-**CI guard.** `tests/rust_grammar_link.rs` is the hard link test for this pair. It is the same runtime ABI guard the C backend relies on (`parser.set_language`; there exercised *indirectly* by the C extraction tests, which surface a mismatch as `ParseStatus::Failed`) — made explicit and standalone here. It builds the grammar's `LANGUAGE` into a `tree_sitter::Parser`, asserts the grammar's reported ABI is inside the runtime's accepted window, asserts `set_language` succeeds, parses a representative Rust translation unit (free function, struct, `impl` method, `for` loop, `macro_rules!` definition, `#[inline]` attribute), asserts the root kind is `source_file` and that a recursive walk finds no `ERROR`/missing nodes, and adds a malformed-source test proving the zero-`ERROR` assertion can actually fail. It is intentionally independent of any backend module — the Rust backend itself lands in R1.
+**CI guard.** `tests/rust_grammar_link.rs` is the hard link test for this pair. It is the same runtime ABI guard the C backend relies on (`parser.set_language`; there exercised *indirectly* by the C extraction tests, which surface a mismatch as `ParseStatus::Failed`) — made explicit and standalone here. It builds the grammar's `LANGUAGE` into a `tree_sitter::Parser`, asserts the grammar's reported ABI is inside the runtime's accepted window, asserts `set_language` succeeds, parses a representative Rust translation unit (free function, struct, `impl` method, `for` loop, `macro_rules!` definition, `#[inline]` attribute), asserts the root kind is `source_file` and that a recursive walk finds no `ERROR`/missing nodes, and adds a malformed-source test proving the zero-`ERROR` assertion can actually fail. It is intentionally independent of any backend module — the Rust backend itself landed in R1 (see §9.7).
 
 `tree-sitter-language` is intentionally a transitive dependency only (no direct perfpal dependency): both grammars pull it in, and the lock resolves a single shared version (`0.1.7`) feeding the runtime and both grammars, so the triple does not diverge today. It is not itself exact-pinned in `Cargo.toml` (ADR-0001 G5 pins the runtime and the grammars); the committed lockfile is the guard, and a deliberate `cargo update` could move it within `0.1.x`.
 
@@ -446,4 +446,36 @@ the panic.
   through a field classify `Direct`, so RS-LOOP-006 does not see them.
 - **Crate-root overrides**: custom `[lib] path` / `[[bin]] path` are out of
   scope; manifest discovery is a bounded walk (depth 12).
+
+### 9.7 R4/R5 implementation notes
+
+- **R4 — `for`-iterable exclusion.** Rust's `for` iterable (`value` field) is
+  evaluated once, so the backend marks every event inside it out-of-loop on all
+  three axes (`in_loop_depth = 0`, `is_innermost = false`, `statement_role =
+  Unknown`). The fix and its precise semantics are in §3.8; the six backend
+  tests are enumerated in the CHANGELOG `Fixed` entry, and the dogfood finding
+  and its consequences are in that same entry (plan `rust-backend` R4) and
+  `docs/evidence/dogfood-rust-backend.md` §1.3. Not duplicated here.
+- **R5 substitution — cross-language ARCH-003 coupling (NEEDS FOUNDER
+  SIGN-OFF).** The R5 plan step pre-committed a test that would couple C and
+  Rust call sites through `PERF-C-ARCH-003` / `PERF-RS-ARCH-003`. That coupling
+  is **unimplementable as specified**: `cross_file_call_edges`
+  (`src/analyzer/heuristics/arch.rs`) keys its definition map on
+  `(language, name)` per the §9.3 **Language tagging** decision, so a
+  whole-program call can never emit a cross-language edge — a same-name
+  definition in the other language is invisible by construction. R5 therefore
+  substituted a mixed-corpus test: the committed
+  `tests/fixtures/e2e-mixed/` corpus carries BOTH directions of a C↔Rust call
+  (`src/main.c` → `rust_surface`, and `src/lib.rs` → `util_init`), and
+  `tests/mixed_language_e2e.rs` locks the gating — exactly ONE same-language
+  `cross_file_call_edges` edge (`src/main.c` → `src/util.c`, the genuine
+  `util_init` coupling), ZERO cross-language edges, and no
+  `PERF-C-ARCH-003` / `PERF-RS-ARCH-003` finding crossing the language
+  boundary — plus a non-vacuity IR check proving both cross-language call sites
+  really exist in the parsed IR. **No production `src/` change was made** (the
+  R5 commit touched `src/` only for test-only version literals). The
+  requirements review judged the substitution satisfies the requirement's
+  intent; the code review confirmed no `src/` change was silently made. The
+  deviation is recorded here, in the CHANGELOG, and in
+  `docs/lessons-learned.md` (LL-010); it awaits explicit founder sign-off.
 

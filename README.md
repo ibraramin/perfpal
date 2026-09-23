@@ -4,8 +4,8 @@ Perfpal is a static-analysis CLI that scans C and Rust codebases for performance
 
 ## How it works
 
-- **Scan** — recursive discovery in lexicographic order (dot-directories skipped, symlinks not followed): `.c`/`.h` files are parsed by the bundled `tree-sitter-c` backend and `.rs` files by the bundled `tree-sitter-rust` backend. Rust files are already discovered, extracted, and carried into `metrics.json`; the Rust heuristic set (`PERF-RS-*`) and full Rust module-graph semantics arrive in R3. Parse health (ok / partial / failed) is captured per file; quoted includes are resolved against the filesystem, and in-repo angle-bracket hits also count as internal coupling (ADR-0002); unresolvable angle-bracket includes are bucketed as external.
-- **Analyze** — 23 catalog heuristics (`PERF-C-*`) run as pure functions over the parser-agnostic IR. Every finding carries mandatory `confidence` and `severity`; documented downgrade hooks (macro origin, parse-error overlap, name-based cross-file matching) cap confidence and set flags instead of silently dropping or trusting data.
+- **Scan** — recursive discovery in lexicographic order (dot-directories skipped, symlinks not followed): `.c`/`.h` files are parsed by the bundled `tree-sitter-c` backend and `.rs` files by the bundled `tree-sitter-rust` backend. Both backends are fully live: C ships 23 `PERF-C-*` catalog heuristics, Rust ships 23 `PERF-RS-*` catalog heuristics, and the Rust module/`use` graph resolves with Cargo.toml-aware crate roots. Parse health (ok / partial / failed) is captured per file; quoted includes are resolved against the filesystem, and in-repo angle-bracket hits also count as internal coupling (ADR-0002); unresolvable angle-bracket includes are bucketed as external.
+- **Analyze** — 46 catalog heuristics (23 `PERF-C-*` C + 23 `PERF-RS-*` Rust) run as pure functions over the parser-agnostic IR. Every finding carries mandatory `confidence` and `severity`; documented downgrade hooks (macro origin, parse-error overlap, name-based cross-file matching) cap confidence and set flags instead of silently dropping or trusting data.
 - **Aggregate** — the include graph, the cross-file call graph (name-based, confidence locked LOW), component ranking, and per-function statistics are assembled into one `metrics.json` document with every sort order explicitly owned.
 - **Render** — `report.md` is rendered from a fixed template; the three SVG charts are pure functions of `metrics.json` structures and are byte-deterministic.
 - **Write** — the report directory is swapped into place atomically; an interrupted run never leaves a half-written report.
@@ -79,7 +79,7 @@ The chart set is `include-graph.svg`, `component-coupling.svg`, and `hot-compone
 | `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs` file |
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
-| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.1.0 (metrics schema 1.2)`), exit 0 |
+| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0 (metrics schema 1.2)`), exit 0 |
 | `-h`, `--help` | — | — | Usage text, exit 0 |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.
@@ -95,9 +95,9 @@ stdout carries the short plain-text summary shown above; all diagnostics, warnin
 
 ## Heuristics
 
-Perfpal's catalog v1 defines 23 heuristics, all of which fire on the syntactic resolver tier. On `semantic-clang` builds with libclang present, proven semantic facts upgrade findings above their catalog defaults — resolved ARCH-003 cross-file edges report MEDIUM instead of LOW (the syntactic tier stays LOW); without libclang every build degrades gracefully to the syntactic tier. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
+Perfpal's catalog defines 46 heuristics — 23 C (`PERF-C-*`) plus 23 Rust (`PERF-RS-*`) — all of which fire on the syntactic resolver tier. On `semantic-clang` builds with libclang present, proven semantic facts upgrade C findings above their catalog defaults — resolved ARCH-003 cross-file edges report MEDIUM instead of LOW (the syntactic tier stays LOW); the Rust backend is **syntactic-tier only** (the libclang resolver is C-only), so no Rust finding is ever upgraded. Without libclang every build degrades gracefully to the syntactic tier. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
 
-Thresholds are named constants documented in the catalog (`docs/heuristics/catalog-v1.md`) and are not runtime-configurable.
+Thresholds are named constants documented in the catalogs (`docs/heuristics/catalog-v1.md` for C, `docs/heuristics/rust-catalog.md` for Rust) and are not runtime-configurable.
 
 ### ALLOC — allocation churn
 
@@ -157,6 +157,38 @@ Thresholds are named constants documented in the catalog (`docs/heuristics/catal
 | `PERF-C-TYPE-001` | Large struct passed by value — estimated size ≥ 32 bytes (one aggregated finding per function; approximate LP64 size model) | warn | LOW | 2 |
 | `PERF-C-TYPE-002` | Struct member ordering — estimated padding waste ≥ 8 bytes (one full LP64 word) | info | LOW | 2 |
 
+### Rust backend (`PERF-RS-*`)
+
+The Rust backend mirrors the C families one-for-one as 23 `PERF-RS-*` rules. **Rust is syntactic-tier only** — the libclang `semantic-clang` resolver is C-only, so every Rust finding keeps its catalog confidence (no resolved-edge / resolved-format upgrades). Several rules are **honest reframings** of their C counterparts (Rust has no `realloc`, `sizeof`, or unbounded `strcpy`); the full per-rule implementation notes and reframings live in `docs/heuristics/rust-catalog.md`.
+
+| Rule | Detects | Severity | Confidence | Tier |
+|---|---|---|---|---|
+| `PERF-RS-ALLOC-001` | Heap-allocation call or macro (`Vec::new`, `Box::new`, `String::with_capacity`, `to_string`, `vec!`, `format!`, …) at `in_loop_depth ≥ 1` | hot | HIGH | 1 |
+| `PERF-RS-ALLOC-002` | Direct, non-macro `drop()` at `in_loop_depth ≥ 1` (escalates warn → hot when an alloc-family site also fires in the same function) | warn | HIGH | 1 |
+| `PERF-RS-ALLOC-003` | Direct, non-macro `reserve`/`reserve_exact` at `in_loop_depth ≥ 1` (additive buffer growth — the `realloc` analogue) | hot | MEDIUM | 1 |
+| `PERF-RS-ARCH-001` | `use`-import-graph hubs (≥12), deep chains (≥8), cycles over resolved internal edges (`mod` declarations excluded) | warn | HIGH | 1 |
+| `PERF-RS-ARCH-002` | Hot-component aggregation — Rust component dirs ranked by complexity sum, max loop depth, and alloc-site density | hot | HIGH | 1 |
+| `PERF-RS-ARCH-003` | Cross-module call-graph edges from name matching (LOW; the symmetric resolved branch is unreachable — no Rust resolver) | info | LOW | 1 |
+| `PERF-RS-CALL-001` | Direct recursion — a function body calling its own name (presence-only; recursion depth is not statically bounded) | info | HIGH | 1 |
+| `PERF-RS-CALL-002` | Cyclomatic complexity ≥ 15 per function (promoted from the baseline stat) | warn | HIGH | 1 |
+| `PERF-RS-LOOP-001` | Deep loop nesting — nesting depth exactly 3 (one finding per maximal nest entry) | warn | HIGH | 1 |
+| `PERF-RS-LOOP-002` | Curated I/O / setup calls nested in loops — print/write macros, read/write methods, `File::open`, `fs::read`, `Command::new`, `TcpStream::connect`, `env::var`, … | hot | MEDIUM | 1 |
+| `PERF-RS-LOOP-003` | Char/byte-at-a-time iterator or reader method (`chars`, `bytes`, `char_indices`, `read_byte`) as the loop body's primary statement | info | MEDIUM | 1 |
+| `PERF-RS-LOOP-004` | Integer `/` or `%` with a non-literal divisor inside the innermost loop body | info | MEDIUM | 1 |
+| `PERF-RS-LOOP-005` | Assignment to a collected `static`/`const` global inside a loop body (dedup per target and enclosing loop) | info | MEDIUM | 2 |
+| `PERF-RS-LOOP-006` | Indirect call inside an innermost loop body (closure-field / trait-object dispatch classifies Direct, so it does not fire) | info | LOW | 2 |
+| `PERF-RS-LOOP-007` | Linear membership scan — comparison against a subscript indexed by an outer loop's induction variable at nesting depth ≥ 2 | info | LOW | 2 |
+| `PERF-RS-LOOP-008` | Member-chain dereference of depth ≥ 3 inside an innermost loop body | info | MEDIUM | 2 |
+| `PERF-RS-MEM-001` | `with_capacity(size_of::<T>())` — a byte count passed where an element count is expected | warn | MEDIUM | 2 |
+| `PERF-RS-MEM-002` | Block-copy/clone family (`copy_from_slice`, `copy_nonoverlapping`, `extend_from_slice`, `clone`, `to_vec`) inside a loop (escalates info → warn innermost) | info | MEDIUM | 2 |
+| `PERF-RS-STR-001` | String accumulation — `push_str`/`push` on a bare-identifier receiver reused across loop iterations | hot | HIGH | 1 |
+| `PERF-RS-STR-002` | `len`/`is_empty`/`capacity` on a bare identifier inside a loop where the receiver is not reassigned in the loop | warn | HIGH | 1 |
+| `PERF-RS-STR-003` | Unbounded `unsafe` memory operation (`copy_nonoverlapping`, `copy`, `from_raw_parts`, `from_utf8_unchecked`, `set_len`), at any loop depth | warn | HIGH | 1 |
+| `PERF-RS-TYPE-001` | Large struct passed by value — estimated size ≥ 32 bytes (one aggregated finding per function; approximate LP64 size model) | warn | LOW | 2 |
+| `PERF-RS-TYPE-002` | Struct member ordering — estimated padding waste ≥ 8 bytes (`repr(Rust)` may reorder fields; deliberately lower-confidence) | info | LOW | 2 |
+
+Rows are ordered by family: ALLOC, ARCH, CALL, LOOP, MEM, STR, TYPE. Every finding remains an optimization candidate.
+
 ## Output contract
 
 - **One scan → one directory.** A completed report directory contains exactly the artifacts of that run; nothing stale survives.
@@ -178,11 +210,15 @@ This claim covers the report directory only. Release binaries make no bit-for-bi
 ## Project docs
 
 - `docs/architecture/modules.md` — module decomposition, determinism ownership, CLI surface (§8)
+- `docs/architecture/rust-backend.md` — the Rust backend design record (plan `rust-backend`, R0–R5)
 - `docs/report/output-contract.md` — the `perfpal-report/` directory contract
-- `docs/heuristics/catalog-v1.md` — the full 23-rule catalog with thresholds and false-positive classes
+- `docs/heuristics/catalog-v1.md` — the full 23-rule C catalog with thresholds and false-positive classes
+- `docs/heuristics/rust-catalog.md` — the full 23-rule Rust (`PERF-RS-*`) catalog with reframings and false-positive classes
 - `docs/schema/metrics-json-v1.md` + `docs/schema/metrics.schema.v1.2.json` — the `metrics.json` data contract and versioning policy
 - `docs/adr/ADR-0001-parser-strategy.md` — tree-sitter-first behind a parser-agnostic IR
 - `docs/adr/ADR-0002-visualization.md` — the deterministic SVG chart set
+- `docs/architecture/ir-v1.md` — the parser-agnostic IR the heuristics consume
+- `docs/roadmap.md` — the authoritative post-v0.1.0 roadmap
 - `CHANGELOG.md` — release history
 
 ## License
