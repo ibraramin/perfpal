@@ -1,0 +1,17 @@
+# Perfpal Rust demo corpus (plan `rust-backend`, phase R4).
+#
+# This manifest exists ONLY so the scanner's Rust module resolver sees a Cargo
+# package layout (`src/lib.rs` crate root, `src/<mod>.rs` modules) and can
+# resolve the internal `use crate::…` edges that PERF-RS-ARCH-001 needs.
+#
+# It is intentionally NOT a member of any workspace in the Perfpal root crate,
+# so `cargo build` at the repo root never builds it. The corpus is scan-only:
+# the numbered programs call across files by bare name for the name-based
+# PERF-RS-ARCH-003 rule and therefore are not rustc-compilable as a unit.
+[package]
+name = "perfpal-examples-rust"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]

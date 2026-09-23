@@ -1,46 +1,40 @@
 # Handoff — Latest
 
 ## Objective
-Session 27: plan `rust-backend` **R3** — the Rust language tier analyzed end-to-end: full 23-rule `PERF-RS-*` heuristic catalog with a **language-tagged registry**, Rust `use`-graph resolution (+ Cargo.toml-aware crate-root detection), the Rust allocation family (+ `macro_rules!` wrapper recognizer + `macro_origin`), and the enum/union/tuple-struct IR decisions. **Complete and COMMITTED as `b775bbc`**; dual review APPROVED (final round 3/3).
+Session 28: plan `rust-backend` **R4** — dogfood + `examples-rust/` corpus. Ran the built binary over Perfpal's own `src/`, published a curated triage as evidence, added the `examples-rust/` demo corpus, and fixed the `for`-iterable scanner defect dogfooding surfaced. **Complete**; dual review APPROVED (`@reviewer` round-3 final APPROVE; `@requirements-reviewer` APPROVED). Commit **pending founder approval**.
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ / R1 ✅ / R2 ✅ / R3 ✅ (R4 next)** · `beta-release` (not started).
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ / R1 ✅ / R2 ✅ / R3 ✅ / R4 ✅ (R5 next)** · `beta-release` (not started).
 
 ## Version snapshot
 - **Released: `v0.1.0`** (tag, target `f368133`). `Cargo.toml` = `0.1.0` (R5 owns the 0.2.0 bump).
-- **`metrics.json` schema = 1.2 — UNCHANGED by R3** (no schema bump: every R3 IR addition is IR-only, never serialized into the document).
-- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + R2 + **R3 (`b775bbc`)**.
+- **`metrics.json` schema = 1.2 — UNCHANGED by R4** (the `for`-iterable fix is behavior-only; no IR/schema field added).
+- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + R2 + R3 (`b775bbc`) + **R4 (uncommitted)**.
 
 ## Key Decisions
-- **R3 approval gate (founder, question tool — all "recommended"):** (1) execute **all** of R3 in staged waves; (2) mirror **all 23** families with **honest reframing**; (3) **language-tagged registry** (`PERF-C-*` C-only / `PERF-RS-*` Rust-only); (4) add a lightweight **macro-as-call surface**; (5) additive `StructDef.kind` + union/enum + pointer/array-dim derivation **and** resolve `use` edges + **Cargo.toml-aware crate-root detection**.
-- **WS-A (IR + backend):** additive `StructKind{struct,union,enum}` + `StructDef.kind`; `CallEvent.callee_path: Option<String>` + `CallEvent.is_macro: bool`; shared `RUST_ALLOC_FAMILY` (19 names, `matches_site`). Rust backend now computes `alloc_site_count`, recognizes alloc-wrapper `macro_rules!` bodies (`RecognizedPattern`), wires `macro_origin` (span-intersects-recognized OR callee-name-equals-local-macro-def), emits union/enum `StructDef`s, derives `is_pointer`/`array_dim_literal`, and emits a function-attached macro-as-call `CallEvent`.
-- **WS-B (module graph):** `use` edges resolve to files via a module-path→file map (longest **FILE-backed** prefix; `crate`/`self`/`leading super`); unresolved internal `use` → `to_path=null, resolved=false` (supersedes R1 raw-`::` retention); **Cargo.toml-aware** crate-root detection with the R1 suffix heuristic as no-manifest fallback; `r#` raw-identifier prefixes stripped.
-- **WS-C (analyzer):** `RuleLanguage`-tagged registry; `analyze` groups units once by language and passes each rule only its slice; `cross_file_call_edges` keyed by `(language, name)`; **23 `PERF-RS-*` rules** in `src/analyzer/heuristics/rust/`.
-- **WS-D (reporter):** catalog extended to **46 ids**; `RegistryEntry.rule_id` + `registered_rule_ids()` drive a registry-derived completeness lock; language-neutral architecture prose + include-graph caption.
-- **N1 fix:** additive IR-only `IncludeEdge.is_mod` — `PERF-RS-ARCH-001` runs over the **`use` import graph only** (`mod` declarations excluded; they still drive resolution and stay in `include_graph` data).
-- **Dual review:** `@reviewer` 1 CHANGES_REQUESTED (C1 raw-ident module resolution + M1 ARCH-001 unresolved FP / M2 reporter lock binding / M3 single-file target) → fix → 2 CHANGES_REQUESTED (**N1** parent/child false cycles, pre-existing) → fix → **3 APPROVE**. `@requirements-reviewer` **APPROVED** (8/8 clauses, scope clean). Orchestrator-direct: `is_mod` added to `ir-v1.md`.
+- **R4 approval gate (founder, question tool — all "recommended"):** (1) dogfood evidence = **curated triage doc only** (raw 1.5 MB `metrics.json` / 640 KB `report.md` deliberately NOT committed); (2) `examples-rust/` = **mini-crate + numbered programs**; (3) fix only clear-cut real issues → **fixed `LOOP-003`** for-header + the same-class `is_innermost`/`statement_role` incoherence; **deferred** `LOOP-004`/`LOOP-007` + source smells.
+- **Dogfood result:** `perfpal src` = 33 files / **1219 findings** (658 hot / 214 warn / 347 info), 17/23 `PERF-RS-*` rules fire. Triage verdict: **no clear-cut source-level hotspots** — volume is documented accepted-FP classes (ALLOC-001 `format!`/`to_string` 511; ARCH-003 name-based `new` 204; STR-001 `Vec::push` 145; MEM-002 `.clone` 128; LOOP-008 chains 96) + intentional design (AST recursion, import hubs, batch I/O, bounded dispatch).
+- **`for`-iterable fix (root cause):** `loop_depth` was set *before* visiting a `for_expression`'s iterable (`value` field), so the once-evaluated iterable was treated as per-iteration body work — filed `LOOP-003` on `for c in text.chars()` and left `is_innermost=true` with `in_loop_depth=0` (contract violation), false-firing `LOOP-004` on `for i in 0..(n/d)`. Fix: `enter_loop` visits the iterable at the **outer** depth + `visit_children_except` skips it in the body walk; `in_for_iterable` (stops at the nearest loop of **any** kind) → `meta_for` forces `is_innermost=false`, `call_position` returns `(Unknown,false)`; `is_innermost_event` skips the iterable when scanning for nested loops. **6 backend tests.** Self-scan **6 findings removed, 0 added** (1225→1219: 2×LOOP-003, 3×STR-002, 1×LOOP-008).
+- **Corpus:** `examples-rust/` mini-crate (15 files: 14 `.rs` / 547 lines + a 17-line `Cargo.toml`) — **all 23 `PERF-RS-*` rules fire** (41 findings: 17/11/13) + **13 silent controls**, all verified silent. Mini-crate (not flat dir) because an internal `use`-cycle resolves only with a Cargo.toml + `src/` crate-root layout.
+- **Review:** `@reviewer` r1 CHANGES_REQUESTED (H1 half-applied exclusion; M1–M5/N1–N5) → r2 SHIP-WITH-FIXES (NEW-1 over-exclusion of a `while`/`loop` inside the iterable) → r3 SHIP-WITH-FIXES (doc counts; pre-existing `is_innermost_event` FN) → **final APPROVE**. `@requirements-reviewer` **APPROVED** (7/7 clauses + all 5 gaps).
 
 ## Risks
-- **Rust is syntactic-tier only** — no semantic resolver (libclang is C-only); `cfg_if!`/`macro_rules!` `token_tree` bodies stay opaque (macro-generated items invisible).
-- **`PERF-RS-ARCH-001` = `use`-import graph only** — module structure lives in `include_graph` data; deep-chain/hub reflect imports, not module nesting.
-- **Rust `use` resolution is an approximation** — custom Cargo.toml `[lib] path`/`[[bin]] path` layouts out of scope; crate-root-item/inline-module imports stay unresolved; **no `unresolved_include` finding** for Rust (intentional FP-class removal).
-- **Curated Rust name-lists** (syntactic): `clone` excluded from `RUST_ALLOC_FAMILY`; `+=` accumulation invisible; RS-MEM-002 has no explicit size arg; RS-TYPE-002 carries a `repr(Rust)` auto-reorder caveat; RS-LOOP-006 closure-field calls classify `Direct`.
-- Carried: grammar-pin drift (node-types diff needed on any bump); `tree-sitter-language` transitive; x64-darwin/msvc binary reproducibility; toolchain `1.92.0` mirrored in 5 places.
-- Pre-existing doc nits (R6): `stats-distributions-proposal.md` + dated `roadmap.md` snapshot name v1.1; `docs/website/scope-and-content.md` still says schema v1.1.
+- **Syntactic-tier only (Rust):** no semantic resolver; `cfg_if!`/`macro_rules!` `token_tree` bodies opaque; `use`-resolution approximate (custom Cargo.toml layouts out of scope; no `unresolved_include` for Rust).
+- **NEW accepted-FN class:** a closure body inside a `for` iterable (`for x in v.iter().map(|y| y/d)`) is treated as once-evaluated → LOOP-003/004/006/008 + MEM-002 under-report there (`rust-catalog.md` §5).
+- **Deferred rule-accuracy defects:** `LOOP-004` on float division (`charts/mod.rs:266,505,570`); `LOOP-007` on a `BTreeMap` index (`graph.rs:139`).
+- **Deferred source smells:** 6 `CALL-002` high-complexity fns; 2 real `TYPE-001` by-value passes.
+- Carried: grammar-pin drift (node-types diff on any bump); x64-darwin/msvc binary reproducibility; toolchain `1.92.0` mirrored in 5 places; pre-existing doc nits (R6).
 
 ## Blockers
 - None.
 
 ## Next Actions
-1. R3 **committed** as `b775bbc` (64 files; `.opencode/**` excluded). Proceed to R4.
-2. **Next session (`/new`) = plan `rust-backend` R4** — dogfood (run the binary over Perfpal's own `src/`, publish the report, triage findings vs accepted FP classes) + `examples-rust/` corpus (mirror `examples/` density + silent controls; verify every `PERF-RS-*` rule fires against real output). Read state files + `readPlan rust-backend` FIRST.
-3. Then R5 (tests/gates + crate version `0.1.0 → 0.2.0`) → R6 (docs/close-out) → plan `beta-release` (`0.2.0-beta.1`).
+1. **Commit R4** (pending founder approval) — change set below; `.opencode/**` excluded.
+2. **Next session (`/new`) = plan `rust-backend` R5** — tests + gates + crate version `0.1.0 → 0.2.0`: parser-free IR fixtures for every `PERF-RS-*` rule and their negatives/suppressions, a Rust attribute/guarded-sibling lock + a real-parse lock, an e2e mixed C+Rust scan→analyze, golden/determinism regen, `fmt --check` + `clippy -D warnings --all-targets` + `cargo test` + the `semantic-clang` feature build, then dual review. Read state files + `readPlan rust-backend` FIRST.
+3. Then R6 (README `PERF-RS-*` table, modules.md §4.2/§5.2, CHANGELOG, EOL) → plan `beta-release` (`0.2.0-beta.1`).
 
-## R3 Change Set (committed `b775bbc`)
-- **Added (code):** `src/analyzer/heuristics/rust/` (`mod.rs`, `alloc.rs`, `str.rs`, `loop.rs`, `call.rs`, `arch.rs`, `mem.rs`, `type.rs`)
-- **Added (docs):** `docs/heuristics/rust-catalog.md`
-- **Added (tests):** `tests/rust_wave_c1.rs`, `tests/rust_wave_c2.rs`, `tests/rust_backend_r3.rs`, `tests/rust_module_graph.rs`, `tests/reporter_rust.rs`, `tests/mixed_language_e2e.rs`, and 25 `tests/fixtures/ir/PERF-RS-*.json`
-- **Modified (code):** `src/ir/mod.rs`, `src/scanner/mod.rs`, `src/scanner/backends/tree_sitter_rust/mod.rs`, `src/scanner/backends/tree_sitter_c/mod.rs`, `src/analyzer/mod.rs`, `src/analyzer/finding.rs`, `src/analyzer/heuristics/{mod,arch,type}.rs`, `src/reporter/mod.rs`, `src/aggregator/mod.rs`, `src/resolver/mod.rs` (compiler-required literal sites only)
-- **Modified (tests):** `tests/common/mod.rs`, `tests/analyzer_registry.rs`, `tests/arch_fixtures.rs`, `tests/reporter_render.rs`, `tests/rust_backend.rs`, `tests/schema_1_2.rs`, `tests/golden/report/report.md` (language-neutral prose)
-- **Modified (docs/state):** `docs/architecture/rust-backend.md` (§3/§8 corrections + §9), `docs/architecture/ir-v1.md` (R3 additive note incl. `is_mod`), `CHANGELOG.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`
-- **Gate status at commit:** `fmt --check` clean · `clippy -D warnings --all-targets` clean (default + `semantic-clang`) · **361 tests default / 366 semantic green, 0 fail** · golden report comparator green + regen idempotent · 3 schema copies `cmp`-identical · dogfood `src` → `PERF-RS-ARCH-001` = 5 hub-only (0 cycles)
+## R4 Change Set (uncommitted)
+- **Added:** `examples-rust/` (Cargo.toml, src/lib.rs, src/common.rs, src/cycle_a.rs, src/cycle_b.rs, and 10 numbered programs `src/01_…` … `src/10_…`); `docs/evidence/dogfood-rust-backend.md`.
+- **Modified:** `src/scanner/backends/tree_sitter_rust/mod.rs` (+252/−3: `visit_children_except`, `in_for_iterable`, `meta_for`, `call_position`, `is_innermost_event`, 6 tests); `docs/architecture/rust-backend.md` (§3.8); `docs/heuristics/rust-catalog.md` (§5); `CHANGELOG.md` (R4 Added×2 + Fixed).
+- **State (EOL):** `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
+- **Gate status:** `fmt --check` clean · `clippy -D warnings --all-targets` clean · **367 default tests green, 0 fail** · corpus 23/23 rules / 41 findings · dogfood 33 files / 1219 findings · probes verified (H1, NEW-1, `is_innermost` alignment). `semantic-clang` feature build NOT run this session (R5 owns it; the change is syntactic-only).

@@ -1089,6 +1089,25 @@ impl FuncScan<'_> {
         }
     }
 
+    /// [`visit_children`](Self::visit_children) but skipping the direct child
+    /// whose `Node::id` matches `skip` (used by [`enter_loop`](Self::enter_loop)
+    /// to avoid re-visiting the `for` iterable, which it already visited at the
+    /// outer depth).
+    fn visit_children_except(&mut self, node: Node<'_>, skip: Option<usize>) {
+        let mut cursor = node.walk();
+        if cursor.goto_first_child() {
+            loop {
+                let child = cursor.node();
+                if Some(child.id()) != skip {
+                    self.visit(child);
+                }
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+        }
+    }
+
     fn enter_loop(&mut self, node: Node<'_>, kind: LoopKind) {
         let depth = self.loop_depth + 1;
         self.max_loop_depth = self.max_loop_depth.max(depth);
@@ -1111,9 +1130,29 @@ impl FuncScan<'_> {
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
         });
+
+        // Rust `for` differs from C's per-iteration increment: the iterable
+        // expression (`value` field, e.g. `text.chars()` in `for c in
+        // text.chars()`) is evaluated ONCE, before the loop body — it is NOT
+        // part of the per-iteration body. Visit it at the OUTER depth and skip
+        // it in the body walk; `in_for_iterable` applies the same exclusion to
+        // `is_innermost` and `statement_role` (via `meta_for`/`call_position`),
+        // so every event inside a `for` header is consistently out-of-loop.
+        // `while`/`loop` conditions and bodies keep the inner depth.
+        // See `docs/architecture/rust-backend.md` §3.8 and rust-catalog.md §3
+        // LOOP-003.
+        let iterable = if kind == LoopKind::For {
+            node.child_by_field_name("value")
+        } else {
+            None
+        };
+        if let Some(it) = iterable {
+            self.visit(it);
+        }
+
         self.loop_depth = depth;
         self.nesting += 1;
-        self.visit_children(node);
+        self.visit_children_except(node, iterable.map(|i| i.id()));
         self.nesting -= 1;
         self.loop_depth -= 1;
     }
@@ -1345,7 +1384,10 @@ impl FuncScan<'_> {
         EventMeta {
             span: ir_span(node, self.source),
             in_loop_depth: self.loop_depth,
-            is_innermost: is_innermost_event(node),
+            // A `for`-iterable event is out-of-loop by construction
+            // (`in_loop_depth == 0`): it must not also claim `is_innermost`,
+            // or `is_innermost`-keyed rules false-fire (RS-LOOP-004).
+            is_innermost: !in_for_iterable(node) && is_innermost_event(node),
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
         }
@@ -1479,10 +1521,20 @@ fn is_innermost_event(event: Node<'_>) -> bool {
     let Some(loop_node) = nearest_enclosing_loop(event) else {
         return false;
     };
+    // A `for`'s iterable is evaluated once, outside the body, so a loop nested
+    // inside it does NOT make the `for` non-innermost for body events (mirrors
+    // `in_for_iterable`). Without this skip, `for x in v.iter().filter(|_| { while
+    // … }) { … x / d … }` wrongly demoted the body's division to non-innermost.
+    let iterable = if loop_node.kind() == "for_expression" {
+        loop_node.child_by_field_name("value")
+    } else {
+        None
+    };
     let mut cursor = loop_node.walk();
     if cursor.goto_first_child() {
         loop {
-            if contains_loop(cursor.node()) {
+            let child = cursor.node();
+            if Some(child.id()) != iterable.map(|i| i.id()) && contains_loop(child) {
                 return false;
             }
             if !cursor.goto_next_sibling() {
@@ -1503,6 +1555,35 @@ fn nearest_enclosing_loop(event: Node<'_>) -> Option<Node<'_>> {
         current = node.parent();
     }
     None
+}
+
+/// Whether `node` lies inside the iterable expression (the `value` field) of its
+/// **nearest** enclosing loop, when that loop is a `for_expression`. Rust's `for`
+/// iterable is evaluated once, before the body, so such nodes are neither
+/// in-loop nor body statements (`in_loop_depth == 0`, `is_innermost == false`,
+/// `statement_role == Unknown`).
+///
+/// The walk stops at the **nearest loop of any kind**, so an event inside a
+/// `while`/`loop` that itself sits in a `for` iterable is correctly in-loop
+/// (that nearest loop is not a `for`) rather than wrongly excluded.
+///
+/// Accepted limitation (syntactic tier): a closure body inside the iterable
+/// (e.g. `v.iter().map(|y| y / d)`) is treated as once-evaluated even though an
+/// iterator adaptor may invoke it per element — the tier cannot know a closure's
+/// invocation count. Documented as an accepted false-negative class in
+/// `docs/heuristics/rust-catalog.md` §5.
+fn in_for_iterable(node: Node<'_>) -> bool {
+    let mut current = node;
+    while let Some(parent) = current.parent() {
+        if LOOP_KINDS.contains(&parent.kind()) {
+            return parent.kind() == "for_expression"
+                && parent
+                    .child_by_field_name("value")
+                    .is_some_and(|value| value.id() == current.id());
+        }
+        current = parent;
+    }
+    false
 }
 
 /// Whether any loop appears in `node`'s subtree.
@@ -1532,6 +1613,11 @@ fn contains_loop(node: Node<'_>) -> bool {
 /// `if_expression`/`match_expression` mark `conditional_guarded`; anything
 /// else buries the call (`nested`). No enclosing loop ⇒ `unknown`.
 fn call_position(node: Node<'_>) -> (StatementRole, bool) {
+    // A call inside a `for` iterable (`value` field) is evaluated once, outside
+    // the loop body: it is neither the loop's primary statement nor in-loop.
+    if in_for_iterable(node) {
+        return (StatementRole::Unknown, false);
+    }
     let mut role = StatementRole::Unknown;
     let mut guarded = false;
     let mut saw_loop = false;
@@ -2098,6 +2184,166 @@ fn process(p: &Point, n: i32, items: &[i32]) -> i32 {
         assert!(!fetch.conditional_guarded);
         let consume = f.calls.iter().find(|c| c.callee_name == "consume").unwrap();
         assert_eq!(consume.statement_role, StatementRole::Primary);
+    }
+
+    /// R4 dogfood fix: the `for` iterable is evaluated ONCE, before the body,
+    /// so `for c in text.chars()` is NOT char-wise work inside the loop
+    /// (RS-LOOP-003). The iterable is visited at the outer depth; the body
+    /// keeps the inner depth.
+    #[test]
+    fn for_iterable_is_outside_loop_body_depth() {
+        let src = concat!(
+            "fn count(text: &str) -> usize {\n",
+            "    let mut total = 0;\n",
+            "    for _c in text.chars() {\n",
+            "        total += 1;\n",
+            "    }\n",
+            "    total\n",
+            "}\n",
+        );
+        let ex = extract("forheader.rs", src.as_bytes());
+        let f = &ex.functions[0];
+        let chars = f.calls.iter().find(|c| c.callee_name == "chars").unwrap();
+        assert_eq!(
+            chars.meta.in_loop_depth, 0,
+            "a `for` iterable is outside the loop body"
+        );
+        assert!(
+            !chars.meta.is_innermost,
+            "a `for` iterable event must not claim `is_innermost`"
+        );
+        assert_eq!(chars.statement_role, StatementRole::Unknown);
+        assert_eq!(f.loops.len(), 1);
+        assert_eq!(f.loops[0].depth, 1);
+        assert_eq!(f.record.max_loop_depth, 1);
+    }
+
+    /// Companion positive: the same `chars()` call inside the loop BODY keeps
+    /// depth 1 and `Primary`, so RS-LOOP-003 still fires on the intended shape.
+    #[test]
+    fn charwise_call_in_loop_body_stays_in_loop() {
+        let src = concat!(
+            "fn scan(text: &str, n: usize) {\n",
+            "    for _i in 0..n {\n",
+            "        text.chars();\n",
+            "    }\n",
+            "}\n",
+        );
+        let ex = extract("forbody.rs", src.as_bytes());
+        let f = &ex.functions[0];
+        let chars = f.calls.iter().find(|c| c.callee_name == "chars").unwrap();
+        assert_eq!(chars.meta.in_loop_depth, 1);
+        assert_eq!(chars.statement_role, StatementRole::Primary);
+    }
+
+    /// A `for` header whose iterable itself contains a call still runs that
+    /// call at depth 0 while the body's work stays in-loop (mixed check).
+    #[test]
+    fn for_iterable_call_does_not_shadow_body_depth() {
+        let src = concat!(
+            "fn run(rows: &[u8], n: usize) {\n",
+            "    for r in rows.iter() {\n",
+            "        consume(*r);\n",
+            "    }\n",
+            "    let _ = n;\n",
+            "}\n",
+        );
+        let ex = extract("formixed.rs", src.as_bytes());
+        let f = &ex.functions[0];
+        let it = f.calls.iter().find(|c| c.callee_name == "iter").unwrap();
+        assert_eq!(it.meta.in_loop_depth, 0);
+        assert!(!it.meta.is_innermost);
+        let consume = f.calls.iter().find(|c| c.callee_name == "consume").unwrap();
+        assert_eq!(consume.meta.in_loop_depth, 1);
+    }
+
+    /// Reviewer H1 regression: arithmetic in the `for` iterable is evaluated
+    /// once, outside the body, so it must NOT be `is_innermost` — RS-LOOP-004 is
+    /// keyed on `is_innermost` alone and false-fired on `for i in 0..(n / d)`.
+    /// The identical operation inside the body stays innermost + in-loop.
+    #[test]
+    fn for_iterable_arithmetic_is_not_innermost() {
+        let iterable = concat!(
+            "fn f(n: u32, d: u32) -> u32 {\n",
+            "    let mut t = 0;\n",
+            "    for i in 0..(n / d) {\n",
+            "        t += i;\n",
+            "    }\n",
+            "    t\n",
+            "}\n",
+        );
+        let ex = extract("foriter.rs", iterable.as_bytes());
+        let f = &ex.functions[0];
+        let div = f.binary_ops.iter().find(|b| b.op == "/").unwrap();
+        assert_eq!(div.meta.in_loop_depth, 0);
+        assert!(
+            !div.meta.is_innermost,
+            "iterable arithmetic is not innermost"
+        );
+
+        let body = concat!(
+            "fn g(n: u32, d: u32) -> u32 {\n",
+            "    let mut t = 0;\n",
+            "    for i in 0..n {\n",
+            "        t += i / d;\n",
+            "    }\n",
+            "    t\n",
+            "}\n",
+        );
+        let ex = extract("forbodyarith.rs", body.as_bytes());
+        let f = &ex.functions[0];
+        let div = f.binary_ops.iter().find(|b| b.op == "/").unwrap();
+        assert_eq!(div.meta.in_loop_depth, 1);
+        assert!(div.meta.is_innermost, "body arithmetic stays innermost");
+    }
+
+    /// Reviewer NEW-1 regression: a `while`/`loop` nested inside a `for`
+    /// iterable is a REAL loop, so its body stays in-loop + innermost — the
+    /// exclusion must stop at the nearest loop of ANY kind, not walk through it.
+    #[test]
+    fn while_inside_for_iterable_stays_in_loop() {
+        let src = concat!(
+            "fn f(v: &[u32], d: u32) -> u32 {\n",
+            "    let mut t = 0;\n",
+            "    for x in v.iter().filter(|_z| {\n",
+            "        let mut i = 1u32;\n",
+            "        while i < 4 { let _q = d / i; i += 1; }\n",
+            "        true\n",
+            "    }) { t += x; }\n",
+            "    t\n",
+            "}\n",
+        );
+        let ex = extract("forwhileiter.rs", src.as_bytes());
+        let f = &ex.functions[0];
+        let div = f.binary_ops.iter().find(|b| b.op == "/").unwrap();
+        assert_eq!(
+            div.meta.in_loop_depth, 1,
+            "the `while` nested in the iterable is a real loop"
+        );
+        assert!(div.meta.is_innermost, "nearest loop is the nested `while`");
+    }
+
+    /// Aligned in R4 (was a pre-existing FN): a loop nested inside a `for`
+    /// iterable must NOT demote the `for` body's events from `is_innermost`.
+    #[test]
+    fn loop_in_for_iterable_does_not_demote_body_innermost() {
+        let src = concat!(
+            "fn f(v: &[u32], d: u32) -> u32 {\n",
+            "    let mut t = 0;\n",
+            "    for x in v.iter().filter(|_z| { let mut i = 1u32; while i < 4 { i += 1; } true }) {\n",
+            "        t += x / d;\n",
+            "    }\n",
+            "    t\n",
+            "}\n",
+        );
+        let ex = extract("foriterbody.rs", src.as_bytes());
+        let f = &ex.functions[0];
+        let div = f.binary_ops.iter().find(|b| b.op == "/").unwrap();
+        assert_eq!(div.meta.in_loop_depth, 1);
+        assert!(
+            div.meta.is_innermost,
+            "a loop in the iterable must not demote the body"
+        );
     }
 
     #[test]

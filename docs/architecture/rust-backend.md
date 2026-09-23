@@ -152,6 +152,8 @@ Rust idiom note: recursion (CALL-001) and complexity (CALL-002) map cleanly beca
 
 Rust idiom note: nesting depth (`max_loop_depth`), `in_loop_depth`, and `is_innermost` semantics carry over unchanged once these three kinds are recognized; `do` is absent from Rust, and `loop` is absent from the IR enum.
 
+**`for`-iterable exclusion (R4 fix).** Unlike C's per-iteration `for` increment/condition, Rust's `for` iterable (`value` field, e.g. `text.chars()` in `for c in text.chars()`) is evaluated **once**, before the loop body. `FuncScan::enter_loop` therefore visits the iterable at the **outer** depth (and skips it in the body walk), and `in_for_iterable(node)` applies the same exclusion at the event layer — `meta_for` forces `is_innermost = false` and `call_position` returns `(StatementRole::Unknown, false)` for iterable nodes. Symmetrically, `is_innermost_event` skips the iterable when deciding whether the `for` nests a loop, so a loop *inside* the iterable does not demote the `for` body's events from `is_innermost`. Every event inside a `for` header is thus consistently out-of-loop on all three axes (`in_loop_depth = 0`, `is_innermost = false`, `statement_role = Unknown`), so both `in_loop_depth`-gated and `is_innermost`-keyed heuristics are covered (`PERF-RS-LOOP-003` and `PERF-RS-LOOP-004` filed such headers before the fix). `while`/`loop` conditions and bodies keep the inner per-iteration depth. See `docs/evidence/dogfood-rust-backend.md` §1.3.
+
 ### 3.9 Events / expressions → typed events and `Shape`
 
 All rows land as events attached to the enclosing `FunctionRecord`, each carrying `span`, `in_loop_depth`, `is_innermost`, `resolver_tier`, `macro_origin` ([ir-v1.md §3.3](./ir-v1.md)).
