@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Task
-Session 30: plan `rust-backend` **R6** — docs + close-out, completing the plan (R0–R6). **Docs-only** (5 markdown files; zero code/test/config). Delivered: README live-languages + 46-heuristic count + new `### Rust backend (PERF-RS-*)` 23-row table + `--version` 0.2.0; `rust-backend.md` §9.7 R4/R5 notes incl. the R5 cross-language ARCH-003 substitution note; `modules.md` §4.2/§5.2 close-out; `CHANGELOG` missing R5 entry + 0.2.0 Changed; `lessons-learned` LL-010. **Complete**; dual review **@requirements-reviewer APPROVED** + **@reviewer SHIP-WITH-FIXES** (0 Critical/MAJOR) → fixes applied. **Commit pending founder approval.**
+Session 30: plan `rust-backend` **R6** — docs + close-out, completing the plan (R0–R6). **Docs-only** (5 markdown files; zero code/test/config). Delivered: README live-languages + 46-heuristic count + new `### Rust backend (PERF-RS-*)` 23-row table + `--version` 0.2.0; `rust-backend.md` §9.7 R4/R5 notes incl. the R5 cross-language ARCH-003 substitution note; `modules.md` §4.2/§5.2 close-out; `CHANGELOG` missing R5 entry + 0.2.0 Changed; `lessons-learned` LL-010. **Complete**; dual review **@requirements-reviewer APPROVED** + **@reviewer SHIP-WITH-FIXES** (0 Critical/MAJOR) → fixes applied. **Committed `0039d4b`; plan `rust-backend` marked DONE.**
 
 ## Recent Decisions
 - **Founder (R6 scope, question tool):** R6 is **docs-only** — the 5 deferred R5 MINOR/NIT test items are **deferred again**. `beta-release` plan already exists (active, B0–B6, Rust-aware, linked `perfpal-core-spec`) → **left as-is**, not recreated.

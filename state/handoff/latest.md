@@ -1,10 +1,10 @@
 # Handoff — Latest
 
 ## Objective
-Session 30: plan `rust-backend` **R6** — docs + close-out, completing the plan (R0–R6). **Docs-only** wave: zero code/test/config changes. **Complete**; dual review **@requirements-reviewer APPROVED** + **@reviewer SHIP-WITH-FIXES** (0 Critical/MAJOR) → all MINORs + NITs 3–5 applied. **Commit pending founder approval.**
+Session 30: plan `rust-backend` **R6** — docs + close-out, completing the plan (R0–R6). **Docs-only** wave: zero code/test/config changes. **Complete**; dual review **@requirements-reviewer APPROVED** + **@reviewer SHIP-WITH-FIXES** (0 Critical/MAJOR) → all MINORs + NITs 3–5 applied. **Committed as `0039d4b`; plan marked DONE.**
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0–R6 ✅ (R6 commit pending) → mark done** · `beta-release` (not started; plan exists, active).
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0–R6 ✅ DONE (committed `0039d4b`)** · `beta-release` (not started; plan exists, active).
 
 ## Version snapshot
 - **Released: `v0.1.0`** (tag, target `f368133`).
@@ -26,14 +26,14 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 - **beta-release B2 open item:** repo visibility for the attestations tag (private needs GitHub Enterprise Cloud).
 
 ## Blockers
-- None. R6 docs complete; only the commit awaits approval.
+- None. R6 committed as `0039d4b`; plan `rust-backend` marked DONE.
 
 ## Next Actions
-1. **Commit R6** (docs-only; change set below), then `markPlanDone rust-backend`.
+1. **R6 committed as `0039d4b`**; plan `rust-backend` marked DONE (R0–R6 complete).
 2. **Next session (`/new`) = plan `beta-release`** — `0.2.0-beta.1` (C + Rust), B0–B6 already scoped. Read state files + `readPlan beta-release` FIRST.
 3. R5 deferred MINORs remain open for a future housekeeping/testing session (see Risks).
 
-## R6 Change Set (uncommitted)
+## R6 Change Set (committed `0039d4b`)
 - **Modified (5 docs):** `README.md` (live languages + 46-heuristic count + new `### Rust backend (PERF-RS-*)` table + version 0.2.0 + Project docs list); `docs/architecture/rust-backend.md` (new §9.7 R4/R5 notes + R5 substitution note; stale-forward-tense fixes); `docs/architecture/modules.md` (§4.2/§5.2 close-out pointers); `CHANGELOG.md` (R5 entry + 0.2.0 Changed); `docs/lessons-learned.md` (LL-010).
 - **State (EOL):** `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
 - **Gate status:** N/A — docs-only, no code/test/config touched (git-verified: only `.md` files changed).
