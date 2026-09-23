@@ -1012,7 +1012,7 @@ mod tests {
             root_path: ".".to_string(),
             started_at: "2026-08-24T00:00:00Z".to_string(),
             duration_ms: 7,
-            tool_version: "0.2.0".to_string(),
+            tool_version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
 }

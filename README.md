@@ -1,5 +1,7 @@
 # Perfpal
 
+> **Beta — `0.2.0-beta.1`.** Pre-release evaluation build (C + Rust backends), provided for **evaluation only — not for commercial or production use at this beta** (see the [License](#license) section for terms). Licensed under PolyForm Strict 1.0.0 (see `LICENSE`).
+
 Perfpal is a static-analysis CLI that scans C and Rust codebases for performance-relevant patterns and writes a self-contained `perfpal-report/` directory: a versioned, LLM-consumable `metrics.json`, a human-readable `report.md`, and three deterministic SVG architecture charts. It is built for AI-generated codebases — high file volume, frequently non-compiling trees, missing headers and build configuration — where a compiler-based pipeline is often not viable. Parsing runs on a tree-sitter syntactic tier (ADR-0001): no build flags, compile database, or macro expansion are required. All output is framed as **optimization candidates for review, never certainties**.
 
 ## How it works
@@ -79,7 +81,7 @@ The chart set is `include-graph.svg`, `component-coupling.svg`, and `hot-compone
 | `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs` file |
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
-| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0 (metrics schema 1.2)`), exit 0 |
+| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0-beta.1 (metrics schema 1.2)`), exit 0 |
 | `-h`, `--help` | — | — | Usage text, exit 0 |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.

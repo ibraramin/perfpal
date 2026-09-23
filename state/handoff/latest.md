@@ -1,39 +1,44 @@
 # Handoff — Latest
 
 ## Objective
-Session 30: plan `rust-backend` **R6** — docs + close-out, completing the plan (R0–R6). **Docs-only** wave: zero code/test/config changes. **Complete**; dual review **@requirements-reviewer APPROVED** + **@reviewer SHIP-WITH-FIXES** (0 Critical/MAJOR) → all MINORs + NITs 3–5 applied. **Committed as `0039d4b`; plan marked DONE.**
+Session 31: plan `beta-release` **B0 (version freeze) + B1 (release hardening)**. **Complete** — 391 tests / 0 fail; hardened release build + smoke test green; dual review rev-2 **@reviewer APPROVE** + **@requirements-reviewer APPROVED**. **Awaiting founder commit approval (17 files).**
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0–R6 ✅ DONE (committed `0039d4b`)** · `beta-release` (not started; plan exists, active).
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ (R0–R6) · **`beta-release` — B0+B1 ✅ (uncommitted); B2–B6 remaining.**
 
 ## Version snapshot
 - **Released: `v0.1.0`** (tag, target `f368133`).
-- **`Cargo.toml` = `0.2.0`** (R5). `examples-rust/Cargo.toml` deliberately stays `0.1.0`.
-- **`metrics.json` schema = 1.2 — UNCHANGED by R6** (docs-only).
-- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + R0–R5 (`…2cde8eb`) + **R6 (uncommitted)**.
+- **`Cargo.toml` = `0.2.0-beta.1`** (B0 prerelease freeze; was `0.2.0`). `examples-rust/Cargo.toml` deliberately stays `0.1.0`.
+- **`metrics.json` schema = 1.2 — UNCHANGED.**
+- `main` unreleased: semantic resolver + both example corpora + guarded-scan fix + R0–R6 + **B0+B1 (uncommitted, 17 files)**.
 
 ## Key Decisions
-- **R6 scope (founder, question tool):** R6 is **docs-only** — the 5 deferred R5 MINOR/NIT test items are **deferred again** (they touch `tests/`; zero gate risk before the beta). `beta-release` plan already exists → **left as-is**, linkage confirmed, **not recreated**.
-- **README:** both backends live; **46 heuristics = 23 C + 23 Rust**; new `### Rust backend (PERF-RS-*)` 23-row table (severity/confidence/tier from `rust-catalog.md`); Rust flagged **syntactic-tier only**; `--version` example `0.2.0`.
-- **R5 substitution documented:** `rust-backend.md` §9.7 records the cross-language ARCH-003 substitution (root cause = §9.3 `(language, name)` keying; **needs founder sign-off**). `LL-010` records the planning lesson.
-- **CHANGELOG:** the missing R5 entry added under `[Unreleased] ### Added`; crate `0.1.0 → 0.2.0` under `### Changed`.
+- **Scope (founder, question tool):** this session = **B0+B1 only**; B2–B6 deferred to later sessions.
+- **`panic = "abort"` REJECTED** — keep `panic = "unwind"` to preserve the documented **exit-code-3** contract (`std::panic::catch_unwind`, modules.md §8.2). (The plan's B1 text still says `abort` — overridden by founder decision.)
+- **Repo stays PRIVATE** — GitHub artifact attestations **deferred** (private repos need GH Enterprise Cloud); **minisign-only** path for B2/B6. The plan's B2 "attestations" line must be requalified when B2 lands.
+- **B0:** `0.2.0 → 0.2.0-beta.1`; `--version` auto-tracks → `perfpal 0.2.0-beta.1 (metrics schema 1.2)`; README beta banner + example; CHANGELOG `[Unreleased]` → `## [0.2.0-beta.1] - 2026-09-24`; **goldens regenerated** (version-only).
+- **B1:** hardened `[profile.release]` (`opt-level=3`, `lto="fat"`, `codegen-units=1`, `strip="symbols"`, `panic="unwind"`); `--remap-path-prefix` in **both** release build steps. **`obfstr` NOT adopted** (no sensitive literals; strip+remap are size/path hygiene, **not** obfuscation) — recorded in `docs/roadmap.md` M2 + CHANGELOG.
 
 ## Risks
-- **R6 deferred (unchanged):** `MD_ESCAPE_CHARS` hand-mirror drift; control-needle uniqueness (4/14 silent alternates); `copy_tree_excluding` symlink following; panic-path temp-dir leak; `materialize_fixture` magic-string dispatch.
-- **⚠ Open founder item:** the R5 cross-language ARCH-003 substitution still awaits explicit founder sign-off (documented in §9.7 + LL-010).
-- **Pre-existing (unchanged):** `error_node_overlap` FORCES `Medium` (raises base-LOW) — founder-level design question.
-- Carried: syntactic-only Rust tier; `cfg_if!`/`macro_rules!` `token_tree` blind spot; grammar-pin drift; x64-darwin/msvc binary reproducibility; toolchain `1.92.0` mirrored in 5 places.
-- **beta-release B2 open item:** repo visibility for the attestations tag (private needs GitHub Enterprise Cloud).
+- **B2 forward:** attestations unavailable on the private repo → requalify to minisign-only; `docs/roadmap.md` M2 "Integrity" still lists attestations.
+- **B6 forward:** `release.yml` `gh release create` lacks `--prerelease --latest=false` — must add, or the beta tag would publish as the repo's LATEST GA release.
+- **Unverified locally:** Windows `pwsh` leg (no pwsh on this host) + musl/darwin/gnu cross-builds (CI-only).
+- **Known NIT:** 7 residual `/home/shafin/.cargo/…` strings are third-party tree-sitter **C** `__FILE__` literals (not rustc-remappable; not panic strings) — out of B1's scope.
+- Carried: R5 cross-language ARCH-003 substitution **still needs founder sign-off**; R5 deferred MINOR test items open; `error_node_overlap` FORCES `Medium` (founder-level design question).
 
 ## Blockers
-- None. R6 committed as `0039d4b`; plan `rust-backend` marked DONE.
+- **Commit approval pending** (B0+B1, 17 files). Suggested message: `feat(beta-release): B0 version freeze 0.2.0-beta.1 + B1 release hardening (opt-level=3, fat LTO, cgu=1, strip, unwind kept, remap-path-prefix); goldens regen; roadmap/CHANGELOG decisions`.
+- Carried: R5 cross-language ARCH-003 substitution awaits explicit founder sign-off.
 
 ## Next Actions
-1. **R6 committed as `0039d4b`**; plan `rust-backend` marked DONE (R0–R6 complete).
-2. **Next session (`/new`) = plan `beta-release`** — `0.2.0-beta.1` (C + Rust), B0–B6 already scoped. Read state files + `readPlan beta-release` FIRST.
-3. R5 deferred MINORs remain open for a future housekeeping/testing session (see Risks).
+1. **Commit B0+B1** on approval (EXCLUDE `.opencode/memory/**`).
+2. **Next session (`/new`) = plan `beta-release` B2 + B3** — minisign-sign SHA256SUMS + SBOM/NOTICES (**skip attestations**: private repo). Read state files + `readPlan beta-release` FIRST.
+3. Then **B4+B5** (EULA + signing deferral), then **B6** (pre-release publish + website handoff).
 
-## R6 Change Set (committed `0039d4b`)
-- **Modified (5 docs):** `README.md` (live languages + 46-heuristic count + new `### Rust backend (PERF-RS-*)` table + version 0.2.0 + Project docs list); `docs/architecture/rust-backend.md` (new §9.7 R4/R5 notes + R5 substitution note; stale-forward-tense fixes); `docs/architecture/modules.md` (§4.2/§5.2 close-out pointers); `CHANGELOG.md` (R5 entry + 0.2.0 Changed); `docs/lessons-learned.md` (LL-010).
+## B0+B1 Change Set (uncommitted, 17 files)
+- **Config:** `Cargo.toml` (version + hardened `[profile.release]`), `Cargo.lock` (perfpal `0.2.0-beta.1`), `.github/workflows/release.yml` (remap in both build steps + header note).
+- **Docs:** `README.md` (banner + `--version` example), `CHANGELOG.md` (new `## [0.2.0-beta.1]` section + beta notice + B0/B1 Changed bullets), `docs/roadmap.md` (M2 unwind correction + obfstr decision bullet).
+- **Test-only:** `src/aggregator/mod.rs`, `src/schema/mod.rs`, `tests/charts_render.rs`, `tests/reporter_render.rs`, `tests/reporter_rust.rs` (version literals → crate version).
+- **Goldens (version-only regen):** `tests/golden/{report,report-mixed,report-rust}/{metrics.json,report.md}` (6 files).
 - **State (EOL):** `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
-- **Gate status:** N/A — docs-only, no code/test/config touched (git-verified: only `.md` files changed).
+- **Gate status:** `cargo fmt --check` ✅ · `cargo clippy --all-targets --locked -- -D warnings` ✅ · `cargo test --locked` **391 pass / 0 fail**; hardened release build (with the CI remap RUSTFLAGS) ✅ 1m12s; smoke ✅ (`--version` exit 0; `examples/` 83 findings; `examples-rust/` 41 findings; full report trees).

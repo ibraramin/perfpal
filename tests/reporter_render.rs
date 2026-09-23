@@ -100,7 +100,7 @@ fn base_doc() -> MetricsDocument {
         schema_version: "1.0".to_string(),
         tool: ToolInfo {
             name: "perfpal".to_string(),
-            version: "0.2.0".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         },
         scan: ScanInfo {
             root_path: ".".to_string(),

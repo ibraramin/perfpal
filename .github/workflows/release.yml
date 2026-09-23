@@ -16,6 +16,13 @@ name: release
 # Local verification performed at pin time (2026-09): x86_64-unknown-linux-musl
 # smoke test via cargo-zigbuild 0.23.3 + zig 0.16.0 produced a statically
 # linked, stripped binary that scanned tests/fixtures/e2e (exit 0).
+#
+# Release builds are HARDENED via `Cargo.toml`'s `[profile.release]`:
+# opt-level=3, fat LTO, codegen-units=1, `strip = "symbols"` (size reduction,
+# NOT obfuscation), and unwinding panics (`panic = "unwind"` is required — the
+# CLI maps a caught panic to exit 3 via `std::panic::catch_unwind`). The build
+# steps also set `--remap-path-prefix` to rewrite build-machine source paths
+# (workspace + cargo registry) out of panic strings — hardening, NOT obfuscation.
 
 on:
   push:
@@ -74,11 +81,15 @@ jobs:
         with:
           tool: cargo-zigbuild
 
-      # musl targets are crt-static by default (zig as linker, no RUSTFLAGS).
+      # musl targets are crt-static by default (a target default, not an
+      # effect of RUSTFLAGS); the RUSTFLAGS set below carry only
+      # `--remap-path-prefix` and change no target features.
       # `matrix.features` is empty for musl (syntactic-only BY DESIGN) and
       # `--features semantic-clang` for the gnu + darwin targets.
       - name: Build static binary
-        run: cargo zigbuild --release --locked --target ${{ matrix.target }} ${{ matrix.features }}
+        run: |
+          export RUSTFLAGS="--remap-path-prefix=$PWD=/perfpal --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo"
+          cargo zigbuild --release --locked --target ${{ matrix.target }} ${{ matrix.features }}
 
       # Rename to the target-suffixed name so parallel artifact downloads
       # cannot collide and `sha256sum -c` works under the shipped filename.
@@ -114,7 +125,11 @@ jobs:
           key: windows-msvc
 
       - name: Build (MSVC)
-        run: cargo build --release --locked --target x86_64-pc-windows-msvc --features semantic-clang
+        shell: pwsh
+        run: |
+          $cargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { "$env:USERPROFILE\.cargo" }
+          $env:RUSTFLAGS = "--remap-path-prefix=$env:GITHUB_WORKSPACE=/perfpal --remap-path-prefix=$cargoHome=/cargo"
+          cargo build --release --locked --target x86_64-pc-windows-msvc --features semantic-clang
 
       # Rename to the target-suffixed name (same rationale as the Unix jobs).
       - name: Checksum

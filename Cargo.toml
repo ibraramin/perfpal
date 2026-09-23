@@ -1,6 +1,6 @@
 [package]
 name = "perfpal"
-version = "0.2.0"
+version = "0.2.0-beta.1"
 edition = "2024"
 rust-version = "1.92.0" # validated floor; pinned via rust-toolchain.toml (modules.md §6)
 description = "Static-analysis CLI that extracts performance-relevant heuristics from C and Rust codebases and emits LLM-consumable metrics."
@@ -37,5 +37,13 @@ clang-sys = { version = "=1.9.1", optional = true, default-features = false, fea
 semantic-clang = ["dep:clang-sys"]
 
 [profile.release]
-# Deterministic, reproducible release artifacts (P6 hardening will extend this).
-strip = true
+# Hardened release profile (plan `beta-release` B1).
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols" # strips symbols for size; NOT obfuscation (rustc: -Cstrip is not an obfuscation mechanism)
+# `panic = "abort"` is deliberately NOT set: the CLI's exit-code-3 contract maps a
+# caught panic to exit 3 via `std::panic::catch_unwind` (docs/architecture/modules.md
+# §8.2), which requires unwinding. `abort` would silently break that contract in
+# release builds. Keep unwinding explicit:
+panic = "unwind"

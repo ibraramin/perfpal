@@ -30,7 +30,8 @@ Add a **Rust language backend** so Perfpal can analyze Rust — and **run on its
 
 ### M2 — `beta-release` (official proprietary beta)
 Cut **`0.2.0-beta.1`** containing **C + Rust** (Rust lands first per M1).
-- Hardening: `strip="symbols"`, `lto="fat"`, `codegen-units=1`, `panic="abort"`, `--remap-path-prefix`.
+- Hardening (shipped in `Cargo.toml` `[profile.release]`): `opt-level=3`, `lto="fat"`, `codegen-units=1`, `strip="symbols"`, and `--remap-path-prefix` in every release build. `panic="unwind"` is kept deliberately — `panic="abort"` is **not** used because the CLI maps a caught panic to exit 3 via `std::panic::catch_unwind` (`modules.md` §8.2). `strip` + path-remapping are size/path hygiene, **not** obfuscation/anti-reversing.
+- **`obfstr` NOT adopted** (closes B1's "decide obfstr for any sensitive literals"): no API keys, URLs, or secrets are compiled into Perfpal, so there are no sensitive literals to obfuscate; the hardening above is size/path hygiene only.
 - Integrity: SHA256SUMS + **minisign** signature + GitHub **artifact attestations** (SLSA/Sigstore).
 - **SBOM** (`cargo-sbom`, SPDX) + **THIRD-PARTY-NOTICES** (`cargo-about`) + `cargo-deny` GPL deny-list.
 - **EULA** + PolyForm Strict `LICENSE`, non-commercial evaluation notice in `--version`/`--help` and the bundle.

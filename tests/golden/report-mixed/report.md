@@ -1,5 +1,5 @@
 # Perfpal Report
-> schema_version 1\.2 · perfpal 0\.2\.0 · scanned <ROOT>
+> schema_version 1\.2 · perfpal 0\.2\.0\-beta\.1 · scanned <ROOT>
 > started <MASKED> · duration <MASKED> ms · 4 files
 
 ## 1. Executive summary
@@ -9,7 +9,7 @@
 - String accumulation in loop (PERF\-C\-STR\-001:src/main\.c:28:9)
 
 ## 2. Scan provenance & parse health
-- Tool: perfpal 0\.2\.0
+- Tool: perfpal 0\.2\.0\-beta\.1
 - Scan root: `<ROOT>`
 - Files scanned: 4
 
