@@ -1,7 +1,7 @@
 # Handoff — Latest
 
 ## Objective
-Session 28: plan `rust-backend` **R4** — dogfood + `examples-rust/` corpus. Ran the built binary over Perfpal's own `src/`, published a curated triage as evidence, added the `examples-rust/` demo corpus, and fixed the `for`-iterable scanner defect dogfooding surfaced. **Complete**; dual review APPROVED (`@reviewer` round-3 final APPROVE; `@requirements-reviewer` APPROVED). Commit **pending founder approval**.
+Session 28: plan `rust-backend` **R4** — dogfood + `examples-rust/` corpus. Ran the built binary over Perfpal's own `src/`, published a curated triage as evidence, added the `examples-rust/` demo corpus, and fixed the `for`-iterable scanner defect dogfooding surfaced. **Complete**; dual review APPROVED (`@reviewer` round-3 final APPROVE; `@requirements-reviewer` APPROVED). Committed as **`24cacb5`**.
 
 ## Phase
 POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0 ✅ / R1 ✅ / R2 ✅ / R3 ✅ / R4 ✅ (R5 next)** · `beta-release` (not started).
@@ -9,7 +9,7 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 ## Version snapshot
 - **Released: `v0.1.0`** (tag, target `f368133`). `Cargo.toml` = `0.1.0` (R5 owns the 0.2.0 bump).
 - **`metrics.json` schema = 1.2 — UNCHANGED by R4** (the `for`-iterable fix is behavior-only; no IR/schema field added).
-- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + R2 + R3 (`b775bbc`) + **R4 (uncommitted)**.
+- `main` unreleased: semantic resolver + `examples/` C corpus + guarded-scan fix + roadmap re-plan + R0 + R1 + R2 + R3 (`b775bbc`) + **R4 (`24cacb5`)**.
 
 ## Key Decisions
 - **R4 approval gate (founder, question tool — all "recommended"):** (1) dogfood evidence = **curated triage doc only** (raw 1.5 MB `metrics.json` / 640 KB `report.md` deliberately NOT committed); (2) `examples-rust/` = **mini-crate + numbered programs**; (3) fix only clear-cut real issues → **fixed `LOOP-003`** for-header + the same-class `is_innermost`/`statement_role` incoherence; **deferred** `LOOP-004`/`LOOP-007` + source smells.
@@ -29,11 +29,11 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 - None.
 
 ## Next Actions
-1. **Commit R4** (pending founder approval) — change set below; `.opencode/**` excluded.
+1. **R4 committed as `24cacb5`** — change set below; `.opencode/**` excluded.
 2. **Next session (`/new`) = plan `rust-backend` R5** — tests + gates + crate version `0.1.0 → 0.2.0`: parser-free IR fixtures for every `PERF-RS-*` rule and their negatives/suppressions, a Rust attribute/guarded-sibling lock + a real-parse lock, an e2e mixed C+Rust scan→analyze, golden/determinism regen, `fmt --check` + `clippy -D warnings --all-targets` + `cargo test` + the `semantic-clang` feature build, then dual review. Read state files + `readPlan rust-backend` FIRST.
 3. Then R6 (README `PERF-RS-*` table, modules.md §4.2/§5.2, CHANGELOG, EOL) → plan `beta-release` (`0.2.0-beta.1`).
 
-## R4 Change Set (uncommitted)
+## R4 Change Set (committed `24cacb5`)
 - **Added:** `examples-rust/` (Cargo.toml, src/lib.rs, src/common.rs, src/cycle_a.rs, src/cycle_b.rs, and 10 numbered programs `src/01_…` … `src/10_…`); `docs/evidence/dogfood-rust-backend.md`.
 - **Modified:** `src/scanner/backends/tree_sitter_rust/mod.rs` (+252/−3: `visit_children_except`, `in_for_iterable`, `meta_for`, `call_position`, `is_innermost_event`, 6 tests); `docs/architecture/rust-backend.md` (§3.8); `docs/heuristics/rust-catalog.md` (§5); `CHANGELOG.md` (R4 Added×2 + Fixed).
 - **State (EOL):** `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
