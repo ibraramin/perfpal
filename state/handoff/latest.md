@@ -1,7 +1,7 @@
 # Handoff — Latest
 
 ## Objective
-Session 29: plan `rust-backend` **R5** — tests + gates + crate version `0.1.0 → 0.2.0`. Delivered negative/suppression fixtures, an `examples-rust` 23/23 coverage gate, a committed mixed C+Rust corpus + 3-tree golden harness, the `0.2.0` bump, and the full gate matrix (incl. first-ever `semantic-clang` run). **Complete**; dual review **APPROVED** (`@reviewer` round-2 APPROVE; `@requirements-reviewer` round-2 APPROVED). **Commit pending founder approval.**
+Session 29: plan `rust-backend` **R5** — tests + gates + crate version `0.1.0 → 0.2.0`. Delivered negative/suppression fixtures, an `examples-rust` 23/23 coverage gate, a committed mixed C+Rust corpus + 3-tree golden harness, the `0.2.0` bump, and the full gate matrix (incl. first-ever `semantic-clang` run). **Complete**; dual review **APPROVED** (`@reviewer` round-2 APPROVE; `@requirements-reviewer` round-2 APPROVED). Committed as **`2cde8eb`** (founder-approved).
 
 ## Phase
 POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · **`rust-backend` R0–R4 ✅ / R5 ✅ (commit pending) / R6 next** · `beta-release` (not started).
@@ -25,10 +25,10 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 - Carried: syntactic-only Rust tier; `cfg_if!`/`macro_rules!` `token_tree` blind spot; grammar-pin drift; x64-darwin/msvc binary reproducibility; toolchain `1.92.0` mirrored in 5 places.
 
 ## Blockers
-- **Commit awaits founder approval.** The cross-language ARCH-003 substitution also awaits knowing sign-off.
+- None. R5 committed as `2cde8eb`. The cross-language ARCH-003 substitution was accepted knowingly (recorded in the commit message).
 
 ## Next Actions
-1. **Commit R5** (change set below) after founder approval.
+1. **R5 committed as `2cde8eb`** (change set below).
 2. **Next session (`/new`) = plan `rust-backend` R6** — docs + close-out: README (supported languages + `PERF-RS-*` table), `modules.md` §4.2/§5.2 (second backend landed), `rust-backend.md` §9.3 R5 substitution note, CHANGELOG (`0.2.0` + R5 entries), lessons-learned if warranted, EOL; pick up the deferred R5 MINORs.
 3. Then plan `beta-release` (`0.2.0-beta.1`, C + Rust).
 
