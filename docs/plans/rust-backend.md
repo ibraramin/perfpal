@@ -1,7 +1,7 @@
 ---
 plan name: rust-backend
 plan description: Rust language support phase
-plan status: active
+plan status: done
 ---
 
 ## Idea
