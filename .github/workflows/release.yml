@@ -38,6 +38,11 @@ name: release
 # the release. `cargo-deny` (`license-audit` in ci.yml) remains the standing
 # no-copyleft enforcement gate for every push; the SBOM job adds a
 # belt-and-braces closure assertion at tag time.
+#
+# Legal bundle (plan `beta-release` B4/B5): the `publish` job stages `EULA.md`,
+# `PRIVACY.md`, and `LICENSE` into `dist/`, so every release asset set carries
+# the evaluation terms, the privacy statement, and the license alongside the
+# binaries.
 
 on:
   push:
@@ -247,6 +252,13 @@ jobs:
           merge-multiple: true
           path: dist
 
+      - name: Stage legal documents into dist
+        # B4: the release bundle carries the EULA + privacy statement + license
+        # alongside the binaries (plan `beta-release` B4/B5).
+        run: |
+          set -euo pipefail
+          cp EULA.md PRIVACY.md LICENSE dist/
+
       - name: Install minisign
         # Version deliberately unpinned (founder decision): the apt package on
         # ubuntu-latest (0.11-1) is used rather than a pinned prebuilt binary.
@@ -298,15 +310,22 @@ jobs:
           # dies with "fatal: not a git repository").
           GH_REPO: ${{ github.repository }}
         run: |
+          set -euo pipefail
           ls -la dist
-          # Re-run safe: if the release already exists (e.g. a previous attempt
-          # created it but failed mid-upload), clobber-upload instead of
-          # create-or-die. The checksum gate above ran in the previous step.
+          test -s docs/release-notes-header.md
+          # Re-run safe, with a known limitation: if the release already exists
+          # (e.g. a previous attempt created it but failed mid-upload),
+          # clobber-upload replaces the assets — but a `gh release create` that
+          # fails AFTER creating the release cannot be cleanly re-created, so a
+          # retry can die on an already-existing release or leave a draft. The
+          # checksum gate above ran in the previous step.
+          # TODO(beta-release B6): make draft recovery + --prerelease re-run-safe.
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             gh release upload --clobber "${GITHUB_REF_NAME}" dist/*
           else
             gh release create "${GITHUB_REF_NAME}" \
               --title "perfpal ${GITHUB_REF_NAME}" \
               --generate-notes \
+              --notes "$(cat docs/release-notes-header.md)" \
               dist/*
           fi

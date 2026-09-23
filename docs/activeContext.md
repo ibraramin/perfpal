@@ -1,22 +1,22 @@
 # Active Context
 
 ## Current Task
-Session 32: plan `beta-release` **B2 (minisign-signed SHA256SUMS; attestations skipped — private repo) + B3 (SPDX 2.3 SBOM + THIRD-PARTY-NOTICES)**. **Complete — committed `daacdd5`.** New tag-time `sbom` job (cargo-sbom 0.10.0 pinned prebuilt + cargo-about 0.9.2, `--all-features`) + `publish` sign/verify of an aggregate `SHA256SUMS` (minisign, passphrase via stdin). Dual review **@reviewer rev-2 APPROVE** + **@requirements-reviewer APPROVED**; gates 391 tests / 0 fail. `main` not yet pushed.
+Session 33: plan `beta-release` **B4 (EULA + noncommercial evaluation notice + no-telemetry statement) + B5 (code-signing deferred; unsigned-beta caveat)**. **Complete — NOT yet committed** (founder approval pending). New `EULA.md`, `PRIVACY.md`, `docs/release-notes-header.md`; `--help` footer notice (clap `after_help`); `--version` byte-exact; release bundle now stages `EULA.md`/`PRIVACY.md`/`LICENSE` and prepends the notes header. Dual review: @reviewer CHANGES_REQUESTED (fix wave applied) + @requirements-reviewer APPROVED; gates 393 tests / 0 fail.
 
 ## Recent Decisions
-- **Attestations skipped** (private repo, GH Enterprise Cloud) → minisign-only; `docs/roadmap.md` M2 requalified + private visibility recorded.
-- **minisign via apt (unpinned, founder decision)**; aggregate `SHA256SUMS` **kept alongside** per-target `.sha256`; passphrase via **stdin**.
-- **SBOM/NOTICES generated at tag time** (`release.yml` `sbom` job, release-attached); `cargo-deny` (`ci.yml`) remains the per-push no-copyleft gate.
-- **`cargo-about --all-features`** — the default closure omitted `clang-sys` et al. that the semantic builds compile (reviewer M1).
-- **Beta keypair generated** (pub key id `4A06548D8A4EFF90`, committed as `minisign.pub`); secret + passphrase handed to the founder.
-- **B2+B3 committed as `daacdd5`** (founder-approved, session 32; 11 files).
+- **Evaluation notice in `--help` ONLY**; `--version` kept byte-exact per `modules.md` §8.1 (founder override).
+- **`EULA.md` + `PRIVACY.md` at repo root, both released** (19-asset bundle).
+- **Signed release notes header** via `--notes` prepended to `--generate-notes`.
+- **Signing deferred**; Azure Trusted Signing NOT wired; unsigned-beta caveat documented (README + release notes). No ADR.
+- **Governing law** defaulted to Bangladesh + **contact address** left as an explicit in-file pre-tag deferred placeholder (both flagged, pending founder).
 
 ## In Progress
-- Nothing — B2+B3 boundary reached and committed.
+- Nothing — B4+B5 boundary reached; review fixes applied and gates green. Awaiting founder commit approval.
 
 ## Next
-- **Set the two GitHub secrets** (`MINISIGN_SECRET_KEY`, `MINISIGN_PASSWORD`) — required before tagging; *(optional)* push `main`; then start a fresh session for **B4+B5** (EULA + evaluation notice + no-telemetry statement + unsigned-beta caveat). **B6** publishes the pre-release.
+- **Resolve the pre-tag contact placeholder** (contact address; governing law is confirmed = Bangladesh) and **set GitHub secrets**; *(optional)* push `main`; then start a fresh session for **B6** (add `--prerelease --latest=false`, make re-run/draft recovery safe, smoke-test the published musl binary, hand the asset inventory to the website milestone).
 
 ## Blockers
+- `EULA.md`/`PRIVACY.md` contact placeholder still unfilled (pre-tag; governing law confirmed = Bangladesh).
 - GitHub secrets not yet set (required before tagging).
 - Carried: the R5 cross-language ARCH-003 substitution still needs explicit founder sign-off.

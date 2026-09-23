@@ -1,6 +1,6 @@
 # Perfpal
 
-> **Beta — `0.2.0-beta.1`.** Pre-release evaluation build (C + Rust backends), provided for **evaluation only — not for commercial or production use at this beta** (see the [License](#license) section for terms). Licensed under PolyForm Strict 1.0.0 (see `LICENSE`).
+> **Beta — `0.2.0-beta.1`.** Pre-release evaluation build (C + Rust backends), provided for **noncommercial evaluation only — not for commercial or production use at this beta**. Use is governed by the [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE). See also the [privacy statement](PRIVACY.md). **Binaries are unsigned** — see [Beta status, code signing, and privacy](#beta-status-code-signing-and-privacy).
 
 Perfpal is a static-analysis CLI that scans C and Rust codebases for performance-relevant patterns and writes a self-contained `perfpal-report/` directory: a versioned, LLM-consumable `metrics.json`, a human-readable `report.md`, and three deterministic SVG architecture charts. It is built for AI-generated codebases — high file volume, frequently non-compiling trees, missing headers and build configuration — where a compiler-based pipeline is often not viable. Parsing runs on a tree-sitter syntactic tier (ADR-0001): no build flags, compile database, or macro expansion are required. All output is framed as **optimization candidates for review, never certainties**.
 
@@ -16,14 +16,17 @@ Perfpal is a static-analysis CLI that scans C and Rust codebases for performance
 
 Perfpal is not published to crates.io (`publish = false` in `Cargo.toml`). It ships as release assets from the private repository `github.com/ibraramin/perfpal`; because the repo is private, releases are visible only to repository collaborators.
 
-Release binaries follow the naming pattern `perfpal-<rust-target>[.exe]` with a sibling `<name>.sha256` checksum file. Each release ships sixteen assets:
+Release binaries follow the naming pattern `perfpal-<rust-target>[.exe]` with a sibling `<name>.sha256` checksum file. Each release ships nineteen assets:
 
 - **six target binaries** (table below) + **six per-file `.sha256`** checksums;
 - **`SHA256SUMS`** — one aggregate manifest over all six binaries — and its **minisign signature `SHA256SUMS.minisig`**;
 - **`perfpal-<version>.spdx.json`** — an SPDX 2.3 SBOM of the dependency closure;
-- **`THIRD-PARTY-NOTICES.md`** — attribution for the bundled third-party crates.
+- **`THIRD-PARTY-NOTICES.md`** — attribution for the bundled third-party crates;
+- **`EULA.md`** — the beta End User License Agreement (supplements `LICENSE`);
+- **`PRIVACY.md`** — the privacy statement (no telemetry, no network calls);
+- **`LICENSE`** — the PolyForm Strict License 1.0.0.
 
-(The v0.1.0 release shipped ten assets: the five targets below minus `gnu`, which joined post-v0.1.0 as the Linux semantic-tier vehicle, and none of the manifest, signature, SBOM, or notices files.)
+(The v0.1.0 release shipped ten assets: the five targets below minus `gnu`, which joined post-v0.1.0 as the Linux semantic-tier vehicle, and none of the manifest, signature, SBOM, notices, or legal document files.)
 
 | Asset | Platform |
 |---|---|
@@ -49,7 +52,7 @@ minisign -Vm SHA256SUMS -p minisign.pub   # verifies the manifest's signature
 sha256sum -c SHA256SUMS                    # verifies all shipped binaries
 ```
 
-`minisign` (the reference implementation, ISC-licensed) or a compatible verifier such as the MIT `minisign-verify` crate can be used. `SHA256SUMS` covers the six binaries only (the SBOM and notices are not covered by the manifest); treat a binary that is not covered by the signed manifest — or by its own `.sha256` — as untrusted.
+`minisign` (the reference implementation, ISC-licensed) or a compatible verifier such as the MIT `minisign-verify` crate can be used. `SHA256SUMS` covers the six binaries only — the SBOM and notices, as well as the legal documents (`EULA.md`, `PRIVACY.md`, `LICENSE`), are not covered by the manifest. The manifest stays binary-only so the documented single-binary `sha256sum -c SHA256SUMS` convenience keeps working; treat a binary that is not covered by the signed manifest — or by its own `.sha256` — as untrusted.
 
 Post-v0.1.0 (plan `semantic-resolver`), the release matrix grows to six targets: `x86_64-unknown-linux-gnu` joins as the Linux semantic-tier vehicle (`perfpal-x86_64-unknown-linux-gnu` + checksum, same naming pattern). The gnu, both darwin, and Windows-MSVC builds compile with the default-OFF `semantic-clang` cargo feature and activate the semantic tier when libclang is installed (`LIBCLANG_PATH`); without libclang they degrade gracefully to the syntactic tier. The musl x86_64/aarch64 builds stay syntactic-only by design (static musl cannot dlopen) and remain fully functional.
 
@@ -98,7 +101,7 @@ The chart set is `include-graph.svg`, `component-coupling.svg`, and `hot-compone
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
 | `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0-beta.1 (metrics schema 1.2)`), exit 0 |
-| `-h`, `--help` | — | — | Usage text, exit 0 |
+| `-h`, `--help` | — | — | Usage text, exit 0; prints a beta evaluation-notice footer |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.
 
@@ -225,6 +228,14 @@ Perfpal's report artifacts are deterministic. For identical inputs scanned with 
 
 This claim covers the report directory only. Release binaries make no bit-for-bit reproducibility claim.
 
+## Beta status, code signing, and privacy
+
+Perfpal `0.2.0-beta.1` is a non-GA pre-release evaluation build. It is provided for noncommercial evaluation only and is not for commercial or production use. Use is governed by the bundled [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE).
+
+**Binaries are unsigned.** No Windows Authenticode signing and no macOS notarization is applied at beta, so Windows SmartScreen and macOS Gatekeeper may warn about the download. Azure Trusted Signing is deliberately not wired at beta. Verify authenticity instead via the signed checksum manifest: `minisign -Vm SHA256SUMS -p minisign.pub` followed by `sha256sum -c SHA256SUMS`.
+
+**No telemetry.** Perfpal makes no network calls and collects no data — it runs entirely offline. See [`PRIVACY.md`](PRIVACY.md) for the full statement.
+
 ## Project docs
 
 - `docs/architecture/modules.md` — module decomposition, determinism ownership, CLI surface (§8)
@@ -237,8 +248,10 @@ This claim covers the report directory only. Release binaries make no bit-for-bi
 - `docs/adr/ADR-0002-visualization.md` — the deterministic SVG chart set
 - `docs/architecture/ir-v1.md` — the parser-agnostic IR the heuristics consume
 - `docs/roadmap.md` — the authoritative post-v0.1.0 roadmap
+- `EULA.md` — the beta End User License Agreement (supplements `LICENSE`)
+- `PRIVACY.md` — the privacy statement (no telemetry, no network calls)
 - `CHANGELOG.md` — release history
 
 ## License
 
-Perfpal is source-available proprietary software licensed under the **PolyForm Strict License 1.0.0**. Free to use for **noncommercial** purposes; **commercial use, modification, and redistribution require the owner's explicit permission**. The crate is marked `LicenseRef-Proprietary` in `Cargo.toml`. The repository is private; there is no external contribution process — proposals and modifications are handled by permission only.
+Perfpal is source-available proprietary software licensed under the **PolyForm Strict License 1.0.0**. Free to use for **noncommercial** purposes; **commercial use, modification, and redistribution require the owner's explicit permission**. The crate is marked `LicenseRef-Proprietary` in `Cargo.toml`. The repository is private; there is no external contribution process — proposals and modifications are handled by permission only. The distributed beta binaries are additionally governed by the [`EULA`](EULA.md); see [`PRIVACY.md`](PRIVACY.md) for the no-telemetry statement.

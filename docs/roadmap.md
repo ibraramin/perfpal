@@ -34,9 +34,9 @@ Cut **`0.2.0-beta.1`** containing **C + Rust** (Rust lands first per M1).
 - **`obfstr` NOT adopted** (closes B1's "decide obfstr for any sensitive literals"): no API keys, URLs, or secrets are compiled into Perfpal, so there are no sensitive literals to obfuscate; the hardening above is size/path hygiene only.
 - Integrity: per-target `.sha256` + an aggregate **minisign-signed** `SHA256SUMS` (`SHA256SUMS.minisig`; public key `minisign.pub` committed, private key in the `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` repo secrets). GitHub **artifact attestations** are **deferred**: they require GitHub Enterprise Cloud on private repositories and the beta repository stays private (decision recorded 2026-09-24).
 - **SBOM** (`cargo-sbom`, SPDX 2.3) + **THIRD-PARTY-NOTICES** (`cargo-about`) attached to the release by the tag-triggered pipeline + `cargo-deny` GPL deny-list as the standing enforcement gate.
-- **EULA** + PolyForm Strict `LICENSE`, non-commercial evaluation notice in `--version`/`--help` and the bundle.
+- **EULA + privacy statement** (`EULA.md` + `PRIVACY.md`, both at repo root) + PolyForm Strict `LICENSE` (`LICENSE`) — all three attached to the release bundle. The noncommercial evaluation notice is surfaced in `--help` only (a footer); `--version` is kept byte-exact per `modules.md` §8.1. The committed `docs/release-notes-header.md` is prepended to the generated release notes. Windows Authenticode + macOS notarization deferred (HSM/cost friction) and **Azure Trusted Signing NOT wired** for beta; the unsigned-beta caveat (verify via the minisign-signed `SHA256SUMS` + `sha256sum -c`) is documented.
 - Distribution: clearly-labelled GitHub **pre-release** (not GA).
-- **Explicitly out of scope at beta:** deep obfuscation (no viable license-clean Rust tooling; obfuscation buys little) and license-key/activation (deferred to paid GA). Windows Authenticode + macOS notarization deferred (cost); optional Azure Trusted Signing.
+- **Explicitly out of scope at beta:** deep obfuscation (no viable license-clean Rust tooling; obfuscation buys little) and license-key/activation (deferred to paid GA).
 - Plan: `docs/plans/beta-release.md` (linked `perfpal-core-spec`).
 
 ### M3 — Website (separate repo, separate session family)

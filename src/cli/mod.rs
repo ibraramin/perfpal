@@ -38,12 +38,24 @@ use crate::writer::Artifact;
 /// [`crate::schema::SCHEMA_VERSION`] by a unit test below.
 const VERSION_SUFFIX: &str = concat!(env!("CARGO_PKG_VERSION"), " (metrics schema ", "1.2", ")");
 
+/// `--help` footer (plan `beta-release` B4): the beta evaluation terms are
+/// surfaced in help output only; `--version` stays byte-exact per modules.md §8.1.
+const HELP_FOOTER: &str = concat!(
+    "Perfpal ",
+    env!("CARGO_PKG_VERSION"),
+    " — pre-release EVALUATION build.\n",
+    "Provided for noncommercial evaluation only; NOT for commercial or production use.\n",
+    "Terms: see EULA.md and LICENSE (PolyForm Strict 1.0.0).\n",
+    "Privacy: no telemetry, no network access, no data collection — see PRIVACY.md.\n",
+);
+
 /// Validated invocation options (modules.md §8.1 flag table).
 #[derive(Debug, Parser)]
 #[command(
     name = "perfpal",
     about = "Static-analysis scan of a C/Rust codebase emitting an LLM-consumable metrics report.",
-    version = VERSION_SUFFIX
+    version = VERSION_SUFFIX,
+    after_help = HELP_FOOTER
 )]
 pub struct Args {
     /// Scan target: directory or single `.c`/`.h`/`.rs` file.
@@ -367,6 +379,33 @@ mod tests {
                 crate::schema::SCHEMA_VERSION
             )
         );
+    }
+
+    #[test]
+    fn help_footer_states_evaluation_terms() {
+        use clap::CommandFactory;
+        let mut cmd = Args::command();
+        let short = cmd.render_help().to_string();
+        let long = cmd.render_long_help().to_string();
+        for needle in ["noncommercial", "EULA.md", "PRIVACY.md", "no telemetry"] {
+            assert!(
+                short.contains(needle),
+                "--help footer must mention {needle}"
+            );
+            assert!(
+                long.contains(needle),
+                "--help (long) footer must mention {needle}"
+            );
+        }
+    }
+
+    #[test]
+    fn version_output_is_byte_exact_and_notice_free() {
+        use clap::CommandFactory;
+        let cmd = Args::command();
+        assert_eq!(cmd.render_version(), format!("perfpal {VERSION_SUFFIX}\n"));
+        assert!(!cmd.render_version().contains("EVALUATION"));
+        assert!(!cmd.render_version().contains("EULA.md"));
     }
 
     #[test]

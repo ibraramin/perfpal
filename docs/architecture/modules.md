@@ -259,6 +259,8 @@ Owned here per output-contract §6. `metrics.json` remains the machine contract;
 | `--version` | — | — | print `perfpal <version> (metrics schema <schema_version>)`, exit 0 |
 | `-h`, `--help` | — | — | usage text, exit 0 |
 
+`-h, --help` also renders a footer carrying the beta evaluation notice plus `EULA.md`/`PRIVACY.md` pointers; the `--version` payload is unchanged (plan `beta-release` B4).
+
 Explicitly out of MVP (post-MVP list): include/exclude path filters, config files, parallelism knobs, `--json` stdout mode, watch mode, diff mode.
 
 ### 8.2 Exit codes
