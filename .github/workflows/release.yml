@@ -23,6 +23,21 @@ name: release
 # CLI maps a caught panic to exit 3 via `std::panic::catch_unwind`). The build
 # steps also set `--remap-path-prefix` to rewrite build-machine source paths
 # (workspace + cargo registry) out of panic strings — hardening, NOT obfuscation.
+#
+# Integrity (plan `beta-release` B2): each target ships a per-file `.sha256`;
+# the `publish` job additionally builds an aggregate `SHA256SUMS` over the six
+# binaries, minisign-signs it (`SHA256SUMS.minisig`), and verifies that
+# signature against the committed `minisign.pub` before publishing. The signing
+# key lives in the `MINISIGN_SECRET_KEY` + `MINISIGN_PASSWORD` repository
+# secrets. GitHub artifact attestations are deliberately NOT used: they require
+# GitHub Enterprise Cloud on private repositories, and this repository stays
+# private (recorded decision, docs/roadmap.md M2).
+#
+# Supply-chain composition (plan `beta-release` B3): the `sbom` job attaches an
+# SPDX 2.3 SBOM (`cargo-sbom`) and `THIRD-PARTY-NOTICES.md` (`cargo-about`) to
+# the release. `cargo-deny` (`license-audit` in ci.yml) remains the standing
+# no-copyleft enforcement gate for every push; the SBOM job adds a
+# belt-and-braces closure assertion at tag time.
 
 on:
   push:
@@ -148,36 +163,145 @@ jobs:
             target/x86_64-pc-windows-msvc/release/perfpal-x86_64-pc-windows-msvc.sha256
           if-no-files-found: error
 
+  # SBOM + third-party attribution (plan `beta-release` B3). Runs on every tag
+  # so the release bundle carries an SPDX 2.3 SBOM and a THIRD-PARTY-NOTICES
+  # file (the permissive deps — notably Apache-2.0 — require attribution).
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
+        with:
+          toolchain: "1.92.0"
+
+      # v2 (pinned commit) — cargo-about 0.9.2 (MIT OR Apache-2.0)
+      - uses: taiki-e/install-action@0758d235715de2f3551eacc980d9ae8fce9342c3
+        with:
+          tool: cargo-about@0.9.2
+
+      # cargo-sbom 0.10.0 (MIT) is NOT in install-action's tool set; install the
+      # pinned prebuilt binary and verify its SHA256 before use.
+      - name: Install cargo-sbom (pinned prebuilt + checksum)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o "$RUNNER_TEMP/cargo-sbom" \
+            https://github.com/psastras/sbom-rs/releases/download/cargo-sbom-v0.10.0/cargo-sbom-x86_64-unknown-linux-gnu
+          echo "860a50d3e009c72fefc12506869cc11ea34d240c65da65cda2c491ed2aaa34f3  $RUNNER_TEMP/cargo-sbom" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          install -m 0755 "$RUNNER_TEMP/cargo-sbom" "$HOME/.local/bin/cargo-sbom"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Generate THIRD-PARTY-NOTICES (cargo-about)
+        # `--all-features` is required: the gnu/darwin/windows binaries build
+        # with `--features semantic-clang`, so the notices must cover the
+        # optional closure (clang-sys et al.), not just default features.
+        # `--threshold` matches deny.toml's confidence-threshold for parity.
+        run: cargo about generate --locked --all-features --threshold 0.93 --output-file THIRD-PARTY-NOTICES.md about.hbs
+
+      - name: Generate SBOM (cargo-sbom, SPDX 2.3)
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          cargo-sbom --project-directory . --output-format spdx_json_2_3 > "perfpal-${VERSION}.spdx.json"
+
+      # Belt-and-braces closure assertion; the standing gate is the cargo-deny
+      # `license-audit` job in ci.yml over every push.
+      - name: Assert no copyleft (GPL-family) in SBOM/NOTICES
+        run: |
+          if grep -niE 'GPL|AGPL|copyleft' THIRD-PARTY-NOTICES.md perfpal-*.spdx.json; then
+            echo "::error::GPL-family license found in SBOM/NOTICES (no-copyleft policy, modules.md §6)"
+            exit 1
+          fi
+          echo "no copyleft licenses found in SBOM/NOTICES"
+
+      # v4.6.2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sbom-notices
+          path: |
+            THIRD-PARTY-NOTICES.md
+            perfpal-*.spdx.json
+          if-no-files-found: error
+
   publish:
     # Creates the GitHub Release from the build artifacts (the first tag run,
     # v0.1.0 at 696ce67, validated builds but had no publish job — assets stayed
     # workflow-artifacts-only; gap closed here).
     # Job-scoped contents: write overrides the workflow-level contents: read.
-    needs: [build-unix, build-windows]
+    needs: [build-unix, build-windows, sbom]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      # v4.3.0 — merges all per-target artifacts into one flat dist/ directory
+      # v4.4.0 — the minisign verification below needs the committed public key
+      # (`minisign.pub`); the checkout also supplies the git context that gh
+      # would otherwise resolve from a remote (GH_REPO stays belt-and-braces).
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      # v4.3.0 — merges all per-target + sbom artifacts into one flat dist/
+      # directory
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           merge-multiple: true
           path: dist
 
-      # Defense-in-depth: re-verify every checksum inside CI before publishing.
+      - name: Install minisign
+        # Version deliberately unpinned (founder decision): the apt package on
+        # ubuntu-latest (0.11-1) is used rather than a pinned prebuilt binary.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minisign
+
+      # Build the aggregate integrity manifest and minisign-sign it.
+      - name: Build and sign SHA256SUMS
+        env:
+          MINISIGN_SECRET_KEY: ${{ secrets.MINISIGN_SECRET_KEY }}
+          MINISIGN_PASSWORD: ${{ secrets.MINISIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # The manifest covers the six shipped binaries only, so a user who
+          # downloads a single binary can still run `sha256sum -c SHA256SUMS`.
+          (cd dist && sha256sum \
+            perfpal-x86_64-unknown-linux-musl \
+            perfpal-aarch64-unknown-linux-musl \
+            perfpal-x86_64-unknown-linux-gnu \
+            perfpal-x86_64-apple-darwin \
+            perfpal-aarch64-apple-darwin \
+            perfpal-x86_64-pc-windows-msvc.exe > SHA256SUMS)
+          (cd dist && sha256sum -c SHA256SUMS)
+          # The secret key is written with 0600 perms and the passphrase is fed
+          # on stdin — never via argv, which is world-visible in the process
+          # table.
+          umask 077
+          key="$RUNNER_TEMP/minisign.key"
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$MINISIGN_SECRET_KEY" > "$key"
+          printf '%s\n' "$MINISIGN_PASSWORD" | minisign -S -s "$key" \
+            -m dist/SHA256SUMS -x dist/SHA256SUMS.minisig \
+            -t "perfpal ${GITHUB_REF_NAME}"
+
+      # Defense-in-depth: re-verify the signature and every per-file checksum
+      # inside CI before publishing. Verifying against the committed public key
+      # also catches a mismatched/incorrect signing secret.
+      - name: Verify signature and checksums
+        run: |
+          minisign -Vm dist/SHA256SUMS -p minisign.pub
+          (cd dist && sha256sum -c ./*.sha256)
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          # No checkout step in this job — gh needs the repo target explicitly
-          # (it otherwise resolves it from git-remote context and dies with
-          # "fatal: not a git repository").
+          # gh needs the repo target explicitly (belt-and-braces beside the
+          # checkout step; it otherwise resolves it from git-remote context and
+          # dies with "fatal: not a git repository").
           GH_REPO: ${{ github.repository }}
         run: |
           ls -la dist
-          (cd dist && sha256sum -c ./*.sha256)
           # Re-run safe: if the release already exists (e.g. a previous attempt
           # created it but failed mid-upload), clobber-upload instead of
-          # create-or-die. The checksum gate above runs in both paths.
+          # create-or-die. The checksum gate above ran in the previous step.
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             gh release upload --clobber "${GITHUB_REF_NAME}" dist/*
           else

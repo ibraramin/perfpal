@@ -32,8 +32,8 @@ Add a **Rust language backend** so Perfpal can analyze Rust — and **run on its
 Cut **`0.2.0-beta.1`** containing **C + Rust** (Rust lands first per M1).
 - Hardening (shipped in `Cargo.toml` `[profile.release]`): `opt-level=3`, `lto="fat"`, `codegen-units=1`, `strip="symbols"`, and `--remap-path-prefix` in every release build. `panic="unwind"` is kept deliberately — `panic="abort"` is **not** used because the CLI maps a caught panic to exit 3 via `std::panic::catch_unwind` (`modules.md` §8.2). `strip` + path-remapping are size/path hygiene, **not** obfuscation/anti-reversing.
 - **`obfstr` NOT adopted** (closes B1's "decide obfstr for any sensitive literals"): no API keys, URLs, or secrets are compiled into Perfpal, so there are no sensitive literals to obfuscate; the hardening above is size/path hygiene only.
-- Integrity: SHA256SUMS + **minisign** signature + GitHub **artifact attestations** (SLSA/Sigstore).
-- **SBOM** (`cargo-sbom`, SPDX) + **THIRD-PARTY-NOTICES** (`cargo-about`) + `cargo-deny` GPL deny-list.
+- Integrity: per-target `.sha256` + an aggregate **minisign-signed** `SHA256SUMS` (`SHA256SUMS.minisig`; public key `minisign.pub` committed, private key in the `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` repo secrets). GitHub **artifact attestations** are **deferred**: they require GitHub Enterprise Cloud on private repositories and the beta repository stays private (decision recorded 2026-09-24).
+- **SBOM** (`cargo-sbom`, SPDX 2.3) + **THIRD-PARTY-NOTICES** (`cargo-about`) attached to the release by the tag-triggered pipeline + `cargo-deny` GPL deny-list as the standing enforcement gate.
 - **EULA** + PolyForm Strict `LICENSE`, non-commercial evaluation notice in `--version`/`--help` and the bundle.
 - Distribution: clearly-labelled GitHub **pre-release** (not GA).
 - **Explicitly out of scope at beta:** deep obfuscation (no viable license-clean Rust tooling; obfuscation buys little) and license-key/activation (deferred to paid GA). Windows Authenticode + macOS notarization deferred (cost); optional Azure Trusted Signing.

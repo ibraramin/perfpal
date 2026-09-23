@@ -7,3 +7,9 @@
 # Editor/OS noise
 *.swp
 .DS_Store
+
+# Generated release artifacts (produced in CI, or by the reproduce commands in
+# the README) — never committed.
+/dist/
+/THIRD-PARTY-NOTICES.md
+/perfpal-*.spdx.json

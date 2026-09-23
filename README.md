@@ -16,7 +16,14 @@ Perfpal is a static-analysis CLI that scans C and Rust codebases for performance
 
 Perfpal is not published to crates.io (`publish = false` in `Cargo.toml`). It ships as release assets from the private repository `github.com/ibraramin/perfpal`; because the repo is private, releases are visible only to repository collaborators.
 
-Release assets follow the naming pattern `perfpal-<rust-target>[.exe]` with a sibling `<name>.sha256` checksum file. The current release matrix ships twelve assets — six target binaries and six checksums (the v0.1.0 release shipped ten: the five targets below minus `gnu`, which joined post-v0.1.0 as the Linux semantic-tier vehicle):
+Release binaries follow the naming pattern `perfpal-<rust-target>[.exe]` with a sibling `<name>.sha256` checksum file. Each release ships sixteen assets:
+
+- **six target binaries** (table below) + **six per-file `.sha256`** checksums;
+- **`SHA256SUMS`** — one aggregate manifest over all six binaries — and its **minisign signature `SHA256SUMS.minisig`**;
+- **`perfpal-<version>.spdx.json`** — an SPDX 2.3 SBOM of the dependency closure;
+- **`THIRD-PARTY-NOTICES.md`** — attribution for the bundled third-party crates.
+
+(The v0.1.0 release shipped ten assets: the five targets below minus `gnu`, which joined post-v0.1.0 as the Linux semantic-tier vehicle, and none of the manifest, signature, SBOM, or notices files.)
 
 | Asset | Platform |
 |---|---|
@@ -27,13 +34,22 @@ Release assets follow the naming pattern `perfpal-<rust-target>[.exe]` with a si
 | `perfpal-aarch64-apple-darwin` + `perfpal-aarch64-apple-darwin.sha256` | macOS arm64 (Apple Silicon) |
 | `perfpal-x86_64-pc-windows-msvc.exe` + `perfpal-x86_64-pc-windows-msvc.sha256` | Windows x86-64 (MSVC) |
 
-Example install and checksum verification (checksum files embed the shipped binary filename, so `sha256sum -c` works as-is):
+Example install and per-file checksum verification (the `.sha256` embeds the shipped binary filename, so `sha256sum -c` works as-is):
 
 ```
-gh release download v0.1.0 --repo ibraramin/perfpal --pattern 'perfpal-x86_64-unknown-linux-musl*'
+gh release download v0.2.0-beta.1 --repo ibraramin/perfpal --pattern 'perfpal-x86_64-unknown-linux-musl*'
 chmod +x perfpal-x86_64-unknown-linux-musl
 sha256sum -c perfpal-x86_64-unknown-linux-musl.sha256
 ```
+
+For the signed aggregate manifest, download `SHA256SUMS` and `SHA256SUMS.minisig` alongside the binaries, then verify the manifest's signature against the committed [`minisign.pub`](minisign.pub) and every binary against the manifest:
+
+```
+minisign -Vm SHA256SUMS -p minisign.pub   # verifies the manifest's signature
+sha256sum -c SHA256SUMS                    # verifies all shipped binaries
+```
+
+`minisign` (the reference implementation, ISC-licensed) or a compatible verifier such as the MIT `minisign-verify` crate can be used. `SHA256SUMS` covers the six binaries only (the SBOM and notices are not covered by the manifest); treat a binary that is not covered by the signed manifest — or by its own `.sha256` — as untrusted.
 
 Post-v0.1.0 (plan `semantic-resolver`), the release matrix grows to six targets: `x86_64-unknown-linux-gnu` joins as the Linux semantic-tier vehicle (`perfpal-x86_64-unknown-linux-gnu` + checksum, same naming pattern). The gnu, both darwin, and Windows-MSVC builds compile with the default-OFF `semantic-clang` cargo feature and activate the semantic tier when libclang is installed (`LIBCLANG_PATH`); without libclang they degrade gracefully to the syntactic tier. The musl x86_64/aarch64 builds stay syntactic-only by design (static musl cannot dlopen) and remain fully functional.
 
