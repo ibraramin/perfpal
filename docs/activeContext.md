@@ -1,22 +1,21 @@
 # Active Context
 
 ## Current Task
-Session 33: plan `beta-release` **B4 (EULA + noncommercial evaluation notice + no-telemetry statement) + B5 (code-signing deferred; unsigned-beta caveat)**. **Complete — NOT yet committed** (founder approval pending). New `EULA.md`, `PRIVACY.md`, `docs/release-notes-header.md`; `--help` footer notice (clap `after_help`); `--version` byte-exact; release bundle now stages `EULA.md`/`PRIVACY.md`/`LICENSE` and prepends the notes header. Dual review: @reviewer CHANGES_REQUESTED (fix wave applied) + @requirements-reviewer APPROVED; gates 393 tests / 0 fail.
+Session 34: plan `beta-release` **B6 — unblocked half COMPLETE**. The GitHub pre-release publish is now **draft-safe** (`create-as-draft → upload-while-draft → flip --draft=false --prerelease --latest=false → fail-closed assert`), tag discipline is recorded, the **19-asset inventory** is handed to the website milestone, and the `0.2.0-beta.1` musl binary is pre-flight smoke-tested (`examples/` 83, `examples-rust/` 41, exit 0). **Not yet committed** (founder approval pending). Founder-only half (contact address + secrets + tag/publish) deferred.
 
 ## Recent Decisions
-- **Evaluation notice in `--help` ONLY**; `--version` kept byte-exact per `modules.md` §8.1 (founder override).
-- **`EULA.md` + `PRIVACY.md` at repo root, both released** (19-asset bundle).
-- **Signed release notes header** via `--notes` prepended to `--generate-notes`.
-- **Signing deferred**; Azure Trusted Signing NOT wired; unsigned-beta caveat documented (README + release notes). No ADR.
-- **Governing law** defaulted to Bangladesh + **contact address** left as an explicit in-file pre-tag deferred placeholder (both flagged, pending founder).
+- **Scope split:** only the unblocked half this session; contact address and the `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` secrets are founder-only, so the tag/publish waits.
+- **Publish pattern:** draft-then-flip (recoverable) over one-shot create — gh semantics verified by @librarian.
+- **Contact placeholder deliberately deferred** (founder: will buy an address later); governing law = Bangladesh.
 
 ## In Progress
-- Nothing — B4+B5 boundary reached; review fixes applied and gates green. Awaiting founder commit approval.
+- Nothing — B6 unblocked half done; gates green; dual review closed (rev-2 APPROVE); awaiting the founder's commit approval.
 
 ## Next
-- **Resolve the pre-tag contact placeholder** (contact address; governing law is confirmed = Bangladesh) and **set GitHub secrets**; *(optional)* push `main`; then start a fresh session for **B6** (add `--prerelease --latest=false`, make re-run/draft recovery safe, smoke-test the published musl binary, hand the asset inventory to the website milestone).
+- **Founder:** approve the B6 ritual commit; supply the contact address; set the two secrets.
+- **Next session (`/new`)** = B6 finish: replace the contact placeholder → confirm secrets → commit → tag `v0.2.0-beta.1` at the `release.yml`-bearing commit → publish → smoke-test the **PUBLISHED** musl binary vs `examples/` + `examples-rust/` → finalize `docs/website/scope-and-content.md` §8.1 with the real release URL.
 
 ## Blockers
-- `EULA.md`/`PRIVACY.md` contact placeholder still unfilled (pre-tag; governing law confirmed = Bangladesh).
-- GitHub secrets not yet set (required before tagging).
-- Carried: the R5 cross-language ARCH-003 substitution still needs explicit founder sign-off.
+- EULA/PRIVACY contact placeholder still unfilled (pre-tag; deliberate deferral).
+- GitHub secrets `MINISIGN_SECRET_KEY` + `MINISIGN_PASSWORD` not yet set (required before tagging).
+- Carried: R5 cross-language ARCH-003 substitution still needs explicit founder sign-off.

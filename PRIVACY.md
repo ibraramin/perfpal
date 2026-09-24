@@ -34,5 +34,8 @@ pipeline is not part of the tool, and the tool itself never transmits anything.
 
 ## Contact
 
-<!-- FOUNDER: set a real contact address before the beta tag (beta-release B6). -->
+<!-- FOUNDER: the contact address is intentionally DEFERRED (session 34 /
+     beta-release B6) — the founder will obtain a dedicated address before
+     tagging. This placeholder MUST be replaced with a real address before
+     v0.2.0-beta.1 is tagged. -->
 Contact: [licensor contact email]

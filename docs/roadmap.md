@@ -4,16 +4,16 @@
 > section of `docs/specs/perfpal-core-spec.md`, which listed C++/Python next.
 > Founder reshaped the roadmap in session 23: **Rust first**, C++/Python delayed.
 
-## Status snapshot (session 23)
+## Status snapshot (session 34)
 
 | Item | Value |
 |---|---|
-| Released | **`v0.1.0`** (tag `v0.1.0`, commit `f368133`) — the only release tag |
-| Unreleased on `main` | semantic resolver tier, `examples/` C corpus, guarded-scan fix (commit `5643737`) |
-| `Cargo.toml` version | `0.1.0` |
-| `metrics.json` schema | **1.1** |
-| Languages supported | **C** only (`.c`/`.h`) |
-| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ |
+| Published | **`v0.1.0`** (tag `v0.1.0`, commit `f368133`) — the only published release |
+| Pending | **`v0.2.0-beta.1`** — the release pipeline is fully staged (`beta-release` B0–B5 committed); tag/publish is gated on the founder supplying the EULA/privacy **contact address** and setting the **`MINISIGN_SECRET_KEY`**/**`MINISIGN_PASSWORD`** secrets |
+| `Cargo.toml` version | `0.2.0-beta.1` (unreleased) |
+| `metrics.json` schema | **1.2** |
+| Languages supported | **C** + **Rust** (`.c`/`.h`/`.rs`) |
+| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` 🟡 (B0–B5 done; B6 in progress) |
 
 ## Milestone sequence
 
@@ -35,7 +35,8 @@ Cut **`0.2.0-beta.1`** containing **C + Rust** (Rust lands first per M1).
 - Integrity: per-target `.sha256` + an aggregate **minisign-signed** `SHA256SUMS` (`SHA256SUMS.minisig`; public key `minisign.pub` committed, private key in the `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` repo secrets). GitHub **artifact attestations** are **deferred**: they require GitHub Enterprise Cloud on private repositories and the beta repository stays private (decision recorded 2026-09-24).
 - **SBOM** (`cargo-sbom`, SPDX 2.3) + **THIRD-PARTY-NOTICES** (`cargo-about`) attached to the release by the tag-triggered pipeline + `cargo-deny` GPL deny-list as the standing enforcement gate.
 - **EULA + privacy statement** (`EULA.md` + `PRIVACY.md`, both at repo root) + PolyForm Strict `LICENSE` (`LICENSE`) — all three attached to the release bundle. The noncommercial evaluation notice is surfaced in `--help` only (a footer); `--version` is kept byte-exact per `modules.md` §8.1. The committed `docs/release-notes-header.md` is prepended to the generated release notes. Windows Authenticode + macOS notarization deferred (HSM/cost friction) and **Azure Trusted Signing NOT wired** for beta; the unsigned-beta caveat (verify via the minisign-signed `SHA256SUMS` + `sha256sum -c`) is documented.
-- Distribution: clearly-labelled GitHub **pre-release** (not GA).
+- Distribution: clearly-labelled GitHub **pre-release** (not GA), published with `--prerelease --latest=false` so the beta never displaces `v0.1.0` as *Latest*. The publish step is **draft-safe and idempotent** (create-as-draft → upload-while-draft → flip to published, then assert the final state): a failure before the flip leaves only a draft and re-running converges, while a re-run after publication skips the asset upload so live assets are never rewritten.
+- **Tag discipline:** GitHub runs the workflow file from the commit a tag points at, so a release tag must point at the commit containing the current `.github/workflows/release.yml`; after any workflow edit, re-point (delete + re-create + push) any not-yet-validated tag so the tag, the workflow, and the built sources agree. Re-pointing an **already-published** tag additionally requires deleting or replacing the existing release/assets first — the publish step intentionally never rewrites a published release's assets.
 - **Explicitly out of scope at beta:** deep obfuscation (no viable license-clean Rust tooling; obfuscation buys little) and license-key/activation (deferred to paid GA).
 - Plan: `docs/plans/beta-release.md` (linked `perfpal-core-spec`).
 

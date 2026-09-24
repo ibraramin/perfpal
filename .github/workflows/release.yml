@@ -43,6 +43,25 @@ name: release
 # `PRIVACY.md`, and `LICENSE` into `dist/`, so every release asset set carries
 # the evaluation terms, the privacy statement, and the license alongside the
 # binaries.
+#
+# Distribution (plan `beta-release` B6): the release is cut as a GitHub
+# PRE-RELEASE with `--latest=false`, so the beta can never displace the `v0.1.0`
+# stable release as "Latest". The publish step is draft-safe and idempotent: it
+# creates the release as a DRAFT when the tag has none (adopting a draft
+# stranded by a failed run), uploads the staged assets while still a draft,
+# then flips the draft to published. A failure before the flip therefore leaves
+# only a draft, and re-running converges to the same final state; the asset
+# upload is skipped once the release is published, so a re-run never rewrites
+# live assets.
+#
+# Tag discipline: GitHub runs the workflow file from the commit the tag points
+# at, so the tag MUST point at the commit that contains the current
+# `release.yml`. Editing this file therefore requires re-pointing any
+# not-yet-validated tag (delete and re-create it, then push it again) so the
+# tag, the workflow, and the built sources all agree. Re-pointing an ALREADY
+# PUBLISHED tag additionally requires deleting (or replacing) the existing
+# release/asset set first — the publish step never rewrites a published
+# release's assets, so it cannot heal them.
 
 on:
   push:
@@ -302,7 +321,7 @@ jobs:
           minisign -Vm dist/SHA256SUMS -p minisign.pub
           (cd dist && sha256sum -c ./*.sha256)
 
-      - name: Publish GitHub Release
+      - name: Publish GitHub Release (pre-release, draft-safe)
         env:
           GH_TOKEN: ${{ github.token }}
           # gh needs the repo target explicitly (belt-and-braces beside the
@@ -313,19 +332,45 @@ jobs:
           set -euo pipefail
           ls -la dist
           test -s docs/release-notes-header.md
-          # Re-run safe, with a known limitation: if the release already exists
-          # (e.g. a previous attempt created it but failed mid-upload),
-          # clobber-upload replaces the assets — but a `gh release create` that
-          # fails AFTER creating the release cannot be cleanly re-created, so a
-          # retry can die on an already-existing release or leave a draft. The
-          # checksum gate above ran in the previous step.
-          # TODO(beta-release B6): make draft recovery + --prerelease re-run-safe.
-          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
-            gh release upload --clobber "${GITHUB_REF_NAME}" dist/*
-          else
-            gh release create "${GITHUB_REF_NAME}" \
-              --title "perfpal ${GITHUB_REF_NAME}" \
+          tag="${GITHUB_REF_NAME}"
+
+          # Idempotent, recoverable publish (plan `beta-release` B6):
+          #   1. create the release as a DRAFT only when the tag has no release
+          #      yet (this also adopts a draft stranded by an earlier failed
+          #      run — `gh release view <tag>` resolves drafts too). NOTE: a
+          #      transient `gh release view` failure is indistinguishable here
+          #      from "no release"; the follow-up `create` then fails with
+          #      `already_exists` and aborts the job — safe, never corrupting.
+          #   2. upload the staged assets ONLY while the release is still a
+          #      DRAFT: `--clobber` deletes a same-named asset before
+          #      re-uploading, so it must never touch a live published release.
+          #      This also makes a re-run after a successful publish a no-op for
+          #      the asset set.
+          #   3. converge to a PUBLISHED PRE-RELEASE that is NOT the "latest"
+          #      release, so the beta never displaces v0.1.0.
+          # Publishing is the last mutation, so a failure in step 1/2 leaves
+          # only a draft and re-running converges to the same final state.
+          # (The checksum gate above already ran in the previous step.)
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --draft \
+              --title "perfpal $tag" \
               --generate-notes \
-              --notes "$(cat docs/release-notes-header.md)" \
-              dist/*
+              --notes "$(cat docs/release-notes-header.md)"
           fi
+          is_draft="$(gh release view "$tag" --json isDraft --jq '.isDraft')"
+          if [ "$is_draft" = "true" ]; then
+            gh release upload --clobber "$tag" dist/*
+          fi
+          gh release edit "$tag" --draft=false --prerelease --latest=false
+
+          # Fail closed: the release MUST end published and marked prerelease.
+          # One atomic read (two separate reads could disagree, and would double
+          # the transient-failure window).
+          converged="$(gh release view "$tag" --json isDraft,isPrerelease \
+            --jq '[.isDraft, .isPrerelease] | @tsv')"
+          if [ "$converged" != "$(printf 'false\ttrue')" ]; then
+            echo "::error::release $tag did not converge to a published pre-release (draft/prerelease = $converged)"
+            exit 1
+          fi
+          echo "published $tag as a GitHub pre-release (latest=false)"

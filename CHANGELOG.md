@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Release distribution — GitHub pre-release + draft-safe publish** (plan `beta-release` B6): the tag-triggered `publish` job now cuts the beta as a GitHub **pre-release** with `--prerelease --latest=false` (the beta can never displace `v0.1.0` as *Latest*), and the publish path is draft-safe/idempotent — it creates the release as a **draft** when the tag has none (adopting a draft stranded by a failed run), uploads the staged assets **only while the release is still a draft** (`--clobber` deletes an existing same-named asset before re-uploading, so it must never touch a live release), then flips the draft to published (`gh release edit --draft=false --prerelease --latest=false`) and **fails closed** if the final state is not a published pre-release. A failure before the flip leaves only a draft and a re-run converges without rewriting published assets. The workflow header + `docs/roadmap.md` M2 record the distribution policy and the **tag discipline** (GitHub runs the workflow file from the tagged commit, so the tag must point at the commit containing the current `release.yml`). `docs/website/scope-and-content.md` §8.1 adds the **19-asset release inventory** + verification steps for the website milestone. The `EULA.md`/`PRIVACY.md` contact placeholder remains intentionally deferred (founder supplies the address before tagging), and the `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` repo secrets remain founder-set gates before publish.
+
 ## [0.2.0-beta.1] - 2026-09-24
 
 > **Beta (pre-release).** Official proprietary beta of the C + Rust toolchain, provided for noncommercial evaluation only — not for commercial or production use. Use is governed by the PolyForm Strict 1.0.0 (`LICENSE`) supplemented by the `EULA` (`EULA.md`); see `PRIVACY.md` for the no-telemetry statement.
