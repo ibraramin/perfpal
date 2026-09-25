@@ -1,21 +1,24 @@
 # Active Context
 
 ## Current Task
-Session 34: plan `beta-release` **B6 — unblocked half COMPLETE**. The GitHub pre-release publish is now **draft-safe** (`create-as-draft → upload-while-draft → flip --draft=false --prerelease --latest=false → fail-closed assert`), tag discipline is recorded, the **19-asset inventory** is handed to the website milestone, and the `0.2.0-beta.1` musl binary is pre-flight smoke-tested (`examples/` 83, `examples-rust/` 41, exit 0). **Not yet committed** (founder approval pending). Founder-only half (contact address + secrets + tag/publish) deferred.
+Session 34 **CLOSED**. B6 unblocked half committed as **`b3a1105`**. A founder **direction reset** is recorded in `docs/roadmap.md` + `state/` and is **PENDING FORMALIZATION** (planning-toolkit spec+plan in the next session).
 
 ## Recent Decisions
-- **Scope split:** only the unblocked half this session; contact address and the `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` secrets are founder-only, so the tag/publish waits.
-- **Publish pattern:** draft-then-flip (recoverable) over one-shot create — gh semantics verified by @librarian.
-- **Contact placeholder deliberately deferred** (founder: will buy an address later); governing law = Bangladesh.
+- **Story:** *"Perfpal audits what AI wrote"* (AI-assisted large codebases).
+- **Language order:** **C → Rust → Python → JS → TS → C++** (Python promoted; C++ demoted). JS/TS separate.
+- **Publish gate:** NO release until the benchmark suite is **built + run** AND the AI-code showcase is **verified**.
+- **Sequence:** M1 Precision Gate → M2 Benchmark (build+RUN) → M3 Python → M4 showcase (Aider/chunkhound) → M5 first release → M6+ JS→TS→C++ → cross-language.
+- **Shipping:** T0 + T2 (winget, own Scoop bucket, own Homebrew tap, AUR `-bin`, cargo-binstall); **T1 deferred to GA**.
+- **Cross-language linking:** its own milestone, after the language sequence.
+- **Beta:** `v0.2.0-beta.1` code complete, **publish parked**.
 
 ## In Progress
-- Nothing — B6 unblocked half done; gates green; dual review closed (rev-2 APPROVE); awaiting the founder's commit approval.
+- Nothing — planning only; no code in flight.
 
 ## Next
-- **Founder:** approve the B6 ritual commit; supply the contact address; set the two secrets.
-- **Next session (`/new`)** = B6 finish: replace the contact placeholder → confirm secrets → commit → tag `v0.2.0-beta.1` at the `release.yml`-bearing commit → publish → smoke-test the **PUBLISHED** musl binary vs `examples/` + `examples-rust/` → finalize `docs/website/scope-and-content.md` §8.1 with the real release URL.
+- **NEXT SESSION (`/new`) = PLANNING-ONLY:** planning-toolkit (`create_spec` → `create_plan`) + `docs/roadmap.md` rewrite + ADRs. Read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan beta-release`.
 
 ## Blockers
-- EULA/PRIVACY contact placeholder still unfilled (pre-tag; deliberate deferral).
-- GitHub secrets `MINISIGN_SECRET_KEY` + `MINISIGN_PASSWORD` not yet set (required before tagging).
-- Carried: R5 cross-language ARCH-003 substitution still needs explicit founder sign-off.
+- **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` secrets.
+- **GA (T1):** Azure Artifact Signing likely ineligible (Bangladesh); macOS notarization $99/yr.
+- Carried: R5 cross-language ARCH-003 substitution needs founder sign-off.
