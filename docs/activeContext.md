@@ -1,24 +1,24 @@
 # Active Context
 
 ## Current Task
-Session 38 **COMPLETE** — plan `evidence-beta` **M3 (Python backend)** entered through new tracking plan **`python-backend`**. **Planning + design-lock only** (zero product code): discovery + @oracle pressure-test → founder-locked decisions; plan created + linked; **ADR-0007** recorded. **Commit pending founder approval.**
+Session 39 **COMPLETE** — plan `python-backend` (evidence-beta **M3**) **W0 canary** executed. **Evidence-only, zero product code.** Pinned Aider + chunkhound were counted with a throwaway stdlib-`ast` counter, baselined against Ruff `PERF`, and ranked frequency × plausibility. Deliverable: `docs/evidence/python-canary.md` + committed `counter.py`/`canary_results.json`. **Commit pending founder approval.**
 
 ## Recent Decisions
-- **Python strategy (ADR-0007):** AST + minimal binding/alias inference — **not bytecode, not native C-extension analysis**. Tiers: T1 static AST+binding (M3) → T2 cross-module resolver (`python-resolver`) → T3 runtime profile (CONFIRMED-1). Bytecode is the profiler axis, not a static tier.
-- **Rule set:** retire 10 C/Rust rules with no honest Python analogue (`TYPE-001/002`, `MEM-001`, `ALLOC-002`, `STR-002/003`, `LOOP-004/005/006/008`); keep ~13 reframed mirrors + Python-native additions; every finding cites the CPython mechanism.
-- **Inference ships in M3** (additive IR, `resolver_tier=syntactic`, ≤MEDIUM) — dynamic typing is the FP source; flagship rules need receiver/kind awareness.
-- **Import graph:** best-effort resolve; unresolved internal imports data-only (no finding, Rust N1 precedent).
-- **`examples-python/` = a real package**; grammar pinned `tree-sitter-python = "=0.25.0"` (MIT, ABI 15 ✓); `semantic-clang` stays C-only.
-- **Wave plan:** W0 canary → W1 design+pin → W2 backend+inference → W3 catalog+schema 1.3 → W4 proof; one wave per session.
+- **W0 keeps:** `ALLOC-003` (flagship, 7.0/6.0 per kLOC prod), `LOOP-007` (flagship, must be loop-scoped + kind-gated), `N1-001` (native flagship), `ASYNC-001`/`ASYNC-002` (native; `async def` + loop gates proven necessary).
+- **W0 reframes:** `ALLOC-001` — 98–99.6% of hits are f-strings → ship only as **loop-invariant construction** (Info-first) or not at all; `LOOP-002` — 72–83% `print`/`input` → drop them (or Info) and keep real I/O.
+- **W0 adds:** `PERF-PY-LOOP-009` (try/except-in-loop; from Ruff `PERF203`) + `PERF-PY-PANDAS-001/002` (0–4 hits; Info + frequency caveat).
+- **W0 defers:** `ARCH-001/002/003` — abundant structure (chunkhound depth 39 vs threshold 8) but the import-graph proxy is **not decision-grade**; thresholds measured in W2/W4.
+- **`COMPREHENSION-001` cross-validated** vs Ruff `PERF401` (16 vs 13; 56 vs 49). ADR-0007 retire-10 / keep-~13 unchanged.
+- **Determinism lesson:** set-iteration in an evidence metric caused run-to-run variation (`ARCH-001` 545↔488; `max_depth` 36↔39) — fixed by sorting all in-graph traversal; two runs now byte-identical.
 
 ## In Progress
-- Nothing — planning/design-lock complete; commit pending founder approval.
+- Nothing — W0 evidence complete; commit pending founder approval.
 
 ## Next
-- **NEXT SESSION (`/new`) = plan `python-backend` W0 CANARY:** pinned Aider + chunkhound, throwaway pattern counter per candidate `PERF-PY` rule, frequency × plausibility ranking, Ruff `PERF` baseline, `docs/evidence/python-canary.md`, finalize the rule set. Read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend`.
+- **NEXT SESSION (`/new`) = plan `python-backend` W1:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend`. Deliver the grammar pin (`tree-sitter-python = "=0.25.0"`), `tests/python_grammar_link.rs`, and `docs/architecture/python-backend.md` (node-kind→IR map + the **durable disposition table**).
 - **Carry (from M1/M2):** semantic-tier USR-ambiguity guard; `PERF-RS-LOOP-008` deref-chain modelling; `r#` raw-identifier receiver nit; M2 non-blocking notes (`replace_json_value` uniqueness assert; expose `registered_rule_ids()`).
-- **W1 design obligations:** comprehension-as-`LoopNode` (iterable once); module-scope synthetic function record; `.ipynb` decision; ARCH-003 Info/low on Python.
+- **W1 design obligations:** comprehension-as-`LoopNode`; module-scope synthetic function record; `.ipynb` decision; `ARCH-003` Info/low on Python; `ALLOC-001` loop-invariant test; `LOOP-002` `print` family.
 
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
-- **Commit:** pending founder approval (session-38 change set — see `state/handoff/latest.md`).
+- **Commit:** pending founder approval (session-39 change set — see `state/handoff/latest.md`).

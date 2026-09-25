@@ -1,40 +1,40 @@
 # Handoff — Latest
 
 ## Objective
-Session 38 **COMPLETE** — plan `evidence-beta` **M3 (Python backend)** entered through a new tracking plan **`python-backend`**. This session was **planning + design-lock ONLY** (zero product code): discovery (@librarian + 2×@explorer) + an @oracle strategy pressure-test produced founder-locked decisions, the plan was created and linked, and **ADR-0007** records the Python tier strategy. **Commit pending founder approval.**
+Session 39 **COMPLETE** — plan `python-backend` (evidence-beta **M3**) **W0 canary** executed: evidence-only, **zero product code**. Pinned Aider + chunkhound were scanned with a throwaway stdlib-`ast` counter (per-rule + silent-control frequency, prod/test split), baselined against Ruff `PERF`, and ranked frequency × plausibility. Deliverable: `docs/evidence/python-canary.md` + the committed counter/results. **Commit pending founder approval.**
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ · M2 ✅ · M3 design-lock ✅ → W0 canary)** · **`python-backend` NEW (active)**.
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ · M2 ✅ · M3 → W0 ✅)** · **`python-backend` ACTIVE (W0 ✅ → W1 next)**.
 
-## M3 locked decisions (this session)
-| # | Decision |
+## W0 canary — method + result
+| Item | Value |
 |---|---|
-| Split | W0 canary → W1 design+pin → W2 backend+inference → W3 catalog+schema 1.3 → W4 proof; one wave per session |
-| Strategy | AST + lightweight binding inference. **Not bytecode, not native C-extension** (ADR-0007). Tiers: T1 (M3) → T2 `python-resolver` → T3 runtime profile |
-| Rule set | **Retire 10** (`TYPE-001/002`, `MEM-001`, `ALLOC-002`, `STR-002/003`, `LOOP-004/005/006/008`); keep ~13 reframed mirrors + Python-native adds; every finding cites the CPython mechanism |
-| Inference | Ships **in** M3: import-alias map, local kind lattice, param annotations, receiver root, async flag (additive IR, `syntactic`, ≤MEDIUM) |
-| Import graph | Best-effort resolve; unresolved internal → data-only, **no finding** |
-| Corpus | `examples-python/` as a real package |
-| Grammar | `tree-sitter-python = "=0.25.0"` (official org, MIT, ABI 15 ✓ window 13–15) |
-| Resolver | `semantic-clang` stays **C-only** |
+| Corpora | Aider `v0.86.0` (`a4be6cc`, Apache-2.0, ~88% AI) + chunkhound `v6.0.0` (`a8553ae`, MIT, 100% AI) |
+| Scale | 1,014 `.py` files / ~301k LOC (prod 156k) · **0 parse errors** |
+| Counter | `docs/evidence/python-canary/counter.py` — sha256 `00157c4c841d0b9caf11680e0acd967284b7812a1d14a0f77719364ee79292b5` |
+| Baseline | ruff `0.16.9` `--select PERF` (Aider 32 all/31 prod; chunkhound 95/79) |
+| Determinism | **proven** — two runs → byte-identical `canary_results.json` |
+
+**Finalized dispositions (input to the W1 durable table):** keep **`ALLOC-003`** (7.0/6.0 per kLOC prod) / **`LOOP-007`** / **`N1-001`** / **`ASYNC-001`+`ASYNC-002`** as flagship/native; **REFRAME `ALLOC-001`** (98–99.6% f-string noise) and **`LOOP-002`** (72–83% `print`/`input`); **ADD `PERF-PY-LOOP-009`** (try/except-in-loop, from Ruff `PERF203`) + **`PERF-PY-PANDAS-001/002`** (per ADR-0007 §6, 0–4 hits); `COMPREHENSION-001` cross-validated vs Ruff `PERF401`; `ARCH-001` has abundant structure but the graph proxy is **not decision-grade** → **ARCH-001/002/003 deferred to W2/W4 measurement**; ADR-0007 retire-10 / keep-~13 unchanged.
 
 ## Verification
-- **Planning-only: no product code, no gates run** (nothing to build). Artifacts: plan `python-backend` (`docs/plans/python-backend.md`, linked `perfpal-core-spec` + `evidence-beta-spec`; **no feature spec**), `docs/adr/ADR-0007-python-tier-strategy.md`, CHANGELOG + state files.
-- Discovery evidence: @librarian (tree-sitter-python 0.25.0 pin/ABI/license + full node-types map + Python idiom reframings); @explorer ×2 (backend/IR/scanner edit surface; schema/registry/tests/doc enumeration points); @oracle (strategy pressure-test).
+- **No product code changed** (`src/`, `Cargo.toml`, `Cargo.lock`, schema, goldens untouched; the W0 files are new/untracked under `docs/evidence/`).
+- **Dual review PASSED:** @requirements-reviewer **APPROVED** (all 10 clauses PRESENT; no scope creep); @reviewer round-1 **SHIP-WITH-FIXES** (3 MAJOR: `+=` mislabel, `ALLOC-003` receiver/binding, coverage gap; + 7 minor/nits) → fix wave → round-3 **APPROVE**. No disagreement between reviewers.
+- Doc numbers independently reconciled against `canary_results.json` (all of §3/§4/§6 spot-checked).
 
 ## Risks / Open (append-only)
-- **W1 design obligations:** comprehensions must be modelled as `LoopNode` (iterable once — the Rust `for` fix); module-level code needs a synthetic function record or script-style AI files yield zero findings; `.ipynb` decided explicitly; ARCH-003 noisier on Python (expect Info/low).
-- **Precision-feedback risk:** the M2 benchmark/precision harness has no Python coverage until W4 → the W0 canary is the mitigation (else M4 is the first Python precision test = the M1 failure mode).
-- **Tooling gap:** `ruff` is NOT installed on this host; cargo is off PATH by default (`export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"`). The canary needs these resolved (or skip the Ruff baseline).
-- **Precedent conflict (recorded):** evidence-beta's M3 line says "mirror the FULL catalog"; the founder + @oracle approved retiring 10. The W1 disposition table supersedes the plan wording.
+- **W1 obligations:** the `ALLOC-001` loop-invariant test must be defined before the rule exists (top precision risk); `LOOP-002` `print`/`input` family decision; `LOOP-007` must be loop-scoped + kind-gated; comprehension-as-`LoopNode`; module-scope synthetic function record; `.ipynb` decision; `ARCH-*` thresholds unmeasured.
+- **W0 counter limitations** (`python-canary.md` §9): `LOOP-007` loop-agnostic (upper bound); ARCH proxy not decision-grade; `LOOP-009` over-counts vs Ruff (2.7–4.5×); `ALLOC-003` leftmost-root collapsing can suppress `self.results.append` when `self.<other>` is assigned in-loop.
+- **Precision-feedback:** the M2 benchmark/precision harness has **no Python coverage until W4** — the W0 canary is the mitigation, but W4 must still measure precision.
+- **M5 publish (unchanged):** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD`.
 
 ## Next Actions
 1. **Founder approves this ritual commit** → commit the working tree (**EXCLUDE `.opencode/**`**):
-   `docs(python-backend): plan python-backend (evidence-beta M3) + ADR-0007 Python tier strategy (AST+binding, retire-10, bytecode is not a tier); planning + design-lock only, no product code`
-2. **NEXT SESSION (`/new`) = plan `python-backend` W0 CANARY:** fetch pinned **Aider** (Apache-2.0) + **chunkhound** (MIT), run a throwaway pattern counter (Python stdlib `ast` or tree-sitter-python) per candidate `PERF-PY` rule + silent control, rank frequency × plausibility, baseline a Ruff `PERF` run, write `docs/evidence/python-canary.md`, finalize the rule set. Read `state/session-state.json` + `state/handoff/latest.md` + `docs/activeContext.md` FIRST, then `readPlan python-backend`.
-3. Then **W1** (pin + `tests/python_grammar_link.rs` + `docs/architecture/python-backend.md` with the node-kind map + disposition table) → **W2** backend + inference + import resolution → **W3** catalog + registry + reporter + schema 1.3 → **W4** examples-python / precision / benchmark / goldens / docs + dual review.
+   `docs(python-backend): W0 canary evidence — pinned Aider + chunkhound frequency/controls + Ruff PERF baseline; ALLOC-001/LOOP-002 reframe, ALLOC-003/LOOP-007/N1/ASYNC keep, LOOP-009 + pandas add; evidence-only, no product code`
+2. **NEXT SESSION (`/new`) = plan `python-backend` W1:** read `state/session-state.json` + `state/handoff/latest.md` + `docs/activeContext.md` FIRST, then `readPlan python-backend`. Deliver: `tree-sitter-python = "=0.25.0"` pin in `Cargo.toml`; `tests/python_grammar_link.rs` (ABI window 13–15 assert + representative `.py` parse with zero `ERROR`/missing + malformed non-vacuity); `docs/architecture/python-backend.md` (node-kind→IR map from `node-types.json`, comprehension/module-scope/async/notebook decisions, additive-IR field list, and the **durable disposition table**).
+3. Then **W2** backend+inference+import resolution → **W3** catalog+registry+reporter+schema `1.3` → **W4** `examples-python/` / precision / benchmark / goldens / docs + dual review.
 
 ## Change set (this session, uncommitted; EXCLUDE `.opencode/**`)
-- **New:** `docs/plans/python-backend.md` (planning-toolkit plan, linked to both repo specs), `docs/adr/ADR-0007-python-tier-strategy.md`.
+- **New:** `docs/evidence/python-canary.md`, `docs/evidence/python-canary/counter.py`, `docs/evidence/python-canary/canary_results.json`.
 - **Modified:** `CHANGELOG.md` ([Unreleased] Added bullet), `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
-- **Note:** Cargo/`.gitignore` untouched; **no `src/` change**.
+- **Note:** Cargo/`.gitignore`/`src/` untouched.
