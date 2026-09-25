@@ -170,7 +170,7 @@ Resolvers sit between scanner and analyzer: they consume the IR stream and enric
 
 Profile adapters (perf / valgrind / cProfile) translate tool-specific output into dynamic-tier events keyed by the same `(path, name, span)` identity. Merge happens at the IR level; the analyzer treats dynamic evidence as additional input to severity/confidence (upgrade semantics deferred to the ingestion design). Because identity is parser-agnostic (ADR-0001), ingestion bolts on without rewriting scanner, analyzer, or schema — the commitment CONFIRMED-1 requires.
 
-### 5.2 Additional languages (C++, Python next)
+### 5.2 Additional languages (order per ADR-0003: Python, JS, TS, C++)
 
 Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.2.json](../schema/metrics.schema.v1.2.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission has already landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2). The Rust backend itself landed end-to-end in plan `rust-backend` (R0–R5): both backends are live, and the Rust rule set (23 `PERF-RS-*` rules) ships alongside the C set.
 

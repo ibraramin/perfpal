@@ -1,56 +1,63 @@
 # Perfpal — Roadmap (post-v0.1.0)
 
 > Authoritative post-MVP roadmap. Supersedes the "Post-MVP Roadmap (direction only)"
-> section of `docs/specs/perfpal-core-spec.md`, which listed C++/Python next.
-> Founder reshaped the roadmap in session 23: **Rust first**, C++/Python delayed.
+> section of `docs/specs/perfpal-core-spec.md` (which listed C++/Python next) and the
+> session-23 milestone sequence.
+>
+> **Re-based in session 35:** the founder direction recorded in session 34 is now formalized
+> (spec `evidence-beta-spec`, plan `evidence-beta`, ADR-0003…0006). The pre-reset M1/M2/M3
+> labels (`rust-backend` / `beta-release` / website) **no longer** correspond to the M1–M6+
+> numbering below.
 
-## Direction (founder, session 34 — PENDING FORMALIZATION)
+## Direction (formalized — session 35)
 
-> Set in session 34 (after B6). **Supersedes the milestone sequence below** until a
-> dedicated planning session expands it into real milestones via planning-toolkit
-> (spec → plan) and records the ADRs.
+> Source of truth: `docs/specs/evidence-beta-spec.md` (repo scope). Decisions recorded as
+> ADR-0003 (language order), ADR-0004 (cross-language deferral), ADR-0005 (evidence/publish
+> gate), ADR-0006 (shipping scope). Execution plan: `docs/plans/evidence-beta.md` (M1–M6+).
 
-**Goal:** ship Perfpal's first *evidence-backed* release — a polished beta whose pitch
-is **"Perfpal audits what AI wrote"**: **verifiable truth** per finding, **benchmark
-evidence**, and a **verified showcase** on large **AI-assisted** codebases. (The
-"100%-AI-written C/Rust" framing is dropped — it is unsubstantiable: no famous large
-mostly-AI-generated C/Rust OSS exists.)
+**Goal:** ship Perfpal's first *evidence-backed* release — a polished beta whose pitch is
+**"Perfpal audits what AI wrote"**: **verifiable truth** per finding, **benchmark evidence**,
+and a **verified showcase** on large **AI-assisted** codebases. (The "100%-AI-written
+C/Rust" framing is dropped — it is unsubstantiable: no famous large mostly-AI-generated
+C/Rust OSS exists.)
 
-**Publish gate:** **NO release** until (a) the benchmark suite is built **and run**, and
-(b) the AI-code credibility showcase is **verified**.
+**Publish gate (ADR-0005):** **NO release** until (a) the benchmark suite is built **and run**,
+and (b) the AI-code credibility showcase is **verified**.
 
-**Language order:** **C → Rust → Python → JS → TS → C++** (Python promoted, C++
-demoted — data: AI-generated code share Python 41.7%, JS 15.4%, C++ 7.8%, C 3.7%,
-Rust not top-8; arXiv 2603.27130). JS and TS are **separate** milestones.
-**Cross-language linking** (mixed C/Rust coupling) is a **separate milestone AFTER**
-that sequence.
+**Language order (ADR-0003):** **C → Rust → Python → JS → TS → C++** (Python promoted, C++
+demoted — data: AI-generated code share Python 41.7%, JS 15.4%, C++ 7.8%, TS 7.8%, C 3.7%, Rust not
+top-8; arXiv 2603.27130). JS and TS are **separate** milestones.
+
+**Cross-language linking (ADR-0004):** mixed-language coupling is a **separate milestone
+AFTER** the language sequence — **not** in M1–M5; language-tagged analysis (no cross-language
+edges) stays as-is until then.
 
 **Sequence to first release:**
 
 | # | Node | Purpose |
 |---|---|---|
-| M1 | Precision Gate (C+Rust) | kill the 5 noise rules (≈89% of the self-scan volume) + per-rule precision KPI |
+| M1 | Precision Gate (C+Rust) | kill the 5 noise rules (≈89% of self-scan volume) + per-rule precision KPI |
 | M2 | Benchmark suite — **build + RUN** | mutation ground-truth + scale ladder + determinism proof |
 | M3 | Python backend | unlocks the popular AI-generated repos |
 | M4 | AI-code showcase | verified findings on **Aider** (Apache-2.0, 88% self-written) + **chunkhound** (MIT, 100% AI) + a famous human-written C/Rust repo for scale |
-| M5 | **First release** | gated on M2 run ✅ + M4 verified ✅ |
+| M5 | **First release** | gated on M2 run + M4 verified; un-parks `beta-release` |
 | M6+ | JS → TS → C++ ; then cross-language linking | fast-follow reach |
-
-**Shipping scope (T0 + T2):** GitHub Releases with the existing **6 unsigned binaries**
-(linux musl x86_64/aarch64, linux gnu, macOS x86_64/aarch64, windows msvc) + minisign
-`SHA256SUMS` + SBOM + legal docs; **packaging** = winget (`portable`), own Scoop bucket,
-own Homebrew tap (macOS+Linux), AUR `-bin`, cargo-binstall. **Signing/notarization (T1)
-DEFERRED to GA** — Azure Artifact Signing is likely ineligible (Bangladesh is not a
-listed country; Individual Public Trust is US/Canada only), signing does **not** silence
-SmartScreen (reputation accrues over weeks), and macOS notarization needs $99/yr + a
-`.pkg`/`.dmg`.
 
 **Evidence discipline ("verifiable truth"):** a repro packet (pinned URL+commit+license,
 one-command scan, expected counts, determinism proof) + hand-verified true positives +
 an explicit accepted-limitations page. Showcase only **MIT/Apache-2.0/BSD** with minimal
 attributed spans.
 
-## Status snapshot (session 34)
+**Shipping scope (T0 + T2 — ADR-0006):** GitHub Releases with the existing **6 unsigned
+binaries** (linux musl x86_64/aarch64, linux gnu, macOS x86_64/aarch64, windows msvc) +
+minisign `SHA256SUMS` + SBOM + legal docs; **packaging** = winget (`portable`), own Scoop
+bucket, own Homebrew tap (macOS+Linux), AUR `-bin`, cargo-binstall. **Signing/notarization
+(T1) DEFERRED to GA** — Azure Artifact Signing is likely ineligible (Bangladesh is not a
+listed country; Individual Public Trust is US/Canada only), signing does **not** silence
+SmartScreen (reputation accrues over weeks), and macOS notarization needs $99/yr + a
+`.pkg`/`.dmg`.
+
+## Status snapshot (session 35)
 
 | Item | Value |
 |---|---|
@@ -59,52 +66,107 @@ attributed spans.
 | `Cargo.toml` version | `0.2.0-beta.1` (unreleased) |
 | `metrics.json` schema | **1.2** |
 | Languages supported | **C** + **Rust** (`.c`/`.h`/`.rs`) |
-| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish PARKED pending evidence gate) |
+| Specs | `perfpal-core-spec` (core product) · **`evidence-beta-spec`** (direction; post-MVP roadmap) |
+| ADRs | `0001` parser · `0002` visualization · **`0003` language order** · **`0004` cross-language deferral** · **`0005` evidence/publish gate** · **`0006` shipping scope** |
+| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish PARKED) · **`evidence-beta`** (active — M1–M6+) |
 
 ## Milestone sequence
 
-Ordered. One milestone = one or more focused sessions; one task per session.
+Ordered. One milestone = one or more focused sessions; one task per session. The milestone
+steps are owned by plan `evidence-beta` (`docs/plans/evidence-beta.md`).
 
-### M1 — `rust-backend` (next implementation milestone)
-Add a **Rust language backend** so Perfpal can analyze Rust — and **run on its own codebase** (dogfooding).
-- New scanner backend over official **`tree-sitter-rust =0.24.2`** (MIT, ABI 15, compatible with pinned `tree-sitter 0.26.13`).
-- **Full catalog mirrored** with **`PERF-RS-*`** rule ids (founder decision), not a subset.
-- Schema **MINOR bump 1.1 → 1.2** (`languages` widens to `["c","rust"]`, `files[].language`); `rule_id` pattern is already open (`modules.md` §5.2).
-- Dogfood report from Perfpal's own tree; `examples-rust/` corpus.
-- Crate version bumps `0.1.0 → 0.2.0` (pre-beta).
-- Plan: `docs/plans/rust-backend.md` (linked `perfpal-core-spec`).
+### M1 — Precision Gate (C+Rust) *(dispositions + KPI harness landed)*
+The existential milestone. The self-scan is ~89% noise (`docs/evidence/dogfood-rust-backend.md`:
+1219 findings, 5 rules dominate). Triage and disposition the 5 rules — ALLOC-001 per-finding
+`format!`/`to_string`, ARCH-003 name-based `new` coupling, STR-001 `Vec::push` collision,
+MEM-002 `.clone` copies, LOOP-008 member chains — deciding per rule to **suppress**, **reframe**
+(severity/confidence), or **fix**.
+- **Status — 5 dispositions LANDED.** `ALLOC-001` now aggregates one finding per innermost loop (with literal-receiver suppression), `ARCH-003` name-based edges require a single-definition-file match, `MEM-002` dropped `clone`/`to_vec`, `LOOP-008` requires a `Subscript` element, and `STR-001` is retired for Rust (Rust tier = 22 rules). Self-scan `perfpal src` (33 files): **1219 → 304 findings** (658 hot / 214 warn / 347 info → 76 / 97 / 131); the 5 rules **1084 → 168** (`ALLOC-001` 511→74, `ARCH-003` 204→90, `STR-001` 145→0, `MEM-002` 128→0, `LOOP-008` 96→4).
+- **Precision KPI harness LANDED.** Labeled ground-truth (mutation) corpus (`tests/fixtures/precision/`, C+Rust) + `tests/precision_kpi.rs` runs the REAL full pipeline and ratchets per-rule precision/recall against a committed baseline; all 9 C+Rust M1 gate rules measure **1.0/1.0** under both the default and `semantic-clang` builds. Evidence: `docs/evidence/precision-baseline.md`. Goldens regenerated (`report-rust`, `report-mixed`; C `report` unchanged) and byte-idempotent.
+- **Close-out** — dual review (@reviewer + @requirements-reviewer) + founder-approved commit.
 
-### M2 — `beta-release` (official proprietary beta)
-Cut **`0.2.0-beta.1`** containing **C + Rust** (Rust lands first per M1).
-- Hardening (shipped in `Cargo.toml` `[profile.release]`): `opt-level=3`, `lto="fat"`, `codegen-units=1`, `strip="symbols"`, and `--remap-path-prefix` in every release build. `panic="unwind"` is kept deliberately — `panic="abort"` is **not** used because the CLI maps a caught panic to exit 3 via `std::panic::catch_unwind` (`modules.md` §8.2). `strip` + path-remapping are size/path hygiene, **not** obfuscation/anti-reversing.
-- **`obfstr` NOT adopted** (closes B1's "decide obfstr for any sensitive literals"): no API keys, URLs, or secrets are compiled into Perfpal, so there are no sensitive literals to obfuscate; the hardening above is size/path hygiene only.
-- Integrity: per-target `.sha256` + an aggregate **minisign-signed** `SHA256SUMS` (`SHA256SUMS.minisig`; public key `minisign.pub` committed, private key in the `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` repo secrets). GitHub **artifact attestations** are **deferred**: they require GitHub Enterprise Cloud on private repositories and the beta repository stays private (decision recorded 2026-09-24).
-- **SBOM** (`cargo-sbom`, SPDX 2.3) + **THIRD-PARTY-NOTICES** (`cargo-about`) attached to the release by the tag-triggered pipeline + `cargo-deny` GPL deny-list as the standing enforcement gate.
-- **EULA + privacy statement** (`EULA.md` + `PRIVACY.md`, both at repo root) + PolyForm Strict `LICENSE` (`LICENSE`) — all three attached to the release bundle. The noncommercial evaluation notice is surfaced in `--help` only (a footer); `--version` is kept byte-exact per `modules.md` §8.1. The committed `docs/release-notes-header.md` is prepended to the generated release notes. Windows Authenticode + macOS notarization deferred (HSM/cost friction) and **Azure Trusted Signing NOT wired** for beta; the unsigned-beta caveat (verify via the minisign-signed `SHA256SUMS` + `sha256sum -c`) is documented.
-- Distribution: clearly-labelled GitHub **pre-release** (not GA), published with `--prerelease --latest=false` so the beta never displaces `v0.1.0` as *Latest*. The publish step is **draft-safe and idempotent** (create-as-draft → upload-while-draft → flip to published, then assert the final state): a failure before the flip leaves only a draft and re-running converges, while a re-run after publication skips the asset upload so live assets are never rewritten.
-- **Tag discipline:** GitHub runs the workflow file from the commit a tag points at, so a release tag must point at the commit containing the current `.github/workflows/release.yml`; after any workflow edit, re-point (delete + re-create + push) any not-yet-validated tag so the tag, the workflow, and the built sources agree. Re-pointing an **already-published** tag additionally requires deleting or replacing the existing release/assets first — the publish step intentionally never rewrites a published release's assets.
-- **Explicitly out of scope at beta:** deep obfuscation (no viable license-clean Rust tooling; obfuscation buys little) and license-key/activation (deferred to paid GA).
+### M2 — Benchmark suite (build + **RUN**)
+Ground-truth (mutation) fixtures + a **scale ladder** (small/medium/large corpora) + a
+**determinism proof** (byte-stable artifacts across runs). **Run it** and record results as
+evidence in `docs/evidence/`. Hard precondition for the publish gate (ADR-0005): the metric is
+measured precision/recall against planted ground truth — never designed-on-paper.
+
+### M3 — Python backend
+Add a Python scanner backend over the official **tree-sitter-python** grammar (MIT, exact pin
+per ADR-0001 G5), mirroring the **full catalog** with **`PERF-PY-*`** rule ids and honest
+reframing to Python idioms. Schema **MINOR bump** admitting the `"python"` language token
+(`rule_id` pattern is already open, modules.md §5.2). Add an `examples-python/` corpus. The
+`semantic-clang` resolver tier stays **C-only**.
+
+### M4 — AI-code credibility showcase
+Scan the flagship AI-authored repos — **Aider** (Apache-2.0, ~88% self-written) and
+**chunkhound** (MIT, 100% AI) — plus a famous human-written C/Rust repo for scale. **Hand-verify**
+true positives; produce a **repro packet** per repo (pinned URL+commit+license, one-command
+scan, expected counts, determinism proof) and an **accepted-limitations page**. Verification of
+this showcase is a hard precondition for the publish gate (ADR-0005).
+
+### M5 — First release — un-parks `beta-release`
+With M2 run **and** M4 verified, clear the residual beta blockers (EULA/privacy **contact
+address** + **`MINISIGN_SECRET_KEY`**/**`MINISIGN_PASSWORD`** secrets) and publish
+**`v0.2.0-beta.1`** as a clearly-labelled GitHub **pre-release** (`--prerelease --latest=false`,
+never displacing `v0.1.0` as *Latest*), then execute **T2 packaging** (ADR-0006). The release
+candidate itself is already built by plan `beta-release`:
+- Hardening: `[profile.release]` `opt-level=3`, fat LTO, `codegen-units=1`, `strip="symbols"`,
+  `panic="unwind"` kept deliberately (the CLI maps a caught panic to exit 3 via
+  `std::panic::catch_unwind`, modules.md §8.2); `--remap-path-prefix` in every release build.
+  `strip` + path-remapping are size/path hygiene, **not** obfuscation; `obfstr` **not adopted**
+  (no sensitive literals compiled in).
+- Integrity: per-target `.sha256` + aggregate **minisign-signed** `SHA256SUMS`
+  (`SHA256SUMS.minisig`; public key `minisign.pub` committed). GitHub **artifact attestations
+  deferred** (need GitHub Enterprise Cloud on private repos; the beta repo stays private).
+- **SBOM** (`cargo-sbom`, SPDX 2.3) + **THIRD-PARTY-NOTICES** (`cargo-about`) attached by the
+  tag-time pipeline; `cargo-deny` GPL deny-list remains the standing enforcement gate.
+- **Legal bundle** (`LICENSE` + `EULA.md` + `PRIVACY.md`) attached; noncommercial evaluation
+  notice surfaced in `--help` only (`--version` byte-exact); `docs/release-notes-header.md`
+  prepended to generated notes.
+- **Tag discipline:** GitHub runs the workflow file from the tagged commit, so the tag must point
+  at the commit containing the current `.github/workflows/release.yml`; re-point a not-yet-validated
+  tag after any workflow edit, and for an **already-published** tag delete/replace the release
+  assets first (the publish step never rewrites a published release's assets).
+- **Out of scope at beta:** deep obfuscation (no viable license-clean Rust tooling) and
+  license-key/activation (deferred to paid GA).
 - Plan: `docs/plans/beta-release.md` (linked `perfpal-core-spec`).
 
-### M3 — Website (separate repo, separate session family)
-Attractive, eye-catching showcase site covering the **full scope** (shipped + planned).
-- **Different repo:** `~/Perfpal-Website`; built and versioned independently; its own session family.
-- Source of truth for its sessions: **`docs/website/scope-and-content.md`** (brief + sitemap + page content spec) in THIS repo.
-- Not tracked by a plan in this repo (no product code here).
+### M6+ — Fast-follow reach *(deferred, direction only)*
+**JS → TS → C++** backends as separate milestones (ADR-0003), then **cross-language linking** as
+its own milestone **after** the language sequence (ADR-0004). Each becomes its own plan/session
+family when reached; recorded here so scope cannot creep into M1–M5.
+
+### Website (separate repo, separate session family)
+Attractive showcase site covering the **full scope** (shipped + planned). **Different repo:**
+`~/Perfpal-Website`, versioned independently. Source of truth: `docs/website/scope-and-content.md`
+(brief + sitemap + page content spec) in THIS repo. Not tracked by a plan here.
 
 ## Sequencing rationale
-- Rust backend **before** the beta so the official beta ships **C + Rust** and the "Perfpal analyzes itself" dogfood demo is part of the product story.
-- Website is orthogonal and lives in its own repo, so it can proceed in parallel without touching the product.
+- **Precision before exposure** (M1) — a noisy first impression on a famous repo is
+  irrecoverable (ADR-0005).
+- **Benchmark before release** (M2) — the pitch is a truth claim; measured precision is the
+  evidence.
+- **Python at M3** — the highest AI-generated-code share unlocks the flagship showcase (ADR-0003).
+- **Release at M5** — the already-built beta simply waits behind the gate; nothing is discarded.
+- **Website is orthogonal** — its own repo, parallelizable without touching the product.
 
 ## Deferred (unchanged priority, not cancelled)
-- **C++ / Python backends** — delayed by founder decision (Rust first).
+- **C++ / JS / TS backends** — sequenced M6+ (ADR-0003).
+- **Cross-language linking** — its own milestone after the language sequence (ADR-0004).
+- **T1 code signing / notarization** — deferred to GA (ADR-0006).
 - **LOOP-004 resolver-constness** follow-up (semantic tier).
 - **Runtime-profile ingestion** (CONFIRMED-1).
-- Release follow-ups: Node-24 action pins, `/Brepro` + darwin-x64 binary reproducibility, toolchain-pin drift guard.
+- Release follow-ups: Node-24 action pins, `/Brepro` + darwin-x64 binary reproducibility,
+  toolchain-pin drift guard.
 - `stats.distributions` activation (MINOR bump on proposal acceptance).
 - Housekeeping: Cargo.toml PolyForm SPDX alignment; `modules.md` §8 CLI doc drift.
+- R5 deferred test-hygiene nits (mirror const import, control-needle uniqueness,
+  `copy_tree_excluding` symlink skip, panic-path temp-dir RAII, `materialize_fixture` descriptor).
 - Optional: `examples/README.md`; corpus extension to fire the ARCH-001 hub-fanout sub-case.
 
 ## Versioning
-- `0.1.0` released → `0.2.0` (Rust backend, unreleased) → **`0.2.0-beta.1`** (official beta, prerelease) → later betas/GA as scoped.
-- `metrics.json` schema follows its own `MAJOR.MINOR` (currently **1.2** — the Rust backend schema MINOR bump has landed; see `docs/schema/metrics-json-v1.md` §5).
+- `0.1.0` released → `0.2.0` (Rust backend, unreleased; the beta is its prerelease) →
+  **`0.2.0-beta.1`** (official beta, prerelease, publish parked) → later betas/GA as scoped.
+- `metrics.json` schema follows its own `MAJOR.MINOR` (currently **1.2**; the Python backend
+  adds the next MINOR — see `docs/schema/metrics-json-v1.md` §5).
