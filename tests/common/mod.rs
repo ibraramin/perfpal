@@ -352,8 +352,12 @@ const MD_ESCAPE_CHARS: &[char] = &[
     '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '<', '>', '&',
 ];
 
-/// Reproduce `escape_md` for the absolute-root needle.
-fn markdown_escaped(input: &str) -> String {
+/// Reproduce `escape_md` for the absolute-root needle. Public so the M2
+/// benchmark's strict provenance-only report mask (`tests/benchmark/mod.rs`)
+/// can build the SAME escaped root needles as [`mask_golden_report`] without
+/// duplicating the Markdown metacharacter set. Adding `pub` does not change
+/// this function's behavior for any existing suite.
+pub fn markdown_escaped(input: &str) -> String {
     let mut out = String::with_capacity(input.len() + 8);
     for c in input.chars() {
         if MD_ESCAPE_CHARS.contains(&c) {

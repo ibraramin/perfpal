@@ -1,52 +1,46 @@
 # Handoff — Latest
 
 ## Objective
-Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)** landed. The five dominant self-scan noise rules are disposed, a **measured** per-rule precision KPI harness is in place, goldens are rebaselined, and **both reviewers APPROVED** (round 2). **Committed:** `959b58e` (session-35 formalization) + `b495b6c` (M1) on `main`.
+Session 37 **COMPLETE** — plan `evidence-beta` **M2 (Benchmark suite — build + RUN)** landed. A deterministic ground-truth mutation catalog drives a **scale ladder** that measures per-rule precision/recall with the REAL pipeline, plus a **strict-provenance byte-determinism proof**; the suite is RUN and recorded as evidence. **Both reviewers APPROVED** (round 2). **Commit pending founder approval.**
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ → M2–M6+)**.
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ · M2 ✅ → M3–M6+)**.
 
-## M1 outcome (empirical, `perfpal src`, 33 files)
-| Rule | Before | After | Disposition |
-|------|-------:|------:|-------------|
-| `PERF-RS-ALLOC-001` | 511 | 74 | aggregate one finding per innermost loop + literal-receiver suppression |
-| `PERF-RS-ARCH-003` | 204 | 90 | name-uniqueness gate (shared producer → also C) |
-| `PERF-RS-STR-001` | 145 | 0 | **retired for Rust** (C rule intact) |
-| `PERF-RS-MEM-002` | 128 | 0 | drop `clone`/`to_vec` from the family |
-| `PERF-RS-LOOP-008` | 96 | 4 | require a `Subscript` element |
-| **5-rule total** | **1084** | **168** | |
-| **All findings** | **1219** (658/214/347) | **304** (76/97/131) | |
+## M2 outcome (measured, RUN)
+| Rung | Files | LOC | Findings | Scoped rules | Result |
+|------|------:|----:|---------:|-------------:|--------|
+| `small` | 69 | 1025 | 50 | all **45 active** + retired control | every rule **1.00/1.00** |
+| `medium` | 132 | 1656 | 86 | 9 gate rules | every rule **1.00/1.00** |
+| `large` | 418 | 5244 | 268 | 9 gate rules | every rule **1.00/1.00** |
+| `real-code` (unlabeled) | 60 | — | 418 | (counts only) | determinism PASS |
 
-Rust tier **23 → 22 rules** (45 total = 23 C + 22 Rust).
-
-## Precision KPI harness
-- Labeled ground-truth (mutation) corpus `tests/fixtures/precision/` (C+Rust) + `tests/precision_kpi.rs` runs the REAL full pipeline and ratchets per-rule precision/recall against `labels.json`; **all 9 C+Rust gate rules measure 1.0/1.0** (default + `semantic-clang`). Evidence: `docs/evidence/precision-baseline.md`.
+- Ground truth = deterministic in-code mutation catalog `tests/benchmark/corpus.rs`; harness `tests/benchmark/mod.rs`; entry `tests/benchmark.rs`. **No generated corpus committed** (materialized into tempdirs at RUN).
+- `small` plants a TP **+ silent control for all 45 active rules** (23 C + 22 Rust) + the retired `PERF-RS-STR-001` silent control; `medium`/`large` replicate the **9 existential gate rules** (`ALLOC-001`, `ARCH-003`, `MEM-002`, `LOOP-008`, `STR-001` × C+Rust) with per-replica unique names.
+- Ratchet: `tests/fixtures/benchmark/baseline.json` (46 rules, intended **1.0/1.0**, never lowered) + no-vacuous-cell guard + 45-id coverage lock + stale-baseline check.
+- Determinism: every rung (and the mixed real-code rung) run **twice**; byte-identical under a **provenance-only** mask (metrics.json: only `scan.started_at`/`duration_ms`/`root_path`; report.md: provenance + scan root only, **§4 block NOT stripped**; charts + bundled schema byte-exact).
+- All corpora parse clean (**0 partial / 0 failed**). Harness always-on **~4.3 s** (default; `semantic-clang` ~12 s from libclang init).
 
 ## Verification
-- `cargo test --locked` **398 / 0** · `--features semantic-clang` **403 / 0** · `cargo fmt --check` clean · `cargo clippy --all-targets --locked -- -D warnings` clean.
-- Goldens: `report-rust` + `report-mixed` rebaselined; C `report` unchanged; byte-idempotent.
-- Dual review: round 1 CHANGES_REQUESTED (both) → review-fix wave → **round 2 APPROVED** (@reviewer + @requirements-reviewer).
+- `cargo test --locked --test benchmark -- --nocapture` **PASS** (~4.3 s; all rules 1.00/1.00; determinism PASS).
+- `cargo test --locked` **399 / 0** · `--features semantic-clang` **404 / 0** · `cargo fmt --check` clean · `cargo clippy --all-targets --locked -- -D warnings` clean.
+- `src/` **unchanged**; baseline **not lowered**. Dual review: round 1 (@requirements-reviewer APPROVED; @reviewer CHANGES_REQUESTED 4 MAJOR/6 MINOR/2 NIT) → fix wave → **round 2 APPROVED**. Two non-blocking rev-2 items also applied (panic-path diff dir persists; README extension instructions).
 
 ## Risks / Open (append-only)
-- **Semantic-tier USR ambiguity (C-only; DEFERRED).** The resolved branch bypasses the ARCH-003 uniqueness gate on duplicate USRs (non-`static` same-name external defs share a location-independent USR). Blast radius = link-invalid C; default build + the Rust tier unaffected. `precision-baseline.md` §6; M2 hardening candidate.
-- **`PERF-RS-LOOP-008` deref-chain silence** — pure deref chains stay silent (accepted FN, documented).
-- **NIT (non-blocking):** `starts_with_string_literal` `r#` prefix also matches a raw-identifier receiver; tighten to `r#"`/`br#"` later (recorded, not fixed, to preserve the reviewed revision).
+- **M2 ladder corpora are synthetic/generated** (exact ground truth); real-repo credibility is **M4**. The real-code rung is internal committed code (unlabeled).
+- **IR-only semantic sub-cases** (proven-`fclose` ALLOC-002, resolved-format STR-003, resolved-edge ARCH-003; ARCH-001 deep-chain/hub) are covered by `tests/fixtures/ir/` + `semantic-clang`, **not** the plain-source benchmark (cycle TP planted instead).
+- **Wall-clock is informational, not gated** (P/R + parse health + determinism are the gates).
+- NIT (rev-2): `replace_json_value` first-occurrence substitution; `active_rule_ids()` hand-maintained 45-id duplicate (reporter lock keeps sync).
+- **Carried (M1):** semantic-tier USR ambiguity for duplicate external C definitions (hardening candidate).
 - **M5 publish gates unchanged:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD`.
 
 ## Next Actions
-1. ✅ **Committed** on `main` — `959b58e` (session-35 formalization docs) then `b495b6c` (M1 change set). `.opencode/**` deliberately left uncommitted (policy).
-2. **NEXT SESSION (`/new`) = plan `evidence-beta` M2 — Benchmark suite (build + RUN).** Read `state/session-state.json` + this file + `docs/activeContext.md` FIRST, then `readPlan evidence-beta`.
+1. **Founder approves the M2 commit** → commit the working tree (list below; **EXCLUDE `.opencode/**`**). Suggested message:
+   `feat(evidence-beta): M2 benchmark suite (build+run) — deterministic mutation catalog + scale ladder (small 45-rule / medium+large 9-gate) + strict-provenance byte-determinism proof + evidence record; all rules 1.00/1.00; dual review APPROVED`
+2. **NEXT SESSION (`/new`) = plan `evidence-beta` M3 — Python backend.** Read `state/session-state.json` + this file + `docs/activeContext.md` FIRST, then `readPlan evidence-beta`.
 
 ## Change set (this session, uncommitted; EXCLUDE `.opencode/**`)
-- **src/**: `analyzer/heuristics/rust/{alloc,loop,mem,str,mod}.rs`, `analyzer/heuristics/{arch,mod}.rs`, `analyzer/{mod,finding}.rs`, `reporter/mod.rs`.
-- **tests/**: `precision_kpi.rs` (new), `fixtures/precision/**` (new), `fixtures/ir/PERF-RS-ALLOC-001__{callee-cap,defensive-singleton,qualified-token,literal-receiver}.json`, `fixtures/ir/PERF-RS-ARCH-003__ambiguous.json`, deleted `PERF-RS-STR-001__*.json`, `rust_wave_c1.rs`, `rust_wave_c2.rs`, `rust_negative_fixtures.rs`, `reporter_rust.rs`, `examples_rust_coverage.rs`, `mixed_language_e2e.rs`, `arch_fixtures.rs`, `golden/report-rust/**`, `golden/report-mixed/**`.
-- **examples-rust/**: `src/02_string_building.rs`, `src/08_globals_and_chains.rs`.
-- **docs/**: `evidence/precision-baseline.md` (new), `evidence/dogfood-rust-backend.md`, `heuristics/rust-catalog.md`, `heuristics/catalog-v1.md`, `architecture/rust-backend.md`, `roadmap.md`.
-- **Root**: `README.md`, `CHANGELOG.md`.
-- **Session-35 docs (also still uncommitted)**: `docs/specs/evidence-beta-spec.md`, `docs/plans/evidence-beta.md`, `docs/adr/ADR-0003..0006`, `docs/architecture/modules.md`, plus state files.
-
-## Commit messages (proposed)
-1. *(session-35 formalization, separate first commit)*
-   `docs(roadmap): formalize evidence-first AI-code beta — spec evidence-beta-spec + plan evidence-beta (M1-M6+) + ADR-0003..0006; roadmap re-based (parked v0.2.0-beta.1 = M5)`
-2. *(M1)*
-   `feat(evidence-beta): M1 precision gate (C+Rust) — ALLOC-001 aggregate/innermost + literal-receiver suppression, ARCH-003 name-uniqueness, MEM-002 drop clone/to_vec, LOOP-008 subscript, STR-001 retired; labeled precision KPI harness + goldens; self-scan 1219->304; Rust tier 22 rules`
+- **tests/**: `benchmark.rs` (new entry), `benchmark/mod.rs` (new harness), `benchmark/corpus.rs` (new catalog), `common/mod.rs` (`markdown_escaped` made `pub` — no behavior change).
+- **tests/fixtures/benchmark/**: `baseline.json` (new, 46 rules), `README.md` (new contract).
+- **docs/**: `evidence/benchmark-suite.md` (new RUN record), `roadmap.md` (M2 status block).
+- **Root**: `CHANGELOG.md` (M2 Added bullet).
+- **state/**: `session-state.json`, `handoff/latest.md`, `activeContext.md`.
