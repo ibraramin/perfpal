@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Task
-Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)** landed: 5 dispositions + a measured precision KPI harness + goldens rebaselined; **both reviewers APPROVED** (round 2). Commit pending founder approval.
+Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)** landed: 5 dispositions + a measured precision KPI harness + goldens rebaselined; **both reviewers APPROVED** (round 2). **Committed:** `959b58e` (formalization) + `b495b6c` (M1) on `main`.
 
 ## Recent Decisions
 - **M1 dispositions (founder-approved):** `PERF-RS-ALLOC-001` aggregate one finding per innermost loop + literal-receiver suppression; `PERF-RS-ARCH-003` name-uniqueness gate (shared `cross_file_call_edges` producer → also governs `PERF-C-ARCH-003`); `PERF-RS-MEM-002` drop `clone`/`to_vec`; `PERF-RS-LOOP-008` require a `Subscript` element; **`PERF-RS-STR-001` retired for Rust** (C rule intact) → Rust tier **22 rules**.
@@ -17,4 +17,4 @@ Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)**
 
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
-- **Commit:** founder approval (session-35 formalization docs + the M1 change set).
+- **Commit:** ✅ done — `959b58e` (session-35 formalization) + `b495b6c` (M1).

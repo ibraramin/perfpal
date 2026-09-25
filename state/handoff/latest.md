@@ -1,7 +1,7 @@
 # Handoff — Latest
 
 ## Objective
-Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)** landed. The five dominant self-scan noise rules are disposed, a **measured** per-rule precision KPI harness is in place, goldens are rebaselined, and **both reviewers APPROVED** (round 2). Commit pending founder approval.
+Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)** landed. The five dominant self-scan noise rules are disposed, a **measured** per-rule precision KPI harness is in place, goldens are rebaselined, and **both reviewers APPROVED** (round 2). **Committed:** `959b58e` (session-35 formalization) + `b495b6c` (M1) on `main`.
 
 ## Phase
 POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ → M2–M6+)**.
@@ -34,7 +34,7 @@ Rust tier **23 → 22 rules** (45 total = 23 C + 22 Rust).
 - **M5 publish gates unchanged:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD`.
 
 ## Next Actions
-1. **Founder approves the commit(s).** ⚠️ The **session-35 formalization docs are STILL uncommitted** — commit them first, then the M1 change set (messages below).
+1. ✅ **Committed** on `main` — `959b58e` (session-35 formalization docs) then `b495b6c` (M1 change set). `.opencode/**` deliberately left uncommitted (policy).
 2. **NEXT SESSION (`/new`) = plan `evidence-beta` M2 — Benchmark suite (build + RUN).** Read `state/session-state.json` + this file + `docs/activeContext.md` FIRST, then `readPlan evidence-beta`.
 
 ## Change set (this session, uncommitted; EXCLUDE `.opencode/**`)
