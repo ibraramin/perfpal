@@ -1,46 +1,40 @@
 # Handoff — Latest
 
 ## Objective
-Session 37 **COMPLETE** — plan `evidence-beta` **M2 (Benchmark suite — build + RUN)** landed. A deterministic ground-truth mutation catalog drives a **scale ladder** that measures per-rule precision/recall with the REAL pipeline, plus a **strict-provenance byte-determinism proof**; the suite is RUN and recorded as evidence. **Both reviewers APPROVED** (round 2). **Commit pending founder approval.**
+Session 38 **COMPLETE** — plan `evidence-beta` **M3 (Python backend)** entered through a new tracking plan **`python-backend`**. This session was **planning + design-lock ONLY** (zero product code): discovery (@librarian + 2×@explorer) + an @oracle strategy pressure-test produced founder-locked decisions, the plan was created and linked, and **ADR-0007** records the Python tier strategy. **Commit pending founder approval.**
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ · M2 ✅ → M3–M6+)**.
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ · M2 ✅ · M3 design-lock ✅ → W0 canary)** · **`python-backend` NEW (active)**.
 
-## M2 outcome (measured, RUN)
-| Rung | Files | LOC | Findings | Scoped rules | Result |
-|------|------:|----:|---------:|-------------:|--------|
-| `small` | 69 | 1025 | 50 | all **45 active** + retired control | every rule **1.00/1.00** |
-| `medium` | 132 | 1656 | 86 | 9 gate rules | every rule **1.00/1.00** |
-| `large` | 418 | 5244 | 268 | 9 gate rules | every rule **1.00/1.00** |
-| `real-code` (unlabeled) | 60 | — | 418 | (counts only) | determinism PASS |
-
-- Ground truth = deterministic in-code mutation catalog `tests/benchmark/corpus.rs`; harness `tests/benchmark/mod.rs`; entry `tests/benchmark.rs`. **No generated corpus committed** (materialized into tempdirs at RUN).
-- `small` plants a TP **+ silent control for all 45 active rules** (23 C + 22 Rust) + the retired `PERF-RS-STR-001` silent control; `medium`/`large` replicate the **9 existential gate rules** (`ALLOC-001`, `ARCH-003`, `MEM-002`, `LOOP-008`, `STR-001` × C+Rust) with per-replica unique names.
-- Ratchet: `tests/fixtures/benchmark/baseline.json` (46 rules, intended **1.0/1.0**, never lowered) + no-vacuous-cell guard + 45-id coverage lock + stale-baseline check.
-- Determinism: every rung (and the mixed real-code rung) run **twice**; byte-identical under a **provenance-only** mask (metrics.json: only `scan.started_at`/`duration_ms`/`root_path`; report.md: provenance + scan root only, **§4 block NOT stripped**; charts + bundled schema byte-exact).
-- All corpora parse clean (**0 partial / 0 failed**). Harness always-on **~4.3 s** (default; `semantic-clang` ~12 s from libclang init).
+## M3 locked decisions (this session)
+| # | Decision |
+|---|---|
+| Split | W0 canary → W1 design+pin → W2 backend+inference → W3 catalog+schema 1.3 → W4 proof; one wave per session |
+| Strategy | AST + lightweight binding inference. **Not bytecode, not native C-extension** (ADR-0007). Tiers: T1 (M3) → T2 `python-resolver` → T3 runtime profile |
+| Rule set | **Retire 10** (`TYPE-001/002`, `MEM-001`, `ALLOC-002`, `STR-002/003`, `LOOP-004/005/006/008`); keep ~13 reframed mirrors + Python-native adds; every finding cites the CPython mechanism |
+| Inference | Ships **in** M3: import-alias map, local kind lattice, param annotations, receiver root, async flag (additive IR, `syntactic`, ≤MEDIUM) |
+| Import graph | Best-effort resolve; unresolved internal → data-only, **no finding** |
+| Corpus | `examples-python/` as a real package |
+| Grammar | `tree-sitter-python = "=0.25.0"` (official org, MIT, ABI 15 ✓ window 13–15) |
+| Resolver | `semantic-clang` stays **C-only** |
 
 ## Verification
-- `cargo test --locked --test benchmark -- --nocapture` **PASS** (~4.3 s; all rules 1.00/1.00; determinism PASS).
-- `cargo test --locked` **399 / 0** · `--features semantic-clang` **404 / 0** · `cargo fmt --check` clean · `cargo clippy --all-targets --locked -- -D warnings` clean.
-- `src/` **unchanged**; baseline **not lowered**. Dual review: round 1 (@requirements-reviewer APPROVED; @reviewer CHANGES_REQUESTED 4 MAJOR/6 MINOR/2 NIT) → fix wave → **round 2 APPROVED**. Two non-blocking rev-2 items also applied (panic-path diff dir persists; README extension instructions).
+- **Planning-only: no product code, no gates run** (nothing to build). Artifacts: plan `python-backend` (`docs/plans/python-backend.md`, linked `perfpal-core-spec` + `evidence-beta-spec`; **no feature spec**), `docs/adr/ADR-0007-python-tier-strategy.md`, CHANGELOG + state files.
+- Discovery evidence: @librarian (tree-sitter-python 0.25.0 pin/ABI/license + full node-types map + Python idiom reframings); @explorer ×2 (backend/IR/scanner edit surface; schema/registry/tests/doc enumeration points); @oracle (strategy pressure-test).
 
 ## Risks / Open (append-only)
-- **M2 ladder corpora are synthetic/generated** (exact ground truth); real-repo credibility is **M4**. The real-code rung is internal committed code (unlabeled).
-- **IR-only semantic sub-cases** (proven-`fclose` ALLOC-002, resolved-format STR-003, resolved-edge ARCH-003; ARCH-001 deep-chain/hub) are covered by `tests/fixtures/ir/` + `semantic-clang`, **not** the plain-source benchmark (cycle TP planted instead).
-- **Wall-clock is informational, not gated** (P/R + parse health + determinism are the gates).
-- NIT (rev-2): `replace_json_value` first-occurrence substitution; `active_rule_ids()` hand-maintained 45-id duplicate (reporter lock keeps sync).
-- **Carried (M1):** semantic-tier USR ambiguity for duplicate external C definitions (hardening candidate).
-- **M5 publish gates unchanged:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD`.
+- **W1 design obligations:** comprehensions must be modelled as `LoopNode` (iterable once — the Rust `for` fix); module-level code needs a synthetic function record or script-style AI files yield zero findings; `.ipynb` decided explicitly; ARCH-003 noisier on Python (expect Info/low).
+- **Precision-feedback risk:** the M2 benchmark/precision harness has no Python coverage until W4 → the W0 canary is the mitigation (else M4 is the first Python precision test = the M1 failure mode).
+- **Tooling gap:** `ruff` is NOT installed on this host; cargo is off PATH by default (`export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"`). The canary needs these resolved (or skip the Ruff baseline).
+- **Precedent conflict (recorded):** evidence-beta's M3 line says "mirror the FULL catalog"; the founder + @oracle approved retiring 10. The W1 disposition table supersedes the plan wording.
 
 ## Next Actions
-1. **Founder approves the M2 commit** → commit the working tree (list below; **EXCLUDE `.opencode/**`**). Suggested message:
-   `feat(evidence-beta): M2 benchmark suite (build+run) — deterministic mutation catalog + scale ladder (small 45-rule / medium+large 9-gate) + strict-provenance byte-determinism proof + evidence record; all rules 1.00/1.00; dual review APPROVED`
-2. **NEXT SESSION (`/new`) = plan `evidence-beta` M3 — Python backend.** Read `state/session-state.json` + this file + `docs/activeContext.md` FIRST, then `readPlan evidence-beta`.
+1. **Founder approves this ritual commit** → commit the working tree (**EXCLUDE `.opencode/**`**):
+   `docs(python-backend): plan python-backend (evidence-beta M3) + ADR-0007 Python tier strategy (AST+binding, retire-10, bytecode is not a tier); planning + design-lock only, no product code`
+2. **NEXT SESSION (`/new`) = plan `python-backend` W0 CANARY:** fetch pinned **Aider** (Apache-2.0) + **chunkhound** (MIT), run a throwaway pattern counter (Python stdlib `ast` or tree-sitter-python) per candidate `PERF-PY` rule + silent control, rank frequency × plausibility, baseline a Ruff `PERF` run, write `docs/evidence/python-canary.md`, finalize the rule set. Read `state/session-state.json` + `state/handoff/latest.md` + `docs/activeContext.md` FIRST, then `readPlan python-backend`.
+3. Then **W1** (pin + `tests/python_grammar_link.rs` + `docs/architecture/python-backend.md` with the node-kind map + disposition table) → **W2** backend + inference + import resolution → **W3** catalog + registry + reporter + schema 1.3 → **W4** examples-python / precision / benchmark / goldens / docs + dual review.
 
 ## Change set (this session, uncommitted; EXCLUDE `.opencode/**`)
-- **tests/**: `benchmark.rs` (new entry), `benchmark/mod.rs` (new harness), `benchmark/corpus.rs` (new catalog), `common/mod.rs` (`markdown_escaped` made `pub` — no behavior change).
-- **tests/fixtures/benchmark/**: `baseline.json` (new, 46 rules), `README.md` (new contract).
-- **docs/**: `evidence/benchmark-suite.md` (new RUN record), `roadmap.md` (M2 status block).
-- **Root**: `CHANGELOG.md` (M2 Added bullet).
-- **state/**: `session-state.json`, `handoff/latest.md`, `activeContext.md`.
+- **New:** `docs/plans/python-backend.md` (planning-toolkit plan, linked to both repo specs), `docs/adr/ADR-0007-python-tier-strategy.md`.
+- **Modified:** `CHANGELOG.md` ([Unreleased] Added bullet), `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
+- **Note:** Cargo/`.gitignore` untouched; **no `src/` change**.
