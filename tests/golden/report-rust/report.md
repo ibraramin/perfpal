@@ -3,10 +3,10 @@
 > started <MASKED> · duration <MASKED> ms · 14 files
 
 ## 1. Executive summary
-41 findings: 17 hot, 11 warn, 13 info. Parse health: 14 ok, 0 partial, 0 failed.
-- Heap allocation inside loop \(Rust\) (PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:35:23)
-- Heap allocation inside loop \(Rust\) (PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:36:21)
-- Heap allocation inside loop \(Rust\) (PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:37:29)
+32 findings: 10 hot, 9 warn, 13 info. Parse health: 14 ok, 0 partial, 0 failed.
+- Heap allocation inside loop \(Rust\) (PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:34:5)
+- Heap allocation inside loop \(Rust\) (PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:58:9)
+- Heap allocation inside loop \(Rust\) (PERF\-RS\-ALLOC\-001:src/02\_string\_building\.rs:41:5)
 
 ## 2. Scan provenance & parse health
 - Tool: perfpal 0\.2\.0\-beta\.1
@@ -27,16 +27,16 @@ Findings overlapping parse-error regions are flagged (`error_node_overlap`) and 
 
 ## 3. Codebase statistics
 - Languages: rust
-- Total LOC: 159 code / 337 comment / 51 blank
+- Total LOC: 162 code / 346 comment / 52 blank
 
 Top files by code LOC:
 
 | path | loc.code | loc.comment | loc.blank | functions |
 |---|---:|---:|---:|---:|
 | src/05\_recursion\_complexity\.rs | 24 | 13 | 2 | 2 |
-| src/08\_globals\_and\_chains\.rs | 22 | 40 | 9 | 5 |
+| src/08\_globals\_and\_chains\.rs | 24 | 49 | 10 | 6 |
+| src/02\_string\_building\.rs | 15 | 47 | 6 | 6 |
 | src/01\_alloc\_churn\.rs | 14 | 46 | 5 | 5 |
-| src/02\_string\_building\.rs | 14 | 47 | 6 | 6 |
 | src/07\_struct\_by\_value\.rs | 14 | 32 | 6 | 3 |
 | src/09\_membership\_scan\.rs | 14 | 18 | 2 | 2 |
 | src/10\_cross\_file\_and\_arch\.rs | 12 | 31 | 3 | 3 |
@@ -45,41 +45,29 @@ Top files by code LOC:
 | src/06\_memory\_ops\.rs | 10 | 20 | 3 | 3 |
 
 ## 4. Findings
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:35:23`)
-- Location: `src/01\_alloc\_churn\.rs:35` (build\_row\_labels)
-- Message: per\-iteration allocation via 'format' at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
+#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:34:5`)
+- Location: `src/01\_alloc\_churn\.rs:34` (build\_row\_labels)
+- Message: loop performs 3 per\-iteration allocation\(s\) \(format, to\_string, vec\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_index=2, callee=format, loop\_depth=1
+- Evidence: alloc\_count=3, callee=format, callees=format, to\_string, vec, loop\_depth=1
 
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:36:21`)
-- Location: `src/01\_alloc\_churn\.rs:36` (build\_row\_labels)
-- Message: per\-iteration allocation via 'scratch\.to\_string' at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
+#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:58:9`)
+- Location: `src/01\_alloc\_churn\.rs:58` (grid\_reset)
+- Message: loop performs 1 per\-iteration allocation\(s\) \(vec\) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_index=3, callee=scratch\.to\_string, loop\_depth=1
+- Evidence: alloc\_count=1, callee=vec, callees=vec, loop\_depth=2
 
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:37:29`)
-- Location: `src/01\_alloc\_churn\.rs:37` (build\_row\_labels)
-- Message: per\-iteration allocation via 'vec' at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_index=4, callee=vec, loop\_depth=1
-
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:59:28`)
-- Location: `src/01\_alloc\_churn\.rs:59` (grid\_reset)
-- Message: per\-iteration allocation via 'vec' at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_index=1, callee=vec, loop\_depth=2
-
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/02\_string\_building\.rs:41:13`)
+#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/02\_string\_building\.rs:41:5`)
 - Location: `src/02\_string\_building\.rs:41` (len\_with\_reassignment)
-- Message: per\-iteration allocation via 'format' at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
+- Message: loop performs 1 per\-iteration allocation\(s\) \(format\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_index=2, callee=format, loop\_depth=1
+- Evidence: alloc\_count=1, callee=format, callees=format, loop\_depth=1
 
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/06\_memory\_ops\.rs:29:24`)
-- Location: `src/06\_memory\_ops\.rs:29` (duplicate\_rows)
-- Message: per\-iteration allocation via 'row\.to\_vec' at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
+#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/06\_memory\_ops\.rs:27:9`)
+- Location: `src/06\_memory\_ops\.rs:27` (duplicate\_rows)
+- Message: loop performs 1 per\-iteration allocation\(s\) \(to\_vec\) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_index=2, callee=row\.to\_vec, loop\_depth=2
+- Evidence: alloc\_count=1, callee=to\_vec, callees=to\_vec, loop\_depth=2
 
 #### Deallocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-002:src/01\_alloc\_churn\.rs:39:9`)
 - Location: `src/01\_alloc\_churn\.rs:39` (build\_row\_labels)
@@ -89,39 +77,9 @@ Top files by code LOC:
 
 #### Hot component \(Rust\)  (`PERF\-RS\-ARCH\-002:src/05\_recursion\_complexity\.rs:20:1`)
 - Location: `src/05\_recursion\_complexity\.rs:20` (classify)
-- Message: directory 'src' aggregates complexity 84 across 39 function\(s\) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization
+- Message: directory 'src' aggregates complexity 86 across 40 function\(s\) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_density=88\.05031446540879, complexity\_sum=84, function\_count=39, max\_loop\_depth=3, path\_prefix=src
-
-#### String accumulation in loop \(Rust\)  (`PERF\-RS\-STR\-001:src/01\_alloc\_churn\.rs:38:9`)
-- Location: `src/01\_alloc\_churn\.rs:38` (build\_row\_labels)
-- Message: 'labels\.push' accumulates into 'labels' at loop depth 1 — repeated growth/reallocation; pre\-sizing the buffer or tracking a running length is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=labels\.push, dest=labels, loop\_depth=1
-
-#### String accumulation in loop \(Rust\)  (`PERF\-RS\-STR\-001:src/01\_alloc\_churn\.rs:50:9`)
-- Location: `src/01\_alloc\_churn\.rs:50` (grow\_one\_at\_a\_time)
-- Message: 'buffer\.push' accumulates into 'buffer' at loop depth 1 — repeated growth/reallocation; pre\-sizing the buffer or tracking a running length is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=buffer\.push, dest=buffer, loop\_depth=1
-
-#### String accumulation in loop \(Rust\)  (`PERF\-RS\-STR\-001:src/02\_string\_building\.rs:21:9`)
-- Location: `src/02\_string\_building\.rs:21` (accumulate)
-- Message: 'out\.push\_str' accumulates into 'out' at loop depth 1 — repeated growth/reallocation; pre\-sizing the buffer or tracking a running length is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=out\.push\_str, dest=out, loop\_depth=1
-
-#### String accumulation in loop \(Rust\)  (`PERF\-RS\-STR\-001:src/02\_string\_building\.rs:22:9`)
-- Location: `src/02\_string\_building\.rs:22` (accumulate)
-- Message: 'out\.push' accumulates into 'out' at loop depth 1 — repeated growth/reallocation; pre\-sizing the buffer or tracking a running length is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=out\.push, dest=out, loop\_depth=1
-
-#### String accumulation in loop \(Rust\)  (`PERF\-RS\-STR\-001:src/06\_memory\_ops\.rs:28:13`)
-- Location: `src/06\_memory\_ops\.rs:28` (duplicate\_rows)
-- Message: 'out\.push' accumulates into 'out' at loop depth 2 — repeated growth/reallocation; pre\-sizing the buffer or tracking a running length is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=out\.push, dest=out, loop\_depth=2
+- Evidence: alloc\_site\_density=86\.41975308641973, complexity\_sum=86, function\_count=40, max\_loop\_depth=3, path\_prefix=src
 
 #### Growable\-buffer additive growth in loop \(Rust\)  (`PERF\-RS\-ALLOC\-003:src/01\_alloc\_churn\.rs:49:9`)
 - Location: `src/01\_alloc\_churn\.rs:49` (grow\_one\_at\_a\_time)
@@ -165,8 +123,8 @@ Top files by code LOC:
 - Confidence: HIGH · Severity: warn · Resolver tier: syntactic
 - Evidence: max\_depth=3, nest\_depth=3
 
-#### Length query recomputed in loop \(Rust\)  (`PERF\-RS\-STR\-002:src/02\_string\_building\.rs:31:18`)
-- Location: `src/02\_string\_building\.rs:31` (scan\_lengths)
+#### Length query recomputed in loop \(Rust\)  (`PERF\-RS\-STR\-002:src/02\_string\_building\.rs:32:18`)
+- Location: `src/02\_string\_building\.rs:32` (scan\_lengths)
 - Message: 'joined\.len' recomputes the length of 'joined' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
 - Confidence: HIGH · Severity: warn · Resolver tier: syntactic
 - Evidence: identifier=joined, loop\_depth=1
@@ -177,8 +135,8 @@ Top files by code LOC:
 - Confidence: HIGH · Severity: warn · Resolver tier: syntactic
 - Evidence: identifier=table, loop\_depth=1
 
-#### Unbounded unsafe memory operation \(Rust\)  (`PERF\-RS\-STR\-003:src/02\_string\_building\.rs:61:5`)
-- Location: `src/02\_string\_building\.rs:61` (unsafe\_slice)
+#### Unbounded unsafe memory operation \(Rust\)  (`PERF\-RS\-STR\-003:src/02\_string\_building\.rs:62:5`)
+- Location: `src/02\_string\_building\.rs:62` (unsafe\_slice)
 - Message: 'std::slice::from\_raw\_parts' performs an unchecked \(unbounded\) memory operation — prefer a safe/bounded variant or add an explicit length check; that is a candidate optimization
 - Confidence: HIGH · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=std::slice::from\_raw\_parts
@@ -194,18 +152,6 @@ Top files by code LOC:
 - Message: 'cell\.copy\_from\_slice' copies a block every iteration at loop depth 2 — hoisting the copy, batching the copies, or reusing a buffer is a candidate optimization
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=cell\.copy\_from\_slice, innermost=true, loop\_depth=2
-
-#### Block copy/clone in loop \(Rust\)  (`PERF\-RS\-MEM\-002:src/06\_memory\_ops\.rs:28:22`)
-- Location: `src/06\_memory\_ops\.rs:28` (duplicate\_rows)
-- Message: 'row\.clone' copies a block every iteration at loop depth 2 — hoisting the copy, batching the copies, or reusing a buffer is a candidate optimization
-- Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
-- Evidence: callee=row\.clone, innermost=true, loop\_depth=2
-
-#### Block copy/clone in loop \(Rust\)  (`PERF\-RS\-MEM\-002:src/06\_memory\_ops\.rs:29:24`)
-- Location: `src/06\_memory\_ops\.rs:29` (duplicate\_rows)
-- Message: 'row\.to\_vec' copies a block every iteration at loop depth 2 — hoisting the copy, batching the copies, or reusing a buffer is a candidate optimization
-- Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
-- Evidence: callee=row\.to\_vec, innermost=true, loop\_depth=2
 
 #### Large struct passed by value \(Rust\)  (`PERF\-RS\-TYPE\-001:src/07\_struct\_by\_value\.rs:40:1`)
 - Location: `src/07\_struct\_by\_value\.rs:40` (consume\_blob)
@@ -231,17 +177,17 @@ Top files by code LOC:
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: divisor=divisor, divisor\_kind=identifier, op=%
 
-#### Global variable written inside loop \(Rust\)  (`PERF\-RS\-LOOP\-005:src/08\_globals\_and\_chains\.rs:39:13`)
-- Location: `src/08\_globals\_and\_chains\.rs:39` (run\_handlers)
+#### Global variable written inside loop \(Rust\)  (`PERF\-RS\-LOOP\-005:src/08\_globals\_and\_chains\.rs:41:13`)
+- Location: `src/08\_globals\_and\_chains\.rs:41` (run\_handlers)
 - Message: static/const\-backed 'GLOBAL\_ACC' is stored every iteration at loop depth 1 — hoisting the write out of the loop or caching it in a local is a candidate optimization
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: loop\_depth=1, target=GLOBAL\_ACC
 
-#### Member\-chain dereference in innermost loop \(Rust\)  (`PERF\-RS\-LOOP\-008:src/08\_globals\_and\_chains\.rs:57:17`)
-- Location: `src/08\_globals\_and\_chains\.rs:57` (read\_depth)
-- Message: 'cfg' field/index chain of depth 3 executes in the innermost loop — caching intermediate references or flattening the structure is a candidate optimization
+#### Member\-chain dereference in innermost loop \(Rust\)  (`PERF\-RS\-LOOP\-008:src/08\_globals\_and\_chains\.rs:59:17`)
+- Location: `src/08\_globals\_and\_chains\.rs:59` (read\_depth)
+- Message: 'configs' field/index chain of depth 4 executes in the innermost loop — caching intermediate references or flattening the structure is a candidate optimization
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
-- Evidence: chain\_depth=3, loop\_depth=1, root=cfg
+- Evidence: chain\_depth=4, loop\_depth=1, root=configs
 
 #### Cross\-module call coupling \(Rust\)  (`PERF\-RS\-ARCH\-003:src/10\_cross\_file\_and\_arch\.rs:21:16`)
 - Location: `src/10\_cross\_file\_and\_arch\.rs:21` (orchestrate)
@@ -273,8 +219,8 @@ Top files by code LOC:
 - Confidence: LOW · Severity: info · Resolver tier: syntactic
 - Evidence: callee\_name=cycle\_a\_root, matched\_path=src/cycle\_a\.rs
 
-#### Indirect call in innermost loop \(Rust\)  (`PERF\-RS\-LOOP\-006:src/08\_globals\_and\_chains\.rs:41:9`)
-- Location: `src/08\_globals\_and\_chains\.rs:41` (run\_handlers)
+#### Indirect call in innermost loop \(Rust\)  (`PERF\-RS\-LOOP\-006:src/08\_globals\_and\_chains\.rs:43:9`)
+- Location: `src/08\_globals\_and\_chains\.rs:43` (run\_handlers)
 - Message: indirect call through 'handlers\[i\]' runs in the innermost loop at depth 1 — resolving the target once outside the loop is a candidate optimization
 - Confidence: LOW · Severity: info · Resolver tier: syntactic
 - Evidence: callee=handlers\[i\], loop\_depth=1
@@ -300,7 +246,7 @@ Component ranking (hottest first):
 
 | component | path prefix | rank | finding density (per KLOC) |
 |---|---|---:|---:|
-| src | src | 1 | 257.86 |
+| src | src | 1 | 197.53 |
 
 The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).
@@ -308,10 +254,10 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 ## Appendix A. Heuristic reference
 | rule_id | title | description |
 |---|---|---|
-| `PERF\-RS\-ALLOC\-001` | Heap allocation inside loop \(Rust\) | Detects Rust allocation sites — qualified constructors \(\`Box::new\`/\`Rc::new\`/\`Arc::new\`/\`Vec::new\`/\`String::new\`/collection \`new\`/\`with\_capacity\`\), methods \(\`to\_vec\`/\`to\_owned\`/\`to\_string\`/\`collect\`/\`with\_capacity\`\), and the \`vec\!\`/\`format\!\` macros — nested inside a loop body \(allocator churn\)\. |
+| `PERF\-RS\-ALLOC\-001` | Heap allocation inside loop \(Rust\) | Detects Rust allocation sites — qualified constructors \(\`Box::new\`/\`Rc::new\`/\`Arc::new\`/\`Vec::new\`/\`String::new\`/collection \`new\`/\`with\_capacity\`\), methods \(\`to\_vec\`/\`to\_owned\`/\`to\_string\`/\`collect\`/\`with\_capacity\`\), and the \`vec\!\`/\`format\!\` macros — at \`in\_loop\_depth ≥ 1\` AND \`is\_innermost\`; surviving sites are aggregated into ONE finding per innermost enclosing loop \(\`alloc\_count\` plus sorted\-unique short callee tokens capped at 8 with a \`\+N more\` suffix\)\. Literal\-receiver \`"…"\.to\_string\(\)\`/\`"…"\.to\_owned\(\)\` \(including raw/byte\-string prefixes\) are suppressed\. |
 | `PERF\-RS\-ALLOC\-002` | Deallocation inside loop \(Rust\) | Detects a direct \`drop\` call inside a loop body \(allocator churn pairing; escalated to hot when the same function also allocates in a loop\)\. |
 | `PERF\-RS\-ALLOC\-003` | Growable\-buffer additive growth in loop \(Rust\) | REFRAMED for Rust \(no \`realloc\`\): detects additive \`reserve\`/\`reserve\_exact\` capacity growth inside a loop — the \`realloc\(p, n\+k\)\` analogue; multiplicative capacity growth is the fix, not the finding\. |
-| `PERF\-RS\-ARCH\-001` | Module\-graph fan\-out / cycles \(Rust\) | Detects module fan\-out/fan\-in, deep module chains, cyclic module edges, and unresolved internal \`mod\`/\`use\` edges from resolved Rust module edges\. |
+| `PERF\-RS\-ARCH\-001` | Module\-graph fan\-out / cycles \(Rust\) | Detects module fan\-out/fan\-in, deep module chains, and cyclic module edges from resolved Rust module edges; unresolved internal \`mod\`/\`use\` edges are retained as graph data but intentionally emit no finding \(their resolver cannot see crate\-root or inline\-module items\)\. |
 | `PERF\-RS\-ARCH\-002` | Hot\-component aggregation \(Rust\) | Ranks Rust component directories by aggregated metrics \(complexity sum, alloc\-site density, max loop depth\) — the hottest component only\. |
 | `PERF\-RS\-ARCH\-003` | Cross\-module call coupling \(Rust\) | Detects cross\-file/module call edges via name matching — LOW confidence, upgraded to MEDIUM when a semantic resolver fact resolves the definition\. |
 | `PERF\-RS\-CALL\-001` | Direct recursion \(Rust\) | Detects a function body containing a direct call to its own name \(presence\-only; recursion depth is post\-MVP\)\. |
@@ -325,8 +271,7 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 | `PERF\-RS\-LOOP\-007` | Linear membership scan nested in loop \(Rust\) | Detects a comparison against a subscript indexed by an enclosing loop's induction variable — hand\-rolled O\(n²\) membership scan\. |
 | `PERF\-RS\-LOOP\-008` | Member\-chain dereference in innermost loop \(Rust\) | Detects field/index access chains of depth ≥ 3 inside innermost loop bodies — pointer/lifetime\-chasing cache\-miss candidates\. |
 | `PERF\-RS\-MEM\-001` | size\_of passed as an element count \(Rust\) | REFRAMED for Rust: detects \`Vec::with\_capacity\`/\`String::with\_capacity\` receiving a \`size\_of\`/\`size\_of\_val\` byte count where an element count is expected \(over\-reserves by the element size\)\. |
-| `PERF\-RS\-MEM\-002` | Block copy/clone in loop \(Rust\) | REFRAMED for Rust \(no explicit size argument\): detects block\-copy/clone methods \(\`copy\_from\_slice\`/\`copy\_nonoverlapping\`/\`extend\_from\_slice\`/\`clone\`/\`to\_vec\`\) inside loops — warn in the innermost loop, info otherwise\. |
-| `PERF\-RS\-STR\-001` | String accumulation in loop \(Rust\) | Detects \`push\_str\`/\`push\` accumulation into a bare\-identifier receiver inside a loop \(repeated growth/reallocation; \`push\` also matches non\-string containers\)\. |
+| `PERF\-RS\-MEM\-002` | Block copy/clone in loop \(Rust\) | REFRAMED for Rust \(no explicit size argument\): detects block\-copy methods \(\`copy\_from\_slice\`/\`copy\_nonoverlapping\`/\`extend\_from\_slice\`\) inside loops — warn in the innermost loop, info otherwise\. \(\`clone\`/\`to\_vec\` were removed by the M1 Precision Gate: borrow\-checker clones and \`Copy\` bit\-copies are not block copies\.\) |
 | `PERF\-RS\-STR\-002` | Length query recomputed in loop \(Rust\) | Detects \`len\`/\`is\_empty\`/\`capacity\` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop\. |
 | `PERF\-RS\-STR\-003` | Unbounded unsafe memory operation \(Rust\) | REFRAMED for Rust \(memory\-safe by default\): detects the unsafe unbounded\-op family \(\`copy\_nonoverlapping\`/\`copy\`/\`from\_raw\_parts\`/\`from\_utf8\_unchecked\`/\`set\_len\`\) anywhere — unchecked\-length surfaces\. |
 | `PERF\-RS\-TYPE\-001` | Large struct passed by value \(Rust\) | Detects a bare\-named struct parameter whose LP64 estimate reaches the approximate\-size floor \(LOW confidence — no real type layout\); one finding per function aggregating qualifying parameters\. |

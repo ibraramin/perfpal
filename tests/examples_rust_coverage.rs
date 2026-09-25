@@ -1,19 +1,21 @@
-//! `examples-rust/` 23/23 rule-coverage gate (plan `rust-backend`, R5 lane B).
+//! `examples-rust/` 22/22 rule-coverage gate (plan `rust-backend`, R5 lane B;
+//! M1 Precision Gate re-baselined).
 //!
 //! Runs the REAL full pipeline (`cli::run_with` = scanner::scan →
 //! analyzer::analyze → aggregator → writer/reporter) over the COMMITTED
 //! `examples-rust/` mini-crate and locks the documented R4 evidence
 //! (`docs/evidence/dogfood-rust-backend.md` §2):
 //!
-//! - the emitted `PERF-RS-*` rule-id set is EXACTLY the 23-rule Rust catalog
-//!   (set equality — no missing rule, no unexpected rule);
+//! - the emitted `PERF-RS-*` rule-id set is EXACTLY the 22-rule Rust catalog
+//!   (set equality — no missing rule, no unexpected rule; `PERF-RS-STR-001`
+//!   retired);
 //! - the scan emits ZERO `PERF-C-*` findings (the corpus is pure Rust);
 //! - `scan.languages == ["rust"]` and every scanned file is `language ==
 //!   "rust"`; `Cargo.toml` (the crate manifest that exists only for module
 //!   resolution) is NOT admitted as a source file;
 //! - `report.md` §4 catalogs every emitted `PERF-RS-*` rule id;
-//! - the total finding count is pinned to the documented 41
-//!   (17 hot / 11 warn / 13 info over 14 files) — the count is byte-stable
+//! - the total finding count is pinned to the M1-rebaselined 32
+//!   (10 hot / 9 warn / 13 info over 14 files) — the count is byte-stable
 //!   across runs modulo provenance and is part of the R4 evidence, so it is
 //!   asserted explicitly rather than left floating.
 //!
@@ -31,8 +33,8 @@ use perfpal::analyzer::finding::{
     RS_ARCH_002_RULE_ID, RS_ARCH_003_RULE_ID, RS_CALL_001_RULE_ID, RS_CALL_002_RULE_ID,
     RS_LOOP_001_RULE_ID, RS_LOOP_002_RULE_ID, RS_LOOP_003_RULE_ID, RS_LOOP_004_RULE_ID,
     RS_LOOP_005_RULE_ID, RS_LOOP_006_RULE_ID, RS_LOOP_007_RULE_ID, RS_LOOP_008_RULE_ID,
-    RS_MEM_001_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_001_RULE_ID, RS_STR_002_RULE_ID,
-    RS_STR_003_RULE_ID, RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
+    RS_MEM_001_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_002_RULE_ID, RS_STR_003_RULE_ID,
+    RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
 };
 use perfpal::cli::run_with;
 
@@ -70,9 +72,9 @@ fn section<'a>(text: &'a str, start: &str, end: &str) -> &'a str {
     &text[s..e]
 }
 
-/// The documented 23-rule Rust catalog, reusing the canonical constants and
-/// naming style of `tests/rust_wave_c2.rs`.
-fn catalog_23() -> BTreeSet<&'static str> {
+/// The documented 22-rule Rust catalog (M1 Precision Gate retired STR-001),
+/// reusing the canonical constants and naming style of `tests/rust_wave_c2.rs`.
+fn catalog_22() -> BTreeSet<&'static str> {
     [
         RS_ALLOC_001_RULE_ID,
         RS_ALLOC_002_RULE_ID,
@@ -92,7 +94,6 @@ fn catalog_23() -> BTreeSet<&'static str> {
         RS_LOOP_008_RULE_ID,
         RS_MEM_001_RULE_ID,
         RS_MEM_002_RULE_ID,
-        RS_STR_001_RULE_ID,
         RS_STR_002_RULE_ID,
         RS_STR_003_RULE_ID,
         RS_TYPE_001_RULE_ID,
@@ -118,8 +119,10 @@ struct Control {
     needle: &'static str,
 }
 
-/// All 13 documented silent controls, expanded to their 14 (file, line, rule)
-/// targets (`make_scratch` covers BOTH ALLOC-001 and ALLOC-003).
+/// All 12 retained silent controls, expanded to their 13 (file, line, rule)
+/// targets (`make_scratch` covers BOTH ALLOC-001 and ALLOC-003). The former
+/// 13th documented control (`append_via_add_assign → STR-001`) is dropped:
+/// PERF-RS-STR-001 is retired, so it is covered by the 22-rule set equality.
 ///
 /// Re-verified against the evidence doc + the corpus comments; two line
 /// drifts corrected vs the review table and one omitted control restored:
@@ -127,10 +130,10 @@ struct Control {
 ///   DEFINITION (line 45); line 44 is that function's doc comment.
 /// - `09_membership_scan.rs` LOOP-007 is anchored at the comparison `if`
 ///   (line 28); line 29 is the comment inside its body.
-/// - the evidence doc's 13th control `PackedTight → TYPE-002`
+/// - the evidence doc's `PackedTight → TYPE-002`
 ///   (`07_struct_by_value.rs`, struct def line 34) was absent from the review
-///   table and is asserted here so all 13 documented controls are covered.
-const SILENT_CONTROLS: [Control; 14] = [
+///   table and is asserted here.
+const SILENT_CONTROLS: [Control; 13] = [
     Control {
         file: "src/01_alloc_churn.rs",
         line: 21,
@@ -151,19 +154,13 @@ const SILENT_CONTROLS: [Control; 14] = [
     },
     Control {
         file: "src/02_string_building.rs",
-        line: 42,
+        line: 43,
         rule: RS_STR_002_RULE_ID,
         needle: "s.len()",
     },
     Control {
         file: "src/02_string_building.rs",
-        line: 51,
-        rule: RS_STR_001_RULE_ID,
-        needle: "s += part",
-    },
-    Control {
-        file: "src/02_string_building.rs",
-        line: 66,
+        line: 67,
         rule: RS_STR_003_RULE_ID,
         needle: "copy_from_slice(src)",
     },
@@ -193,13 +190,13 @@ const SILENT_CONTROLS: [Control; 14] = [
     },
     Control {
         file: "src/08_globals_and_chains.rs",
-        line: 49,
+        line: 51,
         rule: RS_LOOP_006_RULE_ID,
         needle: "direct_handler()",
     },
     Control {
         file: "src/08_globals_and_chains.rs",
-        line: 67,
+        line: 79,
         rule: RS_LOOP_008_RULE_ID,
         needle: "&cfg.region.zone",
     },
@@ -226,7 +223,7 @@ fn span_covers(finding: &serde_json::Value, line: usize) -> bool {
 }
 
 #[test]
-fn examples_rust_corpus_fires_exactly_the_23_rust_rules() {
+fn examples_rust_corpus_fires_exactly_the_22_rust_rules() {
     let committed = corpus_root();
     assert!(
         committed.join("src").is_dir(),
@@ -253,20 +250,20 @@ fn examples_rust_corpus_fires_exactly_the_23_rust_rules() {
     let raw = fs::read_to_string(out.join("metrics.json")).expect("metrics.json present");
     let doc: serde_json::Value = serde_json::from_str(&raw).expect("metrics.json parses");
 
-    // --- 1. exactly the 23-rule id set (set equality) -----------------------
+    // --- 1. exactly the 22-rule id set (set equality) -----------------------
     let findings = doc["findings"].as_array().expect("findings[] present");
     let seen: BTreeSet<&str> = findings
         .iter()
         .map(|f| f["rule_id"].as_str().expect("rule_id token"))
         .collect();
-    let expected = catalog_23();
+    let expected = catalog_22();
     let expected_ref: BTreeSet<&str> = expected.iter().copied().collect();
     assert_eq!(
         seen, expected_ref,
-        "examples-rust must fire EXACTLY the 23 PERF-RS-* ids \
+        "examples-rust must fire EXACTLY the 22 PERF-RS-* ids \
          (missing or unexpected rule ids present)"
     );
-    assert_eq!(expected.len(), 23, "catalog constant set must be 23 rules");
+    assert_eq!(expected.len(), 22, "catalog constant set must be 22 rules");
 
     // --- 2. zero PERF-C-* findings ------------------------------------------
     let c_findings: Vec<&str> = findings
@@ -324,22 +321,22 @@ fn examples_rust_corpus_fires_exactly_the_23_rust_rules() {
         );
     }
 
-    // --- 5. pinned total (documented 41 = 17 hot / 11 warn / 13 info) -------
+    // --- 5. pinned total (M1-rebaselined 32 = 10 hot / 9 warn / 13 info) ----
     assert_eq!(
         findings.len(),
-        41,
-        "documented examples-rust total drifted from 41"
+        32,
+        "M1-rebaselined examples-rust total drifted from 32"
     );
     let count = |sev: &str| findings.iter().filter(|f| f["severity"] == sev).count();
     assert_eq!(
         (count("hot"), count("warn"), count("info")),
-        (17, 11, 13),
-        "documented examples-rust severity split drifted from 17/11/13"
+        (10, 9, 13),
+        "M1-rebaselined examples-rust severity split drifted from 10/9/13"
     );
 
-    // --- 6. the 13 silent controls stay silent (14 target rules) ------------
-    // Requirement: "the 13 silent controls stay silent" must be asserted
-    // DIRECTLY, not inferred from the 23-rule set equality or the pinned
+    // --- 6. the 12 retained silent controls stay silent (13 target rules) ---
+    // Requirement: "the silent controls stay silent" must be asserted
+    // DIRECTLY, not inferred from the 22-rule set equality or the pinned
     // totals. For each control: (a) the control line must exist in the
     // snapshot AND carry the construct (anti-typo), (b) no finding of the
     // target rule may overlap that line, and (c) the target rule must fire

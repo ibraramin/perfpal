@@ -5,11 +5,13 @@
 //! Expected findings:
 //!   PERF-RS-LOOP-005  info  `static mut` written inside a loop
 //!   PERF-RS-LOOP-006  info  indirect call `handlers[i]()` in the innermost loop
-//!   PERF-RS-LOOP-008  info  `cfg.region.zone.depth` member chain of depth 3
+//!   PERF-RS-LOOP-008  info  `configs[i].region.zone.depth` indexed chain (depth 4)
 //!
 //! Silent controls (each must produce ZERO findings of the named rule):
 //!   * `call_directly` calls a plain function (`Direct` callee), so LOOP-006
 //!     must NOT fire.
+//!   * `read_depth_member` forms a pure member chain (no index/subscript step),
+//!     which the M1 Precision Gate excludes, so LOOP-008 must NOT fire.
 //!   * `read_zone_ref` only forms a depth-2 chain, below the LOOP-008 floor,
 //!     so LOOP-008 must NOT fire.
 
@@ -50,11 +52,21 @@ pub fn call_directly(n: usize) {
     }
 }
 
-/// Deep chain in the innermost loop (LOOP-008).
-pub fn read_depth(cfg: &Config, n: usize) -> u64 {
+/// Indexed chain in the innermost loop (LOOP-008: subscript + member steps).
+pub fn read_depth(configs: &[Config], n: usize) -> u64 {
+    let mut total = 0u64;
+    for i in 0..n {
+        let d = configs[i].region.zone.depth; // LOOP-008 (index + members)
+        total += d;
+    }
+    total
+}
+
+/// Pure member chain (no index step) — the M1 LOOP-008 silent control.
+pub fn read_depth_member(cfg: &Config, n: usize) -> u64 {
     let mut total = 0u64;
     for _ in 0..n {
-        let d = cfg.region.zone.depth; // LOOP-008 (chain depth 3)
+        let d = cfg.region.zone.depth; // control: no subscript -> no LOOP-008
         total += d;
     }
     total

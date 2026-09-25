@@ -2,8 +2,8 @@
 //! C1 + C2). Family layout mirrors `heuristics/`: [`alloc`]
 //! (RS-ALLOC-001/002/003), [`arch`] (RS-ARCH-001/002/003), [`call`]
 //! (RS-CALL-001/002), `r#loop` (RS-LOOP-001..008), [`mem`]
-//! (RS-MEM-001/002), `r#str` (RS-STR-001/002/003), and `r#type`
-//! (RS-TYPE-001/002).
+//! (RS-MEM-001/002), `r#str` (RS-STR-002/003; STR-001 retired by the M1
+//! Precision Gate), and `r#type` (RS-TYPE-001/002).
 //!
 //! These functions are only EVER invoked with `language == "rust"` units
 //! (registry language gating, `analyzer::analyze`); they are pure IR views
@@ -25,7 +25,9 @@ mod mem;
 mod r#str;
 mod r#type;
 
-use crate::ir::{CallEvent, ShapeKind};
+use crate::ir::{CallEvent, LoopNode, ShapeKind, Span};
+
+use super::span_contains;
 
 pub(crate) use alloc::{rust_alloc_001, rust_alloc_002, rust_alloc_003};
 pub(crate) use arch::{rust_arch_001, rust_arch_002, rust_arch_003};
@@ -35,8 +37,30 @@ pub(crate) use r#loop::{
     rust_loop_007, rust_loop_008,
 };
 pub(crate) use mem::{rust_mem_001, rust_mem_002};
-pub(crate) use r#str::{rust_str_001, rust_str_002, rust_str_003};
+pub(crate) use r#str::{rust_str_002, rust_str_003};
 pub(crate) use r#type::{rust_type_001, rust_type_002};
+
+/// Innermost (deepest) loop whose span contains `span`; ties on depth break
+/// to the earlier start position for determinism.
+///
+/// Shared by the Rust LOOP-005 global-store dedup and the ALLOC-001
+/// innermost-loop aggregation added by the M1 Precision Gate (plan
+/// `evidence-beta`), so both agree on what "the enclosing loop" is.
+pub(super) fn innermost_enclosing_loop<'a>(
+    loops: &'a [LoopNode],
+    span: &Span,
+) -> Option<&'a LoopNode> {
+    loops
+        .iter()
+        .filter(|l| span_contains(&l.span, span))
+        .min_by_key(|l| {
+            (
+                std::cmp::Reverse(l.depth),
+                l.span.start_line,
+                l.span.start_col,
+            )
+        })
+}
 
 /// Evidence-friendly callee token: the FULL `callee_path` when the Rust
 /// backend populated it (`Vec::with_capacity`, `s.push_str`,

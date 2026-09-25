@@ -286,15 +286,16 @@ fn file_local_definition_wins_over_cross_file_match() {
 }
 
 #[test]
-fn ambiguous_name_resolves_to_smallest_definition_path() {
-    let units = common::load_units_fixture("PERF-C-ARCH-003__ambiguous-smallest-path.json");
+fn ambiguous_name_emits_no_edge() {
+    // M1 Precision Gate uniqueness rule: `setup` is defined in BOTH a.c and
+    // b.c, so the name is ambiguous and the name-based fallback emits nothing
+    // (it previously resolved to the lexicographically smallest path).
+    let units = common::load_units_fixture("PERF-C-ARCH-003__ambiguous-silent.json");
     let findings = analyze(&units);
-    let arch003 = common::by_rule(&findings, ARCH_003_RULE_ID);
-    assert_eq!(arch003.len(), 1);
-    assert_eq!(
-        arch003[0].evidence.get("matched_path").map(String::as_str),
-        Some("a.c"),
-        "ambiguity resolves to the lexicographically smallest path"
+    assert!(
+        common::by_rule(&findings, ARCH_003_RULE_ID).is_empty(),
+        "an ambiguous cross-file name must not emit an ARCH-003 edge — got {:?}",
+        common::by_rule(&findings, ARCH_003_RULE_ID)
     );
 }
 

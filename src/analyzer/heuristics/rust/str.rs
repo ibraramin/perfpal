@@ -1,6 +1,7 @@
 //! Rust string-family heuristics (plan `rust-backend` R3 workstream C2):
-//! PERF-RS-STR-001/002/003 — the API-name mirror of the C string family
-//! (`heuristics::str`) onto Rust idioms.
+//! PERF-RS-STR-002/003 — the API-name mirror of the C string family
+//! (`heuristics::str`) onto Rust idioms. PERF-RS-STR-001 was RETIRED by the
+//! M1 Precision Gate (plan `evidence-beta`; `Vec::push` collision noise).
 //!
 //! Rust string methods carry the receiver in the callee `field_expression`
 //! (`s.push_str` ⇒ `callee_path`, receiver `s`), so the receiver gate reuses
@@ -10,17 +11,13 @@
 //! Purity (modules.md §4.1): pure IR views, no I/O/clock/globals. Messages use
 //! the mandatory "candidate optimization" framing.
 
-use crate::analyzer::finding::{RS_STR_001_RULE_ID, RS_STR_002_RULE_ID, RS_STR_003_RULE_ID};
+use crate::analyzer::finding::{RS_STR_002_RULE_ID, RS_STR_003_RULE_ID};
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{CallEvent, CalleeKind, ShapeKind, Span};
 use crate::scanner::{FileUnit, FunctionUnit};
 
 use super::super::span_contains;
 use super::{callee_token, method_receiver};
-
-/// String-accumulation method family (STR-001): each append rescans/grows the
-/// destination buffer.
-const ACCUM_METHODS: [&str; 2] = ["push_str", "push"];
 
 /// Length-query method family (STR-002): recomputed per iteration.
 const LENGTH_METHODS: [&str; 3] = ["len", "is_empty", "capacity"];
@@ -39,73 +36,6 @@ const UNBOUNDED_OP_METHODS: [&str; 5] = [
 /// Qualified spellings of the STR-003 family (matched as `path == entry` or a
 /// `::entry` suffix, e.g. `std::slice::from_raw_parts`).
 const UNBOUNDED_OP_QUALIFIED: [&str; 2] = ["slice::from_raw_parts", "str::from_utf8_unchecked"];
-
-/// PERF-RS-STR-001 — String accumulation in loop (mirrors PERF-C-STR-001).
-///
-/// Intent: appending to a growable string per iteration is the Rust analogue
-/// of C `strcat` accumulation — repeated growth/reallocation. Detection: a
-/// DIRECT method call `push_str`/`push` at `in_loop_depth ≥ 1` whose receiver
-/// is a simple identifier or field chain (`s`, `self.buf`; see
-/// [`method_receiver`]). Hot/HIGH.
-/// Evidence `callee`, `dest`, `loop_depth`.
-///
-/// HONEST LIMITATION (mandatory): compound-assignment growth
-/// (`s += "x"`, `s.push_str` via `AddAssign`) is NOT a `CallEvent` and
-/// [`crate::ir::AssignmentEvent`] carries no operator field, so additive
-/// `+=` accumulation is INVISIBLE to this rule. Accepted FP class:
-/// `push` is also `Vec::push` (and other container pushes) — the syntactic
-/// tier cannot see the receiver's type, so non-string pushes inside a loop
-/// fire as well; the candidate stays candidate-grade, never a bug verdict.
-pub(crate) fn rust_str_001(units: &[FileUnit]) -> Vec<Finding> {
-    let mut findings = Vec::new();
-    for unit in units {
-        for func in &unit.functions {
-            for call in &func.calls {
-                if call.callee_kind != CalleeKind::Direct
-                    || call.is_macro
-                    || !ACCUM_METHODS.contains(&call.callee_name.as_str())
-                    || call.meta.in_loop_depth == 0
-                {
-                    continue;
-                }
-                let Some(dest) = method_receiver(call) else {
-                    continue;
-                };
-                let callee = callee_token(call);
-                findings.push(Finding {
-                    threshold: None,
-                    rule_id: RS_STR_001_RULE_ID.to_string(),
-                    title: "String accumulation in loop (Rust)".to_string(),
-                    message: format!(
-                        "'{callee}' accumulates into '{dest}' at loop depth \
-                         {} — repeated growth/reallocation; pre-sizing the \
-                         buffer or tracking a running length is a candidate \
-                         optimization",
-                        call.meta.in_loop_depth
-                    ),
-                    severity: Severity::Hot,
-                    confidence: Confidence::High,
-                    resolver_tier: call.meta.resolver_tier,
-                    span: call.meta.span,
-                    path: unit.file.path.clone(),
-                    evidence: [
-                        ("callee".to_string(), callee),
-                        ("dest".to_string(), dest.to_string()),
-                        (
-                            "loop_depth".to_string(),
-                            call.meta.in_loop_depth.to_string(),
-                        ),
-                    ]
-                    .into_iter()
-                    .collect(),
-                    macro_suspect: false,
-                    error_node_overlap: false,
-                });
-            }
-        }
-    }
-    findings
-}
 
 /// PERF-RS-STR-002 — Length query recomputed in loop
 /// (mirrors PERF-C-STR-002).

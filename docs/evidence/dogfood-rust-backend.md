@@ -1,5 +1,14 @@
 # Dogfood + `examples-rust/` — evidence (plan `rust-backend`, phase R4)
 
+> **Superseded R4 snapshot (M1 note, append-only).** Every count in this document is the
+> `rust-backend` R4 self-scan and **predates the M1 Precision Gate** (`evidence-beta`), which
+> disposed 5 rules (`ALLOC-001`, `ARCH-003`, `STR-001`, `MEM-002`, `LOOP-008`). `perfpal src`
+> now reports **304 findings (76 hot / 97 warn / 131 info)**, and those 5 rules are down to
+> **168** (`ARCH-003` 90, `ALLOC-001` 74, `LOOP-008` 4, `STR-001` 0, `MEM-002` 0). History
+> below is retained **unchanged**. The full before/after baseline and the per-rule
+> precision KPI are [precision-baseline.md](./precision-baseline.md); see also the
+> [updated Rust catalog §3–4](../heuristics/rust-catalog.md) and [roadmap M1](../roadmap.md).
+
 - **Status:** LANDED — plan `rust-backend` R4. This document is the published dogfood
   report and the corpus coverage record for the Rust language tier.
 - **Reproduce (dogfood):** `perfpal src -o <out>` from the repo root (33 `.rs` files).

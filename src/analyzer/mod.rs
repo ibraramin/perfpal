@@ -76,11 +76,11 @@ pub(crate) struct RegistryEntry {
 /// call_002, loop_001, loop_002, loop_003, loop_004, loop_005, loop_006,
 /// loop_007, loop_008, mem_001, mem_002, str_001, str_002, str_003,
 /// type_001, type_002.
-/// Rust (waves C1 structural + C2 API-name) — the FULL 23-rule catalog,
-/// ascending: alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003,
-/// call_001, call_002, loop_001, loop_002, loop_003, loop_004, loop_005,
-/// loop_006, loop_007, loop_008, mem_001, mem_002, str_001, str_002, str_003,
-/// type_001, type_002.
+/// Rust (waves C1 structural + C2 API-name) — the 22-rule Rust catalog
+/// (STR-001 retired by the M1 Precision Gate), ascending: alloc_001,
+/// alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001, call_002,
+/// loop_001, loop_002, loop_003, loop_004, loop_005, loop_006, loop_007,
+/// loop_008, mem_001, mem_002, str_002, str_003, type_001, type_002.
 const REGISTRY: &[RegistryEntry] = &[
     RegistryEntry {
         language: RuleLanguage::C,
@@ -289,11 +289,6 @@ const REGISTRY: &[RegistryEntry] = &[
     },
     RegistryEntry {
         language: RuleLanguage::Rust,
-        rule_id: finding::RS_STR_001_RULE_ID,
-        f: heuristics::rust_str_001,
-    },
-    RegistryEntry {
-        language: RuleLanguage::Rust,
         rule_id: finding::RS_STR_002_RULE_ID,
         f: heuristics::rust_str_002,
     },
@@ -344,8 +339,8 @@ pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
     // same-named Rust constructs in a mixed scan. The units are partitioned
     // ONCE here into two owned slices (a single deep clone of every
     // `FileUnit`); the alternative — handing each rule the full borrowed set
-    // and repeating the language filter inside all 46 rules — trades that one
-    // upfront clone for 46 per-rule passes over the units. The upfront split
+    // and repeating the language filter inside all 45 rules — trades that one
+    // upfront clone for 45 per-rule passes over the units. The upfront split
     // is paid once per `analyze` call and keeps every rule a pure,
     // language-homogeneous IR view. Any language other than `"rust"`
     // (including `"c"`) lands in the C bucket, matching the scanner's C

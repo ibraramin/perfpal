@@ -131,7 +131,7 @@ fn loop_008_only_deep_innermost_chains_fire() {
     assert_eq!(
         hits.len(),
         1,
-        "shallow chains and non-innermost chains stay silent"
+        "pure member chains, shallow chains, and non-innermost chains stay silent"
     );
     let f = hits[0];
     assert_eq!(f.severity, Severity::Info);
@@ -266,6 +266,19 @@ fn arch_003_cross_module_name_match_fires_and_local_is_suppressed() {
         Some("src/util.rs")
     );
     assert!(!f.evidence.contains_key("resolved"), "name-based fallback");
+}
+
+/// M1 Precision Gate uniqueness: an ambiguous name (defined in TWO Rust files)
+/// must emit NO name-based edge. Mirrors the C uniqueness negative.
+#[test]
+fn arch_003_ambiguous_name_emits_no_edge() {
+    let units = common::load_units_fixture("PERF-RS-ARCH-003__ambiguous.json");
+    let findings = analyze(&units);
+    assert!(
+        common::by_rule(&findings, RS_ARCH_003_RULE_ID).is_empty(),
+        "an ambiguous cross-module name must not emit an ARCH-003 edge — got {:?}",
+        common::by_rule(&findings, RS_ARCH_003_RULE_ID)
+    );
 }
 
 // ===========================================================================

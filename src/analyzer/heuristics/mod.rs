@@ -8,8 +8,9 @@
 //! Shared candidate collection and span helpers live here so families stay
 //! consistent.
 //!
-//! [`rust`] mirrors the FULL 23-rule catalog onto Rust idioms (R3 waves C1
-//! structural + C2 API-name families).
+//! [`rust`] mirrors the 22-rule Rust catalog onto Rust idioms (R3 waves C1
+//! structural + C2 API-name families; PERF-RS-STR-001 retired by the M1
+//! Precision Gate, plan `evidence-beta`).
 
 mod alloc;
 mod arch;
@@ -20,9 +21,9 @@ mod r#str;
 mod r#type;
 
 /// Rust (`PERF-RS-*`) heuristic families (plan `rust-backend` R3 workstreams
-/// C1 + C2): the FULL 23-rule catalog mirrored onto Rust idioms (structural
-/// subset in C1, API-name families in C2). The registry runs these only over
-/// `language == "rust"` units.
+/// C1 + C2): the 22-rule Rust catalog mirrored onto Rust idioms (structural
+/// subset in C1, API-name families in C2; STR-001 retired by the M1 Precision
+/// Gate). The registry runs these only over `language == "rust"` units.
 pub(super) mod rust;
 
 pub(super) use alloc::{alloc_001, alloc_002, alloc_003};
@@ -36,7 +37,7 @@ pub(super) use rust::{
     rust_alloc_001, rust_alloc_002, rust_alloc_003, rust_arch_001, rust_arch_002, rust_arch_003,
     rust_call_001, rust_call_002, rust_loop_001, rust_loop_002, rust_loop_003, rust_loop_004,
     rust_loop_005, rust_loop_006, rust_loop_007, rust_loop_008, rust_mem_001, rust_mem_002,
-    rust_str_001, rust_str_002, rust_str_003, rust_type_001, rust_type_002,
+    rust_str_002, rust_str_003, rust_type_001, rust_type_002,
 };
 /// Wave B2 (plan `semantic-resolver`): the resolver's literal-args mutation
 /// pass reuses the scanf family/position contract — single source of truth,

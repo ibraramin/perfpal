@@ -34,8 +34,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use perfpal::analyzer::analyze;
 use perfpal::analyzer::finding::{
     ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ARCH_003_RULE_ID, RS_ALLOC_001_RULE_ID,
-    RS_ALLOC_003_RULE_ID, RS_ARCH_003_RULE_ID, RS_MEM_001_RULE_ID, RS_STR_001_RULE_ID,
-    RS_STR_002_RULE_ID, STR_001_RULE_ID, STR_003_RULE_ID,
+    RS_ALLOC_003_RULE_ID, RS_ARCH_003_RULE_ID, RS_MEM_001_RULE_ID, RS_STR_002_RULE_ID,
+    STR_001_RULE_ID, STR_003_RULE_ID,
 };
 use perfpal::cli::run_with;
 use perfpal::scanner::scan;
@@ -184,7 +184,6 @@ fn mixed_c_and_rust_tree_locks_language_gating_and_report() {
     let expected_rs: BTreeSet<&str> = [
         RS_ALLOC_001_RULE_ID,
         RS_ALLOC_003_RULE_ID,
-        RS_STR_001_RULE_ID,
         RS_STR_002_RULE_ID,
         RS_MEM_001_RULE_ID,
     ]

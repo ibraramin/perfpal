@@ -1,5 +1,5 @@
 //! Rust heuristic wave C2 integration tests (plan `rust-backend` R3): the
-//! API-name `PERF-RS-*` families (ALLOC-001/002/003, STR-001/002/003,
+//! API-name `PERF-RS-*` families (ALLOC-001/002/003, STR-002/003,
 //! LOOP-002/003/006, MEM-001/002) that mirror the C library-name rules onto
 //! Rust idioms.
 //!
@@ -7,7 +7,7 @@
 //! drive positives AND negatives/suppressions, severity/confidence and
 //! evidence keys; the LL-009 lesson is honored with REAL-PARSE locks for the
 //! alloc/str/mem families (a small `.rs` tree through `scanner::scan` +
-//! `analyzer::analyze`). A final lock asserts all 23 `PERF-RS-*` ids are
+//! `analyzer::analyze`). A final lock asserts all 22 `PERF-RS-*` ids are
 //! reachable and emitted in the report §4 total order.
 
 mod common;
@@ -22,8 +22,8 @@ use perfpal::analyzer::finding::{
     RS_ARCH_002_RULE_ID, RS_ARCH_003_RULE_ID, RS_CALL_001_RULE_ID, RS_CALL_002_RULE_ID,
     RS_LOOP_001_RULE_ID, RS_LOOP_002_RULE_ID, RS_LOOP_003_RULE_ID, RS_LOOP_004_RULE_ID,
     RS_LOOP_005_RULE_ID, RS_LOOP_006_RULE_ID, RS_LOOP_007_RULE_ID, RS_LOOP_008_RULE_ID,
-    RS_MEM_001_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_001_RULE_ID, RS_STR_002_RULE_ID,
-    RS_STR_003_RULE_ID, RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
+    RS_MEM_001_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_002_RULE_ID, RS_STR_003_RULE_ID,
+    RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
 };
 use perfpal::analyzer::{Confidence, Finding, Severity, analyze};
 use perfpal::scanner::{FileUnit, scan};
@@ -33,40 +33,160 @@ use perfpal::scanner::{FileUnit, scan};
 // ===========================================================================
 
 #[test]
-fn alloc_001_qualified_macro_and_method_sites_fire_with_site_index() {
+fn alloc_001_aggregates_one_finding_per_innermost_loop() {
     let units = common::load_units_fixture("PERF-RS-ALLOC-001__alloc-in-loop.json");
     let findings = analyze(&units);
     let hits = common::by_rule(&findings, RS_ALLOC_001_RULE_ID);
     assert_eq!(
         hits.len(),
-        3,
-        "the depth-0 Vec::new and the non-family in-loop call stay silent"
+        1,
+        "three in-loop alloc sites in ONE loop aggregate to one finding"
     );
-    let callees: Vec<&str> = hits
-        .iter()
-        .map(|f| f.evidence.get("callee").map(String::as_str).unwrap())
-        .collect();
-    assert_eq!(callees, ["Vec::new", "vec", "items.to_vec"]);
-    let indices: Vec<&str> = hits
-        .iter()
-        .map(|f| {
-            f.evidence
-                .get("alloc_site_index")
-                .map(String::as_str)
-                .unwrap()
-        })
-        .collect();
+    let f = hits[0];
+    assert_eq!(f.severity, Severity::Hot);
+    assert_eq!(f.confidence, Confidence::High);
+    assert_eq!(f.evidence.get("alloc_count").map(String::as_str), Some("3"));
     assert_eq!(
-        indices,
-        ["1", "2", "3"],
-        "site index counts all family sites in declaration order (the depth-0 one included)"
+        f.evidence.get("callees").map(String::as_str),
+        Some("Vec::new, to_vec, vec"),
+        "sorted-unique SHORT callee tokens (method receiver text is not leaked)"
     );
-    for f in &hits {
-        assert_eq!(f.severity, Severity::Hot);
-        assert_eq!(f.confidence, Confidence::High);
-        assert_eq!(f.evidence.get("loop_depth").map(String::as_str), Some("1"));
-        assert!(f.message.contains("candidate optimization"));
-    }
+    assert_eq!(
+        f.evidence.get("callee").map(String::as_str),
+        Some("Vec::new"),
+        "evidence-key compatibility: first sorted token"
+    );
+    assert_eq!(f.evidence.get("loop_depth").map(String::as_str), Some("1"));
+    assert_eq!(
+        (
+            f.span.start_line,
+            f.span.start_col,
+            f.span.end_line,
+            f.span.end_col
+        ),
+        (3, 5, 11, 6),
+        "span anchors at the innermost enclosing loop, not a call site"
+    );
+    assert!(f.message.contains("candidate optimization"));
+}
+
+/// One finding per innermost enclosing loop — two sibling loops ⇒ two findings,
+/// each carrying its own `alloc_count` and loop span.
+#[test]
+fn alloc_001_emits_one_finding_per_loop() {
+    let units = common::load_units_fixture("PERF-RS-ALLOC-001__two-loops.json");
+    let findings = analyze(&units);
+    let hits = common::by_rule(&findings, RS_ALLOC_001_RULE_ID);
+    assert_eq!(hits.len(), 2, "two innermost loops ⇒ two findings");
+    let counts: Vec<&str> = hits
+        .iter()
+        .map(|f| f.evidence.get("alloc_count").map(String::as_str).unwrap())
+        .collect();
+    assert_eq!(counts, ["2", "1"], "groups ordered by loop span");
+    assert_eq!(hits[0].span.start_line, 3, "first loop anchor");
+    assert_eq!(hits[1].span.start_line, 8, "second loop anchor");
+}
+
+/// M1 literal-receiver suppression: `"…".to_string()` / `"…".to_owned()` build
+/// a `String` from a literal (often foldable) and must stay silent.
+#[test]
+fn alloc_001_suppresses_literal_receiver_string_alloc() {
+    let units = common::load_units_fixture("PERF-RS-ALLOC-001__literal-receiver.json");
+    let findings = analyze(&units);
+    assert!(
+        common::by_rule(&findings, RS_ALLOC_001_RULE_ID).is_empty(),
+        "literal-receiver .to_string()/.to_owned() allocations stay silent"
+    );
+}
+
+/// M1 `+N more` cap: a single innermost loop with more than 8 distinct
+/// alloc-family callees still yields ONE finding whose `callees` evidence is
+/// the 8-token prefix plus an EXACT `+N more` suffix, and whose
+/// `alloc_count` is the exact site total.
+#[test]
+fn alloc_001_caps_callee_list_with_more_suffix() {
+    let units = common::load_units_fixture("PERF-RS-ALLOC-001__callee-cap.json");
+    let findings = analyze(&units);
+    let hits = common::by_rule(&findings, RS_ALLOC_001_RULE_ID);
+    assert_eq!(
+        hits.len(),
+        1,
+        "ten distinct sites in one loop aggregate to one finding"
+    );
+    let f = hits[0];
+    assert_eq!(
+        f.evidence.get("alloc_count").map(String::as_str),
+        Some("10"),
+        "alloc_count is the exact site total, not the displayed token count"
+    );
+    assert_eq!(
+        f.evidence.get("callees").map(String::as_str),
+        Some(
+            "Arc::new, Box::new, Rc::new, String::new, \
+             String::with_capacity, Vec::new, collect, format, +2 more"
+        ),
+        "the 8-token cap keeps the smallest sorted-unique tokens with an exact remainder"
+    );
+    assert_eq!(
+        f.evidence.get("callee").map(String::as_str),
+        Some("Arc::new"),
+        "evidence-key compatibility: first sorted token"
+    );
+}
+
+/// M1 defensive singleton: an alloc-family call flagged `in_loop_depth ≥ 1` +
+/// `is_innermost` but with NO modelled enclosing `loops[]` entry still emits
+/// exactly one finding anchored at the CALL span, with the call-derived
+/// `loop_depth`.
+#[test]
+fn alloc_001_defensive_singleton_anchors_at_call_span() {
+    let units = common::load_units_fixture("PERF-RS-ALLOC-001__defensive-singleton.json");
+    let findings = analyze(&units);
+    let hits = common::by_rule(&findings, RS_ALLOC_001_RULE_ID);
+    assert_eq!(
+        hits.len(),
+        1,
+        "an unmodelled enclosing loop still fires as a singleton group"
+    );
+    let f = hits[0];
+    assert_eq!(
+        (
+            f.span.start_line,
+            f.span.start_col,
+            f.span.end_line,
+            f.span.end_col
+        ),
+        (4, 9, 4, 20),
+        "the singleton anchors at the call span"
+    );
+    assert_eq!(f.evidence.get("alloc_count").map(String::as_str), Some("1"));
+    assert_eq!(
+        f.evidence.get("loop_depth").map(String::as_str),
+        Some("1"),
+        "the fallback keeps the call-derived in_loop_depth"
+    );
+    assert_eq!(
+        f.evidence.get("callees").map(String::as_str),
+        Some("Vec::new")
+    );
+}
+
+/// M1 short-token qualified-name rule: a generic qualified name is retained
+/// (`HashMap::<K, V>::with_capacity`), while a method call carrying a receiver
+/// expression in `callee_path` (`Mod::make().collect`) collapses to its bare
+/// `callee_name` instead of leaking the receiver text.
+#[test]
+fn alloc_001_short_token_keeps_qualified_and_drops_receiver_text() {
+    let units = common::load_units_fixture("PERF-RS-ALLOC-001__qualified-token.json");
+    let findings = analyze(&units);
+    let hits = common::by_rule(&findings, RS_ALLOC_001_RULE_ID);
+    assert_eq!(hits.len(), 1);
+    let f = hits[0];
+    assert_eq!(
+        f.evidence.get("callees").map(String::as_str),
+        Some("HashMap::<K, V>::with_capacity, collect"),
+        "qualified constructor kept; receiver text from a method call not leaked"
+    );
 }
 
 // ===========================================================================
@@ -129,32 +249,6 @@ fn alloc_003_reserve_methods_fire_at_any_loop_depth() {
             Some("additive")
         );
     }
-}
-
-// ===========================================================================
-// PERF-RS-STR-001 — push_str/push accumulation in loop
-// ===========================================================================
-
-#[test]
-fn str_001_only_identifier_receivers_fire() {
-    let units = common::load_units_fixture("PERF-RS-STR-001__push-str-in-loop.json");
-    let findings = analyze(&units);
-    let hits = common::by_rule(&findings, RS_STR_001_RULE_ID);
-    assert_eq!(
-        hits.len(),
-        2,
-        "out-of-loop and expression-receiver pushes stay silent"
-    );
-    for f in &hits {
-        assert_eq!(f.severity, Severity::Hot);
-        assert_eq!(f.confidence, Confidence::High);
-        assert_eq!(f.evidence.get("dest").map(String::as_str), Some("s"));
-    }
-    let callees: Vec<&str> = hits
-        .iter()
-        .map(|f| f.evidence.get("callee").map(String::as_str).unwrap())
-        .collect();
-    assert_eq!(callees, ["s.push_str", "s.push"]);
 }
 
 // ===========================================================================
@@ -326,22 +420,35 @@ fn mem_001_flags_size_of_arguments_to_with_capacity() {
 // ===========================================================================
 
 #[test]
-fn mem_002_info_outside_innermost_and_warn_inside() {
+fn mem_002_block_copies_warn_innermost_and_clone_stays_silent() {
     let units = common::load_units_fixture("PERF-RS-MEM-002__block-copy-in-loop.json");
     let findings = analyze(&units);
     let hits = common::by_rule(&findings, RS_MEM_002_RULE_ID);
-    assert_eq!(hits.len(), 4, "the out-of-loop copy stays silent");
-    let warns = hits.iter().filter(|f| f.severity == Severity::Warn).count();
-    let infos = hits.iter().filter(|f| f.severity == Severity::Info).count();
-    assert_eq!((warns, infos), (2, 2), "innermost copies escalate to Warn");
+    assert_eq!(
+        hits.len(),
+        2,
+        "only the two block-copy methods fire; clone/to_vec were dropped from the family"
+    );
+    let callees: BTreeSet<&str> = hits
+        .iter()
+        .map(|f| f.evidence.get("callee").map(String::as_str).unwrap())
+        .collect();
+    assert_eq!(
+        callees,
+        BTreeSet::from(["dst.copy_from_slice", "dst.extend_from_slice"])
+    );
     for f in &hits {
+        assert_eq!(f.severity, Severity::Warn, "innermost copies escalate");
         assert_eq!(f.confidence, Confidence::Medium);
-        assert!(f.evidence.contains_key("innermost"));
+        assert_eq!(
+            f.evidence.get("innermost").map(String::as_str),
+            Some("true")
+        );
     }
 }
 
 // ===========================================================================
-// All-23 reachability + total order
+// All-22 reachability + total order
 // ===========================================================================
 
 /// Report §4 rank comparison (spec-derived, independent of the enum order):
@@ -372,9 +479,9 @@ fn adjacently_in_total_order(a: &Finding, b: &Finding) -> bool {
 }
 
 #[test]
-fn all_23_rust_rules_are_reachable_and_total_ordered() {
+fn all_22_rust_rules_are_reachable_and_total_ordered() {
     // Load EVERY `PERF-RS-*` fixture in the corpus (parser-free) and analyze
-    // them together: the union of emitted rule ids must be the full 23-rule
+    // them together: the union of emitted rule ids must be the full 22-rule
     // Rust catalog, and the document must be in report §4 total order.
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/ir");
     let mut names: Vec<String> = fs::read_dir(&dir)
@@ -384,7 +491,7 @@ fn all_23_rust_rules_are_reachable_and_total_ordered() {
         .filter(|n| n.starts_with("PERF-RS-") && n.ends_with(".json"))
         .collect();
     names.sort();
-    assert!(names.len() >= 23, "expected the full R3 fixture corpus");
+    assert!(names.len() >= 22, "expected the full R3 fixture corpus");
     let mut units: Vec<FileUnit> = Vec::new();
     for name in &names {
         units.extend(common::load_units_fixture(name));
@@ -410,7 +517,6 @@ fn all_23_rust_rules_are_reachable_and_total_ordered() {
         RS_LOOP_008_RULE_ID,
         RS_MEM_001_RULE_ID,
         RS_MEM_002_RULE_ID,
-        RS_STR_001_RULE_ID,
         RS_STR_002_RULE_ID,
         RS_STR_003_RULE_ID,
         RS_TYPE_001_RULE_ID,
@@ -495,9 +601,6 @@ fn real_parse_lock_str_family() {
     );
     let units = scan(&root).expect("scan must succeed");
     let findings = analyze(&units);
-    let accum = common::by_rule(&findings, RS_STR_001_RULE_ID);
-    assert_eq!(accum.len(), 1, "real parse: s.push_str fires RS-STR-001");
-    assert_eq!(accum[0].evidence.get("dest").map(String::as_str), Some("s"));
     assert!(
         !common::by_rule(&findings, RS_STR_002_RULE_ID).is_empty(),
         "real parse: unassigned .len() in loop fires RS-STR-002"
@@ -505,6 +608,10 @@ fn real_parse_lock_str_family() {
     assert!(
         !common::by_rule(&findings, RS_STR_003_RULE_ID).is_empty(),
         "real parse: set_len fires RS-STR-003"
+    );
+    assert!(
+        findings.iter().all(|f| f.rule_id != "PERF-RS-STR-001"),
+        "real parse: retired RS-STR-001 must stay silent on push_str"
     );
     fs::remove_dir_all(&root).ok();
 }
@@ -537,8 +644,8 @@ fn real_parse_lock_mem_family() {
 
 /// LL-009 real-parse locks for the paths that were previously fixture-only:
 /// `PERF-RS-ALLOC-002` (`drop`), `PERF-RS-LOOP-002`, `PERF-RS-LOOP-003` and
-/// `PERF-RS-LOOP-006`, plus the m1 receiver-evidence regression
-/// (`self.buf.push_str(p)` must report `self.buf`, never the argument `p`).
+/// `PERF-RS-LOOP-006`. `Acc::accum` keeps the m1 receiver shape
+/// (`self.buf.push_str(p)`) as a retired-RS-STR-001 silence probe.
 #[test]
 fn real_parse_lock_drop_loop_api_and_receiver_evidence() {
     let root = temp_root("drop-loop-recv");
@@ -583,17 +690,10 @@ fn real_parse_lock_drop_loop_api_and_receiver_evidence() {
     let units = scan(&root).expect("scan must succeed");
     let findings = analyze(&units);
 
-    // m1: the receiver is `self.buf`, NEVER the argument `p`.
-    let accum = common::by_rule(&findings, RS_STR_001_RULE_ID);
-    assert_eq!(
-        accum.len(),
-        1,
-        "real parse: self.buf.push_str fires RS-STR-001"
-    );
-    assert_eq!(
-        accum[0].evidence.get("dest").map(String::as_str),
-        Some("self.buf"),
-        "m1: receiver evidence is the base, not the first argument"
+    // Retired RS-STR-001: `self.buf.push_str(p)` must emit NOTHING.
+    assert!(
+        findings.iter().all(|f| f.rule_id != "PERF-RS-STR-001"),
+        "real parse: retired RS-STR-001 stays silent on self.buf.push_str"
     );
 
     // ALLOC-002: a per-iteration `drop` fires (Warn, no paired in-loop alloc).

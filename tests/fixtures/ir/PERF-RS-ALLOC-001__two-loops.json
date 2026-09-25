@@ -1,0 +1,28 @@
+[
+  {
+    "file": {"path": "src/two_loops.rs", "language": "rust", "loc": {"code": 14, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/two_loops.rs#fill#1:1", "name": "fill", "path": "src/two_loops.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 14, "end_col": 2}, "param_count": 1, "param_types": ["usize"], "cyclomatic_complexity": 3, "cognitive_complexity": 2, "max_loop_depth": 1, "alloc_site_count": 3, "length_lines": 14},
+        "calls": [
+          {"span": {"start_line": 4, "start_col": 9, "end_line": 4, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "new", "callee_kind": "direct", "callee_path": "Vec::new", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 4, "start_col": 25, "end_line": 4, "end_col": 33}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "vec", "callee_kind": "direct", "callee_path": "vec", "is_macro": true, "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 9, "start_col": 9, "end_line": 9, "end_col": 24}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "to_vec", "callee_kind": "direct", "callee_path": "items.to_vec", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 3, "start_col": 5, "end_line": 5, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false},
+          {"kind": "for", "depth": 1, "induction_vars": ["j"], "span": {"start_line": 8, "start_col": 5, "end_line": 10, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      }
+    ]
+  }
+]

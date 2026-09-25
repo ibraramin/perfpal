@@ -33,8 +33,8 @@ use perfpal::analyzer::Severity;
 use perfpal::analyzer::finding::{
     RS_ALLOC_001_RULE_ID, RS_ALLOC_002_RULE_ID, RS_ALLOC_003_RULE_ID, RS_ARCH_003_RULE_ID,
     RS_CALL_002_RULE_ID, RS_LOOP_001_RULE_ID, RS_LOOP_002_RULE_ID, RS_LOOP_003_RULE_ID,
-    RS_LOOP_005_RULE_ID, RS_LOOP_006_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_001_RULE_ID,
-    RS_STR_002_RULE_ID, RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
+    RS_LOOP_005_RULE_ID, RS_LOOP_006_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_002_RULE_ID,
+    RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
 };
 use perfpal::analyzer::{Confidence, analyze};
 use perfpal::scanner::scan;
@@ -67,15 +67,6 @@ fn alloc_003_stays_silent_when_not_in_loop() {
     assert!(
         common::by_rule(&analyze(&units), RS_ALLOC_003_RULE_ID).is_empty(),
         "a reserve outside any loop must not fire RS-ALLOC-003"
-    );
-}
-
-#[test]
-fn str_001_stays_silent_when_not_in_loop() {
-    let units = common::load_units_fixture("PERF-RS-STR-001__not-in-loop.json");
-    assert!(
-        common::by_rule(&analyze(&units), RS_STR_001_RULE_ID).is_empty(),
-        "a push_str outside any loop must not fire RS-STR-001"
     );
 }
 
@@ -210,7 +201,7 @@ fn mem_002_macro_origin_downgrades_to_medium_with_flag() {
     assert!(!f.error_node_overlap, "hooks fire independently");
     assert_eq!(
         f.evidence.get("callee").map(String::as_str),
-        Some("buf.clone")
+        Some("dst.copy_from_slice")
     );
 }
 

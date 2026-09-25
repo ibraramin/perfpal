@@ -1,0 +1,35 @@
+{
+  "baseline": {
+    "PERF-C-ALLOC-001": { "precision": 1.0, "recall": 1.0 },
+    "PERF-C-ARCH-003": { "precision": 1.0, "recall": 1.0 },
+    "PERF-C-LOOP-008": { "precision": 1.0, "recall": 1.0 },
+    "PERF-C-MEM-002": { "precision": 1.0, "recall": 1.0 },
+    "PERF-C-STR-001": { "precision": 1.0, "recall": 1.0 },
+    "PERF-RS-ALLOC-001": { "precision": 1.0, "recall": 1.0 },
+    "PERF-RS-ARCH-003": { "precision": 1.0, "recall": 1.0 },
+    "PERF-RS-LOOP-008": { "precision": 1.0, "recall": 1.0 },
+    "PERF-RS-MEM-002": { "precision": 1.0, "recall": 1.0 },
+    "PERF-RS-STR-001": { "precision": 1.0, "recall": 1.0 }
+  },
+  "cases": [
+    { "rule_id": "PERF-RS-ALLOC-001", "path": "rust/alloc.rs", "line": 8, "expect": "fire" },
+    { "rule_id": "PERF-RS-ALLOC-001", "path": "rust/alloc_silent.rs", "expect": "silent" },
+    { "rule_id": "PERF-RS-STR-001", "path": "rust/alloc_silent.rs", "expect": "silent" },
+    { "rule_id": "PERF-RS-ARCH-003", "path": "rust/arch.rs", "line": 7, "expect": "fire" },
+    { "rule_id": "PERF-RS-ARCH-003", "path": "rust/arch_silent.rs", "expect": "silent" },
+    { "rule_id": "PERF-RS-MEM-002", "path": "rust/mem.rs", "line": 8, "expect": "fire" },
+    { "rule_id": "PERF-RS-MEM-002", "path": "rust/mem_silent.rs", "expect": "silent" },
+    { "rule_id": "PERF-RS-LOOP-008", "path": "rust/loop_chain.rs", "line": 17, "expect": "fire" },
+    { "rule_id": "PERF-RS-LOOP-008", "path": "rust/loop_silent.rs", "expect": "silent" },
+    { "rule_id": "PERF-C-ALLOC-001", "path": "c/alloc.c", "line": 10, "expect": "fire" },
+    { "rule_id": "PERF-C-ALLOC-001", "path": "c/alloc_silent.c", "expect": "silent" },
+    { "rule_id": "PERF-C-ARCH-003", "path": "c/arch.c", "line": 6, "expect": "fire" },
+    { "rule_id": "PERF-C-ARCH-003", "path": "c/arch_silent.c", "expect": "silent" },
+    { "rule_id": "PERF-C-MEM-002", "path": "c/mem.c", "line": 9, "expect": "fire" },
+    { "rule_id": "PERF-C-MEM-002", "path": "c/mem_silent.c", "expect": "silent" },
+    { "rule_id": "PERF-C-LOOP-008", "path": "c/loop.c", "line": 21, "expect": "fire" },
+    { "rule_id": "PERF-C-LOOP-008", "path": "c/loop_silent.c", "expect": "silent" },
+    { "rule_id": "PERF-C-STR-001", "path": "c/str.c", "line": 9, "expect": "fire" },
+    { "rule_id": "PERF-C-STR-001", "path": "c/str_silent.c", "expect": "silent" }
+  ]
+}

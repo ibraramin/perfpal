@@ -17,8 +17,8 @@ use perfpal::analyzer::finding::{
     RS_ARCH_002_RULE_ID, RS_ARCH_003_RULE_ID, RS_CALL_001_RULE_ID, RS_CALL_002_RULE_ID,
     RS_LOOP_001_RULE_ID, RS_LOOP_002_RULE_ID, RS_LOOP_003_RULE_ID, RS_LOOP_004_RULE_ID,
     RS_LOOP_005_RULE_ID, RS_LOOP_006_RULE_ID, RS_LOOP_007_RULE_ID, RS_LOOP_008_RULE_ID,
-    RS_MEM_001_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_001_RULE_ID, RS_STR_002_RULE_ID,
-    RS_STR_003_RULE_ID, RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
+    RS_MEM_001_RULE_ID, RS_MEM_002_RULE_ID, RS_STR_002_RULE_ID, RS_STR_003_RULE_ID,
+    RS_TYPE_001_RULE_ID, RS_TYPE_002_RULE_ID,
 };
 use perfpal::analyzer::{Confidence, Severity};
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
@@ -28,9 +28,9 @@ use perfpal::schema::{
     StatsSection, ToolInfo,
 };
 
-/// All 23 Rust catalog rule ids, ascending — the set the analyzer registry
-/// can emit for Rust files.
-const ALL_RS_RULE_IDS: [&str; 23] = [
+/// All 22 Rust catalog rule ids, ascending — the set the analyzer registry
+/// can emit for Rust files (STR-001 was retired by the M1 Precision Gate).
+const ALL_RS_RULE_IDS: [&str; 22] = [
     RS_ALLOC_001_RULE_ID,
     RS_ALLOC_002_RULE_ID,
     RS_ALLOC_003_RULE_ID,
@@ -49,7 +49,6 @@ const ALL_RS_RULE_IDS: [&str; 23] = [
     RS_LOOP_008_RULE_ID,
     RS_MEM_001_RULE_ID,
     RS_MEM_002_RULE_ID,
-    RS_STR_001_RULE_ID,
     RS_STR_002_RULE_ID,
     RS_STR_003_RULE_ID,
     RS_TYPE_001_RULE_ID,
@@ -184,7 +183,7 @@ fn all_rust_rule_ids_render_without_panic_and_reach_appendix_a() {
         .lines()
         .filter(|l| l.starts_with("| `PERF"))
         .count();
-    assert_eq!(data_rows, 23, "Appendix A must list all 23 Rust ids");
+    assert_eq!(data_rows, 22, "Appendix A must list all 22 Rust ids");
 }
 
 // ---------------------------------------------------------------------------

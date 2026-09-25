@@ -26,7 +26,7 @@ use super::super::{
     LOOP_001_MIN_DEPTH, LOOP_007_MIN_DEPTH, LOOP_008_MIN_CHAIN_DEPTH, shape_kind_token,
     span_contains,
 };
-use super::{callee_token, qualified_match};
+use super::{callee_token, innermost_enclosing_loop, qualified_match};
 
 /// Rust expensive-I/O MACRO family (LOOP-002): matched on `callee_name` only
 /// when the call event is a macro invocation (`is_macro`). `write`/`writeln`
@@ -588,8 +588,21 @@ fn membership_sides<'a>(
 /// Intent: repeated member/subscript dereferences per iteration are
 /// cache-miss candidates. Detection: [`crate::ir::AccessChainEvent`] with
 /// chain depth ≥ [`LOOP_008_MIN_CHAIN_DEPTH`] (3) at `in_loop_depth ≥ 1` AND
-/// `is_innermost`. Info/Medium; evidence `root`, `chain_depth`,
-/// `loop_depth`.
+/// `is_innermost` AND at least one chain element is a
+/// [`ShapeKind::Subscript`] (an INDEX step). Info/Medium; evidence `root`,
+/// `chain_depth`, `loop_depth`.
+///
+/// M1 Precision Gate (plan `evidence-beta`): the Subscript (index)
+/// requirement was added because pure member chains (`ctx.ops.fun`) are
+/// idiomatic trait-object/vtable-style dispatch, not a cache-miss chase —
+/// the dominant false-positive class on the Rust self-scan. Without an index
+/// step the chain no longer fires.
+///
+/// Accepted limitation (documented): the backend does NOT model explicit
+/// derefs as chain elements, so a pure deref chain such as `(*p).a.b` yields
+/// `MemberAccess`-only elements and therefore stays SILENT — the gate cannot
+/// see its pointer dereference. This is an accepted false negative, not a
+/// "pointer chase" the rule claims to catch.
 ///
 /// Accepted FP class (catalog-mandated): trait-object/vtable-style dispatch
 /// (`ctx.ops.fun`) is idiomatic Rust design, not a defect — the finding stays
@@ -603,6 +616,10 @@ pub(crate) fn rust_loop_008(units: &[FileUnit]) -> Vec<Finding> {
                 if chain.elements.len() < LOOP_008_MIN_CHAIN_DEPTH
                     || !chain.meta.is_innermost
                     || chain.meta.in_loop_depth == 0
+                    || !chain
+                        .elements
+                        .iter()
+                        .any(|e| e.kind == ShapeKind::Subscript)
                 {
                     continue;
                 }
@@ -650,19 +667,4 @@ struct Loop005Group {
     anchor: Span,
     loop_depth: u32,
     resolver_tier: ResolverTier,
-}
-
-/// Innermost (deepest) loop whose span contains `span`; ties on depth break
-/// to the earlier start position for determinism.
-fn innermost_enclosing_loop<'a>(loops: &'a [LoopNode], span: &Span) -> Option<&'a LoopNode> {
-    loops
-        .iter()
-        .filter(|l| span_contains(&l.span, span))
-        .min_by_key(|l| {
-            (
-                std::cmp::Reverse(l.depth),
-                l.span.start_line,
-                l.span.start_col,
-            )
-        })
 }

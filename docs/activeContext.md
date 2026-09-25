@@ -1,24 +1,20 @@
 # Active Context
 
 ## Current Task
-Session 34 **CLOSED**. B6 unblocked half committed as **`b3a1105`**. A founder **direction reset** is recorded in `docs/roadmap.md` + `state/` and is **PENDING FORMALIZATION** (planning-toolkit spec+plan in the next session).
+Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)** landed: 5 dispositions + a measured precision KPI harness + goldens rebaselined; **both reviewers APPROVED** (round 2). Commit pending founder approval.
 
 ## Recent Decisions
-- **Story:** *"Perfpal audits what AI wrote"* (AI-assisted large codebases).
-- **Language order:** **C → Rust → Python → JS → TS → C++** (Python promoted; C++ demoted). JS/TS separate.
-- **Publish gate:** NO release until the benchmark suite is **built + run** AND the AI-code showcase is **verified**.
-- **Sequence:** M1 Precision Gate → M2 Benchmark (build+RUN) → M3 Python → M4 showcase (Aider/chunkhound) → M5 first release → M6+ JS→TS→C++ → cross-language.
-- **Shipping:** T0 + T2 (winget, own Scoop bucket, own Homebrew tap, AUR `-bin`, cargo-binstall); **T1 deferred to GA**.
-- **Cross-language linking:** its own milestone, after the language sequence.
-- **Beta:** `v0.2.0-beta.1` code complete, **publish parked**.
+- **M1 dispositions (founder-approved):** `PERF-RS-ALLOC-001` aggregate one finding per innermost loop + literal-receiver suppression; `PERF-RS-ARCH-003` name-uniqueness gate (shared `cross_file_call_edges` producer → also governs `PERF-C-ARCH-003`); `PERF-RS-MEM-002` drop `clone`/`to_vec`; `PERF-RS-LOOP-008` require a `Subscript` element; **`PERF-RS-STR-001` retired for Rust** (C rule intact) → Rust tier **22 rules**.
+- **KPI harness depth = labeled ground-truth corpus + ratchet baseline** (M1 lightweight; M2 builds the full scale-ladder benchmark).
+- **STR-001 retirement is a deliberate, founder-approved deviation** from the R3 "mirror all 23 C families" decision — recorded in `docs/heuristics/rust-catalog.md` + `docs/evidence/precision-baseline.md`.
 
 ## In Progress
-- Nothing — planning only; no code in flight.
+- Nothing — M1 session complete; commit pending founder approval.
 
 ## Next
-- **NEXT SESSION (`/new`) = PLANNING-ONLY:** planning-toolkit (`create_spec` → `create_plan`) + `docs/roadmap.md` rewrite + ADRs. Read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan beta-release`.
+- **NEXT SESSION (`/new`) = plan `evidence-beta` M2 — Benchmark suite (build + RUN):** ground-truth mutation fixtures + scale ladder (small/medium/large) + determinism proof; **RUN** and record in `docs/evidence/`. Read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan evidence-beta`.
+- **Carry (from M1 review):** semantic-tier USR-ambiguity guard; `PERF-RS-LOOP-008` deref-chain modelling; `r#` raw-identifier receiver nit; re-run the KPI over the M2 corpora.
 
 ## Blockers
-- **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` secrets.
-- **GA (T1):** Azure Artifact Signing likely ineligible (Bangladesh); macOS notarization $99/yr.
-- Carried: R5 cross-language ARCH-003 substitution needs founder sign-off.
+- **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
+- **Commit:** founder approval (session-35 formalization docs + the M1 change set).

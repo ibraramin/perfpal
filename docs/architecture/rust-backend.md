@@ -429,8 +429,8 @@ deserializing unchanged — [ir-v1.md](./ir-v1.md)).
 
 ### 9.5 Workstream D — reporter
 
-The reporter's frozen `HEURISTIC_CATALOG_V1` was extended to **all 46 rule ids**
-(23 C + 23 Rust) with language-neutral prose, fixing the Appendix A `panic!` on
+The reporter's frozen `HEURISTIC_CATALOG_V1` was extended to **all 45 rule ids**
+(23 C + 22 Rust) with language-neutral prose, fixing the Appendix A `panic!` on
 an uncataloged Rust rule id; a completeness lock derives the expected set
 DIRECTLY from the analyzer registry (`analyzer::registered_rule_ids`), so a
 registry entry whose rule id is not cataloged fails the lock instead of reaching
@@ -456,8 +456,8 @@ the panic.
   tests are enumerated in the CHANGELOG `Fixed` entry, and the dogfood finding
   and its consequences are in that same entry (plan `rust-backend` R4) and
   `docs/evidence/dogfood-rust-backend.md` §1.3. Not duplicated here.
-- **R5 substitution — cross-language ARCH-003 coupling (NEEDS FOUNDER
-  SIGN-OFF).** The R5 plan step pre-committed a test that would couple C and
+- **R5 substitution — cross-language ARCH-003 coupling (RATIFIED by
+  ADR-0004, 2026-09-25).** The R5 plan step pre-committed a test that would couple C and
   Rust call sites through `PERF-C-ARCH-003` / `PERF-RS-ARCH-003`. That coupling
   is **unimplementable as specified**: `cross_file_call_edges`
   (`src/analyzer/heuristics/arch.rs`) keys its definition map on
@@ -477,5 +477,8 @@ the panic.
   requirements review judged the substitution satisfies the requirement's
   intent; the code review confirmed no `src/` change was silently made. The
   deviation is recorded here, in the CHANGELOG, and in
-  `docs/lessons-learned.md` (LL-010); it awaits explicit founder sign-off.
+  `docs/lessons-learned.md` (LL-010). **ADR-0004 (2026-09-25) ratifies this
+  substitution**: cross-language linking is a formal post-sequence milestone and
+  this language-tagged behavior is the accepted state through M1–M5, so the
+  pending founder sign-off is closed.
 

@@ -14,12 +14,14 @@
 //! the mandatory "candidate optimization" framing; macro-origin capping is
 //! applied centrally (`analyzer::apply_downgrade_hooks`).
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use crate::analyzer::finding::{RS_ALLOC_001_RULE_ID, RS_ALLOC_002_RULE_ID, RS_ALLOC_003_RULE_ID};
 use crate::analyzer::{Confidence, Finding, Severity};
-use crate::ir::{CalleeKind, RUST_ALLOC_FAMILY};
+use crate::ir::{CallEvent, CalleeKind, RUST_ALLOC_FAMILY, ResolverTier, ShapeKind, Span};
 use crate::scanner::FileUnit;
 
-use super::callee_token;
+use super::{callee_token, innermost_enclosing_loop, is_bare_identifier};
 
 /// PERF-RS-ALLOC-001 — Heap/growable-buffer allocation inside loop
 /// (mirrors PERF-C-ALLOC-001).
@@ -27,14 +29,32 @@ use super::callee_token;
 /// Intent: per-iteration allocation is allocator churn that dominates runtime;
 /// hoisting the allocation or reusing a buffer is the optimization candidate.
 /// Detection: any direct or macro [`crate::ir::CallEvent`] at
-/// `in_loop_depth ≥ 1` for which
+/// `in_loop_depth ≥ 1` AND `is_innermost` for which
 /// [`RUST_ALLOC_FAMILY::matches_site`](crate::ir::RustAllocFamily::matches_site)
 /// holds — a qualified constructor (`Vec::new`), a bare method (`to_vec`,
 /// `collect`, `with_capacity`), or a macro (`vec!`, `format!`) when
-/// `is_macro`. Hot/HIGH; `resolver_tier` is inherited from the call event.
-/// Evidence `callee`, `loop_depth`, `alloc_site_index` (1-based index among
-/// the function's alloc-family sites in declaration order, mirroring the C
-/// rule's pairing key).
+/// `is_macro`.
+///
+/// M1 Precision Gate (plan `evidence-beta`): only the INNERMOST loop is hot
+/// (an outer loop's allocation is one call per outer iteration, not per inner
+/// element), so surviving sites are GROUPED by their innermost enclosing loop
+/// and ONE finding is emitted per group — span = the group loop's span,
+/// `resolver_tier` from that loop, evidence `alloc_count`, `callees`
+/// (sorted-unique SHORT callee tokens joined by `", "`, capped at 8 with a
+/// `+N more` suffix), `loop_depth` (the group loop's own `depth`; only the
+/// defensive fallback, below, uses the call's derived `in_loop_depth`), and
+/// `callee` (the first sorted token, kept for evidence-key compatibility). A
+/// defensive fallback (no enclosing loop modelled) emits a singleton group
+/// keyed by the call span. Groups sort deterministically by `(start_line,
+/// start_col, function id)`; Hot/HIGH.
+///
+/// M1 also SUPPRESSES the literal-receiver string idioms: `"…".to_string()`
+/// / `"…".to_owned()` build a `String` from a string literal (often
+/// foldable), recognised from the base before the FINAL `.` of `callee_path`
+/// after `trim_start()` starting with a string-literal prefix — plain `"`,
+/// raw `r"`/`r#`, byte `b"`, or raw byte `br"`/`br#` — or — fixture form, no
+/// `callee_path` — a first argument whose shape is a
+/// [`ShapeKind::Literal`].
 ///
 /// Accepted FP classes / honest limitations: `clone` is deliberately NOT in
 /// the family (ubiquitous, not allocation pressure by itself — an accepted
@@ -44,10 +64,12 @@ use super::callee_token;
 /// `token_tree` blind spot is not seen beyond the macro-invocation event
 /// itself.
 pub(crate) fn rust_alloc_001(units: &[FileUnit]) -> Vec<Finding> {
-    let mut findings = Vec::new();
+    // (function id, anchor line, anchor col) → aggregated group. BTreeMap
+    // keeps construction deterministic; the final sort re-anchors by
+    // (start_line, start_col, function id) as specified.
+    let mut groups: BTreeMap<(String, u32, u32), Alloc001Group> = BTreeMap::new();
     for unit in units {
         for func in &unit.functions {
-            let mut site_index = 0u32;
             for call in &func.calls {
                 if !RUST_ALLOC_FAMILY.matches_site(
                     call.callee_path.as_deref(),
@@ -56,44 +78,172 @@ pub(crate) fn rust_alloc_001(units: &[FileUnit]) -> Vec<Finding> {
                 ) {
                     continue;
                 }
-                site_index += 1;
-                if call.meta.in_loop_depth == 0 {
+                if call.meta.in_loop_depth == 0 || !call.meta.is_innermost {
                     continue;
                 }
-                let callee = callee_token(call);
-                findings.push(Finding {
-                    threshold: None,
-                    rule_id: RS_ALLOC_001_RULE_ID.to_string(),
-                    title: "Heap allocation inside loop (Rust)".to_string(),
-                    message: format!(
-                        "per-iteration allocation via '{callee}' at loop depth \
-                         {} — allocator churn dominates runtime; hoisting the \
-                         allocation or reusing a buffer is a candidate \
-                         optimization",
-                        call.meta.in_loop_depth
-                    ),
-                    severity: Severity::Hot,
-                    confidence: Confidence::High,
-                    resolver_tier: call.meta.resolver_tier,
-                    span: call.meta.span,
-                    path: unit.file.path.clone(),
-                    evidence: [
-                        ("callee".to_string(), callee),
-                        (
-                            "loop_depth".to_string(),
-                            call.meta.in_loop_depth.to_string(),
+                if is_literal_receiver_string_alloc(call) {
+                    continue;
+                }
+                // When the group anchors at a found loop, the finding's
+                // `loop_depth` is the LOOP's own `depth` (not the call's
+                // derived `in_loop_depth`) — the aggregation gate trusts the
+                // modelled loop; only the defensive singleton fallback keeps
+                // the call-derived depth.
+                let (span, resolver_tier, loop_depth) =
+                    match innermost_enclosing_loop(&func.loops, &call.meta.span) {
+                        Some(loop_node) => {
+                            (loop_node.span, loop_node.resolver_tier, loop_node.depth)
+                        }
+                        // Defensive fallback: no modelled enclosing loop, so
+                        // anchor a singleton group at the call site.
+                        None => (
+                            call.meta.span,
+                            call.meta.resolver_tier,
+                            call.meta.in_loop_depth,
                         ),
-                        ("alloc_site_index".to_string(), site_index.to_string()),
-                    ]
-                    .into_iter()
-                    .collect(),
-                    macro_suspect: false,
-                    error_node_overlap: false,
+                    };
+                let key = (func.record.id.clone(), span.start_line, span.start_col);
+                let group = groups.entry(key).or_insert_with(|| Alloc001Group {
+                    function_id: func.record.id.clone(),
+                    path: unit.file.path.clone(),
+                    span,
+                    resolver_tier,
+                    loop_depth,
+                    alloc_count: 0,
+                    callees: BTreeSet::new(),
                 });
+                group.callees.insert(short_alloc_token(call));
+                group.alloc_count += 1;
             }
         }
     }
+
+    let mut groups: Vec<Alloc001Group> = groups.into_values().collect();
+    groups.sort_by(|a, b| {
+        (a.span.start_line, a.span.start_col, a.function_id.as_str()).cmp(&(
+            b.span.start_line,
+            b.span.start_col,
+            b.function_id.as_str(),
+        ))
+    });
+
+    let mut findings = Vec::with_capacity(groups.len());
+    for group in groups {
+        let callee_tokens: Vec<String> = group.callees.into_iter().collect();
+        // Cap the displayed list so an aggregation over many distinct idioms
+        // cannot produce an unbounded message; the remainder is summarized.
+        // The list is sorted-unique (BTreeSet) so the cap is deterministic.
+        const MAX_CALLEES: usize = 8;
+        let total_callees = callee_tokens.len();
+        let callees = if total_callees > MAX_CALLEES {
+            format!(
+                "{}, +{} more",
+                callee_tokens[..MAX_CALLEES].join(", "),
+                total_callees - MAX_CALLEES
+            )
+        } else {
+            callee_tokens.join(", ")
+        };
+        let first_callee = callee_tokens.first().cloned().unwrap_or_default();
+        findings.push(Finding {
+            threshold: None,
+            rule_id: RS_ALLOC_001_RULE_ID.to_string(),
+            title: "Heap allocation inside loop (Rust)".to_string(),
+            message: format!(
+                "loop performs {} per-iteration allocation(s) ({callees}) at \
+                 loop depth {} — allocator churn dominates runtime; hoisting \
+                 the allocation or reusing a buffer is a candidate \
+                 optimization",
+                group.alloc_count, group.loop_depth
+            ),
+            severity: Severity::Hot,
+            confidence: Confidence::High,
+            resolver_tier: group.resolver_tier,
+            span: group.span,
+            path: group.path,
+            evidence: [
+                ("alloc_count".to_string(), group.alloc_count.to_string()),
+                ("callees".to_string(), callees),
+                ("loop_depth".to_string(), group.loop_depth.to_string()),
+                ("callee".to_string(), first_callee),
+            ]
+            .into_iter()
+            .collect(),
+            macro_suspect: false,
+            error_node_overlap: false,
+        });
+    }
     findings
+}
+
+/// RS-ALLOC-001 aggregation group: one innermost loop (or a defensive
+/// fallback singleton keyed by a call span) plus its alloc-family sites.
+struct Alloc001Group {
+    function_id: String,
+    path: String,
+    span: Span,
+    resolver_tier: ResolverTier,
+    loop_depth: u32,
+    alloc_count: u32,
+    callees: BTreeSet<String>,
+}
+
+/// M1 short alloc token for message/evidence: a QUALIFIED name keeps its `::`
+/// path (`Vec::with_capacity`, `HashMap::<K, V>::new`); methods and macros use
+/// the bare `callee_name` (`format`, `to_string`, `collect`). Deliberately NOT
+/// [`callee_token`], which returns the full receiver expression text for
+/// method calls (e.g. `items.iter().collect`).
+///
+/// A path is trusted ONLY when it is a qualified name: it contains `::`,
+/// contains no `(`, `)` or `.` (so a method call's embedded receiver
+/// expression never leaks — `Mod::make().collect()` collapses to `collect`),
+/// and its LAST `::` segment is a bare identifier (so `HashMap::<K, V>::new`
+/// stays informative, while a trailing non-identifier segment is rejected).
+/// Otherwise the bare `callee_name` is used.
+fn short_alloc_token(call: &CallEvent) -> String {
+    if call.is_macro {
+        return call.callee_name.clone();
+    }
+    match call.callee_path.as_deref() {
+        Some(path)
+            if path.contains("::")
+                && !path.contains('(')
+                && !path.contains(')')
+                && !path.contains('.')
+                && path.rsplit("::").next().is_some_and(is_bare_identifier) =>
+        {
+            path.to_string()
+        }
+        _ => call.callee_name.clone(),
+    }
+}
+
+/// M1 literal-receiver suppression: `"…".to_string()` / `"…".to_owned()`.
+/// The receiver is the base before the FINAL `.` of `callee_path` (leading
+/// whitespace trimmed) when it starts with a string-literal prefix; for the
+/// path-less fixture form the first argument is the receiver and must be a
+/// literal shape.
+fn is_literal_receiver_string_alloc(call: &CallEvent) -> bool {
+    if call.callee_name != "to_string" && call.callee_name != "to_owned" {
+        return false;
+    }
+    match call.callee_path.as_deref() {
+        Some(path) => path
+            .rsplit_once('.')
+            .is_some_and(|(base, _method)| starts_with_string_literal(base.trim_start())),
+        None => call
+            .args
+            .first()
+            .is_some_and(|arg| arg.kind == ShapeKind::Literal),
+    }
+}
+
+/// Whether `base` (a trimmed receiver expression) begins a string literal:
+/// plain `"…"`, raw `r"…"`/`r#"…"#`, byte `b"…"`, or raw byte
+/// `br"…"`/`br#"…"#`.
+fn starts_with_string_literal(base: &str) -> bool {
+    const PREFIXES: [&str; 6] = ["\"", "r\"", "r#", "b\"", "br\"", "br#"];
+    PREFIXES.iter().any(|prefix| base.starts_with(prefix))
 }
 
 /// PERF-RS-ALLOC-002 — Deallocation (`drop`) inside loop

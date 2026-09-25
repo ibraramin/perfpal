@@ -557,11 +557,16 @@ pub(crate) struct CrossFileCallEdge {
 ///    `(from_function_id, callee_name, target_path)` keeping the EARLIEST
 ///    call span.
 /// 2. NAME-BASED fallback — ONLY for calls without facts (or whose facts
-///    were gated): the lexicographically SMALLEST other-file definition
-///    path, confidence LOW (documented catalog limitation — an unverified
-///    hypothesis). Dedup per `(from_function_id, callee_name)` keeping the
-///    EARLIEST call span; suppressed when a resolved edge already covers the
-///    same `(caller, callee, target)` triple (the resolved edge supersedes).
+///    were gated): a definition name yields an edge ONLY under the M1
+///    Precision Gate UNIQUENESS rule — the language-scoped definition set
+///    must contain EXACTLY ONE other-file path. Zero or more than one
+///    definition file means the name is ambiguous (or undefined) and no edge
+///    is emitted, which kills the name-collision FP class that dominated the
+///    Rust self-scan (`new`, `default`, `from`). Confidence LOW (documented
+///    catalog limitation — an unverified hypothesis). Dedup per
+///    `(from_function_id, callee_name)` keeping the EARLIEST call span;
+///    suppressed when a resolved edge already covers the same
+///    `(caller, callee, target)` triple (the resolved edge supersedes).
 ///    A caller may legitimately emit BOTH a resolved edge and different
 ///    name-based edges for the same callee name to different targets.
 /// 3. File-local-first (ADR-0001): same-file definitions never produce
@@ -644,24 +649,33 @@ pub(crate) fn cross_file_call_edges(units: &[FileUnit]) -> Vec<CrossFileCallEdge
                 }
                 // NAME-BASED fallback (no facts / gated facts), scoped to the
                 // CALLER's language so same-named definitions in the other
-                // language never match.
+                // language never match. M1 Precision Gate UNIQUENESS rule:
+                // only a name with EXACTLY ONE definition file produces an
+                // edge — zero (undefined) or many (ambiguous, e.g. `new`)
+                // emit nothing.
                 let Some(targets) = defs.get(&(unit.file.language.as_str(), name)) else {
                     continue;
                 };
-                let Some(target) = targets.iter().find(|p| **p != func.record.path) else {
+                if targets.len() != 1 {
                     continue;
-                };
+                }
+                let target = targets
+                    .iter()
+                    .next()
+                    .copied()
+                    .expect("uniqueness gate checked len == 1");
+                // Defensive: unreachable after the file-local-first skip above
+                // (a same-file definition implies `local_names.contains(name)`).
+                if target == func.record.path.as_str() {
+                    continue;
+                }
                 let key = (func.record.id.clone(), name.to_string());
                 match name_edges.get(&key) {
                     Some((span, _, _)) if *span <= call.meta.span => {}
                     _ => {
                         name_edges.insert(
                             key,
-                            (
-                                call.meta.span,
-                                func.record.path.clone(),
-                                (*target).to_string(),
-                            ),
+                            (call.meta.span, func.record.path.clone(), target.to_string()),
                         );
                     }
                 }

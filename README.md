@@ -180,16 +180,16 @@ Thresholds are named constants documented in the catalogs (`docs/heuristics/cata
 
 ### Rust backend (`PERF-RS-*`)
 
-The Rust backend mirrors the C families one-for-one as 23 `PERF-RS-*` rules. **Rust is syntactic-tier only** — the libclang `semantic-clang` resolver is C-only, so every Rust finding keeps its catalog confidence (no resolved-edge / resolved-format upgrades). Several rules are **honest reframings** of their C counterparts (Rust has no `realloc`, `sizeof`, or unbounded `strcpy`); the full per-rule implementation notes and reframings live in `docs/heuristics/rust-catalog.md`.
+The Rust backend mirrors the C families as **22** `PERF-RS-*` rules — `PERF-RS-STR-001` was **retired** by the M1 precision gate (the C `strcat` O(n²) premise does not transfer to Rust's amortized-O(1) `push`/`push_str`, and the rule's real effect was the `Vec::push` name collision; the C `PERF-C-STR-001` rule is unchanged). **Rust is syntactic-tier only** — the libclang `semantic-clang` resolver is C-only, so every Rust finding keeps its catalog confidence (no resolved-edge / resolved-format upgrades). Several rules are **honest reframings** of their C counterparts (Rust has no `realloc`, `sizeof`, or unbounded `strcpy`); the full per-rule implementation notes and reframings live in `docs/heuristics/rust-catalog.md`.
 
 | Rule | Detects | Severity | Confidence | Tier |
 |---|---|---|---|---|
-| `PERF-RS-ALLOC-001` | Heap-allocation call or macro (`Vec::new`, `Box::new`, `String::with_capacity`, `to_string`, `vec!`, `format!`, …) at `in_loop_depth ≥ 1` | hot | HIGH | 1 |
+| `PERF-RS-ALLOC-001` | Heap-allocation call or macro (`Vec::new`, `Box::new`, `String::with_capacity`, `to_string`, `vec!`, `format!`, …) in the **innermost** loop (`in_loop_depth ≥ 1` + `is_innermost`); **one aggregated finding per innermost loop** (`alloc_count` + short callee list); literal-receiver `"x".to_string()`/`"x".to_owned()` suppressed | hot | HIGH | 1 |
 | `PERF-RS-ALLOC-002` | Direct, non-macro `drop()` at `in_loop_depth ≥ 1` (escalates warn → hot when an alloc-family site also fires in the same function) | warn | HIGH | 1 |
 | `PERF-RS-ALLOC-003` | Direct, non-macro `reserve`/`reserve_exact` at `in_loop_depth ≥ 1` (additive buffer growth — the `realloc` analogue) | hot | MEDIUM | 1 |
 | `PERF-RS-ARCH-001` | `use`-import-graph hubs (≥12), deep chains (≥8), cycles over resolved internal edges (`mod` declarations excluded) | warn | HIGH | 1 |
 | `PERF-RS-ARCH-002` | Hot-component aggregation — Rust component dirs ranked by complexity sum, max loop depth, and alloc-site density | hot | HIGH | 1 |
-| `PERF-RS-ARCH-003` | Cross-module call-graph edges from name matching (LOW; the symmetric resolved branch is unreachable — no Rust resolver) | info | LOW | 1 |
+| `PERF-RS-ARCH-003` | Cross-module call-graph edges from name matching; a **name-based edge requires the callee name to be defined in exactly one file** (ambiguous names such as `new` emit nothing) | info | LOW | 1 |
 | `PERF-RS-CALL-001` | Direct recursion — a function body calling its own name (presence-only; recursion depth is not statically bounded) | info | HIGH | 1 |
 | `PERF-RS-CALL-002` | Cyclomatic complexity ≥ 15 per function (promoted from the baseline stat) | warn | HIGH | 1 |
 | `PERF-RS-LOOP-001` | Deep loop nesting — nesting depth exactly 3 (one finding per maximal nest entry) | warn | HIGH | 1 |
@@ -199,10 +199,10 @@ The Rust backend mirrors the C families one-for-one as 23 `PERF-RS-*` rules. **R
 | `PERF-RS-LOOP-005` | Assignment to a collected `static`/`const` global inside a loop body (dedup per target and enclosing loop) | info | MEDIUM | 2 |
 | `PERF-RS-LOOP-006` | Indirect call inside an innermost loop body (closure-field / trait-object dispatch classifies Direct, so it does not fire) | info | LOW | 2 |
 | `PERF-RS-LOOP-007` | Linear membership scan — comparison against a subscript indexed by an outer loop's induction variable at nesting depth ≥ 2 | info | LOW | 2 |
-| `PERF-RS-LOOP-008` | Member-chain dereference of depth ≥ 3 inside an innermost loop body | info | MEDIUM | 2 |
+| `PERF-RS-LOOP-008` | Member/index chain of depth ≥ 3 **containing at least one `Subscript` element** inside an innermost loop body (pure member chains such as `ctx.ops.fun` stay silent) | info | MEDIUM | 2 |
 | `PERF-RS-MEM-001` | `with_capacity(size_of::<T>())` — a byte count passed where an element count is expected | warn | MEDIUM | 2 |
-| `PERF-RS-MEM-002` | Block-copy/clone family (`copy_from_slice`, `copy_nonoverlapping`, `extend_from_slice`, `clone`, `to_vec`) inside a loop (escalates info → warn innermost) | info | MEDIUM | 2 |
-| `PERF-RS-STR-001` | String accumulation — `push_str`/`push` on a bare-identifier receiver reused across loop iterations | hot | HIGH | 1 |
+| `PERF-RS-MEM-002` | Block-copy family (`copy_from_slice`, `copy_nonoverlapping`, `extend_from_slice`) inside a loop (escalates info → warn innermost); `clone`/`to_vec` are no longer included (needs receiver-type evidence) | info | MEDIUM | 2 |
+| `PERF-RS-STR-001` | **RETIRED (M1)** — String accumulation via `push_str`/`push` was C-premised; no longer emitted for Rust (the C `PERF-C-STR-001` rule remains) | — | — | — |
 | `PERF-RS-STR-002` | `len`/`is_empty`/`capacity` on a bare identifier inside a loop where the receiver is not reassigned in the loop | warn | HIGH | 1 |
 | `PERF-RS-STR-003` | Unbounded `unsafe` memory operation (`copy_nonoverlapping`, `copy`, `from_raw_parts`, `from_utf8_unchecked`, `set_len`), at any loop depth | warn | HIGH | 1 |
 | `PERF-RS-TYPE-001` | Large struct passed by value — estimated size ≥ 32 bytes (one aggregated finding per function; approximate LP64 size model) | warn | LOW | 2 |

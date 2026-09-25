@@ -1,11 +1,12 @@
 // End-to-end MIXED C+Rust fixture — Rust side (plan `rust-backend`, R5 C1).
 //
-// `build` deliberately fires five PERF-RS-* families:
+// `build` deliberately fires four PERF-RS-* families:
 //   - PERF-RS-ALLOC-001 (Vec::new inside the for loop)
 //   - PERF-RS-ALLOC-003 (out.reserve additive growth inside the loop)
-//   - PERF-RS-STR-001   (s.push_str accumulation inside the loop)
 //   - PERF-RS-STR-002   (s.len / tmp.len recomputed inside the loop)
 //   - PERF-RS-MEM-001   (size_of used as an element count)
+//
+// PERF-RS-STR-001 is RETIRED for Rust, so `s.push_str(p)` is a silence probe.
 //
 // Cross-file, CROSS language (deliberate): `util_init` is defined in
 // src/util.c. `cross_file_call_edges` is language-scoped, so this call emits

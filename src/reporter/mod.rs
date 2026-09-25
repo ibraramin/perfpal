@@ -54,7 +54,7 @@ const MD_ESCAPE_CHARS: &[char] = &[
 /// Rust" clause wherever the rule is an honest re-mapping of the C intent
 /// (no `realloc`/char-stdio, `unsafe`-only unbounded ops, `size_of` as an
 /// element count, default `repr(Rust)` field reordering). A completeness
-/// lock in this module's tests asserts the catalog covers exactly the 46
+/// lock in this module's tests asserts the catalog covers exactly the 45
 /// rule ids the analyzer registry can emit.
 const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
@@ -181,7 +181,7 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-RS-ALLOC-001",
         "Heap allocation inside loop (Rust)",
-        "Detects Rust allocation sites — qualified constructors (`Box::new`/`Rc::new`/`Arc::new`/`Vec::new`/`String::new`/collection `new`/`with_capacity`), methods (`to_vec`/`to_owned`/`to_string`/`collect`/`with_capacity`), and the `vec!`/`format!` macros — nested inside a loop body (allocator churn).",
+        "Detects Rust allocation sites — qualified constructors (`Box::new`/`Rc::new`/`Arc::new`/`Vec::new`/`String::new`/collection `new`/`with_capacity`), methods (`to_vec`/`to_owned`/`to_string`/`collect`/`with_capacity`), and the `vec!`/`format!` macros — at `in_loop_depth ≥ 1` AND `is_innermost`; surviving sites are aggregated into ONE finding per innermost enclosing loop (`alloc_count` plus sorted-unique short callee tokens capped at 8 with a `+N more` suffix). Literal-receiver `\"…\".to_string()`/`\"…\".to_owned()` (including raw/byte-string prefixes) are suppressed.",
     ),
     (
         "PERF-RS-ALLOC-002",
@@ -196,7 +196,7 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-RS-ARCH-001",
         "Module-graph fan-out / cycles (Rust)",
-        "Detects module fan-out/fan-in, deep module chains, cyclic module edges, and unresolved internal `mod`/`use` edges from resolved Rust module edges.",
+        "Detects module fan-out/fan-in, deep module chains, and cyclic module edges from resolved Rust module edges; unresolved internal `mod`/`use` edges are retained as graph data but intentionally emit no finding (their resolver cannot see crate-root or inline-module items).",
     ),
     (
         "PERF-RS-ARCH-002",
@@ -266,12 +266,7 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-RS-MEM-002",
         "Block copy/clone in loop (Rust)",
-        "REFRAMED for Rust (no explicit size argument): detects block-copy/clone methods (`copy_from_slice`/`copy_nonoverlapping`/`extend_from_slice`/`clone`/`to_vec`) inside loops — warn in the innermost loop, info otherwise.",
-    ),
-    (
-        "PERF-RS-STR-001",
-        "String accumulation in loop (Rust)",
-        "Detects `push_str`/`push` accumulation into a bare-identifier receiver inside a loop (repeated growth/reallocation; `push` also matches non-string containers).",
+        "REFRAMED for Rust (no explicit size argument): detects block-copy methods (`copy_from_slice`/`copy_nonoverlapping`/`extend_from_slice`) inside loops — warn in the innermost loop, info otherwise. (`clone`/`to_vec` were removed by the M1 Precision Gate: borrow-checker clones and `Copy` bit-copies are not block copies.)",
     ),
     (
         "PERF-RS-STR-002",
@@ -807,7 +802,8 @@ mod tests {
 
     /// Completeness lock (plan `rust-backend` R3 workstream D1): the catalog
     /// must cover EXACTLY the rule ids the analyzer registry can emit (23
-    /// `PERF-C-*` + 23 `PERF-RS-*`), so a newly added heuristic cannot
+    /// `PERF-C-*` + 22 `PERF-RS-*`; STR-001 retired by M1), so a newly added
+    /// heuristic cannot
     /// silently reintroduce the Appendix A `panic!` on an uncataloged
     /// rule_id. The expected set is derived FROM the registry
     /// ([`crate::analyzer::registered_rule_ids`]) — an id added to `REGISTRY`
@@ -818,7 +814,7 @@ mod tests {
     fn catalog_covers_every_registry_rule_id() {
         // Authoritative: the registry's own rule ids, in declaration order.
         let registry_ids: Vec<&'static str> = crate::analyzer::registered_rule_ids().collect();
-        assert_eq!(registry_ids.len(), 46, "expected 23 C + 23 Rust ids");
+        assert_eq!(registry_ids.len(), 45, "expected 23 C + 22 Rust ids");
 
         // The registry declares its entries in ascending rule_id order
         // (the C block, then the `PERF-RS-*` block) — declaration order is
@@ -842,7 +838,7 @@ mod tests {
         );
 
         let catalog_ids: Vec<&str> = HEURISTIC_CATALOG_V1.iter().map(|(id, _, _)| *id).collect();
-        assert_eq!(catalog_ids.len(), 46, "catalog entry count drifted");
+        assert_eq!(catalog_ids.len(), 45, "catalog entry count drifted");
 
         // Every catalog entry carries a non-empty title and description.
         for (id, title, description) in HEURISTIC_CATALOG_V1 {

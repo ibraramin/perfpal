@@ -3,23 +3,24 @@
 //! Mirrors `examples/02_string_building.c`.
 //!
 //! Expected findings:
-//!   PERF-RS-STR-001  hot   push_str()/push() accumulation inside a loop
 //!   PERF-RS-STR-002  warn  len() recomputed inside a loop
 //!   PERF-RS-STR-003  warn  unsafe std::slice::from_raw_parts (any depth)
 //!
+//! Note: PERF-RS-STR-001 was RETIRED for Rust (the `Vec::push` name collision
+//! dominated the self-scan), so `accumulate` now produces NO finding — it is a
+//! retire-probe, not a positive.
+//!
 //! Silent controls (each must produce ZERO findings of the named rule):
-//!   * `append_via_add_assign` uses `+=`, a compound assignment rather than a
-//!     CallEvent, so STR-001 must NOT fire (documented limitation).
 //!   * `len_with_reassignment` assigns to the receiver inside the loop, which
 //!     suppresses STR-002 for that call.
 //!   * `bounded_copy` uses `copy_from_slice`, the MEM-002 family, never
 //!     STR-003, so STR-003 must NOT fire there.
 
-/// Accumulate into a growable string per iteration (STR-001).
+/// Accumulate into a growable string per iteration (retired STR-001 probe).
 pub fn accumulate(parts: &[&str], out: &mut String) {
     for part in parts {
-        out.push_str(part); // STR-001
-        out.push(';'); // STR-001 (push)
+        out.push_str(part); // retired STR-001: no finding
+        out.push(';'); // retired STR-001: no finding
     }
 }
 
@@ -44,11 +45,11 @@ pub fn len_with_reassignment(n: usize) -> usize {
     total
 }
 
-/// Compound assignment is invisible to STR-001.
+/// Compound assignment produced no CallEvent for the retired STR-001.
 pub fn append_via_add_assign(parts: &[&str]) -> String {
     let mut s = String::new();
     for part in parts {
-        s += part; // control: no CallEvent, so STR-001 must NOT fire
+        s += part; // retired STR-001: no CallEvent, no finding
     }
     s
 }

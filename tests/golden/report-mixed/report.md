@@ -3,7 +3,7 @@
 > started <MASKED> · duration <MASKED> ms · 4 files
 
 ## 1. Executive summary
-11 findings: 6 hot, 4 warn, 1 info. Parse health: 4 ok, 0 partial, 0 failed.
+10 findings: 5 hot, 4 warn, 1 info. Parse health: 4 ok, 0 partial, 0 failed.
 - Heap allocation inside loop (PERF\-C\-ALLOC\-001:src/main\.c:27:21)
 - Deallocation inside loop (PERF\-C\-ALLOC\-002:src/main\.c:29:9)
 - String accumulation in loop (PERF\-C\-STR\-001:src/main\.c:28:9)
@@ -27,13 +27,13 @@ Findings overlapping parse-error regions are flagged (`error_node_overlap`) and 
 
 ## 3. Codebase statistics
 - Languages: c, rust
-- Total LOC: 37 code / 45 comment / 6 blank
+- Total LOC: 36 code / 47 comment / 6 blank
 
 Top files by code LOC:
 
 | path | loc.code | loc.comment | loc.blank | functions |
 |---|---:|---:|---:|---:|
-| src/lib\.rs | 15 | 18 | 1 | 2 |
+| src/lib\.rs | 14 | 20 | 1 | 2 |
 | src/main\.c | 14 | 18 | 1 | 1 |
 | src/util\.c | 4 | 3 | 1 | 1 |
 | src/util\.h | 4 | 6 | 3 | 0 |
@@ -57,20 +57,14 @@ Top files by code LOC:
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
 - Evidence: callee=strcat, dest=acc, loop\_depth=1
 
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/lib\.rs:18:28`)
+#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/lib\.rs:18:5`)
 - Location: `src/lib\.rs:18` (build)
-- Message: per\-iteration allocation via 'Vec::new' at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
+- Message: loop performs 1 per\-iteration allocation\(s\) \(Vec::new\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_site\_index=3, callee=Vec::new, loop\_depth=1
+- Evidence: alloc\_count=1, callee=Vec::new, callees=Vec::new, loop\_depth=1
 
-#### String accumulation in loop \(Rust\)  (`PERF\-RS\-STR\-001:src/lib\.rs:20:9`)
+#### Growable\-buffer additive growth in loop \(Rust\)  (`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`)
 - Location: `src/lib\.rs:20` (build)
-- Message: 's\.push\_str' accumulates into 's' at loop depth 1 — repeated growth/reallocation; pre\-sizing the buffer or tracking a running length is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=s\.push\_str, dest=s, loop\_depth=1
-
-#### Growable\-buffer additive growth in loop \(Rust\)  (`PERF\-RS\-ALLOC\-003:src/lib\.rs:19:9`)
-- Location: `src/lib\.rs:19` (build)
 - Message: 'out\.reserve' grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization
 - Confidence: MEDIUM · Severity: hot · Resolver tier: syntactic
 - Evidence: callee=out\.reserve, growth=additive, loop\_depth=1
@@ -81,20 +75,20 @@ Top files by code LOC:
 - Confidence: HIGH · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=strcat
 
-#### Length query recomputed in loop \(Rust\)  (`PERF\-RS\-STR\-002:src/lib\.rs:21:17`)
-- Location: `src/lib\.rs:21` (build)
+#### Length query recomputed in loop \(Rust\)  (`PERF\-RS\-STR\-002:src/lib\.rs:22:17`)
+- Location: `src/lib\.rs:22` (build)
 - Message: 's\.len' recomputes the length of 's' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
 - Confidence: HIGH · Severity: warn · Resolver tier: syntactic
 - Evidence: identifier=s, loop\_depth=1
 
-#### Length query recomputed in loop \(Rust\)  (`PERF\-RS\-STR\-002:src/lib\.rs:22:17`)
-- Location: `src/lib\.rs:22` (build)
+#### Length query recomputed in loop \(Rust\)  (`PERF\-RS\-STR\-002:src/lib\.rs:23:17`)
+- Location: `src/lib\.rs:23` (build)
 - Message: 'tmp\.len' recomputes the length of 'tmp' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
 - Confidence: HIGH · Severity: warn · Resolver tier: syntactic
 - Evidence: identifier=tmp, loop\_depth=1
 
-#### size\_of passed as an element count \(Rust\)  (`PERF\-RS\-MEM\-001:src/lib\.rs:24:22`)
-- Location: `src/lib\.rs:24` (build)
+#### size\_of passed as an element count \(Rust\)  (`PERF\-RS\-MEM\-001:src/lib\.rs:25:22`)
+- Location: `src/lib\.rs:25` (build)
 - Message: 'Vec::with\_capacity' receives a \`size\_of\` byte count where an element COUNT is expected — that over\-reserves by a factor of the element size; passing the element count is a candidate optimization
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=Vec::with\_capacity, misuse=size\_of\_as\_element\_count
@@ -108,7 +102,7 @@ Component ranking (hottest first):
 
 | component | path prefix | rank | finding density (per KLOC) |
 |---|---|---:|---:|
-| src | src | 1 | 297.30 |
+| src | src | 1 | 277.78 |
 
 The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).
@@ -121,10 +115,9 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 | `PERF\-C\-ARCH\-003` | Cross\-file call coupling \(name\-based\) | Detects cross\-file call edges via name matching — LOW confidence until a semantic resolver tier exists\. |
 | `PERF\-C\-STR\-001` | String accumulation in loop \(\`strcat\` family\) | Detects strcat/strncat with a destination reused across loop iterations \(O\(n²\) rescan\)\. |
 | `PERF\-C\-STR\-003` | Unbounded copy family \(\`strcpy\`/\`sprintf\`/\`gets\`\) | Detects unbounded copy calls \(strcpy, strcat, sprintf, gets, scanf %s\) — unbounded\-latency hotspots\. |
-| `PERF\-RS\-ALLOC\-001` | Heap allocation inside loop \(Rust\) | Detects Rust allocation sites — qualified constructors \(\`Box::new\`/\`Rc::new\`/\`Arc::new\`/\`Vec::new\`/\`String::new\`/collection \`new\`/\`with\_capacity\`\), methods \(\`to\_vec\`/\`to\_owned\`/\`to\_string\`/\`collect\`/\`with\_capacity\`\), and the \`vec\!\`/\`format\!\` macros — nested inside a loop body \(allocator churn\)\. |
+| `PERF\-RS\-ALLOC\-001` | Heap allocation inside loop \(Rust\) | Detects Rust allocation sites — qualified constructors \(\`Box::new\`/\`Rc::new\`/\`Arc::new\`/\`Vec::new\`/\`String::new\`/collection \`new\`/\`with\_capacity\`\), methods \(\`to\_vec\`/\`to\_owned\`/\`to\_string\`/\`collect\`/\`with\_capacity\`\), and the \`vec\!\`/\`format\!\` macros — at \`in\_loop\_depth ≥ 1\` AND \`is\_innermost\`; surviving sites are aggregated into ONE finding per innermost enclosing loop \(\`alloc\_count\` plus sorted\-unique short callee tokens capped at 8 with a \`\+N more\` suffix\)\. Literal\-receiver \`"…"\.to\_string\(\)\`/\`"…"\.to\_owned\(\)\` \(including raw/byte\-string prefixes\) are suppressed\. |
 | `PERF\-RS\-ALLOC\-003` | Growable\-buffer additive growth in loop \(Rust\) | REFRAMED for Rust \(no \`realloc\`\): detects additive \`reserve\`/\`reserve\_exact\` capacity growth inside a loop — the \`realloc\(p, n\+k\)\` analogue; multiplicative capacity growth is the fix, not the finding\. |
 | `PERF\-RS\-MEM\-001` | size\_of passed as an element count \(Rust\) | REFRAMED for Rust: detects \`Vec::with\_capacity\`/\`String::with\_capacity\` receiving a \`size\_of\`/\`size\_of\_val\` byte count where an element count is expected \(over\-reserves by the element size\)\. |
-| `PERF\-RS\-STR\-001` | String accumulation in loop \(Rust\) | Detects \`push\_str\`/\`push\` accumulation into a bare\-identifier receiver inside a loop \(repeated growth/reallocation; \`push\` also matches non\-string containers\)\. |
 | `PERF\-RS\-STR\-002` | Length query recomputed in loop \(Rust\) | Detects \`len\`/\`is\_empty\`/\`capacity\` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop\. |
 
 ## Appendix B. How to read this report

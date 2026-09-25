@@ -1,0 +1,51 @@
+[
+  {
+    "file": {"path": "src/main.rs", "language": "rust", "loc": {"code": 9, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/main.rs#caller#3:1", "name": "caller", "path": "src/main.rs", "span": {"start_line": 3, "start_col": 1, "end_line": 7, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 5},
+        "calls": [
+          {"span": {"start_line": 5, "start_col": 5, "end_line": 5, "end_col": 22}, "in_loop_depth": 0, "is_innermost": false, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "ambig_target", "callee_kind": "direct", "args": [], "statement_role": "nested", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": []
+      }
+    ]
+  },
+  {
+    "file": {"path": "src/a.rs", "language": "rust", "loc": {"code": 3, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/a.rs#ambig_target#1:1", "name": "ambig_target", "path": "src/a.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 3, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 3},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  },
+  {
+    "file": {"path": "src/b.rs", "language": "rust", "loc": {"code": 3, "comment": 0, "blank": 0}, "function_count": 1, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/b.rs#ambig_target#1:1", "name": "ambig_target", "path": "src/b.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 3, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 1, "cognitive_complexity": 0, "max_loop_depth": 0, "alloc_site_count": 0, "length_lines": 3},
+        "calls": [], "assignments": [], "binary_ops": [], "comparisons": [], "access_chains": [], "loops": []
+      }
+    ]
+  }
+]

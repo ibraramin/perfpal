@@ -1,42 +1,52 @@
 # Handoff — Latest
 
 ## Objective
-Session 34 **CLOSED**. Two things:
-1. **`beta-release` B6 — unblocked half** committed as **`b3a1105`** (draft-safe pre-release publish + tag discipline + 19-asset website inventory).
-2. A **founder direction reset** (planning conversation): the path to the first release is re-scoped to an **evidence-first AI-code beta**. Recorded here + in `docs/roadmap.md` `## Direction`; **PENDING FORMALIZATION** (planning-toolkit spec+plan next session).
+Session 36 **COMPLETE** — plan `evidence-beta` **M1 (Precision Gate, C+Rust)** landed. The five dominant self-scan noise rules are disposed, a **measured** per-rule precision KPI harness is in place, goldens are rebaselined, and **both reviewers APPROVED** (round 2). Commit pending founder approval.
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · **`beta-release` ✅ code (B0–B6, `b3a1105`); PUBLISH PARKED** (see Direction).
+POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ → M2–M6+)**.
 
-## The direction (founder, session 34 — supersedes the prior roadmap)
-- **Story:** *"Perfpal audits what AI wrote"* — performance landmines in large **AI-assisted** codebases. (The "100%-AI-written C/Rust" claim is dropped: no famous large mostly-AI-generated C/Rust OSS exists.)
-- **Language order:** **C → Rust → Python → JS → TS → C++** (Python promoted, C++ demoted). Data: AI-code share Python 41.7%, JS 15.4%, C++ 7.8%, C 3.7%, Rust not top-8 (arXiv 2603.27130). JS/TS are separate milestones. **Cross-language linking = a separate milestone AFTER** the sequence.
-- **Publish gate: NO release until (a) the benchmark suite is built AND run, and (b) the AI-code credibility showcase is verified.**
-- **Sequence:** M1 Precision Gate (C+Rust) → M2 Benchmark (build + RUN) → M3 Python backend → M4 AI-code showcase (Aider / chunkhound) → **M5 First release** → M6+ JS→TS→C++ → cross-language.
-- **Shipping: T0 + T2** — the existing 6 unsigned targets + packaging (winget, own Scoop bucket, own Homebrew tap, AUR `-bin`, cargo-binstall). **T1 signing/notarization deferred to GA.**
-- **Evidence discipline:** repro packet (pinned URL+commit+license, one-command scan, expected counts, determinism proof) + hand-verified true positives + an accepted-limitations page; showcase only MIT/Apache/BSD.
+## M1 outcome (empirical, `perfpal src`, 33 files)
+| Rule | Before | After | Disposition |
+|------|-------:|------:|-------------|
+| `PERF-RS-ALLOC-001` | 511 | 74 | aggregate one finding per innermost loop + literal-receiver suppression |
+| `PERF-RS-ARCH-003` | 204 | 90 | name-uniqueness gate (shared producer → also C) |
+| `PERF-RS-STR-001` | 145 | 0 | **retired for Rust** (C rule intact) |
+| `PERF-RS-MEM-002` | 128 | 0 | drop `clone`/`to_vec` from the family |
+| `PERF-RS-LOOP-008` | 96 | 4 | require a `Subscript` element |
+| **5-rule total** | **1084** | **168** | |
+| **All findings** | **1219** (658/214/347) | **304** (76/97/131) | |
 
-## Version snapshot
-- **Published:** `v0.1.0` (C-only). **Unreleased:** `0.2.0-beta.1` (C+Rust), schema `1.2`. `main` = **`b3a1105`**, **unpushed**.
-- Beta **code complete** (B0–B6); **publish parked** behind the evidence gate.
+Rust tier **23 → 22 rules** (45 total = 23 C + 22 Rust).
 
-## Evidence
-- **B6:** 393 tests / 0 fail; fmt + clippy + actionlint v1.7.12 clean; musl smoke test `examples/` 83, `examples-rust/` 41.
-- **Dogfood (R4):** `perfpal src` → 33 files, 1219 findings, **~89% from 5 rules** → the precision gate is M1 and existential for the pitch.
-- **Research:** `lib-1` (AI-code language share; showcase feasibility; attention) and `lib-2` (2026 signing/packaging). Key facts recorded in `state/session-state.json` decisions.
+## Precision KPI harness
+- Labeled ground-truth (mutation) corpus `tests/fixtures/precision/` (C+Rust) + `tests/precision_kpi.rs` runs the REAL full pipeline and ratchets per-rule precision/recall against `labels.json`; **all 9 C+Rust gate rules measure 1.0/1.0** (default + `semantic-clang`). Evidence: `docs/evidence/precision-baseline.md`.
 
-## Risks
-- **Pipeline never run on GitHub** — first-run risk now deferred to M5 (build-only dry-run can validate build+SBOM legs; the publish leg needs `MINISIGN_*`).
-- **Precision credibility** — raw output on a famous repo backfires; hence M1 before M2/M4.
-- Carried: R5 cross-language ARCH-003 substitution still needs founder sign-off.
+## Verification
+- `cargo test --locked` **398 / 0** · `--features semantic-clang` **403 / 0** · `cargo fmt --check` clean · `cargo clippy --all-targets --locked -- -D warnings` clean.
+- Goldens: `report-rust` + `report-mixed` rebaselined; C `report` unchanged; byte-idempotent.
+- Dual review: round 1 CHANGES_REQUESTED (both) → review-fix wave → **round 2 APPROVED** (@reviewer + @requirements-reviewer).
 
-## Blockers
-- **At M5 publish:** EULA/privacy **contact address** + **`MINISIGN_SECRET_KEY`**/**`MINISIGN_PASSWORD`** secrets.
-- **At GA (T1):** Azure Artifact Signing likely ineligible (Bangladesh not listed; Individual = US/Canada only); macOS notarization $99/yr.
+## Risks / Open (append-only)
+- **Semantic-tier USR ambiguity (C-only; DEFERRED).** The resolved branch bypasses the ARCH-003 uniqueness gate on duplicate USRs (non-`static` same-name external defs share a location-independent USR). Blast radius = link-invalid C; default build + the Rust tier unaffected. `precision-baseline.md` §6; M2 hardening candidate.
+- **`PERF-RS-LOOP-008` deref-chain silence** — pure deref chains stay silent (accepted FN, documented).
+- **NIT (non-blocking):** `starts_with_string_literal` `r#` prefix also matches a raw-identifier receiver; tighten to `r#"`/`br#"` later (recorded, not fixed, to preserve the reviewed revision).
+- **M5 publish gates unchanged:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD`.
 
 ## Next Actions
-1. **NEXT SESSION (`/new`) = PLANNING-ONLY.** Formalize the direction via planning-toolkit: `create_spec` (evidence-first AI-code beta) → `create_plan` (M1…M6+) → rewrite `docs/roadmap.md` `## Direction` into real milestones → record ADRs (language-order change; cross-language deferral; evidence/publish gate; T0+T2 packaging). Read `state/session-state.json` + this file + `docs/activeContext.md` FIRST, then `readPlan beta-release`. **No implementation code in that session.**
+1. **Founder approves the commit(s).** ⚠️ The **session-35 formalization docs are STILL uncommitted** — commit them first, then the M1 change set (messages below).
+2. **NEXT SESSION (`/new`) = plan `evidence-beta` M2 — Benchmark suite (build + RUN).** Read `state/session-state.json` + this file + `docs/activeContext.md` FIRST, then `readPlan evidence-beta`.
 
-## Change set (this commit, docs-only)
-- **Modified:** `docs/roadmap.md`, `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
-- **Commit message:** `docs(roadmap): record founder direction — evidence-first AI-code beta (C→Rust→Python→JS→TS→C++), publish gated on benchmark+showcase, T0+T2 shipping (pending formalization)`.
+## Change set (this session, uncommitted; EXCLUDE `.opencode/**`)
+- **src/**: `analyzer/heuristics/rust/{alloc,loop,mem,str,mod}.rs`, `analyzer/heuristics/{arch,mod}.rs`, `analyzer/{mod,finding}.rs`, `reporter/mod.rs`.
+- **tests/**: `precision_kpi.rs` (new), `fixtures/precision/**` (new), `fixtures/ir/PERF-RS-ALLOC-001__{callee-cap,defensive-singleton,qualified-token,literal-receiver}.json`, `fixtures/ir/PERF-RS-ARCH-003__ambiguous.json`, deleted `PERF-RS-STR-001__*.json`, `rust_wave_c1.rs`, `rust_wave_c2.rs`, `rust_negative_fixtures.rs`, `reporter_rust.rs`, `examples_rust_coverage.rs`, `mixed_language_e2e.rs`, `arch_fixtures.rs`, `golden/report-rust/**`, `golden/report-mixed/**`.
+- **examples-rust/**: `src/02_string_building.rs`, `src/08_globals_and_chains.rs`.
+- **docs/**: `evidence/precision-baseline.md` (new), `evidence/dogfood-rust-backend.md`, `heuristics/rust-catalog.md`, `heuristics/catalog-v1.md`, `architecture/rust-backend.md`, `roadmap.md`.
+- **Root**: `README.md`, `CHANGELOG.md`.
+- **Session-35 docs (also still uncommitted)**: `docs/specs/evidence-beta-spec.md`, `docs/plans/evidence-beta.md`, `docs/adr/ADR-0003..0006`, `docs/architecture/modules.md`, plus state files.
+
+## Commit messages (proposed)
+1. *(session-35 formalization, separate first commit)*
+   `docs(roadmap): formalize evidence-first AI-code beta — spec evidence-beta-spec + plan evidence-beta (M1-M6+) + ADR-0003..0006; roadmap re-based (parked v0.2.0-beta.1 = M5)`
+2. *(M1)*
+   `feat(evidence-beta): M1 precision gate (C+Rust) — ALLOC-001 aggregate/innermost + literal-receiver suppression, ARCH-003 name-uniqueness, MEM-002 drop clone/to_vec, LOOP-008 subscript, STR-001 retired; labeled precision KPI harness + goldens; self-scan 1219->304; Rust tier 22 rules`

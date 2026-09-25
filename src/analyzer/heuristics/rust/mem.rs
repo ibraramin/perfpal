@@ -19,13 +19,14 @@ use super::{callee_token, is_size_of_call};
 const WITH_CAPACITY_METHOD: &str = "with_capacity";
 
 /// Block-copy method family (MEM-002): Rust's `memcpy`/`memmove` family —
-/// bulk per-element or whole-buffer copies.
-const BLOCK_COPY_METHODS: [&str; 5] = [
+/// bulk per-element or whole-buffer copies. M1 Precision Gate removed
+/// `clone`/`to_vec`: borrow-checker clones and cheap `Copy` type copies are
+/// not block copies, and without receiver-type evidence the collision is
+/// noise (they require receiver-type evidence before returning).
+const BLOCK_COPY_METHODS: [&str; 3] = [
     "copy_from_slice",
     "copy_nonoverlapping",
     "extend_from_slice",
-    "clone",
-    "to_vec",
 ];
 
 /// PERF-RS-MEM-001 — `size_of` passed as an element count
@@ -118,17 +119,23 @@ pub(crate) fn rust_mem_001(units: &[FileUnit]) -> Vec<Finding> {
 /// (REFRAMED mirror of PERF-C-MEM-002).
 ///
 /// REFRAMING (mandatory, documented): Rust block-copy calls
-/// (`copy_from_slice`, `copy_nonoverlapping`, `extend_from_slice`, `clone`,
-/// `to_vec`) carry NO explicit size argument, so the C rule's
-/// "non-literal size" guard collapses to presence-in-loop. Detection: a
-/// DIRECT method call in the block-copy family at `in_loop_depth ≥ 1`.
+/// (`copy_from_slice`, `copy_nonoverlapping`, `extend_from_slice`) carry NO
+/// explicit size argument, so the C rule's "non-literal size" guard collapses
+/// to presence-in-loop. Detection: a DIRECT method call in the block-copy
+/// family at `in_loop_depth ≥ 1`.
 /// Info/MEDIUM by default; escalated to Warn/MEDIUM when the call sits in
 /// the INNERMOST loop (`is_innermost`), where per-element small copies are
 /// most repetitive. Evidence `callee`, `loop_depth`, `innermost`.
 ///
+/// M1 Precision Gate (plan `evidence-beta`) REMOVED `clone` and `to_vec` from
+/// the family: a borrow-checker clone is required by ownership and a `Copy`
+/// type's clone is a bit-copy, neither is a block copy — and the syntactic
+/// tier has no receiver-type evidence to distinguish them, so they were the
+/// dominant false-positive class. Re-admitting them requires receiver-type
+/// evidence.
+///
 /// Accepted FP classes: per-element small-struct copies are idiomatic and
-/// cheap (the Info band keeps them candidate-grade); `clone` on a cheap
-/// `Copy` type also fires (the syntactic tier cannot see the element size).
+/// cheap (the Info band keeps them candidate-grade).
 pub(crate) fn rust_mem_002(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {

@@ -43,10 +43,11 @@ pub const LOOP_008_RULE_ID: &str = "PERF-C-LOOP-008";
 /// mirroring the C families' intent on Rust idioms. Each const is the single
 /// spelling shared by the heuristic and its tests across the seam.
 ///
-/// Coverage is now the FULL 23-rule Rust catalog: the structural subset
-/// (LOOP-001/004/005/007/008, CALL-001/002, ARCH-001/002/003, TYPE-001/002,
-/// wave C1) plus the API-name families (ALLOC-001/002/003, STR-001/002/003,
-/// LOOP-002/003/006, MEM-001/002, wave C2).
+/// Coverage is now the 22-rule Rust catalog (STR-001 retired by the M1
+/// Precision Gate): the structural subset (LOOP-001/004/005/007/008,
+/// CALL-001/002, ARCH-001/002/003, TYPE-001/002, wave C1) plus the API-name
+/// families (ALLOC-001/002/003, STR-002/003, LOOP-002/003/006, MEM-001/002,
+/// wave C2).
 pub const RS_ALLOC_001_RULE_ID: &str = "PERF-RS-ALLOC-001";
 pub const RS_ALLOC_002_RULE_ID: &str = "PERF-RS-ALLOC-002";
 pub const RS_ALLOC_003_RULE_ID: &str = "PERF-RS-ALLOC-003";
@@ -65,6 +66,10 @@ pub const RS_LOOP_007_RULE_ID: &str = "PERF-RS-LOOP-007";
 pub const RS_LOOP_008_RULE_ID: &str = "PERF-RS-LOOP-008";
 pub const RS_MEM_001_RULE_ID: &str = "PERF-RS-MEM-001";
 pub const RS_MEM_002_RULE_ID: &str = "PERF-RS-MEM-002";
+/// RETIRED by the M1 Precision Gate (plan `evidence-beta`): no emitter is
+/// registered and no rule emits this id (Rust tier 23 → 22). Kept as public
+/// API — the id stays **reserved** so it is never reused for a different rule
+/// — so it is not dead code.
 pub const RS_STR_001_RULE_ID: &str = "PERF-RS-STR-001";
 pub const RS_STR_002_RULE_ID: &str = "PERF-RS-STR-002";
 pub const RS_STR_003_RULE_ID: &str = "PERF-RS-STR-003";
