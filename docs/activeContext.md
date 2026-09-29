@@ -22,3 +22,11 @@ Session 39 **COMPLETE** — plan `python-backend` (evidence-beta **M3**) **W0 ca
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
 - **Commit:** pending founder approval (session-39 change set — see `state/handoff/latest.md`).
+
+## L2 state split (2026-09-29)
+Hot/cold split applied: hot `state/session-state.json` is now compact JSON (schema v2, ≤ 8 KB); full history
+in cold `state/archive/ledger.jsonl`; AGENTS.md state rule updated. No product code touched; uncommitted.
+
+## L2 reviewed (2026-09-29)
+Hot ≤ 8 KB (7853 B); cold ledger `state/archive/ledger.jsonl` (481 records). Dual review: round-1
+CHANGES_REQUESTED → round-2 reviewer APPROVED + requirements-reviewer APPROVED. Commit pending founder approval.

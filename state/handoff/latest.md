@@ -38,3 +38,14 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 - **New:** `docs/evidence/python-canary.md`, `docs/evidence/python-canary/counter.py`, `docs/evidence/python-canary/canary_results.json`.
 - **Modified:** `CHANGELOG.md` ([Unreleased] Added bullet), `state/session-state.json`, `state/handoff/latest.md`, `docs/activeContext.md`.
 - **Note:** Cargo/`.gitignore`/`src/` untouched.
+
+## L2 state split (2026-09-29)
+Hot/cold state split applied: hot `state/session-state.json` is now compact schema v2 and **≤ 8 KB**; full
+history (481 ledger records, incl. the phase record) moved to cold `state/archive/ledger.jsonl` (greppable, never auto-read); pre-L2
+snapshot + full `state/archive/CHANGELOG-history.md` archived. **AGENTS.md state rule updated.** No product
+code touched; uncommitted.
+
+## L2 reviewed (2026-09-29)
+Hot ≤ 8 KB (7853 B); cold `state/archive/ledger.jsonl` **481 records**. Dual review: round-1
+CHANGES_REQUESTED (M1–M5) → fixed → **round-2 reviewer APPROVED + requirements-reviewer APPROVED**.
+Commit pending founder approval.
