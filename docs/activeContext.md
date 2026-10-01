@@ -30,3 +30,9 @@ in cold `state/archive/ledger.jsonl`; AGENTS.md state rule updated. No product c
 ## L2 reviewed (2026-09-29)
 Hot ≤ 8 KB (7853 B); cold ledger `state/archive/ledger.jsonl` (481 records). Dual review: round-1
 CHANGES_REQUESTED → round-2 reviewer APPROVED + requirements-reviewer APPROVED. Commit pending founder approval.
+
+## L6 north-star pinned (2026-10-01)
+Harness L6 (`harness-v2`): added founder-owned `docs/NORTH-STAR.md` (goal / non-goals / current stage / success
+metrics; business KPIs marked `UNSET (founder to ratify)`), a `docs/NORTH-STAR.md` doc-pointer in `AGENTS.md`,
+and `state/session-state.json` `north_star_ref` → `docs/NORTH-STAR.md` (+ optional `sessions_since_alignment_audit`
+/ `last_alignment_audit` counter fields). Docs-only; no product code touched; uncommitted.

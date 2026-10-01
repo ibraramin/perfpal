@@ -39,6 +39,7 @@ LLM-consumable quantified metrics (structured JSON + a human-readable Markdown r
 - Architecture: `docs/architecture/` (`modules.md`, `ir-v1.md`, `rust-backend.md`)
 - Specs: `docs/specs/` (`perfpal-core-spec.md`, `evidence-beta-spec.md`) · Plans: `docs/plans/` · ADRs: `docs/adr/`
 - Heuristics: `docs/heuristics/` · Schema: `docs/schema/` · Lessons: `docs/lessons-learned.md`
+- **North-star (pinned, founder-edited):** `docs/NORTH-STAR.md` — goal / non-goals / stage / metrics.
 - **State (hot/cold):** hot `state/session-state.json` (compact JSON, ≤ 8 KB; schema `~/.config/opencode/docs/STATE-SCHEMA.md`;
   view via `jq .`) · cold `state/archive/ledger.jsonl` (greppable, never auto-read). Session start reads hot +
   `state/handoff/latest.md` + `docs/activeContext.md` only.

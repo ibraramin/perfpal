@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **North-star pinned (harness L6).** `docs/NORTH-STAR.md` — founder-owned goal / non-goals / current stage /
+  success metrics (business KPIs marked `UNSET` pending founder ratification). `AGENTS.md` now points to it and
+  `state/session-state.json` `north_star_ref` → `docs/NORTH-STAR.md`. Docs-only; no product code touched.
+
 ### Pending
 - Housekeeping follow-ups: Cargo.toml SPDX, modules §8 drift, distributions
 - Examples follow-ups: examples/README.md + ARCH-001 hub extension
