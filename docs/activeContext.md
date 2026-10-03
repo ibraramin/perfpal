@@ -9,7 +9,7 @@ Session 40 **L2 state hygiene** complete: hot `state/session-state.json` trimmed
 - **`sessions_since_alignment_audit` incremented 0 → 1** (L6 EOL increment; 0 < 10 so no alignment audit was due).
 
 ## In Progress
-- Nothing — hygiene complete, commit pending.
+- Nothing — hygiene complete; committed as `156a3f4`.
 
 ## Next
 - **NEXT SESSION (`/new`) = plan `python-backend` W1:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend`. Deliver the grammar pin (`tree-sitter-python = "=0.25.0"`), `tests/python_grammar_link.rs`, and `docs/architecture/python-backend.md` (node-kind→IR map + the **durable disposition table**).
@@ -18,7 +18,7 @@ Session 40 **L2 state hygiene** complete: hot `state/session-state.json` trimmed
 
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
-- **Commit:** session-40 change set pending.
+- **Commit:** session-40 change set committed as `156a3f4` (EOL handoff follow-up on top).
 
 ## History
 - **L2 state split (2026-09-29):** hot/cold split applied — hot `state/session-state.json` compact schema v2 (≤ 8 KB), full history in cold `state/archive/ledger.jsonl`.

@@ -49,7 +49,8 @@ Plan `python-backend` (evidence-beta **M3**) **W0 canary** executed; evidence-on
 - **Note:** `src/`, `Cargo.toml`, `Cargo.lock`, schema, goldens untouched.
 
 ## Commit
-1. work commit (this change set) — **SHA recorded in the EOL follow-up commit** (the EOL commit regenerates this handoff to embed the actual commit-1 SHA).
+1. **`156a3f4`** — work commit: hot-trim 7932 → 7602 B + 4 `settled` cold-ledger appends + docs truth-up (this handoff draft).
+2. (this EOL follow-up commit) — regenerates this handoff to embed `156a3f4` and flips the `docs/activeContext.md` commit status.
 
 ## L2 state split / L6 north-star (history)
 The L2 hot/cold split landed **2026-09-29**: hot `state/session-state.json` is compact schema v2 and ≤ 8 KB, with full history in cold `state/archive/ledger.jsonl` (greppable, never auto-read). The L6 north-star (`docs/NORTH-STAR.md`, founder-owned goal / non-goals / stage / metrics) was pinned **2026-10-01** and referenced by `north_star_ref` in hot state.
