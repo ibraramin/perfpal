@@ -1,38 +1,25 @@
 # Active Context
 
 ## Current Task
-Session 39 **COMPLETE** — plan `python-backend` (evidence-beta **M3**) **W0 canary** executed. **Evidence-only, zero product code.** Pinned Aider + chunkhound were counted with a throwaway stdlib-`ast` counter, baselined against Ruff `PERF`, and ranked frequency × plausibility. Deliverable: `docs/evidence/python-canary.md` + committed `counter.py`/`canary_results.json`. **Commit pending founder approval.**
+Session 40 **L2 state hygiene** complete: hot `state/session-state.json` trimmed **7932 → 7602 B** by demoting the 4 completed W0/M3-plan decisions (`D-pf-186/188/189/190`) to the cold ledger as `settled` records (append-only, full text preserved; **481 → 485 records**). Also regenerated the stale `state/handoff/latest.md` and this file. **Zero product code.**
 
 ## Recent Decisions
-- **W0 keeps:** `ALLOC-003` (flagship, 7.0/6.0 per kLOC prod), `LOOP-007` (flagship, must be loop-scoped + kind-gated), `N1-001` (native flagship), `ASYNC-001`/`ASYNC-002` (native; `async def` + loop gates proven necessary).
-- **W0 reframes:** `ALLOC-001` — 98–99.6% of hits are f-strings → ship only as **loop-invariant construction** (Info-first) or not at all; `LOOP-002` — 72–83% `print`/`input` → drop them (or Info) and keep real I/O.
-- **W0 adds:** `PERF-PY-LOOP-009` (try/except-in-loop; from Ruff `PERF203`) + `PERF-PY-PANDAS-001/002` (0–4 hits; Info + frequency caveat).
-- **W0 defers:** `ARCH-001/002/003` — abundant structure (chunkhound depth 39 vs threshold 8) but the import-graph proxy is **not decision-grade**; thresholds measured in W2/W4.
-- **`COMPREHENSION-001` cross-validated** vs Ruff `PERF401` (16 vs 13; 56 vs 49). ADR-0007 retire-10 / keep-~13 unchanged.
-- **Determinism lesson:** set-iteration in an evidence metric caused run-to-run variation (`ARCH-001` 545↔488; `max_depth` 36↔39) — fixed by sorting all in-graph traversal; two runs now byte-identical.
+- **Demotion convention:** append a **NEW** ledger line with the same id + closed status + `*_at`; originals are never deleted (mirrors the harness ledger precedent; preserves append-only history).
+- **W0 canary is committed** as `ad0a20a`; evidence in `docs/evidence/python-canary.md`.
+- **`sessions_since_alignment_audit` incremented 0 → 1** (L6 EOL increment; 0 < 10 so no alignment audit was due).
 
 ## In Progress
-- Nothing — W0 evidence complete; commit pending founder approval.
+- Nothing — hygiene complete, commit pending.
 
 ## Next
 - **NEXT SESSION (`/new`) = plan `python-backend` W1:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend`. Deliver the grammar pin (`tree-sitter-python = "=0.25.0"`), `tests/python_grammar_link.rs`, and `docs/architecture/python-backend.md` (node-kind→IR map + the **durable disposition table**).
 - **Carry (from M1/M2):** semantic-tier USR-ambiguity guard; `PERF-RS-LOOP-008` deref-chain modelling; `r#` raw-identifier receiver nit; M2 non-blocking notes (`replace_json_value` uniqueness assert; expose `registered_rule_ids()`).
-- **W1 design obligations:** comprehension-as-`LoopNode`; module-scope synthetic function record; `.ipynb` decision; `ARCH-003` Info/low on Python; `ALLOC-001` loop-invariant test; `LOOP-002` `print` family.
+- **W1 design obligations:** comprehension-as-`LoopNode`; module-scope synthetic function record; `.ipynb` decision; `ALLOC-001` loop-invariant test; `LOOP-002` `print` family; `LOOP-007` loop-scoped + kind-gated; `ARCH-*` thresholds (W2/W4).
 
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
-- **Commit:** pending founder approval (session-39 change set — see `state/handoff/latest.md`).
+- **Commit:** session-40 change set pending.
 
-## L2 state split (2026-09-29)
-Hot/cold split applied: hot `state/session-state.json` is now compact JSON (schema v2, ≤ 8 KB); full history
-in cold `state/archive/ledger.jsonl`; AGENTS.md state rule updated. No product code touched; uncommitted.
-
-## L2 reviewed (2026-09-29)
-Hot ≤ 8 KB (7853 B); cold ledger `state/archive/ledger.jsonl` (481 records). Dual review: round-1
-CHANGES_REQUESTED → round-2 reviewer APPROVED + requirements-reviewer APPROVED. Commit pending founder approval.
-
-## L6 north-star pinned (2026-10-01)
-Harness L6 (`harness-v2`): added founder-owned `docs/NORTH-STAR.md` (goal / non-goals / current stage / success
-metrics; business KPIs marked `UNSET (founder to ratify)`), a `docs/NORTH-STAR.md` doc-pointer in `AGENTS.md`,
-and `state/session-state.json` `north_star_ref` → `docs/NORTH-STAR.md` (+ optional `sessions_since_alignment_audit`
-/ `last_alignment_audit` counter fields). Docs-only; no product code touched; uncommitted.
+## History
+- **L2 state split (2026-09-29):** hot/cold split applied — hot `state/session-state.json` compact schema v2 (≤ 8 KB), full history in cold `state/archive/ledger.jsonl`.
+- **L6 north-star pinned (2026-10-01):** founder-owned `docs/NORTH-STAR.md` (goal / non-goals / stage / metrics), `north_star_ref` in hot state, alignment-audit counter fields added.

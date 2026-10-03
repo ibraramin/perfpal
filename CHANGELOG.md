@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   success metrics (business KPIs marked `UNSET` pending founder ratification). `AGENTS.md` now points to it and
   `state/session-state.json` `north_star_ref` → `docs/NORTH-STAR.md`. Docs-only; no product code touched.
 
+### Changed
+- **L2 state hygiene + docs truth-up.** Hot `state/session-state.json` trimmed 7932 → 7602 B by demoting 4 completed W0/M3-plan decisions (`D-pf-186/188/189/190`) to cold `state/archive/ledger.jsonl` as `settled` records (append-only; full text preserved; 481 → 485 records); regenerated stale `state/handoff/latest.md` (session-39 W0 canary is committed `ad0a20a`) and `docs/activeContext.md`. Docs/state only; no product code touched.
+
 ### Pending
 - Housekeeping follow-ups: Cargo.toml SPDX, modules §8 drift, distributions
 - Examples follow-ups: examples/README.md + ARCH-001 hub extension
