@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **North-star pinned (harness L6).** `docs/NORTH-STAR.md` — founder-owned goal / non-goals / current stage /
   success metrics (business KPIs marked `UNSET` pending founder ratification). `AGENTS.md` now points to it and
   `state/session-state.json` `north_star_ref` → `docs/NORTH-STAR.md`. Docs-only; no product code touched.
+- **Python backend W1 — grammar pin + pinned-pair link test + design doc** (plan `python-backend`, task A-pf-069; evidence-beta M3): `tree-sitter-python = "=0.25.0"` exact-pinned in `Cargo.toml` per ADR-0001 guardrail G5 (official tree-sitter-org grammar, MIT; `deny.toml` allowlists MIT). ABI compatibility confirmed against primary sources — the pinned runtime (`tree-sitter =0.26.13`) accepts ABI `13..=15` and the grammar's generated parser declares `LANGUAGE_VERSION 15`, so `15 ∈ [13,15]`. New `tests/python_grammar_link.rs` (standalone, backend-independent) asserts the reported ABI is inside the runtime window, `parser.set_language` succeeds, a representative Python module (docstring, aliased imports, decorator, typed fn, class+base+method, `for`/`while`, list/set/dict comprehensions, generator expression, f-string, `async def`+`await`, `try`/`except`/`finally`, `with`, lambda, `not`, chained comparison) parses with **zero** `ERROR`/missing nodes via a recursive walk plus a 15-kind presence lock, and a deliberately malformed source still reports an error (non-vacuity guard). New `docs/architecture/python-backend.md` records the W1 research: the pin/ABI table; a node-kind → IR mapping table (10 families) derived from the pinned `node-types.json` (217 entries / 128 named); the comprehension-as-`LoopNode` (iterable evaluated once — the Rust R4 fix), synthetic module-scope `FunctionRecord`, `async` flag, and `.ipynb`-excluded decisions; the 4 additive serde-default IR fields (`is_async`, `is_module_scope`, `binding_kind`, `receiver_root`); and the **durable rule disposition table** (10 retire / 13 transferred-or-reframed mirrors / 8 native additions / 3 cuts) resolving the "mirror full catalog vs retire-10" conflict (R-pf-087/R-pf-088) and the W0 obligations (R-pf-091). No backend/catalog/schema code — W2–W4 remain.
 
 ### Changed
 - **L2 state hygiene + docs truth-up.** Hot `state/session-state.json` trimmed 7932 → 7602 B by demoting 4 completed W0/M3-plan decisions (`D-pf-186/188/189/190`) to cold `state/archive/ledger.jsonl` as `settled` records (append-only; full text preserved; 481 → 485 records); regenerated stale `state/handoff/latest.md` (session-39 W0 canary is committed `ad0a20a`) and `docs/activeContext.md`. Docs/state only; no product code touched.
@@ -31,9 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - M2 candidates: semantic USR guard, LOOP-008 deref, re-run KPI
 - Remaining milestones: M3 Python, M4 showcase, M5 release, M6+
 - M2 follow-ups: single-key assert, expose rule-id accessor, ladder
-- python-backend W1-W4 roadmap (pin, backend, catalog, proof)
-- NEXT = python-backend W1: pin grammar + link test + backend doc
-- Then W2 backend+inference -> W3 catalog+schema -> W4 proof
+- python-backend roadmap: W1 DONE (grammar pin + link test + backend doc); NEXT = W2 backend+inference -> W3 catalog+schema -> W4 proof
 
 ## [0.2.0-beta.1] - 2026-09-24
 

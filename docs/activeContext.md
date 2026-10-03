@@ -1,24 +1,25 @@
 # Active Context
 
 ## Current Task
-Session 40 **L2 state hygiene** complete: hot `state/session-state.json` trimmed **7932 → 7602 B** by demoting the 4 completed W0/M3-plan decisions (`D-pf-186/188/189/190`) to the cold ledger as `settled` records (append-only, full text preserved; **481 → 485 records**). Also regenerated the stale `state/handoff/latest.md` and this file. **Zero product code.**
+Session 41 **python-backend W1** (task A-pf-069) **complete**: pinned `tree-sitter-python = "=0.25.0"` (MIT, ABI 15), added `tests/python_grammar_link.rs` (ABI window + zero-ERROR parse + 15-kind lock + malformed non-vacuity, 2/2 pass), and authored `docs/architecture/python-backend.md` (node-kind→IR map, comprehension/module-scope/async/notebook decisions, 4 additive IR fields, durable 10-retire/13-mirror/8-native/3-cut disposition table).
 
 ## Recent Decisions
-- **Demotion convention:** append a **NEW** ledger line with the same id + closed status + `*_at`; originals are never deleted (mirrors the harness ledger precedent; preserves append-only history).
-- **W0 canary is committed** as `ad0a20a`; evidence in `docs/evidence/python-canary.md`.
-- **`sessions_since_alignment_audit` incremented 0 → 1** (L6 EOL increment; 0 < 10 so no alignment audit was due).
+- **D-pf-191 (live):** W1 outcome + design lock (see `state/session-state.json` and the W1 doc). Resolves R-pf-087/R-pf-088 (mirror-vs-retire) via the durable disposition table.
+- **`.ipynb` excluded from M3** (documented accepted limitation; dispatcher returns `None` for `.ipynb`).
+- **4 additive serde-default IR fields planned** (`FunctionRecord.is_async`, `FunctionRecord.is_module_scope`, `AssignmentEvent.binding_kind`, `CallEvent.receiver_root`) — IR-internal; no schema bump from inference.
+- **Round-1 review corrections applied:** `await`/`lambda` are named nodes; `comparison_operator` has no `operands` field; no `positional_argument`; `not` is `not_operator`; added `PERF-PY-ALLOC-004` materialisation-churn disposition.
 
 ## In Progress
-- Nothing — hygiene complete; committed as `156a3f4`.
+- Nothing — W1 complete and committed (work commit + expected EOL follow-up).
 
 ## Next
-- **NEXT SESSION (`/new`) = plan `python-backend` W1:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend`. Deliver the grammar pin (`tree-sitter-python = "=0.25.0"`), `tests/python_grammar_link.rs`, and `docs/architecture/python-backend.md` (node-kind→IR map + the **durable disposition table**).
+- **NEXT SESSION (`/new`) = plan `python-backend` W2:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend` + `docs/architecture/python-backend.md`. Deliver the Python backend module (`Extraction` contract + ParseHealth parity), minimal binding/alias inference + best-effort import resolution, and `LanguageKind::Python` / `language_of(.py/.pyi)` / `extract_unit` / `failed_unit` / `SUPPORTED_LANGUAGES` wiring.
 - **Carry (from M1/M2):** semantic-tier USR-ambiguity guard; `PERF-RS-LOOP-008` deref-chain modelling; `r#` raw-identifier receiver nit; M2 non-blocking notes (`replace_json_value` uniqueness assert; expose `registered_rule_ids()`).
-- **W1 design obligations:** comprehension-as-`LoopNode`; module-scope synthetic function record; `.ipynb` decision; `ALLOC-001` loop-invariant test; `LOOP-002` `print` family; `LOOP-007` loop-scoped + kind-gated; `ARCH-*` thresholds (W2/W4).
+- **W2 obligations:** comprehension-as-`LoopNode` + once-evaluated iterables; synthetic module-scope `FunctionRecord`; 4 additive IR fields; `__init__.py` one-level re-export rule; `ARCH-*` thresholds measure in W4.
 
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
-- **Commit:** session-40 change set committed as `156a3f4` (EOL handoff follow-up on top).
+- **Hygiene:** hot state at **8076 B / 8192 B** (~116 B headroom) — expect to demote settled decisions next session.
 
 ## History
 - **L2 state split (2026-09-29):** hot/cold split applied — hot `state/session-state.json` compact schema v2 (≤ 8 KB), full history in cold `state/archive/ledger.jsonl`.
