@@ -12,7 +12,7 @@ Session 42 **python-backend W2** (task A-pf-070) **complete**: the Python scanne
 - **`.ipynb` excluded** (unchanged); `.py`/`.pyi` dispatch.
 
 ## In Progress
-- Nothing — W2 code complete and gated; EOL docs updated; commit pending founder approval.
+- Nothing — W2 complete and committed as `6b5c8ea` (EOL follow-up commit on top).
 
 ## Next
 - **NEXT SESSION (`/new`) = plan `python-backend` W3:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend` + `docs/architecture/python-backend.md`. Deliver the `PERF-PY-*` catalog (consts + `src/analyzer/heuristics/python/**` as pure IR views), `RuleLanguage::Python` + registry/reporter, and schema MINOR `1.2 → 1.3` (canonical/embedded/golden copies, drift test, CLI `VERSION_SUFFIX`, `tests/schema_1_2.rs` flip, `SUPPORTED_LANGUAGES` widen, aggregator `scan_languages`).
