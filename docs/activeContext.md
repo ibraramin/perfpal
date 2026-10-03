@@ -1,26 +1,28 @@
 # Active Context
 
 ## Current Task
-Session 41 **python-backend W1** (task A-pf-069) **complete**: pinned `tree-sitter-python = "=0.25.0"` (MIT, ABI 15), added `tests/python_grammar_link.rs` (ABI window + zero-ERROR parse + 15-kind lock + malformed non-vacuity, 2/2 pass), and authored `docs/architecture/python-backend.md` (node-kind→IR map, comprehension/module-scope/async/notebook decisions, 4 additive IR fields, durable 10-retire/13-mirror/8-native/3-cut disposition table).
+Session 42 **python-backend W2** (task A-pf-070) **complete**: the Python scanner backend `src/scanner/backends/tree_sitter_python/` (mod/infer/scan + 28 inline tests) implements the shared `Extraction` contract (FileRecord/ParseHealth parity, imports, globals, classes, decorators, functions, typed events), with minimal binding/alias inference, best-effort import resolution, 4 additive IR fields + an additive `AwaitEvent` stream, and `LanguageKind::Python` / `language_of(.py/.pyi)` wiring. `tests/python_backend.rs` (8 integration tests) locks discovery, the synthetic `<module>` record, comprehensions, import resolution (incl. `.pyi`), and parse-health parity.
 
 ## Recent Decisions
-- **D-pf-191 (live):** W1 outcome + design lock (see `state/session-state.json` and the W1 doc). Resolves R-pf-087/R-pf-088 (mirror-vs-retire) via the durable disposition table.
-- **`.ipynb` excluded from M3** (documented accepted limitation; dispatcher returns `None` for `.ipynb`).
-- **4 additive serde-default IR fields planned** (`FunctionRecord.is_async`, `FunctionRecord.is_module_scope`, `AssignmentEvent.binding_kind`, `CallEvent.receiver_root`) — IR-internal; no schema bump from inference.
-- **Round-1 review corrections applied:** `await`/`lambda` are named nodes; `comparison_operator` has no `operands` field; no `positional_argument`; `not` is `not_operator`; added `PERF-PY-ALLOC-004` materialisation-churn disposition.
+- **D-pf-192 (live):** W2 outcome + carry (see `state/session-state.json`). Both reviews APPROVED.
+- **Analyzer gate:** non-`c`/non-`rust` units are dropped from heuristic buckets until W3's `RuleLanguage::Python` — `.py` files must not emit C/Rust findings.
+- **`AwaitEvent` (founder-approved):** a dedicated additive `FunctionUnit.awaits: Vec<AwaitEvent>` carries `await` (meta: span/loop depth/innermost) so parser-free `ASYNC-002` works; the W1 doc's "no field for await" was un-implementable across the seam (`python-backend.md` §3.9/§4/§6 amended).
+- **Name-level `__init__.py` re-export: DEFERRED** to T2 `python-resolver` (`python-backend.md` §5 amended); W2 keeps module-level edges.
+- **`SUPPORTED_LANGUAGES` stays `["c","rust"]`**; widens with the 1.3 schema bump in W3.
+- **`.ipynb` excluded** (unchanged); `.py`/`.pyi` dispatch.
 
 ## In Progress
-- Nothing — W1 complete; committed as `2b897b4` (EOL follow-up on top).
+- Nothing — W2 code complete and gated; EOL docs updated; commit pending founder approval.
 
 ## Next
-- **NEXT SESSION (`/new`) = plan `python-backend` W2:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend` + `docs/architecture/python-backend.md`. Deliver the Python backend module (`Extraction` contract + ParseHealth parity), minimal binding/alias inference + best-effort import resolution, and `LanguageKind::Python` / `language_of(.py/.pyi)` / `extract_unit` / `failed_unit` / `SUPPORTED_LANGUAGES` wiring.
-- **Carry (from M1/M2):** semantic-tier USR-ambiguity guard; `PERF-RS-LOOP-008` deref-chain modelling; `r#` raw-identifier receiver nit; M2 non-blocking notes (`replace_json_value` uniqueness assert; expose `registered_rule_ids()`).
-- **W2 obligations:** comprehension-as-`LoopNode` + once-evaluated iterables; synthetic module-scope `FunctionRecord`; 4 additive IR fields; `__init__.py` one-level re-export rule; `ARCH-*` thresholds measure in W4.
+- **NEXT SESSION (`/new`) = plan `python-backend` W3:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend` + `docs/architecture/python-backend.md`. Deliver the `PERF-PY-*` catalog (consts + `src/analyzer/heuristics/python/**` as pure IR views), `RuleLanguage::Python` + registry/reporter, and schema MINOR `1.2 → 1.3` (canonical/embedded/golden copies, drift test, CLI `VERSION_SUFFIX`, `tests/schema_1_2.rs` flip, `SUPPORTED_LANGUAGES` widen, aggregator `scan_languages`).
+- **W2 carry (decide in W3/W4):** aggregator graphs/stats include Python IR pre-W3; `function_count` counts `<module>`; C/Rust `loc_counts` `len+1` double-count (latent, unfixed).
+- **Carry (from M1/M2):** semantic-tier USR-ambiguity guard; `PERF-RS-LOOP-008` deref-chain modelling; `r#` raw-identifier receiver nit; M2 non-blocking notes.
 
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
-- **Hygiene:** hot state at **8076 B / 8192 B** (~116 B headroom) — expect to demote settled decisions next session.
+- **Hygiene:** hot state **8037 B / 8192 B** (~155 B headroom); demoted 4 settled records to the cold ledger this session.
 
 ## History
 - **L2 state split (2026-09-29):** hot/cold split applied — hot `state/session-state.json` compact schema v2 (≤ 8 KB), full history in cold `state/archive/ledger.jsonl`.
-- **L6 north-star pinned (2026-10-01):** founder-owned `docs/NORTH-STAR.md` (goal / non-goals / stage / metrics), `north_star_ref` in hot state, alignment-audit counter fields added.
+- **L6 north-star pinned (2026-10-01):** founder-owned `docs/NORTH-STAR.md`, `north_star_ref` in hot state, alignment-audit counter fields added.

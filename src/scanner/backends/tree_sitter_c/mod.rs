@@ -25,10 +25,10 @@ use tree_sitter::{Node, Parser};
 pub use super::Extraction;
 pub use crate::ir::ALLOC_WRAPPER_PATTERN_ID;
 use crate::ir::{
-    CallEvent, CalleeKind, ComparisonEvent, FileRecord, GlobalVar, IncludeCounts, IncludeEdge,
-    IncludeForm, LocCounts, LoopKind, LoopNode, MacroEvent, MacroEventKind, NativePoint,
-    ParseHealth, ParseStatus, ResolverTier, ScopeClass, Shape, ShapeKind, Span, StatementRole,
-    StorageClass, StructDef, StructKind, StructMember,
+    BindingKind, CallEvent, CalleeKind, ComparisonEvent, FileRecord, GlobalVar, IncludeCounts,
+    IncludeEdge, IncludeForm, LocCounts, LoopKind, LoopNode, MacroEvent, MacroEventKind,
+    NativePoint, ParseHealth, ParseStatus, ResolverTier, ScopeClass, Shape, ShapeKind, Span,
+    StatementRole, StorageClass, StructDef, StructKind, StructMember,
 };
 use crate::scanner::FunctionUnit;
 
@@ -663,6 +663,8 @@ fn function_unit(
         alloc_site_count: scan.alloc_site_count,
         length_lines,
         resolver_tier: ResolverTier::default(),
+        is_async: false,
+        is_module_scope: false,
     };
     FunctionUnit {
         record,
@@ -672,6 +674,7 @@ fn function_unit(
         comparisons: scan.comparisons,
         access_chains: scan.access_chains,
         loops: scan.loops,
+        awaits: Vec::new(),
     }
 }
 
@@ -896,6 +899,7 @@ impl<'a> FuncScan<'a> {
             statement_role,
             conditional_guarded,
             semantic: None,
+            receiver_root: None,
         });
     }
 
@@ -911,6 +915,7 @@ impl<'a> FuncScan<'a> {
             meta,
             target,
             scope_class,
+            binding_kind: BindingKind::Unknown,
         });
     }
 

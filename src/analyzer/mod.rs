@@ -333,25 +333,31 @@ pub(crate) use heuristics::{CrossFileCallEdge, cross_file_call_edges, scanf_form
 /// severity → confidence → rule_id → path → start_line → start_col.
 #[must_use]
 pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
-    // Language gating (plan `rust-backend` R3 workstream C1): the registry is
-    // language-tagged, so each entry must receive ONLY the units for its own
-    // language — otherwise a name-based C rule (ALLOC/STR/ARCH) would fire on
-    // same-named Rust constructs in a mixed scan. The units are partitioned
-    // ONCE here into two owned slices (a single deep clone of every
-    // `FileUnit`); the alternative — handing each rule the full borrowed set
-    // and repeating the language filter inside all 45 rules — trades that one
-    // upfront clone for 45 per-rule passes over the units. The upfront split
-    // is paid once per `analyze` call and keeps every rule a pure,
-    // language-homogeneous IR view. Any language other than `"rust"`
-    // (including `"c"`) lands in the C bucket, matching the scanner's C
-    // fallback default.
+    // Language gating (plan `rust-backend` R3 workstream C1; tightened by plan
+    // `python-backend` W2). The registry is language-tagged, so each entry must
+    // receive ONLY the units for its own language — otherwise a name-based C
+    // rule (ALLOC/STR/ARCH) would fire on same-named constructs in another
+    // language. The units are partitioned ONCE here into two owned slices (a
+    // single deep clone of every `FileUnit`); the alternative — handing each
+    // rule the full borrowed set and repeating the language filter inside all
+    // 45 rules — trades that one upfront clone for 45 per-rule passes over the
+    // units. The upfront split is paid once per `analyze` call and keeps every
+    // rule a pure, language-homogeneous IR view. Only `"rust"` and `"c"` are
+    // bucketed explicitly; any OTHER language (today: `"python"`, M3 W2) is
+    // dropped — it has no registry rules yet and MUST NOT be scored by C/Rust
+    // heuristics. W3 adds `RuleLanguage::Python` + the `PERF-PY-*` registry;
+    // dropping here is the interim honest gate.
     let mut c_units: Vec<FileUnit> = Vec::new();
     let mut rust_units: Vec<FileUnit> = Vec::new();
     for unit in units {
-        if unit.file.language == "rust" {
-            rust_units.push(unit.clone());
-        } else {
-            c_units.push(unit.clone());
+        match unit.file.language.as_str() {
+            "rust" => rust_units.push(unit.clone()),
+            "c" => c_units.push(unit.clone()),
+            // Other languages (today: "python", M3 W2) have no registry rules
+            // yet and MUST NOT be scored by C/Rust heuristics — W3 adds
+            // RuleLanguage::Python + the PERF-PY-* registry. Dropping them
+            // here is the interim honest gate.
+            _ => {}
         }
     }
 
@@ -584,6 +590,7 @@ mod tests {
             statement_role: StatementRole::Nested,
             conditional_guarded: false,
             semantic,
+            receiver_root: None,
         }
     }
 
@@ -626,6 +633,7 @@ mod tests {
                 comparisons: Vec::new(),
                 access_chains: Vec::new(),
                 loops: Vec::new(),
+                awaits: Vec::new(),
             }],
         }
     }

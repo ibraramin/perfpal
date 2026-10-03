@@ -9,8 +9,9 @@
 //!   symlinks not followed (v1); per-file failures become `ParseHealth{failed}`
 //!   records, never run aborts (total target failure = [`ScanError`], which
 //!   cli maps to exit 1).
-//! - Language detection by extension: `.c`/`.h` are C and `.rs` is Rust in v1;
-//!   others skipped silently. `scan.file_count` = `len(files[])`.
+//! - Language detection by extension: `.c`/`.h` are C, `.rs` is Rust and
+//!   `.py`/`.pyi` are Python; others skipped silently. `scan.file_count` =
+//!   `len(files[])`.
 //! - Parse via the bound backend; capture ParseHealth (status, error regions,
 //!   error node count).
 //! - **C** include resolution against the filesystem (includer-relative first,
@@ -76,6 +77,12 @@ pub struct FunctionUnit {
     pub comparisons: Vec<crate::ir::ComparisonEvent>,
     pub access_chains: Vec<crate::ir::AccessChainEvent>,
     pub loops: Vec<crate::ir::LoopNode>,
+    /// `await` occurrences in the function body (plan `python-backend` W2;
+    /// additive v1 field with `#[serde(default)]`, so documents written before
+    /// it deserialize unchanged as an empty stream). The C and Rust backends
+    /// always leave it empty — only the Python backend emits `AwaitEvent`s.
+    #[serde(default)]
+    pub awaits: Vec<crate::ir::AwaitEvent>,
 }
 
 /// Scanner failure that is a USAGE error rather than scan data (modules.md
@@ -93,15 +100,17 @@ pub enum ScanError {
 /// emitted by each backend (and `failed_unit`); a new language must update
 /// those backends AND this const — nothing enforces that in lockstep.
 pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "rust"];
+// "python" is added with the 1.3 schema bump (W3); .py files still emit "python" via FileRecord.
 
 /// Source language selected by extension (plan `rust-backend` R1).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum LanguageKind {
     C,
     Rust,
+    Python,
 }
 
-/// Scan a target path (directory or single `.c`/`.h`/`.rs` file) into the IR stream.
+/// Scan a target path (directory or single `.c`/`.h`/`.rs`/`.py`/`.pyi` file) into the IR stream.
 ///
 /// Determinism (modules.md §1): discovered files are emitted in lexicographic
 /// order of their repo-relative POSIX paths; dot-prefixed directories are
@@ -185,12 +194,25 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
             resolve_rust_use_edges(unit, &map);
         }
     }
+
+    // Python import resolution (plan `python-backend` W2) runs over the WHOLE
+    // unit set once every file is extracted, because absolute `import a.b`
+    // edges resolve against a dotted-module → file map assembled from all
+    // Python units. The backend emits RAW module text in `to_path`
+    // (`IncludeForm::Quoted`, `resolved=false`); this pass rewrites hits to the
+    // owning repo-relative file or normalizes internal misses to `to_path=None`
+    // (external `Angle`-style misses keep the raw text). Data only — no
+    // findings are emitted here.
+    if units.iter().any(|u| u.file.language == "python") {
+        resolve_python_edges(&mut units);
+    }
     Ok(units)
 }
 
 /// Recursively discover sources under `root`. Skips dot-prefixed directories,
-/// does not follow symlinks, keeps only known-language files (`.c`/`.h`/`.rs`,
-/// modules.md §3.2); other extensions are skipped silently.
+/// does not follow symlinks, keeps only known-language files
+/// (`.c`/`.h`/`.rs`/`.py`/`.pyi`, modules.md §3.2); other extensions are skipped
+/// silently.
 fn discover(root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut stack = vec![root.to_path_buf()];
@@ -221,11 +243,14 @@ fn discover(root: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Language detection by extension: `.c`/`.h` are C, `.rs` is Rust.
+/// Language detection by extension: `.c`/`.h` are C, `.rs` is Rust,
+/// `.py`/`.pyi` are Python.
 fn language_of(file_name: &str) -> Option<LanguageKind> {
     let ext = Path::new(file_name).extension()?;
     if ext == "rs" {
         Some(LanguageKind::Rust)
+    } else if ext == "py" || ext == "pyi" {
+        Some(LanguageKind::Python)
     } else if ext == "c" || ext == "h" {
         Some(LanguageKind::C)
     } else {
@@ -248,6 +273,7 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
     let ex = match lang {
         LanguageKind::C => backends::tree_sitter_c::extract(rel_path, source),
         LanguageKind::Rust => backends::tree_sitter_rust::extract(rel_path, source),
+        LanguageKind::Python => backends::tree_sitter_python::extract(rel_path, source),
     };
     FileUnit {
         file: ex.file,
@@ -270,6 +296,7 @@ fn failed_unit(rel_path: &str, lang: LanguageKind) -> FileUnit {
             language: match lang {
                 LanguageKind::C => "c".to_string(),
                 LanguageKind::Rust => "rust".to_string(),
+                LanguageKind::Python => "python".to_string(),
             },
             loc: Default::default(),
             function_count: 0,
@@ -327,6 +354,139 @@ fn resolve_c_edges(unit: &mut FileUnit, root: &Path, rel_path: &str) {
             }
         }
     }
+}
+
+/// Python import resolution over the whole unit set (plan `python-backend`
+/// W2). The Python backend emits [`IncludeEdge`]s with the RAW module text in
+/// `to_path`, [`IncludeForm::Quoted`], `resolved=false`, `is_mod=false`. This
+/// pass resolves exactly that edge encoding:
+///
+/// - `import a.b.c` → raw `"a.b.c"`; `import a.b as x` → raw `"a.b"`;
+///   `import a, b` → raw `"a"`, `"b"`.
+/// - `from a.b import c, d` → ONE raw `"a.b"` (module dependency; imported
+///   names are not separate edges).
+/// - `from .mod import z` → raw `".mod"` (leading dots preserved).
+/// - `from . import x, y` → raw `".x"`, `".y"`.
+/// - `from x import *` → raw `"x"`.
+///
+/// Determinism: `module_map` is a `BTreeMap`, `top_level` a `BTreeSet`, unit
+/// order is the scanner's sorted emission, and edges retain source order.
+/// Relative imports are always INTERNAL: a miss normalizes to `to_path=None`.
+/// An absolute miss whose first segment names a top-level scanned module is
+/// internal (also `to_path=None`); any other absolute miss is the external
+/// bucket and keeps the raw text. `__init__.py` one-level re-exports fall out
+/// of the hub's own relative edges; deep name-level re-export tracing is OUT OF
+/// SCOPE (T2 `python-resolver`) and is deliberately NOT guessed here.
+fn resolve_python_edges(units: &mut [FileUnit]) {
+    // Dotted module path → repo-relative POSIX file, from every `.py` and
+    // `.pyi` unit (so a `.py` importing a stub-only module resolves to the
+    // `.pyi`; `python_dotted_module` applies `__init__.pyi` like
+    // `__init__.py`).
+    let mut module_map: BTreeMap<String, String> = BTreeMap::new();
+    for unit in units.iter().filter(|u| u.file.language == "python") {
+        let path = &unit.file.path;
+        if !(path.ends_with(".py") || path.ends_with(".pyi")) {
+            continue;
+        }
+        if let Some(module) = python_dotted_module(path) {
+            module_map.entry(module).or_insert_with(|| path.clone());
+        }
+    }
+    let top_level: BTreeSet<String> = module_map
+        .keys()
+        .filter_map(|module| module.split('.').next())
+        .filter(|segment| !segment.is_empty())
+        .map(str::to_string)
+        .collect();
+
+    for unit in units.iter_mut().filter(|u| u.file.language == "python") {
+        let package = python_package(&unit.file.path);
+        let base: Vec<&str> = if package.is_empty() {
+            Vec::new()
+        } else {
+            package.split('.').collect()
+        };
+        for edge in &mut unit.includes {
+            let Some(raw) = edge.to_path.clone() else {
+                continue;
+            };
+            if raw.starts_with('.') {
+                // Relative: leading dots are preserved in `raw`.
+                let dots = raw.chars().take_while(|&c| c == '.').count();
+                let rest = &raw[dots..];
+                // `dots == 1` anchors at the includer package; each extra dot
+                // climbs one parent package.
+                let drop = dots.saturating_sub(1);
+                let keep = base.len().saturating_sub(drop);
+                let base_str = base[..keep].join(".");
+                let candidate = if rest.is_empty() {
+                    base_str
+                } else {
+                    format!("{base_str}.{rest}")
+                };
+                match module_map.get(&candidate) {
+                    Some(file) => {
+                        edge.to_path = Some(file.clone());
+                        edge.resolved = true;
+                    }
+                    None => {
+                        // Relative miss is always internal (data, not error).
+                        edge.to_path = None;
+                        edge.resolved = false;
+                    }
+                }
+            } else if let Some(file) = module_map.get(&raw) {
+                edge.to_path = Some(file.clone());
+                edge.resolved = true;
+            } else {
+                let first = raw.split('.').next().unwrap_or("");
+                if top_level.contains(first) {
+                    // The top-level package is in-repo but the full path is
+                    // not a module file: internal unresolved.
+                    edge.to_path = None;
+                    edge.resolved = false;
+                }
+                // Absolute miss on an unknown top-level package: external
+                // bucket — keep the raw text in `to_path`, `resolved=false`.
+            }
+        }
+    }
+}
+
+/// Dotted Python module path for a repo-relative path (plan `python-backend`
+/// W2). `pkg/__init__.py` → `"pkg"`, `pkg/sub/mod.py` → `"pkg.sub.mod"`,
+/// repo-root `foo.py` → `"foo"`, root `__init__.py` → `""`. `.pyi` stubs use
+/// the same rule; non-Python extensions return `None`.
+fn python_dotted_module(path: &str) -> Option<String> {
+    let (dir, file) = split_rel(path);
+    let stem = file
+        .strip_suffix(".py")
+        .or_else(|| file.strip_suffix(".pyi"))?;
+    if stem == "__init__" {
+        Some(dir.replace('/', "."))
+    } else if dir.is_empty() {
+        Some(stem.to_string())
+    } else {
+        Some(format!("{}.{}", dir.replace('/', "."), stem))
+    }
+}
+
+/// Package containing a Python unit (plan `python-backend` W2). For an
+/// `__init__.py`/`__init__.pyi` hub the package IS its module; for an ordinary
+/// module it is the module minus its final segment; a top-level module (or a
+/// non-Python path) yields `""`.
+fn python_package(path: &str) -> String {
+    let (dir, file) = split_rel(path);
+    if file == "__init__.py" || file == "__init__.pyi" {
+        return dir.replace('/', ".");
+    }
+    python_dotted_module(path)
+        .and_then(|module| {
+            module
+                .rsplit_once('.')
+                .map(|(package, _)| package.to_string())
+        })
+        .unwrap_or_default()
 }
 
 /// Discovered Cargo package layout for Rust module resolution (R3 workstream

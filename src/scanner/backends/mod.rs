@@ -4,7 +4,8 @@
 //! (hyphens are invalid in Rust module paths, hence `tree_sitter_c`).
 //!
 //! v1 shipped exactly one backend (C via tree-sitter, [`tree_sitter_c`]);
-//! plan `rust-backend` adds the Rust backend ([`tree_sitter_rust`]). Adding a
+//! plan `rust-backend` adds the Rust backend ([`tree_sitter_rust`]); plan
+//! `python-backend` adds the Python backend ([`tree_sitter_python`]). Adding a
 //! language = new backend module + MINOR-bump schema re-emission (modules.md §5
 //! extension points).
 //!
@@ -13,6 +14,7 @@
 //! [`crate::scanner::FileUnit`].
 
 pub mod tree_sitter_c;
+pub mod tree_sitter_python;
 pub mod tree_sitter_rust;
 
 use crate::ir::{FileRecord, GlobalVar, IncludeEdge, MacroEvent, ParseHealth, StructDef};

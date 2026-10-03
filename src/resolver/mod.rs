@@ -1332,6 +1332,7 @@ mod tests {
             statement_role: StatementRole::Nested,
             conditional_guarded: false,
             semantic: None,
+            receiver_root: None,
         }
     }
 

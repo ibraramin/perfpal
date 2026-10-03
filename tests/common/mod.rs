@@ -18,10 +18,10 @@ use std::sync::{Mutex, MutexGuard};
 
 use perfpal::analyzer::Finding;
 use perfpal::ir::{
-    AccessChainEvent, AssignmentEvent, BinaryOpEvent, CallEvent, CalleeKind, ComparisonEvent,
-    EventMeta, FileRecord, FunctionRecord, GlobalVar, IncludeCounts, IncludeEdge, IncludeForm,
-    LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, ScopeClass, Shape, ShapeKind, Span,
-    StatementRole, StorageClass, StructDef, StructKind, StructMember,
+    AccessChainEvent, AssignmentEvent, BinaryOpEvent, BindingKind, CallEvent, CalleeKind,
+    ComparisonEvent, EventMeta, FileRecord, FunctionRecord, GlobalVar, IncludeCounts, IncludeEdge,
+    IncludeForm, LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, ScopeClass, Shape,
+    ShapeKind, Span, StatementRole, StorageClass, StructDef, StructKind, StructMember,
 };
 use perfpal::scanner::{FileUnit, FunctionUnit};
 
@@ -474,6 +474,7 @@ fn call(callee: &str, args: &[&str], span: Span, depth: u32, role: StatementRole
         statement_role: role,
         conditional_guarded: false,
         semantic: None,
+        receiver_root: None,
     }
 }
 
@@ -524,6 +525,8 @@ fn func(
             alloc_site_count: 0,
             length_lines: span.end_line - span.start_line + 1,
             resolver_tier: ResolverTier::Syntactic,
+            is_async: false,
+            is_module_scope: false,
         },
         calls,
         assignments: Vec::new(),
@@ -531,6 +534,7 @@ fn func(
         comparisons: Vec::new(),
         access_chains: Vec::new(),
         loops,
+        awaits: Vec::new(),
     }
 }
 
@@ -657,6 +661,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
         semantic: None,
+        receiver_root: None,
     });
     // MEM-001: malloc(n * sizeof(p)) with `p` a pointer-typed kitchen
     // parameter — the flagship pointer_param_sizeof misuse class.
@@ -677,6 +682,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
         semantic: None,
+        receiver_root: None,
     });
     // MEM-002: memcpy with a non-literal byte count in the innermost loop.
     kitchen_calls.push(call(
@@ -703,6 +709,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
         meta: meta(sp(16, 17, 30), 3),
         target: Shape::identifier("g_sink"),
         scope_class: ScopeClass::Global,
+        binding_kind: BindingKind::Unknown,
     }];
     // LOOP-007: arr[j] == key at depth 3 with j an induction var of the
     // innermost loop (set below) — hand-rolled O(n²) lookup shape.

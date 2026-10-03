@@ -545,6 +545,7 @@ mod tests {
             statement_role: StatementRole::Unknown,
             conditional_guarded: false,
             semantic: None,
+            receiver_root: None,
         }
     }
 

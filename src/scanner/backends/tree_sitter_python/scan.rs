@@ -1,0 +1,794 @@
+//! Python backend event engine (plan `python-backend` W2).
+//!
+//! A single body walk produces events and complexity metrics with shared
+//! traversal state (loop depth, nesting). It mirrors the Rust backend's
+//! [`FuncScan`] strategy, adapted to Python node kinds:
+//!
+//! - `for_statement` / `while_statement` ⇒ [`LoopNode`];
+//! - comprehensions ⇒ real [`LoopNode`]s (one `for_in_clause` = one nesting
+//!   level) so loop-scoped rules fire inside them;
+//! - a `for` iterable (`right` of `for_statement`/`for_in_clause`) is evaluated
+//!   **once** at the clause's OUTER depth and skipped in the body walk
+//!   (ADR-0007 §Consequences; mirrors Rust's `in_for_iterable`).
+
+use std::collections::BTreeMap;
+
+use tree_sitter::Node;
+
+use super::infer::{self, AliasMap};
+use super::{ir_span, text};
+use crate::ir::{
+    AccessChainEvent, AssignmentEvent, AwaitEvent, BinaryOpEvent, BindingKind, CallEvent,
+    CalleeKind, ComparisonEvent, EventMeta, LoopKind, LoopNode, ResolverTier, ScopeClass, Shape,
+    ShapeKind, StatementRole,
+};
+
+/// Loop-bearing node kinds for ancestor climbing (`is_innermost` /
+/// `contains_loop`). Comprehension containers count as loops here because the
+/// `for_in_clause`s are siblings of the body, not ancestors.
+const LOOP_KINDS: [&str; 7] = [
+    "for_statement",
+    "while_statement",
+    "for_in_clause",
+    "list_comprehension",
+    "set_comprehension",
+    "dictionary_comprehension",
+    "generator_expression",
+];
+
+/// Curated Python object-construction family for `alloc_site_count` (best
+/// effort, documented): container/type constructors plus the pandas/numpy
+/// constructors the W3 `ALLOC`/`PANDAS` rules consume. Matched on the
+/// alias-resolved final callee segment (so `pd.DataFrame` counts via
+/// `DataFrame`). A generator expression / f-string is NOT a call and never
+/// counts (ADR-0007 §9.2 ALLOC-001 honesty).
+const PY_ALLOC_FAMILY: [&str; 13] = [
+    "list",
+    "dict",
+    "set",
+    "tuple",
+    "str",
+    "bytes",
+    "bytearray",
+    "frozenset",
+    "open",
+    "DataFrame",
+    "Series",
+    "array",
+    "ndarray",
+];
+
+/// Everything one function/module body yields.
+pub(super) struct ScanResult {
+    pub cyclomatic: u32,
+    pub cognitive: u32,
+    pub max_loop_depth: u32,
+    pub alloc_site_count: u32,
+    pub calls: Vec<CallEvent>,
+    pub assignments: Vec<AssignmentEvent>,
+    pub binary_ops: Vec<BinaryOpEvent>,
+    pub comparisons: Vec<ComparisonEvent>,
+    pub access_chains: Vec<AccessChainEvent>,
+    pub loops: Vec<LoopNode>,
+    pub awaits: Vec<AwaitEvent>,
+}
+
+/// Walk `start` (a function/module body or the `module` root) emitting events
+/// and metrics. Never panics: every node access is optional.
+pub(super) fn scan(
+    start: Node<'_>,
+    source: &[u8],
+    alias: &AliasMap,
+    param_names: &[String],
+    global_names: &[String],
+    binding: &BTreeMap<String, BindingKind>,
+) -> ScanResult {
+    let mut state = FuncScan {
+        source,
+        alias,
+        param_names,
+        global_names,
+        binding,
+        loop_depth: 0,
+        max_loop_depth: 0,
+        nesting: 0,
+        cyclomatic: 1,
+        cognitive: 0,
+        alloc_site_count: 0,
+        calls: Vec::new(),
+        assignments: Vec::new(),
+        binary_ops: Vec::new(),
+        comparisons: Vec::new(),
+        access_chains: Vec::new(),
+        loops: Vec::new(),
+        awaits: Vec::new(),
+    };
+    state.visit(start);
+    ScanResult {
+        cyclomatic: state.cyclomatic,
+        cognitive: state.cognitive,
+        max_loop_depth: state.max_loop_depth,
+        alloc_site_count: state.alloc_site_count,
+        calls: state.calls,
+        assignments: state.assignments,
+        binary_ops: state.binary_ops,
+        comparisons: state.comparisons,
+        access_chains: state.access_chains,
+        loops: state.loops,
+        awaits: state.awaits,
+    }
+}
+
+struct FuncScan<'a> {
+    source: &'a [u8],
+    alias: &'a AliasMap,
+    param_names: &'a [String],
+    global_names: &'a [String],
+    binding: &'a BTreeMap<String, BindingKind>,
+    loop_depth: u32,
+    max_loop_depth: u32,
+    nesting: u32,
+    cyclomatic: u32,
+    cognitive: u32,
+    alloc_site_count: u32,
+    calls: Vec<CallEvent>,
+    assignments: Vec<AssignmentEvent>,
+    binary_ops: Vec<BinaryOpEvent>,
+    comparisons: Vec<ComparisonEvent>,
+    access_chains: Vec<AccessChainEvent>,
+    loops: Vec<LoopNode>,
+    awaits: Vec<AwaitEvent>,
+}
+
+impl FuncScan<'_> {
+    fn visit(&mut self, node: Node<'_>) {
+        match node.kind() {
+            "if_statement" | "elif_clause" | "except_clause" => {
+                self.cyclomatic += 1;
+                self.cognitive += 1 + self.nesting;
+                self.nesting += 1;
+                self.visit_children(node);
+                self.nesting -= 1;
+            }
+            "boolean_operator" | "conditional_expression" => {
+                self.cyclomatic += 1;
+                self.cognitive += 1;
+                self.visit_children(node);
+            }
+            "for_statement" => self.enter_loop(node, LoopKind::For),
+            "while_statement" => self.enter_loop(node, LoopKind::While),
+            "list_comprehension"
+            | "set_comprehension"
+            | "dictionary_comprehension"
+            | "generator_expression" => self.enter_comprehension(node),
+            // Defensive: a `for_in_clause` is only reachable via a comprehension
+            // container, which `enter_comprehension` owns; handle a stray one as
+            // a single-level loop rather than descending blindly.
+            "for_in_clause" => self.enter_clause_sequence(&[node], None),
+            "call" => {
+                self.emit_call(node);
+                self.visit_children(node);
+            }
+            "assignment" | "augmented_assignment" | "named_expression" => {
+                self.emit_assignment(node);
+                self.visit_children(node);
+            }
+            "binary_operator" => self.visit_binary(node),
+            "comparison_operator" => self.emit_comparisons(node),
+            "attribute" | "subscript" => {
+                self.maybe_emit_access_chain(node);
+                self.visit_children(node);
+            }
+            // One additive `AwaitEvent` per NAMED `await` node (the anonymous
+            // `await` keyword token shares the kind but is not named), and STILL
+            // descend so the awaited expression's own events are emitted
+            // normally (plan `python-backend` W2; feeds ASYNC-002).
+            "await" if node.is_named() => {
+                self.awaits.push(AwaitEvent {
+                    meta: self.meta_for(node),
+                });
+                self.visit_children(node);
+            }
+            // Scope boundary: nested functions/classes (and decorators applied to
+            // them) are separate records / file-level events — their bodies are
+            // never attributed to the enclosing scope.
+            "function_definition" | "class_definition" | "decorated_definition" => {}
+            _ => self.visit_children(node),
+        }
+    }
+
+    fn visit_children(&mut self, node: Node<'_>) {
+        let mut cursor = node.walk();
+        if cursor.goto_first_child() {
+            loop {
+                self.visit(cursor.node());
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+        }
+    }
+
+    fn visit_children_except(&mut self, node: Node<'_>, skip: Option<usize>) {
+        let mut cursor = node.walk();
+        if cursor.goto_first_child() {
+            loop {
+                let child = cursor.node();
+                if Some(child.id()) != skip {
+                    self.visit(child);
+                }
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+        }
+    }
+
+    fn enter_loop(&mut self, node: Node<'_>, kind: LoopKind) {
+        let depth = self.loop_depth + 1;
+        self.max_loop_depth = self.max_loop_depth.max(depth);
+        self.cyclomatic += 1;
+        self.cognitive += 1 + self.nesting;
+        let span = ir_span(node, self.source);
+        let induction_vars = if kind == LoopKind::For {
+            node.child_by_field_name("left")
+                .map(|l| pattern_identifiers(l, self.source))
+                .unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        self.loops.push(LoopNode {
+            kind,
+            depth,
+            induction_vars,
+            span,
+            resolver_tier: ResolverTier::Syntactic,
+            macro_origin: false,
+        });
+
+        // A Python `for` iterable is evaluated once, before the body — visit it
+        // at the OUTER depth and skip it in the body walk (same fix as Rust R4).
+        // A `while` condition keeps the inner depth (re-evaluated each pass).
+        let iterable = if kind == LoopKind::For {
+            node.child_by_field_name("right")
+        } else {
+            None
+        };
+        if let Some(it) = iterable {
+            self.visit(it);
+        }
+
+        self.loop_depth = depth;
+        self.nesting += 1;
+        self.visit_children_except(node, iterable.map(|i| i.id()));
+        self.nesting -= 1;
+        self.loop_depth -= 1;
+    }
+
+    /// Comprehensions are real loops: each `for_in_clause` adds one nesting
+    /// level; each clause's iterable is evaluated at that clause's outer depth;
+    /// `if_clause` filters add complexity but no loop depth.
+    fn enter_comprehension(&mut self, node: Node<'_>) {
+        let mut clauses = Vec::new();
+        let mut cursor = node.walk();
+        if cursor.goto_first_child() {
+            loop {
+                let child = cursor.node();
+                if matches!(child.kind(), "for_in_clause" | "if_clause") {
+                    clauses.push(child);
+                }
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+        }
+        let body = node.child_by_field_name("body");
+        self.enter_clause_sequence(&clauses, body);
+    }
+
+    fn enter_clause_sequence(&mut self, clauses: &[Node<'_>], body: Option<Node<'_>>) {
+        let base_depth = self.loop_depth;
+        let base_nesting = self.nesting;
+        let mut depth = base_depth;
+        let mut nesting = base_nesting;
+        for clause in clauses {
+            match clause.kind() {
+                "for_in_clause" => {
+                    depth += 1;
+                    self.max_loop_depth = self.max_loop_depth.max(depth);
+                    self.cyclomatic += 1;
+                    self.cognitive += 1 + nesting;
+                    let induction_vars = clause
+                        .child_by_field_name("left")
+                        .map(|l| pattern_identifiers(l, self.source))
+                        .unwrap_or_default();
+                    self.loops.push(LoopNode {
+                        kind: LoopKind::For,
+                        depth,
+                        induction_vars,
+                        span: ir_span(*clause, self.source),
+                        resolver_tier: ResolverTier::Syntactic,
+                        macro_origin: false,
+                    });
+                    let iterable = clause.child_by_field_name("right");
+                    self.loop_depth = depth - 1;
+                    self.nesting = nesting;
+                    if let Some(it) = iterable {
+                        self.visit(it);
+                    }
+                    self.visit_children_except(*clause, iterable.map(|i| i.id()));
+                    nesting += 1;
+                }
+                "if_clause" => {
+                    self.cyclomatic += 1;
+                    self.cognitive += 1 + nesting;
+                    self.loop_depth = depth;
+                    self.visit_children(*clause);
+                }
+                _ => {}
+            }
+        }
+        self.nesting = nesting;
+        self.loop_depth = depth;
+        if let Some(b) = body {
+            self.visit(b);
+        }
+        self.nesting = base_nesting;
+        self.loop_depth = base_depth;
+    }
+
+    fn visit_binary(&mut self, node: Node<'_>) {
+        let op = node
+            .child_by_field_name("operator")
+            .map(|o| text(o, self.source))
+            .unwrap_or("");
+        let left = node.child_by_field_name("left").map(|n| self.shape_of(n));
+        let right = node.child_by_field_name("right").map(|n| self.shape_of(n));
+        if let (Some(left), Some(right)) = (left, right) {
+            let meta = self.meta_for(node);
+            self.binary_ops.push(BinaryOpEvent {
+                meta,
+                op: op.to_string(),
+                left,
+                right,
+            });
+        }
+        self.visit_children(node);
+    }
+
+    /// Python chained comparisons (`a < b < c`) yield ONE event per adjacent
+    /// operand pair; operands are the unnamed `primary_expression` children and
+    /// there is no `operands` field (W1 §3.9).
+    fn emit_comparisons(&mut self, node: Node<'_>) {
+        let mut operands = Vec::new();
+        let mut cursor = node.walk();
+        if cursor.goto_first_child() {
+            loop {
+                let child = cursor.node();
+                if child.is_named() {
+                    operands.push(child);
+                }
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+        }
+        for pair in operands.windows(2) {
+            let meta = self.meta_for(node);
+            self.comparisons.push(ComparisonEvent {
+                meta,
+                left: self.shape_of(pair[0]),
+                right: self.shape_of(pair[1]),
+            });
+        }
+        self.visit_children(node);
+    }
+
+    fn emit_call(&mut self, node: Node<'_>) {
+        let callee = node.child_by_field_name("function");
+        let (callee_kind, callee_name, callee_path) = match callee {
+            None => (CalleeKind::Unknown, String::new(), None),
+            Some(c) => {
+                let resolved = infer::apply_alias_first_segment(text(c, self.source), self.alias);
+                let final_segment = resolved.rsplit('.').next().unwrap_or(resolved.as_str());
+                if PY_ALLOC_FAMILY.contains(&final_segment) {
+                    self.alloc_site_count += 1;
+                }
+                let kind = match c.kind() {
+                    // A statically named callee — plain name OR member/method
+                    // path (`x.method()`, `pd.concat(...)`) — is `Direct`, in
+                    // parity with the Rust backend's `field_expression` arm.
+                    "identifier" | "attribute" => CalleeKind::Direct,
+                    "call" | "subscript" => CalleeKind::Indirect,
+                    _ => CalleeKind::Unknown,
+                };
+                (kind, final_segment_of(c, self.source), Some(resolved))
+            }
+        };
+        let args = self.call_args(node);
+        let (statement_role, conditional_guarded) = call_position(node);
+        let receiver_root = callee.and_then(|c| match c.kind() {
+            "attribute" | "subscript" => infer::receiver_root_of(c, self.source),
+            _ => None,
+        });
+        self.calls.push(CallEvent {
+            meta: self.meta_for(node),
+            callee_name,
+            callee_kind,
+            callee_path,
+            is_macro: false,
+            args,
+            statement_role,
+            conditional_guarded,
+            semantic: None,
+            receiver_root,
+        });
+    }
+
+    fn call_args(&self, node: Node<'_>) -> Vec<Shape> {
+        let Some(arguments) = node.child_by_field_name("arguments") else {
+            return Vec::new();
+        };
+        if arguments.kind() == "generator_expression" {
+            return vec![self.shape_of(arguments)];
+        }
+        let mut shapes = Vec::new();
+        let mut cursor = arguments.walk();
+        if cursor.goto_first_child() {
+            loop {
+                let child = cursor.node();
+                if child.is_named() {
+                    if child.kind() == "keyword_argument" {
+                        // Carry BOTH the keyword name and the value's raw source
+                        // text so `apply(axis=1)` is distinguishable from
+                        // `apply(1)` (plan `python-backend` W2; feeds
+                        // `PERF-PY-PANDAS-001`).
+                        shapes.push(Shape {
+                            kind: ShapeKind::Other,
+                            name: child
+                                .child_by_field_name("name")
+                                .map(|n| text(n, self.source).to_string()),
+                            value: child
+                                .child_by_field_name("value")
+                                .map(|v| text(v, self.source).to_string()),
+                            ..Shape::default()
+                        });
+                    } else {
+                        shapes.push(self.shape_of(child));
+                    }
+                }
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+        }
+        shapes
+    }
+
+    fn emit_assignment(&mut self, node: Node<'_>) {
+        let target_node = match node.kind() {
+            "assignment" | "augmented_assignment" => node.child_by_field_name("left"),
+            "named_expression" => node.child_by_field_name("name"),
+            _ => None,
+        };
+        let Some(target_node) = target_node else {
+            return;
+        };
+        let target = self.shape_of(target_node);
+        let scope_class = self.classify_target(&target);
+        let binding_kind = match (&target.kind, target.name.as_deref()) {
+            (ShapeKind::Identifier, Some(name)) => self
+                .binding
+                .get(name)
+                .copied()
+                .unwrap_or(BindingKind::Unknown),
+            _ => BindingKind::Unknown,
+        };
+        self.assignments.push(AssignmentEvent {
+            meta: self.meta_for(node),
+            target,
+            scope_class,
+            binding_kind,
+        });
+    }
+
+    fn classify_target(&self, target: &Shape) -> ScopeClass {
+        match (&target.kind, target.name.as_deref()) {
+            (ShapeKind::Identifier, Some(name)) if self.param_names.iter().any(|p| p == name) => {
+                ScopeClass::Param
+            }
+            (ShapeKind::Identifier, Some(name)) if self.global_names.iter().any(|g| g == name) => {
+                ScopeClass::Global
+            }
+            (ShapeKind::Identifier, Some(_)) => ScopeClass::Local,
+            _ => ScopeClass::Unknown,
+        }
+    }
+
+    fn maybe_emit_access_chain(&mut self, node: Node<'_>) {
+        if node
+            .parent()
+            .is_some_and(|p| matches!(p.kind(), "attribute" | "subscript"))
+        {
+            return;
+        }
+        let Some((root, elements)) = self.access_chain(node) else {
+            return;
+        };
+        if elements.len() < 2 {
+            return;
+        }
+        let meta = self.meta_for(node);
+        self.access_chains.push(AccessChainEvent {
+            meta,
+            root,
+            elements,
+        });
+    }
+
+    /// Decompose `a.b[i].c` into (root identifier, element shapes).
+    fn access_chain(&self, node: Node<'_>) -> Option<(String, Vec<Shape>)> {
+        match node.kind() {
+            "subscript" => {
+                let base = node.child_by_field_name("value")?;
+                let (root, mut elements) = self.access_chain(base)?;
+                let index_ident = node
+                    .child_by_field_name("subscript")
+                    .and_then(|i| infer::leftmost_identifier(i, self.source));
+                elements.push(Shape {
+                    kind: ShapeKind::Subscript,
+                    index_ident,
+                    ..Shape::default()
+                });
+                Some((root, elements))
+            }
+            "attribute" => {
+                let base = node.child_by_field_name("object")?;
+                let (root, mut elements) = self.access_chain(base)?;
+                let name = node
+                    .child_by_field_name("attribute")
+                    .map(|f| text(f, self.source).to_string());
+                elements.push(Shape {
+                    kind: ShapeKind::MemberAccess,
+                    name,
+                    ..Shape::default()
+                });
+                Some((root, elements))
+            }
+            _ => infer::leftmost_identifier(node, self.source).map(|root| (root, Vec::new())),
+        }
+    }
+
+    fn meta_for(&self, node: Node<'_>) -> EventMeta {
+        EventMeta {
+            span: ir_span(node, self.source),
+            in_loop_depth: self.loop_depth,
+            is_innermost: !in_for_iterable(node) && is_innermost_event(node),
+            resolver_tier: ResolverTier::Syntactic,
+            macro_origin: false,
+        }
+    }
+
+    fn shape_of(&self, node: Node<'_>) -> Shape {
+        match node.kind() {
+            "integer" | "float" | "string" | "concatenated_string" | "true" | "false" | "none" => {
+                Shape::literal(text(node, self.source))
+            }
+            "identifier" | "keyword_identifier" => Shape::identifier(text(node, self.source)),
+            "call" => Shape {
+                kind: ShapeKind::Call,
+                name: node
+                    .child_by_field_name("function")
+                    .map(|c| text(c, self.source).to_string()),
+                ..Shape::default()
+            },
+            "subscript" => Shape {
+                kind: ShapeKind::Subscript,
+                index_ident: node
+                    .child_by_field_name("subscript")
+                    .and_then(|i| infer::leftmost_identifier(i, self.source)),
+                ..Shape::default()
+            },
+            "attribute" => Shape {
+                kind: ShapeKind::MemberAccess,
+                depth: Some(chain_depth(node)),
+                ..Shape::default()
+            },
+            "unary_operator" | "not_operator" => Shape {
+                kind: ShapeKind::Unary,
+                ..Shape::default()
+            },
+            "binary_operator" => Shape {
+                kind: ShapeKind::Binary,
+                ..Shape::default()
+            },
+            "parenthesized_expression" => node
+                .named_child(0)
+                .map(|inner| self.shape_of(inner))
+                .unwrap_or_default(),
+            _ => Shape::default(),
+        }
+    }
+}
+
+/// Chain depth of member/subscript nesting rooted at `node`.
+fn chain_depth(node: Node<'_>) -> u32 {
+    match node.kind() {
+        "subscript" => node
+            .child_by_field_name("value")
+            .map_or(1, |base| 1 + chain_depth(base)),
+        "attribute" => node
+            .child_by_field_name("object")
+            .map_or(1, |base| 1 + chain_depth(base)),
+        _ => 0,
+    }
+}
+
+/// Final segment of a callee expression.
+fn final_segment_of(node: Node<'_>, source: &[u8]) -> String {
+    match node.kind() {
+        "identifier" | "keyword_identifier" => text(node, source).to_string(),
+        "attribute" => node
+            .child_by_field_name("attribute")
+            .map(|a| text(a, source).to_string())
+            .unwrap_or_default(),
+        "subscript" => node
+            .child_by_field_name("value")
+            .map(|v| final_segment_of(v, source))
+            .unwrap_or_default(),
+        "call" => node
+            .child_by_field_name("function")
+            .map(|f| final_segment_of(f, source))
+            .unwrap_or_default(),
+        _ => text(node, source).to_string(),
+    }
+}
+
+/// Best-effort induction identifiers of a `for` target pattern.
+fn pattern_identifiers(pattern: Node<'_>, source: &[u8]) -> Vec<String> {
+    let mut vars = Vec::new();
+    collect_identifiers(pattern, source, &mut vars);
+    vars
+}
+
+fn collect_identifiers(node: Node<'_>, source: &[u8], out: &mut Vec<String>) {
+    if node.kind() == "identifier" {
+        let name = text(node, source).to_string();
+        if !out.contains(&name) {
+            out.push(name);
+        }
+    }
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            collect_identifiers(cursor.node(), source, out);
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+}
+
+/// Nearest loop-bearing ancestor of `event`, if any.
+fn nearest_enclosing_loop(event: Node<'_>) -> Option<Node<'_>> {
+    let mut current = event.parent();
+    while let Some(node) = current {
+        if LOOP_KINDS.contains(&node.kind()) {
+            return Some(node);
+        }
+        current = node.parent();
+    }
+    None
+}
+
+/// `is_innermost` operational rule (ir-v1.md §3.3): the nearest enclosing loop
+/// exists and nests no further loop in its own body. For a `for`, the iterable
+/// is excluded (evaluated once). For a comprehension container, every
+/// `for_in_clause` child is skipped: those clauses ARE the loop levels
+/// enclosing the body, not loops nested below it.
+fn is_innermost_event(event: Node<'_>) -> bool {
+    let Some(loop_node) = nearest_enclosing_loop(event) else {
+        return false;
+    };
+    let kind = loop_node.kind();
+    let iterable = match kind {
+        "for_statement" | "for_in_clause" => loop_node.child_by_field_name("right"),
+        _ => None,
+    };
+    let is_comprehension = matches!(
+        kind,
+        "list_comprehension"
+            | "set_comprehension"
+            | "dictionary_comprehension"
+            | "generator_expression"
+    );
+    let mut cursor = loop_node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            let skip = Some(child.id()) == iterable.map(|i| i.id())
+                || (is_comprehension && child.kind() == "for_in_clause");
+            if !skip && contains_loop(child) {
+                return false;
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    true
+}
+
+/// Whether `node` lies inside the iterable (`right` field) of its nearest
+/// enclosing `for_statement`/`for_in_clause`. Such nodes are evaluated once,
+/// before the body: neither in-loop nor body statements (`in_loop_depth == 0`,
+/// `is_innermost == false`, `statement_role == Unknown`).
+fn in_for_iterable(node: Node<'_>) -> bool {
+    let mut current = node;
+    while let Some(parent) = current.parent() {
+        if LOOP_KINDS.contains(&parent.kind()) {
+            return matches!(parent.kind(), "for_statement" | "for_in_clause")
+                && parent
+                    .child_by_field_name("right")
+                    .is_some_and(|right| right.id() == current.id());
+        }
+        current = parent;
+    }
+    false
+}
+
+fn contains_loop(node: Node<'_>) -> bool {
+    if LOOP_KINDS.contains(&node.kind()) {
+        return true;
+    }
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            if contains_loop(cursor.node()) {
+                return true;
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    false
+}
+
+/// Position of a call relative to its enclosing loop (ir-v1.md §3.3). A call in
+/// a `for` iterable is evaluated once and is `Unknown`/not-in-loop.
+fn call_position(node: Node<'_>) -> (StatementRole, bool) {
+    if in_for_iterable(node) {
+        return (StatementRole::Unknown, false);
+    }
+    let mut role = StatementRole::Unknown;
+    let mut guarded = false;
+    let mut saw_loop = false;
+    let mut current = node.parent();
+    while let Some(parent) = current {
+        match parent.kind() {
+            k if LOOP_KINDS.contains(&k) => {
+                saw_loop = true;
+                if role == StatementRole::Unknown {
+                    role = StatementRole::Primary;
+                }
+                break;
+            }
+            "expression_statement" => {}
+            "block"
+                if parent
+                    .parent()
+                    .is_some_and(|g| LOOP_KINDS.contains(&g.kind())) => {}
+            "if_statement" | "elif_clause" | "if_clause" | "conditional_expression" => {
+                guarded = true;
+                role = StatementRole::Nested;
+            }
+            _ => role = StatementRole::Nested,
+        }
+        current = parent.parent();
+    }
+    if !saw_loop {
+        return (StatementRole::Unknown, false);
+    }
+    (role, guarded)
+}

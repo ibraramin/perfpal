@@ -81,11 +81,12 @@ use tree_sitter::{Node, Parser};
 
 use super::Extraction;
 use crate::ir::{
-    ALLOC_WRAPPER_PATTERN_ID, AccessChainEvent, AssignmentEvent, BinaryOpEvent, CallEvent,
-    CalleeKind, ComparisonEvent, EventMeta, FileRecord, FunctionRecord, GlobalVar, IncludeCounts,
-    IncludeEdge, IncludeForm, LocCounts, LoopKind, LoopNode, MacroEvent, MacroEventKind,
-    NativePoint, ParseHealth, ParseStatus, RUST_ALLOC_FAMILY, ResolverTier, ScopeClass, Shape,
-    ShapeKind, Span, StatementRole, StorageClass, StructDef, StructKind, StructMember,
+    ALLOC_WRAPPER_PATTERN_ID, AccessChainEvent, AssignmentEvent, BinaryOpEvent, BindingKind,
+    CallEvent, CalleeKind, ComparisonEvent, EventMeta, FileRecord, FunctionRecord, GlobalVar,
+    IncludeCounts, IncludeEdge, IncludeForm, LocCounts, LoopKind, LoopNode, MacroEvent,
+    MacroEventKind, NativePoint, ParseHealth, ParseStatus, RUST_ALLOC_FAMILY, ResolverTier,
+    ScopeClass, Shape, ShapeKind, Span, StatementRole, StorageClass, StructDef, StructKind,
+    StructMember,
 };
 use crate::scanner::FunctionUnit;
 
@@ -962,6 +963,8 @@ fn function_unit(
         alloc_site_count: scan.alloc_site_count,
         length_lines,
         resolver_tier: ResolverTier::default(),
+        is_async: false,
+        is_module_scope: false,
     };
     FunctionUnit {
         record,
@@ -971,6 +974,7 @@ fn function_unit(
         comparisons: scan.comparisons,
         access_chains: scan.access_chains,
         loops: scan.loops,
+        awaits: Vec::new(),
     }
 }
 
@@ -1249,6 +1253,7 @@ impl FuncScan<'_> {
             statement_role,
             conditional_guarded,
             semantic: None,
+            receiver_root: None,
         });
     }
 
@@ -1279,6 +1284,7 @@ impl FuncScan<'_> {
             statement_role,
             conditional_guarded,
             semantic: None,
+            receiver_root: None,
         });
     }
 
@@ -1293,6 +1299,7 @@ impl FuncScan<'_> {
             meta,
             target,
             scope_class,
+            binding_kind: BindingKind::Unknown,
         });
     }
 

@@ -3,8 +3,8 @@
 //! File-level records ([`FileRecord`], [`ParseHealth`], [`IncludeEdge`],
 //! [`GlobalVar`], [`StructDef`], [`MacroEvent`]), [`FunctionRecord`], and typed
 //! events ([`CallEvent`], [`AssignmentEvent`], [`BinaryOpEvent`],
-//! [`ComparisonEvent`], [`AccessChainEvent`], [`LoopNode`]) sharing the
-//! [`Shape`] descriptor.
+//! [`ComparisonEvent`], [`AccessChainEvent`], [`LoopNode`], [`AwaitEvent`])
+//! sharing the [`Shape`] descriptor.
 //!
 //! Conventions (ir-v1.md §2): spans are 1-based lines and byte-columns with
 //! INCLUSIVE ends; engine-native conversion (+1/−1) happens only at the
@@ -467,6 +467,17 @@ pub struct FunctionRecord {
     /// nothing copies this tier blindly.
     #[serde(default)]
     pub resolver_tier: ResolverTier,
+    /// `async def` flag (plan `python-backend` W2; additive v1 field with
+    /// `#[serde(default)]`, so documents written before it deserialize
+    /// unchanged as `false`). Feeds Python ASYNC-001/002. The C and Rust
+    /// backends always leave it `false`.
+    #[serde(default)]
+    pub is_async: bool,
+    /// True ONLY on the synthetic `<module>` record a module-scope language
+    /// backend emits for top-level statements (plan `python-backend` W2;
+    /// additive v1 field with `#[serde(default)]`, defaulting to `false`).
+    #[serde(default)]
+    pub is_module_scope: bool,
 }
 
 /// Resolver tier tag carried by every event (ir-v1.md §2). v1 emits only
@@ -575,6 +586,16 @@ pub struct EventMeta {
     pub macro_origin: bool,
 }
 
+/// One `await` occurrence inside a function body (plan `python-backend` W2,
+/// additive). Carries the shared event meta (span, loop depth, innermost,
+/// resolver tier, macro origin) so parser-free heuristics (ASYNC-002) can
+/// match awaits inside loops without engine node kinds crossing the seam.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AwaitEvent {
+    #[serde(flatten)]
+    pub meta: EventMeta,
+}
+
 /// Call event (ir-v1.md §3.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CallEvent {
@@ -608,6 +629,14 @@ pub struct CallEvent {
     /// set the finding's own `resolver_tier`/`confidence`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub semantic: Option<CallSemantic>,
+    /// Leftmost name of the callee's `attribute`/`subscript` chain, e.g.
+    /// `df` for `df.groupby(...)`, `np` for `np.array(...)` (plan
+    /// `python-backend` W2). ADDITIVE v1 field: `Option` + `#[serde(default,
+    /// skip_serializing_if)]`, so documents written before it deserialize
+    /// unchanged and `None` is OMITTED on the wire (omit-don't-null). Only
+    /// the Python backend populates it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub receiver_root: Option<String>,
 }
 
 /// Semantic facts about one call (ir-v1.md §3.3, additive v1). Extensible:
@@ -659,6 +688,33 @@ pub struct AssignmentEvent {
     pub target: Shape,
     /// Name-based classification against GlobalVar records (LOOP-005, MEDIUM).
     pub scope_class: ScopeClass,
+    /// Per-function single-assignment local kind lattice (plan
+    /// `python-backend` W2). ADDITIVE v1 field with `#[serde(default)]`:
+    /// documents written before it deserialize unchanged as
+    /// [`BindingKind::Unknown`], and the C/Rust backends always leave it
+    /// `Unknown`.
+    #[serde(default)]
+    pub binding_kind: BindingKind,
+}
+
+/// Per-function single-assignment local kind lattice (plan `python-backend`
+/// W2). The deliberate ceiling is single-assignment — NO dataflow: each local
+/// is classified once from its single initializer, and conflicting
+/// reassignment degrades to [`BindingKind::Unknown`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BindingKind {
+    List,
+    Dict,
+    Set,
+    Str,
+    Bytes,
+    Dataframe,
+    Series,
+    Ndarray,
+    Filehandle,
+    #[default]
+    Unknown,
 }
 
 /// Assignment-target scope class (ir-v1.md §3.3).

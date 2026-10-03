@@ -38,6 +38,7 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
         semantic: None,
+        receiver_root: None,
     };
     FileUnit {
         file: FileRecord {
@@ -67,6 +68,8 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 alloc_site_count: 1,
                 length_lines: 1,
                 resolver_tier: ResolverTier::default(),
+                is_async: false,
+                is_module_scope: false,
             },
             calls: vec![call],
             assignments: Vec::new(),
@@ -74,6 +77,7 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
             comparisons: Vec::new(),
             access_chains: Vec::new(),
             loops: Vec::new(),
+            awaits: Vec::new(),
         }],
     }
 }
@@ -90,6 +94,20 @@ fn identical_rule_path_line_col_collapses_to_first() {
     assert_eq!(
         findings[0].finding_id(),
         format!("{ALLOC_001_RULE_ID}:src/a.c:10:1")
+    );
+}
+
+/// A `"python"`-language unit is DROPPED by the language gate: the exact same
+/// malloc-in-loop that fires PERF-C-ALLOC-001 for a C unit must produce ZERO
+/// findings (plan `python-backend` W2, FIX 1). W3 adds RuleLanguage::Python.
+#[test]
+fn python_language_units_are_not_scored_by_c_rules() {
+    let mut unit = unit_with_malloc("src/app.py", 10, 1);
+    unit.file.language = "python".to_string();
+    let findings = analyze(&[unit]);
+    assert!(
+        findings.is_empty(),
+        "python units must not be scored by C/Rust heuristics: {findings:?}"
     );
 }
 
@@ -145,6 +163,7 @@ fn call_event(callee: &str, line: u32, loop_depth: u32) -> CallEvent {
         statement_role: StatementRole::Nested,
         conditional_guarded: false,
         semantic: None,
+        receiver_root: None,
     }
 }
 
@@ -193,6 +212,8 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                 alloc_site_count: 0,
                 length_lines: last_line + 10,
                 resolver_tier: ResolverTier::default(),
+                is_async: false,
+                is_module_scope: false,
             },
             calls,
             assignments: Vec::new(),
@@ -200,6 +221,7 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
             comparisons: Vec::new(),
             access_chains: Vec::new(),
             loops: Vec::new(),
+            awaits: Vec::new(),
         }],
     }
 }

@@ -148,7 +148,7 @@ All rows land as events attached to the enclosing `FunctionRecord` (including th
 | `try_statement` | complexity + `LOOP-009` context | Field `body` (`block`); positional `except_clause`/`else_clause`/`finally_clause` children. A `try_statement` inside a loop body is the `PERF-PY-LOOP-009` shape. |
 | `with_statement` | resource-context marker | Field `body`; `with_clause` items. Feeds file-handle kind inference (§4). |
 | `lambda` | callable expression | **Named node** with fields `parameters` (`lambda_parameters`) and `body` (an anonymous `lambda` keyword token also exists). W2 treats it as an inline callable, not a `FunctionRecord` (matches the C inline-lambda posture). |
-| `await` | await marker | **Named node** wrapping a required `primary_expression` child (an anonymous `await` keyword token also exists) — not a `FunctionRecord`. `ASYNC-002` detects the named `await` node inside a loop body (§6). |
+| `await` | `AwaitEvent` (additive) | **Named node** wrapping a required `primary_expression` child (an anonymous `await` keyword token also exists) — not a `FunctionRecord`. W2 emits one `AwaitEvent` per named `await` (additive IR, §4) while STILL descending to extract the awaited expression's events normally; `ASYNC-002` consumes `FunctionUnit.awaits` inside a loop body (§6). |
 
 ### 3.10 Literals / basic shapes / comments
 
@@ -184,8 +184,9 @@ Python idiom note (memory/`sizeof`): Python has **no `sizeof` and no by-value st
 | `FunctionRecord` | `is_module_scope` | `bool` | `false` | synthetic module record (§3.3) |
 | `AssignmentEvent` | `binding_kind` | `BindingKind` (new enum, snake_case) | `unknown` | `LOOP-007`, `STR-001`, `ALLOC-003` |
 | `CallEvent` | `receiver_root` | `Option<String>` | `None` (omitted on wire) | `N1-001`, `PANDAS-001/002`, `ASYNC-001` |
+| `FunctionUnit` | `awaits` | `Vec<AwaitEvent>` (new additive event) | `[]` | `ASYNC-002` |
 
-**No field is added for the alias map or `await`:** aliases fold into the existing `CallEvent.callee_path`, and `await` is detected from the named `await` node. **Confidence rule:** a finding that used any inference above is capped at **MEDIUM** and its `resolver_tier` stays `syntactic` — rules must never claim `semantic` ([ADR-0007 §5](../adr/ADR-0007-python-tier-strategy.md)); the central `apply_upgrade_hooks` gate reverts unbacked claims. **No schema bump comes from inference** — only the `"python"` language token widens the schema (1.2 → 1.3, W3).
+**Additive `AwaitEvent` stream:** `await` uses the additive `FunctionUnit.awaits: Vec<AwaitEvent>` stream (each carries the shared `EventMeta`: span, loop depth, innermost, resolver tier, macro origin), while the per-file import-alias map folds into the existing `CallEvent.callee_path` (no field is added for it). **Confidence rule:** a finding that used any inference above is capped at **MEDIUM** and its `resolver_tier` stays `syntactic` — rules must never claim `semantic` ([ADR-0007 §5](../adr/ADR-0007-python-tier-strategy.md)); the central `apply_upgrade_hooks` gate reverts unbacked claims. **No schema bump comes from inference** — only the `"python"` language token widens the schema (1.2 → 1.3, W3).
 
 ## 5. Import-graph resolution (best-effort) & `__init__.py`
 
@@ -195,12 +196,12 @@ Per [ADR-0007 §7](../adr/ADR-0007-python-tier-strategy.md), resolution is **bes
 - **Unresolved internal imports stay data-only with NO finding** (`to_path = None`, `resolved = false`) — this mirrors the Rust N1 decision that removed an entire FP stream, and it gates `ARCH-001`.
 - **External imports** (stdlib/third-party, e.g. `import pandas`) keep their raw module text in `to_path` with `resolved = false` (they are not in-repo edges).
 
-**`__init__.py` re-export hub (explicit decision).** A package `__init__.py` is extracted as a normal module; its `from .sub import Name` / `from .sub import *` statements produce `IncludeEdge`s to `sub.py` (the hub→sub edges). Name-level re-exports through the hub are resolved **one level deep only** when the target is unambiguous; wildcard re-exports and ambiguous multi-source re-exports are **data-only** (no edge, no finding). Rationale: deeper re-export tracing is the T2 `python-resolver` milestone, and guessing produces the exact FP stream the Rust N1 rule killed.
+**`__init__.py` re-export hub (explicit decision).** A package `__init__.py` is extracted as a normal module; its `from .sub import Name` / `from .sub import *` statements produce `IncludeEdge`s to `sub.py` (the hub→sub edges), and those edges still resolve. **W2 keeps MODULE-level edges only:** a consumer's `from pkg import Name` resolves to `pkg/__init__.py` (the module dependency), NOT through to the re-exporting submodule. **Name-level re-export tracing through an `__init__.py` hub is explicitly DEFERRED to the T2 `python-resolver` milestone**; wildcard re-exports and ambiguous multi-source re-exports stay **data-only** (no edge, no finding). Rationale: guessing the re-export target produces the exact FP stream the Rust N1 rule killed.
 
 ## 6. `async def` handling
 
 - `async def` parses as `function_definition` with a leading `async` modifier token → `FunctionRecord.is_async = true` (§4).
-- `await x` parses as a **named `await` node** wrapping a required `primary_expression` child (an anonymous `await` keyword token also exists). `ASYNC-002` (await in loop) detects the named `await` node inside a loop body.
+- `await x` parses as a **named `await` node** wrapping a required `primary_expression` child (an anonymous `await` keyword token also exists). `ASYNC-002` (await in loop) consumes the additive `FunctionUnit.awaits` stream (§4) — one `AwaitEvent` per `await`, with `meta.in_loop_depth >= 1` marking an await inside a loop body — so the rule never reads engine node kinds.
 - `ASYNC-001` (blocking call in `async def`) fires on a call in the blocking family (`time.sleep`, `requests.*`, sync DB/`open`) **inside a `is_async` function**. The `async def` gate is the highest-leverage gate in the canary: `CTL-SLEEP-SYNC` shows 166 production blocking calls in **sync** functions vs **0** real hits on Aider — ungated, `ASYNC-001` is pure noise ([python-canary.md §4](./../evidence/python-canary.md)).
 
 ## 7. Notebooks (`.ipynb`) — decision
