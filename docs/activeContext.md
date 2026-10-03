@@ -10,7 +10,7 @@ Session 41 **python-backend W1** (task A-pf-069) **complete**: pinned `tree-sitt
 - **Round-1 review corrections applied:** `await`/`lambda` are named nodes; `comparison_operator` has no `operands` field; no `positional_argument`; `not` is `not_operator`; added `PERF-PY-ALLOC-004` materialisation-churn disposition.
 
 ## In Progress
-- Nothing — W1 complete and committed (work commit + expected EOL follow-up).
+- Nothing — W1 complete; committed as `2b897b4` (EOL follow-up on top).
 
 ## Next
 - **NEXT SESSION (`/new`) = plan `python-backend` W2:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend` + `docs/architecture/python-backend.md`. Deliver the Python backend module (`Extraction` contract + ParseHealth parity), minimal binding/alias inference + best-effort import resolution, and `LanguageKind::Python` / `language_of(.py/.pyi)` / `extract_unit` / `failed_unit` / `SUPPORTED_LANGUAGES` wiring.

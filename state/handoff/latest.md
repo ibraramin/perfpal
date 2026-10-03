@@ -50,8 +50,8 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 - **Excluded / untracked:** `brag-output/` and `perfpal-report/` — unrelated working-tree dirs, deliberately NOT in this change set.
 
 ## Commit
-1. **(this work commit)** — W1: grammar pin + link test + backend doc + state/handoff/activeContext/CHANGELOG.
-2. (expected EOL follow-up commit) — regenerates this handoff to embed the work-commit hash.
+1. **`2b897b4`** — work commit: W1 grammar pin + link test + backend doc + state/handoff/activeContext/CHANGELOG.
+2. (this EOL follow-up commit) — regenerates this handoff to embed `2b897b4`.
 
 ## L2 state split / L6 north-star (history)
 The L2 hot/cold split landed **2026-09-29**: hot `state/session-state.json` is compact schema v2 and ≤ 8 KB, with full history in cold `state/archive/ledger.jsonl` (greppable, never auto-read). The L6 north-star (`docs/NORTH-STAR.md`, founder-owned goal / non-goals / stage / metrics) was pinned **2026-10-01** and referenced by `north_star_ref` in hot state.
