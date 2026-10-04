@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.2.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.3.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -48,7 +48,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.2.json
+/// Schema version of emitted documents (metrics.schema.v1.3.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
 ///
@@ -62,19 +62,24 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// v1.1 → v1.2 (2026-09-22, minor/additive): `scan.languages` +
 /// `files[].language` widened from const "c" to enum ["c","rust"] (language
 /// addition; v1.1 documents still validate).
-pub const SCHEMA_VERSION: &str = "1.2";
+///
+/// v1.2 → v1.3 (minor/additive): `scan.languages` +
+/// `files[].language` widened from enum ["c","rust"] to
+/// enum ["c","rust","python"] (language addition; v1.2 documents still
+/// validate).
+pub const SCHEMA_VERSION: &str = "1.3";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.2"` ⇒ `metrics.schema.v1.2.json`, never an elided `.0`. Kept as a
+/// `"1.3"` ⇒ `metrics.schema.v1.3.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.2.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.3.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.2.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.3.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift. The v1.1 + v1.0 docs copies are kept as history.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.2.json");
+/// the two cannot drift. The v1.2 + v1.1 + v1.0 docs copies are kept as history.
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.3.json");
 
 // ---------------------------------------------------------------------------
 // Document model — nine sections, field-for-field vs the canonical schema
@@ -127,7 +132,7 @@ pub struct ScanInfo {
     pub duration_ms: Option<u64>,
     /// Sorted-unique languages of the scanned files (derived by the
     /// aggregator, modules.md §3.2/§3.4). On a zero-file scan this is the
-    /// supported set `["c","rust"]` so schema `minItems: 1` holds
+    /// supported set `["c","python","rust"]` so schema `minItems: 1` holds
     /// (semantics: "languages scanned for").
     pub languages: Vec<String>,
     pub file_count: u32,
@@ -150,7 +155,7 @@ pub struct ParseHealthSummary {
 pub struct FileEntry {
     /// Repo-relative POSIX path.
     pub path: String,
-    /// `"c"` or `"rust"` (schema 1.2 admits both).
+    /// `"c"`, `"rust"`, or `"python"` (schema 1.3 admits all three).
     pub language: String,
     pub loc: LocCounts,
     pub function_count: u32,
@@ -528,11 +533,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.2.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.3.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.2.json drifted from \
-             docs/schema/metrics.schema.v1.2.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.3.json drifted from \
+             docs/schema/metrics.schema.v1.3.json — re-copy the canonical artifact"
         );
     }
 

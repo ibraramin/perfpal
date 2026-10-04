@@ -651,6 +651,7 @@ fn module_unit(
         access_chains: result.access_chains,
         loops: result.loops,
         awaits: result.awaits,
+        try_blocks: result.try_blocks,
     }
 }
 
@@ -706,6 +707,7 @@ fn function_unit(
         access_chains: result.access_chains,
         loops: result.loops,
         awaits: result.awaits,
+        try_blocks: result.try_blocks,
     }
 }
 

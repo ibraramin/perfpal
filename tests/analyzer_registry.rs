@@ -4,6 +4,7 @@
 
 use perfpal::analyzer::finding::{
     ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ARCH_003_RULE_ID, CALL_001_RULE_ID, LOOP_002_RULE_ID,
+    PY_CALL_001_RULE_ID, PY_CALL_002_RULE_ID,
 };
 use perfpal::analyzer::{Confidence, Severity, analyze};
 use perfpal::ir::{
@@ -78,6 +79,7 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
             access_chains: Vec::new(),
             loops: Vec::new(),
             awaits: Vec::new(),
+            try_blocks: Vec::new(),
         }],
     }
 }
@@ -97,9 +99,10 @@ fn identical_rule_path_line_col_collapses_to_first() {
     );
 }
 
-/// A `"python"`-language unit is DROPPED by the language gate: the exact same
-/// malloc-in-loop that fires PERF-C-ALLOC-001 for a C unit must produce ZERO
-/// findings (plan `python-backend` W2, FIX 1). W3 adds RuleLanguage::Python.
+/// A `"python"`-language unit is NOT scored by C/Rust heuristics: the exact
+/// same malloc-in-loop that fires PERF-C-ALLOC-001 for a C unit must produce
+/// zero findings (plan `python-backend` W2 FIX 1; W3 keeps the language
+/// partition and adds the Python registry on top).
 #[test]
 fn python_language_units_are_not_scored_by_c_rules() {
     let mut unit = unit_with_malloc("src/app.py", 10, 1);
@@ -109,6 +112,43 @@ fn python_language_units_are_not_scored_by_c_rules() {
         findings.is_empty(),
         "python units must not be scored by C/Rust heuristics: {findings:?}"
     );
+}
+
+/// W3: Python units ARE scored by `PERF-PY-*` rules, and the 10 retired
+/// Python ids are never registered/emitted.
+#[test]
+fn python_units_are_scored_by_python_rules_with_no_retired_ids() {
+    let mut unit = unit_with_malloc("src/app.py", 10, 1);
+    unit.file.language = "python".to_string();
+    let f = &mut unit.functions[0];
+    f.record.name = "recur".to_string();
+    f.record.cyclomatic_complexity = 20;
+    f.calls.push(call_event("recur", 5, 0));
+
+    let findings = analyze(&[unit]);
+    let ids: Vec<&str> = findings.iter().map(|f| f.rule_id.as_str()).collect();
+    assert!(
+        ids.contains(&PY_CALL_001_RULE_ID),
+        "direct recursion: {ids:?}"
+    );
+    assert!(
+        ids.contains(&PY_CALL_002_RULE_ID),
+        "high complexity: {ids:?}"
+    );
+    for retired in [
+        "PERF-PY-TYPE-001",
+        "PERF-PY-TYPE-002",
+        "PERF-PY-MEM-001",
+        "PERF-PY-ALLOC-002",
+        "PERF-PY-STR-002",
+        "PERF-PY-STR-003",
+        "PERF-PY-LOOP-004",
+        "PERF-PY-LOOP-005",
+        "PERF-PY-LOOP-006",
+        "PERF-PY-LOOP-008",
+    ] {
+        assert!(!ids.contains(&retired), "retired id emitted: {retired}");
+    }
 }
 
 #[test]
@@ -222,6 +262,7 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
             access_chains: Vec::new(),
             loops: Vec::new(),
             awaits: Vec::new(),
+            try_blocks: Vec::new(),
         }],
     }
 }

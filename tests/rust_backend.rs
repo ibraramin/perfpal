@@ -6,7 +6,7 @@
 //! Deliberately does NOT run the schema/writer path over Rust: R1 stopped at
 //! the scanner seam. That restriction is historical — R2 has since widened
 //! the schema (`scan.languages` / `files[].language` admit `"rust"`), and the
-//! schema/writer path over Rust is locked by `tests/schema_1_2.rs`.
+//! schema/writer path over Rust is locked by `tests/schema_1_3.rs`.
 
 use std::fs;
 use std::path::PathBuf;

@@ -707,7 +707,7 @@ mod tests {
     #[test]
     fn zero_file_scan_yields_valid_empty_document() {
         let doc = assemble(&[], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c", "rust"]);
+        assert_eq!(doc.scan.languages, ["c", "python", "rust"]);
         assert_eq!(doc.scan.file_count, 0);
         assert!(doc.files.is_empty());
         assert!(doc.findings.is_empty());
@@ -739,7 +739,8 @@ mod tests {
     }
 
     /// `scan.languages` derives from the scanned files: C-only → `["c"]`,
-    /// Rust-only → `["rust"]` (D-A, plan `rust-backend` R2).
+    /// Rust-only → `["rust"]`, Python-only → `["python"]` (D-A, plan
+    /// `rust-backend` R2; extended by plan `python-backend` W3).
     #[test]
     fn scan_languages_derive_from_single_language_units() {
         let c_doc = assemble(&[unit("a.c")], &[], &prov());
@@ -749,16 +750,24 @@ mod tests {
         rust.file.language = "rust".to_string();
         let rust_doc = assemble(&[rust], &[], &prov());
         assert_eq!(rust_doc.scan.languages, ["rust"]);
+
+        let mut python = unit("a.py");
+        python.file.language = "python".to_string();
+        let python_doc = assemble(&[python], &[], &prov());
+        assert_eq!(python_doc.scan.languages, ["python"]);
     }
 
-    /// Mixed C+Rust → sorted-unique `["c","rust"]`, deterministic regardless
-    /// of unit order (fed in REVERSE to prove the BTreeSet sorts).
+    /// Mixed C+Python+Rust → sorted-unique `["c","python","rust"]`,
+    /// deterministic regardless of unit order (fed in REVERSE to prove the
+    /// BTreeSet sorts).
     #[test]
     fn scan_languages_mixed_c_and_rust_are_sorted_unique() {
         let mut rust = unit("a.rs");
         rust.file.language = "rust".to_string();
-        let doc = assemble(&[rust, unit("a.c")], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c", "rust"]);
+        let mut python = unit("a.py");
+        python.file.language = "python".to_string();
+        let doc = assemble(&[rust, python, unit("a.c")], &[], &prov());
+        assert_eq!(doc.scan.languages, ["c", "python", "rust"]);
     }
 
     /// Zero-file scan → the supported set (schema `minItems: 1` preserved;
@@ -766,7 +775,7 @@ mod tests {
     #[test]
     fn scan_languages_empty_scan_uses_supported_set() {
         let doc = assemble(&[], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c", "rust"]);
+        assert_eq!(doc.scan.languages, ["c", "python", "rust"]);
     }
 
     /// call_graph assembly: a genuine cross-file Direct call maps field-for-

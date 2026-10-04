@@ -535,6 +535,7 @@ fn func(
         access_chains: Vec::new(),
         loops,
         awaits: Vec::new(),
+        try_blocks: Vec::new(),
     }
 }
 
@@ -715,6 +716,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
     // innermost loop (set below) — hand-rolled O(n²) lookup shape.
     let kitchen_comparisons = vec![ComparisonEvent {
         meta: meta(sp(17, 17, 31), 3),
+        operator: String::new(),
         left: Shape {
             kind: ShapeKind::Subscript,
             name: Some("arr".to_string()),

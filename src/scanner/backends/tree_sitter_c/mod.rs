@@ -675,6 +675,7 @@ fn function_unit(
         access_chains: scan.access_chains,
         loops: scan.loops,
         awaits: Vec::new(),
+        try_blocks: Vec::new(),
     }
 }
 
@@ -826,7 +827,12 @@ impl<'a> FuncScan<'a> {
                 let left = node.child_by_field_name("left").map(|n| self.shape_of(n));
                 let right = node.child_by_field_name("right").map(|n| self.shape_of(n));
                 if let (Some(left), Some(right)) = (left, right) {
-                    self.comparisons.push(ComparisonEvent { meta, left, right });
+                    self.comparisons.push(ComparisonEvent {
+                        meta,
+                        operator: String::new(),
+                        left,
+                        right,
+                    });
                 }
             }
             "+" | "-" | "*" | "/" | "%" => {

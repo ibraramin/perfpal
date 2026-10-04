@@ -596,6 +596,15 @@ pub struct AwaitEvent {
     pub meta: EventMeta,
 }
 
+/// One `try_statement` occurrence inside a function body (plan `python-backend`
+/// W3, additive). Carries shared event meta so parser-free LOOP-009 can detect a
+/// `try` nested inside a loop without engine node kinds crossing the seam.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TryEvent {
+    #[serde(flatten)]
+    pub meta: EventMeta,
+}
+
 /// Call event (ir-v1.md §3.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CallEvent {
@@ -744,6 +753,11 @@ pub struct BinaryOpEvent {
 pub struct ComparisonEvent {
     #[serde(flatten)]
     pub meta: EventMeta,
+    /// Comparison operator text (`"=="`, `"!="`, `"<"`, `"in"`, `"not in"`,
+    /// `"is"`, `"is not"`, ...). ADDITIVE (plan `python-backend` W3): empty for
+    /// C/Rust and skipped on the wire.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub operator: String,
     pub left: Shape,
     pub right: Shape,
 }

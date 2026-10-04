@@ -26,6 +26,13 @@ mod r#type;
 /// Gate). The registry runs these only over `language == "rust"` units.
 pub(super) mod rust;
 
+/// Python (`PERF-PY-*`) heuristic families (plan `python-backend` W3): the
+/// 13 transferred/reframed mirrors of the C/Rust catalog plus 9 Python-native
+/// additions from the durable disposition table (docs/architecture/
+/// python-backend.md §9). The registry runs these only over
+/// `language == "python"` units.
+pub(super) mod python;
+
 pub(super) use alloc::{alloc_001, alloc_002, alloc_003};
 pub(super) use arch::{arch_001, arch_002, arch_003};
 pub(super) use call::{call_001, call_002};
@@ -33,6 +40,15 @@ pub(super) use r#loop::{
     loop_001, loop_002, loop_003, loop_004, loop_005, loop_006, loop_007, loop_008,
 };
 pub(super) use mem::{mem_001, mem_002};
+/// Python (`PERF-PY-*`) rule functions re-exported to the registry
+/// (plan `python-backend` W3).
+pub(super) use python::{
+    python_alloc_001, python_alloc_003, python_alloc_004, python_arch_001, python_arch_002,
+    python_arch_003, python_async_001, python_async_002, python_call_001, python_call_002,
+    python_comprehension_001, python_executor_001, python_loop_001, python_loop_002,
+    python_loop_003, python_loop_007, python_loop_009, python_mem_002, python_n1_001,
+    python_pandas_001, python_pandas_002, python_str_001,
+};
 pub(super) use rust::{
     rust_alloc_001, rust_alloc_002, rust_alloc_003, rust_arch_001, rust_arch_002, rust_arch_003,
     rust_call_001, rust_call_002, rust_loop_001, rust_loop_002, rust_loop_003, rust_loop_004,

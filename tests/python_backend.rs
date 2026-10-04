@@ -3,10 +3,11 @@
 //! seam (`scanner::scan`) over a temp package tree, plus ONE full-pipeline
 //! smoke through `cli::run_with`.
 //!
-//! Deliberately does NOT validate the emitted document against the embedded
-//! v1.2 JSON schema and does NOT assert `scan.languages`: the Python schema
-//! token lands with the v1.3 bump in W3. Per-file `files[].language` is
-//! already `"python"` (FileRecord contract), which is all this milestone locks.
+//! Does NOT validate the emitted document against the embedded JSON schema
+//! (the v1.3 schema is the schema agent's slice); it DOES assert that the
+//! `"python"` token now surfaces in `scan.languages` (W3 wired
+//! `SUPPORTED_LANGUAGES`/the aggregator union). Per-file `files[].language`
+//! is `"python"` (FileRecord contract).
 
 use std::ffi::OsString;
 use std::fs;
@@ -346,9 +347,9 @@ fn stub_file_is_discovered_as_python() {
 }
 
 /// (7) Full-pipeline smoke: `cli::run_with` exits 0 over a `.py` tree and the
-/// emitted metrics.json carries a `"python"` file. NOT schema-validated (the
-/// v1.3 Python token lands in W3) and `scan.languages` is intentionally not
-/// asserted here.
+/// emitted metrics.json carries a `"python"` file AND `"python"` in
+/// `scan.languages` (W3). NOT schema-validated (the schema is the schema
+/// agent's slice).
 #[test]
 fn full_pipeline_smoke_emits_python_file() {
     let root = temp_root("pipeline");
@@ -373,6 +374,15 @@ fn full_pipeline_smoke_emits_python_file() {
     assert!(
         files.iter().any(|f| f["language"] == "python"),
         "at least one files[].language == \"python\""
+    );
+
+    // W3: the Python token now surfaces in scan.languages.
+    let languages = doc["scan"]["languages"]
+        .as_array()
+        .expect("scan.languages[] present");
+    assert!(
+        languages.iter().any(|l| l == "python"),
+        "scan.languages must include \"python\": {languages:?}"
     );
 
     fs::remove_dir_all(&root).ok();

@@ -1,27 +1,27 @@
 # Active Context
 
 ## Current Task
-Session 42 **python-backend W2** (task A-pf-070) **complete**: the Python scanner backend `src/scanner/backends/tree_sitter_python/` (mod/infer/scan + 28 inline tests) implements the shared `Extraction` contract (FileRecord/ParseHealth parity, imports, globals, classes, decorators, functions, typed events), with minimal binding/alias inference, best-effort import resolution, 4 additive IR fields + an additive `AwaitEvent` stream, and `LanguageKind::Python` / `language_of(.py/.pyi)` wiring. `tests/python_backend.rs` (8 integration tests) locks discovery, the synthetic `<module>` record, comprehensions, import resolution (incl. `.pyi`), and parse-health parity.
+Session 43 **python-backend W3** (task A-pf-071) **complete**: the full `PERF-PY-*` catalog — **22 rules** = 13 reframed C/Rust mirrors (`ALLOC-001/003`, `STR-001`, `LOOP-001/002/003/007`, `MEM-002`, `CALL-001/002`, `ARCH-001/002/003`) + 9 Python-native (`LOOP-009`, `PANDAS-001/002`, `ALLOC-004`, `N1-001`, `ASYNC-001/002`, `COMPREHENSION-001`, `EXECUTOR-001`); the 10 retired rules are NOT registered. `src/analyzer/heuristics/python/**` (mod + 11 family files) implements every rule as a pure IR-view fn with CPython-mechanism-cited messages, inference-gated at MEDIUM, never `Semantic`. `RuleLanguage::Python` + 22-entry registry, `analyze()` python bucket, reporter catalog 45→67 + completeness lock, `SUPPORTED_LANGUAGES=["c","python","rust"]`, aggregator `scan_languages` fallback, and schema MINOR **1.2 → 1.3** admitting the `"python"` token (canonical + embedded byte-identical + 3 golden copies; `tests/schema_1_2.rs` → `tests/schema_1_3.rs`).
 
 ## Recent Decisions
-- **D-pf-192 (live):** W2 outcome + carry (see `state/session-state.json`). Both reviews APPROVED.
-- **Analyzer gate:** non-`c`/non-`rust` units are dropped from heuristic buckets until W3's `RuleLanguage::Python` — `.py` files must not emit C/Rust findings.
-- **`AwaitEvent` (founder-approved):** a dedicated additive `FunctionUnit.awaits: Vec<AwaitEvent>` carries `await` (meta: span/loop depth/innermost) so parser-free `ASYNC-002` works; the W1 doc's "no field for await" was un-implementable across the seam (`python-backend.md` §3.9/§4/§6 amended).
-- **Name-level `__init__.py` re-export: DEFERRED** to T2 `python-resolver` (`python-backend.md` §5 amended); W2 keeps module-level edges.
-- **`SUPPORTED_LANGUAGES` stays `["c","rust"]`**; widens with the 1.3 schema bump in W3.
-- **`.ipynb` excluded** (unchanged); `.py`/`.pyi` dispatch.
+- **D-pf-193 (live):** W3 outcome summary — 22-rule catalog, registry/reporter/aggregator wiring, schema 1.3, Option A IR, fidelity fixes (see `state/session-state.json`). Both reviews APPROVED after round-1 fixes.
+- **Option A (founder-approved):** additive Python IR completion — `ComparisonEvent.operator` (skip-if-empty → C/Rust byte-neutral) + new `TryEvent` / `FunctionUnit.try_blocks` (serde-default) so `LOOP-007`/`LOOP-009` are real, not dead. IR events never reach `metrics.json`.
+- **Rule-fidelity fixes:** ALLOC-003 accumulator gate (polarity); STR-001 `+`/`+=` with accumulator gate; LOOP-007 membership + lone `seq[i]` chains (set/dict excluded); LOOP-009 off `try_blocks` at depth ≥ 1; ARCH-003 dead Semantic branch removed.
+- **Registry ordering:** the 22 `PERF-PY-*` entries sit between the C and Rust blocks, global ascending rule_id (declaration order is load-bearing for first-wins dedup).
+- **Schema 1.3:** MINOR additive — `scan.languages` / `files[].language` admit `"python"`; version consts + artifact name → 1.3; goldens regenerated.
 
 ## In Progress
-- Nothing — W2 complete and committed as `6b5c8ea` (EOL follow-up commit on top).
+- Nothing — W3 complete; the work commit is created by the orchestrator immediately after this EOL ritual (see `state/handoff/latest.md`).
 
 ## Next
-- **NEXT SESSION (`/new`) = plan `python-backend` W3:** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend` + `docs/architecture/python-backend.md`. Deliver the `PERF-PY-*` catalog (consts + `src/analyzer/heuristics/python/**` as pure IR views), `RuleLanguage::Python` + registry/reporter, and schema MINOR `1.2 → 1.3` (canonical/embedded/golden copies, drift test, CLI `VERSION_SUFFIX`, `tests/schema_1_2.rs` flip, `SUPPORTED_LANGUAGES` widen, aggregator `scan_languages`).
-- **W2 carry (decide in W3/W4):** aggregator graphs/stats include Python IR pre-W3; `function_count` counts `<module>`; C/Rust `loc_counts` `len+1` double-count (latent, unfixed).
-- **Carry (from M1/M2):** semantic-tier USR-ambiguity guard; `PERF-RS-LOOP-008` deref-chain modelling; `r#` raw-identifier receiver nit; M2 non-blocking notes.
+- **NEXT SESSION (`/new`) = plan `python-backend` W4 (`A-pf-072`):** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend`. Deliver `examples-python/` (real package) + parser-free IR fixtures + precision KPI + benchmark ladder + goldens + docs (`ir-v1.md` / `metrics-json-v1.md` / `README` / roadmap) + the full gate matrix (default **and** `semantic-clang`) + dual review before commit.
+- **New carry `R-pf-093` (low):** LOOP-007 misses `x.index()` and `x in [a,b]` list-literal membership; LOOP-007 index branch fires at depth ≥ 1 (single linear `for i in range(len(seq)): use(seq[i])` gets an O(n²)-flavoured message — accepted approximation); `arch.rs:128-131` unused `key.0`; `async_rules.rs:68` `is_open` ignores receiver root.
+- **W4 carry (prior):** aggregator graphs/stats include Python IR; `function_count` counts `<module>`; C/Rust `loc_counts` `len+1` double-count (latent, unfixed).
+- **Carry (from M1/M2):** semantic-tier USR-ambiguity guard (`R-pf-077`); `PERF-RS-LOOP-008` deref-chain modelling (`R-pf-078`); `r#` raw-identifier receiver nit (`R-pf-080`); M2 non-blocking notes.
 
 ## Blockers
 - **M5 publish:** EULA/privacy contact address + `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` (unchanged).
-- **Hygiene:** hot state **8037 B / 8192 B** (~155 B headroom); demoted 4 settled records to the cold ledger this session.
+- **Hygiene:** hot state **8153 B / 8192 B**; demoted/discharged 13 records to the cold ledger this session (489 → 502 records).
 
 ## History
 - **L2 state split (2026-09-29):** hot/cold split applied — hot `state/session-state.json` compact schema v2 (≤ 8 KB), full history in cold `state/archive/ledger.jsonl`.

@@ -76,6 +76,36 @@ pub const RS_STR_003_RULE_ID: &str = "PERF-RS-STR-003";
 pub const RS_TYPE_001_RULE_ID: &str = "PERF-RS-TYPE-001";
 pub const RS_TYPE_002_RULE_ID: &str = "PERF-RS-TYPE-002";
 
+/// Python (`PERF-PY-*`) rule ids (plan `python-backend` W3), the durable
+/// disposition table in `docs/architecture/python-backend.md` §9: 13
+/// transferred/reframed mirrors of the C/Rust catalog plus 9 Python-native
+/// additions. Ten C/Rust ids are RETIRED for Python and deliberately have NO
+/// const here (TYPE-001/002, MEM-001, ALLOC-002, STR-002/003, LOOP-004/005/006/
+/// 008 — their premises do not transfer to CPython). Each const is the single
+/// spelling shared by the heuristic and its tests across the seam.
+pub const PY_ALLOC_001_RULE_ID: &str = "PERF-PY-ALLOC-001";
+pub const PY_ALLOC_003_RULE_ID: &str = "PERF-PY-ALLOC-003";
+pub const PY_ALLOC_004_RULE_ID: &str = "PERF-PY-ALLOC-004";
+pub const PY_ARCH_001_RULE_ID: &str = "PERF-PY-ARCH-001";
+pub const PY_ARCH_002_RULE_ID: &str = "PERF-PY-ARCH-002";
+pub const PY_ARCH_003_RULE_ID: &str = "PERF-PY-ARCH-003";
+pub const PY_ASYNC_001_RULE_ID: &str = "PERF-PY-ASYNC-001";
+pub const PY_ASYNC_002_RULE_ID: &str = "PERF-PY-ASYNC-002";
+pub const PY_CALL_001_RULE_ID: &str = "PERF-PY-CALL-001";
+pub const PY_CALL_002_RULE_ID: &str = "PERF-PY-CALL-002";
+pub const PY_COMPREHENSION_001_RULE_ID: &str = "PERF-PY-COMPREHENSION-001";
+pub const PY_EXECUTOR_001_RULE_ID: &str = "PERF-PY-EXECUTOR-001";
+pub const PY_LOOP_001_RULE_ID: &str = "PERF-PY-LOOP-001";
+pub const PY_LOOP_002_RULE_ID: &str = "PERF-PY-LOOP-002";
+pub const PY_LOOP_003_RULE_ID: &str = "PERF-PY-LOOP-003";
+pub const PY_LOOP_007_RULE_ID: &str = "PERF-PY-LOOP-007";
+pub const PY_LOOP_009_RULE_ID: &str = "PERF-PY-LOOP-009";
+pub const PY_MEM_002_RULE_ID: &str = "PERF-PY-MEM-002";
+pub const PY_N1_001_RULE_ID: &str = "PERF-PY-N1-001";
+pub const PY_PANDAS_001_RULE_ID: &str = "PERF-PY-PANDAS-001";
+pub const PY_PANDAS_002_RULE_ID: &str = "PERF-PY-PANDAS-002";
+pub const PY_STR_001_RULE_ID: &str = "PERF-PY-STR-001";
+
 /// Severity band (report §4 order: hot → warn → info).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

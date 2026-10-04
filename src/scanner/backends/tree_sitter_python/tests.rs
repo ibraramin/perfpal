@@ -436,3 +436,71 @@ fn alloc_site_count_counts_container_constructor() {
     let f = function(&ex, "f");
     assert_eq!(f.record.alloc_site_count, 1, "{:?}", f.calls);
 }
+
+/// W3: comparison operators are captured per adjacent pair, including the
+/// two-token `not in` / `is not` forms normalized with a single space.
+#[test]
+fn comparison_operator_text_captured_and_normalized() {
+    let ex = extract_py("def f(x, seq):\n    return x not in seq\n");
+    let f = function(&ex, "f");
+    assert_eq!(f.comparisons.len(), 1, "{:?}", f.comparisons);
+    assert_eq!(f.comparisons[0].operator, "not in");
+
+    let ex2 = extract_py("def f(x, a, b, c):\n    return a < b <= c\n");
+    let f2 = function(&ex2, "f");
+    let ops: Vec<&str> = f2.comparisons.iter().map(|c| c.operator.as_str()).collect();
+    assert_eq!(ops, ["<", "<="], "{:?}", f2.comparisons);
+}
+
+/// W3: a lone `seq[i]` emits one `AccessChainEvent` (one `Subscript` element),
+/// while a `seq[i].j` chain keeps its full element list — so chain-depth
+/// consumers (e.g. LOOP-008's `>= 3` floor on multi-element chains) are not
+/// regressed by the lone-subscript widening.
+#[test]
+fn lone_subscript_and_deep_chain_element_counts() {
+    let ex = extract_py("def f(seq, i):\n    a = seq[i]\n    b = seq[i].j\n");
+    let f = function(&ex, "f");
+    let lens: Vec<usize> = f.access_chains.iter().map(|c| c.elements.len()).collect();
+    assert!(
+        lens.contains(&1),
+        "lone subscript emits: {:?}",
+        f.access_chains
+    );
+    assert!(
+        lens.contains(&2),
+        "two-element chain kept: {:?}",
+        f.access_chains
+    );
+    assert!(
+        f.access_chains.iter().all(|c| c.elements.len() < 3),
+        "no chain reaches LOOP-008 depth here: {:?}",
+        f.access_chains
+    );
+}
+
+/// W3: a `try_statement` emits one `TryEvent`; the one inside the loop carries
+/// `in_loop_depth >= 1`, the one outside any loop carries 0.
+#[test]
+fn try_event_captures_loop_context() {
+    let src = "def f(xs):\n    for x in xs:\n        try:\n            use(x)\n        except ValueError:\n            pass\n    try:\n        pass\n    except Exception:\n        pass\n";
+    let ex = extract_py(src);
+    let f = function(&ex, "f");
+    assert_eq!(f.try_blocks.len(), 2, "{:?}", f.try_blocks);
+    assert!(f.try_blocks.iter().any(|t| t.meta.in_loop_depth >= 1));
+    assert!(f.try_blocks.iter().any(|t| t.meta.in_loop_depth == 0));
+}
+
+/// W3: `augmented_assignment` additionally emits a `BinaryOpEvent` carrying the
+/// operator (`+=`), the target and value shapes — STR-001's in-place signal.
+#[test]
+fn augmented_assignment_emits_binary_op_event() {
+    let ex = extract_py("def f(x):\n    s += x\n");
+    let f = function(&ex, "f");
+    let aug = f
+        .binary_ops
+        .iter()
+        .find(|b| b.op == "+=")
+        .expect("augmented binop event");
+    assert_eq!(aug.left.name.as_deref(), Some("s"));
+    assert_eq!(aug.right.name.as_deref(), Some("x"));
+}

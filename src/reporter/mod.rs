@@ -53,9 +53,12 @@ const MD_ESCAPE_CHARS: &[char] = &[
 /// rule's ACTUAL implemented detection, carrying an explicit "REFRAMED for
 /// Rust" clause wherever the rule is an honest re-mapping of the C intent
 /// (no `realloc`/char-stdio, `unsafe`-only unbounded ops, `size_of` as an
-/// element count, default `repr(Rust)` field reordering). A completeness
-/// lock in this module's tests asserts the catalog covers exactly the 45
-/// rule ids the analyzer registry can emit.
+/// element count, default `repr(Rust)` field reordering). The Python
+/// (`PERF-PY-*`) entries transcribe the durable disposition table
+/// (docs/architecture/python-backend.md §9): 13 reframed mirrors + 9 native,
+/// with the CPython mechanism and the missing-signal limitations stated. A
+/// completeness lock in this module's tests asserts the catalog covers
+/// exactly the 67 rule ids the analyzer registry can emit.
 const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-C-ALLOC-001",
@@ -171,6 +174,120 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
         "PERF-C-LOOP-008",
         "Pointer-chasing chain in innermost loop",
         "Detects member-access chains of depth ≥ 3 inside innermost loop bodies — pointer-chasing cache-miss candidates.",
+    ),
+    // -----------------------------------------------------------------------
+    // Python (`PERF-PY-*`) entries (plan `python-backend` W3), ascending
+    // rule_id. The durable disposition table is docs/architecture/
+    // python-backend.md §9 (13 reframed mirrors + 9 native).
+    (
+        "PERF-PY-ALLOC-001",
+        "Loop-invariant construction inside loop",
+        "Detects a container/object constructor (list/dict/set/tuple/str/bytes/open/DataFrame/Series/array/ndarray) called inside a loop with only literal (or no) arguments — a loop-invariant value rebuilt each pass; f-string-in-loop is NOT a finding (98–99.6% of raw C hits were f-strings).",
+    ),
+    (
+        "PERF-PY-ALLOC-003",
+        "Superlinear list accumulation in loop",
+        "Detects non-in-place `acc = acc + [...]` concatenation of a list-bound name reassigned inside the loop, and append/extend onto a list-bound receiver NOT rebuilt inside any enclosing loop (the accumulator carried across iterations) — CPython rebuilds and copies the list each pass (O(n²)). Silent when the receiver is reset inside the loop (the benign CTL-APPEND-LOCAL control). Flagship.",
+    ),
+    (
+        "PERF-PY-ALLOC-004",
+        "Eager iterable materialisation inside loop",
+        "Detects `list()`/`dict()`/`set()`/`tuple()` with a non-literal iterable argument inside a loop — forces an eager O(n) allocation and copy, defeating lazy iteration.",
+    ),
+    (
+        "PERF-PY-ARCH-001",
+        "Import cycle",
+        "Detects cycles among RESOLVED internal Python import edges (via break_cycles); unresolved internal imports stay data-only with no finding. Info, conservative — thresholds are not decision-grade on Python.",
+    ),
+    (
+        "PERF-PY-ARCH-002",
+        "Hot component",
+        "Ranks directories by aggregated cyclomatic complexity and reports only the hottest component above a conservative floor. Info — thresholds are not measured on Python in W0 (measured in W4).",
+    ),
+    (
+        "PERF-PY-ARCH-003",
+        "Cross-file call coupling",
+        "Detects name-based cross-file call edges (a callee name with exactly one other-file definition); LOW confidence because Python duck typing makes name coupling noisy.",
+    ),
+    (
+        "PERF-PY-ASYNC-001",
+        "Blocking call inside `async def`",
+        "Detects `time.sleep`, blocking HTTP clients (requests/httpx/urllib), synchronous DB driver methods and `open` inside an `async def` — the blocking call stalls the single event-loop thread. The `async def` gate is required (166 production blocking calls in sync functions vs 0 real hits).",
+    ),
+    (
+        "PERF-PY-ASYNC-002",
+        "`await` inside a loop",
+        "Detects an `await` whose event metadata reports `in_loop_depth ≥ 1` (additive AwaitEvent stream) — sequential awaits serialise latency that `asyncio.gather` could overlap.",
+    ),
+    (
+        "PERF-PY-CALL-001",
+        "Direct recursion",
+        "Detects a function body containing a direct call to its own name; framed as CPython call cost and `RecursionError` depth, not C stack cost.",
+    ),
+    (
+        "PERF-PY-CALL-002",
+        "High cyclomatic complexity",
+        "Detects branch-count complexity above threshold (default ≥ 15), reported per function.",
+    ),
+    (
+        "PERF-PY-COMPREHENSION-001",
+        "Manual loop collapsible to a comprehension",
+        "Detects a loop whose body is a single `list.append` statement (single-statement gate) appending to a list-bound receiver — a list comprehension compiles to a specialised `LIST_APPEND` with inline iteration.",
+    ),
+    (
+        "PERF-PY-EXECUTOR-001",
+        "Executor/event-loop creation per iteration",
+        "Detects `ThreadPoolExecutor(...)`, `ProcessPoolExecutor(...)` and `asyncio.new_event_loop()` constructed inside a loop — worker/selector setup is re-paid every iteration and never amortises.",
+    ),
+    (
+        "PERF-PY-LOOP-001",
+        "Deep loop nesting",
+        "Detects loop nesting depth exactly 3 (one finding per maximal nest entry) — an O(n^k) candidate zone under interpreted iteration.",
+    ),
+    (
+        "PERF-PY-LOOP-002",
+        "Expensive I/O call inside loop",
+        "Detects file/network/subprocess/socket I/O inside a loop — direct I/O names, network-rooted methods, and filehandle read/write methods. `print`/`input` are deliberately excluded (72–83% of the C rule's raw hits were logging).",
+    ),
+    (
+        "PERF-PY-LOOP-003",
+        "`range(len(seq))` iteration",
+        "Detects `range(len(seq))` inside a loop (the `len()` gate keeps it false-positive-free) — prefer direct iteration or `enumerate`.",
+    ),
+    (
+        "PERF-PY-LOOP-007",
+        "Linear index scan of a list inside loop",
+        "Detects (a) membership `x in list` / `x not in list` where the container is a list-bound name (additive `ComparisonEvent.operator`), and (b) a list-bound name subscripted by an enclosing loop's induction variable — including a lone `seq[i]` and deeper `seq[i].field` chains. The kind gate excludes set/dict (kills the CTL-IN-SET false-positive class). Flagship.",
+    ),
+    (
+        "PERF-PY-LOOP-009",
+        "`try`/`except` inside a loop",
+        "Detects a `try_statement` whose event metadata reports `in_loop_depth ≥ 1` (additive TryEvent stream) — CPython sets up per-iteration exception handling. Honest that the zero-cost-`try` claim is version-dependent (CPython ≥ 3.11). Info.",
+    ),
+    (
+        "PERF-PY-MEM-002",
+        "Container copy inside loop",
+        "Detects `copy`/`deepcopy` (module function or `.copy()` method) inside a loop — a whole new container is materialised per iteration (`deepcopy` also walks the graph with a memo dict).",
+    ),
+    (
+        "PERF-PY-N1-001",
+        "DB/HTTP call inside loop (N+1)",
+        "Detects a DB/HTTP round-trip per iteration (receiver-root and call-name family gated) — the N+1 pattern; batch into `IN (...)`, a JOIN, or a bulk request. Flagship.",
+    ),
+    (
+        "PERF-PY-PANDAS-001",
+        "Row-wise pandas iteration",
+        "Detects `iterrows`/`itertuples` or `apply(axis=1)` (receiver-root gated) — pandas materialises a Python object per row, dwarfing the vectorised work. Info; frequency caveat (4 hits on the W0 corpora).",
+    ),
+    (
+        "PERF-PY-PANDAS-002",
+        "`concat`/`append` in loop",
+        "Detects `pd.concat`/`DataFrame.append` inside a loop — the whole frame is copied per iteration (O(n²)). `.append` is syntactically indistinguishable from `list.append`, so the receiver must be a proven DataFrame. Info; 0 hits on the W0 corpora.",
+    ),
+    (
+        "PERF-PY-STR-001",
+        "String accumulation in loop",
+        "Detects string accumulation across iterations on a `str`-bound identifier inside a loop: both the explicit `s = s + piece` form and the in-place `s += piece` form (additive augmented-assignment BinaryOpEvent). Gated on the name being reassigned within the loop (accumulation, not a loop-invariant read) — CPython strings are immutable, so each pass allocates and copies (O(n²)); `str.join` is the fix.",
     ),
     // -----------------------------------------------------------------------
     // Rust (`PERF-RS-*`) entries (plan `rust-backend` R3 workstream D1),
@@ -800,12 +917,12 @@ mod tests {
         assert_eq!(format_fixed_point(-0.001, 2), "0.00");
     }
 
-    /// Completeness lock (plan `rust-backend` R3 workstream D1): the catalog
-    /// must cover EXACTLY the rule ids the analyzer registry can emit (23
-    /// `PERF-C-*` + 22 `PERF-RS-*`; STR-001 retired by M1), so a newly added
-    /// heuristic cannot
-    /// silently reintroduce the Appendix A `panic!` on an uncataloged
-    /// rule_id. The expected set is derived FROM the registry
+    /// Completeness lock (plans `rust-backend` R3 D1 + `python-backend` W3):
+    /// the catalog must cover EXACTLY the rule ids the analyzer registry can
+    /// emit (23 `PERF-C-*` + 22 `PERF-PY-*` + 22 `PERF-RS-*`; C/Rust STR-001
+    /// and the 10 Python-retired ids never registered), so a newly added
+    /// heuristic cannot silently reintroduce the Appendix A `panic!` on an
+    /// uncataloged rule_id. The expected set is derived FROM the registry
     /// ([`crate::analyzer::registered_rule_ids`]) — an id added to `REGISTRY`
     /// without a catalog entry now fails THIS test instead of passing a
     /// hand-maintained duplicate. Every catalog entry also has a non-empty
@@ -814,7 +931,11 @@ mod tests {
     fn catalog_covers_every_registry_rule_id() {
         // Authoritative: the registry's own rule ids, in declaration order.
         let registry_ids: Vec<&'static str> = crate::analyzer::registered_rule_ids().collect();
-        assert_eq!(registry_ids.len(), 45, "expected 23 C + 22 Rust ids");
+        assert_eq!(
+            registry_ids.len(),
+            67,
+            "expected 23 C + 22 Python + 22 Rust ids"
+        );
 
         // The registry declares its entries in ascending rule_id order
         // (the C block, then the `PERF-RS-*` block) — declaration order is
@@ -838,7 +959,7 @@ mod tests {
         );
 
         let catalog_ids: Vec<&str> = HEURISTIC_CATALOG_V1.iter().map(|(id, _, _)| *id).collect();
-        assert_eq!(catalog_ids.len(), 45, "catalog entry count drifted");
+        assert_eq!(catalog_ids.len(), 67, "catalog entry count drifted");
 
         // Every catalog entry carries a non-empty title and description.
         for (id, title, description) in HEURISTIC_CATALOG_V1 {
@@ -863,15 +984,38 @@ mod tests {
             "catalog must cover exactly the registered rule ids"
         );
 
-        // The Rust block is appended in ascending rule_id order (the C block
-        // keeps its frozen catalog-v1 doc order).
-        let rs_ids: Vec<&str> = catalog_ids
-            .iter()
-            .copied()
-            .filter(|id| id.starts_with("PERF-RS-"))
-            .collect();
-        let mut rs_sorted = rs_ids.clone();
-        rs_sorted.sort_unstable();
-        assert_eq!(rs_ids, rs_sorted, "PERF-RS-* catalog entries not ascending");
+        // The Python and Rust blocks are appended in ascending rule_id order
+        // (the C block keeps its frozen catalog-v1 doc order).
+        for prefix in ["PERF-PY-", "PERF-RS-"] {
+            let ids: Vec<&str> = catalog_ids
+                .iter()
+                .copied()
+                .filter(|id| id.starts_with(prefix))
+                .collect();
+            let mut sorted = ids.clone();
+            sorted.sort_unstable();
+            assert_eq!(ids, sorted, "{prefix}* catalog entries not ascending");
+        }
+
+        // The 10 Python-retired C/Rust ids must never be registered for
+        // Python (docs/architecture/python-backend.md §9.1).
+        const RETIRED_PYTHON_IDS: [&str; 10] = [
+            "PERF-PY-TYPE-001",
+            "PERF-PY-TYPE-002",
+            "PERF-PY-MEM-001",
+            "PERF-PY-ALLOC-002",
+            "PERF-PY-STR-002",
+            "PERF-PY-STR-003",
+            "PERF-PY-LOOP-004",
+            "PERF-PY-LOOP-005",
+            "PERF-PY-LOOP-006",
+            "PERF-PY-LOOP-008",
+        ];
+        for retired in RETIRED_PYTHON_IDS {
+            assert!(
+                !actual.contains(retired),
+                "retired Python rule id must not be registered/cataloged: {retired}"
+            );
+        }
     }
 }

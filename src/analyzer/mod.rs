@@ -51,6 +51,7 @@ type HeuristicFn = fn(&[FileUnit]) -> Vec<Finding>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum RuleLanguage {
     C,
+    Python,
     Rust,
 }
 
@@ -65,17 +66,19 @@ pub(crate) struct RegistryEntry {
     f: HeuristicFn,
 }
 
-/// The registry, DECLARED IN ASCENDING `rule_id` ORDER ACROSS BOTH LANGUAGES
-/// (all `PERF-C-*` ascending, then all `PERF-RS-*` ascending) — execution
-/// order equals declaration order and duplicate collapse is first-wins, so
-/// declaration order is load-bearing (modules.md §3.3). Adding a heuristic
-/// = inserting a new entry whose rule_id sorts into place (open pattern,
-/// minor-bump schema policy).
+/// The registry, DECLARED IN ASCENDING `rule_id` ORDER ACROSS ALL THREE
+/// LANGUAGES (all `PERF-C-*` ascending, then all `PERF-PY-*` ascending, then
+/// all `PERF-RS-*` ascending) — execution order equals declaration order and
+/// duplicate collapse is first-wins, so declaration order is load-bearing
+/// (modules.md §3.3). Adding a heuristic = inserting a new entry whose rule_id
+/// sorts into place (open pattern, minor-bump schema policy).
 ///
 /// C: alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001,
 /// call_002, loop_001, loop_002, loop_003, loop_004, loop_005, loop_006,
 /// loop_007, loop_008, mem_001, mem_002, str_001, str_002, str_003,
 /// type_001, type_002.
+/// Python (plan `python-backend` W3 — 13 reframed mirrors + 9 native): the 22
+/// `PERF-PY-*` rules from docs/architecture/python-backend.md §9, ascending.
 /// Rust (waves C1 structural + C2 API-name) — the 22-rule Rust catalog
 /// (STR-001 retired by the M1 Precision Gate), ascending: alloc_001,
 /// alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001, call_002,
@@ -196,6 +199,117 @@ const REGISTRY: &[RegistryEntry] = &[
         language: RuleLanguage::C,
         rule_id: finding::TYPE_002_RULE_ID,
         f: heuristics::type_002,
+    },
+    // ---- Python (`PERF-PY-*`) block — ascending rule_id (W3). ----
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ALLOC_001_RULE_ID,
+        f: heuristics::python_alloc_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ALLOC_003_RULE_ID,
+        f: heuristics::python_alloc_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ALLOC_004_RULE_ID,
+        f: heuristics::python_alloc_004,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ARCH_001_RULE_ID,
+        f: heuristics::python_arch_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ARCH_002_RULE_ID,
+        f: heuristics::python_arch_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ARCH_003_RULE_ID,
+        f: heuristics::python_arch_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ASYNC_001_RULE_ID,
+        f: heuristics::python_async_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_ASYNC_002_RULE_ID,
+        f: heuristics::python_async_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_CALL_001_RULE_ID,
+        f: heuristics::python_call_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_CALL_002_RULE_ID,
+        f: heuristics::python_call_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_COMPREHENSION_001_RULE_ID,
+        f: heuristics::python_comprehension_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_EXECUTOR_001_RULE_ID,
+        f: heuristics::python_executor_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_LOOP_001_RULE_ID,
+        f: heuristics::python_loop_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_LOOP_002_RULE_ID,
+        f: heuristics::python_loop_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_LOOP_003_RULE_ID,
+        f: heuristics::python_loop_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_LOOP_007_RULE_ID,
+        f: heuristics::python_loop_007,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_LOOP_009_RULE_ID,
+        f: heuristics::python_loop_009,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_MEM_002_RULE_ID,
+        f: heuristics::python_mem_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_N1_001_RULE_ID,
+        f: heuristics::python_n1_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_PANDAS_001_RULE_ID,
+        f: heuristics::python_pandas_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_PANDAS_002_RULE_ID,
+        f: heuristics::python_pandas_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Python,
+        rule_id: finding::PY_STR_001_RULE_ID,
+        f: heuristics::python_str_001,
     },
     RegistryEntry {
         language: RuleLanguage::Rust,
@@ -333,30 +447,26 @@ pub(crate) use heuristics::{CrossFileCallEdge, cross_file_call_edges, scanf_form
 /// severity → confidence → rule_id → path → start_line → start_col.
 #[must_use]
 pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
-    // Language gating (plan `rust-backend` R3 workstream C1; tightened by plan
-    // `python-backend` W2). The registry is language-tagged, so each entry must
+    // Language gating (plan `rust-backend` R3 workstream C1; extended by plan
+    // `python-backend` W3). The registry is language-tagged, so each entry must
     // receive ONLY the units for its own language — otherwise a name-based C
     // rule (ALLOC/STR/ARCH) would fire on same-named constructs in another
-    // language. The units are partitioned ONCE here into two owned slices (a
+    // language. The units are partitioned ONCE here into three owned slices (a
     // single deep clone of every `FileUnit`); the alternative — handing each
     // rule the full borrowed set and repeating the language filter inside all
-    // 45 rules — trades that one upfront clone for 45 per-rule passes over the
+    // 67 rules — trades that one upfront clone for 67 per-rule passes over the
     // units. The upfront split is paid once per `analyze` call and keeps every
-    // rule a pure, language-homogeneous IR view. Only `"rust"` and `"c"` are
-    // bucketed explicitly; any OTHER language (today: `"python"`, M3 W2) is
-    // dropped — it has no registry rules yet and MUST NOT be scored by C/Rust
-    // heuristics. W3 adds `RuleLanguage::Python` + the `PERF-PY-*` registry;
-    // dropping here is the interim honest gate.
+    // rule a pure, language-homogeneous IR view. `"c"`, `"python"` and `"rust"`
+    // are bucketed explicitly; any OTHER language is dropped — it has no
+    // registry rules and MUST NOT be scored by another language's heuristics.
     let mut c_units: Vec<FileUnit> = Vec::new();
+    let mut python_units: Vec<FileUnit> = Vec::new();
     let mut rust_units: Vec<FileUnit> = Vec::new();
     for unit in units {
         match unit.file.language.as_str() {
             "rust" => rust_units.push(unit.clone()),
             "c" => c_units.push(unit.clone()),
-            // Other languages (today: "python", M3 W2) have no registry rules
-            // yet and MUST NOT be scored by C/Rust heuristics — W3 adds
-            // RuleLanguage::Python + the PERF-PY-* registry. Dropping them
-            // here is the interim honest gate.
+            "python" => python_units.push(unit.clone()),
             _ => {}
         }
     }
@@ -367,6 +477,7 @@ pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
     for entry in REGISTRY {
         let slice: &[FileUnit] = match entry.language {
             RuleLanguage::C => &c_units,
+            RuleLanguage::Python => &python_units,
             RuleLanguage::Rust => &rust_units,
         };
         if slice.is_empty() {
@@ -634,6 +745,7 @@ mod tests {
                 access_chains: Vec::new(),
                 loops: Vec::new(),
                 awaits: Vec::new(),
+                try_blocks: Vec::new(),
             }],
         }
     }

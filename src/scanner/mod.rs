@@ -83,6 +83,10 @@ pub struct FunctionUnit {
     /// always leave it empty — only the Python backend emits `AwaitEvent`s.
     #[serde(default)]
     pub awaits: Vec<crate::ir::AwaitEvent>,
+    /// `try_statement` occurrences in the function body (plan `python-backend`
+    /// W3; additive v1 field with `#[serde(default)]`, empty for C/Rust).
+    #[serde(default)]
+    pub try_blocks: Vec<crate::ir::TryEvent>,
 }
 
 /// Scanner failure that is a USAGE error rather than scan data (modules.md
@@ -99,8 +103,8 @@ pub enum ScanError {
 /// `scan.languages` fallback (aggregator). Per-file language tokens are
 /// emitted by each backend (and `failed_unit`); a new language must update
 /// those backends AND this const — nothing enforces that in lockstep.
-pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "rust"];
-// "python" is added with the 1.3 schema bump (W3); .py files still emit "python" via FileRecord.
+pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "python", "rust"];
+// "python" landed with the 1.3 schema bump (W3); .py files emit "python" via FileRecord.
 
 /// Source language selected by extension (plan `rust-backend` R1).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

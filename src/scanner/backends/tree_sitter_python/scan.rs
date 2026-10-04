@@ -20,7 +20,7 @@ use super::{ir_span, text};
 use crate::ir::{
     AccessChainEvent, AssignmentEvent, AwaitEvent, BinaryOpEvent, BindingKind, CallEvent,
     CalleeKind, ComparisonEvent, EventMeta, LoopKind, LoopNode, ResolverTier, ScopeClass, Shape,
-    ShapeKind, StatementRole,
+    ShapeKind, StatementRole, TryEvent,
 };
 
 /// Loop-bearing node kinds for ancestor climbing (`is_innermost` /
@@ -71,6 +71,7 @@ pub(super) struct ScanResult {
     pub access_chains: Vec<AccessChainEvent>,
     pub loops: Vec<LoopNode>,
     pub awaits: Vec<AwaitEvent>,
+    pub try_blocks: Vec<TryEvent>,
 }
 
 /// Walk `start` (a function/module body or the `module` root) emitting events
@@ -102,6 +103,7 @@ pub(super) fn scan(
         access_chains: Vec::new(),
         loops: Vec::new(),
         awaits: Vec::new(),
+        try_blocks: Vec::new(),
     };
     state.visit(start);
     ScanResult {
@@ -116,6 +118,7 @@ pub(super) fn scan(
         access_chains: state.access_chains,
         loops: state.loops,
         awaits: state.awaits,
+        try_blocks: state.try_blocks,
     }
 }
 
@@ -138,6 +141,7 @@ struct FuncScan<'a> {
     access_chains: Vec<AccessChainEvent>,
     loops: Vec<LoopNode>,
     awaits: Vec<AwaitEvent>,
+    try_blocks: Vec<TryEvent>,
 }
 
 impl FuncScan<'_> {
@@ -171,6 +175,14 @@ impl FuncScan<'_> {
             }
             "assignment" | "augmented_assignment" | "named_expression" => {
                 self.emit_assignment(node);
+                // `augmented_assignment` ALSO emits a `BinaryOpEvent` carrying
+                // the operator text (`"+="`) plus the target/value shapes, so
+                // STR-001 can see the in-place string-accumulation form that the
+                // pure `a = a + b` binary shape misses. Assignment emission is
+                // unchanged (plan `python-backend` W3).
+                if node.kind() == "augmented_assignment" {
+                    self.emit_augmented_binop(node);
+                }
                 self.visit_children(node);
             }
             "binary_operator" => self.visit_binary(node),
@@ -185,6 +197,18 @@ impl FuncScan<'_> {
             // normally (plan `python-backend` W2; feeds ASYNC-002).
             "await" if node.is_named() => {
                 self.awaits.push(AwaitEvent {
+                    meta: self.meta_for(node),
+                });
+                self.visit_children(node);
+            }
+            // One additive `TryEvent` per `try_statement`, then descend so any
+            // nested loops/tries (and their events) are captured normally. The
+            // event's `meta.in_loop_depth` marks a `try` inside a loop body
+            // (plan `python-backend` W3; feeds LOOP-009). `try_statement` itself
+            // contributes no complexity here — its `except_clause` children
+            // already do, in parity with the C/Rust branch counting.
+            "try_statement" => {
+                self.try_blocks.push(TryEvent {
                     meta: self.meta_for(node),
                 });
                 self.visit_children(node);
@@ -357,31 +381,71 @@ impl FuncScan<'_> {
     }
 
     /// Python chained comparisons (`a < b < c`) yield ONE event per adjacent
-    /// operand pair; operands are the unnamed `primary_expression` children and
-    /// there is no `operands` field (W1 §3.9).
+    /// operand pair; operands are the named expression children and there is no
+    /// `operands` field (W1 §3.9). The operator TEXT between each pair (one or
+    /// two anonymous tokens — `not in` / `is not`) is captured and normalized by
+    /// joining its tokens with a single space, so LOOP-007 can read `"in"` /
+    /// `"not in"` from the IR (plan `python-backend` W3).
     fn emit_comparisons(&mut self, node: Node<'_>) {
         let mut operands = Vec::new();
+        let mut operators: Vec<String> = Vec::new();
+        let mut pending: Vec<String> = Vec::new();
         let mut cursor = node.walk();
         if cursor.goto_first_child() {
             loop {
                 let child = cursor.node();
                 if child.is_named() {
+                    if !operands.is_empty() {
+                        operators.push(pending.join(" "));
+                    }
+                    pending.clear();
                     operands.push(child);
+                } else {
+                    let token = text(child, self.source);
+                    if !token.trim().is_empty() {
+                        pending.push(token.to_string());
+                    }
                 }
                 if !cursor.goto_next_sibling() {
                     break;
                 }
             }
         }
-        for pair in operands.windows(2) {
+        for (pair_idx, pair) in operands.windows(2).enumerate() {
             let meta = self.meta_for(node);
             self.comparisons.push(ComparisonEvent {
                 meta,
+                operator: operators.get(pair_idx).cloned().unwrap_or_default(),
                 left: self.shape_of(pair[0]),
                 right: self.shape_of(pair[1]),
             });
         }
         self.visit_children(node);
+    }
+
+    /// `augmented_assignment` (`s += x`) → a [`BinaryOpEvent`] whose `op` is the
+    /// operator token text and whose operands are the target/value shapes. This
+    /// is the additive signal STR-001 needs for the in-place accumulation form;
+    /// the ordinary `a = a + b` shape is still covered by `binary_operator`
+    /// (plan `python-backend` W3).
+    fn emit_augmented_binop(&mut self, node: Node<'_>) {
+        let Some(left) = node.child_by_field_name("left") else {
+            return;
+        };
+        let Some(right) = node.child_by_field_name("right") else {
+            return;
+        };
+        let op = node
+            .child_by_field_name("operator")
+            .map(|o| text(o, self.source))
+            .unwrap_or("")
+            .to_string();
+        self.binary_ops.push(BinaryOpEvent {
+            meta: self.meta_for(node),
+            op,
+            left: self.shape_of(left),
+            right: self.shape_of(right),
+        });
     }
 
     fn emit_call(&mut self, node: Node<'_>) {
@@ -515,7 +579,11 @@ impl FuncScan<'_> {
         let Some((root, elements)) = self.access_chain(node) else {
             return;
         };
-        if elements.len() < 2 {
+        // Emit for a LONE subscript/attribute chain too (`seq[i]`): LOOP-007
+        // needs the root-bearing event to kind-gate the common index-scan shape.
+        // An empty chain (a bare identifier) carries no chain and is skipped
+        // (plan `python-backend` W3).
+        if elements.is_empty() {
             return;
         }
         let meta = self.meta_for(node);
