@@ -51,7 +51,7 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 - **Excluded / untracked:** `brag-output/` and `perfpal-report/` — unrelated working-tree dirs, deliberately NOT in this change set.
 
 ## Commit
-1. **pending orchestrator** — work commit: Python backend W3 (`PERF-PY-*` catalog + `RuleLanguage::Python` + registry/reporter/aggregator + schema 1.3 + Option A IR + fidelity fixes + goldens + state/docs). The orchestrator creates this commit immediately after the EOL ritual; the hash is to be filled in here.
+1. **`2a80882`** — work commit: Python backend W3 (`PERF-PY-*` catalog + `RuleLanguage::Python` + registry/reporter/aggregator + schema 1.3 + Option A IR + fidelity fixes + goldens + state/docs). The orchestrator creates this commit immediately after the EOL ritual; the hash is to be filled in here.
 2. (this EOL follow-up) — regenerates this handoff to embed the work-commit hash; marks activeContext W3 committed.
 
 ## L2 state split / L6 north-star (history)

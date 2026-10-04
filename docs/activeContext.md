@@ -11,7 +11,7 @@ Session 43 **python-backend W3** (task A-pf-071) **complete**: the full `PERF-PY
 - **Schema 1.3:** MINOR additive — `scan.languages` / `files[].language` admit `"python"`; version consts + artifact name → 1.3; goldens regenerated.
 
 ## In Progress
-- Nothing — W3 complete; the work commit is created by the orchestrator immediately after this EOL ritual (see `state/handoff/latest.md`).
+- Nothing — W3 complete and committed as `2a80882` (this EOL follow-up commit on top).
 
 ## Next
 - **NEXT SESSION (`/new`) = plan `python-backend` W4 (`A-pf-072`):** read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan python-backend`. Deliver `examples-python/` (real package) + parser-free IR fixtures + precision KPI + benchmark ladder + goldens + docs (`ir-v1.md` / `metrics-json-v1.md` / `README` / roadmap) + the full gate matrix (default **and** `semantic-clang`) + dual review before commit.
