@@ -1,0 +1,58 @@
+[
+  {
+    "file": {
+      "path": "pkg/a.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "pkg/a.py#hot#2:1",
+          "name": "hot",
+          "path": "pkg/a.py",
+          "span": {
+            "start_line": 2,
+            "start_col": 1,
+            "end_line": 6,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 50,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 5
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [],
+        "awaits": [],
+        "try_blocks": []
+      }
+    ]
+  }
+]

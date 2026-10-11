@@ -155,10 +155,11 @@ Each heuristic is a pure function over IR views:
 
 A backend implements one interface: *given (path, source bytes), emit that language's IR records/events.*
 
-- v1 ships two backends: `tree-sitter-c` (`.c`/`.h`) and `tree-sitter-rust` (`.rs`) — both official grammars, MIT, pinned versions per ADR-0001 guardrail 5.
+- v1 ships three backends: `tree-sitter-c` (`.c`/`.h`), `tree-sitter-rust` (`.rs`) and `tree-sitter-python` (`.py`/`.pyi`; `.ipynb` deliberately excluded) — all official grammars, MIT, pinned versions per ADR-0001 guardrail 5.
 - Backends convert spans at the boundary and never leak node kinds past it.
 - New languages = new backends + grammar vendoring per the ADR-0001 license policy (official `tree-sitter-*` repos unless individually audited). No analyzer, aggregator, or reporter changes required — see §5.2 for the schema caveat.
-- **Close-out (plan `rust-backend`, R0–R5).** Both backends are live in the shipped tree — C ships 23 `PERF-C-*` rules, Rust ships 23 `PERF-RS-*` rules, and the Rust `mod`/`use` module graph resolves with Cargo.toml-aware crate roots. The Rust tier is syntactic-only (§5.3's libclang resolver is C-only). Design record: [`rust-backend.md`](./rust-backend.md); Rust rule catalog: [`rust-catalog.md`](../heuristics/rust-catalog.md).
+- **Close-out (plan `rust-backend`, R0–R5).** All backends are live in the shipped tree — C ships 23 `PERF-C-*` rules, Rust ships 22 `PERF-RS-*` rules, and the Rust `mod`/`use` module graph resolves with Cargo.toml-aware crate roots. Design record: [`rust-backend.md`](./rust-backend.md); Rust rule catalog: [`rust-catalog.md`](../heuristics/rust-catalog.md).
+- **Close-out (plan `python-backend`, W0–W4).** The Python backend ships 22 `PERF-PY-*` rules (13 reframed C/Rust mirrors + 9 Python-native; 10 C/Rust ids retired because their premise does not transfer to CPython), plus best-effort binding/alias inference and relative/absolute import resolution. Design record + disposition table: [`python-backend.md`](./python-backend.md). The Python tier is syntactic-only too — the libclang resolver stays C-only.
 
 ### 4.3 Resolvers (future)
 
@@ -172,7 +173,7 @@ Profile adapters (perf / valgrind / cProfile) translate tool-specific output int
 
 ### 5.2 Additional languages (order per ADR-0003: Python, JS, TS, C++)
 
-Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.2.json](../schema/metrics.schema.v1.2.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission has already landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2). The Rust backend itself landed end-to-end in plan `rust-backend` (R0–R5): both backends are live, and the Rust rule set (23 `PERF-RS-*` rules) ships alongside the C set.
+Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.3.json](../schema/metrics.schema.v1.3.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2) and the Python re-emission as **v1.3** (admits `"python"`; plan `python-backend` W3). All three backends are live: C (23 `PERF-C-*`), Python (22 `PERF-PY-*`) and Rust (22 `PERF-RS-*`) ship together.
 
 ### 5.3 Semantic resolver — REALIZED (plan `semantic-resolver`, waves A–B2)
 
@@ -226,9 +227,9 @@ perfpal/
 ├── src/
 │   ├── cli/            # §3.1
 │   ├── scanner/        # §3.2 — discovery, resolution, recognizer pass
-│   │   └── backends/tree-sitter-c/
+│   │   └── backends/{tree-sitter-c,tree-sitter-rust,tree-sitter-python}/
 │   ├── ir/             # the seam: record/event/shape types (IR v1)
-│   ├── analyzer/       # §3.3 — registry + the 23 catalog heuristics
+│   ├── analyzer/       # §3.3 — registry + the catalog heuristics (23 C + 22 Python + 22 Rust)
 │   ├── aggregator/     # §3.4
 │   ├── schema/         # §3.5 — document model, serializer, embedded JSON Schema
 │   ├── reporter/       # §3.6

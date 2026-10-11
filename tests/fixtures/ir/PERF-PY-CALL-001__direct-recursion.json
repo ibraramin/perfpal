@@ -1,0 +1,76 @@
+[
+  {
+    "file": {
+      "path": "pos/call_001.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "pos/call_001.py#walk#1:1",
+          "name": "walk",
+          "path": "pos/call_001.py",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 6,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 6
+        },
+        "calls": [
+          {
+            "span": {
+              "start_line": 3,
+              "start_col": 9,
+              "end_line": 3,
+              "end_col": 18
+            },
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "callee_name": "walk",
+            "callee_kind": "direct",
+            "args": [],
+            "statement_role": "primary",
+            "conditional_guarded": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [],
+        "awaits": [],
+        "try_blocks": []
+      }
+    ]
+  }
+]

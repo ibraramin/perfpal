@@ -84,7 +84,7 @@ A completed scan leaves exactly this layout (default `perfpal-report/`):
 
 ```
 perfpal-report/
-├── metrics.json              # raw machine-readable data (schema v1.2)
+├── metrics.json              # raw machine-readable data (schema v1.3)
 ├── metrics.schema.v1.2.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report
 └── charts/                   # static visualizations (set defined by ADR-0002)
@@ -97,10 +97,10 @@ The chart set is `include-graph.svg`, `component-coupling.svg`, and `hot-compone
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
-| `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs` file |
+| `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs`/`.py`/`.pyi` file |
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
-| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0-beta.1 (metrics schema 1.2)`), exit 0 |
+| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0-beta.1 (metrics schema 1.3)`), exit 0 |
 | `-h`, `--help` | — | — | Usage text, exit 0; prints a beta evaluation-notice footer |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.
@@ -109,16 +109,16 @@ stdout carries the short plain-text summary shown above; all diagnostics, warnin
 
 | Code | Meaning |
 |---|---|
-| `0` | Success — report written. Findings never affect the exit code (they are data). Zero-file scans succeed with a valid empty report (`scan.languages` = the supported set `["c","rust"]`). |
+| `0` | Success — report written. Findings never affect the exit code (they are data). Zero-file scans succeed with a valid empty report (`scan.languages` = the supported set `["c","python","rust"]`). |
 | `1` | Usage error — unknown flag; missing/unreadable target path. |
 | `2` | Output error — cannot create output dir; safety-guard refusal without `--force`; disk/write failure. |
 | `3` | Internal error — unexpected panic/crash, always a bug (this also covers a `metrics.json` serialization failure). |
 
 ## Heuristics
 
-Perfpal's catalog defines 46 heuristics — 23 C (`PERF-C-*`) plus 23 Rust (`PERF-RS-*`) — all of which fire on the syntactic resolver tier. On `semantic-clang` builds with libclang present, proven semantic facts upgrade C findings above their catalog defaults — resolved ARCH-003 cross-file edges report MEDIUM instead of LOW (the syntactic tier stays LOW); the Rust backend is **syntactic-tier only** (the libclang resolver is C-only), so no Rust finding is ever upgraded. Without libclang every build degrades gracefully to the syntactic tier. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
+Perfpal's catalog defines **67** heuristics — 23 C (`PERF-C-*`), 22 Rust (`PERF-RS-*`), and 22 Python (`PERF-PY-*`) — all of which fire on the syntactic resolver tier. On `semantic-clang` builds with libclang present, proven semantic facts upgrade C findings above their catalog defaults — resolved ARCH-003 cross-file edges report MEDIUM instead of LOW (the syntactic tier stays LOW); the Rust and Python backends are **syntactic-tier only** (the libclang resolver is C-only), so no Rust or Python finding is ever upgraded. Without libclang every build degrades gracefully to the syntactic tier. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
 
-Thresholds are named constants documented in the catalogs (`docs/heuristics/catalog-v1.md` for C, `docs/heuristics/rust-catalog.md` for Rust) and are not runtime-configurable.
+Thresholds are named constants documented in the catalogs (`docs/heuristics/catalog-v1.md` for C, `docs/heuristics/rust-catalog.md` for Rust; the Python per-rule notes and disposition table live in `docs/architecture/python-backend.md`) and are not runtime-configurable.
 
 ### ALLOC — allocation churn
 
@@ -209,6 +209,37 @@ The Rust backend mirrors the C families as **22** `PERF-RS-*` rules — `PERF-RS
 | `PERF-RS-TYPE-002` | Struct member ordering — estimated padding waste ≥ 8 bytes (`repr(Rust)` may reorder fields; deliberately lower-confidence) | info | LOW | 2 |
 
 Rows are ordered by family: ALLOC, ARCH, CALL, LOOP, MEM, STR, TYPE. Every finding remains an optimization candidate.
+
+### Python backend (`PERF-PY-*`)
+
+The Python backend ships **22** `PERF-PY-*` rules: **13 transferred/reframed mirrors** of the C/Rust catalog plus **9 Python-native additions**. Ten C/Rust ids are **retired** for Python because their premise does not transfer to CPython (`TYPE-001`/`TYPE-002` — no by-value struct layout; `MEM-001` — no `sizeof`; `ALLOC-002` — no `free`; `STR-002` — `len()` is O(1); `STR-003` — memory-safe; `LOOP-004` — bytecode-era div/mod; `LOOP-005` — a "global store" is a dict write; `LOOP-006` — every call is dynamic dispatch; `LOOP-008` — attribute chains are idiomatic and PEP 659-cached). **Python is syntactic-tier only** (T1: AST + best-effort binding/alias inference, `resolver_tier = syntactic`): the libclang `semantic-clang` resolver is C-only, and the cross-module resolver (`python-resolver`, T2) and runtime-profile ingestion (T3) are out of scope. Inference-gated findings are capped at MEDIUM and never `semantic`. Messages cite the CPython mechanism (per-object header allocation, list re-scan, immutable strings, event-loop blocking, N+1 round-trips). Per-rule notes and the full disposition table live in `docs/architecture/python-backend.md`.
+
+| Rule | Detects | Severity | Confidence |
+|---|---|---|---|
+| `PERF-PY-ALLOC-001` | Loop-invariant container/object construction (all-literal args) inside a loop — an f-string in a loop is **not** a finding | info | MEDIUM |
+| `PERF-PY-ALLOC-003` | Superlinear list accumulation in a loop — non-in-place `acc = acc + [x]`, or `append`/`extend` into an accumulator never rebuilt in the loop | warn | MEDIUM |
+| `PERF-PY-ALLOC-004` | Eager re-materialisation (`list()`/`dict()`/`set()`/`tuple()` of a non-literal iterable) inside a loop | info | MEDIUM |
+| `PERF-PY-ARCH-001` | Import cycle over resolved internal edges | info | MEDIUM |
+| `PERF-PY-ARCH-002` | Hot-component aggregation — directories ranked by cyclomatic-complexity sum (conservative floor; not decision-grade) | info | MEDIUM |
+| `PERF-PY-ARCH-003` | Cross-file call coupling from name matching (needs exactly one other-file definition; duck typing makes this noisy) | info | LOW |
+| `PERF-PY-ASYNC-001` | Blocking call inside `async def` — `time.sleep`, a blocking HTTP client, a sync DB-driver method, or the builtin `open` | warn | MEDIUM |
+| `PERF-PY-ASYNC-002` | Sequential `await` inside a loop (serialises latency `asyncio.gather` could overlap) | warn | MEDIUM |
+| `PERF-PY-CALL-001` | Direct recursion — framed as `RecursionError`/interpreter depth, not C stack cost | info | HIGH |
+| `PERF-PY-CALL-002` | Cyclomatic complexity ≥ 15 per function | info | HIGH |
+| `PERF-PY-COMPREHENSION-001` | Loop body collapsible to a list comprehension (single `append` statement) | info | MEDIUM |
+| `PERF-PY-EXECUTOR-001` | Executor / event-loop construction per iteration (`ThreadPoolExecutor`, `ProcessPoolExecutor`, `new_event_loop`) | info | MEDIUM |
+| `PERF-PY-LOOP-001` | Deep loop nesting — nesting depth exactly 3 | info | HIGH |
+| `PERF-PY-LOOP-002` | File/network/subprocess/socket I/O inside a loop (`print`/`input` deliberately excluded) | warn | MEDIUM |
+| `PERF-PY-LOOP-003` | `range(len(seq))` positional iteration inside a loop | info | HIGH |
+| `PERF-PY-LOOP-007` | Linear list scan inside a loop — membership (`x in seq`), index (`seq[i]`), or `seq.index(x)`; set/dict containers excluded | warn | MEDIUM |
+| `PERF-PY-LOOP-009` | `try`/`except` inside a loop body | info | MEDIUM |
+| `PERF-PY-MEM-002` | Container copy (`copy`/`deepcopy`/`.copy()`) inside a loop | info | MEDIUM |
+| `PERF-PY-N1-001` | DB/HTTP call inside a loop (the N+1 pattern) | warn | MEDIUM |
+| `PERF-PY-PANDAS-001` | Row-wise pandas iteration (`iterrows`/`itertuples`/`apply(axis=1)`) | info | MEDIUM |
+| `PERF-PY-PANDAS-002` | `pd.concat`/`DataFrame.append` inside a loop (O(n²) frame rebuild) | info | MEDIUM |
+| `PERF-PY-STR-001` | `str +=` / `str = str + …` accumulation in a loop (honest about CPython refcount==1 amortisation) | warn | MEDIUM |
+
+Every finding remains an optimization candidate. A `try`/`except`-in-loop (`LOOP-009`) is an info-grade readability/robustness signal: the zero-cost-`try` premise is version-dependent (CPython ≥ 3.11).
 
 ## Output contract
 

@@ -250,8 +250,12 @@ pub(crate) fn python_loop_003(units: &[FileUnit]) -> Vec<Finding> {
 ///    list-bound and whose subscript index IS an enclosing loop's induction
 ///    variable (`seq[i]`, including the LONE-subscript form now emitted by the
 ///    backend, and `seq[i].field` chains): positional re-scan of the whole list.
+/// 3. **`.index()` scan** — a DIRECT [`crate::ir::CallEvent`] named `index` whose
+///    `receiver_root` is list-bound at `in_loop_depth ≥ 1` (`seq.index(x)`):
+///    CPython's list `.index()` is an O(n) linear scan (plan `python-backend`
+///    W4, R-pf-093).
 ///
-/// Evidence `root`, (`index_ident` | `operator`), `binding_kind`,
+/// Evidence `root`, (`method` | `index_ident` | `operator`), `binding_kind`,
 /// `loop_depth`. Warn/MEDIUM (binding kind is inference).
 pub(crate) fn python_loop_007(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
@@ -339,6 +343,52 @@ pub(crate) fn python_loop_007(units: &[FileUnit]) -> Vec<Finding> {
                         ("index_ident".to_string(), index_ident.to_string()),
                         ("binding_kind".to_string(), "list".to_string()),
                         ("loop_depth".to_string(), list_depth.to_string()),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    macro_suspect: false,
+                    error_node_overlap: false,
+                });
+            }
+            // `.index()` shape: a direct call `seq.index(x)` whose receiver root
+            // is list-bound at loop depth ≥ 1. The Python backend emits an
+            // `attribute` callee as `Direct` and populates `receiver_root` with
+            // the leftmost chain name (so `seq.index` → `receiver_root = "seq"`).
+            // CPython's list `.index()` is an O(n) linear scan (plan
+            // `python-backend` W4, R-pf-093).
+            for call in &func.calls {
+                if call.meta.in_loop_depth == 0
+                    || call.callee_kind != CalleeKind::Direct
+                    || call.callee_name != "index"
+                {
+                    continue;
+                }
+                let Some(root) = call.receiver_root.as_deref().filter(|r| lists.contains(*r))
+                else {
+                    continue;
+                };
+                let call_depth = call.meta.in_loop_depth;
+                findings.push(Finding {
+                    threshold: None,
+                    rule_id: PY_LOOP_007_RULE_ID.to_string(),
+                    title: "Linear list scan inside loop".to_string(),
+                    message: format!(
+                        "list '{root}' is scanned with `.index()` inside a loop \
+                         at depth {call_depth} — CPython's list `.index()` is an \
+                         O(n) linear scan, so re-scanning per outer iteration is \
+                         O(n²); building a set/dict lookup or a positional map is \
+                         a candidate optimization"
+                    ),
+                    severity: Severity::Warn,
+                    confidence: Confidence::Medium,
+                    resolver_tier: call.meta.resolver_tier,
+                    span: call.meta.span,
+                    path: unit.file.path.clone(),
+                    evidence: [
+                        ("root".to_string(), root.to_string()),
+                        ("method".to_string(), "index".to_string()),
+                        ("binding_kind".to_string(), "list".to_string()),
+                        ("loop_depth".to_string(), call_depth.to_string()),
                     ]
                     .into_iter()
                     .collect(),
@@ -698,5 +748,63 @@ mod tests {
             false,
         );
         assert!(python_loop_007(&[unit(vec![set_lone])]).is_empty());
+    }
+
+    #[test]
+    fn loop_007_fires_on_list_index_method_call_silent_for_set() {
+        let lspan = Span {
+            start_line: 1,
+            start_col: 1,
+            end_line: 12,
+            end_col: 1,
+        };
+        let list_index = func(
+            "f",
+            lspan,
+            vec![call("index", Some("seq.index"), Some("seq"), point(5), 1)],
+            vec![assign("seq", BindingKind::List, point(2), 0)],
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            vec![outer(12)],
+            Vec::new(),
+            false,
+        );
+        let out = python_loop_007(&[unit(vec![list_index])]);
+        assert_eq!(out.len(), 1, "{out:?}");
+        assert_eq!(
+            out[0].evidence.get("method").map(String::as_str),
+            Some("index")
+        );
+
+        // Outside a loop nothing fires.
+        let outside = func(
+            "f",
+            lspan,
+            vec![call("index", Some("seq.index"), Some("seq"), point(5), 0)],
+            vec![assign("seq", BindingKind::List, point(2), 0)],
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            false,
+        );
+        assert!(python_loop_007(&[unit(vec![outside])]).is_empty());
+
+        // A set-bound receiver stays silent (kind gate).
+        let set_index = func(
+            "f",
+            lspan,
+            vec![call("index", Some("seen.index"), Some("seen"), point(5), 1)],
+            vec![assign("seen", BindingKind::Set, point(2), 0)],
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            vec![outer(12)],
+            Vec::new(),
+            false,
+        );
+        assert!(python_loop_007(&[unit(vec![set_index])]).is_empty());
     }
 }

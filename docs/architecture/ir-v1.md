@@ -30,7 +30,7 @@
 
 ```
 FileRecord {
-  path, language            // "c" in v1
+  path, language            // "c" | "rust" | "python" (schema v1.3)
   loc: {code, comment, blank}
   function_count, global_var_count
   include_counts: {quoted, angle}
@@ -291,7 +291,7 @@ The IR exposes exactly three signals findings need for downgrades:
 
 - **Semantic tier:** libclang resolver would enrich existing records (types, true scopes, resolved callees) and raise tier tags — no new record kinds required for current heuristics.
 - **Dynamic tier:** runtime profiles attach as parallel event streams keyed by the same `(path, name, span)` identity.
-- **New languages:** FileRecord.language + per-language event emitters; record model is language-neutral by construction.
+- **New languages:** FileRecord.language + per-language event emitters; record model is language-neutral by construction. The language token is the open string surfaced in `scan.languages`/`files[].language` (`"c"`, `"rust"`, `"python"` today; schema v1.3).
 
 ## 7. Validation requirements (for implementation phase)
 

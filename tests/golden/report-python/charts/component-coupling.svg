@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="278" height="242" viewBox="0 0 278 242">
+<g font-family="monospace" font-size="11">
+<text x="204" y="166" text-anchor="end">.</text>
+<text transform="translate(226,144) rotate(-90)">.</text>
+<text x="204" y="190" text-anchor="end">pkg</text>
+<text transform="translate(250,144) rotate(-90)">pkg</text>
+</g>
+<g stroke="#dddddd" stroke-width="1">
+<rect x="210" y="150" width="24" height="24" fill="#ffffff"/>
+<rect x="234" y="150" width="24" height="24" fill="#e8b3b3"/>
+<rect x="234" y="150" width="24" height="24" fill="#3a3aff" fill-opacity="0.55"/>
+<rect x="210" y="174" width="24" height="24" fill="#e8b3b3"/>
+<rect x="210" y="174" width="24" height="24" fill="#3a3aff" fill-opacity="0.55"/>
+<rect x="234" y="174" width="24" height="24" fill="#b30000"/>
+<rect x="234" y="174" width="24" height="24" fill="#3a3aff" fill-opacity="0.55"/>
+</g>
+<text x="20" y="230" font-family="monospace" font-size="11">call edges are LOW-confidence hypotheses (ADR-0001)</text>
+</svg>

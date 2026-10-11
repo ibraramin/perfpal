@@ -48,8 +48,9 @@ const BLOCKING_METHODS: [&str; 14] = [
 /// high-value, Warn.
 ///
 /// A DIRECT call inside an `async def` body to `time.sleep`, a blocking HTTP
-/// client (`requests`/`httpx`/`urllib`), a synchronous DB driver method, or
-/// `open` — each blocks the single event loop thread, stalling every other
+/// client (`requests`/`httpx`/`urllib`), a synchronous DB driver method, or the
+/// BUILTIN `open` (no receiver root — so the non-blocking `aiofiles.open` is not
+/// flagged) — each blocks the single event loop thread, stalling every other
 /// task. Evidence `callee`, `receiver_root` (when present), `loop_depth`.
 /// Warn/MEDIUM (receiver-root inference).
 pub(crate) fn python_async_001(units: &[FileUnit]) -> Vec<Finding> {
@@ -65,7 +66,10 @@ pub(crate) fn python_async_001(units: &[FileUnit]) -> Vec<Finding> {
                 }
                 let root = call.receiver_root.as_deref();
                 let is_sleep = call.callee_name == "sleep" && root == Some("time");
-                let is_open = call.callee_name == "open";
+                // Only the BUILTIN `open` blocks: a module-qualified `.open`
+                // (e.g. `aiofiles.open`) is a non-blocking async client and
+                // must not fire (plan `python-backend` W4, R-pf-093).
+                let is_open = call.callee_name == "open" && root.is_none();
                 let is_blocking_client = root.is_some_and(|r| BLOCKING_ROOTS.contains(&r))
                     && BLOCKING_METHODS.contains(&call.callee_name.as_str());
                 if !(is_sleep || is_open || is_blocking_client) {
@@ -194,6 +198,47 @@ mod tests {
             false,
         );
         assert!(python_async_001(&[unit(vec![sync_fn])]).is_empty());
+    }
+
+    #[test]
+    fn async_001_fires_on_builtin_open_only() {
+        let span = point(4);
+        // Bare builtin `open(...)` inside `async def` still fires.
+        let builtin = func(
+            "read",
+            Span::default(),
+            vec![call("open", None, None, span, 0)],
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            true,
+        );
+        assert_eq!(python_async_001(&[unit(vec![builtin])]).len(), 1);
+
+        // A module-qualified `aiofiles.open(...)` is a non-blocking async
+        // client and must NOT fire (R-pf-093 false positive).
+        let aiofiles = func(
+            "read",
+            Span::default(),
+            vec![call(
+                "open",
+                Some("aiofiles.open"),
+                Some("aiofiles"),
+                span,
+                0,
+            )],
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            true,
+        );
+        assert!(python_async_001(&[unit(vec![aiofiles])]).is_empty());
     }
 
     #[test]

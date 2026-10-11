@@ -4,10 +4,10 @@
 //! the benchmark harness. Every rung is built by composing "units":
 //!
 //! - the `small` rung plants ONE true positive plus ONE silent control for
-//!   EVERY active rule in the 45-rule catalog (23 C + 22 Rust) — plus the
-//!   retired `PERF-RS-STR-001` always-silent control. The nine existential
-//!   gate constructs are lifted VERBATIM from the committed M1 corpus
-//!   (`tests/fixtures/precision/`), with every function/definition name
+//!   EVERY active rule in the 67-rule catalog (23 C + 22 Python + 22 Rust) —
+//!   plus the retired `PERF-RS-STR-001` always-silent control. The nine
+//!   existential gate constructs are lifted VERBATIM from the committed M1
+//!   corpus (`tests/fixtures/precision/`), with every function/definition name
 //!   parameterized by a per-replica suffix so replicas can never collide on
 //!   the cross-file name-uniqueness gate that ARCH-003 depends on;
 //! - `medium`/`large` replicate the NINE gate rules UNCHANGED (the M1
@@ -77,6 +77,29 @@ const RS_STR_002: &str = "PERF-RS-STR-002";
 const RS_STR_003: &str = "PERF-RS-STR-003";
 const RS_TYPE_001: &str = "PERF-RS-TYPE-001";
 const RS_TYPE_002: &str = "PERF-RS-TYPE-002";
+
+const PY_ALLOC_001: &str = "PERF-PY-ALLOC-001";
+const PY_ALLOC_003: &str = "PERF-PY-ALLOC-003";
+const PY_ALLOC_004: &str = "PERF-PY-ALLOC-004";
+const PY_ARCH_001: &str = "PERF-PY-ARCH-001";
+const PY_ARCH_002: &str = "PERF-PY-ARCH-002";
+const PY_ARCH_003: &str = "PERF-PY-ARCH-003";
+const PY_ASYNC_001: &str = "PERF-PY-ASYNC-001";
+const PY_ASYNC_002: &str = "PERF-PY-ASYNC-002";
+const PY_CALL_001: &str = "PERF-PY-CALL-001";
+const PY_CALL_002: &str = "PERF-PY-CALL-002";
+const PY_COMPREHENSION_001: &str = "PERF-PY-COMPREHENSION-001";
+const PY_EXECUTOR_001: &str = "PERF-PY-EXECUTOR-001";
+const PY_LOOP_001: &str = "PERF-PY-LOOP-001";
+const PY_LOOP_002: &str = "PERF-PY-LOOP-002";
+const PY_LOOP_003: &str = "PERF-PY-LOOP-003";
+const PY_LOOP_007: &str = "PERF-PY-LOOP-007";
+const PY_LOOP_009: &str = "PERF-PY-LOOP-009";
+const PY_MEM_002: &str = "PERF-PY-MEM-002";
+const PY_N1_001: &str = "PERF-PY-N1-001";
+const PY_PANDAS_001: &str = "PERF-PY-PANDAS-001";
+const PY_PANDAS_002: &str = "PERF-PY-PANDAS-002";
+const PY_STR_001: &str = "PERF-PY-STR-001";
 
 /// 1-based line of `marker` inside `contents`; the marker MUST be unique —
 /// a duplicate or misplaced token fails loudly rather than silently anchoring
@@ -1727,6 +1750,665 @@ fn rust_ext() -> (Vec<GenFile>, Vec<Label>) {
 }
 
 // ===========================================================================
+// Python extension templates (plan `python-backend` W4). The six KPI rules'
+// fixtures are lifted VERBATIM from the committed `tests/fixtures/precision/
+// python/` corpus (so `assert_small_anchors_match_m1` holds); the rest are
+// dedicated minimal files under `py/`.
+// ===========================================================================
+
+const PY_KPI_ALLOC: &str = r#"# Precision corpus — Python alloc family (PERF-PY-ALLOC-001): planted true
+# positive. Silent controls live in `alloc_silent.py`.
+
+
+def build(n):
+    for _ in range(n):
+        buf = dict()  # TP PERF-PY-ALLOC-001
+        del buf
+"#;
+const PY_KPI_ALLOC_SILENT: &str = r#"# Precision corpus — Python alloc-family silent control (must stay silent).
+
+
+def hoisted():
+    return dict()  # silent PERF-PY-ALLOC-001 (constructor outside every loop)
+"#;
+const PY_KPI_ALLOC3: &str = r#"# Precision corpus — Python accumulation (PERF-PY-ALLOC-003): planted true
+# positive. Silent controls live in `alloc3_silent.py`.
+
+
+def grow(items):
+    acc = []
+    for item in items:
+        acc = acc + [item]  # TP PERF-PY-ALLOC-003
+    return acc
+"#;
+const PY_KPI_ALLOC3_SILENT: &str = r#"# Precision corpus — Python accumulation silent control (must stay silent).
+
+
+def rebuild(rows):
+    count = 0
+    for row in rows:
+        tmp = []
+        tmp.append(row)  # silent PERF-PY-ALLOC-003 (receiver rebuilt in loop)
+        count += len(tmp)
+    return count
+"#;
+const PY_KPI_STR: &str = r#"# Precision corpus — Python string building (PERF-PY-STR-001): planted true
+# positive. Silent controls live in `str_silent.py`.
+
+
+def build(pieces):
+    s = ""
+    for piece in pieces:
+        s += piece  # TP PERF-PY-STR-001
+    return s
+"#;
+const PY_KPI_STR_SILENT: &str = r#"# Precision corpus — Python string silent control (must stay silent).
+
+
+def prefix_read(pieces):
+    prefix = "["
+    last = ""
+    for piece in pieces:
+        last = prefix + piece  # silent PERF-PY-STR-001 (not accumulated)
+    return last
+"#;
+const PY_KPI_LOOP: &str = r#"# Precision corpus — Python list scan (PERF-PY-LOOP-007): planted true
+# positive. Silent controls live in `loop_silent.py`.
+
+
+def contains(rows):
+    table = [1, 2, 3]
+    hits = 0
+    for r in rows:
+        if r in table:  # TP PERF-PY-LOOP-007
+            hits += 1
+    return hits
+"#;
+const PY_KPI_LOOP_SILENT: &str = r#"# Precision corpus — Python list-scan silent control (must stay silent).
+
+
+def in_set(rows):
+    seen = {1, 2, 3}
+    for r in rows:
+        if r in seen:  # silent PERF-PY-LOOP-007 (set/dict container excluded)
+            return True
+    return False
+"#;
+const PY_KPI_ARCH: &str = r#"# Precision corpus — Python cross-module call coupling (PERF-PY-ARCH-003):
+# planted true positive. Silent controls live in `arch_silent.py`.
+
+
+def use(raw):
+    return py_unique_helper(raw, 0, 100)  # TP PERF-PY-ARCH-003
+"#;
+const PY_KPI_ARCH_HELPERS: &str = r#"# Precision corpus — Python cross-file callee definitions.
+
+
+def py_unique_helper(value, lo, hi):
+    """Uniquely defined corpus callee (the ARCH-003 true-positive target)."""
+    if value < lo:
+        return lo
+    if value > hi:
+        return hi
+    return value
+"#;
+const PY_KPI_ARCH_SILENT: &str = r#"# Precision corpus — Python cross-module coupling silent control.
+
+
+def wrapper(row):
+    return same_file_only(row)  # silent PERF-PY-ARCH-003 (same-file def)
+
+
+def same_file_only(row):
+    return row
+"#;
+const PY_KPI_MEM: &str = r#"# Precision corpus — Python container copy (PERF-PY-MEM-002): planted true
+# positive. Silent controls live in `mem_silent.py`.
+
+import copy
+
+
+def clone(rows):
+    last = None
+    for row in rows:
+        last = copy.deepcopy(row)  # TP PERF-PY-MEM-002
+    return last
+"#;
+const PY_KPI_MEM_SILENT: &str = r#"# Precision corpus — Python container-copy silent control (must stay silent).
+
+import copy
+
+
+def clone_once(rows):
+    return copy.deepcopy(rows)  # silent PERF-PY-MEM-002 (outside any loop)
+"#;
+
+const PY_ALLOC004: &str = r#"def materialise(rows):
+    total = 0
+    for row in rows:
+        total += len(list(row))  # TP PERF-PY-ALLOC-004
+    return total
+"#;
+const PY_ALLOC004_MARK: &str = "TP PERF-PY-ALLOC-004";
+const PY_ALLOC004_SILENT: &str = r#"def hoisted(rows):
+    return list(rows[0])
+"#;
+
+const PY_CYCLE_A: &str = r#"from .cycle_b import ping_b
+
+
+def walk(n):
+    return n
+"#;
+const PY_CYCLE_B: &str = r#"from .cycle_a import walk  # TP PERF-PY-ARCH-001
+
+
+def ping_b(n):
+    return n
+"#;
+const PY_CYCLE_MARK: &str = "TP PERF-PY-ARCH-001";
+const PY_CYCLE_LEAF: &str = r#"def leaf():
+    return 1
+"#;
+
+const PY_ASYNC001: &str = r#"import requests
+
+
+async def fetch(url):
+    return requests.get(url)  # TP PERF-PY-ASYNC-001
+"#;
+const PY_ASYNC001_MARK: &str = "TP PERF-PY-ASYNC-001";
+const PY_ASYNC001_SILENT: &str = r#"def fetch_sync(url):
+    return url
+"#;
+
+const PY_ASYNC002: &str = r#"async def fetch(url):
+    return url
+
+
+async def await_each(urls):
+    last = None
+    for url in urls:
+        last = await fetch(url)  # TP PERF-PY-ASYNC-002
+    return last
+"#;
+const PY_ASYNC002_MARK: &str = "TP PERF-PY-ASYNC-002";
+const PY_ASYNC002_SILENT: &str = r#"async def fetch(url):
+    return url
+
+
+async def one(url):
+    return await fetch(url)
+"#;
+
+const PY_CALL001: &str = r#"def walk(n):
+    if n <= 0:
+        return 0
+    return walk(n - 1)  # TP PERF-PY-CALL-001
+"#;
+const PY_CALL001_MARK: &str = "TP PERF-PY-CALL-001";
+const PY_CALL001_SILENT: &str = r#"def step(n):
+    return n - 1
+"#;
+
+const PY_COMPLEX: &str = r#"def complex_py(value):  # TP PERF-PY-CALL-002
+    score = 0
+    if value > 1:
+        score += 1
+    if value > 2:
+        score += 1
+    if value > 3:
+        score += 1
+    if value > 4:
+        score += 1
+    if value > 5:
+        score += 1
+    if value > 6:
+        score += 1
+    if value > 7:
+        score += 1
+    if value > 8:
+        score += 1
+    if value > 9:
+        score += 1
+    if value > 10:
+        score += 1
+    if value > 11:
+        score += 1
+    if value > 12:
+        score += 1
+    if value > 13:
+        score += 1
+    if value > 14:
+        score += 1
+    if value > 15:
+        score += 1
+    if value > 16:
+        score += 1
+    return score
+"#;
+const PY_COMPLEX_MARK: &str = "TP PERF-PY-CALL-002";
+const PY_COMPLEX_SILENT: &str = r#"def tiny(value):
+    return value + 1
+"#;
+
+const PY_COMPREHENSION: &str = r#"def transform(row):
+    return row * 2
+
+
+def collect(rows):
+    out = []
+    for row in rows:
+        out.append(transform(row))  # TP PERF-PY-COMPREHENSION-001
+    return out
+"#;
+const PY_COMPREHENSION_MARK: &str = "TP PERF-PY-COMPREHENSION-001";
+const PY_COMPREHENSION_SILENT: &str = r#"def plain(rows):
+    total = 0
+    for row in rows:
+        total += row
+    return total
+"#;
+
+const PY_EXECUTOR: &str = r#"from concurrent.futures import ThreadPoolExecutor
+
+
+def fan_out(tasks):
+    for task in tasks:
+        with ThreadPoolExecutor() as pool:  # TP PERF-PY-EXECUTOR-001
+            pool.submit(task)
+"#;
+const PY_EXECUTOR_MARK: &str = "TP PERF-PY-EXECUTOR-001";
+const PY_EXECUTOR_SILENT: &str = r#"from concurrent.futures import ThreadPoolExecutor
+
+
+def once(tasks):
+    with ThreadPoolExecutor() as pool:
+        return pool
+"#;
+
+const PY_LOOP001: &str = r#"def triple(a, b, c):
+    total = 0
+    for x in a:
+        for y in b:
+            for z in c:  # TP PERF-PY-LOOP-001
+                total += z
+    return total
+"#;
+const PY_LOOP001_MARK: &str = "TP PERF-PY-LOOP-001";
+const PY_LOOP001_SILENT: &str = r#"def double(a, b):
+    total = 0
+    for x in a:
+        for y in b:
+            total += x + y
+    return total
+"#;
+
+const PY_LOOP002: &str = r#"def read_each(paths):
+    total = 0
+    for p in paths:
+        fh = open(p)  # TP PERF-PY-LOOP-002
+        total += 1
+        del fh
+    return total
+"#;
+const PY_LOOP002_MARK: &str = "TP PERF-PY-LOOP-002";
+const PY_LOOP002_SILENT: &str = r#"def log_each(rows):
+    for row in rows:
+        print(row)
+"#;
+
+const PY_LOOP003: &str = r#"def positional(rows, seq):
+    total = 0
+    for _ in rows:
+        for i in range(len(seq)):  # TP PERF-PY-LOOP-003
+            total += i
+    return total
+"#;
+const PY_LOOP003_MARK: &str = "TP PERF-PY-LOOP-003";
+const PY_LOOP003_SILENT: &str = r#"def count(n):
+    total = 0
+    for i in range(n):
+        total += i
+    return total
+"#;
+
+const PY_LOOP009: &str = r#"def swallow(rows):
+    ok = 0
+    for row in rows:
+        try:  # TP PERF-PY-LOOP-009
+            ok += int(row)
+        except ValueError:
+            pass
+    return ok
+"#;
+const PY_LOOP009_MARK: &str = "TP PERF-PY-LOOP-009";
+const PY_LOOP009_SILENT: &str = r#"def guarded(rows):
+    try:
+        return rows[0]
+    except IndexError:
+        return None
+"#;
+
+const PY_N1: &str = r#"def fetch_each(conn, ids):
+    last = None
+    for i in ids:
+        last = conn.execute(i)  # TP PERF-PY-N1-001
+    return last
+"#;
+const PY_N1_MARK: &str = "TP PERF-PY-N1-001";
+const PY_N1_SILENT: &str = r#"def fetch_once(conn):
+    return conn.execute("select 1")
+"#;
+
+const PY_PANDAS001: &str = r#"import pandas as pd
+
+
+def row_wise(df):
+    total = 0
+    for _, row in df.iterrows():  # TP PERF-PY-PANDAS-001
+        total += row["x"]
+    return total
+"#;
+const PY_PANDAS001_MARK: &str = "TP PERF-PY-PANDAS-001";
+const PY_PANDAS001_SILENT: &str = r#"def vectorised(df):
+    return df["x"].mean()
+"#;
+
+const PY_PANDAS002: &str = r#"import pandas as pd
+
+
+def append_frames(frames):
+    out = None
+    for frame in frames:
+        out = pd.concat([out, frame])  # TP PERF-PY-PANDAS-002
+    return out
+"#;
+const PY_PANDAS002_MARK: &str = "TP PERF-PY-PANDAS-002";
+const PY_PANDAS002_SILENT: &str = r#"import pandas as pd
+
+
+def combine(frames):
+    return pd.concat(frames)
+"#;
+
+/// The 22 Python rules: the six lifted KPI fixtures (`python/`) plus sixteen
+/// dedicated `py/` templates. Mirrors `rust_ext()`.
+fn py_ext() -> (Vec<GenFile>, Vec<Label>) {
+    let files = vec![
+        gf("python/alloc.py".to_string(), PY_KPI_ALLOC.to_string()),
+        gf(
+            "python/alloc_silent.py".to_string(),
+            PY_KPI_ALLOC_SILENT.to_string(),
+        ),
+        gf("python/alloc3.py".to_string(), PY_KPI_ALLOC3.to_string()),
+        gf(
+            "python/alloc3_silent.py".to_string(),
+            PY_KPI_ALLOC3_SILENT.to_string(),
+        ),
+        gf("python/str.py".to_string(), PY_KPI_STR.to_string()),
+        gf(
+            "python/str_silent.py".to_string(),
+            PY_KPI_STR_SILENT.to_string(),
+        ),
+        gf("python/loop.py".to_string(), PY_KPI_LOOP.to_string()),
+        gf(
+            "python/loop_silent.py".to_string(),
+            PY_KPI_LOOP_SILENT.to_string(),
+        ),
+        gf("python/arch.py".to_string(), PY_KPI_ARCH.to_string()),
+        gf(
+            "python/arch_helpers.py".to_string(),
+            PY_KPI_ARCH_HELPERS.to_string(),
+        ),
+        gf(
+            "python/arch_silent.py".to_string(),
+            PY_KPI_ARCH_SILENT.to_string(),
+        ),
+        gf("python/mem.py".to_string(), PY_KPI_MEM.to_string()),
+        gf(
+            "python/mem_silent.py".to_string(),
+            PY_KPI_MEM_SILENT.to_string(),
+        ),
+        gf("py/alloc4.py".to_string(), PY_ALLOC004.to_string()),
+        gf(
+            "py/alloc4_silent.py".to_string(),
+            PY_ALLOC004_SILENT.to_string(),
+        ),
+        gf("py/cycle_a.py".to_string(), PY_CYCLE_A.to_string()),
+        gf("py/cycle_b.py".to_string(), PY_CYCLE_B.to_string()),
+        gf("py/cycle_leaf.py".to_string(), PY_CYCLE_LEAF.to_string()),
+        gf("py/asyncblock.py".to_string(), PY_ASYNC001.to_string()),
+        gf(
+            "py/asyncsilent.py".to_string(),
+            PY_ASYNC001_SILENT.to_string(),
+        ),
+        gf("py/awaitloop.py".to_string(), PY_ASYNC002.to_string()),
+        gf(
+            "py/awaitsilent.py".to_string(),
+            PY_ASYNC002_SILENT.to_string(),
+        ),
+        gf("py/selfcall.py".to_string(), PY_CALL001.to_string()),
+        gf(
+            "py/selfcall_silent.py".to_string(),
+            PY_CALL001_SILENT.to_string(),
+        ),
+        gf("py/complex_py.py".to_string(), PY_COMPLEX.to_string()),
+        gf(
+            "py/complex_low.py".to_string(),
+            PY_COMPLEX_SILENT.to_string(),
+        ),
+        gf(
+            "py/comprehension.py".to_string(),
+            PY_COMPREHENSION.to_string(),
+        ),
+        gf(
+            "py/comprehension_silent.py".to_string(),
+            PY_COMPREHENSION_SILENT.to_string(),
+        ),
+        gf("py/executor.py".to_string(), PY_EXECUTOR.to_string()),
+        gf(
+            "py/executor_silent.py".to_string(),
+            PY_EXECUTOR_SILENT.to_string(),
+        ),
+        gf("py/nest.py".to_string(), PY_LOOP001.to_string()),
+        gf(
+            "py/nest_silent.py".to_string(),
+            PY_LOOP001_SILENT.to_string(),
+        ),
+        gf("py/io.py".to_string(), PY_LOOP002.to_string()),
+        gf("py/io_silent.py".to_string(), PY_LOOP002_SILENT.to_string()),
+        gf("py/range.py".to_string(), PY_LOOP003.to_string()),
+        gf(
+            "py/range_silent.py".to_string(),
+            PY_LOOP003_SILENT.to_string(),
+        ),
+        gf("py/tryloop.py".to_string(), PY_LOOP009.to_string()),
+        gf(
+            "py/tryloop_silent.py".to_string(),
+            PY_LOOP009_SILENT.to_string(),
+        ),
+        gf("py/n1.py".to_string(), PY_N1.to_string()),
+        gf("py/n1_silent.py".to_string(), PY_N1_SILENT.to_string()),
+        gf("py/pandas1.py".to_string(), PY_PANDAS001.to_string()),
+        gf(
+            "py/pandas1_silent.py".to_string(),
+            PY_PANDAS001_SILENT.to_string(),
+        ),
+        gf("py/pandas2.py".to_string(), PY_PANDAS002.to_string()),
+        gf(
+            "py/pandas2_silent.py".to_string(),
+            PY_PANDAS002_SILENT.to_string(),
+        ),
+    ];
+
+    let labels = vec![
+        fire(
+            PY_ALLOC_001,
+            "python/alloc.py".to_string(),
+            PY_KPI_ALLOC,
+            "TP PERF-PY-ALLOC-001",
+        ),
+        silent(PY_ALLOC_001, "python/alloc_silent.py".to_string()),
+        fire(
+            PY_ALLOC_003,
+            "python/alloc3.py".to_string(),
+            PY_KPI_ALLOC3,
+            "TP PERF-PY-ALLOC-003",
+        ),
+        silent(PY_ALLOC_003, "python/alloc3_silent.py".to_string()),
+        fire(
+            PY_ALLOC_004,
+            "py/alloc4.py".to_string(),
+            PY_ALLOC004,
+            PY_ALLOC004_MARK,
+        ),
+        silent(PY_ALLOC_004, "py/alloc4_silent.py".to_string()),
+        fire(
+            PY_ARCH_001,
+            "py/cycle_b.py".to_string(),
+            PY_CYCLE_B,
+            PY_CYCLE_MARK,
+        ),
+        silent(PY_ARCH_001, "py/cycle_leaf.py".to_string()),
+        fire(
+            PY_ARCH_002,
+            "py/complex_py.py".to_string(),
+            PY_COMPLEX,
+            PY_COMPLEX_MARK,
+        ),
+        silent(PY_ARCH_002, "py/cycle_leaf.py".to_string()),
+        fire(
+            PY_ARCH_003,
+            "python/arch.py".to_string(),
+            PY_KPI_ARCH,
+            "TP PERF-PY-ARCH-003",
+        ),
+        silent(PY_ARCH_003, "python/arch_silent.py".to_string()),
+        fire(
+            PY_ASYNC_001,
+            "py/asyncblock.py".to_string(),
+            PY_ASYNC001,
+            PY_ASYNC001_MARK,
+        ),
+        silent(PY_ASYNC_001, "py/asyncsilent.py".to_string()),
+        fire(
+            PY_ASYNC_002,
+            "py/awaitloop.py".to_string(),
+            PY_ASYNC002,
+            PY_ASYNC002_MARK,
+        ),
+        silent(PY_ASYNC_002, "py/awaitsilent.py".to_string()),
+        fire(
+            PY_CALL_001,
+            "py/selfcall.py".to_string(),
+            PY_CALL001,
+            PY_CALL001_MARK,
+        ),
+        silent(PY_CALL_001, "py/selfcall_silent.py".to_string()),
+        fire(
+            PY_CALL_002,
+            "py/complex_py.py".to_string(),
+            PY_COMPLEX,
+            PY_COMPLEX_MARK,
+        ),
+        silent(PY_CALL_002, "py/complex_low.py".to_string()),
+        fire(
+            PY_COMPREHENSION_001,
+            "py/comprehension.py".to_string(),
+            PY_COMPREHENSION,
+            PY_COMPREHENSION_MARK,
+        ),
+        // Collateral: the single-append body also accumulates into `out`, so
+        // ALLOC-003 fires at the same coordinate.
+        fire(
+            PY_ALLOC_003,
+            "py/comprehension.py".to_string(),
+            PY_COMPREHENSION,
+            PY_COMPREHENSION_MARK,
+        ),
+        silent(
+            PY_COMPREHENSION_001,
+            "py/comprehension_silent.py".to_string(),
+        ),
+        fire(
+            PY_EXECUTOR_001,
+            "py/executor.py".to_string(),
+            PY_EXECUTOR,
+            PY_EXECUTOR_MARK,
+        ),
+        silent(PY_EXECUTOR_001, "py/executor_silent.py".to_string()),
+        fire(
+            PY_LOOP_001,
+            "py/nest.py".to_string(),
+            PY_LOOP001,
+            PY_LOOP001_MARK,
+        ),
+        silent(PY_LOOP_001, "py/nest_silent.py".to_string()),
+        fire(
+            PY_LOOP_002,
+            "py/io.py".to_string(),
+            PY_LOOP002,
+            PY_LOOP002_MARK,
+        ),
+        silent(PY_LOOP_002, "py/io_silent.py".to_string()),
+        fire(
+            PY_LOOP_003,
+            "py/range.py".to_string(),
+            PY_LOOP003,
+            PY_LOOP003_MARK,
+        ),
+        silent(PY_LOOP_003, "py/range_silent.py".to_string()),
+        fire(
+            PY_LOOP_007,
+            "python/loop.py".to_string(),
+            PY_KPI_LOOP,
+            "TP PERF-PY-LOOP-007",
+        ),
+        silent(PY_LOOP_007, "python/loop_silent.py".to_string()),
+        fire(
+            PY_LOOP_009,
+            "py/tryloop.py".to_string(),
+            PY_LOOP009,
+            PY_LOOP009_MARK,
+        ),
+        silent(PY_LOOP_009, "py/tryloop_silent.py".to_string()),
+        fire(
+            PY_MEM_002,
+            "python/mem.py".to_string(),
+            PY_KPI_MEM,
+            "TP PERF-PY-MEM-002",
+        ),
+        silent(PY_MEM_002, "python/mem_silent.py".to_string()),
+        fire(PY_N1_001, "py/n1.py".to_string(), PY_N1, PY_N1_MARK),
+        silent(PY_N1_001, "py/n1_silent.py".to_string()),
+        fire(
+            PY_PANDAS_001,
+            "py/pandas1.py".to_string(),
+            PY_PANDAS001,
+            PY_PANDAS001_MARK,
+        ),
+        silent(PY_PANDAS_001, "py/pandas1_silent.py".to_string()),
+        fire(
+            PY_PANDAS_002,
+            "py/pandas2.py".to_string(),
+            PY_PANDAS002,
+            PY_PANDAS002_MARK,
+        ),
+        silent(PY_PANDAS_002, "py/pandas2_silent.py".to_string()),
+        fire(
+            PY_STR_001,
+            "python/str.py".to_string(),
+            PY_KPI_STR,
+            "TP PERF-PY-STR-001",
+        ),
+        silent(PY_STR_001, "python/str_silent.py".to_string()),
+    ];
+
+    (files, labels)
+}
+
+// ===========================================================================
 // Gate units (the nine M1 rules) — UNCHANGED, and the only units replicated
 // into the medium/large scale ladder.
 // ===========================================================================
@@ -1844,7 +2526,7 @@ fn gate_rust_unit(s: &str) -> (Vec<GenFile>, Vec<Label>) {
 const FILES_PER_UNIT: usize = 22;
 
 /// The `small` rung: the nine M1 gate constructs plus a true positive and a
-/// silent control for EVERY remaining rule in the 45-rule catalog.
+/// silent control for EVERY remaining rule in the 67-rule catalog.
 pub fn small() -> Rung {
     let (mut files, mut labels) = gate_c_unit("");
     let (mut rf, mut rl) = gate_rust_unit("");
@@ -1895,6 +2577,10 @@ pub fn small() -> Rung {
     files.append(&mut ef);
     labels.append(&mut el);
     let (mut ef, mut el) = rust_ext();
+    files.append(&mut ef);
+    labels.append(&mut el);
+
+    let (mut ef, mut el) = py_ext();
     files.append(&mut ef);
     labels.append(&mut el);
 

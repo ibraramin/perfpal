@@ -1,0 +1,194 @@
+[
+  {
+    "file": {
+      "path": "neg/loop_007_set.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "neg/loop_007_set.py#check#1:1",
+          "name": "check",
+          "path": "neg/loop_007_set.py",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 13,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 13
+        },
+        "calls": [
+          {
+            "span": {
+              "start_line": 8,
+              "start_col": 9,
+              "end_line": 8,
+              "end_col": 22
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "callee_name": "index",
+            "callee_kind": "direct",
+            "callee_path": "seen.index",
+            "receiver_root": "seen",
+            "args": [],
+            "statement_role": "nested",
+            "conditional_guarded": false
+          }
+        ],
+        "assignments": [
+          {
+            "span": {
+              "start_line": 2,
+              "start_col": 1,
+              "end_line": 2,
+              "end_col": 10
+            },
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "target": {
+              "kind": "identifier",
+              "name": "seen"
+            },
+            "scope_class": "local",
+            "binding_kind": "set"
+          },
+          {
+            "span": {
+              "start_line": 3,
+              "start_col": 1,
+              "end_line": 3,
+              "end_col": 14
+            },
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "target": {
+              "kind": "identifier",
+              "name": "mapping"
+            },
+            "scope_class": "local",
+            "binding_kind": "dict"
+          }
+        ],
+        "binary_ops": [],
+        "comparisons": [
+          {
+            "span": {
+              "start_line": 5,
+              "start_col": 9,
+              "end_line": 5,
+              "end_col": 18
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "operator": "in",
+            "left": {
+              "kind": "identifier",
+              "name": "x"
+            },
+            "right": {
+              "kind": "identifier",
+              "name": "seen"
+            }
+          },
+          {
+            "span": {
+              "start_line": 6,
+              "start_col": 9,
+              "end_line": 6,
+              "end_col": 22
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "operator": "in",
+            "left": {
+              "kind": "identifier",
+              "name": "y"
+            },
+            "right": {
+              "kind": "identifier",
+              "name": "mapping"
+            }
+          }
+        ],
+        "access_chains": [
+          {
+            "span": {
+              "start_line": 7,
+              "start_col": 9,
+              "end_line": 7,
+              "end_col": 14
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "root": "seen",
+            "elements": [
+              {
+                "kind": "subscript",
+                "index_ident": "i"
+              }
+            ]
+          }
+        ],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": [
+              "i"
+            ],
+            "span": {
+              "start_line": 1,
+              "start_col": 1,
+              "end_line": 12,
+              "end_col": 1
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "awaits": [],
+        "try_blocks": []
+      }
+    ]
+  }
+]

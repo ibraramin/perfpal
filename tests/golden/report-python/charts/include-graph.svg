@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="690" height="868" viewBox="0 0 690 868">
+<g stroke="#999999" stroke-width="1">
+<line x1="210" y1="671" x2="260" y2="55"/>
+<line x1="210" y1="759" x2="260" y2="99"/>
+<line x1="210" y1="759" x2="480" y2="55"/>
+<line x1="430" y1="99" x2="480" y2="55"/>
+</g>
+<g font-family="monospace" font-size="11">
+<rect x="40" y="40" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="59">01_alloc_churn.py</text>
+<rect x="40" y="84" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="103">02_string_building.py</text>
+<rect x="40" y="128" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="147">03_deep_nesting.py</text>
+<rect x="40" y="172" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="191">04_stdio_churn.py</text>
+<rect x="40" y="216" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="235">05_recursion_complexity.py</text>
+<rect x="40" y="260" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="279">06_memory_ops.py</text>
+<rect x="40" y="304" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="323">07_membership_scan.py</text>
+<rect x="40" y="348" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="367">08_range_len.py</text>
+<rect x="40" y="392" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="411">09_try_in_loop.py</text>
+<rect x="40" y="436" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="455">10_comprehension.py</text>
+<rect x="40" y="480" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="499">11_executors.py</text>
+<rect x="40" y="524" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="543">12_io_n1.py</text>
+<rect x="40" y="568" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="587">13_pandas.py</text>
+<rect x="40" y="612" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="631">14_async_blocking.py</text>
+<rect x="40" y="656" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="675">15_cross_file_and_arch.py</text>
+<rect x="40" y="700" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="719">__init__.py</text>
+<rect x="40" y="744" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="45" y="763">pkg/__init__.py</text>
+<rect x="260" y="40" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="265" y="59">pkg/arch_helpers.py</text>
+<rect x="260" y="84" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="265" y="103">pkg/cycle_a.py</text>
+<rect x="480" y="40" width="170" height="30" fill="#dbe9ff" stroke="#4a6fa5"/>
+<text x="485" y="59">pkg/cycle_b.py</text>
+</g>
+<text x="40" y="840" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
+</svg>

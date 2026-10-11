@@ -1,0 +1,84 @@
+[
+  {
+    "file": {
+      "path": "pos/arch_a.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "pos/arch_a.py",
+        "to_path": "pos/arch_b.py",
+        "form": "quoted",
+        "resolved": true,
+        "is_mod": false,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 20
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  },
+  {
+    "file": {
+      "path": "pos/arch_b.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 0,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [
+      {
+        "from_path": "pos/arch_b.py",
+        "to_path": "pos/arch_a.py",
+        "form": "quoted",
+        "resolved": true,
+        "is_mod": false,
+        "span": {
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 1,
+          "end_col": 20
+        }
+      }
+    ],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": []
+  }
+]

@@ -1,0 +1,119 @@
+[
+  {
+    "file": {
+      "path": "neg/loop_007.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "neg/loop_007.py#check#1:1",
+          "name": "check",
+          "path": "neg/loop_007.py",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 6,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 6
+        },
+        "calls": [],
+        "assignments": [
+          {
+            "span": {
+              "start_line": 2,
+              "start_col": 1,
+              "end_line": 2,
+              "end_col": 10
+            },
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "target": {
+              "kind": "identifier",
+              "name": "seq"
+            },
+            "scope_class": "local",
+            "binding_kind": "list"
+          }
+        ],
+        "binary_ops": [],
+        "comparisons": [
+          {
+            "span": {
+              "start_line": 4,
+              "start_col": 9,
+              "end_line": 4,
+              "end_col": 18
+            },
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "operator": "in",
+            "left": {
+              "kind": "identifier",
+              "name": "x"
+            },
+            "right": {
+              "kind": "identifier",
+              "name": "seq"
+            }
+          }
+        ],
+        "access_chains": [
+          {
+            "span": {
+              "start_line": 5,
+              "start_col": 9,
+              "end_line": 5,
+              "end_col": 14
+            },
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "root": "seq",
+            "elements": [
+              {
+                "kind": "subscript",
+                "index_ident": "i"
+              }
+            ]
+          }
+        ],
+        "loops": [],
+        "awaits": [],
+        "try_blocks": []
+      }
+    ]
+  }
+]

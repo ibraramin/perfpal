@@ -125,20 +125,16 @@ pub(crate) fn python_arch_002(units: &[FileUnit]) -> Vec<Finding> {
             entry.complexity_sum += u64::from(func.record.cyclomatic_complexity);
             entry.max_loop_depth = entry.max_loop_depth.max(func.record.max_loop_depth);
             entry.function_count += 1;
-            let key = (
-                u32::MAX - func.record.cyclomatic_complexity,
-                func.record.span,
-            );
             let slot =
                 anchors
                     .entry(dir)
                     .or_insert((0, func.record.span, func.record.path.clone()));
             if func.record.cyclomatic_complexity > slot.0
-                || (func.record.cyclomatic_complexity == slot.0 && key.1 < slot.1)
+                || (func.record.cyclomatic_complexity == slot.0 && func.record.span < slot.1)
             {
                 *slot = (
                     func.record.cyclomatic_complexity,
-                    key.1,
+                    func.record.span,
                     func.record.path.clone(),
                 );
             }

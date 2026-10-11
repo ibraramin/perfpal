@@ -57,14 +57,15 @@ number. The full labels/scoring contract lives in
 **Coverage.**
 
 - The `small` rung plants a true positive and an explicit `Silent` control for
-  **ALL 45 active rules** (23 C + 22 Rust), plus the retired `PERF-RS-STR-001`
-  always-silent control. The harness asserts the set of rules carrying a `Fire`
-  label **equals** the 45 active rule ids (derived from the product's public
-  rule-id constants, so a deleted corpus unit fails the suite), that `Silent`
-  coverage is exactly those 45 plus `PERF-RS-STR-001`, and that every
-  `baseline.json` key is planted by at least one rung (no stale entries). The
-  nine existential M1 gate constructs are lifted **verbatim** from the
-  committed M1 corpus, retaining every M1 fire anchor.
+  **ALL 67 active rules** (23 C + 22 Python + 22 Rust), plus the retired
+  `PERF-RS-STR-001` always-silent control. The harness asserts the set of rules
+  carrying a `Fire` label **equals** the 67 active rule ids (derived from the
+  product's public rule-id constants, so a deleted corpus unit fails the suite),
+  that `Silent` coverage is exactly those 67 plus `PERF-RS-STR-001`, and that
+  every `baseline.json` key is planted by at least one rung (no stale entries).
+  The nine existential M1 gate constructs are lifted **verbatim** from the
+  committed M1 corpus (including the six Python KPI fixtures, plan
+  `python-backend` W4), retaining every M1 fire anchor.
 - `medium` / `large` replicate the **NINE** existential M1 gate rules
   (`ALLOC-001`, `ARCH-003`, `MEM-002`, `LOOP-008`, `STR-001` × C+Rust) with
   **per-replica unique names** (`_k` suffix) so replicas can never trip the
@@ -96,7 +97,7 @@ the only exemption is the retired `PERF-RS-STR-001` (mirrors the M1 guard in
 rule must be inside the scored set.
 
 The ratchet is **per rung**, scoped to the rules that rung actually plants
-(`small` ratchets all 45 active rules + the retired control; `medium`/`large`
+(`small` ratchets all 67 active rules + the retired control; `medium`/`large`
 ratchet only the nine gate rules they replicate). Measured precision/recall
 **MUST** be `>=` baseline; a shortfall is a **real analyzer gap or a corpus
 bug** — never a reason to lower the baseline.
@@ -116,7 +117,7 @@ Pasted from `cargo test --locked --test benchmark -- --nocapture`:
 # M2 benchmark suite — measured per-rule precision/recall
 
 Baseline: `tests/fixtures/benchmark/baseline.json` (intended 1.0/1.0 ratchet).
-Scoped rules: 46 (45 active rules + retired PERF-RS-STR-001); the `small` rung plants all of them, while `medium`/`large` replicate the nine gate rules only.
+Scoped rules: 68 (67 active rules + retired PERF-RS-STR-001); the `small` rung plants all of them, while `medium`/`large` replicate the nine gate rules only.
 Corpus: deterministic in-code mutation catalog (`tests/benchmark/corpus.rs`).
 
 scanned 69 files (69 ok, 0 partial, 0 failed) · 50 findings (12 hot, 20 warn, 18 info)
@@ -298,7 +299,7 @@ on unwind.
 | | M1 | M2 |
 |---|---|---|
 | **What** | lightweight hand-labeled per-rule KPI | the same rigor at scale |
-| **Coverage** | 9 gate rules | all 45 active rules at `small`; 9 gate rules at `medium`/`large` |
+| **Coverage** | 9 gate rules | all 67 active rules at `small`; 9 gate rules at `medium`/`large` |
 | **Determinism** | not a proof | byte-level two-run determinism proof |
 | **Record** | `docs/evidence/precision-baseline.md` | this document |
 

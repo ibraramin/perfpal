@@ -68,6 +68,13 @@ The schema artifact was re-emitted as `metrics.schema.v1.1.json` (the v1.0 copy,
 
 The schema artifact was re-emitted as `metrics.schema.v1.2.json` (the v1.1 and v1.0 copies are kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.2 name.
 
+**Minor bump v1.2 → v1.3 (2026-10-11, plan `python-backend` W3).** Two additive widenings, the same shape as v1.1 → v1.2. The v1.2 field set remains valid under v1.3 with the version marker updated to `"1.3"`:
+
+1. **`scan.languages`** — item schema widened from `enum ["c","rust"]` to `enum ["c","python","rust"]`; still derived from the scanned files (sorted-unique `files[].language`), and a zero-file scan emits the supported set `["c","python","rust"]`.
+2. **`files[].language`** — widened from `enum ["c","rust"]` to `enum ["c","python","rust"]`, admitting Python (`.py`/`.pyi`) scanned files.
+
+The schema artifact was re-emitted as `metrics.schema.v1.3.json` (the v1.2, v1.1 and v1.0 copies are kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.3 name.
+
 ## 6. Worked example
 
 ```json

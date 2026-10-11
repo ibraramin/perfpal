@@ -1,7 +1,7 @@
 //! P6 hardening gates (modules.md §7): finding-id uniqueness (composite-id
 //! contract, modules.md §1 analyzer row) and golden-report locking.
 //!
-//! Golden flow (three committed trees, see [`GOLDEN_TREES`]): each tree is a
+//! Golden flow (four committed trees, see [`GOLDEN_TREES`]): each tree is a
 //! FULL pipeline output over its fixture, masked in place for every
 //! run-varying field. Regenerate ALL trees with:
 //!
@@ -42,10 +42,11 @@ struct GoldenTree {
     golden: &'static str,
 }
 
-/// The three locked trees. `c` is the original (T1 uniqueness stays pointed
+/// The four locked trees. `c` is the original (T1 uniqueness stays pointed
 /// here); `mixed` (`.c` + `.h` + `.rs`) and `rust` (`examples-rust/`) are the
-/// R5 Wave 2 additions.
-const GOLDEN_TREES: [GoldenTree; 3] = [
+/// R5 Wave 2 additions; `python` (`examples-python/`) is the plan
+/// `python-backend` W4 Lane 5 addition.
+const GOLDEN_TREES: [GoldenTree; 4] = [
     GoldenTree {
         tag: "c",
         fixture: "tests/fixtures/e2e",
@@ -60,6 +61,11 @@ const GOLDEN_TREES: [GoldenTree; 3] = [
         tag: "rust",
         fixture: "examples-rust",
         golden: "tests/golden/report-rust",
+    },
+    GoldenTree {
+        tag: "python",
+        fixture: "examples-python",
+        golden: "tests/golden/report-python",
     },
 ];
 

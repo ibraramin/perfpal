@@ -1,0 +1,104 @@
+[
+  {
+    "file": {
+      "path": "pos/loop_001.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "pos/loop_001.py#nest#1:1",
+          "name": "nest",
+          "path": "pos/loop_001.py",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 11,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 5,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 3,
+          "alloc_site_count": 0,
+          "length_lines": 11
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": [
+              "i"
+            ],
+            "span": {
+              "start_line": 1,
+              "start_col": 1,
+              "end_line": 10,
+              "end_col": 1
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "kind": "for",
+            "depth": 2,
+            "induction_vars": [
+              "j"
+            ],
+            "span": {
+              "start_line": 2,
+              "start_col": 5,
+              "end_line": 9,
+              "end_col": 6
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          },
+          {
+            "kind": "for",
+            "depth": 3,
+            "induction_vars": [
+              "k"
+            ],
+            "span": {
+              "start_line": 3,
+              "start_col": 9,
+              "end_line": 8,
+              "end_col": 10
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "awaits": [],
+        "try_blocks": []
+      }
+    ]
+  }
+]

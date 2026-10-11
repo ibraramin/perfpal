@@ -1,0 +1,87 @@
+[
+  {
+    "file": {
+      "path": "pos/loop_009.py",
+      "language": "python",
+      "loc": {
+        "code": 10,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "pos/loop_009.py#guarded#1:1",
+          "name": "guarded",
+          "path": "pos/loop_009.py",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 9,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 2,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 9
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": [
+              "i"
+            ],
+            "span": {
+              "start_line": 1,
+              "start_col": 1,
+              "end_line": 9,
+              "end_col": 1
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "awaits": [],
+        "try_blocks": [
+          {
+            "span": {
+              "start_line": 5,
+              "start_col": 5,
+              "end_line": 5,
+              "end_col": 20
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      }
+    ]
+  }
+]

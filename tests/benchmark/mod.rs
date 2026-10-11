@@ -36,23 +36,23 @@ pub mod corpus;
 
 /// The one retired rule id (M1 Precision Gate): a reserved const with no
 /// registry emitter. It is silent-only by design, so the no-vacuous-cell guard
-/// exempts it and it is excluded from the 45-rule active catalog.
+/// exempts it and it is excluded from the 67-rule active catalog.
 const RETIRED_RULE_ID: &str = "PERF-RS-STR-001";
 
-/// The 45 active rule ids, derived from the PRODUCT's public rule-id
+/// The 67 active rule ids, derived from the PRODUCT's public rule-id
 /// constants (`perfpal::analyzer::finding`) — NOT from the corpus or the
 /// baseline — so deleting a corpus unit can never silently shrink the scored
 /// set: the M2 assertion `fire_set(small) == active_rule_ids()` fails loudly
 /// instead.
 ///
-/// The product registry exposes 45 registered ids (23 `PERF-C-*` + 22
-/// `PERF-RS-*`); `PERF-RS-STR-001` is a reserved const with no registry
-/// entry, so it is deliberately absent here. (`perfpal::analyzer::
+/// The product registry exposes 67 registered ids (23 `PERF-C-*` + 22
+/// `PERF-PY-*` + 22 `PERF-RS-*`); `PERF-RS-STR-001` is a reserved const with no
+/// registry entry, so it is deliberately absent here. (`perfpal::analyzer::
 /// registered_rule_ids()` would be the direct source, but it is `pub(crate)`
 /// and this task forbids `src/` changes; the public consts are the same
 /// authoritative ids. The in-crate test
 /// `reporter::tests::catalog_covers_every_registry_rule_id` locks the
-/// registry itself to exactly 45 ids, so a new registry rule still fails the
+/// registry itself to exactly 67 ids, so a new registry rule still fails the
 /// suite.)
 fn active_rule_ids() -> BTreeSet<&'static str> {
     use perfpal::analyzer::finding::*;
@@ -102,6 +102,28 @@ fn active_rule_ids() -> BTreeSet<&'static str> {
         RS_STR_003_RULE_ID,
         RS_TYPE_001_RULE_ID,
         RS_TYPE_002_RULE_ID,
+        PY_ALLOC_001_RULE_ID,
+        PY_ALLOC_003_RULE_ID,
+        PY_ALLOC_004_RULE_ID,
+        PY_ARCH_001_RULE_ID,
+        PY_ARCH_002_RULE_ID,
+        PY_ARCH_003_RULE_ID,
+        PY_ASYNC_001_RULE_ID,
+        PY_ASYNC_002_RULE_ID,
+        PY_CALL_001_RULE_ID,
+        PY_CALL_002_RULE_ID,
+        PY_COMPREHENSION_001_RULE_ID,
+        PY_EXECUTOR_001_RULE_ID,
+        PY_LOOP_001_RULE_ID,
+        PY_LOOP_002_RULE_ID,
+        PY_LOOP_003_RULE_ID,
+        PY_LOOP_007_RULE_ID,
+        PY_LOOP_009_RULE_ID,
+        PY_MEM_002_RULE_ID,
+        PY_N1_001_RULE_ID,
+        PY_PANDAS_001_RULE_ID,
+        PY_PANDAS_002_RULE_ID,
+        PY_STR_001_RULE_ID,
     ]
     .into_iter()
     .collect()
@@ -217,7 +239,7 @@ pub fn run_suite() {
     println!("\n# M2 benchmark suite — measured per-rule precision/recall\n");
     println!("Baseline: `tests/fixtures/benchmark/baseline.json` (intended 1.0/1.0 ratchet).");
     println!(
-        "Scoped rules: {} (45 active rules + retired PERF-RS-STR-001); the `small` rung \
+        "Scoped rules: {} (67 active rules + retired PERF-RS-STR-001); the `small` rung \
          plants all of them, while `medium`/`large` replicate the nine gate rules only.",
         baseline.len()
     );
@@ -305,7 +327,7 @@ fn assert_small_anchors_match_m1(small: &Rung) {
         .filter(|l| l.expect == Expect::Fire)
         .map(|l| (l.rule_id.to_string(), l.rel_path.clone(), l.line))
         .collect();
-    // The small rung now plants the full 45-rule catalog, so it is a SUPERSET
+    // The small rung now plants the full 67-rule catalog, so it is a SUPERSET
     // of the M1 corpus: every committed M1 fire anchor must still be present
     // verbatim (the nine gate constructs are lifted unmodified), while the
     // added coverage contributes extra anchors that M1 never had.
@@ -317,13 +339,13 @@ fn assert_small_anchors_match_m1(small: &Rung) {
 }
 
 /// M2: the `small` rung MUST carry exactly one `Fire` label for every one of
-/// the 45 active rules (and no other rule), so an extension unit deleted from
+/// the 67 active rules (and no other rule), so an extension unit deleted from
 /// the catalog can never silently drop a rule from scoring. M4: it must also
 /// carry an explicit `Silent` control for every active rule (plus the retired
 /// always-silent `PERF-RS-STR-001`).
 fn assert_small_covers_catalog(small: &Rung) {
     let active = active_rule_ids();
-    assert_eq!(active.len(), 45, "active catalog must be 45 rule ids");
+    assert_eq!(active.len(), 67, "active catalog must be 67 rule ids");
 
     let fired: BTreeSet<&str> = small
         .labels
@@ -339,7 +361,7 @@ fn assert_small_covers_catalog(small: &Rung) {
     );
     assert!(
         extra_fire.is_empty(),
-        "small rung fires rule(s) outside the 45-rule active catalog: {extra_fire:?}"
+        "small rung fires rule(s) outside the 67-rule active catalog: {extra_fire:?}"
     );
 
     let silenced: BTreeSet<&str> = small
@@ -422,7 +444,7 @@ fn run_labeled_rung(rung: &Rung, baseline: &BTreeMap<String, (f64, f64)>) {
     // finding would be silently unscored. Conversely the ratchet is scoped to
     // the rules the rung actually plants: `medium`/`large` replicate only the
     // nine gate rules (plus the retired always-silent control), so their
-    // KPI stays the committed M1 set, while `small` ratchets all 45.
+    // KPI stays the committed M1 set, while `small` ratchets all 67.
     let planted: BTreeSet<&str> = rung.labels.iter().map(|l| l.rule_id).collect();
     for rule in &planted {
         assert!(
@@ -909,8 +931,9 @@ fn write_diff(dir: &Path, name: &str, run1: &[u8], run2: &[u8]) -> String {
 // ---------------------------------------------------------------------------
 
 /// One mixed-language scan over the repo's OWN committed corpora (`src/` Rust,
-/// `examples/` C, `examples-rust/` Rust), snapshotted read-only into a tempdir
-/// (so `target/` never inflates it) and run twice. Counts only — no labels.
+/// `examples/` C, `examples-rust/` Rust, `examples-python/` Python), snapshotted
+/// read-only into a tempdir (so `target/` never inflates it) and run twice.
+/// Counts only — no labels.
 fn run_real_code_rung() {
     let tree = TempTree::new("real-code");
     let scan = tree.root.join("scan");
@@ -920,6 +943,11 @@ fn run_real_code_rung() {
     common::copy_tree_excluding(
         &repo.join("examples-rust"),
         &scan.join("examples-rust"),
+        "target",
+    );
+    common::copy_tree_excluding(
+        &repo.join("examples-python"),
+        &scan.join("examples-python"),
         "target",
     );
 
@@ -933,7 +961,9 @@ fn run_real_code_rung() {
     let findings = doc["findings"].as_array().map_or(0, Vec::len);
     let summary = &doc["parse_health_summary"];
     println!("### Rung `real-code` (unlabeled, counts only)\n");
-    println!("Committed mixed scan: `src/` (Rust) + `examples/` (C) + `examples-rust/` (Rust).\n");
+    println!(
+        "Committed mixed scan: `src/` (Rust) + `examples/` (C) + `examples-rust/` (Rust) + `examples-python/` (Python).\n"
+    );
     println!("- files scanned: {files}");
     println!("- findings: {findings}");
     println!(

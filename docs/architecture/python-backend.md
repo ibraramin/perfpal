@@ -17,11 +17,11 @@ Phase W1 closes the pre-conditions for writing the Python scanner backend: (a) p
 - The CI guard: the pair must link and parse a representative Python module with zero `ERROR`/missing nodes (`tests/python_grammar_link.rs`).
 - This mapping table (§3), the inference/additive-field plan (§4), import resolution (§5), async (§6), notebooks (§7), tier statement (§8), and the disposition table (§9).
 
-**Deferred (not built by W1):**
+**Phases (W2–W4 all landed):**
 
-- **W2** — `src/scanner/backends/tree_sitter_python/` implementing the same `Extraction` interface as the C/Rust backends; extension dispatch (`.py`/`.pyi` → python); `FileRecord.language = "python"`; the minimal binding/alias inference pass and the best-effort import-resolution pass (§4–§5).
-- **W3** — the `PERF-PY-*` catalog (§9), the registry/reporter wiring, and the schema MINOR 1.2 → 1.3 (admitting the `"python"` token).
-- **W4** — `examples-python/` proof, precision KPI, benchmark ladder, goldens, docs.
+- **W2 ✅** — `src/scanner/backends/tree_sitter_python/` implementing the same `Extraction` interface as the C/Rust backends; extension dispatch (`.py`/`.pyi` → python); `FileRecord.language = "python"`; the minimal binding/alias inference pass and the best-effort import-resolution pass (§4–§5).
+- **W3 ✅** — the `PERF-PY-*` catalog (§9), the registry/reporter wiring, and the schema MINOR 1.2 → 1.3 (admitting the `"python"` token).
+- **W4 ✅** — `examples-python/` proof (20 files, all 22 rules fire exactly; `tests/examples_python_coverage.rs`), parser-free IR fixtures + negatives, the precision KPI (6 Python rules at 1.0/1.0), the benchmark ladder (67-rule `small` rung), the `report-python` golden tree, and docs. Evidence: [`docs/evidence/dogfood-python-backend.md`](../evidence/dogfood-python-backend.md).
 
 **No new ADR is required for W1 (or for the language addition itself), because the IR contract does not change.** The IR is keyed `(path, name, span)` and shaped by records/events, never by grammar node kinds ([ADR-0001](../adr/ADR-0001-parser-strategy.md); [ir-v1.md §1](./ir-v1.md)). Only **additive, serde-defaulted** IR fields are introduced (§4); a change to the IR *contract* would require an ADR, and W2–W4 must avoid it.
 
@@ -249,9 +249,9 @@ This table resolves the "mirror the full 23-rule catalog vs retire-10" conflict 
 | `MEM-002` | `PERF-PY-MEM-002` | **TRANSFER (Info)** | Container copy/`deepcopy` in a loop; partial Ruff overlap (`PERF402`). |
 | `CALL-001` | `PERF-PY-CALL-001` | **TRANSFER (Info)** | Recursion framed as `RecursionError`/depth, not C stack cost; low frequency. |
 | `CALL-002` | `PERF-PY-CALL-002` | **TRANSFER (Info)** | Cyclomatic ≥ 15; low-but-plausible (2.44/1.83 per kLOC). |
-| `ARCH-001` | `PERF-PY-ARCH-001` | **TRANSFER, measure first** | Import cycles / deep chains; abundant structure but thresholds not decision-grade in W0 — defer thresholds to W2/W4. |
-| `ARCH-002` | `PERF-PY-ARCH-002` | **TRANSFER, Info/low** | Hot-component aggregation; expected noisy on Python; **not measured in W0** — measure in W4. |
-| `ARCH-003` | `PERF-PY-ARCH-003` | **TRANSFER, Info/low** | Name-based call coupling is noisier on Python (duck typing, ubiquitous `get`/`save`/`run`); **not measured in W0** — measure in W4. |
+| `ARCH-001` | `PERF-PY-ARCH-001` | **TRANSFER, measure first** | Import cycles / deep chains; abundant structure but thresholds not decision-grade. **W4:** fires on a resolved 2-cycle in `examples-python/` (`pkg/cycle_a` ↔ `pkg/cycle_b`); thresholds stay conservative. |
+| `ARCH-002` | `PERF-PY-ARCH-002` | **TRANSFER, Info/low** | Hot-component aggregation; expected noisy on Python. **W4:** measured on `examples-python/` (fires on the rank-1 component); the floor (`complexity_sum ≥ 40`) stays conservative/Info. |
+| `ARCH-003` | `PERF-PY-ARCH-003` | **TRANSFER, Info/low** | Name-based call coupling is noisier on Python (duck typing, ubiquitous `get`/`save`/`run`). **W4:** measured on `examples-python/` (Info/LOW, name-based); the accepted FP class is documented. |
 
 ### 9.3 Python-native additions
 
@@ -260,7 +260,7 @@ This table resolves the "mirror the full 23-rule catalog vs retire-10" conflict 
 | `PERF-PY-LOOP-009` | `try`/`except` inside a loop | Info | **Implemented (W3)** — fires on any `TryEvent` with `meta.in_loop_depth ≥ 1`. Surfaced by the Ruff `PERF203` baseline; real footprint; honest that the zero-cost-`try` claim is version-dependent (CPython ≥ 3.11). |
 | `PERF-PY-PANDAS-001` | row-wise pandas (`iterrows`/`itertuples`/`apply(axis=1)`) | Info | Required by ADR-0007 §6; near-zero on the W0 corpora (4 hits) — not pandas-heavy. Receiver-root gated. |
 | `PERF-PY-PANDAS-002` | `concat`/`DataFrame.append` in a loop | Info | Required by ADR-0007 §6; **0 hits** on both corpora — ships with the frequency caveat; `.append` indistinguishable from `list.append` syntactically. |
-| `PERF-PY-ALLOC-004` | `list()`/`dict()`/`set()` materialisation churn (eager re-materialisation of an iterable, esp. in a loop) | Info | Required by ADR-0007 §6 / plan native list. Mechanism: `list(gen)`/`dict(pairs)` forces an eager O(n) allocation + copy and defeats laziness. **Not measured in W0** (the canary had no row for it) — ships Info and is measured in W4. |
+| `PERF-PY-ALLOC-004` | `list()`/`dict()`/`set()` materialisation churn (eager re-materialisation of an iterable, esp. in a loop) | Info | Required by ADR-0007 §6 / plan native list. Mechanism: `list(gen)`/`dict(pairs)` forces an eager O(n) allocation + copy and defeats laziness. **W4:** demonstrated firing in `examples-python/` and in the benchmark/precision fixtures; ships Info. |
 | `PERF-PY-N1-001` | DB/HTTP call in a loop (N+1) | **Flagship** | Native; real production footprint (chunkhound 66 prod; `CTL-N1-NOLOOP` 332). Receiver-root + call-name family gated. |
 | `PERF-PY-ASYNC-001` | blocking call inside `async def` | **High-value** | Highest-value native rule; `async def` gate proven necessary (`CTL-SLEEP-SYNC` 166 vs 0). |
 | `PERF-PY-ASYNC-002` | `await` in a loop | Native | 1.36/kLOC prod on the async corpus; loop-gating proven necessary (`CTL-AWAIT-NOLOOP`). |
@@ -280,6 +280,6 @@ This table resolves the "mirror the full 23-rule catalog vs retire-10" conflict 
 - **Inference is single-assignment and best-effort** — a name reused to a different kind degrades to `unknown`; flagships are MEDIUM-confidence, never `semantic`.
 - **Attribute-path key is root-only** — `self.results` vs `self.tmp` share root `self` (the canary's disclosed undercount; `python-canary.md §9`). A full attribute-path key is a possible W2 refinement if `ALLOC-003` precision demands it.
 - **`PANDAS-002`/`PANDAS-001` matching is name-based** — can fire on non-pandas objects with the same method names (accepted FP class).
-- **`ARCH-*` thresholds are unmeasured** on Python; they ship conservative/Info and are **measured in W4** (not asserted).
+- **`ARCH-*` thresholds are not decision-grade** on Python; they ship conservative/Info and were **measured in W4** on `examples-python/` (each fires; the thresholds are not asserted).
 - **`.ipynb` excluded** (§7); **`python-resolver` (T2)** and **runtime profiles (T3)** are out of scope.
 - **Decorators** yield `MacroEvent`s but no rule consumes them yet (W3 decides).
