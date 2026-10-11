@@ -220,7 +220,17 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
 fn discover(root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut stack = vec![root.to_path_buf()];
+    // Cycle guard (cross-platform hardening): follow nothing twice. `is_symlink`
+    // below skips POSIX symlinks, but a Windows directory *junction* reports
+    // `is_dir() == true` and is NOT `is_symlink()`, so without this a junction
+    // cycle would re-enter without bound. Canonicalize each popped directory and
+    // visit each real directory at most once (deterministic BTreeSet).
+    let mut visited: std::collections::BTreeSet<PathBuf> = std::collections::BTreeSet::new();
     while let Some(dir) = stack.pop() {
+        let real = dir.canonicalize().unwrap_or_else(|_| dir.clone());
+        if !visited.insert(real) {
+            continue;
+        }
         let entries = match fs::read_dir(&dir) {
             Ok(entries) => entries,
             Err(_) => continue, // unreadable subdir: skip silently, v1 has no counter for it

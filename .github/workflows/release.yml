@@ -167,7 +167,10 @@ jobs:
         shell: pwsh
         run: |
           $cargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { "$env:USERPROFILE\.cargo" }
-          $env:RUSTFLAGS = "--remap-path-prefix=$env:GITHUB_WORKSPACE=/perfpal --remap-path-prefix=$cargoHome=/cargo"
+          # `+crt-static` statically links the MSVC CRT so the shipped .exe is
+          # self-contained (no VCRUNTIME140.dll / UCRT dependency on the host);
+          # cross-platform audit M3.
+          $env:RUSTFLAGS = "--remap-path-prefix=$env:GITHUB_WORKSPACE=/perfpal --remap-path-prefix=$cargoHome=/cargo -C target-feature=+crt-static"
           cargo build --release --locked --target x86_64-pc-windows-msvc --features semantic-clang
 
       # Rename to the target-suffixed name (same rationale as the Unix jobs).

@@ -258,6 +258,7 @@ fn unreadable_target_directory_is_usage_error() {
 }
 
 #[test]
+#[cfg(unix)]
 fn per_file_read_failure_becomes_failed_health_not_abort() {
     use std::os::unix::fs::PermissionsExt;
     let root = temp_root("unreadable");

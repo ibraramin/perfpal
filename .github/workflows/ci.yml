@@ -103,3 +103,28 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25
         with:
           command: check licenses
+
+  # Cross-platform guard (plan `python-backend` W4 follow-up / cross-platform
+  # audit): previously NO CI job ran on Windows, so a Windows compile break (an
+  # ungated `std::os::unix` test) and a Windows-only resolver path bug went
+  # unnoticed until a tag. This job type-checks every target on MSVC so a
+  # Windows compile regression fails the build.
+  check-windows:
+    runs-on: windows-latest
+    steps:
+      # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      # master HEAD at pin time; same explicit-toolchain requirement as the
+      # jobs above. Host target (windows-msvc) needs no `targets:` input.
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
+        with:
+          toolchain: "1.92.0"
+
+      # v2.9.2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+        with:
+          key: windows-msvc-ci
+
+      - name: cargo check --all-targets (Windows MSVC)
+        run: cargo check --locked --all-targets

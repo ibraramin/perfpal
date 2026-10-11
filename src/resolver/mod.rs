@@ -490,7 +490,11 @@ pub fn resolve(units: &mut [crate::scanner::FileUnit], root: &std::path::Path) {
     for &index in &order {
         let unit = &mut units[index];
         let rel = unit.file.path.clone();
-        let abs = root.join(&rel);
+        // `rel` is a repo-relative POSIX path; on Windows the canonicalized
+        // root is an extended-length `\\?\C:\…` path where forward slashes are
+        // NOT separators, so translate to the platform separator before joining
+        // (mirrors `scanner::resolve_c_edges`). No-op on POSIX.
+        let abs = root.join(rel.replace('/', std::path::MAIN_SEPARATOR_STR));
 
         let health = match std::fs::read(&abs) {
             // Re-read from disk (FileUnit carries no bytes; the caller
