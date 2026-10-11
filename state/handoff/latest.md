@@ -38,6 +38,16 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 
 **Dual review:** `@requirements-reviewer` **APPROVED** (all 8 W4 items present). `@reviewer` **UNAVAILABLE** — every code-review subagent attempt (5) was blocked by the provider content filter (a tool outage that triggers when a subagent opens `.py` source). A disclosed self-review covered the reviewer's checklist: `active_rule_ids()==67` and "every baseline key planted" are asserted by passing benchmark guards; the coverage gate's vacuity risks are closed by set-equality + exact counts + direct control checks; C/Rust byte-neutrality is proven by the empty `git diff` on the existing goldens. **No unresolved reviewer disagreement exists (the reviewer could not return one).**
 
+## Post-W4 follow-up — cross-platform (Windows) hardening (commit `cccd91c`)
+A background cross-platform audit + a real mingw cross-compile found and fixed Windows issues:
+- **M1 (fixed):** `tests/scanner_pipeline.rs` used `std::os::unix` in an **ungated** test → `cargo test` could not compile on Windows; now `#[cfg(unix)]`-gated (matching the sibling at `:229`).
+- **M2 (fixed):** the semantic-resolver re-read joined a POSIX repo-relative path onto the (Windows `\\?\`-prefixed) canonicalized root; now translates `/` → `MAIN_SEPARATOR` first (mirrors `scanner::resolve_c_edges`). The tier was non-functional on Windows.
+- **M4 (fixed):** `discover` gained a canonical-path visited-set so a Windows directory junction (which reports `is_dir()` and is **not** `is_symlink()`) cannot recurse without bound.
+- **CI (added):** a `windows-latest` `cargo check --all-targets` job — **no Windows CI job existed**, which is why M1/M2 slipped through.
+- **M3 (fixed):** the MSVC release step now builds `-C target-feature=+crt-static` so the `.exe` is self-contained (no `VCRUNTIME140.dll`).
+
+**Verification:** `cargo build --release --locked --target x86_64-pc-windows-gnu` → `perfpal.exe` (PE32+ x86-64); `cargo check --all-targets` for windows-gnu is **green after M1** (was 3 errors); Linux suite **526 passed / 0 failed**; goldens **byte-neutral** (`git diff tests/golden` empty). Residuals (M5 legacy-console non-ASCII, M6 `root_path` OS separators, real-Windows runtime paths) tracked as **`R-pf-095`**. Binaries staged: `/home/shafin/Opencode/perfpal-linux-gnu-x86_64` (CachyOS) + `/home/shafin/Opencode/perfpal-windows-gnu-x86_64.exe`.
+
 ## Risks / Open (append-only; hot ledger demoted the settled records)
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`** (high; EULA/PRIVACY contact placeholder), **`R-pf-082`** (medium; M2 corpora synthetic — real-repo credibility is M4), **`R-pf-007`** (medium; differentiation claims rest on one survey pass), **`R-pf-094`** (low; NEW — root-package relative imports don't resolve + the residual `R-pf-093` LOOP-007 depth≥1 note).
 - **Blockers (hot, unchanged):** **`B-pf-001`** (real contact address before tag); **`B-pf-002`** (repo secrets before tag).
@@ -57,7 +67,9 @@ POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semant
 
 ## Commit
 1. **`67fb682`** — work commit: python-backend W4 (`examples-python` corpus + 50 IR fixtures + precision KPI + 67-rule benchmark + report-python golden + docs).
-2. (this EOL follow-up) — regenerates this handoff, updates `state/session-state.json` + `docs/activeContext.md`.
+2. **`cda4315`** — EOL state: mark W4/M3 done, demote 30 stale risks to the cold ledger.
+3. **`cccd91c`** — post-W4 cross-platform (Windows) hardening (M1/M2/M3/M4 + Windows CI job).
+4. (this EOL follow-up) — records the cross-platform follow-up in `state/session-state.json` + `docs/activeContext.md`, marks the `python-backend` plan done.
 
 ## L2 state split / L6 north-star (history)
 The L2 hot/cold split landed **2026-09-29**: hot `state/session-state.json` is compact schema v2 and ≤ 8 KB, with full history in cold `state/archive/ledger.jsonl` (greppable, never auto-read). The L6 north-star (`docs/NORTH-STAR.md`, founder-owned goal / non-goals / stage / metrics) was pinned **2026-10-01** and referenced by `north_star_ref` in hot state.

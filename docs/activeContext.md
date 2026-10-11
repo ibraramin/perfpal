@@ -6,11 +6,12 @@ Session 44 **python-backend W4** (task A-pf-072) **complete** — the Python tie
 ## Recent Decisions
 - **D-pf-194 (live):** W4 DONE — corpus + IR fixtures + precision KPI + benchmark + golden + docs; full gate green (526 default / 531 semantic-clang). `@requirements-reviewer` APPROVED; `@reviewer` blocked by a provider content-filter outage (5 attempts) — disclosed self-review used instead.
 - **D-pf-195 (live):** M3 COMPLETE — Python is the third first-class language (23 C + 22 Python + 22 Rust = 67 rules, schema 1.3).
+- **D-pf-196 (live):** post-W4 cross-platform (Windows) hardening (commit `cccd91c`) — M1 ungated unix test gated; M2 resolver re-read path join fixed; M4 `discover` junction-cycle guard; a `windows-latest` CI `cargo check --all-targets` job added; MSVC release `+crt-static`. Windows build+link verified (`perfpal.exe`); Linux suite 526 + goldens byte-neutral. Residuals → `R-pf-095`.
 - **`R-pf-093` scoped fixes:** removed the dead `key.0` in `python_arch_002`; `PERF-PY-ASYNC-001` treats only the builtin `open` as blocking; `PERF-PY-LOOP-007` gained a `.index()` shape. The **list-literal** half was intentionally skipped — the backend collapses literal containers to one shape.
 - **Golden tree:** a separate `report-python` tree (mirrors `report-rust`), not an extension of `report-mixed`.
 
 ## In Progress
-- Nothing — W4 complete and committed as `67fb682` (this EOL follow-up commit on top). Plan `python-backend` is complete.
+- Nothing — W4 complete and committed as `67fb682` (+ state `cda4315`), plus the cross-platform (Windows) hardening follow-up `cccd91c`. Plan `python-backend` is complete.
 
 ## Next
 - **NEXT SESSION (`/new`) = `evidence-beta` M4** (AI-code showcase): pinned Aider (Apache-2.0) + chunkhound (MIT), hand-verified true positives, a repro packet per repo + an accepted-limitations page. Read `state/session-state.json` + `state/handoff/latest.md` + this file FIRST, then `readPlan evidence-beta`.
