@@ -61,7 +61,7 @@ A background cross-platform audit + a real mingw cross-compile found and fixed W
 3. Re-run `@reviewer` on commit `67fb682` in a fresh session to close the dual-review gap (the tool outage may be transient).
 
 ## Change set (this session)
-- **Added:** `examples-python/**` (20 files); `tests/examples_python_coverage.rs`; `tests/fixtures/ir/PERF-PY-*.json` (50); `tests/python_negative_fixtures.rs`; `tests/fixtures/precision/python/**` (13); `tests/golden/report-python/**` (6); `docs/evidence/dogfood-python-backend.md`.
+- **Added:** `examples-python/**` (20 files); `tests/examples_python_coverage.rs`; `tests/fixtures/ir/PERF-PY-*.json` (50); `tests/python_negative_fixtures.rs`; `tests/fixtures/precision/python/**` (13); `tests/golden/report-python/**` (6); `docs/evidence/dogfood-python-backend.md`; `docs/cross-platform-verification.md`; `scripts/verify-windows-compat.sh`.
 - **Modified:** `src/analyzer/heuristics/python/{arch,async_rules,loop}.rs`; `tests/benchmark/{corpus.rs,mod.rs}`; `tests/fixtures/benchmark/{baseline.json,README.md}`; `tests/fixtures/precision/labels.json`; `tests/p6_hardening.rs`; `README.md`; `docs/architecture/{modules.md,ir-v1.md,python-backend.md}`; `docs/schema/metrics-json-v1.md`; `docs/roadmap.md`; `docs/evidence/benchmark-suite.md`; `CHANGELOG.md`; `state/session-state.json`; `state/archive/ledger.jsonl`; `state/handoff/latest.md`; `docs/activeContext.md`.
 - **Excluded / untracked:** `brag-output/`, `perfpal-report/` (unrelated working dirs) and `docs/research/ai-code-trends.md` (founder-authored positioning note, not part of W4).
 
