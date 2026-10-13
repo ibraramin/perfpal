@@ -1,0 +1,193 @@
+{
+ "repo": "ripgrep",
+ "sample_n": 26,
+ "verdicts": {
+  "TP": 11,
+  "FP": 14,
+  "AMBIG": 1
+ },
+ "rows": [
+  {
+   "rule_id": "PERF-RS-ARCH-003",
+   "location": "crates/core/flags/doc/help.rs:151",
+   "verdict": "TP",
+   "quote": "super::render_custom_markup(doc, \"flag\"",
+   "reason": "real cross-file call; defined in doc/mod.rs:18 via explicit super:: path"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-003",
+   "location": "crates/core/flags/doc/man.rs:66",
+   "verdict": "TP",
+   "quote": "super::render_custom_markup(doc, \"flag\"",
+   "reason": "same confirmed call to doc/mod.rs:18; coupling real, not name-only"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-003",
+   "location": "build.rs:40",
+   "verdict": "FP",
+   "quote": "Command::new(\"git\").args(args).output()",
+   "reason": "`.output()` is std::process::Command method, not tests/util.rs `output`"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-001",
+   "location": "crates/cli/src/decompress.rs:65",
+   "verdict": "FP",
+   "quote": "glob_builder.build()",
+   "reason": "calls GlobSetBuilder::build, not DecompressionMatcherBuilder::build; no recursion"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-001",
+   "location": "crates/cli/src/decompress.rs:168",
+   "verdict": "FP",
+   "quote": "DecompressionMatcherBuilder::new()",
+   "reason": "calls another type's `new`, not self-recursion"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-002",
+   "location": "crates/core/flags/hiargs.rs:112",
+   "verdict": "TP",
+   "quote": "fn from_low_args(mut low: LowArgs)",
+   "reason": "huge fn (~50 decision points; if15/else8/match7/arms18/for3), far over 15"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-002",
+   "location": "crates/core/flags/hiargs.rs:459",
+   "verdict": "TP",
+   "quote": "fn matcher_rust(&self)",
+   "reason": "~16 branches, exceeds threshold 15"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-002",
+   "location": "crates/cli/src/decompress.rs:182",
+   "verdict": "FP",
+   "quote": "let mut cmd = Command::new(&decomp_cmd.bin);",
+   "reason": "Command::new is not I/O; loop also returns on 1st iter"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-002",
+   "location": "crates/core/flags/doc/help.rs:102",
+   "verdict": "FP",
+   "quote": "write!(out, \"  \");",
+   "reason": "`out` is a String; write! is in-memory fmt, no syscall/blocking I/O"
+  },
+  {
+   "rule_id": "PERF-RS-STR-002",
+   "location": "crates/core/flags/doc/help.rs:32",
+   "verdict": "FP",
+   "quote": "maxcol1 = maxcol1.max(col1.len());",
+   "reason": "col1 re-assigned each iter (line 31); not a hoistable loop-invariant length"
+  },
+  {
+   "rule_id": "PERF-RS-STR-002",
+   "location": "crates/core/flags/doc/help.rs:33",
+   "verdict": "FP",
+   "quote": "maxcol2 = maxcol2.max(col2.len());",
+   "reason": "col2 re-assigned each iter; the 'no in-loop assignment' claim is false"
+  },
+  {
+   "rule_id": "PERF-RS-ALLOC-001",
+   "location": "crates/core/flags/complete/bash.rs:83",
+   "verdict": "TP",
+   "quote": "format!(\"--{}\", flag.name_long())",
+   "reason": "loop body allocates via format!/to_string/join every iteration"
+  },
+  {
+   "rule_id": "PERF-RS-ALLOC-001",
+   "location": "crates/core/flags/complete/fish.rs:14",
+   "verdict": "TP",
+   "quote": "format!(\"-s {}\", char::from(byte))",
+   "reason": "loop body allocates (format!/replace/to_string) every iteration"
+  },
+  {
+   "rule_id": "PERF-RS-TYPE-001",
+   "location": "crates/core/flags/hiargs.rs:112",
+   "verdict": "FP",
+   "quote": "from_low_args(mut low: LowArgs)",
+   "reason": "by-value param is a move (ownership transfer), not a copy; single startup call"
+  },
+  {
+   "rule_id": "PERF-RS-TYPE-001",
+   "location": "crates/ignore/src/dir.rs:666",
+   "verdict": "FP",
+   "quote": "fn types(&mut self, types: Types)",
+   "reason": "`types` moved into Arc::new; no per-call copy; builder setter called once"
+  },
+  {
+   "rule_id": "PERF-RS-TYPE-002",
+   "location": "crates/core/flags/hiargs.rs:36",
+   "verdict": "FP",
+   "quote": "pub(crate) struct HiArgs {",
+   "reason": "no #[repr(C)]/FFI; Rust auto-reorders fields, so declared-order padding is moot"
+  },
+  {
+   "rule_id": "PERF-RS-TYPE-002",
+   "location": "crates/core/flags/lowargs.rs:33",
+   "verdict": "FP",
+   "quote": "pub(crate) struct LowArgs {",
+   "reason": "no #[repr(C)]/FFI; compiler reorders fields already; padding not actionable"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-001",
+   "location": "crates/core/flags/mod.rs:18",
+   "verdict": "FP",
+   "quote": "generate_complete_bash",
+   "reason": "bash.rs imports crate::flags::defs, not mod.rs; no mod.rs<->bash.rs cycle"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-001",
+   "location": "crates/core/flags/parse.rs:9",
+   "verdict": "AMBIG",
+   "quote": "use crate::flags::{",
+   "reason": "mutual import exists but defs->parse is #[cfg(test)]-gated; no production cycle"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-001",
+   "location": "crates/ignore/src/types.rs:486",
+   "verdict": "TP",
+   "quote": "for ext in exts {",
+   "reason": "triple-nested for (DEFAULT_TYPES->names->exts), depth 3 confirmed"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-001",
+   "location": "crates/printer/src/standard.rs:1209",
+   "verdict": "TP",
+   "quote": "while !line.is_empty() {",
+   "reason": "inside for(matches)->while(stepper)->while; depth 3 confirmed"
+  },
+  {
+   "rule_id": "PERF-RS-STR-003",
+   "location": "crates/ignore/src/walk.rs:1922",
+   "verdict": "FP",
+   "quote": "file.set_len(size).unwrap();",
+   "reason": "bounded file-truncate in a test helper; not a string-conversion smell"
+  },
+  {
+   "rule_id": "PERF-RS-STR-003",
+   "location": "tests/util.rs:119",
+   "verdict": "FP",
+   "quote": "nice_err(&path, file.set_len(filesize));",
+   "reason": "File::set_len (bounded, test util); not a string conversion smell"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-008",
+   "location": "crates/searcher/src/searcher/glue.rs:114",
+   "verdict": "TP",
+   "quote": "while !self.slice[self.core.pos()..].is_empty()",
+   "reason": "self.core.pos() is a depth-3 member chain re-evaluated in the loop"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-008",
+   "location": "crates/searcher/src/searcher/glue.rs:164",
+   "verdict": "TP",
+   "quote": "while !self.slice[self.core.pos()..].is_empty() && keepgoing",
+   "reason": "same depth-3 self chain in run()'s loop condition"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-002",
+   "location": "crates/core/flags/hiargs.rs:112",
+   "verdict": "TP",
+   "quote": "fn from_low_args",
+   "reason": "flags dir is huge (defs.rs 7675 LOC, ~980 fns); hub/hottest plausible"
+  }
+ ]
+}

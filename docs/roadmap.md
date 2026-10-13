@@ -57,7 +57,7 @@ listed country; Individual Public Trust is US/Canada only), signing does **not**
 SmartScreen (reputation accrues over weeks), and macOS notarization needs $99/yr + a
 `.pkg`/`.dmg`.
 
-## Status snapshot (session 44)
+## Status snapshot (session 45)
 
 | Item | Value |
 |---|---|
@@ -68,7 +68,7 @@ SmartScreen (reputation accrues over weeks), and macOS notarization needs $99/yr
 | Languages supported | **C** + **Rust** + **Python** (`.c`/`.h`/`.rs`/`.py`/`.pyi`; `.ipynb` excluded) |
 | Specs | `perfpal-core-spec` (core product) · **`evidence-beta-spec`** (direction; post-MVP roadmap) |
 | ADRs | `0001` parser · `0002` visualization · **`0003` language order** · **`0004` cross-language deferral** · **`0005` evidence/publish gate** · **`0006` shipping scope** |
-| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish PARKED) · **`evidence-beta`** (active — M1–M6+) · **`python-backend`** (active — W0–W3 ✅, W4 ✅) |
+| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish PARKED) · **`evidence-beta`** (active — M1 ✅ · M2 ✅ · M3 ✅ · **M4 ✅ record**) · **`python-backend`** ✅ COMPLETE (W0–W4) |
 
 ## Milestone sequence
 
@@ -114,6 +114,16 @@ Scan the flagship AI-authored repos — **Aider** (Apache-2.0, ~88% self-written
 true positives; produce a **repro packet** per repo (pinned URL+commit+license, one-command
 scan, expected counts, determinism proof) and an **accepted-limitations page**. Verification of
 this showcase is a hard precondition for the publish gate (ADR-0005).
+- **Status — EVIDENCE RECORD COMPLETE.** Four pinned repos scanned — Aider `v0.86.0`
+  (`a4be6ccd…`), chunkhound `v6.0.0` (`a8553ae6…`), ripgrep `14.1.1` (`4649aa97…`), curl
+  `curl-8_11_1` (`75a2079d…`) — **2056 files / 22010 findings**, all runs exit 0 and
+  `metrics.json` byte-identical **modulo provenance** (`started_at`/`duration_ms`). Hand-verified
+  **stratified sample (174 findings): 70% TP / 26% FP / 4% AMBIG**. Deliverables:
+  `docs/evidence/ai-code-showcase.md` (umbrella), `docs/evidence/showcase-{aider,chunkhound,ripgrep,curl}.md`
+  (repro packets), `docs/evidence/showcase/<repo>/{counts.json,verified.json}`, and
+  `docs/evidence/accepted-limitations.md`. Honest headline: **72% of volume is the single
+  `ARCH-003`** name-based coupling rule; name-matching rules (`ARCH-003`/`CALL-001`/`MEM-002`) are
+  the FP engine; the **Rust backend is weakest** (ripgrep 42% TP). Evidence only — no product code.
 
 ### M5 — First release — un-parks `beta-release`
 With M2 run **and** M4 verified, clear the residual beta blockers (EULA/privacy **contact

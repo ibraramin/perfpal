@@ -1,0 +1,431 @@
+{
+ "repo": "curl",
+ "sample_n": 60,
+ "verdicts": {
+  "TP": 51,
+  "FP": 8,
+  "AMBIG": 1
+ },
+ "rows": [
+  {
+   "rule_id": "PERF-C-ARCH-003",
+   "location": "curl/lib/asyn-thread.c:191",
+   "verdict": "TP",
+   "quote": "Curl_freeaddrinfo(tsd->res);",
+   "reason": "name match real; defined in curl_addrinfo.c:78 - genuine cross-file call"
+  },
+  {
+   "rule_id": "PERF-C-ARCH-003",
+   "location": "curl/lib/asyn-thread.c:248",
+   "verdict": "FP",
+   "quote": "tsd->hostname = strdup(hostname);",
+   "reason": "strdup is libc; src/tool_strdup.c is the curl-tool binary, unrelated to libcurl"
+  },
+  {
+   "rule_id": "PERF-C-ARCH-003",
+   "location": "curl/lib/asyn-thread.c:270",
+   "verdict": "TP",
+   "quote": "Curl_addrinfo_callback(data, tsd->sock_error, tsd->res);",
+   "reason": "name match real; defined in hostasyn.c:66"
+  },
+  {
+   "rule_id": "PERF-C-ARCH-001",
+   "location": "curl/include/curl/mprintf.h:29",
+   "verdict": "TP",
+   "quote": "#include \"curl.h\"",
+   "reason": "curl.h:3246 includes mprintf.h -> real include cycle"
+  },
+  {
+   "rule_id": "PERF-C-ARCH-001",
+   "location": "curl/include/curl/multi.h:51",
+   "verdict": "TP",
+   "quote": "#include \"curl.h\"",
+   "reason": "curl.h:3240 includes multi.h -> real include cycle"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "curl/tests/dictserver.py:63",
+   "verdict": "FP",
+   "quote": "log.info(\"[DICT] Listening on %s\", local_bind)",
+   "reason": "logging.Logger.info; scorecard.py's `info` method is unrelated"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "curl/tests/dictserver.py:84",
+   "verdict": "FP",
+   "quote": "data = self.request.recv(1024).strip()",
+   "reason": "socket.recv; name-only match to negtelnetserver's recv"
+  },
+  {
+   "rule_id": "PERF-C-CALL-002",
+   "location": "curl/docs/examples/chkspeed.c:64",
+   "verdict": "TP",
+   "quote": "int main(int argc, char *argv[])",
+   "reason": "CLI parser: 2 switches (13+8 cases) + many ifs, >15 branches"
+  },
+  {
+   "rule_id": "PERF-C-CALL-002",
+   "location": "curl/docs/examples/debug.c:35",
+   "verdict": "TP",
+   "quote": "void dump(const char *text,",
+   "reason": "hex-dump with many compound `&&` conditions ~18 branch points"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-002",
+   "location": "curl/docs/examples/certinfo.c:74",
+   "verdict": "TP",
+   "quote": "printf(\"%s\\n\", slist->data);",
+   "reason": "printf executed per inner-loop iteration (depth 2), stdio I/O"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-002",
+   "location": "curl/docs/examples/cookie_interface.c:55",
+   "verdict": "TP",
+   "quote": "printf(\"[%d]: %s\\n\", i, nc->data);",
+   "reason": "printf in while-loop, depth 1"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-008",
+   "location": "curl/docs/examples/crawler.c:143",
+   "verdict": "TP",
+   "quote": "nodeset->nodeTab[x]->xmlChildrenNode",
+   "reason": "3-deep deref chain in innermost loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-008",
+   "location": "curl/docs/examples/ephiperfifo.c:529",
+   "verdict": "TP",
+   "quote": "events[idx].data.fd",
+   "reason": "3-deep member chain inside inner for loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-005",
+   "location": "curl/docs/examples/synctime.c:277",
+   "verdict": "TP",
+   "quote": "ShowAllHeader = 1;",
+   "reason": "global assigned inside while(argv) loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-005",
+   "location": "curl/docs/examples/synctime.c:280",
+   "verdict": "TP",
+   "quote": "AutoSyncTime = 1;",
+   "reason": "global assigned inside while(argv) loop"
+  },
+  {
+   "rule_id": "PERF-C-ALLOC-002",
+   "location": "curl/lib/formdata.c:369",
+   "verdict": "TP",
+   "quote": "free(fname);",
+   "reason": "free inside FormAdd `while(return_value==OK)` loop"
+  },
+  {
+   "rule_id": "PERF-C-ALLOC-002",
+   "location": "curl/lib/formdata.c:458",
+   "verdict": "TP",
+   "quote": "free(type);",
+   "reason": "free inside same FormAdd while loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-006",
+   "location": "curl/lib/multi.c:2958",
+   "verdict": "TP",
+   "quote": "data->set.fmultidone(data, result);",
+   "reason": "indirect call inside do-while loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-006",
+   "location": "curl/lib/socketpair.c:224",
+   "verdict": "FP",
+   "quote": "#ifdef WSAEWOULDBLOCK",
+   "reason": "line is a preprocessor directive; no indirect call - macro parse artifact"
+  },
+  {
+   "rule_id": "PERF-C-MEM-002",
+   "location": "curl/lib/asyn-ares.c:712",
+   "verdict": "TP",
+   "quote": "memcpy(ca->ai_addr, ai->ai_addr, ss_size);",
+   "reason": "variable-size copy every iteration of addrinfo loop"
+  },
+  {
+   "rule_id": "PERF-C-MEM-002",
+   "location": "curl/lib/cfilters.c:931",
+   "verdict": "TP",
+   "quote": "memmove(&ps->sockets[i], &ps->sockets[i + 1],",
+   "reason": "array-shift memmove inside for loop"
+  },
+  {
+   "rule_id": "PERF-C-ALLOC-001",
+   "location": "curl/lib/asyn-ares.c:693",
+   "verdict": "TP",
+   "quote": "ca = malloc(sizeof(struct Curl_addrinfo) + ss_size);",
+   "reason": "malloc nested in addrinfo loop body"
+  },
+  {
+   "rule_id": "PERF-C-ALLOC-001",
+   "location": "curl/lib/c-hyper.c:456",
+   "verdict": "TP",
+   "quote": "data->req.newurl = strdup(data->state.url);",
+   "reason": "strdup nested inside while(1) loop"
+  },
+  {
+   "rule_id": "PERF-C-STR-003",
+   "location": "curl/docs/examples/hsts-preload.c:60",
+   "verdict": "TP",
+   "quote": "strcpy(e->name, host);",
+   "reason": "unbounded strcpy present"
+  },
+  {
+   "rule_id": "PERF-C-STR-003",
+   "location": "curl/docs/examples/hsts-preload.c:62",
+   "verdict": "TP",
+   "quote": "strcpy(e->expire, expire);",
+   "reason": "unbounded strcpy present"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-003",
+   "location": "curl/tests/http/conftest.py:67",
+   "verdict": "TP",
+   "quote": "report.extend([line])",
+   "reason": "list grown inside `for line in file_in` loop"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-003",
+   "location": "curl/tests/http/scorecard.py:150",
+   "verdict": "TP",
+   "quote": "errors.append(err)",
+   "reason": "list append inside for loop"
+  },
+  {
+   "rule_id": "PERF-C-TYPE-002",
+   "location": "curl/lib/socks.c:82",
+   "verdict": "AMBIG",
+   "quote": "struct socks_state {",
+   "reason": "~8B padding exists, but the claim's '64 vs 53 / ~11B' numbers are wrong"
+  },
+  {
+   "rule_id": "PERF-C-TYPE-002",
+   "location": "curl/docs/examples/ephiperfifo.c:82",
+   "verdict": "TP",
+   "quote": "typedef struct _GlobalInfo",
+   "reason": "40 aligned vs 32 packed confirmed (~8B padding)"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-004",
+   "location": "curl/docs/examples/crawler.c:142",
+   "verdict": "FP",
+   "quote": "int x = r * nodeset->nodeNr / RAND_MAX;",
+   "reason": "divisor RAND_MAX is a constant, not non-constant as claimed"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-004",
+   "location": "curl/lib/cf-https-connect.c:361",
+   "verdict": "FP",
+   "quote": "for(i = 0; i < sizeof(ballers)/sizeof(ballers[0]); i++)",
+   "reason": "divisor is a sizeof constant, compile-time folded"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-007",
+   "location": "curl/lib/multi.c:3234",
+   "verdict": "TP",
+   "quote": "if(s == last_ps->sockets[j])",
+   "reason": "linear socket scan in nested loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-007",
+   "location": "curl/lib/multi.c:3313",
+   "verdict": "TP",
+   "quote": "if(s == ps->sockets[j])",
+   "reason": "linear socket scan in nested loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-001",
+   "location": "curl/lib/altsvc.c:585",
+   "verdict": "TP",
+   "quote": "while(ISBLANK(*p))",
+   "reason": "while subset for(;;) subset do -> depth 3"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-001",
+   "location": "curl/lib/altsvc.c:597",
+   "verdict": "TP",
+   "quote": "while(*p && ISBLANK(*p))",
+   "reason": "same depth-3 nest"
+  },
+  {
+   "rule_id": "PERF-C-STR-002",
+   "location": "curl/docs/examples/crawler.c:151",
+   "verdict": "FP",
+   "quote": "strlen(link) < 20",
+   "reason": "`link` is reassigned each iteration (line 150); hoist invalid"
+  },
+  {
+   "rule_id": "PERF-C-STR-002",
+   "location": "curl/lib/altsvc.c:561",
+   "verdict": "TP",
+   "quote": "dstlen = strlen(srchost);",
+   "reason": "srchost is invariant param over do-while loop"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-002",
+   "location": "curl/tests/http/test_02_download.py:539",
+   "verdict": "TP",
+   "quote": "open(srcfile).readlines()",
+   "reason": "file I/O per loop iteration"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-002",
+   "location": "curl/tests/http/test_02_download.py:540",
+   "verdict": "TP",
+   "quote": "open(dfile).readlines()",
+   "reason": "file I/O per loop iteration"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-001",
+   "location": "curl/tests/ech_combos.py:70",
+   "verdict": "TP",
+   "quote": "CombinationRepetitionUtil(chosen, arr, badarr, index + 1,",
+   "reason": "direct recursion, 2 call sites"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-001",
+   "location": "curl/tests/http/test_11_unix.py:64",
+   "verdict": "FP",
+   "quote": "self._thread.start()",
+   "reason": "calls Thread.start, not method `start` itself - name collision"
+  },
+  {
+   "rule_id": "PERF-C-CALL-001",
+   "location": "curl/docs/examples/htmltidy.c:72",
+   "verdict": "TP",
+   "quote": "dumpNode(doc, child, indent + 4);",
+   "reason": "direct recursion"
+  },
+  {
+   "rule_id": "PERF-C-CALL-001",
+   "location": "curl/lib/curl_fnmatch.c:285",
+   "verdict": "TP",
+   "quote": "if(loop(p, s, maxstars) == CURL_FNMATCH_MATCH)",
+   "reason": "`loop` directly recursive"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-007",
+   "location": "curl/tests/http/scorecard.py:530",
+   "verdict": "TP",
+   "quote": "if sskey not in sizes:",
+   "reason": "list membership scan inside loop"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-007",
+   "location": "curl/tests/http/scorecard.py:533",
+   "verdict": "TP",
+   "quote": "if mkey not in measures:",
+   "reason": "list membership scan in nested loop"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-003",
+   "location": "curl/docs/examples/debug.c:81",
+   "verdict": "TP",
+   "quote": "fputc('\\n', stream);",
+   "reason": "char-wise I/O in loop body"
+  },
+  {
+   "rule_id": "PERF-C-LOOP-003",
+   "location": "curl/docs/examples/http2-download.c:97",
+   "verdict": "TP",
+   "quote": "fputc('\\n', stderr);",
+   "reason": "char-wise I/O in loop body"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-009",
+   "location": "curl/tests/http/test_11_unix.py:72",
+   "verdict": "TP",
+   "quote": "try:",
+   "reason": "try/except inside `while self._done is False` loop"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-009",
+   "location": "curl/tests/http/test_11_unix.py:74",
+   "verdict": "TP",
+   "quote": "try:",
+   "reason": "nested try inside loop"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-002",
+   "location": "curl/tests/http/scorecard.py:431",
+   "verdict": "TP",
+   "quote": "def score(self,",
+   "reason": "~19 branch points > 15"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-002",
+   "location": "curl/tests/http/scorecard.py:507",
+   "verdict": "TP",
+   "quote": "def print_score(self, score):",
+   "reason": "large function, ~43 branches > 15"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-001",
+   "location": "curl/tests/http/scorecard.py:83",
+   "verdict": "TP",
+   "quote": "for _ in range(sample_size):",
+   "reason": "3-deep loop nest"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-001",
+   "location": "curl/tests/http/test_17_ssl_use.py:194",
+   "verdict": "TP",
+   "quote": "for [ciphers12, succeed12] in tls12_tests:",
+   "reason": "3-deep loop nest"
+  },
+  {
+   "rule_id": "PERF-C-ALLOC-003",
+   "location": "curl/src/tool_urlglob.c:133",
+   "verdict": "TP",
+   "quote": "char **new_arr = realloc(pat->content.Set.elements,",
+   "reason": "additive (+1 element) realloc inside while loop"
+  },
+  {
+   "rule_id": "PERF-C-ALLOC-003",
+   "location": "curl/tests/server/rtspd.c:380",
+   "verdict": "TP",
+   "quote": "req->rtp_buffer = realloc(req->rtp_buffer,",
+   "reason": "additive realloc inside do-while loop"
+  },
+  {
+   "rule_id": "PERF-C-ARCH-002",
+   "location": "curl/lib/setopt.c:258",
+   "verdict": "TP",
+   "quote": "static CURLcode setopt_long(",
+   "reason": "lib/ is the largest component; aggregate claim plausible"
+  },
+  {
+   "rule_id": "PERF-PY-ASYNC-002",
+   "location": "curl/tests/http/testenv/ws_echo_server.py:38",
+   "verdict": "TP",
+   "quote": "await websocket.send(message)",
+   "reason": "await inside `async for` loop"
+  },
+  {
+   "rule_id": "PERF-PY-STR-001",
+   "location": "curl/tests/http/scorecard.py:258",
+   "verdict": "TP",
+   "quote": "error += f'[{f[\"response_code\"]}]'",
+   "reason": "string `+=` accumulated in loop (O(n^2))"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-002",
+   "location": "curl/tests/http/scorecard.py:507",
+   "verdict": "TP",
+   "quote": "def print_score(self, score):",
+   "reason": "tests/http is largest Python dir; aggregate plausible"
+  },
+  {
+   "rule_id": "PERF-PY-COMPREHENSION-001",
+   "location": "curl/tests/http/test_17_ssl_use.py:195",
+   "verdict": "TP",
+   "quote": "ret.append([tls_proto, ciphers13, ciphers12, succeed13, succeed12])",
+   "reason": "only statement in innermost loop; comprehension candidate"
+  }
+ ]
+}

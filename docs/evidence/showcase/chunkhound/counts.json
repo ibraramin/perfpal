@@ -1,0 +1,204 @@
+{
+ "url": "https://github.com/chunkhound/chunkhound",
+ "tag": "v6.0.0",
+ "commit": "a8553ae644686d8ee55b94ee74ff560a38e6cc7d",
+ "license": "MIT",
+ "lang": "python",
+ "file_count": 887,
+ "loc_code": 209378,
+ "findings_total": 8124,
+ "severity_totals": {
+  "hot": 26,
+  "warn": 1125,
+  "info": 6973
+ },
+ "distinct_rules": 31,
+ "by_rule": {
+  "PERF-PY-ALLOC-001": {
+   "total": 9,
+   "hot": 0,
+   "warn": 0,
+   "info": 9
+  },
+  "PERF-PY-ALLOC-003": {
+   "total": 718,
+   "hot": 0,
+   "warn": 718,
+   "info": 0
+  },
+  "PERF-PY-ALLOC-004": {
+   "total": 36,
+   "hot": 0,
+   "warn": 0,
+   "info": 36
+  },
+  "PERF-PY-ARCH-001": {
+   "total": 1,
+   "hot": 0,
+   "warn": 0,
+   "info": 1
+  },
+  "PERF-PY-ARCH-002": {
+   "total": 1,
+   "hot": 0,
+   "warn": 0,
+   "info": 1
+  },
+  "PERF-PY-ARCH-003": {
+   "total": 6047,
+   "hot": 0,
+   "warn": 0,
+   "info": 6047
+  },
+  "PERF-PY-ASYNC-001": {
+   "total": 17,
+   "hot": 0,
+   "warn": 17,
+   "info": 0
+  },
+  "PERF-PY-ASYNC-002": {
+   "total": 251,
+   "hot": 0,
+   "warn": 251,
+   "info": 0
+  },
+  "PERF-PY-CALL-001": {
+   "total": 228,
+   "hot": 0,
+   "warn": 0,
+   "info": 228
+  },
+  "PERF-PY-CALL-002": {
+   "total": 242,
+   "hot": 0,
+   "warn": 0,
+   "info": 242
+  },
+  "PERF-PY-COMPREHENSION-001": {
+   "total": 60,
+   "hot": 0,
+   "warn": 0,
+   "info": 60
+  },
+  "PERF-PY-LOOP-001": {
+   "total": 22,
+   "hot": 0,
+   "warn": 0,
+   "info": 22
+  },
+  "PERF-PY-LOOP-002": {
+   "total": 16,
+   "hot": 0,
+   "warn": 16,
+   "info": 0
+  },
+  "PERF-PY-LOOP-007": {
+   "total": 30,
+   "hot": 0,
+   "warn": 30,
+   "info": 0
+  },
+  "PERF-PY-LOOP-009": {
+   "total": 200,
+   "hot": 0,
+   "warn": 0,
+   "info": 200
+  },
+  "PERF-PY-MEM-002": {
+   "total": 11,
+   "hot": 0,
+   "warn": 0,
+   "info": 11
+  },
+  "PERF-PY-N1-001": {
+   "total": 42,
+   "hot": 0,
+   "warn": 42,
+   "info": 0
+  },
+  "PERF-PY-PANDAS-001": {
+   "total": 4,
+   "hot": 0,
+   "warn": 0,
+   "info": 4
+  },
+  "PERF-PY-STR-001": {
+   "total": 10,
+   "hot": 0,
+   "warn": 10,
+   "info": 0
+  },
+  "PERF-RS-ALLOC-001": {
+   "total": 22,
+   "hot": 22,
+   "warn": 0,
+   "info": 0
+  },
+  "PERF-RS-ARCH-002": {
+   "total": 1,
+   "hot": 1,
+   "warn": 0,
+   "info": 0
+  },
+  "PERF-RS-ARCH-003": {
+   "total": 97,
+   "hot": 0,
+   "warn": 0,
+   "info": 97
+  },
+  "PERF-RS-CALL-001": {
+   "total": 10,
+   "hot": 0,
+   "warn": 0,
+   "info": 10
+  },
+  "PERF-RS-CALL-002": {
+   "total": 7,
+   "hot": 0,
+   "warn": 7,
+   "info": 0
+  },
+  "PERF-RS-LOOP-001": {
+   "total": 2,
+   "hot": 0,
+   "warn": 2,
+   "info": 0
+  },
+  "PERF-RS-LOOP-002": {
+   "total": 4,
+   "hot": 3,
+   "warn": 1,
+   "info": 0
+  },
+  "PERF-RS-LOOP-004": {
+   "total": 1,
+   "hot": 0,
+   "warn": 0,
+   "info": 1
+  },
+  "PERF-RS-LOOP-008": {
+   "total": 3,
+   "hot": 0,
+   "warn": 0,
+   "info": 3
+  },
+  "PERF-RS-STR-002": {
+   "total": 28,
+   "hot": 0,
+   "warn": 28,
+   "info": 0
+  },
+  "PERF-RS-TYPE-001": {
+   "total": 3,
+   "hot": 0,
+   "warn": 3,
+   "info": 0
+  },
+  "PERF-RS-TYPE-002": {
+   "total": 1,
+   "hot": 0,
+   "warn": 0,
+   "info": 1
+  }
+ }
+}

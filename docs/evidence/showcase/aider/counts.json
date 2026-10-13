@@ -1,0 +1,108 @@
+{
+ "url": "https://github.com/Aider-AI/aider",
+ "tag": "v0.86.0",
+ "commit": "a4be6ccd87ebaa59b361f3f028d116ce1761b626",
+ "license": "Apache-2.0",
+ "lang": "python",
+ "file_count": 148,
+ "loc_code": 27592,
+ "findings_total": 1567,
+ "severity_totals": {
+  "hot": 0,
+  "warn": 256,
+  "info": 1311
+ },
+ "distinct_rules": 15,
+ "by_rule": {
+  "PERF-PY-ALLOC-001": {
+   "total": 7,
+   "hot": 0,
+   "warn": 0,
+   "info": 7
+  },
+  "PERF-PY-ALLOC-003": {
+   "total": 128,
+   "hot": 0,
+   "warn": 128,
+   "info": 0
+  },
+  "PERF-PY-ALLOC-004": {
+   "total": 38,
+   "hot": 0,
+   "warn": 0,
+   "info": 38
+  },
+  "PERF-PY-ARCH-002": {
+   "total": 1,
+   "hot": 0,
+   "warn": 0,
+   "info": 1
+  },
+  "PERF-PY-ARCH-003": {
+   "total": 1072,
+   "hot": 0,
+   "warn": 0,
+   "info": 1072
+  },
+  "PERF-PY-CALL-001": {
+   "total": 48,
+   "hot": 0,
+   "warn": 0,
+   "info": 48
+  },
+  "PERF-PY-CALL-002": {
+   "total": 57,
+   "hot": 0,
+   "warn": 0,
+   "info": 57
+  },
+  "PERF-PY-COMPREHENSION-001": {
+   "total": 16,
+   "hot": 0,
+   "warn": 0,
+   "info": 16
+  },
+  "PERF-PY-LOOP-001": {
+   "total": 11,
+   "hot": 0,
+   "warn": 0,
+   "info": 11
+  },
+  "PERF-PY-LOOP-002": {
+   "total": 28,
+   "hot": 0,
+   "warn": 28,
+   "info": 0
+  },
+  "PERF-PY-LOOP-007": {
+   "total": 18,
+   "hot": 0,
+   "warn": 18,
+   "info": 0
+  },
+  "PERF-PY-LOOP-009": {
+   "total": 56,
+   "hot": 0,
+   "warn": 0,
+   "info": 56
+  },
+  "PERF-PY-MEM-002": {
+   "total": 5,
+   "hot": 0,
+   "warn": 0,
+   "info": 5
+  },
+  "PERF-PY-N1-001": {
+   "total": 14,
+   "hot": 0,
+   "warn": 14,
+   "info": 0
+  },
+  "PERF-PY-STR-001": {
+   "total": 68,
+   "hot": 0,
+   "warn": 68,
+   "info": 0
+  }
+ }
+}

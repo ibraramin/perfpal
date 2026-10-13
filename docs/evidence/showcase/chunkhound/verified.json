@@ -1,0 +1,417 @@
+{
+ "repo": "chunkhound",
+ "sample_n": 58,
+ "verdicts": {
+  "TP": 40,
+  "FP": 17,
+  "AMBIG": 1
+ },
+ "rows": [
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "chunkhound/api/cli/commands/autodoc.py:28",
+   "verdict": "TP",
+   "quote": "formatter.error(message)",
+   "reason": "`error` genuinely defined at rich_output.py:173 on the formatter class"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "chunkhound/api/cli/commands/autodoc.py:34",
+   "verdict": "FP",
+   "quote": "Path(getattr(args, \"out_dir\")).resolve()",
+   "reason": "`resolve` is a pathlib method, unrelated to llm_provider.py:162"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "chunkhound/api/cli/commands/autodoc.py:37",
+   "verdict": "TP",
+   "quote": "git_utils.maybe_warn_git_output_dir(",
+   "reason": "`git_utils`=&autodoc_git; real def at autodoc_git.py:49"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-003",
+   "location": "chunkhound/api/cli/commands/autodoc_autorun.py:37",
+   "verdict": "TP",
+   "quote": "output.append(item)",
+   "reason": "list grows via append across `for item in items` loop"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-003",
+   "location": "chunkhound/api/cli/commands/autodoc_autorun.py:220",
+   "verdict": "TP",
+   "quote": "details.append(f\"- Missing LLM configuration: {item}.\")",
+   "reason": "append accumulates across loop iterations"
+  },
+  {
+   "rule_id": "PERF-PY-ASYNC-002",
+   "location": "chunkhound/api/cli/commands/autodoc_generate.py:66",
+   "verdict": "TP",
+   "quote": "return await call_generate_docsite(",
+   "reason": "await inside `for attempt in range(2)` loop"
+  },
+  {
+   "rule_id": "PERF-PY-ASYNC-002",
+   "location": "chunkhound/api/cli/commands/autodoc_generate.py:94",
+   "verdict": "TP",
+   "quote": "current_map_dir = await autorun.autorun_code_mapper_for_autodoc(",
+   "reason": "await inside for loop"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-002",
+   "location": "chunkhound/api/cli/commands/code_mapper.py:89",
+   "verdict": "TP",
+   "quote": "async def code_mapper_command(args: argparse.Namespace, config: Config)",
+   "reason": "~32 branch keywords in body, >15"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-002",
+   "location": "chunkhound/api/cli/commands/mcp.py:127",
+   "verdict": "TP",
+   "quote": "def _show_mcp_setup_instructions(",
+   "reason": "~23 branches in body, >15"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-001",
+   "location": "chunkhound/api/cli/commands/code_mapper.py:57",
+   "verdict": "FP",
+   "quote": "return await code_mapper_pipeline.run_code_mapper_overview_hyde(",
+   "reason": "calls another module's fn, not self-recursion"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-001",
+   "location": "chunkhound/api/cli/utils/rich_output.py:593",
+   "verdict": "FP",
+   "quote": "task_id = self.progress.add_task(",
+   "reason": "rich Progress method; not self-recursion"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-009",
+   "location": "chunkhound/api/cli/commands/autodoc_generate.py:65",
+   "verdict": "TP",
+   "quote": "try:",
+   "reason": "try/except inside `for attempt` loop body"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-009",
+   "location": "chunkhound/api/cli/commands/run.py:427",
+   "verdict": "TP",
+   "quote": "try:",
+   "reason": "try/except inside `for p in skipped_timeouts` loop"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-003",
+   "location": "chunkhound/src/db/duckdb_backend/compaction.rs:33",
+   "verdict": "FP",
+   "quote": "PathBuf::from(&self.config.db_path)",
+   "reason": "std PathBuf::from, unrelated to error.rs `fn from`"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-003",
+   "location": "chunkhound/src/db/duckdb_backend/compaction.rs:39",
+   "verdict": "TP",
+   "quote": "let conn = self.conn_or_err()?;",
+   "reason": "method really defined mod.rs:50"
+  },
+  {
+   "rule_id": "PERF-PY-COMPREHENSION-001",
+   "location": "chunkhound/api/cli/commands/autodoc_autorun.py:220",
+   "verdict": "TP",
+   "quote": "details.append(f\"- Missing LLM configuration: {item}.\")",
+   "reason": "loop body's only statement is the append"
+  },
+  {
+   "rule_id": "PERF-PY-COMPREHENSION-001",
+   "location": "chunkhound/autodoc/ia.py:328",
+   "verdict": "FP",
+   "quote": "collected.append(line)",
+   "reason": "body also has `if ...: break`; not 'only' append"
+  },
+  {
+   "rule_id": "PERF-PY-N1-001",
+   "location": "chunkhound/providers/database/duckdb/embedding_repository.py:218",
+   "verdict": "TP",
+   "quote": "conn.execute(",
+   "reason": "DB round-trip per `for index_info` iteration"
+  },
+  {
+   "rule_id": "PERF-PY-N1-001",
+   "location": "chunkhound/providers/database/duckdb/embedding_repository.py:236",
+   "verdict": "TP",
+   "quote": "conn.execute(create_sql)",
+   "reason": "DB call per loop iteration"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-004",
+   "location": "chunkhound/daemon/client_manager.py:77",
+   "verdict": "TP",
+   "quote": "for cid, sess in list(self._sessions.items())",
+   "reason": "list() over non-literal iterable inside `while True`"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-004",
+   "location": "chunkhound/parsers/mappings/go.py:554",
+   "verdict": "TP",
+   "quote": "go_files = list(pkg_dir.glob(\"*.go\"))",
+   "reason": "list() over generator inside `for prefix` loop"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-007",
+   "location": "chunkhound/core/config/indexing_config.py:568",
+   "verdict": "TP",
+   "quote": "if pat not in out:",
+   "reason": "list membership scan inside for loop"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-007",
+   "location": "chunkhound/parsers/mappings/groovy.py:328",
+   "verdict": "TP",
+   "quote": "if annotation_text and annotation_text not in annotations:",
+   "reason": "list `in` test inside loop"
+  },
+  {
+   "rule_id": "PERF-RS-STR-002",
+   "location": "chunkhound/src/db/duckdb_backend/write.rs:29",
+   "verdict": "FP",
+   "quote": "if !e.is_empty() {",
+   "reason": "is_empty() is O(1) and `e` is loop-varying; no string build"
+  },
+  {
+   "rule_id": "PERF-RS-STR-002",
+   "location": "chunkhound/src/db/duckdb_backend/write.rs:30",
+   "verdict": "FP",
+   "quote": "dims.insert(e.len() as u32);",
+   "reason": "len() O(1), loop-varying; not a string build"
+  },
+  {
+   "rule_id": "PERF-RS-ALLOC-001",
+   "location": "chunkhound/src/db/duckdb_backend/compaction.rs:47",
+   "verdict": "TP",
+   "quote": "let _ = conn.execute_batch(&format!(\"DROP TABLE IF EXISTS \\\"{}\\\"\", name));",
+   "reason": "format! allocates per iteration"
+  },
+  {
+   "rule_id": "PERF-RS-ALLOC-001",
+   "location": "chunkhound/src/db/duckdb_backend/compaction.rs:99",
+   "verdict": "TP",
+   "quote": "&format!(\"SELECT COALESCE(MAX(id), 0) FROM src.\\\"{}\\\"\", tname)",
+   "reason": "format! allocates per iteration"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-001",
+   "location": "chunkhound/parsers/mappings/css.py:99",
+   "verdict": "TP",
+   "quote": "for prop_child in block_child.children:",
+   "reason": "loops nest 3 deep (children->block_child->prop_child)"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-001",
+   "location": "chunkhound/parsers/mappings/lua.py:183",
+   "verdict": "TP",
+   "quote": "for var in subchild.children:",
+   "reason": "3-deep nest (children->subchild->var)"
+  },
+  {
+   "rule_id": "PERF-PY-ASYNC-001",
+   "location": "chunkhound/services/embedding_service.py:161",
+   "verdict": "TP",
+   "quote": "with open(debug_file, \"a\") as f:",
+   "reason": "blocking open inside async method (await at line 172)"
+  },
+  {
+   "rule_id": "PERF-PY-ASYNC-001",
+   "location": "chunkhound/services/embedding_service.py:200",
+   "verdict": "TP",
+   "quote": "with open(debug_file, \"a\") as f:",
+   "reason": "blocking open inside same async method"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-002",
+   "location": "chunkhound/code_mapper/hyde.py:233",
+   "verdict": "TP",
+   "quote": "with path.open(\"rb\") as f:",
+   "reason": "file open per loop iteration"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-002",
+   "location": "chunkhound/daemon/client_proxy.py:300",
+   "verdict": "FP",
+   "quote": "line = await stdin.readline()",
+   "reason": "async non-blocking readline, not a blocking I/O call"
+  },
+  {
+   "rule_id": "PERF-PY-MEM-002",
+   "location": "chunkhound/mcp_server/base.py:1321",
+   "verdict": "TP",
+   "quote": "tool_params = copy.deepcopy(tool.parameters)",
+   "reason": "deepcopy per iteration of TOOL_REGISTRY loop"
+  },
+  {
+   "rule_id": "PERF-PY-MEM-002",
+   "location": "chunkhound/parsers/svelte_parser.py:134",
+   "verdict": "TP",
+   "quote": "chunk.metadata.copy()",
+   "reason": "dict copy at loop depth 2"
+  },
+  {
+   "rule_id": "PERF-PY-STR-001",
+   "location": "chunkhound/api/cli/commands/search.py:235",
+   "verdict": "AMBIG",
+   "quote": "line_info += f\"-{end_line}\"",
+   "reason": "`+=` in loop, but line_info reset each pass so no O(n^2) growth"
+  },
+  {
+   "rule_id": "PERF-PY-STR-001",
+   "location": "chunkhound/parsers/mappings/markdown.py:203",
+   "verdict": "TP",
+   "quote": "heading_text += text_content + \" \"",
+   "reason": "accumulates across loop -> O(n^2)"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-001",
+   "location": "chunkhound/src/db/duckdb_backend/mod.rs:43",
+   "verdict": "FP",
+   "quote": "known_dims: HashSet::new(),",
+   "reason": "HashSet::new is not self-recursion on `new`"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-001",
+   "location": "chunkhound/src/db/duckdb_backend/mod.rs:69",
+   "verdict": "FP",
+   "quote": "let conn = Connection::open(&self.config.db_path)?;",
+   "reason": "Connection::open, not the method `open` recursing"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-001",
+   "location": "chunkhound/code_mapper/hyde.py:233",
+   "verdict": "FP",
+   "quote": "with path.open(\"rb\") as f:",
+   "reason": "open() is not a container literal (set/list/dict)"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-001",
+   "location": "chunkhound/daemon/client_proxy.py:180",
+   "verdict": "FP",
+   "quote": "self._shutdown_event.set()",
+   "reason": "Event.set() method, not constructing a set"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-002",
+   "location": "chunkhound/src/db/duckdb_backend/compaction.rs:32",
+   "verdict": "TP",
+   "quote": "fn run_attach_copy_compaction(&mut self) -> Result<(), DbError> {",
+   "reason": "~37 branch/`?` points >15"
+  },
+  {
+   "rule_id": "PERF-RS-CALL-002",
+   "location": "chunkhound/src/db/duckdb_backend/write.rs:367",
+   "verdict": "TP",
+   "quote": "fn pre_delete_for_upsert(",
+   "reason": "~23 branch/`?` points >15"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-002",
+   "location": "chunkhound/src/pipeline/pipeline.rs:707",
+   "verdict": "TP",
+   "quote": "let recv = store_rx.recv();",
+   "reason": "blocking channel recv in loop at depth 2"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-002",
+   "location": "chunkhound/src/pipeline/pipeline.rs:902",
+   "verdict": "TP",
+   "quote": "let recv = parse_rx.recv();",
+   "reason": "blocking channel recv in loop"
+  },
+  {
+   "rule_id": "PERF-PY-PANDAS-001",
+   "location": "chunkhound/providers/database/lancedb_provider.py:1278",
+   "verdict": "TP",
+   "quote": "for _, row in existing_data_df.iterrows():",
+   "reason": "iterrows row-by-row iteration"
+  },
+  {
+   "rule_id": "PERF-PY-PANDAS-001",
+   "location": "chunkhound/providers/database/lancedb_provider.py:1427",
+   "verdict": "TP",
+   "quote": "for _, row in existing_df.iterrows():",
+   "reason": "iterrows row-by-row iteration"
+  },
+  {
+   "rule_id": "PERF-RS-TYPE-001",
+   "location": "chunkhound/src/db/duckdb_backend/mod.rs:37",
+   "verdict": "FP",
+   "quote": "pub fn new(config: DbConfig) -> Self {",
+   "reason": "DbConfig is Clone (moved, not Copy); constructor called once"
+  },
+  {
+   "rule_id": "PERF-RS-TYPE-001",
+   "location": "chunkhound/src/db/mod.rs:81",
+   "verdict": "FP",
+   "quote": "pub fn create_backend(cfg: DbConfig) -> Box<dyn DbBackend> {",
+   "reason": "arg moved once at startup; not copied per call"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-008",
+   "location": "chunkhound/src/db/duckdb_backend/write.rs:206",
+   "verdict": "TP",
+   "quote": "let chunk = &batch.files[file_idx].chunks[chunk_idx];",
+   "reason": "depth-4 index chain inside loop"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-008",
+   "location": "chunkhound/src/db/duckdb_backend/write.rs:532",
+   "verdict": "TP",
+   "quote": "if file.chunks[chunk_idx]",
+   "reason": "depth-4 field/index chain in innermost loop"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-001",
+   "location": "chunkhound/src/db/duckdb_backend/write.rs:239",
+   "verdict": "TP",
+   "quote": "for (chunk_id, chunk) in chunk_slice.iter() {",
+   "reason": "3-deep nest (by_dims->chunks->iter)"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-001",
+   "location": "chunkhound/src/pipeline/pipeline.rs:922",
+   "verdict": "TP",
+   "quote": "for (ci, ch) in pf.chunks.iter().enumerate() {",
+   "reason": "3-deep nest (loop->fi->ci)"
+  },
+  {
+   "rule_id": "PERF-RS-ARCH-002",
+   "location": "chunkhound/src/db/duckdb_backend/compaction.rs:32",
+   "verdict": "TP",
+   "quote": "fn run_attach_copy_compaction(&mut self) -> Result<(), DbError> {",
+   "reason": "plausible directory-aggregate complexity claim"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-001",
+   "location": "chunkhound/services/indexing_coordinator.py:27",
+   "verdict": "FP",
+   "quote": "if TYPE_CHECKING:",
+   "reason": "import is TYPE_CHECKING-only; no runtime import cycle"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-002",
+   "location": "chunkhound/tests/test_qa_deterministic.py:350",
+   "verdict": "TP",
+   "quote": "tests/ dir aggregate",
+   "reason": "plausible for a 2465-function tests dir"
+  },
+  {
+   "rule_id": "PERF-RS-LOOP-004",
+   "location": "chunkhound/src/pipeline/differ.rs:122",
+   "verdict": "FP",
+   "quote": "if files_scanned % DIFF_TICK_INTERVAL == 0 {",
+   "reason": "divisor is `const DIFF_TICK_INTERVAL: usize = 200` (differ.rs:45)"
+  },
+  {
+   "rule_id": "PERF-RS-TYPE-002",
+   "location": "chunkhound/src/pipeline/config.rs:49",
+   "verdict": "FP",
+   "quote": "pub(crate) struct PipelineConfig {",
+   "reason": "not `#[repr(C)]`/FFI; Rust auto-reorders fields, padding N/A"
+  }
+ ]
+}

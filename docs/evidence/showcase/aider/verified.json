@@ -1,0 +1,221 @@
+{
+ "repo": "aider",
+ "sample_n": 30,
+ "verdicts": {
+  "TP": 20,
+  "FP": 6,
+  "AMBIG": 4
+ },
+ "rows": [
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "aider/analytics.py:181",
+   "verdict": "FP",
+   "quote": "data_file.write_text(json.dumps(data, indent=4))",
+   "reason": "pathlib write_text (1-arg); io.py:478 is a different method (filename,content) - duck-typing name-only match"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "aider/analytics.py:199",
+   "verdict": "TP",
+   "quote": "model_info_manager.get_model_from_cached_json_db(model.name)",
+   "reason": "agent imports model_info_manager; method defined at models.py:204 - real cross-file coupling"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-003",
+   "location": "aider/analytics.py:208",
+   "verdict": "FP",
+   "quote": "print(\"X\" * 100)",
+   "reason": "builtin print, not InputOutput.print (io.py:1047) - name-only false positive"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-003",
+   "location": "aider/args_formatter.py:218",
+   "verdict": "TP",
+   "quote": "parts.append(f\"  - `{switch} {metavar}`\")",
+   "reason": "append inside `for switch in action.option_strings`; parts built before loop, accumulates"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-003",
+   "location": "aider/args_formatter.py:220",
+   "verdict": "TP",
+   "quote": "parts.append(f\"  - `{switch}`\")",
+   "reason": "same loop else-branch; list accumulates across iterations"
+  },
+  {
+   "rule_id": "PERF-PY-STR-001",
+   "location": "aider/coders/base_coder.py:612",
+   "verdict": "TP",
+   "quote": "all_content += content + \"\\n\"",
+   "reason": "+= on str inside for-loop over generator - immutable-copy O(n^2)"
+  },
+  {
+   "rule_id": "PERF-PY-STR-001",
+   "location": "aider/coders/base_coder.py:616",
+   "verdict": "TP",
+   "quote": "all_content += content + \"\\n\"",
+   "reason": "+= on str inside second for-loop; genuinely accumulates"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-002",
+   "location": "aider/args_formatter.py:105",
+   "verdict": "TP",
+   "quote": "elif action.nargs in (\"*\", \"+\") or isinstance(action, argparse._AppendAction):",
+   "reason": "_format_action has ~16 branch points; high-complexity confirmed"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-002",
+   "location": "aider/coders/base_coder.py:125",
+   "verdict": "TP",
+   "quote": "if edit_format != from_coder.edit_format and done_messages",
+   "reason": "create() has many conditionals/branches (>15) - genuinely complex flow"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-009",
+   "location": "aider/coders/base_coder.py:691",
+   "verdict": "TP",
+   "quote": "for fname in self.get_all_relative_files():",
+   "reason": "try/except (691-699) inside the for-loop body"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-009",
+   "location": "aider/coders/base_coder.py:883",
+   "verdict": "TP",
+   "quote": "try:",
+   "reason": "try/except at 883 nested inside `while True:` (882)"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-001",
+   "location": "aider/args_formatter.py:13",
+   "verdict": "FP",
+   "quote": "super().start_section(res)",
+   "reason": "calls PARENT via super(), not itself - not direct recursion"
+  },
+  {
+   "rule_id": "PERF-PY-CALL-001",
+   "location": "aider/args_formatter.py:86",
+   "verdict": "FP",
+   "quote": "super().start_section(res)",
+   "reason": "same super() delegation in YamlHelpFormatter - not self-recursion"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-004",
+   "location": "aider/coders/base_coder.py:193",
+   "verdict": "AMBIG",
+   "quote": "res.original_kwargs = dict(kwargs)",
+   "reason": "dict(non-literal) in loop body, but returns immediately after match -> runs <=1x"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-004",
+   "location": "aider/coders/base_coder.py:934",
+   "verdict": "TP",
+   "quote": "list(self.send_message(message))",
+   "reason": "list(...) wraps generator (non-literal) inside `while message:` loop"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-002",
+   "location": "aider/coders/base_coder.py:838",
+   "verdict": "TP",
+   "quote": "with open(fname, \"rb\") as image_file:",
+   "reason": "blocking open inside `for fname in fnames` - real per-file I/O"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-002",
+   "location": "aider/coders/base_coder.py:1459",
+   "verdict": "AMBIG",
+   "quote": "yield from self.send(messages, functions=self.functions)",
+   "reason": "inside retry `while True`/except; deliberate retry-until-success, not per-element I/O"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-007",
+   "location": "aider/coders/editblock_coder.py:578",
+   "verdict": "TP",
+   "quote": "if fname in valid_fnames:",
+   "reason": "valid_fnames is a list (default []); membership scan in loop"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-007",
+   "location": "aider/coders/search_replace.py:715",
+   "verdict": "TP",
+   "quote": "if method not in methods:",
+   "reason": "`methods = []` list; O(n) `not in` scan inside loop (dedup pattern)"
+  },
+  {
+   "rule_id": "PERF-PY-COMPREHENSION-001",
+   "location": "aider/coders/base_coder.py:283",
+   "verdict": "TP",
+   "quote": "lines.append(f\"Added {fname} to the chat.\")",
+   "reason": "loop body's only statement is a list append"
+  },
+  {
+   "rule_id": "PERF-PY-COMPREHENSION-001",
+   "location": "aider/coders/base_coder.py:1243",
+   "verdict": "TP",
+   "quote": "example_messages.append(",
+   "reason": "sole loop-body statement is append (multiline call)"
+  },
+  {
+   "rule_id": "PERF-PY-N1-001",
+   "location": "aider/scripts/issues.py:89",
+   "verdict": "AMBIG",
+   "quote": "response = requests.get(",
+   "reason": "per-page fetch in `while True` pagination (page+=1); inherent, not per-element N+1"
+  },
+  {
+   "rule_id": "PERF-PY-N1-001",
+   "location": "aider/scripts/issues.py:164",
+   "verdict": "TP",
+   "quote": "response = requests.get(comments_url, headers=headers)",
+   "reason": "one HTTP request per issue inside `for issue in issues` - genuine N+1"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-001",
+   "location": "aider/coders/patch_coder.py:451",
+   "verdict": "TP",
+   "quote": "for i, scope in enumerate(scope_lines):",
+   "reason": "while(421)>while(448)>for(451) = depth 3"
+  },
+  {
+   "rule_id": "PERF-PY-LOOP-001",
+   "location": "aider/coders/patch_coder.py:469",
+   "verdict": "TP",
+   "quote": "for i, scope in enumerate(scope_lines):",
+   "reason": "while(421)>while(467)>for(469) = depth 3"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-001",
+   "location": "aider/commands.py:406",
+   "verdict": "TP",
+   "quote": "lint_coder.abs_fnames = set()",
+   "reason": "set() constructed inside `for fname in fnames` (377) each pass"
+  },
+  {
+   "rule_id": "PERF-PY-ALLOC-001",
+   "location": "aider/linter.py:283",
+   "verdict": "AMBIG",
+   "quote": "result[fname] = set()",
+   "reason": "inside loop but guarded by `if fname not in result`; one-time init per new key"
+  },
+  {
+   "rule_id": "PERF-PY-MEM-002",
+   "location": "aider/benchmark/benchmark.py:768",
+   "verdict": "FP",
+   "quote": "shutil.copy(original_fname, src)",
+   "reason": "shutil.copy is a FILESYSTEM copy, not container copy.copy/deepcopy - rule misidentified"
+  },
+  {
+   "rule_id": "PERF-PY-MEM-002",
+   "location": "aider/benchmark/benchmark.py:1014",
+   "verdict": "FP",
+   "quote": "shutil.copy(src, dst)",
+   "reason": "filesystem copy in loop, not a container copy"
+  },
+  {
+   "rule_id": "PERF-PY-ARCH-002",
+   "location": "aider/main.py:451",
+   "verdict": "TP",
+   "quote": "def main(argv=None, input=None, output=None",
+   "reason": "directory-level `aider` complexity aggregate anchored at entry point"
+  }
+ ]
+}

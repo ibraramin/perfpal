@@ -1,0 +1,96 @@
+{
+ "url": "https://github.com/BurntSushi/ripgrep",
+ "tag": "14.1.1",
+ "commit": "4649aa9700619f94cf9c66876e9549d83420e16c",
+ "license": "MIT-OR-Unlicense",
+ "lang": "rust",
+ "file_count": 98,
+ "loc_code": 31814,
+ "findings_total": 1315,
+ "severity_totals": {
+  "hot": 40,
+  "warn": 90,
+  "info": 1185
+ },
+ "distinct_rules": 13,
+ "by_rule": {
+  "PERF-RS-ALLOC-001": {
+   "total": 25,
+   "hot": 25,
+   "warn": 0,
+   "info": 0
+  },
+  "PERF-RS-ARCH-001": {
+   "total": 7,
+   "hot": 0,
+   "warn": 7,
+   "info": 0
+  },
+  "PERF-RS-ARCH-002": {
+   "total": 1,
+   "hot": 1,
+   "warn": 0,
+   "info": 0
+  },
+  "PERF-RS-ARCH-003": {
+   "total": 849,
+   "hot": 0,
+   "warn": 0,
+   "info": 849
+  },
+  "PERF-RS-CALL-001": {
+   "total": 324,
+   "hot": 0,
+   "warn": 0,
+   "info": 324
+  },
+  "PERF-RS-CALL-002": {
+   "total": 28,
+   "hot": 0,
+   "warn": 28,
+   "info": 0
+  },
+  "PERF-RS-LOOP-001": {
+   "total": 3,
+   "hot": 0,
+   "warn": 3,
+   "info": 0
+  },
+  "PERF-RS-LOOP-002": {
+   "total": 27,
+   "hot": 14,
+   "warn": 13,
+   "info": 0
+  },
+  "PERF-RS-LOOP-008": {
+   "total": 2,
+   "hot": 0,
+   "warn": 0,
+   "info": 2
+  },
+  "PERF-RS-STR-002": {
+   "total": 26,
+   "hot": 0,
+   "warn": 26,
+   "info": 0
+  },
+  "PERF-RS-STR-003": {
+   "total": 2,
+   "hot": 0,
+   "warn": 2,
+   "info": 0
+  },
+  "PERF-RS-TYPE-001": {
+   "total": 11,
+   "hot": 0,
+   "warn": 11,
+   "info": 0
+  },
+  "PERF-RS-TYPE-002": {
+   "total": 10,
+   "hot": 0,
+   "warn": 0,
+   "info": 10
+  }
+ }
+}

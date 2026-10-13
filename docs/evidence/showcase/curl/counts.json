@@ -1,0 +1,210 @@
+{
+ "url": "https://github.com/curl/curl",
+ "tag": "curl-8_11_1",
+ "commit": "75a2079d5c28debb2eaa848ca9430f1fe0d7844c",
+ "license": "curl (MIT-like)",
+ "lang": "c",
+ "file_count": 923,
+ "loc_code": 164579,
+ "findings_total": 11004,
+ "severity_totals": {
+  "hot": 225,
+  "warn": 1308,
+  "info": 9471
+ },
+ "distinct_rules": 32,
+ "by_rule": {
+  "PERF-C-ALLOC-001": {
+   "total": 68,
+   "hot": 68,
+   "warn": 0,
+   "info": 0
+  },
+  "PERF-C-ALLOC-002": {
+   "total": 107,
+   "hot": 37,
+   "warn": 70,
+   "info": 0
+  },
+  "PERF-C-ALLOC-003": {
+   "total": 2,
+   "hot": 2,
+   "warn": 0,
+   "info": 0
+  },
+  "PERF-C-ARCH-001": {
+   "total": 1254,
+   "hot": 0,
+   "warn": 189,
+   "info": 1065
+  },
+  "PERF-C-ARCH-002": {
+   "total": 1,
+   "hot": 1,
+   "warn": 0,
+   "info": 0
+  },
+  "PERF-C-ARCH-003": {
+   "total": 6958,
+   "hot": 0,
+   "warn": 0,
+   "info": 6958
+  },
+  "PERF-C-CALL-001": {
+   "total": 16,
+   "hot": 0,
+   "warn": 0,
+   "info": 16
+  },
+  "PERF-C-CALL-002": {
+   "total": 502,
+   "hot": 0,
+   "warn": 502,
+   "info": 0
+  },
+  "PERF-C-LOOP-001": {
+   "total": 34,
+   "hot": 0,
+   "warn": 34,
+   "info": 0
+  },
+  "PERF-C-LOOP-002": {
+   "total": 392,
+   "hot": 117,
+   "warn": 275,
+   "info": 0
+  },
+  "PERF-C-LOOP-003": {
+   "total": 11,
+   "hot": 0,
+   "warn": 0,
+   "info": 11
+  },
+  "PERF-C-LOOP-004": {
+   "total": 37,
+   "hot": 0,
+   "warn": 0,
+   "info": 37
+  },
+  "PERF-C-LOOP-005": {
+   "total": 145,
+   "hot": 0,
+   "warn": 0,
+   "info": 145
+  },
+  "PERF-C-LOOP-006": {
+   "total": 83,
+   "hot": 0,
+   "warn": 0,
+   "info": 83
+  },
+  "PERF-C-LOOP-007": {
+   "total": 36,
+   "hot": 0,
+   "warn": 0,
+   "info": 36
+  },
+  "PERF-C-LOOP-008": {
+   "total": 191,
+   "hot": 0,
+   "warn": 0,
+   "info": 191
+  },
+  "PERF-C-MEM-002": {
+   "total": 78,
+   "hot": 0,
+   "warn": 63,
+   "info": 15
+  },
+  "PERF-C-STR-002": {
+   "total": 32,
+   "hot": 0,
+   "warn": 32,
+   "info": 0
+  },
+  "PERF-C-STR-003": {
+   "total": 55,
+   "hot": 0,
+   "warn": 55,
+   "info": 0
+  },
+  "PERF-C-TYPE-002": {
+   "total": 46,
+   "hot": 0,
+   "warn": 0,
+   "info": 46
+  },
+  "PERF-PY-ALLOC-003": {
+   "total": 47,
+   "hot": 0,
+   "warn": 47,
+   "info": 0
+  },
+  "PERF-PY-ARCH-002": {
+   "total": 1,
+   "hot": 0,
+   "warn": 0,
+   "info": 1
+  },
+  "PERF-PY-ARCH-003": {
+   "total": 827,
+   "hot": 0,
+   "warn": 0,
+   "info": 827
+  },
+  "PERF-PY-ASYNC-002": {
+   "total": 1,
+   "hot": 0,
+   "warn": 1,
+   "info": 0
+  },
+  "PERF-PY-CALL-001": {
+   "total": 21,
+   "hot": 0,
+   "warn": 0,
+   "info": 21
+  },
+  "PERF-PY-CALL-002": {
+   "total": 7,
+   "hot": 0,
+   "warn": 0,
+   "info": 7
+  },
+  "PERF-PY-COMPREHENSION-001": {
+   "total": 1,
+   "hot": 0,
+   "warn": 0,
+   "info": 1
+  },
+  "PERF-PY-LOOP-001": {
+   "total": 3,
+   "hot": 0,
+   "warn": 0,
+   "info": 3
+  },
+  "PERF-PY-LOOP-002": {
+   "total": 28,
+   "hot": 0,
+   "warn": 28,
+   "info": 0
+  },
+  "PERF-PY-LOOP-007": {
+   "total": 11,
+   "hot": 0,
+   "warn": 11,
+   "info": 0
+  },
+  "PERF-PY-LOOP-009": {
+   "total": 8,
+   "hot": 0,
+   "warn": 0,
+   "info": 8
+  },
+  "PERF-PY-STR-001": {
+   "total": 1,
+   "hot": 0,
+   "warn": 1,
+   "info": 0
+  }
+ }
+}
