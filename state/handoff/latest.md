@@ -79,12 +79,14 @@ JSONs; only cosmetic nits remained, now fixed). **No unresolved reviewer disagre
 - **Hot-state hygiene:** `state/session-state.json` = **7258 B / 8192 B**; this session demoted `D-pf-193`/`D-pf-194` to cold `state/archive/ledger.jsonl` (append-only; 533 → 535 records).
 
 ## Next Actions
-1. **NEXT SESSION (`/new`) = performance-findings deep dive** (user-directed after M4): triage the
-   **production-code `hot` findings** from the M4 showcase (~**259**: chunkhound 26, ripgrep 34, curl 199;
-   aider 0) — dominated by `ALLOC-001` (113) + `LOOP-002` (104) + C `ALLOC-002` (37) — hunting for genuine
-   **critical performance bugs** (real + reachable + impactful; ideally corroborated by an upstream fix/issue).
-   Goal: concrete evidence that Perfpal finds things maintainers also consider real. Scope + "critical bug" bar
-   **pending user decision**. Deliverable: an evidence dossier of the standout bug(s).
+1. **NEXT SESSION (`/new`) = performance-findings deep dive** (user-directed after M4; **scope CONFIRMED** session 45):
+   triage the **production-code `hot` findings** from the 4 pinned M4 repos (~**259**: chunkhound 26, ripgrep 34,
+   curl 199; aider 0) — dominated by `ALLOC-001` (113) + `LOOP-002` (104) + C `ALLOC-002` (37).
+   **Bar = hunt L3+L4 hero bug(s):** hand-confirm real + reachable on a non-test path (L2), quantify impact (L3),
+   and **corroborate with an upstream commit/PR/issue on the same spot (L4)**. Deliverable:
+   `docs/evidence/findings-deep-dive.md` — every prod-`hot` candidate triaged (genuine / real-but-minor / FP) plus
+   the standout bug(s) evidenced at L3/L4. Reuse the pinned checkouts at `/var/tmp/opencode/m4-showcase/` (may need
+   full clones for history search). Read state + this handoff first.
 2. **Then `evidence-beta` M5** (first release): with **M2 run ✅ and M4 verified ✅**, un-park `beta-release` —
    clear `B-pf-001`/`B-pf-002`, publish `v0.2.0-beta.1` as a clearly-labelled pre-release
    (`--prerelease --latest=false`, never displacing `v0.1.0` as Latest), then T2 packaging.
