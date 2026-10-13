@@ -1,0 +1,262 @@
+[
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:47:17",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/compaction.rs",
+  "line": 47,
+  "symbol": "run_attach_copy_compaction",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "One-shot compaction; loop over rust_temp_% catalog rows (usually 0-2); format! per temp table, not a scan/write hot path."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:99:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/compaction.rs",
+  "line": 99,
+  "symbol": "run_attach_copy_compaction",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "One-shot compaction; loops over discovered embedding-dim tables (few); format! builds one COUNT query per dim."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:151:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/compaction.rs",
+  "line": 151,
+  "symbol": "run_attach_copy_compaction",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "One-shot compaction; per-dim loop (few iters) with 2 format! DDL builds; DDL/exec dominates, not alloc."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:261:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/compaction.rs",
+  "line": 261,
+  "symbol": "compaction_stats",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "Compaction probe; loops over known_dims (few); format! per dim to build COUNT query; one-shot maintenance."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:289:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/compaction.rs",
+  "line": 289,
+  "symbol": "compaction_stats",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "Same known_dims probe loop; 2 format! per dim; few iterations, one-shot compaction stats."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/hnsw.rs:90:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/hnsw.rs",
+  "line": 90,
+  "symbol": "drop_all_hnsw_indexes",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "Test-only branch (#[cfg(test)] at line 89); unreachable in production builds, so not a prod perf concern."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/hnsw.rs:100:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/hnsw.rs",
+  "line": 100,
+  "symbol": "drop_all_hnsw_indexes",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "Production branch but loops over discovered HNSW indexes (one per dim, few); one-shot drop before bulk load."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/hnsw.rs:152:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/hnsw.rs",
+  "line": 152,
+  "symbol": "ensure_all_hnsw_indexes",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "One-shot index (re)build; per-dim loop (few), 2 format! DDL per dim; catalog DDL dominates, not the alloc."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:133:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/write.rs",
+  "line": 133,
+  "symbol": "insert_chunks_for_file",
+  "verdict": "GENUINE",
+  "reachable": "hot",
+  "reason": "Inner per-chunk loop (depth 2) does 3 to_string (symbol/language/metadata) per chunk on the DB chunk-insert path."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:239:17",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/write.rs",
+  "line": 239,
+  "symbol": "insert_embeddings_txn",
+  "verdict": "GENUINE",
+  "reachable": "hot",
+  "reason": "Per embedding: serde_json::to_string of the whole vector + 2 to_string, loop depth 3, on the embedding-write path."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:297:17",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/write.rs",
+  "line": 297,
+  "symbol": "delete_paths",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Per-batch loop over emb_tables (few dims); format! DELETE per dim per 500-path batch; delete path, allocation amortized."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:326:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/write.rs",
+  "line": 326,
+  "symbol": "delete_paths",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Per 500-path batch: join collect + format! placeholder list; allocation amortized over DELETE_BATCH, delete path only."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:445:17",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/write.rs",
+  "line": 445,
+  "symbol": "pre_delete_for_upsert",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Loops over emb_tables (few dims); format! DELETE per dim; pre-insert setup path, few iterations."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:478:17",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/db/duckdb_backend/write.rs",
+  "line": 478,
+  "symbol": "pre_delete_for_upsert",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Same emb_tables per-dim loop in the by_path branch; few iterations; pre-delete setup path."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/differ.rs:118:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/differ.rs",
+  "line": 118,
+  "symbol": "compute_diff",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Scan loop over all disk files, but the single to_string is only in the mtime-match skip branch (one small hash copy/file)."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:566:25",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 566,
+  "symbol": "pipeline_parse_embed_store",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Iterates parsed files but format!/to_string fire only on the error/skip branch (diagnostic collection), not the normal path."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:705:25",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 705,
+  "symbol": "pipeline_parse_embed_store",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "for _ in 0..STORE_COMMIT_INTERVAL with STORE_COMMIT_INTERVAL=1 (const, line 654); to_string only on error; runs once."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:922:29",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 922,
+  "symbol": "pipeline_parse_embed_store",
+  "verdict": "GENUINE",
+  "reachable": "hot",
+  "reason": "Loop depth 3 (batch>file>chunk): to_string copies each chunk's embed_text/code for every chunk on the embed path."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1124:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 1124,
+  "symbol": "build_db_batch",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "One Vec<ChunkRecord> alloc (collect) per file; the alloc itself is minor vs the per-chunk field clones it wraps."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1209:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 1209,
+  "symbol": "parse_one_batch",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Vec::new() never heap-allocates (2 of 3 flagged 'allocs'); format! only on the parse-error branch."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1431:25",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 1431,
+  "symbol": "embed_batch_parallel",
+  "verdict": "GENUINE",
+  "reachable": "hot",
+  "reason": "Per embedding: collect() allocates a Vec<f32> (dims hundreds) converting f64 vectors; runs for every embedded chunk."
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1493:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 1493,
+  "symbol": "embed_batch_parallel",
+  "verdict": "GENUINE",
+  "reachable": "hot",
+  "reason": "2 to_string per chunk for loop-invariant provider/model (constant across all chunks) - classic hoist candidate."
+ },
+ {
+  "finding_id": "PERF-RS-ARCH-002:src/db/duckdb_backend/compaction.rs:32:5",
+  "rule_id": "PERF-RS-ARCH-002",
+  "path": "src/db/duckdb_backend/compaction.rs",
+  "line": 32,
+  "symbol": "run_attach_copy_compaction",
+  "verdict": "GENUINE",
+  "reachable": "hot",
+  "reason": "Aggregation correct: src/db/duckdb_backend holds the chunk/embedding write path (write.rs) - genuinely the hottest component."
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:src/pipeline/pipeline.rs:707:40",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 707,
+  "symbol": "pipeline_parse_embed_store",
+  "verdict": "FP",
+  "reachable": "hot",
+  "reason": "store_rx.recv() is the streaming loop's blocking receive - cannot be hoisted; enclosing loop bound is const 1."
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:src/pipeline/pipeline.rs:902:32",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 902,
+  "symbol": "pipeline_parse_embed_store",
+  "verdict": "FP",
+  "reachable": "hot",
+  "reason": "parse_rx.recv() is the embed thread's blocking consume call - intrinsic to the loop's purpose, not hoistable I/O."
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:src/pipeline/pipeline.rs:1001:32",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "src/pipeline/pipeline.rs",
+  "line": 1001,
+  "symbol": "pipeline_parse_embed_store",
+  "verdict": "FP",
+  "reachable": "hot",
+  "reason": "store_tx.send() per batch is the streaming producer's whole purpose; cannot be hoisted out of the loop."
+ }
+]

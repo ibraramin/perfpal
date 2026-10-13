@@ -1,0 +1,342 @@
+[
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/complete/bash.rs:83:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/complete/bash.rs",
+  "line": 83,
+  "symbol": "generate",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format!/to_string per FLAGS iter; real but one-shot bash-completion generation (cold)"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/complete/fish.rs:14:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/complete/fish.rs",
+  "line": 14,
+  "symbol": "generate",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format! per FLAGS iter; real but one-shot fish-completion generation (cold)"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/complete/powershell.rs:46:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/complete/powershell.rs",
+  "line": 46,
+  "symbol": "generate",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format!/to_string per FLAGS iter; real but one-shot PowerShell-completion generation (cold)"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:28:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 28,
+  "symbol": "generate_short",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "or_insert((vec![],vec![])) creates empty Vec = no heap alloc; one-shot -h help gen"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:39:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 39,
+  "symbol": "generate_short",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format! per category in -h help gen; real but one-shot help generation"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:113:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 113,
+  "symbol": "generate_long",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "String::new() does not heap-allocate; it is only the or_insert default in --help gen"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:123:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 123,
+  "symbol": "generate_long",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format! per category in --help gen; real but one-shot help generation"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:192:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 192,
+  "symbol": "generate_long_flag",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "paragraph.to_string() per paragraph (help.rs:196); one-shot --help generation"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:218:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 218,
+  "symbol": "remove_roff",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "collect/format/to_string per doc line; real but one-shot --help generation"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/man.rs:29:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/man.rs",
+  "line": 29,
+  "symbol": "generate",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "String::new() does not heap-allocate; it is only the or_insert default in man-page gen"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/man.rs:38:5",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/doc/man.rs",
+  "line": 38,
+  "symbol": "generate",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format! per category in man-page gen; real but one-shot generation"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/parse.rs:227:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/core/flags/parse.rs",
+  "line": 227,
+  "symbol": "parse",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "format! sites are bail error-path or lazy with_context closures; not per successful arg"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/globset/src/glob.rs:712:21",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/globset/src/glob.rs",
+  "line": 712,
+  "symbol": "tokens_to_regex",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "String::new() does not heap-allocate (glob.rs:713 alternates branch)"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/globset/src/lib.rs:424:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/globset/src/lib.rs",
+  "line": 424,
+  "symbol": "new",
+  "verdict": "GENUINE",
+  "reachable": "hot",
+  "reason": "to_owned/to_string per pattern (lib.rs:440,445,449); GlobSet built via GitignoreBuilder::build during walk"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/dir.rs:201:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/ignore/src/dir.rs",
+  "line": 201,
+  "symbol": "add_parents",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "hot",
+  "reason": "Arc::new per parent (dir.rs:219) but add_parents runs only at depth 0 (walk.rs:1355)"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/lib.rs:529:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/ignore/src/lib.rs",
+  "line": 529,
+  "symbol": "new",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "TempDir::new inside #[cfg(test)] mod tests (lib.rs:488); not in production binary"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/types.rs:337:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/ignore/src/types.rs",
+  "line": 337,
+  "symbol": "build",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "to_string calls are inside lazy map_err closure; run only on glob-compile error"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/types.rs:383:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/ignore/src/types.rs",
+  "line": 383,
+  "symbol": "select",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "name.to_string() per file type; select('all') builder runs once at startup"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/types.rs:397:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/ignore/src/types.rs",
+  "line": 397,
+  "symbol": "negate",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "name.to_string() per file type; negate('all') builder runs once at startup"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/pcre2/src/matcher.rs:51:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/pcre2/src/matcher.rs",
+  "line": 51,
+  "symbol": "build_many",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format! per pattern (one if/else branch); build_many compiles once at matcher construction"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/pcre2/src/matcher.rs:73:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/pcre2/src/matcher.rs",
+  "line": 73,
+  "symbol": "build_many",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "name.to_string() per capture name; runs once at matcher construction"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/regex/src/config.rs:183:13",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/regex/src/config.rs",
+  "line": 183,
+  "symbol": "new",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "format! per pattern (one if/else branch); ConfiguredHIR built once at startup"
+ },
+ {
+  "finding_id": "PERF-RS-ALLOC-001:crates/regex/src/literal.rs:200:9",
+  "rule_id": "PERF-RS-ALLOC-001",
+  "path": "crates/regex/src/literal.rs",
+  "line": 200,
+  "symbol": "extract_concat",
+  "verdict": "FP",
+  "reachable": "one-shot",
+  "reason": "Literal::exact(vec![]) is an empty Vec = no heap alloc (literal.rs:198,219)"
+ },
+ {
+  "finding_id": "PERF-RS-ARCH-002:crates/core/flags/hiargs.rs:112:5",
+  "rule_id": "PERF-RS-ARCH-002",
+  "path": "crates/core/flags/hiargs.rs",
+  "line": 112,
+  "symbol": "from_low_args",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "dir-level info aggregation; crates/core/flags is startup/help/doc-gen code, not search path"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/cli/src/decompress.rs:182:27",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/cli/src/decompress.rs",
+  "line": 182,
+  "symbol": "command",
+  "verdict": "FP",
+  "reachable": "hot",
+  "reason": "loop body returns unconditionally (decompress.rs:184); Command::new runs at most once per call"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:102:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 102,
+  "symbol": "format_short_columns",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "local write! macro to in-memory String; one-shot -h help column formatting"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:103:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 103,
+  "symbol": "format_short_columns",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "local write! macro to in-memory String; one-shot -h help column formatting"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:104:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 104,
+  "symbol": "format_short_columns",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "local write! macro to in-memory String; one-shot -h help column formatting"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:105:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 105,
+  "symbol": "format_short_columns",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "local write! macro to in-memory String; one-shot -h help column formatting"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:206:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/flags/doc/help.rs",
+  "line": 206,
+  "symbol": "generate_long_flag",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "local write! macro to in-memory String; one-shot --help generation"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:334:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/main.rs",
+  "line": 334,
+  "symbol": "types",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "stdout.write_all per type definition; one-shot --type-list mode"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:335:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/main.rs",
+  "line": 335,
+  "symbol": "types",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "stdout.write_all per type definition; one-shot --type-list mode"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:342:13",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/main.rs",
+  "line": 342,
+  "symbol": "types",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "inner loop over globs writes each glob; one-shot --type-list mode"
+ },
+ {
+  "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:345:9",
+  "rule_id": "PERF-RS-LOOP-002",
+  "path": "crates/core/main.rs",
+  "line": 345,
+  "symbol": "types",
+  "verdict": "REAL_BUT_MINOR",
+  "reachable": "one-shot",
+  "reason": "stdout.write_all per type definition; one-shot --type-list mode"
+ }
+]
