@@ -13,7 +13,7 @@ use crate::analyzer::finding::{
     PY_LOOP_009_RULE_ID,
 };
 use crate::analyzer::{Confidence, Finding, Severity};
-use crate::ir::{BindingKind, CalleeKind, LoopNode, Shape, ShapeKind};
+use crate::ir::{BindingKind, CalleeKind, LoopNode, Shape, ShapeKind, Span};
 use crate::scanner::FileUnit;
 
 use super::{enclosing_induction_vars, names_with_kind, path_final_segment, sort_findings};
@@ -50,6 +50,20 @@ const NET_METHODS: [&str; 10] = [
 /// File-object read/write methods (fired only when the receiver is proven a
 /// filehandle by the binding lattice).
 const FILE_METHODS: [&str; 4] = ["read", "write", "readline", "writelines"];
+
+/// Handle/process-setup calls (LOOP-002 message split, fix 5): acquiring the
+/// handle per iteration is hoistable setup. Every other call the rule fires
+/// on (streaming reads/writes, network methods, filehandle transfers) is
+/// element-wise transfer — batching is the fix, not hoisting.
+const SETUP_IO_CALLS: [&str; 7] = [
+    "open",
+    "urlopen",
+    "Popen",
+    "check_output",
+    "check_call",
+    "getoutput",
+    "accept",
+];
 
 /// PY-LOOP-001 — Deep loop nesting (transferred mirror of PERF-C-LOOP-001),
 /// Info.
@@ -114,15 +128,28 @@ pub(crate) fn python_loop_001(units: &[FileUnit]) -> Vec<Finding> {
 /// A call at `in_loop_depth ≥ 1` whose callee is a direct I/O name
 /// ([`DIRECT_IO_FAMILY`]), a network-rooted method ([`NET_ROOTS`] ×
 /// [`NET_METHODS`]), or a filehandle read/write method proven by the binding
-/// lattice. Evidence `callee`, `receiver_root` (when present), `loop_depth`.
-/// Warn/MEDIUM (receiver-root/filehandle gates are inference).
+/// lattice. Evidence `callee`, `receiver_root` (when present), `loop_depth`,
+/// `io_kind`. Warn/MEDIUM (receiver-root/filehandle gates are inference).
+///
+/// Divergence-study message split (fix 5): acquiring a handle per iteration
+/// ([`SETUP_IO_CALLS`]) is hoistable setup, while element-wise transfer
+/// (streaming reads/writes, network methods, filehandle transfers) cannot be
+/// hoisted — batching the transfer is the candidate.
+///
+/// Precision FP-class fix 1: Python has no `do-while(0)` shape (the producer
+/// always emits `condition_is_zero: false`), so the zero-guard gate below is
+/// a no-op today — kept for uniformity so a future backend emitting the flag
+/// is gated without a heuristic change.
 pub(crate) fn python_loop_002(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
         for func in &unit.functions {
             let filehandles: BTreeSet<String> = names_with_kind(func, BindingKind::Filehandle);
             for call in &func.calls {
-                if call.meta.in_loop_depth == 0 || call.callee_kind != CalleeKind::Direct {
+                if call.meta.in_loop_depth == 0
+                    || call.callee_kind != CalleeKind::Direct
+                    || in_zero_guard_loop(&func.loops, &call.meta.span)
+                {
                     continue;
                 }
                 let root = call.receiver_root.as_deref();
@@ -138,11 +165,35 @@ pub(crate) fn python_loop_002(units: &[FileUnit]) -> Vec<Finding> {
                     .callee_path
                     .clone()
                     .unwrap_or_else(|| call.callee_name.clone());
+                // Only a DIRECT handle-setup call is hoistable; network and
+                // filehandle transfers are element-wise streaming.
+                let hoistable = direct && SETUP_IO_CALLS.contains(&call.callee_name.as_str());
+                let message = if hoistable {
+                    format!(
+                        "'{}' acquires a file/network/subprocess handle every \
+                         iteration at loop depth {} — setup dominates the \
+                         loop; hoisting the handle out of the loop is a \
+                         candidate optimization",
+                        call.callee_name, call.meta.in_loop_depth
+                    )
+                } else {
+                    format!(
+                        "'{}' transfers element-wise every iteration at loop \
+                         depth {} — the blocking transfer dominates the loop; \
+                         batching into block operations is a candidate \
+                         optimization",
+                        call.callee_name, call.meta.in_loop_depth
+                    )
+                };
                 let mut evidence = vec![
                     ("callee".to_string(), callee),
                     (
                         "loop_depth".to_string(),
                         call.meta.in_loop_depth.to_string(),
+                    ),
+                    (
+                        "io_kind".to_string(),
+                        if hoistable { "hoistable" } else { "streaming" }.to_string(),
                     ),
                 ];
                 if let Some(root) = root {
@@ -152,13 +203,7 @@ pub(crate) fn python_loop_002(units: &[FileUnit]) -> Vec<Finding> {
                     threshold: None,
                     rule_id: PY_LOOP_002_RULE_ID.to_string(),
                     title: "Expensive I/O call inside loop".to_string(),
-                    message: format!(
-                        "'{}' performs file/network/subprocess I/O every \
-                         iteration at loop depth {} — the blocking syscall \
-                         dominates the loop; hoisting the handle or batching \
-                         the I/O is a candidate optimization",
-                        call.callee_name, call.meta.in_loop_depth
-                    ),
+                    message,
                     severity: Severity::Warn,
                     confidence: Confidence::Medium,
                     resolver_tier: call.meta.resolver_tier,
@@ -468,6 +513,24 @@ pub(crate) fn python_loop_009(units: &[FileUnit]) -> Vec<Finding> {
     findings
 }
 
+/// Precision FP-class fix 1 shared gate: true when `span`'s innermost
+/// enclosing loop carries the producer-set `(0)`-condition flag. The Python
+/// backend never sets the flag (no do-while shape); the gate is uniformity
+/// with the C rule.
+fn in_zero_guard_loop(loops: &[LoopNode], span: &Span) -> bool {
+    loops
+        .iter()
+        .filter(|l| super::super::span_contains(&l.span, span))
+        .min_by_key(|l| {
+            (
+                std::cmp::Reverse(l.depth),
+                l.span.start_line,
+                l.span.start_col,
+            )
+        })
+        .is_some_and(|l| l.condition_is_zero)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -542,7 +605,13 @@ mod tests {
             Vec::new(),
             false,
         );
-        assert_eq!(python_loop_002(&[unit(vec![net])]).len(), 1);
+        let hits = python_loop_002(&[unit(vec![net])]);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].evidence.get("io_kind").map(String::as_str),
+            Some("streaming"),
+            "network transfer is element-wise streaming"
+        );
 
         let logging = func(
             "f",
@@ -557,6 +626,58 @@ mod tests {
             false,
         );
         assert!(python_loop_002(&[unit(vec![logging])]).is_empty());
+    }
+
+    #[test]
+    fn loop_002_splits_setup_from_streaming() {
+        let span = point(4);
+        let setup = func(
+            "f",
+            Span::default(),
+            vec![call("open", None, None, span, 1)],
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            false,
+        );
+        let hits = python_loop_002(&[unit(vec![setup])]);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].evidence.get("io_kind").map(String::as_str),
+            Some("hoistable")
+        );
+        assert!(
+            hits[0].message.contains("hoisting the handle"),
+            "setup message names hoisting: {}",
+            hits[0].message
+        );
+
+        let streaming = func(
+            "f",
+            Span::default(),
+            vec![call("recv", None, None, span, 1)],
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            false,
+        );
+        let hits = python_loop_002(&[unit(vec![streaming])]);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].evidence.get("io_kind").map(String::as_str),
+            Some("streaming")
+        );
+        assert!(
+            hits[0].message.contains("batching into block operations"),
+            "streaming message names batching: {}",
+            hits[0].message
+        );
     }
 
     #[test]

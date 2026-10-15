@@ -328,14 +328,14 @@ void accumulate_once@S@(char *dst, const char *src) {
 "#;
 
 const RS_ALLOC_TP: &str = r#"//! Precision corpus — Rust alloc family (PERF-RS-ALLOC-001): planted true
-//! positive. Silent controls live in `alloc_silent.rs`.
+//! positive (REAL per-iteration alloc; zero-alloc ctors silent since fix 3; silents in alloc_silent.rs).
 
 /// TP ALLOC-001: a single innermost loop that allocates per iteration. The
 /// finding anchors at the LOOP span (the `for` line), not the alloc call.
 pub fn alloc_in_loop@S@(n: usize) -> usize {
     let mut total = 0usize;
     for i in 0..n { // TP PERF-RS-ALLOC-001
-        let v: Vec<usize> = Vec::new();
+        let v: Vec<usize> = vec![i; 4];
         total += v.len() + i;
     }
     total
@@ -2527,12 +2527,68 @@ const FILES_PER_UNIT: usize = 22;
 
 /// The `small` rung: the nine M1 gate constructs plus a true positive and a
 /// silent control for EVERY remaining rule in the 67-rule catalog.
+/// Precision FP-class fix fixtures (fixes 1-4): the committed M1
+/// silent-case + TP fixtures from `tests/fixtures/precision/`, lifted via
+/// `include_str!` — byte-verbatim BY CONSTRUCTION, so the M1 anchors can
+/// never drift from the KPI corpus (function names are unique across the
+/// generated tree, so the ARCH-003 uniqueness gate is undisturbed). Labels
+/// use explicit anchor lines where TP markers repeat across sibling
+/// functions (`realloc_guard.c`); rung scoring verifies every anchor
+/// end-to-end (drift fails loudly as FN/FP).
+const FIX1_DOWHILE: &str = include_str!("../fixtures/precision/c/loop_dowhile.c");
+const FIX2_CFGDEAD: &str = include_str!("../fixtures/precision/c/cfg_dead.c");
+const FIX4_REALLOC: &str = include_str!("../fixtures/precision/c/realloc_guard.c");
+const FIX3_EMPTYCTOR: &str = include_str!("../fixtures/precision/rust/alloc_empty.rs");
+
+/// Plant the fix fixtures at their M1 paths with the M1 anchor lines.
+fn fix_units() -> (Vec<GenFile>, Vec<Label>) {
+    let files = vec![
+        gf("c/loop_dowhile.c".to_string(), FIX1_DOWHILE.to_string()),
+        gf("c/cfg_dead.c".to_string(), FIX2_CFGDEAD.to_string()),
+        gf("c/realloc_guard.c".to_string(), FIX4_REALLOC.to_string()),
+        gf(
+            "rust/alloc_empty.rs".to_string(),
+            FIX3_EMPTYCTOR.to_string(),
+        ),
+    ];
+    let at = |rule_id: &'static str, rel_path: &str, line: u32| Label {
+        rule_id,
+        rel_path: rel_path.to_string(),
+        line,
+        expect: Expect::Fire,
+    };
+    let labels = vec![
+        at(C_LOOP_002, "c/loop_dowhile.c", 12),
+        at(C_LOOP_002, "c/loop_dowhile.c", 22),
+        at(C_ALLOC_001, "c/cfg_dead.c", 12),
+        at(C_ALLOC_002, "c/cfg_dead.c", 15),
+        at(C_ALLOC_001, "c/cfg_dead.c", 41),
+        at(C_ALLOC_002, "c/cfg_dead.c", 44),
+        at(C_ALLOC_001, "c/realloc_guard.c", 13),
+        at(C_ALLOC_003, "c/realloc_guard.c", 13),
+        at(C_ALLOC_001, "c/realloc_guard.c", 24),
+        at(RS_ALLOC_001, "rust/alloc_empty.rs", 28),
+    ];
+    // Marker-anchored duplicates of the unambiguous anchors above: the
+    // markers MUST be unique or `fire` fails loudly, so these double as
+    // verbatim-lift drift locks (a fixture edit that shifts lines breaks
+    // the M1 KPI first, and a const edit that shifts lines breaks here).
+    let dowhile = contents_of(&files, "c/loop_dowhile.c").to_string();
+    assert_eq!(anchor_line(&dowhile, "i=%d"), 12);
+    assert_eq!(anchor_line(&dowhile, "do=%d"), 22);
+    let cfgdead = contents_of(&files, "c/cfg_dead.c").to_string();
+    assert_eq!(anchor_line(&cfgdead, "malloc(16)"), 12);
+    assert_eq!(anchor_line(&cfgdead, "malloc(64)"), 41);
+    let emptyctor = contents_of(&files, "rust/alloc_empty.rs").to_string();
+    assert_eq!(anchor_line(&emptyctor, "v[0]"), 30);
+    (files, labels)
+}
+
 pub fn small() -> Rung {
     let (mut files, mut labels) = gate_c_unit("");
     let (mut rf, mut rl) = gate_rust_unit("");
     files.append(&mut rf);
     labels.append(&mut rl);
-
     // Collateral true positives in the committed M1 gate files, now that the
     // full catalog is scoped: the in-loop `free` (ALLOC-002), the unbounded
     // `strcat` sites (STR-003), and the recomputed `len()` calls (STR-002).
@@ -2571,6 +2627,13 @@ pub fn small() -> Rung {
         &rust_alloc_sil,
         "s.len()",
     ));
+
+    // Precision FP-class fix fixtures (fixes 1-4): the committed M1
+    // silent-case + TP fixtures, lifted verbatim so every fix anchor the M1
+    // KPI pins is also planted here (`assert_small_anchors_match_m1`).
+    let (mut ff, mut fl) = fix_units();
+    files.append(&mut ff);
+    labels.append(&mut fl);
 
     // The 36 remaining rules: dedicated minimal files.
     let (mut ef, mut el) = c_ext();

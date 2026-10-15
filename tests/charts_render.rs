@@ -200,6 +200,7 @@ fn costly_fn(path: &str, name: &str, cyclomatic: u32) -> FunctionStats {
         idiom_hash: None,
         error_path: Some(false),
         alloc_family: None,
+        cfg_gated: None,
     }
 }
 

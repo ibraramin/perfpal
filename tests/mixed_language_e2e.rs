@@ -33,9 +33,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use perfpal::analyzer::analyze;
 use perfpal::analyzer::finding::{
-    ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ARCH_003_RULE_ID, RS_ALLOC_001_RULE_ID,
-    RS_ALLOC_003_RULE_ID, RS_ARCH_003_RULE_ID, RS_MEM_001_RULE_ID, RS_STR_002_RULE_ID,
-    STR_001_RULE_ID, STR_003_RULE_ID,
+    ALLOC_001_RULE_ID, ALLOC_002_RULE_ID, ARCH_003_RULE_ID, RS_ALLOC_003_RULE_ID,
+    RS_ARCH_003_RULE_ID, RS_MEM_001_RULE_ID, RS_STR_002_RULE_ID, STR_001_RULE_ID, STR_003_RULE_ID,
 };
 use perfpal::cli::run_with;
 use perfpal::scanner::scan;
@@ -181,14 +180,13 @@ fn mixed_c_and_rust_tree_locks_language_gating_and_report() {
         "expected exactly these PERF-C-* rule ids on C files, got {findings:?}"
     );
 
-    let expected_rs: BTreeSet<&str> = [
-        RS_ALLOC_001_RULE_ID,
-        RS_ALLOC_003_RULE_ID,
-        RS_STR_002_RULE_ID,
-        RS_MEM_001_RULE_ID,
-    ]
-    .into_iter()
-    .collect();
+    // `RS_ALLOC_001` is deliberately ABSENT since precision fix 3: the
+    // fixture's only in-loop alloc site is `Vec::new()`, a zero-alloc
+    // constructor that never touches the allocator (empty-ctor FP class).
+    let expected_rs: BTreeSet<&str> =
+        [RS_ALLOC_003_RULE_ID, RS_STR_002_RULE_ID, RS_MEM_001_RULE_ID]
+            .into_iter()
+            .collect();
     assert_eq!(
         rs_rules, expected_rs,
         "expected exactly these PERF-RS-* rule ids on Rust files, got {findings:?}"

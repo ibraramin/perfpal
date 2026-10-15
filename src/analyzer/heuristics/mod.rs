@@ -135,6 +135,9 @@ pub(super) struct AllocCandidate<'a> {
     /// Resolver tier carried by the source event (ir-v1.md §2) — findings
     /// built from this candidate inherit it instead of hardcoding a tier.
     pub resolver_tier: ResolverTier,
+    /// The source call sits inside a conditional branch within the loop
+    /// (precision FP-class fix 4: the ALLOC-003 capacity-guard conjunct).
+    pub conditional_guarded: bool,
 }
 
 /// Walk every CallEvent that is an alloc site: a DIRECT alloc-family
@@ -168,6 +171,7 @@ pub(super) fn alloc_candidates(units: &[FileUnit]) -> Vec<AllocCandidate<'_>> {
                         loop_depth: call.meta.in_loop_depth,
                         alloc_site_index: site_index,
                         resolver_tier: call.meta.resolver_tier,
+                        conditional_guarded: call.conditional_guarded,
                     });
                 }
             }

@@ -237,6 +237,7 @@ fn function_stats(
                 idiom_hash: r.idiom_hash.clone(),
                 error_path: r.error_path,
                 alloc_family: r.alloc_family.clone(),
+                cfg_gated: r.cfg_gated,
             }
         })
         .collect()
@@ -1500,6 +1501,7 @@ mod tests {
             idiom_hash: None,
             error_path: None,
             alloc_family: None,
+            cfg_gated: None,
         };
         let functions = vec![
             stat(2, 0),   // 01-04, 0

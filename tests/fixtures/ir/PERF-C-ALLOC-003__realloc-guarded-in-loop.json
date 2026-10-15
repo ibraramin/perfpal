@@ -1,0 +1,73 @@
+[
+  {
+    "file": {
+      "path": "src/grow_guarded.c",
+      "language": "c",
+      "loc": {"code": 14, "comment": 0, "blank": 2},
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {"quoted": 0, "angle": 0}
+    },
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "src/grow_guarded.c#append_rows_guarded#4:5",
+          "name": "append_rows_guarded",
+          "path": "src/grow_guarded.c",
+          "span": {"start_line": 4, "start_col": 5, "end_line": 12, "end_col": 6},
+          "param_count": 3,
+          "param_types": ["char *buf", "int n", "size_t cap"],
+          "cyclomatic_complexity": 3,
+          "cognitive_complexity": 2,
+          "max_loop_depth": 1,
+          "alloc_site_count": 1,
+          "length_lines": 9
+        },
+        "calls": [
+          {
+            "callee_name": "realloc",
+            "callee_kind": "direct",
+            "args": [{"kind": "identifier", "name": "buf"}, {"kind": "binary", "name": null}],
+            "statement_role": "nested",
+            "conditional_guarded": true,
+            "span": {"start_line": 8, "start_col": 13, "end_line": 8, "end_col": 40},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [
+          {
+            "op": "+",
+            "left": {"kind": "identifier", "name": "len"},
+            "right": {"kind": "identifier", "name": "chunk"},
+            "span": {"start_line": 8, "start_col": 25, "end_line": 8, "end_col": 38},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": ["i"],
+            "span": {"start_line": 5, "start_col": 5, "end_line": 11, "end_col": 6},
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ]
+      }
+    ]
+  }
+]

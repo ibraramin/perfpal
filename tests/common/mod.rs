@@ -487,6 +487,7 @@ fn loop_node(kind: LoopKind, depth: u32, span: Span) -> LoopNode {
         span,
         resolver_tier: ResolverTier::Syntactic,
         macro_origin: false,
+        condition_is_zero: false,
     }
 }
 
@@ -534,6 +535,7 @@ fn func(
             idiom_hash: None,
             error_path: None,
             alloc_family: None,
+            cfg_gated: None,
         },
         calls,
         assignments: Vec::new(),

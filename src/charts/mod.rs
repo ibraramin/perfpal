@@ -779,6 +779,7 @@ mod tests {
             idiom_hash: None,
             error_path: Some(true),
             alloc_family: Some("real_alloc".to_string()),
+            cfg_gated: None,
         };
         // 3 + 2 + 2*1 + 3*2 + 4 + 1 + 2 + 2 + 1 + 1 = 24.
         assert_eq!(function_cost(&costly), 24.0);
@@ -802,6 +803,7 @@ mod tests {
             idiom_hash: None,
             error_path: None,
             alloc_family: None,
+            cfg_gated: None,
         };
         assert_eq!(function_cost(&bare), 1.0);
     }

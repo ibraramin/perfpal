@@ -40,20 +40,21 @@ fn alloc_001_aggregates_one_finding_per_innermost_loop() {
     assert_eq!(
         hits.len(),
         1,
-        "three in-loop alloc sites in ONE loop aggregate to one finding"
+        "two in-loop alloc sites in ONE loop aggregate to one finding (the \
+         Vec::new zero-alloc ctor in the same loop stays silent since fix 3)"
     );
     let f = hits[0];
     assert_eq!(f.severity, Severity::Hot);
     assert_eq!(f.confidence, Confidence::High);
-    assert_eq!(f.evidence.get("alloc_count").map(String::as_str), Some("3"));
+    assert_eq!(f.evidence.get("alloc_count").map(String::as_str), Some("2"));
     assert_eq!(
         f.evidence.get("callees").map(String::as_str),
-        Some("Vec::new, to_vec, vec"),
+        Some("to_vec, vec"),
         "sorted-unique SHORT callee tokens (method receiver text is not leaked)"
     );
     assert_eq!(
         f.evidence.get("callee").map(String::as_str),
-        Some("Vec::new"),
+        Some("to_vec"),
         "evidence-key compatibility: first sorted token"
     );
     assert_eq!(f.evidence.get("loop_depth").map(String::as_str), Some("1"));
@@ -82,7 +83,7 @@ fn alloc_001_emits_one_finding_per_loop() {
         .iter()
         .map(|f| f.evidence.get("alloc_count").map(String::as_str).unwrap())
         .collect();
-    assert_eq!(counts, ["2", "1"], "groups ordered by loop span");
+    assert_eq!(counts, ["1", "1"], "groups ordered by loop span");
     assert_eq!(hits[0].span.start_line, 3, "first loop anchor");
     assert_eq!(hits[1].span.start_line, 8, "second loop anchor");
 }
@@ -97,6 +98,26 @@ fn alloc_001_suppresses_literal_receiver_string_alloc() {
         common::by_rule(&findings, RS_ALLOC_001_RULE_ID).is_empty(),
         "literal-receiver .to_string()/.to_owned() allocations stay silent"
     );
+}
+
+/// Precision FP-class fix 3: zero-alloc constructors never fire
+/// RS-ALLOC-001 — qualified `String::new` / `Vec::new` per-call, and the
+/// arg-less `vec![]` macro form via the scan-side dominant family
+/// (`record.alloc_family == "empty_ctor"`). A `vec!` macro site in a
+/// `real_alloc`-dominant function still fires (no over-suppression).
+#[test]
+fn alloc_001_suppresses_empty_ctors_but_not_real_vec_macro() {
+    let units = common::load_units_fixture("PERF-RS-ALLOC-001__empty-ctor.json");
+    let findings = analyze(&units);
+    let hits = common::by_rule(&findings, RS_ALLOC_001_RULE_ID);
+    assert_eq!(
+        hits.len(),
+        1,
+        "the empty-dominant loop stays silent; the real-dominant vec! loop fires"
+    );
+    let f = hits[0];
+    assert_eq!(f.span.start_line, 16, "anchor is the real-dominant loop");
+    assert_eq!(f.evidence.get("callees").map(String::as_str), Some("vec"));
 }
 
 /// M1 `+N more` cap: a single innermost loop with more than 8 distinct
@@ -122,8 +143,8 @@ fn alloc_001_caps_callee_list_with_more_suffix() {
     assert_eq!(
         f.evidence.get("callees").map(String::as_str),
         Some(
-            "Arc::new, Box::new, Rc::new, String::new, \
-             String::with_capacity, Vec::new, collect, format, +2 more"
+            "Arc::new, Box::new, Rc::new, String::with_capacity, \
+              VecDeque::with_capacity, collect, format, to_owned, +2 more"
         ),
         "the 8-token cap keeps the smallest sorted-unique tokens with an exact remainder"
     );
@@ -167,7 +188,7 @@ fn alloc_001_defensive_singleton_anchors_at_call_span() {
     );
     assert_eq!(
         f.evidence.get("callees").map(String::as_str),
-        Some("Vec::new")
+        Some("Vec::with_capacity")
     );
 }
 
@@ -338,6 +359,61 @@ fn loop_002_macros_methods_and_qualified_calls_fire_with_guard_downgrade() {
     for f in &hits {
         assert_eq!(f.confidence, Confidence::Medium);
     }
+    for f in &hits {
+        assert_eq!(
+            f.evidence.get("io_kind").map(String::as_str),
+            Some("hoistable"),
+            "macros, whole-buffer methods and setup paths are hoistable"
+        );
+    }
+}
+
+/// Divergence-study message split (fix 5): element-wise streaming transfer
+/// (`recv`) cannot be hoisted — batching is the candidate — while a setup
+/// macro (`println!`) is hoistable.
+#[test]
+fn loop_002_splits_streaming_from_hoistable() {
+    let units = common::load_units_fixture("PERF-RS-LOOP-002__streaming-split.json");
+    let findings = analyze(&units);
+    let hits = common::by_rule(&findings, RS_LOOP_002_RULE_ID);
+    assert_eq!(
+        hits.len(),
+        2,
+        "streaming recv and hoistable println both fire"
+    );
+
+    let stream = hits
+        .iter()
+        .find(|f| f.span.start_line == 5)
+        .expect("streaming recv");
+    assert_eq!(
+        stream.evidence.get("io_kind").map(String::as_str),
+        Some("streaming")
+    );
+    assert!(
+        stream.message.contains("batching"),
+        "streaming message names batching: {}",
+        stream.message
+    );
+    assert!(
+        !stream.message.contains("hoisting the call"),
+        "streaming message must not advise hoisting: {}",
+        stream.message
+    );
+
+    let hoist = hits
+        .iter()
+        .find(|f| f.span.start_line == 15)
+        .expect("hoistable println");
+    assert_eq!(
+        hoist.evidence.get("io_kind").map(String::as_str),
+        Some("hoistable")
+    );
+    assert!(
+        hoist.message.contains("hoisting the call"),
+        "hoistable message names hoisting: {}",
+        hoist.message
+    );
 }
 
 // ===========================================================================
@@ -572,13 +648,13 @@ fn real_parse_lock_alloc_family() {
     write_file(
         &root,
         "src/lib.rs",
-        "pub fn fill(n: usize) -> Vec<u8> {\n    let mut out = Vec::with_capacity(n);\n    for i in 0..n {\n        let tmp = Vec::new();\n        out.reserve(1);\n        out.push(tmp.len() as u8);\n        let _ = i;\n    }\n    out\n}\n",
+        "pub fn fill(n: usize) -> Vec<u8> {\n    let mut out = Vec::with_capacity(n);\n    for i in 0..n {\n        let tmp = vec![i as u8; 2];\n        out.reserve(1);\n        out.push(tmp.len() as u8);\n        let _ = i;\n    }\n    out\n}\n",
     );
     let units = scan(&root).expect("scan must succeed");
     let findings = analyze(&units);
     assert!(
         !common::by_rule(&findings, RS_ALLOC_001_RULE_ID).is_empty(),
-        "real parse: per-iteration Vec::new fires RS-ALLOC-001"
+        "real parse: per-iteration vec![] fires RS-ALLOC-001 (a Vec::new zero-alloc ctor here would stay silent since fix 3)"
     );
     assert!(
         !common::by_rule(&findings, RS_ALLOC_003_RULE_ID).is_empty(),

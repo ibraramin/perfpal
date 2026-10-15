@@ -361,8 +361,10 @@ fn real_parse_lock_not_in_loop_family() {
     );
     let findings = analyze(&units);
 
-    // ALLOC-001: only the in-loop `Vec::new` fires; the out-of-loop one and
-    // the out-of-loop `Vec::with_capacity` stay silent.
+    // ALLOC-001: only the in-loop `vec!` fires; the out-of-loop one and
+    // the out-of-loop `Vec::with_capacity` stay silent. (The in-loop site is
+    // a REAL allocation since precision fix 3 — a `Vec::new()` zero-alloc
+    // ctor there would stay silent.)
     let alloc = common::by_rule(&findings, RS_ALLOC_001_RULE_ID);
     assert_eq!(
         alloc.len(),
@@ -371,7 +373,7 @@ fn real_parse_lock_not_in_loop_family() {
     );
     assert_eq!(
         alloc[0].evidence.get("callee").map(String::as_str),
-        Some("Vec::new")
+        Some("vec")
     );
     assert_eq!(
         alloc[0].evidence.get("loop_depth").map(String::as_str),

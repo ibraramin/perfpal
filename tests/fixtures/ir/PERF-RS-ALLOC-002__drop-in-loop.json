@@ -24,7 +24,7 @@
       {
         "record": {"id": "src/drops.rs#drop_with_alloc#12:1", "name": "drop_with_alloc", "path": "src/drops.rs", "span": {"start_line": 12, "start_col": 1, "end_line": 25, "end_col": 2}, "param_count": 0, "param_types": [], "cyclomatic_complexity": 2, "cognitive_complexity": 2, "max_loop_depth": 1, "alloc_site_count": 1, "length_lines": 14},
         "calls": [
-          {"span": {"start_line": 15, "start_col": 9, "end_line": 15, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "new", "callee_kind": "direct", "callee_path": "Vec::new", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 15, "start_col": 9, "end_line": 15, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "with_capacity", "callee_kind": "direct", "callee_path": "Vec::with_capacity", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false},
           {"span": {"start_line": 16, "start_col": 9, "end_line": 16, "end_col": 16}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "drop", "callee_kind": "direct", "callee_path": "drop", "is_macro": false, "args": [{"kind": "identifier", "name": "buf"}], "statement_role": "primary", "conditional_guarded": false}
         ],
         "assignments": [],

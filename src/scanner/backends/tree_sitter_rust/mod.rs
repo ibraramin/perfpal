@@ -976,6 +976,7 @@ fn function_unit(
         idiom_hash: None,
         error_path: None,
         alloc_family: None,
+        cfg_gated: None,
     };
     FunctionUnit {
         record,
@@ -1145,6 +1146,8 @@ impl FuncScan<'_> {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
+            // No do-while shape in Rust: the `(0)`-wrapper gate never fires.
+            condition_is_zero: false,
         });
 
         // Rust `for` differs from C's per-iteration increment: the iterable

@@ -103,9 +103,9 @@ Distribution — max\_loop\_depth:
 
 #### Expensive I/O call inside loop  (`PERF\-PY\-LOOP\-002:04\_stdio\_churn\.py:8:14`)
 - Location: `04\_stdio\_churn\.py:8` (\<module\>)
-- Message: 'open' performs file/network/subprocess I/O every iteration at loop depth 1 — the blocking syscall dominates the loop; hoisting the handle or batching the I/O is a candidate optimization
+- Message: 'open' acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
-- Evidence: callee=open, loop\_depth=1
+- Evidence: callee=open, io\_kind=hoistable, loop\_depth=1
 
 #### Linear list scan inside loop  (`PERF\-PY\-LOOP\-007:07\_membership\_scan\.py:9:12`)
 - Location: `07\_membership\_scan\.py:9` (\<module\>)
@@ -254,7 +254,7 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 | `PERF\-PY\-COMPREHENSION\-001` | Manual loop collapsible to a comprehension | Detects a loop whose body is a single \`list\.append\` statement \(single\-statement gate\) appending to a list\-bound receiver — a list comprehension compiles to a specialised \`LIST\_APPEND\` with inline iteration\. |
 | `PERF\-PY\-EXECUTOR\-001` | Executor/event\-loop creation per iteration | Detects \`ThreadPoolExecutor\(\.\.\.\)\`, \`ProcessPoolExecutor\(\.\.\.\)\` and \`asyncio\.new\_event\_loop\(\)\` constructed inside a loop — worker/selector setup is re\-paid every iteration and never amortises\. |
 | `PERF\-PY\-LOOP\-001` | Deep loop nesting | Detects loop nesting depth exactly 3 \(one finding per maximal nest entry\) — an O\(n^k\) candidate zone under interpreted iteration\. |
-| `PERF\-PY\-LOOP\-002` | Expensive I/O call inside loop | Detects file/network/subprocess/socket I/O inside a loop — direct I/O names, network\-rooted methods, and filehandle read/write methods\. \`print\`/\`input\` are deliberately excluded \(72–83% of the C rule's raw hits were logging\)\. |
+| `PERF\-PY\-LOOP\-002` | Expensive I/O call inside loop | Detects file/network/subprocess/socket I/O inside a loop — direct I/O names, network\-rooted methods, and filehandle read/write methods\. \`print\`/\`input\` are deliberately excluded \(72–83% of the C rule's raw hits were logging\)\. The message splits hoistable handle setup \(open/urlopen/Popen/\.\.\.\) from element\-wise streaming transfer \(batching is the candidate\); evidence carries io\_kind\. |
 | `PERF\-PY\-LOOP\-003` | \`range\(len\(seq\)\)\` iteration | Detects \`range\(len\(seq\)\)\` inside a loop \(the \`len\(\)\` gate keeps it false\-positive\-free\) — prefer direct iteration or \`enumerate\`\. |
 | `PERF\-PY\-LOOP\-007` | Linear index scan of a list inside loop | Detects \(a\) membership \`x in list\` / \`x not in list\` where the container is a list\-bound name \(additive \`ComparisonEvent\.operator\`\), and \(b\) a list\-bound name subscripted by an enclosing loop's induction variable — including a lone \`seq\[i\]\` and deeper \`seq\[i\]\.field\` chains\. The kind gate excludes set/dict \(kills the CTL\-IN\-SET false\-positive class\)\. Flagship\. |
 | `PERF\-PY\-LOOP\-009` | \`try\`/\`except\` inside a loop | Detects a \`try\_statement\` whose event metadata reports \`in\_loop\_depth ≥ 1\` \(additive TryEvent stream\) — CPython sets up per\-iteration exception handling\. Honest that the zero\-cost\-\`try\` claim is version\-dependent \(CPython ≥ 3\.11\)\. Info\. |

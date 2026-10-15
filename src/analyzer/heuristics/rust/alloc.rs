@@ -63,6 +63,11 @@ use super::{callee_token, innermost_enclosing_loop, is_bare_identifier};
 /// macro-generated allocation whose expansion is invisible under the
 /// `token_tree` blind spot is not seen beyond the macro-invocation event
 /// itself.
+///
+/// Precision FP-class fix 3: zero-alloc constructors never fire here (see
+/// [`is_empty_ctor_site`]) — a `String::new()` / `Vec::new()` / map-set
+/// `::new` call performs NO allocation at the site, so per-iteration
+/// "allocator churn" on it is a false positive.
 pub(crate) fn rust_alloc_001(units: &[FileUnit]) -> Vec<Finding> {
     // (function id, anchor line, anchor col) → aggregated group. BTreeMap
     // keeps construction deterministic; the final sort re-anchors by
@@ -79,6 +84,9 @@ pub(crate) fn rust_alloc_001(units: &[FileUnit]) -> Vec<Finding> {
                     continue;
                 }
                 if call.meta.in_loop_depth == 0 || !call.meta.is_innermost {
+                    continue;
+                }
+                if is_empty_ctor_site(call, func.record.alloc_family.as_deref()) {
                     continue;
                 }
                 if is_literal_receiver_string_alloc(call) {
@@ -218,6 +226,47 @@ fn short_alloc_token(call: &CallEvent) -> String {
     }
 }
 
+/// Precision FP-class fix 3 — zero-alloc constructor paths: the qualified
+/// `*::new` forms that never touch the allocator. Mirrors the
+/// `AllocFamily::EmptyCtor` qualified arm of
+/// `scanner::instrument::classify_alloc_call` (which the analyzer consults
+/// via `record.alloc_family`); `Box`/`Rc`/`Arc` `::new` and
+/// `with_capacity` are REAL allocation and stay out of this list.
+const EMPTY_CTOR_QUALIFIED: [&str; 7] = [
+    "String::new",
+    "Vec::new",
+    "VecDeque::new",
+    "HashMap::new",
+    "HashSet::new",
+    "BTreeMap::new",
+    "BTreeSet::new",
+];
+
+/// Precision FP-class fix 3 gate: true when this alloc-family site is a
+/// zero-alloc constructor performing NO allocation at the call, so an
+/// "allocator churn" finding on it would be a false positive.
+///
+/// Two arms (both conservative — anything unproven keeps firing):
+/// - qualified `*::new` empty ctors ([`EMPTY_CTOR_QUALIFIED`]), provable
+///   per-call from `callee_path` alone (exact match, mirroring the
+///   scan-side classifier);
+/// - the arg-less `vec![]` macro form: macro calls carry no args and no body
+///   text analyzer-side, so emptiness is readable ONLY through the
+///   scan-side dominant family — gated solely when
+///   `record.alloc_family == "empty_ctor"` (computed WITH body text, where
+///   available). A `vec![..]` with elements in an empty-dominant function is
+///   the documented residual false negative.
+fn is_empty_ctor_site(call: &CallEvent, alloc_family: Option<&str>) -> bool {
+    if call
+        .callee_path
+        .as_deref()
+        .is_some_and(|path| EMPTY_CTOR_QUALIFIED.contains(&path))
+    {
+        return true;
+    }
+    call.is_macro && call.callee_name == "vec" && alloc_family == Some("empty_ctor")
+}
+
 /// M1 literal-receiver suppression: `"…".to_string()` / `"…".to_owned()`.
 /// The receiver is the base before the FINAL `.` of `callee_path` (leading
 /// whitespace trimmed) when it starts with a string-literal prefix; for the
@@ -263,6 +312,9 @@ fn starts_with_string_literal(base: &str) -> bool {
 /// destructor call on a legitimately scoped value; a balanced
 /// allocate-per-iteration + drop-per-iteration is still flagged as churn, not
 /// a bug verdict. Evidence `callee`, `loop_depth`[ , `alloc_cooccurrence` ].
+/// Precision FP-class fix 3: zero-alloc constructor sites (see
+/// [`is_empty_ctor_site`]) do NOT count toward the co-occurrence escalation —
+/// a `Vec::new()` + `drop()` pairing is not allocator churn.
 pub(crate) fn rust_alloc_002(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
@@ -274,6 +326,7 @@ pub(crate) fn rust_alloc_002(units: &[FileUnit]) -> Vec<Finding> {
                         &c.callee_name,
                         c.is_macro,
                     )
+                    && !is_empty_ctor_site(c, func.record.alloc_family.as_deref())
             });
             for call in &func.calls {
                 if call.callee_kind != CalleeKind::Direct

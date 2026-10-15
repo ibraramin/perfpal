@@ -20,6 +20,12 @@ use super::{
 /// Character-wise stdio family (LOOP-003).
 const CHAR_IO_FAMILY: [&str; 5] = ["fgetc", "getc", "getchar", "fputc", "putc"];
 
+/// Element-wise streaming I/O (LOOP-002 message split, fix 5): raw syscalls
+/// that transfer per iteration and cannot be hoisted — batching into block
+/// reads/writes is the documented fix. Every other EXPENSIVE_CALL_FAMILY
+/// entry is hoistable setup.
+const STREAMING_IO_CALLS: [&str; 2] = ["read", "write"];
+
 /// Expensive setup / I-O family (LOOP-002, catalog-v1 §3 detail block):
 /// printf-family formatting churn, file/syscall setup-teardown per
 /// iteration, environment/process spawns, and regex compilation.
@@ -163,6 +169,19 @@ pub(crate) fn loop_003(units: &[FileUnit]) -> Vec<Finding> {
 /// Severity: Hot by default; lowered to Warn when the call sits inside a
 /// conditional branch within the loop (`conditional_guarded`, catalog FP
 /// note — intentionally interleaved logging is a weaker signal).
+///
+/// Precision FP-class fix 1: calls whose innermost enclosing loop is a
+/// `do { ... } while(0)` macro-wrapper body (`LoopNode.condition_is_zero`,
+/// the `(0)` condition TEXT — never a blanket `LoopKind::Do` exclusion, so
+/// genuine `do-while(cond)` loops still fire) stay silent: the body runs
+/// exactly once, so there is no per-iteration churn.
+///
+/// Divergence-study message split (fix 5): element-wise streaming I/O
+/// ([`STREAMING_IO_CALLS`]) is intrinsic per-iteration transfer — batching
+/// into block reads/writes is the fix, not hoisting — while every other
+/// family entry is hoistable setup (hoisting or batching its work is the
+/// candidate). Evidence carries `io_kind = "streaming" | "hoistable"` so the
+/// instrument can report rates per kind.
 pub(crate) fn loop_002(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
@@ -171,20 +190,33 @@ pub(crate) fn loop_002(units: &[FileUnit]) -> Vec<Finding> {
                 if call.callee_kind != CalleeKind::Direct
                     || !EXPENSIVE_CALL_FAMILY.contains(&call.callee_name.as_str())
                     || call.meta.in_loop_depth == 0
+                    || in_zero_guard_loop(&func.loops, &call.meta.span)
                 {
                     continue;
                 }
                 let guarded = call.conditional_guarded;
-                findings.push(Finding {
-                    threshold: None,
-                    rule_id: LOOP_002_RULE_ID.to_string(),
-                    title: "Expensive setup or I/O call inside loop".to_string(),
-                    message: format!(
+                let streaming = STREAMING_IO_CALLS.contains(&call.callee_name.as_str());
+                let message = if streaming {
+                    format!(
+                        "'{}' performs streaming I/O every iteration at loop \
+                         depth {} — the call transfers element-wise and \
+                         cannot be hoisted; batching into block reads or \
+                         writes is a candidate optimization",
+                        call.callee_name, call.meta.in_loop_depth
+                    )
+                } else {
+                    format!(
                         "'{}' runs every iteration at loop depth {} — \
                          hoisting the call out of the loop or batching \
                          its work is a candidate optimization",
                         call.callee_name, call.meta.in_loop_depth
-                    ),
+                    )
+                };
+                findings.push(Finding {
+                    threshold: None,
+                    rule_id: LOOP_002_RULE_ID.to_string(),
+                    title: "Expensive setup or I/O call inside loop".to_string(),
+                    message,
                     severity: if guarded {
                         Severity::Warn
                     } else {
@@ -201,6 +233,10 @@ pub(crate) fn loop_002(units: &[FileUnit]) -> Vec<Finding> {
                             call.meta.in_loop_depth.to_string(),
                         ),
                         ("conditional_guarded".to_string(), guarded.to_string()),
+                        (
+                            "io_kind".to_string(),
+                            if streaming { "streaming" } else { "hoistable" }.to_string(),
+                        ),
                     ]
                     .into_iter()
                     .collect(),
@@ -575,6 +611,14 @@ struct Loop005Group {
     resolver_tier: ResolverTier,
 }
 
+/// Precision FP-class fix 1 shared gate: true when `span`'s innermost
+/// enclosing loop is a `do { ... } while(0)` macro-wrapper body. The check
+/// reads the producer-set `(0)`-condition flag, never the loop kind, so a
+/// genuine `do-while(cond)` (or any other) loop is unaffected.
+fn in_zero_guard_loop(loops: &[LoopNode], span: &Span) -> bool {
+    innermost_enclosing_loop(loops, span).is_some_and(|l| l.condition_is_zero)
+}
+
 /// Innermost (deepest) loop whose span contains `span`; ties on depth break
 /// to the earlier start position for determinism.
 fn innermost_enclosing_loop<'a>(loops: &'a [LoopNode], span: &Span) -> Option<&'a LoopNode> {
@@ -588,4 +632,135 @@ fn innermost_enclosing_loop<'a>(loops: &'a [LoopNode], span: &Span) -> Option<&'
                 l.span.start_col,
             )
         })
+}
+
+#[cfg(test)]
+mod tests {
+    //! Precision FP-class fix 1 consumer locks: `loop_002` stays silent for
+    //! calls inside a `do { ... } while(0)` wrapper body yet fires for the
+    //! same call shape in a genuine `do-while(cond)` or `for` loop.
+
+    use super::*;
+    use crate::ir::{CallEvent, EventMeta, FunctionRecord};
+    use crate::scanner::FunctionUnit;
+
+    fn call_named_in(span: Span, depth: u32, callee: &str) -> CallEvent {
+        CallEvent {
+            meta: EventMeta {
+                span,
+                in_loop_depth: depth,
+                is_innermost: depth >= 1,
+                resolver_tier: ResolverTier::Syntactic,
+                macro_origin: false,
+            },
+            callee_name: callee.to_string(),
+            callee_kind: CalleeKind::Direct,
+            callee_path: None,
+            is_macro: false,
+            args: Vec::new(),
+            statement_role: StatementRole::Nested,
+            conditional_guarded: false,
+            semantic: None,
+            receiver_root: None,
+        }
+    }
+
+    fn loop_unit(kind: crate::ir::LoopKind, zero_guard: bool) -> FileUnit {
+        loop_unit_with(kind, zero_guard, "printf")
+    }
+
+    fn loop_unit_with(kind: crate::ir::LoopKind, zero_guard: bool, callee: &str) -> FileUnit {
+        let loop_span = Span {
+            start_line: 2,
+            start_col: 1,
+            end_line: 6,
+            end_col: 1,
+        };
+        let call_span = Span {
+            start_line: 4,
+            start_col: 5,
+            end_line: 4,
+            end_col: 20,
+        };
+        FileUnit {
+            file: crate::ir::FileRecord {
+                path: "t.c".to_string(),
+                language: "c".to_string(),
+                ..Default::default()
+            },
+            functions: vec![FunctionUnit {
+                record: FunctionRecord {
+                    id: "t.c#f#1:1".to_string(),
+                    name: "f".to_string(),
+                    path: "t.c".to_string(),
+                    span: Span {
+                        start_line: 1,
+                        start_col: 1,
+                        end_line: 7,
+                        end_col: 1,
+                    },
+                    ..Default::default()
+                },
+                calls: vec![call_named_in(call_span, 1, callee)],
+                loops: vec![LoopNode {
+                    kind,
+                    depth: 1,
+                    induction_vars: Vec::new(),
+                    span: loop_span,
+                    resolver_tier: ResolverTier::Syntactic,
+                    macro_origin: false,
+                    condition_is_zero: zero_guard,
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn loop_002_silent_in_do_while_zero_wrapper() {
+        let out = loop_002(&[loop_unit(crate::ir::LoopKind::Do, true)]);
+        assert!(out.is_empty(), "do-while(0) body runs once: {out:?}");
+    }
+
+    #[test]
+    fn loop_002_fires_in_genuine_do_while_and_for() {
+        for kind in [crate::ir::LoopKind::Do, crate::ir::LoopKind::For] {
+            let out = loop_002(&[loop_unit(kind, false)]);
+            assert_eq!(out.len(), 1, "{kind:?} genuine loop must fire");
+            assert_eq!(out[0].rule_id, LOOP_002_RULE_ID);
+        }
+    }
+
+    #[test]
+    fn loop_002_splits_streaming_from_hoistable() {
+        let hoist = loop_002(&[loop_unit_with(crate::ir::LoopKind::For, false, "printf")]);
+        assert_eq!(hoist.len(), 1);
+        assert_eq!(
+            hoist[0].evidence.get("io_kind").map(String::as_str),
+            Some("hoistable")
+        );
+        assert!(
+            hoist[0].message.contains("hoisting the call"),
+            "hoistable message names hoisting: {}",
+            hoist[0].message
+        );
+
+        let stream = loop_002(&[loop_unit_with(crate::ir::LoopKind::For, false, "read")]);
+        assert_eq!(stream.len(), 1);
+        assert_eq!(
+            stream[0].evidence.get("io_kind").map(String::as_str),
+            Some("streaming")
+        );
+        assert!(
+            stream[0].message.contains("batching into block reads"),
+            "streaming message names batching, never hoisting: {}",
+            stream[0].message
+        );
+        assert!(
+            !stream[0].message.contains("hoisting the call"),
+            "streaming message must not advise hoisting: {}",
+            stream[0].message
+        );
+    }
 }

@@ -114,19 +114,19 @@ Distribution — max\_loop\_depth:
 - Location: `src/01\_alloc\_churn\.rs:40` (build\_row\_labels)
 - Message: 'println' runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization
 - Confidence: MEDIUM · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=println, conditional\_guarded=false, loop\_depth=1
+- Evidence: callee=println, conditional\_guarded=false, io\_kind=hoistable, loop\_depth=1
 
 #### Expensive setup or I/O call inside loop \(Rust\)  (`PERF\-RS\-LOOP\-002:src/04\_stdio\_churn\.rs:28:9`)
 - Location: `src/04\_stdio\_churn\.rs:28` (emit\_rows)
 - Message: 'println' runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization
 - Confidence: MEDIUM · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=println, conditional\_guarded=false, loop\_depth=1
+- Evidence: callee=println, conditional\_guarded=false, io\_kind=hoistable, loop\_depth=1
 
 #### Expensive setup or I/O call inside loop \(Rust\)  (`PERF\-RS\-LOOP\-002:src/04\_stdio\_churn\.rs:29:17`)
 - Location: `src/04\_stdio\_churn\.rs:29` (emit\_rows)
 - Message: 'sink\.write\_all' runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization
 - Confidence: MEDIUM · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=sink\.write\_all, conditional\_guarded=false, loop\_depth=1
+- Evidence: callee=sink\.write\_all, conditional\_guarded=false, io\_kind=hoistable, loop\_depth=1
 
 #### Module\-graph cycle \(Rust\)  (`PERF\-RS\-ARCH\-001:src/cycle\_b\.rs:6:1`)
 - Location: `src/cycle\_b\.rs:6`
@@ -288,7 +288,7 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 | `PERF\-RS\-CALL\-001` | Direct recursion \(Rust\) | Detects a function body containing a direct call to its own name \(presence\-only; recursion depth is post\-MVP\)\. |
 | `PERF\-RS\-CALL\-002` | High cyclomatic complexity \(Rust\) | Detects branch\-count complexity above threshold \(default ≥ 15\), reported per function\. |
 | `PERF\-RS\-LOOP\-001` | Deeply nested loops \(Rust\) | Detects loop nesting depth ≥ 3 — O\(n^k\) candidate zones and primary input to hotspot maps\. |
-| `PERF\-RS\-LOOP\-002` | Expensive setup or I/O call inside loop \(Rust\) | Detects Rust I/O/setup work nested in loops — \`println\!\`/\`print\!\`\-family macros, reader/writer/socket methods \(\`read\_to\_string\`/\`write\_all\`/\`flush\`/\`recv\`/\`send\`\), and \`File\`/\`fs\`/\`Command\`/\`TcpStream\`/\`env\` setup calls; lowered to warn when conditionally guarded\. |
+| `PERF\-RS\-LOOP\-002` | Expensive setup or I/O call inside loop \(Rust\) | Detects Rust I/O/setup work nested in loops — \`println\!\`/\`print\!\`\-family macros, reader/writer/socket methods \(\`read\_to\_string\`/\`write\_all\`/\`flush\`/\`recv\`/\`send\`\), and \`File\`/\`fs\`/\`Command\`/\`TcpStream\`/\`env\` setup calls; lowered to warn when conditionally guarded\. The message splits hoistable setup from intrinsic streaming transfer \(recv/send/read\_line — batching is the candidate\); evidence carries io\_kind\. |
 | `PERF\-RS\-LOOP\-003` | Character\-wise processing in loop \(Rust\) | REFRAMED for Rust \(no char stdio\): detects char/byte\-at\-a\-time iterator or reader methods \(\`chars\`/\`bytes\`/\`char\_indices\`/\`byte\_indices\`/\`read\_byte\`\) as the primary statement of a loop body\. |
 | `PERF\-RS\-LOOP\-004` | Variable\-divisor division in innermost loop \(Rust\) | Detects / or % with a non\-literal divisor inside the innermost loop body \(literal divisors skipped by design\)\. |
 | `PERF\-RS\-LOOP\-005` | Global variable written inside loop \(Rust\) | Detects assignment to a Rust \`static\`/\`const\`\-backed identifier inside a loop body \(name\-based scope classification, MEDIUM confidence\)\. |

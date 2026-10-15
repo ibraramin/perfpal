@@ -101,7 +101,7 @@ Distribution — max\_loop\_depth:
 - Location: `src/main\.c:80` (report)
 - Message: 'printf' runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization
 - Confidence: MEDIUM · Severity: hot · Resolver tier: syntactic
-- Evidence: callee=printf, conditional\_guarded=false, loop\_depth=1
+- Evidence: callee=printf, conditional\_guarded=false, io\_kind=hoistable, loop\_depth=1
 
 #### Deallocation inside loop  (`PERF\-C\-ALLOC\-002:src/main\.c:44:9`)
 - Location: `src/main\.c:44` (drain)
@@ -171,7 +171,7 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 | `PERF\-C\-ARCH\-003` | Cross\-file call coupling \(name\-based\) | Detects cross\-file call edges via name matching — LOW confidence until a semantic resolver tier exists\. |
 | `PERF\-C\-CALL\-002` | High cyclomatic complexity | Detects branch\-count complexity above threshold \(default ≥ 15\), reported per function\. |
 | `PERF\-C\-LOOP\-001` | Deep loop nesting \(≥3\) | Detects loop nesting depth ≥ 3 — O\(n^k\) candidate zones and primary input to hotspot maps\. |
-| `PERF\-C\-LOOP\-002` | Expensive setup / I/O call inside loop | Detects printf\-family, file\-I/O, getenv, system, and regex\-compilation calls nested in loops\. |
+| `PERF\-C\-LOOP\-002` | Expensive setup / I/O call inside loop | Detects printf\-family, file\-I/O, getenv, system, and regex\-compilation calls nested in loops\. The message splits hoistable setup \(hoisting or batching is the candidate\) from intrinsic streaming I/O \(read/write — batching into block transfers is the candidate\); evidence carries io\_kind\. Calls in do\-while\(0\) wrapper bodies stay silent\. |
 | `PERF\-C\-LOOP\-004` | Integer div/mod with variable divisor in innermost loop | Detects / or % with a non\-literal divisor inside the innermost loop body \(literal divisors skipped by design\)\. |
 | `PERF\-C\-MEM\-001` | sizeof\-misuse shapes in allocation args | Detects malloc\(x \* sizeof\(ptr\)\) and sizeof misplacement shapes in allocation arguments — wrong\-size allocations\. |
 | `PERF\-C\-STR\-001` | String accumulation in loop \(\`strcat\` family\) | Detects strcat/strncat with a destination reused across loop iterations \(O\(n²\) rescan\)\. |

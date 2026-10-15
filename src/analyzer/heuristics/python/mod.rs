@@ -225,6 +225,7 @@ pub(crate) mod test_support {
                 idiom_hash: None,
                 error_path: None,
                 alloc_family: None,
+                cfg_gated: None,
             },
             calls,
             assignments,
@@ -375,6 +376,7 @@ pub(crate) mod test_support {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
+            condition_is_zero: false,
         }
     }
 

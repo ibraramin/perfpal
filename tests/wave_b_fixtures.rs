@@ -113,6 +113,19 @@ fn first_arg_pointer_arithmetic_with_plain_size_stays_silent() {
     );
 }
 
+#[test]
+fn capacity_guarded_realloc_stays_silent() {
+    // Precision FP-class fix 4: a `realloc` inside a conditional branch
+    // within the loop (`if (len >= cap)` — guarded growth that reallocates
+    // only when needed) stays silent even though the size arg is additive.
+    let units = common::load_units_fixture("PERF-C-ALLOC-003__realloc-guarded-in-loop.json");
+    let findings = analyze(&units);
+    assert!(
+        common::by_rule(&findings, ALLOC_003_RULE_ID).is_empty(),
+        "capacity-guarded growth must not fire ALLOC-003"
+    );
+}
+
 // ===========================================================================
 // PERF-C-LOOP-002 — expensive setup / I-O call inside loop
 // ===========================================================================

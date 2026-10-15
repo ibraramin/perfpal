@@ -108,6 +108,23 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
         }
     });
 
+    // Precision FP-class fix 2 producer: `#if 0` regions are provably dead
+    // (the condition constant-folds to false — the code never compiles), so
+    // a function defined INSIDE one carries `cfg_gated = Some(true)`.
+    // `#ifdef`/`#ifndef` guards (the everyday header shape) and `#if 0`
+    // regions nested inside a live function body never flag the function.
+    let dead_regions = dead_config_regions(root, source);
+    for func in &mut functions {
+        if dead_regions.iter().any(|region| {
+            (region.start_line, region.start_col)
+                <= (func.record.span.start_line, func.record.span.start_col)
+                && (func.record.span.end_line, func.record.span.end_col)
+                    <= (region.end_line, region.end_col)
+        }) {
+            func.record.cfg_gated = Some(true);
+        }
+    }
+
     // Comment lines anywhere in the file (including inside function bodies)
     // feed the LOC stat.
     let mut comment_ranges: Vec<(usize, usize)> = Vec::new();
@@ -224,6 +241,29 @@ fn walk_file_level(node: Node<'_>, visit: &mut impl FnMut(Node<'_>)) {
             }
         }
     }
+}
+
+/// Precision FP-class fix 2 producer helper: spans of `preproc_if` regions
+/// whose condition constant-folds to false (`#if 0`, parenthesized `#if (0)`
+/// included) — provably-dead configuration regions. `#ifdef`/`#ifndef` and
+/// `#if <expr>` never qualify: those arms may be live.
+fn dead_config_regions(root: Node<'_>, source: &[u8]) -> Vec<Span> {
+    let mut regions = Vec::new();
+    let mut cursor = root.walk();
+    walk(&mut cursor, &mut |node| {
+        if node.kind() == "preproc_if"
+            && node.child_by_field_name("condition").is_some_and(|c| {
+                let collapsed: String = text(c, source)
+                    .chars()
+                    .filter(|ch| !ch.is_whitespace())
+                    .collect();
+                collapsed == "0" || collapsed == "(0)"
+            })
+        {
+            regions.push(ir_span(node, source));
+        }
+    });
+    regions
 }
 
 /// Count ALL error/missing nodes; record outermost extents as regions
@@ -676,6 +716,7 @@ fn function_unit(
         idiom_hash: None,
         error_path: None,
         alloc_family: None,
+        cfg_gated: None,
     };
     FunctionUnit {
         record,
@@ -808,6 +849,19 @@ impl<'a> FuncScan<'a> {
             Vec::new()
         };
         let macro_origin = self.macro_origin_of(&span, "");
+        // Precision FP-class fix 1 producer: a `do_statement` whose
+        // condition text is the literal `(0)` is the `do { ... } while(0)`
+        // macro-wrapper idiom (single-shot body, not per-iteration churn).
+        // The TEXT check (not a blanket `LoopKind::Do` flag) keeps genuine
+        // `do-while(cond)` loops gated `false`.
+        let condition_is_zero = kind == LoopKind::Do
+            && node.child_by_field_name("condition").is_some_and(|c| {
+                let collapsed: String = text(c, self.source)
+                    .chars()
+                    .filter(|ch| !ch.is_whitespace())
+                    .collect();
+                collapsed == "(0)" || collapsed == "0"
+            });
         self.loops.push(LoopNode {
             kind,
             depth,
@@ -815,6 +869,7 @@ impl<'a> FuncScan<'a> {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
+            condition_is_zero,
         });
         self.loop_depth = depth;
         self.nesting += 1;
@@ -1822,6 +1877,83 @@ int process(int n, char *buf) {
             "function-local struct must not leak past the stop boundary"
         );
         assert_eq!(ex.file.function_count, 1);
+    }
+
+    /// Precision FP-class fix 1 producer: only a `do_statement` whose
+    /// condition text is the literal `(0)` carries `condition_is_zero` — the
+    /// macro-wrapper idiom. Genuine `do-while(cond)` plus `for`/`while`
+    /// loops report `false` (text check, never a blanket `Do` flag).
+    #[test]
+    fn zero_guard_flag_set_only_on_do_while_zero_condition() {
+        let src = concat!(
+            "void w0(void) { do { f(); } while(0); }\n",
+            "void wsp(void) { do { f(); } while (0); }\n",
+            "void real(void) { int i = 0; do { f(); i++; } while (i < 9); }\n",
+            "void fw(void) { for (int i = 0; i < 9; i++) { f(); } while (0) { f(); break; } }\n",
+        );
+        let ex = extract("z.c", src.as_bytes());
+        assert_eq!(ex.functions.len(), 4);
+        let flags: Vec<(String, Vec<(LoopKind, bool)>)> = ex
+            .functions
+            .iter()
+            .map(|f| {
+                (
+                    f.record.name.clone(),
+                    f.loops
+                        .iter()
+                        .map(|l| (l.kind, l.condition_is_zero))
+                        .collect(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            flags,
+            [
+                ("w0".to_string(), vec![(LoopKind::Do, true)]),
+                ("wsp".to_string(), vec![(LoopKind::Do, true)]),
+                ("real".to_string(), vec![(LoopKind::Do, false)]),
+                (
+                    "fw".to_string(),
+                    vec![(LoopKind::For, false), (LoopKind::While, false)]
+                ),
+            ]
+        );
+    }
+
+    /// Precision FP-class fix 2 producer: a function defined inside `#if 0`
+    /// carries `cfg_gated = Some(true)` (provably dead). `#ifdef`-guarded,
+    /// live, and `#if 0`-inside-body functions stay `None`.
+    #[test]
+    fn if_zero_function_flagged_only() {
+        let src = concat!(
+            "int live(void) { return 0; }\n",
+            "#if 0\n",
+            "int dead(void) { return 1; }\n",
+            "#endif\n",
+            "#ifdef X\n",
+            "int maybe(void) { return 2; }\n",
+            "#endif\n",
+            "int mixed(void) { int x = 1;\n",
+            "#if 0\n",
+            "x = 2;\n",
+            "#endif\n",
+            "return x; }\n",
+        );
+        let ex = extract("g.c", src.as_bytes());
+        let flags: Vec<(&str, Option<bool>)> = ex
+            .functions
+            .iter()
+            .map(|f| (f.record.name.as_str(), f.record.cfg_gated))
+            .collect();
+        assert_eq!(
+            flags,
+            [
+                ("live", None),
+                ("dead", Some(true)),
+                ("maybe", None),
+                ("mixed", None),
+            ]
+        );
     }
 
     /// Unguarded regression: the recursion must not change the everyday

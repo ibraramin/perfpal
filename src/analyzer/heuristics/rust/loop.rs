@@ -74,6 +74,12 @@ const CHARWISE_METHODS: [&str; 5] = [
     "read_byte",
 ];
 
+/// Element-wise streaming methods (LOOP-002 message split, fix 5):
+/// socket/stream element transfer, intrinsically per-iteration — batching is
+/// the fix, not hoisting. Macros, qualified setup paths, and whole-buffer
+/// methods (`read_to_string`, `write_all`, `flush`, …) are hoistable.
+const STREAMING_IO_METHODS: [&str; 5] = ["recv", "send", "recv_from", "send_to", "read_line"];
+
 /// PERF-RS-LOOP-002 — Expensive I/O / setup call inside loop
 /// (mirrors PERF-C-LOOP-002).
 ///
@@ -93,32 +99,59 @@ const CHARWISE_METHODS: [&str; 5] = [
 /// Severity: Hot/MEDIUM by default; lowered to Warn/MEDIUM when the call sits
 /// inside a conditional branch within the loop (`conditional_guarded`,
 /// mirroring the C rule's intentional-logging FP note). Evidence `callee`,
-/// `loop_depth`, `conditional_guarded`.
+/// `loop_depth`, `conditional_guarded`, `io_kind`.
+///
+/// Divergence-study message split (fix 5): element-wise streaming transfer
+/// ([`STREAMING_IO_METHODS`]) is intrinsic per-iteration work — batching is
+/// the candidate — while macros, setup paths, and whole-buffer methods are
+/// hoistable (hoisting or batching is the candidate).
 ///
 /// Accepted FP classes: an intentionally interleaved debug/log print stays
 /// candidate-grade (Warn when guarded); `send`/`recv` on a non-blocking
 /// channel also fire. Windows of `token_tree`-opaque macros cannot be
 /// inspected beyond the invocation event.
+///
+/// Precision FP-class fix 1: Rust has no `do-while(0)` shape (the producer
+/// always emits `condition_is_zero: false`), so the zero-guard gate below is
+/// a no-op today — kept for uniformity so a future backend emitting the flag
+/// is gated without a heuristic change.
 pub(crate) fn rust_loop_002(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
         for func in &unit.functions {
             for call in &func.calls {
-                if call.meta.in_loop_depth == 0 || !is_expensive_io_call(call) {
+                if call.meta.in_loop_depth == 0
+                    || !is_expensive_io_call(call)
+                    || innermost_enclosing_loop(&func.loops, &call.meta.span)
+                        .is_some_and(|l| l.condition_is_zero)
+                {
                     continue;
                 }
                 let guarded = call.conditional_guarded;
                 let callee = callee_token(call);
-                findings.push(Finding {
-                    threshold: None,
-                    rule_id: RS_LOOP_002_RULE_ID.to_string(),
-                    title: "Expensive setup or I/O call inside loop (Rust)".to_string(),
-                    message: format!(
+                let streaming =
+                    !call.is_macro && STREAMING_IO_METHODS.contains(&call.callee_name.as_str());
+                let message = if streaming {
+                    format!(
+                        "'{callee}' transfers element-wise every iteration at \
+                         loop depth {} — the call cannot be hoisted; batching \
+                         transfers into block operations is a candidate \
+                         optimization",
+                        call.meta.in_loop_depth
+                    )
+                } else {
+                    format!(
                         "'{callee}' runs every iteration at loop depth {} — \
                          hoisting the call out of the loop or batching its \
                          work is a candidate optimization",
                         call.meta.in_loop_depth
-                    ),
+                    )
+                };
+                findings.push(Finding {
+                    threshold: None,
+                    rule_id: RS_LOOP_002_RULE_ID.to_string(),
+                    title: "Expensive setup or I/O call inside loop (Rust)".to_string(),
+                    message,
                     severity: if guarded {
                         Severity::Warn
                     } else {
@@ -135,6 +168,10 @@ pub(crate) fn rust_loop_002(units: &[FileUnit]) -> Vec<Finding> {
                             call.meta.in_loop_depth.to_string(),
                         ),
                         ("conditional_guarded".to_string(), guarded.to_string()),
+                        (
+                            "io_kind".to_string(),
+                            if streaming { "streaming" } else { "hoistable" }.to_string(),
+                        ),
                     ]
                     .into_iter()
                     .collect(),

@@ -489,11 +489,34 @@ pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
     // Downgrade/upgrade hooks and duplicate collapse keep the FULL unit set
     // and the full findings (they look up a finding's file by path, so the
     // language split must not narrow their view).
+    apply_cfg_gating(units, &mut findings);
     apply_downgrade_hooks(units, &mut findings);
     apply_upgrade_hooks(units, &mut findings);
     collapse_duplicates(&mut findings);
     findings.sort_by(total_order);
     findings
+}
+
+/// Central precision SUPPRESSION GATE (precision FP-class fix 2): findings
+/// anchored inside a provably-dead configuration region (C `#if 0` —
+/// [`FunctionRecord::cfg_gated`](crate::ir::FunctionRecord::cfg_gated)) are
+/// false positives — the code never compiles — and are REMOVED, not
+/// downgraded. Conservative by construction: only `Some(true)` suppresses;
+/// `None` (uncomputed, parser-free, or a live region) and `Some(false)` keep
+/// every finding. Runs before the downgrade hooks so dead findings never
+/// reach confidence capping or duplicate collapse.
+fn apply_cfg_gating(units: &[FileUnit], findings: &mut Vec<Finding>) {
+    findings.retain(|finding| {
+        !units
+            .iter()
+            .find(|u| u.file.path == finding.path)
+            .is_some_and(|unit| {
+                unit.functions.iter().any(|f| {
+                    f.record.cfg_gated == Some(true)
+                        && span_contains_point(&f.record.span, &finding.span)
+                })
+            })
+    });
 }
 
 /// Central semantic CONSISTENCY GATE (plan `semantic-resolver` Wave B1),
@@ -926,5 +949,63 @@ mod tests {
         apply_upgrade_hooks(&units, &mut findings);
         assert_eq!(findings[0].resolver_tier, ResolverTier::Syntactic);
         assert_eq!(findings[0].confidence, Confidence::High);
+    }
+
+    /// Precision FP-class fix 2 consumer locks: [`apply_cfg_gating`] removes
+    /// findings anchored inside a `cfg_gated` (`#if 0`) function but keeps
+    /// findings in live functions (`None`), explicitly-live functions
+    /// (`Some(false)`), and findings outside any function span.
+    #[test]
+    fn cfg_gated_dead_findings_removed_live_kept() {
+        fn func(name: &str, start: u32, end: u32, gated: Option<bool>) -> FunctionUnit {
+            FunctionUnit {
+                record: FunctionRecord {
+                    id: format!("src/a.c#{name}#{start}:1"),
+                    name: name.to_string(),
+                    path: "src/a.c".to_string(),
+                    span: Span {
+                        start_line: start,
+                        start_col: 1,
+                        end_line: end,
+                        end_col: 1,
+                    },
+                    cfg_gated: gated,
+                    ..FunctionRecord::default()
+                },
+                ..FunctionUnit::default()
+            }
+        }
+        fn finding_at(line: u32) -> Finding {
+            let mut f = finding_for_rule("PERF-C-ALLOC-001");
+            f.span = Span {
+                start_line: line,
+                start_col: 5,
+                end_line: line,
+                end_col: 20,
+            };
+            f
+        }
+        let units = vec![FileUnit {
+            file: FileRecord {
+                path: "src/a.c".to_string(),
+                language: "c".to_string(),
+                ..FileRecord::default()
+            },
+            functions: vec![
+                func("dead", 1, 15, Some(true)),
+                func("live", 20, 40, None),
+                func("checked", 45, 60, Some(false)),
+            ],
+            ..FileUnit::default()
+        }];
+        let mut findings = vec![
+            finding_at(10),
+            finding_at(30),
+            finding_at(50),
+            finding_at(70),
+        ];
+        apply_cfg_gating(&units, &mut findings);
+        let lines: Vec<u32> = findings.iter().map(|f| f.span.start_line).collect();
+        assert_eq!(lines, [30, 50, 70]);
     }
 }

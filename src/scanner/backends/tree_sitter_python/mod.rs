@@ -656,6 +656,7 @@ fn module_unit(
         idiom_hash: None,
         error_path: None,
         alloc_family: None,
+        cfg_gated: None,
     };
     FunctionUnit {
         record,
@@ -723,6 +724,7 @@ fn function_unit(
         idiom_hash: None,
         error_path: None,
         alloc_family: None,
+        cfg_gated: None,
     };
     FunctionUnit {
         record,

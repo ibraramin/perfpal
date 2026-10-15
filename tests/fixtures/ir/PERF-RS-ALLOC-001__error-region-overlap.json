@@ -10,7 +10,7 @@
       {
         "record": {"id": "neg/err_alloc.rs#fill#1:1", "name": "fill", "path": "neg/err_alloc.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 8, "end_col": 2}, "param_count": 1, "param_types": ["usize"], "cyclomatic_complexity": 2, "cognitive_complexity": 1, "max_loop_depth": 1, "alloc_site_count": 1, "length_lines": 8},
         "calls": [
-          {"span": {"start_line": 5, "start_col": 9, "end_line": 5, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "new", "callee_kind": "direct", "callee_path": "Vec::new", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false}
+          {"span": {"start_line": 5, "start_col": 9, "end_line": 5, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "to_vec", "callee_kind": "direct", "callee_path": "items.to_vec", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false}
         ],
         "assignments": [],
         "binary_ops": [],

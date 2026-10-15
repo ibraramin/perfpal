@@ -251,6 +251,11 @@ pub struct FunctionStats {
     /// `empty_ctor` vs `serialize/format`). Skeleton: `None` until computed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alloc_family: Option<String>,
+    /// ADDITIVE precision-gate flag (precision FP-class fix 2): `Some(true)`
+    /// only for functions defined inside a provably-dead configuration
+    /// region (C `#if 0`). Omitted when uncomputed or live.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cfg_gated: Option<bool>,
 }
 
 /// One element of `findings[]` — the analyzer's [`Finding`] lifted into its
@@ -666,6 +671,7 @@ mod tests {
                     idiom_hash: None,
                     error_path: None,
                     alloc_family: None,
+                    cfg_gated: None,
                 }],
                 distributions: None,
             },

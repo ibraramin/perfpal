@@ -538,6 +538,17 @@ pub struct FunctionRecord {
     /// pre-step-2 inputs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alloc_family: Option<String>,
+    /// ADDITIVE precision-gate flag (precision FP-class fix 2): `Some(true)`
+    /// only when the function is defined inside a provably-dead
+    /// configuration region — C `#if 0` (the condition constant-folds to
+    /// false, so the code never compiles). `#ifdef`/`#ifndef` guards (the
+    /// everyday header-guard shape, locked visible by
+    /// `tests/guarded_content.rs`) and Rust `#[cfg(test)]` (live test code,
+    /// already surfaced via `error_path`) report `None`/omitted: gating them
+    /// would hide live code. Same serde-default pattern; uncomputed (`None`)
+    /// for parser-free or pre-fix inputs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cfg_gated: Option<bool>,
 }
 
 /// Resolver tier tag carried by every event (ir-v1.md §2). v1 emits only
@@ -859,6 +870,17 @@ pub struct LoopNode {
     pub span: Span,
     pub resolver_tier: ResolverTier,
     pub macro_origin: bool,
+    /// ADDITIVE precision-gate flag (precision FP-class fix 1): true only
+    /// for a C `do_statement` whose condition text is the literal `(0)` —
+    /// the `do { ... } while(0)` macro-wrapper idiom, whose body executes
+    /// exactly once and is therefore not per-iteration churn. A genuine
+    /// `do-while(cond)` loop and every `for`/`while`/`loop` node report
+    /// `false` (the gate checks the `(0)` condition TEXT, never a blanket
+    /// `LoopKind::Do` exclusion). The Rust and Python backends have no
+    /// do-while shape and always leave it `false`. `#[serde(default)]` keeps
+    /// older documents deserializing unchanged.
+    #[serde(default)]
+    pub condition_is_zero: bool,
 }
 
 #[cfg(test)]
@@ -1005,6 +1027,7 @@ mod tests {
         assert_eq!(record.idiom_hash, None);
         assert_eq!(record.error_path, None);
         assert_eq!(record.alloc_family, None);
+        assert_eq!(record.cfg_gated, None);
         let wire = serde_json::to_value(&record).expect("serialize");
         for absent in [
             "call_fanout",
@@ -1014,6 +1037,7 @@ mod tests {
             "idiom_hash",
             "error_path",
             "alloc_family",
+            "cfg_gated",
         ] {
             assert!(
                 wire.get(absent).is_none(),

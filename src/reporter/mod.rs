@@ -98,7 +98,7 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-C-LOOP-002",
         "Expensive setup / I/O call inside loop",
-        "Detects printf-family, file-I/O, getenv, system, and regex-compilation calls nested in loops.",
+        "Detects printf-family, file-I/O, getenv, system, and regex-compilation calls nested in loops. The message splits hoistable setup (hoisting or batching is the candidate) from intrinsic streaming I/O (read/write — batching into block transfers is the candidate); evidence carries io_kind. Calls in do-while(0) wrapper bodies stay silent.",
     ),
     (
         "PERF-C-LOOP-003",
@@ -247,7 +247,7 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-PY-LOOP-002",
         "Expensive I/O call inside loop",
-        "Detects file/network/subprocess/socket I/O inside a loop — direct I/O names, network-rooted methods, and filehandle read/write methods. `print`/`input` are deliberately excluded (72–83% of the C rule's raw hits were logging).",
+        "Detects file/network/subprocess/socket I/O inside a loop — direct I/O names, network-rooted methods, and filehandle read/write methods. `print`/`input` are deliberately excluded (72–83% of the C rule's raw hits were logging). The message splits hoistable handle setup (open/urlopen/Popen/...) from element-wise streaming transfer (batching is the candidate); evidence carries io_kind.",
     ),
     (
         "PERF-PY-LOOP-003",
@@ -343,7 +343,7 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-RS-LOOP-002",
         "Expensive setup or I/O call inside loop (Rust)",
-        "Detects Rust I/O/setup work nested in loops — `println!`/`print!`-family macros, reader/writer/socket methods (`read_to_string`/`write_all`/`flush`/`recv`/`send`), and `File`/`fs`/`Command`/`TcpStream`/`env` setup calls; lowered to warn when conditionally guarded.",
+        "Detects Rust I/O/setup work nested in loops — `println!`/`print!`-family macros, reader/writer/socket methods (`read_to_string`/`write_all`/`flush`/`recv`/`send`), and `File`/`fs`/`Command`/`TcpStream`/`env` setup calls; lowered to warn when conditionally guarded. The message splits hoistable setup from intrinsic streaming transfer (recv/send/read_line — batching is the candidate); evidence carries io_kind.",
     ),
     (
         "PERF-RS-LOOP-003",

@@ -3,7 +3,7 @@
 > started <MASKED> · duration <MASKED> ms · 4 files
 
 ## 1. Executive summary
-10 findings: 5 hot, 4 warn, 1 info. Parse health: 4 ok, 0 partial, 0 failed.
+9 findings: 4 hot, 4 warn, 1 info. Parse health: 4 ok, 0 partial, 0 failed.
 - Heap allocation inside loop (PERF\-C\-ALLOC\-001:src/main\.c:27:21)
 - Deallocation inside loop (PERF\-C\-ALLOC\-002:src/main\.c:29:9)
 - String accumulation in loop (PERF\-C\-STR\-001:src/main\.c:28:9)
@@ -80,12 +80,6 @@ Distribution — max\_loop\_depth:
 - Confidence: HIGH · Severity: hot · Resolver tier: syntactic
 - Evidence: callee=strcat, dest=acc, loop\_depth=1
 
-#### Heap allocation inside loop \(Rust\)  (`PERF\-RS\-ALLOC\-001:src/lib\.rs:18:5`)
-- Location: `src/lib\.rs:18` (build)
-- Message: loop performs 1 per\-iteration allocation\(s\) \(Vec::new\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
-- Confidence: HIGH · Severity: hot · Resolver tier: syntactic
-- Evidence: alloc\_count=1, callee=Vec::new, callees=Vec::new, loop\_depth=1
-
 #### Growable\-buffer additive growth in loop \(Rust\)  (`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`)
 - Location: `src/lib\.rs:20` (build)
 - Message: 'out\.reserve' grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization
@@ -125,7 +119,7 @@ Component ranking (hottest first):
 
 | component | path prefix | rank | finding density (per KLOC) |
 |---|---|---:|---:|
-| src | src | 1 | 277.78 |
+| src | src | 1 | 250.00 |
 
 The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 Coupling heat blends edge counts with per-function cost (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count + call fanout/fanin/depth, +2 if recursive, +1 each for error_path / alloc_family; each edge weighs 1 + mean endpoint cost normalized by the scan maximum) — charts remain pure functions of metrics.json.
@@ -140,7 +134,6 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 | `PERF\-C\-ARCH\-003` | Cross\-file call coupling \(name\-based\) | Detects cross\-file call edges via name matching — LOW confidence until a semantic resolver tier exists\. |
 | `PERF\-C\-STR\-001` | String accumulation in loop \(\`strcat\` family\) | Detects strcat/strncat with a destination reused across loop iterations \(O\(n²\) rescan\)\. |
 | `PERF\-C\-STR\-003` | Unbounded copy family \(\`strcpy\`/\`sprintf\`/\`gets\`\) | Detects unbounded copy calls \(strcpy, strcat, sprintf, gets, scanf %s\) — unbounded\-latency hotspots\. |
-| `PERF\-RS\-ALLOC\-001` | Heap allocation inside loop \(Rust\) | Detects Rust allocation sites — qualified constructors \(\`Box::new\`/\`Rc::new\`/\`Arc::new\`/\`Vec::new\`/\`String::new\`/collection \`new\`/\`with\_capacity\`\), methods \(\`to\_vec\`/\`to\_owned\`/\`to\_string\`/\`collect\`/\`with\_capacity\`\), and the \`vec\!\`/\`format\!\` macros — at \`in\_loop\_depth ≥ 1\` AND \`is\_innermost\`; surviving sites are aggregated into ONE finding per innermost enclosing loop \(\`alloc\_count\` plus sorted\-unique short callee tokens capped at 8 with a \`\+N more\` suffix\)\. Literal\-receiver \`"…"\.to\_string\(\)\`/\`"…"\.to\_owned\(\)\` \(including raw/byte\-string prefixes\) are suppressed\. |
 | `PERF\-RS\-ALLOC\-003` | Growable\-buffer additive growth in loop \(Rust\) | REFRAMED for Rust \(no \`realloc\`\): detects additive \`reserve\`/\`reserve\_exact\` capacity growth inside a loop — the \`realloc\(p, n\+k\)\` analogue; multiplicative capacity growth is the fix, not the finding\. |
 | `PERF\-RS\-MEM\-001` | size\_of passed as an element count \(Rust\) | REFRAMED for Rust: detects \`Vec::with\_capacity\`/\`String::with\_capacity\` receiving a \`size\_of\`/\`size\_of\_val\` byte count where an element count is expected \(over\-reserves by the element size\)\. |
 | `PERF\-RS\-STR\-002` | Length query recomputed in loop \(Rust\) | Detects \`len\`/\`is\_empty\`/\`capacity\` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop\. |

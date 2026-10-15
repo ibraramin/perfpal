@@ -8,7 +8,9 @@
 pub fn fill(n: usize) -> Vec<u8> {
     let mut out = Vec::with_capacity(n);
     for i in 0..n {
-        let tmp = Vec::new();
+        // REAL per-iteration allocation (a `Vec::new()` zero-alloc ctor here
+        // would stay silent since precision fix 3).
+        let tmp = vec![i as u8; 2];
         out.push(tmp.len() as u8);
         let _ = i;
     }

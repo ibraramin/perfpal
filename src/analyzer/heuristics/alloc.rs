@@ -198,6 +198,12 @@ fn is_fclose_of_fopened(call: &CallEvent) -> bool {
 ///    additive expression). Exact at the syntactic tier because a
 ///    BinaryOpEvent carries no operators on its operand shapes, but its
 ///    own span covers the additive expression.
+///
+/// Precision FP-class fix 4 (capacity-guard conjunct): a `realloc` whose
+/// call sits inside a conditional branch within the loop
+/// (`conditional_guarded` — the `if (len >= cap)` capacity check, same
+/// signal LOOP-002 already consumes for severity) stays silent — guarded
+/// growth reallocates only when needed, not blindly per iteration.
 pub(crate) fn alloc_003(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
@@ -210,6 +216,9 @@ pub(crate) fn alloc_003(units: &[FileUnit]) -> Vec<Finding> {
                 .filter(|c| span_contains(&func.record.span, &c.span))
             {
                 if f.callee != "realloc" {
+                    continue;
+                }
+                if f.conditional_guarded {
                     continue;
                 }
                 // Conjunct 1: the LAST argument (the size) must itself be a

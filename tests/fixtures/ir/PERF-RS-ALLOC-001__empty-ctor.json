@@ -1,0 +1,40 @@
+[
+  {
+    "file": {"path": "src/empty_ctor.rs", "language": "rust", "loc": {"code": 24, "comment": 0, "blank": 0}, "function_count": 2, "global_var_count": 0, "include_counts": {"quoted": 0, "angle": 0}},
+    "parse_health": {"status": "ok", "error_regions": [], "error_node_count": 0},
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {"id": "src/empty_ctor.rs#holds_empties#1:1", "name": "holds_empties", "path": "src/empty_ctor.rs", "span": {"start_line": 1, "start_col": 1, "end_line": 12, "end_col": 2}, "param_count": 1, "param_types": ["usize"], "cyclomatic_complexity": 1, "cognitive_complexity": 1, "max_loop_depth": 1, "alloc_site_count": 3, "length_lines": 12, "alloc_family": "empty_ctor"},
+        "calls": [
+          {"span": {"start_line": 5, "start_col": 9, "end_line": 5, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "new", "callee_kind": "direct", "callee_path": "String::new", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 6, "start_col": 9, "end_line": 6, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "new", "callee_kind": "direct", "callee_path": "Vec::new", "is_macro": false, "args": [], "statement_role": "nested", "conditional_guarded": false},
+          {"span": {"start_line": 7, "start_col": 9, "end_line": 7, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "vec", "callee_kind": "direct", "callee_path": "vec", "is_macro": true, "args": [], "statement_role": "nested", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 3, "start_col": 5, "end_line": 9, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      },
+      {
+        "record": {"id": "src/empty_ctor.rs#holds_real_vec#14:1", "name": "holds_real_vec", "path": "src/empty_ctor.rs", "span": {"start_line": 14, "start_col": 1, "end_line": 24, "end_col": 2}, "param_count": 1, "param_types": ["usize"], "cyclomatic_complexity": 1, "cognitive_complexity": 1, "max_loop_depth": 1, "alloc_site_count": 1, "length_lines": 11, "alloc_family": "real_alloc"},
+        "calls": [
+          {"span": {"start_line": 18, "start_col": 9, "end_line": 18, "end_col": 20}, "in_loop_depth": 1, "is_innermost": true, "resolver_tier": "syntactic", "macro_origin": false, "callee_name": "vec", "callee_kind": "direct", "callee_path": "vec", "is_macro": true, "args": [], "statement_role": "nested", "conditional_guarded": false}
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {"kind": "for", "depth": 1, "induction_vars": ["i"], "span": {"start_line": 16, "start_col": 5, "end_line": 20, "end_col": 6}, "resolver_tier": "syntactic", "macro_origin": false}
+        ]
+      }
+    ]
+  }
+]
