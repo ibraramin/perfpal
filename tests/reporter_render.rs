@@ -600,6 +600,124 @@ fn architecture_omits_hook_when_no_component_page_emitted() {
 }
 
 // ---------------------------------------------------------------------------
+// 8b. Layered overviews link in emission order; detail-page predicate is
+// anchored on ^component-\d+- (Option A slice 2)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn architecture_links_layered_overviews_in_emission_order() {
+    let report = render_report(
+        &base_doc(),
+        &[
+            "include-graph.svg".to_string(),
+            "layer-file.svg".to_string(),
+            "component-coupling.svg".to_string(),
+            "hot-components.svg".to_string(),
+            "layer-workspace.svg".to_string(),
+        ],
+    );
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+
+    let workspace = "[Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)";
+    let file = "[File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)";
+    for expected in [
+        "[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)",
+        file,
+        "[Component coupling — cross-file call edges between components.](charts/component-coupling.svg)",
+        "[Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)",
+        workspace,
+    ] {
+        assert!(
+            arch.contains(expected),
+            "overview link missing:\n{expected}\n{arch}"
+        );
+    }
+    // Emission order preserved verbatim (the self-caught BTreeSet-reorder
+    // class from slice 1: never re-sort the overview list).
+    let positions: Vec<usize> = [
+        "charts/include-graph.svg",
+        "charts/layer-file.svg",
+        "charts/component-coupling.svg",
+        "charts/hot-components.svg",
+        "charts/layer-workspace.svg",
+    ]
+    .iter()
+    .map(|name| arch.find(name).unwrap_or_else(|| panic!("{name} missing")))
+    .collect();
+    let mut sorted = positions.clone();
+    sorted.sort_unstable();
+    assert_eq!(positions, sorted, "overview links out of order:\n{arch}");
+}
+
+#[test]
+fn non_numeric_component_stem_is_an_overview_not_a_detail_page() {
+    // Exact-registry routing (B4 pin): a `component-<word>` stem must NOT be
+    // swallowed by the detail-page path — it links inline with the overviews
+    // under the generic caption.
+    let report = render_report(&base_doc(), &["component-notes.svg".to_string()]);
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    assert!(
+        arch.contains("[Chart: component-notes.](charts/component-notes.svg)"),
+        "non-numeric component stem must take the overview path:\n{arch}"
+    );
+    assert!(
+        !arch.contains("Component detail — per-file hot-path map."),
+        "detail caption leaked onto an overview stem:\n{arch}"
+    );
+
+    // B4 numeric-overview collision: `component-5-notes` LOOKS like a
+    // `component-<rank>-<slug>` page but names no component in this
+    // document — with an empty registry it must NOT route to detail.
+    let report = render_report(&base_doc(), &["component-5-notes.svg".to_string()]);
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    assert!(
+        arch.contains("[Chart: component-5-notes.](charts/component-5-notes.svg)"),
+        "numeric colliding stem must take the overview path:\n{arch}"
+    );
+    assert!(
+        !arch.contains("Component detail — per-file hot-path map."),
+        "detail caption leaked onto a colliding stem:\n{arch}"
+    );
+}
+
+#[test]
+fn colliding_numeric_stem_is_an_overview_even_with_components_present() {
+    // Same collision with a NON-empty registry: only the page reconstructed
+    // from a real component (`component-01-src-a`) routes to detail; the
+    // lookalike `component-5-notes` still links as a generic overview.
+    let mut doc = base_doc();
+    doc.components = Some(vec![ComponentEntry {
+        component_id: "src/a".to_string(),
+        path_prefix: "src/a".to_string(),
+        rank: 1,
+        metrics: ComponentMetrics {
+            complexity_sum: 10.0,
+            alloc_site_density: 0.0,
+            max_loop_depth: 1,
+            finding_density: 8.25,
+        },
+        finding_count: Some(2),
+    }]);
+    let report = render_report(
+        &doc,
+        &[
+            "hot-components.svg".to_string(),
+            "component-5-notes.svg".to_string(),
+            "component-01-src-a.svg".to_string(),
+        ],
+    );
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    assert!(
+        arch.contains("[Chart: component-5-notes.](charts/component-5-notes.svg)"),
+        "colliding stem must stay on the overview path:\n{arch}"
+    );
+    assert!(
+        arch.contains("[Component src/a — per-file hot-path map.](charts/component-01-src-a.svg)"),
+        "genuine registry page must still hook as detail:\n{arch}"
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 

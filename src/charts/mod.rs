@@ -4,13 +4,16 @@
 //! guardrail 1), plus `files[].path` (component membership) and
 //! `stats.functions[]` (cost heat — the same extension the coupling overlay
 //! consumes). Produces: SVG bytes for chart-set v1 ([`render`]:
-//! include-graph.svg, component-coupling.svg, hot-components.svg, plus one
+//! include-graph.svg, layer-file.svg, component-coupling.svg,
+//! hot-components.svg, layer-workspace.svg, plus one
 //! `component-<rank>-<slug>.svg` detail page per capped component).
 //!
 //! Responsibilities: byte-deterministic rendering by construction (ADR-0002
 //! guardrail 2); XML-escape all label/path text; deterministic node caps with
-//! in-chart truncation markers; presence rule — an overview chart is emitted
-//! iff its source section is present and non-empty; every capped component
+//! in-chart truncation markers; presence rule — a ranked overview chart is
+//! emitted iff its source section is present and non-empty, while the two
+//! layered overviews emit a deterministic stub whenever their source section
+//! is present even if empty (symmetric-stub pin); every capped component
 //! yields a detail page (a file-less component yields a deterministic stub,
 //! never an omission); otherwise omitted (charts/ may be empty).
 //!
@@ -34,11 +37,20 @@
 //!   31 chars prefixed with `…` (tail kept because paths identify best by
 //!   their basename-ish end; pinned rule, ADR ambiguity resolved here).
 //!
+//! Presence rule — symmetric stubs (B5 pin): a section that is PRESENT but
+//! empty still emits its layer stub (`layer-file.svg` whenever `graphs` is
+//! present, `layer-workspace.svg` whenever `components` is present — the
+//! renderers own the empty → stub mapping, never an omission); only a
+//! wholly ABSENT section omits its charts. Ranked charts
+//! (include-graph, component-coupling, hot-components) and the
+//! per-component pages still require non-empty sources.
+//!
 //! Non-goals: layout quality beyond "legible" (MVP bar); external
 //! charting/layout libraries are banned by ADR-0002.
 
 pub mod component;
 pub mod dot;
+pub mod layers;
 
 use std::collections::BTreeMap;
 
@@ -99,43 +111,60 @@ const HC_STUB_W: i64 = 2;
 // ---------------------------------------------------------------------------
 
 /// Render the chart set v1 for `doc`.
-///
 /// Returns ordered `(filename, svg bytes)` pairs. Emission rule (ADR-0002
-/// guardrail 5): an overview chart appears IFF its source section is present
-/// AND non-empty; an empty document yields an empty list. Per-component
+/// guardrail 5 + symmetric-stub pin): a ranked overview chart appears IFF
+/// its source section is present AND non-empty; an empty document yields an
+/// empty list. The layered overviews (Option A slice 2) emit STUBS on empty
+/// sources — `layer-file.svg` whenever `graphs` is present (even with zero
+/// nodes), `layer-workspace.svg` whenever `components` is present (even when
+/// empty) — so both stubs are reachable via `render`, symmetrically. Per-component
 /// detail pages follow the same gate (components present AND non-empty) —
 /// one page per capped component in `(rank, path_prefix)` order, appended
-/// AFTER the three overview charts; a file-less component yields the
+/// AFTER the overview charts (including the layered overviews); a file-less
+/// component yields the
 /// deterministic stub page, never an omission.
 #[must_use]
 pub fn render(doc: &MetricsDocument) -> Vec<(String, Vec<u8>)> {
     let mut out = Vec::new();
-    if let Some(graphs) = &doc.graphs
-        && !graphs.include_graph.nodes.is_empty()
-    {
+    if let Some(graphs) = &doc.graphs {
+        if !graphs.include_graph.nodes.is_empty() {
+            out.push((
+                "include-graph.svg".to_string(),
+                render_include_graph(graphs),
+            ));
+        }
+        // Stub on empty nodes (symmetric with layer-workspace below).
         out.push((
-            "include-graph.svg".to_string(),
-            render_include_graph(graphs),
+            "layer-file.svg".to_string(),
+            layers::render_layer_file(graphs, &doc.stats.functions),
         ));
     }
-    if let Some(components) = &doc.components
-        && !components.is_empty()
-    {
-        let graphs = doc.graphs.as_ref();
+    if let Some(components) = &doc.components {
+        if !components.is_empty() {
+            let graphs = doc.graphs.as_ref();
+            out.push((
+                "component-coupling.svg".to_string(),
+                render_component_coupling(components, graphs, &doc.stats.functions),
+            ));
+            out.push((
+                "hot-components.svg".to_string(),
+                render_hot_components(components),
+            ));
+        }
+        // Stub on empty components (symmetric with layer-file above).
         out.push((
-            "component-coupling.svg".to_string(),
-            render_component_coupling(components, graphs, &doc.stats.functions),
+            "layer-workspace.svg".to_string(),
+            layers::render_layer_workspace(components, doc.graphs.as_ref()),
         ));
-        out.push((
-            "hot-components.svg".to_string(),
-            render_hot_components(components),
-        ));
-        out.extend(component::render_component_pages(
-            components,
-            graphs,
-            &doc.files,
-            &doc.stats.functions,
-        ));
+        if !components.is_empty() {
+            let graphs = doc.graphs.as_ref();
+            out.extend(component::render_component_pages(
+                components,
+                graphs,
+                &doc.files,
+                &doc.stats.functions,
+            ));
+        }
     }
     out
 }

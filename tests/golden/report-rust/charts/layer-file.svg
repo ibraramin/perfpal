@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="690" height="668" viewBox="0 0 690 668">
+<text x="40" y="56" font-family="monospace" font-size="13">File hot-path map — 14 files</text>
+<text x="40" y="76" font-family="monospace" font-size="11">heat = function cost; hot-path outlined (top-50 scope)</text>
+<g stroke="#999999" stroke-width="1">
+<line x1="430" y1="163" x2="480" y2="119"/>
+<line x1="210" y1="559" x2="260" y2="119"/>
+<line x1="210" y1="559" x2="260" y2="163"/>
+<line x1="210" y1="559" x2="480" y2="119"/>
+</g>
+<g font-family="monospace" font-size="11">
+<rect x="40" y="104" width="170" height="30" fill="#b30000" stroke="#b30000" stroke-width="2"/>
+<text x="48" y="123">src/01_alloc_churn.rs</text>
+<rect x="40" y="148" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="167">src/02_string_building.rs</text>
+<rect x="40" y="192" width="170" height="30" fill="#e19999" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="211">src/03_deep_nesting.rs</text>
+<rect x="40" y="236" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="255">src/04_stdio_churn.rs</text>
+<rect x="40" y="280" width="170" height="30" fill="#c23333" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="299">src/05_recursion_complexity.rs</text>
+<rect x="40" y="324" width="170" height="30" fill="#d16666" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="343">src/06_memory_ops.rs</text>
+<rect x="40" y="368" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="387">src/07_struct_by_value.rs</text>
+<rect x="40" y="412" width="170" height="30" fill="#d16666" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="431">src/08_globals_and_chains.rs</text>
+<rect x="40" y="456" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="475">src/09_membership_scan.rs</text>
+<rect x="40" y="500" width="170" height="30" fill="#e19999" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="519">src/10_cross_file_and_arch.rs</text>
+<rect x="260" y="104" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5" stroke-width="1"/>
+<text x="268" y="123">src/common.rs</text>
+<rect x="260" y="148" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5" stroke-width="1"/>
+<text x="268" y="167">src/cycle_a.rs</text>
+<rect x="480" y="104" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5" stroke-width="1"/>
+<text x="488" y="123">src/cycle_b.rs</text>
+<rect x="40" y="544" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="563">src/lib.rs</text>
+</g>
+<text x="40" y="640" font-family="monospace" font-size="11">hot-path: src/01_alloc_churn.rs at max cost among shown files</text>
+<text x="40" y="624" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
+</svg>

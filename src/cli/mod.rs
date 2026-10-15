@@ -228,7 +228,9 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // Derived artifacts (modules.md Principle 5): report.md and charts/ are
     // pure functions of the final document. charts::render applies the
     // emission rule itself (an overview chart appears iff its source section
-    // is present and non-empty; per-component detail pages follow the same
+    // is present and non-empty — the layered overviews `layer-file.svg` and
+    // `layer-workspace.svg` ride the include-graph and components gates
+    // respectively; per-component detail pages follow the same
     // gate — one page per capped component, a stub when file-less), so an
     // empty scan yields an empty chart set — the writer still creates
     // charts/ (output-contract §3). graphs.dot is

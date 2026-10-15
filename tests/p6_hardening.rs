@@ -83,31 +83,79 @@ fn fixture_root() -> PathBuf {
 /// Run-varying-masked artifacts under comparison. metrics.json and report.md
 /// are compared as masked text; schema + SVGs + graph.dot carry no provenance
 /// and are compared byte-exact (verified by `regenerate_goldens`).
-const GOLDEN_ARTIFACTS: [&str; 7] = [
+const GOLDEN_ARTIFACTS: [&str; 9] = [
     "metrics.json",
     "metrics.schema.v1.4.json",
     "report.md",
     "charts/include-graph.svg",
+    "charts/layer-file.svg",
     "charts/component-coupling.svg",
     "charts/hot-components.svg",
+    "charts/layer-workspace.svg",
     "charts/graph.dot",
 ];
 
 /// Sorted `charts/component-*.svg` page names under a report tree,
 /// excluding the `component-coupling.svg` overview (it is a fixed golden
-/// above, not a per-component page).
+/// above, not a per-component page). The filter mirrors the hardened
+/// reporter registry exactly: `component-<one-or-more-ASCII-digits>-*`
+/// (a colliding `component-<word>` or extension-less name is an overview,
+/// never a detail page).
+fn is_component_page_name(n: &str) -> bool {
+    let Some(rest) = n.strip_prefix("component-") else {
+        return false;
+    };
+    let digits = rest.chars().take_while(|c| c.is_ascii_digit()).count();
+    digits > 0 && rest.as_bytes().get(digits) == Some(&b'-') && n.ends_with(".svg")
+}
+
 fn component_page_names(root: &Path) -> Vec<String> {
     let mut names: Vec<String> = fs::read_dir(root.join("charts"))
         .expect("charts dir present")
         .flatten()
         .filter_map(|e| e.file_name().into_string().ok())
-        .filter(|n| {
-            n.starts_with("component-") && n.ends_with(".svg") && n != "component-coupling.svg"
-        })
+        .filter(|n| is_component_page_name(n) && n != "component-coupling.svg")
         .map(|n| format!("charts/{n}"))
         .collect();
     names.sort();
     names
+}
+
+/// PINNED per-tree detail-page sets (B6 lock): the exact `component-<rank>-`
+/// page names each golden tree must emit. Any add/remove/rename fails the
+/// gate — even a regeneration must update this table explicitly, never
+/// auto-adopt a changed set. `component-coupling.svg` is an overview chart
+/// and is NOT listed here.
+const EXPECTED_COMPONENT_PAGES: &[(&str, &[&str])] = &[
+    ("c", &["charts/component-01-src.svg"]),
+    ("mixed", &["charts/component-01-src.svg"]),
+    ("rust", &["charts/component-01-src.svg"]),
+    (
+        "python",
+        &[
+            "charts/component-01-root.svg",
+            "charts/component-02-pkg.svg",
+        ],
+    ),
+];
+
+/// Assert a tree's page set is EXACTLY the pinned expectation (no
+/// auto-adopt: extras and missing pages both fail with the regen command).
+fn assert_pinned_page_set(tag: &str, pages: &[String]) {
+    let expected: Vec<String> = EXPECTED_COMPONENT_PAGES
+        .iter()
+        .find(|(t, _)| *t == tag)
+        .unwrap_or_else(|| panic!("no pinned page set for tree '{tag}'"))
+        .1
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
+    assert_eq!(
+        *pages, expected,
+        "[{tag}] per-component page set changed (add/remove/rename) — \
+         update EXPECTED_COMPONENT_PAGES explicitly, then regenerate with:\n  \
+         PERFPAL_REGEN_GOLDEN=1 cargo test --test p6_hardening regenerate_goldens"
+    );
 }
 
 fn temp_dir(tag: &str) -> PathBuf {
@@ -333,8 +381,10 @@ fn regenerate_goldens() {
         let root_str = fixture.to_string_lossy().into_owned();
         let mut provenance_free = vec![
             "charts/include-graph.svg".to_string(),
+            "charts/layer-file.svg".to_string(),
             "charts/component-coupling.svg".to_string(),
             "charts/hot-components.svg".to_string(),
+            "charts/layer-workspace.svg".to_string(),
             "charts/graph.dot".to_string(),
             "metrics.schema.v1.4.json".to_string(),
         ];
@@ -342,17 +392,14 @@ fn regenerate_goldens() {
             .expect("charts dir")
             .flatten()
             .filter_map(|e| e.file_name().into_string().ok())
-            .filter(|n| {
-                n.starts_with("component-") && n.ends_with(".svg") && n != "component-coupling.svg"
-            })
+            .filter(|n| is_component_page_name(n) && n != "component-coupling.svg")
             .map(|n| format!("charts/{n}"))
             .collect();
         component_pages.sort();
-        assert!(
-            !component_pages.is_empty(),
-            "tree '{}' must emit at least one per-component detail page",
-            tree.tag
-        );
+        // Pinned-set gate (B6): regeneration adopts nothing implicitly —
+        // a changed emission set fails here until EXPECTED_COMPONENT_PAGES
+        // is updated explicitly.
+        assert_pinned_page_set(tree.tag, &component_pages);
         provenance_free.extend(component_pages);
         for name in &provenance_free {
             let text = fs::read_to_string(golden.join(name)).expect(name);
@@ -444,12 +491,13 @@ fn report_matches_committed_goldens() {
             }
         }
 
-        // Per-component detail pages: discovered from the COMMITTED golden
-        // tree (the emission rule owns the set), compared byte-exact like
-        // the overview SVGs; a fresh page with no golden twin (or vice
-        // versa) is a diff either way.
+        // Per-component detail pages: the PINNED set per tree (B6 — no
+        // auto-adopt), compared byte-exact like the overview SVGs; a fresh
+        // page with no golden twin (or vice versa) is a diff either way.
         let golden_pages = component_page_names(&golden);
+        assert_pinned_page_set(tree.tag, &golden_pages);
         let fresh_pages = component_page_names(&out);
+        assert_pinned_page_set(tree.tag, &fresh_pages);
         for name in &golden_pages {
             if !fresh_pages.contains(name) {
                 diffs.push(format!("{name}: MISSING from fresh output"));

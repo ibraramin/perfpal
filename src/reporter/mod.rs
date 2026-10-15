@@ -689,11 +689,29 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
     // Emitted stems (`.svg`-suffixed or bare — both forms accepted, mirroring
     // the pipe contract in `crate::cli`); per-component detail pages are
     // indexed under the component table below, not in the overview link list.
-    // NOTE: `component-coupling.svg` is an OVERVIEW chart — only
-    // `component-<rank>-<slug>` stems count as detail pages.
+    // NOTE: `component-coupling.svg` is an OVERVIEW chart — only stems in
+    // the exact `detail_stems` registry below count as detail pages.
     let emitted_stems: BTreeSet<String> = emitted_charts
         .iter()
         .map(|name| name.strip_suffix(".svg").unwrap_or(name).to_string())
+        .collect();
+    // Exact detail-page registry (B4 pin): reconstructed via the
+    // charts-owned pinning function from THIS document's components —
+    // never guessed, never a name heuristic. A stem routes to the detail
+    // path ONLY when it names a page emitted for a component in this
+    // document; every other stem — known overviews AND unknown/colliding
+    // names like `component-5-notes` — takes the overview path.
+    let detail_stems: BTreeSet<String> = doc
+        .components
+        .iter()
+        .flatten()
+        .map(|c| {
+            let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
+            filename
+                .strip_suffix(".svg")
+                .unwrap_or(&filename)
+                .to_string()
+        })
         .collect();
     let mut component_stems: Vec<String> = Vec::new();
     if emitted_charts.is_empty() {
@@ -703,7 +721,7 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
         // Emission order is preserved verbatim (the charts module owns it).
         for name in emitted_charts {
             let stem = name.strip_suffix(".svg").unwrap_or(name);
-            if is_component_page(stem) {
+            if detail_stems.contains(stem) {
                 if !component_stems.iter().any(|s| s == stem) {
                     component_stems.push(stem.to_string());
                 }
@@ -771,22 +789,25 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
             }
             out.push('\n');
         }
-        // Orphan fallback: an emitted component page with no matching
-        // component entry (unreachable via the pipeline — defensive only for
-        // direct `render_report` callers) still links via generic caption.
+        // Orphan fallback: an emitted registry detail page with no matching
+        // hook entry (unreachable via the pipeline — defensive only for
+        // direct `render_report` callers) still links via the detail caption.
         for stem in &component_stems {
             if !linked.contains(stem) {
-                out.push_str(&format!("[{}](charts/{stem}.svg)\n", chart_caption(stem)));
+                out.push_str(&format!("[{}](charts/{stem}.svg)\n", detail_caption()));
             }
         }
         if !component_stems.is_empty() && linked.len() != component_stems.len() {
             out.push('\n');
         }
     } else {
-        // No component table to hook under: emitted component pages (if any
-        // were passed without components) link via generic caption.
+        // No component table to hook under: without components the detail
+        // registry is empty, so every emitted stem took the overview path
+        // above (generic caption for unknown names). This loop only fires
+        // for registry detail stems, which require components — kept for
+        // shape symmetry with the branch above.
         for stem in &component_stems {
-            out.push_str(&format!("[{}](charts/{stem}.svg)\n", chart_caption(stem)));
+            out.push_str(&format!("[{}](charts/{stem}.svg)\n", detail_caption()));
         }
         if !component_stems.is_empty() {
             out.push('\n');
@@ -916,18 +937,25 @@ fn chart_caption(stem: &str) -> String {
         "hot-components" => {
             "Hot components — ranking by aggregated bottleneck metrics.".to_string()
         }
-        stem if is_component_page(stem) => {
-            "Component detail — per-file hot-path map.".to_string()
+        "layer-workspace" => {
+            "Workspace map — components as nodes over inter-component call/include edges, heat by finding density.".to_string()
         }
+        "layer-file" => {
+            "File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).".to_string()
+        }
+        // Detail pages never reach this caption: routing is by the exact
+        // `detail_stems` registry in `render_architecture`, and orphan
+        // registry stems link via `detail_caption` below. Unknown stems —
+        // including colliding `component-<digits>-*` names with no matching
+        // component — take the generic overview path.
         other => format!("Chart: {other}."),
     }
 }
 
-/// Detail-page predicate: `component-<rank>-<slug>` stems ONLY —
-/// `component-coupling.svg` is an overview chart and must never be mistaken
-/// for a per-component page (its stem shares the prefix).
-fn is_component_page(stem: &str) -> bool {
-    stem != "component-coupling" && stem.starts_with("component-")
+/// Caption for registry-confirmed per-component detail pages (orphan links
+/// only — the hooked index builds its own link text).
+fn detail_caption() -> String {
+    "Component detail — per-file hot-path map.".to_string()
 }
 
 /// Escape Markdown metacharacters with the PINNED set [`MD_ESCAPE_CHARS`].

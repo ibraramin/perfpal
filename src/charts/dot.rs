@@ -20,13 +20,16 @@ use crate::schema::MetricsDocument;
 /// Render `doc`'s graphs + components as deterministic DOT text (LF newlines,
 /// exactly one trailing newline).
 ///
-/// Sections, in fixed order:
-/// 1. include-graph nodes (`"path";`);
-/// 2. resolved include edges (`"from" -> "to";`);
-/// 3. call-graph edges — resolved as `"from_function" -> "to_path"`,
-///    unresolved as `"from_function" -> "to_name"` — dashed, labelled with
-///    the callee name (LOW-confidence hypotheses per ADR-0001);
-/// 4. component nodes (`"component:<prefix>" [shape=box, label="<prefix> (rank N)"];`).
+/// Emission is ONE globally-sorted line set (a single `BTreeSet` — sorted AND
+/// deduped), not per-section blocks: node lines, resolved include edges,
+/// call-graph edges, and component lines all sort together. Concretely the
+/// line shapes are:
+/// - include-graph nodes (`"path";`);
+/// - resolved include edges (`"from" -> "to";`);
+/// - call-graph edges — resolved as `"from_function" -> "to_path"`,
+///   unresolved as `"from_function" -> "to_name"` — dashed, labelled with
+///   the callee name (LOW-confidence hypotheses per ADR-0001);
+/// - component nodes (`"component:<prefix>" [shape=box, label="<prefix> (rank N)"];`).
 #[must_use]
 pub fn render_dot(doc: &MetricsDocument) -> String {
     let mut lines: BTreeSet<String> = BTreeSet::new();
@@ -224,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    fn emission_is_sorted_deduped_and_section_ordered() {
+    fn emission_is_globally_sorted_and_deduped() {
         let dot = render_dot(&sample_doc());
         let body: Vec<&str> = dot.lines().skip(1).take_while(|l| *l != "}").collect();
         let mut sorted = body.clone();

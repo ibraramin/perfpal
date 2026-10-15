@@ -25,6 +25,8 @@ perfpal-report/
 ├── report.md                 # human-readable report
 └── charts/                   # static visualizations (set defined by ADR-0002)
     ├── <chart-name>.svg      # e.g. include-graph.svg — naming rules in §3
+    ├── layer-workspace.svg   # components-as-nodes overview (Option A slice 2)
+    ├── layer-file.svg        # top-files-by-degree overview (Option A slice 2)
     ├── component-<rank>-<slug>.svg  # per-component detail page (Option A slice 1)
     └── graph.dot             # deterministic DOT export of the graphs (v1.4 step 2)
 ```
@@ -45,7 +47,8 @@ Layout rules:
 | Schema copy | `metrics.schema.v<MAJOR>.<MINOR>.json` | Full version always — `schema_version: "1.2"` ⇒ `metrics.schema.v1.2.json` (no elided `.0`; avoids ambiguity between "v1" = 1.0 vs the 1.x series). The file is a byte-copy of the canonical schema artifact for that version, per the per-minor re-emission policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). |
 | Human report | `report.md` | Fixed name. |
 | Charts | `charts/<name>.svg` | `<name>` matches `[a-z0-9]+(-[a-z0-9]+)*` (kebab-case ASCII). No timestamps, counters, or input-derived suffixes — the same chart has the same name across runs so directories can be diffed. |
-| Component pages | `charts/component-<rank>-<slug>.svg` | One page per capped component (same rank ≤ 50 + top-50 cap as the overview component charts), in `(rank, path_prefix)` order after the overviews. `<rank>` is the zero-padded component rank (`01`–`50`); `<slug>` is the lowercased `path_prefix` with every non-`[a-z0-9]` run collapsed to a single `-` (the `"."` root ⇒ `root`). A file-less component yields a deterministic stub page (`no files recorded`), never an omission. |
+| Component pages | `charts/component-<rank>-<slug>.svg` | One page per capped component (same rank ≤ 50 + top-50 cap as the overview component charts), in `(rank, path_prefix)` order after the overviews. `<rank>` is the zero-padded component rank (`01`–`50`); `<slug>` is the lowercased `path_prefix` with every non-`[a-z0-9]` run collapsed to a single `-` (the `"."` root ⇒ `root`). Each page keeps the top-50 files by INTRA-component degree (edges with both endpoints in the component — cross-component edges never influence the ranking). A file-less component yields a deterministic stub page (`no files recorded`), never an omission. |
+| Layered overviews | `charts/layer-workspace.svg`, `charts/layer-file.svg` | Option A slice 2 zoom levels, in emission order after the three v1 overviews and before the component pages. `layer-workspace.svg` shows capped components as nodes over aggregated inter-component call/include edges (heat = finding density per KLOC); emitted whenever `components` is present (deterministic `no components recorded` stub when empty). `layer-file.svg` shows top files by degree over the include DAG (heat = per-file function cost; the hot-path highlight outlines a SINGLE file — highest cost among the drawn files, ties → path-asc first, caption states the post-cap scope); emitted whenever `graphs` is present (deterministic `no files recorded` stub when the node list is empty). Same top-50 caps, same byte-determinism bar as every other chart. Honest coverage note: the per-component pages draw intra-component file edges only and the workspace draws aggregates, so a cross-component FILE edge is currently visible ONLY as an aggregated component-level edge — in neither the workspace nor any detail page. The middle "files-under-component-bands" layer that would draw those edges across bands was deliberately NOT built in this slice; it is recorded as an explicit follow-up third layer, never a silent reshape of these two. |
 | Graph export | `charts/graph.dot` | Fixed name (v1.4 step 2). Deterministic DOT rendering of `graphs.*` + `components[]` (same input set as the SVG charts); always emitted, even on empty scans (an empty digraph). |
 
 Chart-set rules (binding; chart set defined by [ADR-0002](../adr/ADR-0002-visualization.md)):
@@ -112,7 +115,9 @@ finding renders as:
 
 ## 5. Architecture
 Embedded charts via relative links (charts/<name>.svg), each with a
-one-line caption. Component ranking table from components[]:
+one-line caption. Overview links render in chart-emission order
+(include-graph, layer-file, component-coupling, hot-components,
+layer-workspace). Component ranking table from components[]:
 component_id, path_prefix, rank, finding_density. Component detail index:
 one link per capped component whose `charts/component-<rank>-<slug>.svg`
 page was emitted (`[Component <prefix> — per-file hot-path

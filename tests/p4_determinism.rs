@@ -137,15 +137,16 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
     // kinds, or the comparisons above prove nothing.
     assert!(run1.contains_key("metrics.json"));
     assert!(run1.contains_key("report.md"));
-    // Three overview charts + graph.dot + one detail page per capped
-    // component (count derived from metrics.json, not hardcoded).
+    // Three overview charts + two layered overviews + graph.dot + one detail
+    // page per capped component (count derived from metrics.json, not
+    // hardcoded).
     let metrics_raw = String::from_utf8(run1["metrics.json"].clone()).expect("metrics.json UTF-8");
     let metrics_doc: serde_json::Value =
         serde_json::from_str(&metrics_raw).expect("metrics.json parses");
     let component_count = metrics_doc["components"].as_array().unwrap().len();
     assert_eq!(
         run1.keys().filter(|n| n.starts_with("charts/")).count(),
-        4 + component_count,
-        "fixture should emit all three v1 charts + graph.dot + one page per component"
+        6 + component_count,
+        "fixture should emit all three v1 charts + both layered overviews + graph.dot + one page per component"
     );
 }

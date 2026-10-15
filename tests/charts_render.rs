@@ -475,23 +475,70 @@ fn empty_include_nodes_omit_include_graph_but_keep_component_charts() {
     });
     doc.components = Some(vec![component("src/solo", 1, 1.0)]);
     let out = render(&doc);
+    // Symmetric-stub pin (B5): the ranked include-graph is omitted on empty
+    // nodes, but the layer-file STUB still rides the present graphs section.
     assert_eq!(
         emitted_names(&out),
         [
+            "layer-file.svg",
             "component-coupling.svg",
             "hot-components.svg",
+            "layer-workspace.svg",
             "component-01-src-solo.svg",
         ],
         "a file-less component still yields its deterministic stub page"
     );
+    let stub = svg_of(&out, "layer-file.svg");
+    assert!(
+        stub.contains("no files recorded"),
+        "layer-file stub caption missing:\n{stub}"
+    );
 }
 
 #[test]
-fn empty_components_omit_component_charts_but_keep_include_graph() {
+fn empty_components_emit_workspace_stub_but_omit_ranked_charts() {
     let mut doc = cycle_doc();
     doc.components = Some(vec![]);
     let out = render(&doc);
-    assert_eq!(emitted_names(&out), ["include-graph.svg"]);
+    // Symmetric-stub pin (B5): ranked component charts are omitted on empty
+    // components, but the layer-workspace STUB still rides the present
+    // components section — mirroring the layer-file stub above.
+    assert_eq!(
+        emitted_names(&out),
+        ["include-graph.svg", "layer-file.svg", "layer-workspace.svg"]
+    );
+    let stub = svg_of(&out, "layer-workspace.svg");
+    assert!(
+        stub.contains("no components recorded"),
+        "workspace stub caption missing:\n{stub}"
+    );
+}
+
+#[test]
+fn present_but_empty_sections_emit_exactly_the_two_layer_stubs() {
+    // B5 symmetry lock: graphs present-but-empty AND components
+    // present-but-empty ⇒ exactly the two deterministic stubs, byte-identical
+    // across renders, and nothing else.
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![],
+            edges: vec![],
+        },
+        call_graph: None,
+    });
+    doc.components = Some(vec![]);
+    let out = render(&doc);
+    assert_eq!(
+        emitted_names(&out),
+        ["layer-file.svg", "layer-workspace.svg"],
+        "symmetric stubs only"
+    );
+    assert_eq!(render(&doc), out, "stubs must be byte-deterministic");
+    let file = svg_of(&out, "layer-file.svg");
+    assert!(file.contains("no files recorded"));
+    let workspace = svg_of(&out, "layer-workspace.svg");
+    assert!(workspace.contains("no components recorded"));
 }
 
 #[test]
@@ -503,8 +550,10 @@ fn chart_emission_order_is_frozen() {
         emitted_names(&out),
         [
             "include-graph.svg",
+            "layer-file.svg",
             "component-coupling.svg",
             "hot-components.svg",
+            "layer-workspace.svg",
             // Per-component pages trail the overviews in (rank, prefix)
             // order; src/x has no scanned file here ⇒ stub page.
             "component-01-src-x.svg",
@@ -519,8 +568,10 @@ fn calls_doc_emits_real_per_component_pages_in_rank_order() {
         emitted_names(&out),
         [
             "include-graph.svg",
+            "layer-file.svg",
             "component-coupling.svg",
             "hot-components.svg",
+            "layer-workspace.svg",
             "component-01-src-a.svg",
             "component-02-src-b.svg",
         ]
@@ -561,6 +612,7 @@ fn file_less_components_emit_deterministic_stubs() {
         [
             "component-coupling.svg",
             "hot-components.svg",
+            "layer-workspace.svg",
             "component-01-src-quiet.svg",
             "component-02-src-calmer.svg",
         ]
@@ -594,8 +646,10 @@ fn component_page_escapes_hostile_prefix_and_path() {
         emitted_names(&out),
         [
             "include-graph.svg",
+            "layer-file.svg",
             "component-coupling.svg",
             "hot-components.svg",
+            "layer-workspace.svg",
             "component-01-we-ird.svg",
         ]
     );
@@ -669,4 +723,96 @@ fn identical_documents_render_identically_across_construction() {
     let a = render(&calls_doc());
     let b = render(&calls_doc());
     assert_eq!(a, b);
+}
+
+// ---------------------------------------------------------------------------
+// Option A slice 2: layered overviews (workspace + file)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn layered_overviews_ride_their_source_gates_in_emission_order() {
+    // calls_doc has both graphs and components: both layers emitted, in
+    // frozen positions (file with the include gate, workspace with the
+    // components gate, pages trailing).
+    let out = render(&calls_doc());
+    let names = emitted_names(&out);
+    let file_pos = names
+        .iter()
+        .position(|n| *n == "layer-file.svg")
+        .expect("layer-file emitted");
+    let workspace_pos = names
+        .iter()
+        .position(|n| *n == "layer-workspace.svg")
+        .expect("layer-workspace emitted");
+    assert_eq!(names[file_pos - 1], "include-graph.svg");
+    assert_eq!(names[file_pos + 1], "component-coupling.svg");
+    assert_eq!(names[workspace_pos - 1], "hot-components.svg");
+    assert_eq!(names[workspace_pos + 1], "component-01-src-a.svg");
+
+    // Workspace content: both components as nodes over one coupling edge.
+    let workspace = svg_of(&out, "layer-workspace.svg");
+    assert!(
+        workspace.contains(">1 src/a 8.00<"),
+        "rank-1 node:\n{workspace}"
+    );
+    assert!(
+        workspace.contains(">2 src/b 4.00<"),
+        "rank-2 node:\n{workspace}"
+    );
+    assert_eq!(workspace.matches("<line ").count(), 1);
+    assert!(
+        workspace.contains("heat = finding density per KLOC"),
+        "heat caption:\n{workspace}"
+    );
+
+    // File content: both files as nodes over the include edge.
+    let file = svg_of(&out, "layer-file.svg");
+    assert!(file.contains(">src/a/x.c<"), "file node:\n{file}");
+    assert!(file.contains(">src/b/y.c<"), "file node:\n{file}");
+    assert_eq!(file.matches("<line ").count(), 1);
+}
+
+#[test]
+fn layered_overviews_are_byte_identical_and_capped() {
+    // 60-node chain: the file layer keeps the top-50 by degree with the
+    // shared truncation marker, byte-identical across renders.
+    let first = render(&big_doc());
+    assert_eq!(first, render(&big_doc()));
+    let file = svg_of(&first, "layer-file.svg");
+    assert_eq!(file.matches("<rect ").count(), 50, "node cap");
+    assert!(
+        file.contains("&#8230; 10 more files omitted"),
+        "truncation marker missing:\n{file}"
+    );
+}
+
+#[test]
+fn layer_file_escapes_hostile_paths_and_highlights_hot_path() {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![node("<a>&\"'b.c")],
+            edges: vec![],
+        },
+        call_graph: None,
+    });
+    doc.stats.functions = vec![costly_fn("<a>&\"'b.c", "hot", 20)];
+    let out = render(&doc);
+    let file = svg_of(&out, "layer-file.svg");
+    assert!(
+        file.contains("&lt;a&gt;&amp;&quot;&#39;b.c"),
+        "hostile path not fully escaped:\n{file}"
+    );
+    assert!(
+        !file.contains("<a>&"),
+        "raw unescaped hostile bytes leaked:\n{file}"
+    );
+    assert!(
+        file.contains("stroke=\"#b30000\" stroke-width=\"2\""),
+        "hot-path outline missing:\n{file}"
+    );
+    assert!(
+        file.contains("hot-path: &lt;a&gt;&amp;&quot;&#39;b.c at max cost among shown files"),
+        "hot-path caption missing:\n{file}"
+    );
 }

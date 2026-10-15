@@ -337,8 +337,8 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
 
     // charts/: exactly the emission-rule-expected set — all three overview
     // charts (include-graph nodes AND components are non-empty here) plus
-    // one per-component detail page per capped component, in (rank, prefix)
-    // order after the overviews.
+    // the two layered overviews plus one per-component detail page per
+    // capped component, in (rank, prefix) order after the overviews.
     let charts_dir = out.join("charts");
     let mut chart_files: Vec<String> = fs::read_dir(&charts_dir)
         .unwrap()
@@ -351,6 +351,8 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         "component-coupling.svg".to_string(),
         "hot-components.svg".to_string(),
         "include-graph.svg".to_string(),
+        "layer-file.svg".to_string(),
+        "layer-workspace.svg".to_string(),
     ];
     let mut ranked: Vec<(u64, String)> = doc1["components"]
         .as_array()

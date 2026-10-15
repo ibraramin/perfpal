@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="470" height="272" viewBox="0 0 470 272">
+<text x="40" y="56" font-family="monospace" font-size="13">File hot-path map — 3 files</text>
+<text x="40" y="76" font-family="monospace" font-size="11">heat = function cost; hot-path outlined (top-50 scope)</text>
+<g stroke="#999999" stroke-width="1">
+<line x1="210" y1="119" x2="260" y2="119"/>
+<line x1="210" y1="163" x2="260" y2="119"/>
+</g>
+<g font-family="monospace" font-size="11">
+<rect x="40" y="104" width="170" height="30" fill="#b30000" stroke="#b30000" stroke-width="2"/>
+<text x="48" y="123">src/main.c</text>
+<rect x="40" y="148" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="167">src/util.c</text>
+<rect x="260" y="104" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
+<text x="268" y="123">src/util.h</text>
+</g>
+<text x="40" y="244" font-family="monospace" font-size="11">hot-path: src/main.c at max cost among shown files</text>
+</svg>

@@ -176,17 +176,25 @@ fn render_component_page(
     include_pairs: &[(String, String)],
     file_cost: &BTreeMap<String, f64>,
 ) -> Vec<u8> {
+    // Intra-component scope FIRST: only edges with both endpoints in this
+    // component's member set may influence the cap ranking. Ranking by the
+    // scan-global set would let cross-component (or phantom) edges displace
+    // the files that define this page and silently drop intra-component
+    // edges — so the cap below ranks by INTRA-component degree only.
+    let intra_pairs: Vec<(String, String)> = include_pairs
+        .iter()
+        .filter(|(f, t)| member_set.contains(f) && member_set.contains(t))
+        .cloned()
+        .collect();
     let members: Vec<String> = member_set.iter().cloned().collect();
-    let (nodes, dropped) = cap_nodes(&members, include_pairs);
+    let (nodes, dropped) = cap_nodes(&members, &intra_pairs);
+    // `nodes ⊆ member_set` by construction (`cap_nodes` returns a subset of
+    // its input), so the capped node set alone admits the intra-component
+    // subgraph — no second membership check needed.
     let node_set: BTreeSet<&str> = nodes.iter().map(String::as_str).collect();
     let pairs: Vec<(String, String)> = include_pairs
         .iter()
-        .filter(|(f, t)| {
-            node_set.contains(f.as_str())
-                && node_set.contains(t.as_str())
-                && member_set.contains(f)
-                && member_set.contains(t)
-        })
+        .filter(|(f, t)| node_set.contains(f.as_str()) && node_set.contains(t.as_str()))
         .cloned()
         .collect();
 
@@ -357,5 +365,96 @@ mod tests {
         let pages = render_component_pages(&comps, None, &[], &[]);
         assert_eq!(pages.len(), COMPONENT_CAP);
         assert_eq!(pages[0].0, "component-01-dir01.svg");
+    }
+
+    #[test]
+    fn intra_component_edge_survives_the_single_node_set_filter() {
+        // Lock for the double-filter simplification: `nodes ⊆ member_set`
+        // by construction, so the capped node set alone must admit the
+        // intra-component edge (exactly one drawn line).
+        use crate::ir::{IncludeForm, Span};
+        use crate::schema::{GraphNode, GraphsSection, IncludeEdgeDto, IncludeGraph};
+        let graphs = GraphsSection {
+            include_graph: IncludeGraph {
+                nodes: vec![
+                    GraphNode {
+                        path: "src/a/x.c".to_string(),
+                    },
+                    GraphNode {
+                        path: "src/a/y.c".to_string(),
+                    },
+                ],
+                edges: vec![IncludeEdgeDto {
+                    from: "src/a/x.c".to_string(),
+                    to: Some("src/a/y.c".to_string()),
+                    form: IncludeForm::Quoted,
+                    resolved: true,
+                    span: Span::point(1, 1),
+                }],
+            },
+            call_graph: None,
+        };
+        let pages = render_component_pages(&[comp("src/a", 1, 1.0)], Some(&graphs), &[], &[]);
+        assert_eq!(pages.len(), 1);
+        let text = String::from_utf8(pages[0].1.clone()).expect("SVG UTF-8");
+        assert!(text.contains(">src/a/x.c<"), "member node:\n{text}");
+        assert!(text.contains(">src/a/y.c<"), "member node:\n{text}");
+        assert_eq!(text.matches("<line ").count(), 1, "edge drawn:\n{text}");
+    }
+
+    #[test]
+    fn cap_ranks_by_intra_component_degree_so_the_hub_survives() {
+        // B1 lock: the top-50 cap MUST rank by INTRA-component degree. The
+        // planted victim (`big/f00.c`, 20 intra edges, zero cross edges)
+        // must survive the cap even though every other file carries
+        // cross-component edges that a global-degree ranking would count.
+        use crate::ir::{IncludeForm, Span};
+        use crate::schema::{GraphNode, GraphsSection, IncludeEdgeDto, IncludeGraph};
+        let paths: Vec<String> = (0..60).map(|i| format!("big/f{i:02}.c")).collect();
+        let pair = |from: &str, to: &str| IncludeEdgeDto {
+            from: from.to_string(),
+            to: Some(to.to_string()),
+            form: IncludeForm::Quoted,
+            resolved: true,
+            span: Span::point(1, 1),
+        };
+        let mut edges = Vec::new();
+        // Victim fan: f00 → f01..=f20 (20 intra edges, degree 20).
+        for i in 1..=20 {
+            edges.push(pair(&paths[0], &paths[i]));
+        }
+        // Backbone chain f01 → f02 → … → f59 (degrees 1–3 elsewhere).
+        for pair_paths in paths[1..].windows(2) {
+            edges.push(pair(&pair_paths[0], &pair_paths[1]));
+        }
+        // Cross-component decoys: every non-victim file also includes an
+        // unscanned external file. These endpoints are not chart nodes, so
+        // an intra-component ranking ignores them; a global ranking would
+        // let them outrank the victim.
+        for p in paths.iter().skip(1) {
+            edges.push(pair(p, "other/external.c"));
+        }
+        let graphs = GraphsSection {
+            include_graph: IncludeGraph {
+                nodes: paths
+                    .iter()
+                    .map(|p| GraphNode { path: p.clone() })
+                    .collect(),
+                edges,
+            },
+            call_graph: None,
+        };
+        let pages = render_component_pages(&[comp("big", 1, 1.0)], Some(&graphs), &[], &[]);
+        assert_eq!(pages.len(), 1);
+        let text = String::from_utf8(pages[0].1.clone()).expect("SVG UTF-8");
+        assert_eq!(text.matches("<rect ").count(), 50, "node cap");
+        assert!(
+            text.contains(">big/f00.c<"),
+            "high-intra victim must survive the cap:\n{text}"
+        );
+        assert!(
+            text.contains("&#8230; 10 more files omitted"),
+            "truncation marker missing:\n{text}"
+        );
     }
 }

@@ -112,8 +112,10 @@ Distribution — max\_loop\_depth:
 
 ## 5. Architecture
 [Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)
+[File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
 [Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
+[Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)
 
 Component ranking (hottest first):
 
