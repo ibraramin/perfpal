@@ -4,7 +4,7 @@
 //! smoke through `cli::run_with`.
 //!
 //! Does NOT validate the emitted document against the embedded JSON schema
-//! (the v1.3 schema is the schema agent's slice); it DOES assert that the
+//! (the versioned schema is the schema agent's slice); it DOES assert that the
 //! `"python"` token now surfaces in `scan.languages` (W3 wired
 //! `SUPPORTED_LANGUAGES`/the aggregator union). Per-file `files[].language`
 //! is `"python"` (FileRecord contract).

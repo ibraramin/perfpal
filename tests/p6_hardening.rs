@@ -85,7 +85,7 @@ fn fixture_root() -> PathBuf {
 /// compared byte-exact (verified by `regenerate_goldens`).
 const GOLDEN_ARTIFACTS: [&str; 6] = [
     "metrics.json",
-    "metrics.schema.v1.3.json",
+    "metrics.schema.v1.4.json",
     "report.md",
     "charts/include-graph.svg",
     "charts/component-coupling.svg",
@@ -314,7 +314,7 @@ fn regenerate_goldens() {
             "charts/include-graph.svg",
             "charts/component-coupling.svg",
             "charts/hot-components.svg",
-            "metrics.schema.v1.3.json",
+            "metrics.schema.v1.4.json",
         ] {
             let text = fs::read_to_string(golden.join(name)).expect(name);
             assert!(

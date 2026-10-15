@@ -478,6 +478,46 @@ pub struct FunctionRecord {
     /// additive v1 field with `#[serde(default)]`, defaulting to `false`).
     #[serde(default)]
     pub is_module_scope: bool,
+    /// ADDITIVE v1.4 skeleton (plan `divergence-revamp` step 1, specs
+    /// `divergence-study`/`divergence-paper`): per-function call-shape —
+    /// distinct direct-callee count. `Option` + `#[serde(default,
+    /// skip_serializing_if)]` following the [`ParseHealth::resolver`]
+    /// pattern — documents written before it deserialize unchanged and
+    /// `None` is OMITTED on the wire (omit-don't-null). No backend computes
+    /// it yet (needs a whole-program view); the field existing with `None`
+    /// is the step-1 contract.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub call_fanout: Option<u32>,
+    /// ADDITIVE v1.4 skeleton: per-function call-shape — distinct caller
+    /// count. Same serde-default pattern; uncomputed (`None`) this step.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub call_fanin: Option<u32>,
+    /// ADDITIVE v1.4 skeleton: per-function call-shape — longest static
+    /// call-chain depth rooted at this function. Same serde-default
+    /// pattern; uncomputed (`None`) this step.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub call_depth: Option<u32>,
+    /// ADDITIVE v1.4 skeleton: per-function call-shape — true when the
+    /// function can reach itself statically. Same serde-default pattern;
+    /// uncomputed (`None`) this step.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_recursive: Option<bool>,
+    /// ADDITIVE v1.4 skeleton: token-normalized idiom hash of the function
+    /// body (clone/idiom-rate bucketing). Same serde-default pattern;
+    /// uncomputed (`None`) this step.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub idiom_hash: Option<String>,
+    /// ADDITIVE v1.4 skeleton: true when the body contains an
+    /// error-handling path (`try`/`except`, `?`/`Err`-return,
+    /// `do-while(0)`, `#if 0` / `cfg(test)` gating, error-branch `free`).
+    /// Same serde-default pattern; uncomputed (`None`) this step.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_path: Option<bool>,
+    /// ADDITIVE v1.4 skeleton: dominant allocation family (`real_alloc` vs
+    /// `empty_ctor` vs `serialize/format`). Same serde-default pattern;
+    /// uncomputed (`None`) this step.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alloc_family: Option<String>,
 }
 
 /// Resolver tier tag carried by every event (ir-v1.md §2). v1 emits only
@@ -914,5 +954,51 @@ mod tests {
             end_col: 12,
         };
         assert!(early < late);
+    }
+
+    /// v1.4 additive-skeleton lock (plan `divergence-revamp` step 1): a
+    /// pre-v1.4 `FunctionRecord` document (no call-shape / idiom / error /
+    /// alloc fields) deserializes unchanged with every new field `None`, and
+    /// re-serializes WITHOUT emitting them (omit-don't-null) — old JSON
+    /// parsing never breaks.
+    #[test]
+    fn function_record_deserializes_without_v14_fields() {
+        let old = serde_json::json!({
+            "id": "a.c#f#1:1",
+            "name": "f",
+            "path": "a.c",
+            "span": {"start_line": 1, "start_col": 1, "end_line": 3, "end_col": 1},
+            "param_count": 0,
+            "param_types": [],
+            "cyclomatic_complexity": 1,
+            "cognitive_complexity": 0,
+            "max_loop_depth": 0,
+            "alloc_site_count": 0,
+            "length_lines": 3
+        });
+        let record: FunctionRecord =
+            serde_json::from_value(old).expect("pre-v1.4 record must deserialize");
+        assert_eq!(record.call_fanout, None);
+        assert_eq!(record.call_fanin, None);
+        assert_eq!(record.call_depth, None);
+        assert_eq!(record.is_recursive, None);
+        assert_eq!(record.idiom_hash, None);
+        assert_eq!(record.error_path, None);
+        assert_eq!(record.alloc_family, None);
+        let wire = serde_json::to_value(&record).expect("serialize");
+        for absent in [
+            "call_fanout",
+            "call_fanin",
+            "call_depth",
+            "is_recursive",
+            "idiom_hash",
+            "error_path",
+            "alloc_family",
+        ] {
+            assert!(
+                wire.get(absent).is_none(),
+                "{absent} must be omitted when uncomputed"
+            );
+        }
     }
 }

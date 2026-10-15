@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.3.json",
-  "title": "Perfpal metrics.json schema v1.3",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.4.json",
+  "title": "Perfpal metrics.json schema v1.4",
   "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, Rust, Python). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.3",
+      "const": "1.4",
       "description": "Schema version of this document. MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
@@ -68,7 +68,7 @@
         "additionalProperties": false,
         "properties": {
           "path": { "type": "string", "description": "Repo-relative POSIX path." },
-          "language": { "enum": ["c", "rust", "python"], "description": "Scanned file language (schema 1.3 admits c, rust, and python); widening is a minor-bump schema re-emission." },
+          "language": { "enum": ["c", "rust", "python"], "description": "Scanned file language (schema 1.4 admits c, rust, and python); widening is a minor-bump schema re-emission." },
           "loc": {
             "type": "object",
             "required": ["code", "comment", "blank"],
@@ -133,7 +133,14 @@
               "cognitive_complexity": { "type": "integer", "minimum": 0 },
               "max_loop_depth": { "type": "integer", "minimum": 0 },
               "alloc_site_count": { "type": "integer", "minimum": 0 },
-              "length_lines": { "type": "integer", "minimum": 0 }
+              "length_lines": { "type": "integer", "minimum": 0 },
+              "call_fanout": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4 (divergence-study instrument, IR v1.4 step 1): per-function call-shape — distinct direct-callee count. Optional; omitted when the producer has no whole-program view." },
+              "call_fanin": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — distinct caller count. Optional; omitted when uncomputed." },
+              "call_depth": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — longest static call-chain depth rooted at this function. Optional; omitted when uncomputed." },
+              "is_recursive": { "type": "boolean", "description": "ADDITIVE v1.4: per-function call-shape — true when the function can reach itself statically. Optional; omitted when uncomputed." },
+              "idiom_hash": { "type": "string", "description": "ADDITIVE v1.4: token-normalized idiom hash of the function body (clone/idiom-rate bucketing). Optional; omitted when uncomputed." },
+              "error_path": { "type": "boolean", "description": "ADDITIVE v1.4: true when the function body contains an error-handling path (try/except, ?/Err-return, do-while(0), #if 0 / cfg(test) gating, error-branch free). Optional; omitted when uncomputed." },
+              "alloc_family": { "type": "string", "description": "ADDITIVE v1.4: dominant allocation family of the function (real_alloc vs empty_ctor vs serialize/format). Optional; omitted when uncomputed." }
             }
           }
         },

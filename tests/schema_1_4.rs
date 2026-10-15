@@ -1,10 +1,14 @@
-//! metrics.json schema 1.3 end-to-end lock (plan `python-backend`): the
-//! `"python"` language token was admitted alongside `"c"` / `"rust"` (minor
-//! bump 1.2 → 1.3, additive). `scan.languages` derives from the scanned files
-//! (sorted-unique, supported set on a zero-file scan) and `files[].language`
-//! admits `"python"`, all asserted through the REAL pipeline (`cli::run_with`)
-//! over temp trees — NOT inside a language-specific backend test (whose header
-//! pins the contract that the schema/writer path is not exercised there).
+//! metrics.json schema 1.4 end-to-end lock (plan `divergence-revamp` step 1):
+//! seven OPTIONAL `stats.functions[]` instrument fields (call-shape, idiom
+//! hash, error path, alloc family) plus the first populated
+//! `stats.distributions[]` histograms — additive-only over 1.3, so every
+//! `required` list is byte-equal to the v1.3 artifact's.
+//!
+//! History: the `"python"` language token arrived with the 1.2 → 1.3 bump
+//! (plan `python-backend`); its locks below are RETAINED unchanged.
+//! `scan.languages` derives from the scanned files (sorted-unique, supported
+//! set on a zero-file scan) and `files[].language` admits `"python"`, all
+//! asserted through the REAL pipeline (`cli::run_with`) over temp trees.
 
 use std::ffi::OsString;
 use std::fs;
@@ -78,8 +82,9 @@ fn rust_only_tree_derives_rust_language() {
 }
 
 /// (3) Empty dir → exit 0 with the supported-set fallback (`minItems: 1`
-/// preserved; semantics = "languages scanned for"). With the 1.3 bump the
-/// supported set is `["c","python","rust"]` (the `SUPPORTED_LANGUAGES` order).
+/// preserved; semantics = "languages scanned for"). Since the 1.3 bump the
+/// supported set is `["c","python","rust"]` (the `SUPPORTED_LANGUAGES` order);
+// v1.4 retains it unchanged.
 #[test]
 fn empty_dir_scan_falls_back_to_supported_set() {
     let root = temp_dir("empty");
@@ -91,13 +96,13 @@ fn empty_dir_scan_falls_back_to_supported_set() {
     assert_eq!(doc["scan"]["file_count"], 0);
 }
 
-/// (4) Schema lock: the embedded canonical v1.3 schema admits exactly
-/// `["c","rust","python"]` at both language sites; the retained v1.2 and v1.1
-/// artifacts still pin their own version markers and un-widened language
+/// (4) Schema lock: the embedded canonical v1.4 schema admits exactly
+/// `["c","rust","python"]` at both language sites; the retained v1.3, v1.2
+/// and v1.1 artifacts still pin their own version markers and language
 /// values (proving the history copies are kept intact, not silently
 /// overwritten).
 #[test]
-fn schema_1_3_admits_c_rust_and_python_language_values() {
+fn schema_1_4_admits_c_rust_and_python_language_values() {
     let schema: serde_json::Value =
         serde_json::from_str(perfpal::schema::EMBEDDED_SCHEMA).expect("embedded schema parses");
 
@@ -108,6 +113,17 @@ fn schema_1_3_admits_c_rust_and_python_language_values() {
     let file_lang_enum =
         schema["properties"]["files"]["items"]["properties"]["language"]["enum"].clone();
     assert_eq!(file_lang_enum, serde_json::json!(["c", "rust", "python"]));
+
+    // Retained history: v1.3 artifact intact (const "1.3", enum
+    // ["c","rust","python"]).
+    let v1_3: serde_json::Value =
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.3.json"))
+            .expect("v1.3 schema parses");
+    assert_eq!(v1_3["properties"]["schema_version"]["const"], "1.3");
+    assert_eq!(
+        v1_3["properties"]["files"]["items"]["properties"]["language"]["enum"],
+        serde_json::json!(["c", "rust", "python"])
+    );
 
     // Retained history: v1.2 artifact intact (enum ["c","rust"]).
     let v1_2: serde_json::Value =
@@ -131,12 +147,13 @@ fn schema_1_3_admits_c_rust_and_python_language_values() {
 }
 
 // ---------------------------------------------------------------------------
-// (5) v1.3 bump lock (plan `python-backend`): the Python language arrived as
-// an additive minor bump 1.2 → 1.3. No runtime JSON-Schema validator is
-// available in-repo — Cargo.toml is dependency-frozen and carries no
-// `jsonschema`/`valico`-style crate — so the v1.3 `rule_id`/`finding_id`
-// patterns and the `files[].language` enum are asserted STRUCTURALLY here
-// against the bundled artifact.
+// (5) v1.4 bump lock (plan `divergence-revamp` step 1): seven additive
+// OPTIONAL function instrument fields + the first populated distributions.
+// No runtime JSON-Schema validator is available in-repo — Cargo.toml is
+// dependency-frozen and carries no `jsonschema`/`valico`-style crate — so
+// the v1.4 `rule_id`/`finding_id` patterns and the `files[].language` enum
+// are asserted STRUCTURALLY here against the bundled artifact (retained
+// verbatim from the v1.3 lock).
 // ---------------------------------------------------------------------------
 
 /// C source producing at least one `PERF-C-*` finding (alloc + free in loop).
@@ -178,7 +195,7 @@ fn is_three_digits(s: &str) -> bool {
     s.len() == 3 && s.bytes().all(|b| b.is_ascii_digit())
 }
 
-/// Structural match for the v1.3 `rule_id` pattern
+/// Structural match for the v1.4 `rule_id` pattern
 /// `^PERF-[A-Z]+(-[A-Z]+)?-[0-9]{3}$`.
 fn matches_rule_id(s: &str) -> bool {
     let Some(rest) = s.strip_prefix("PERF-") else {
@@ -192,7 +209,7 @@ fn matches_rule_id(s: &str) -> bool {
     }
 }
 
-/// Structural match for the v1.3 `finding_id` pattern
+/// Structural match for the v1.4 `finding_id` pattern
 /// `^PERF-[A-Z]+(-[A-Z]+)?-[0-9]{3}:.+:[0-9]+:[0-9]+$`. Parsed from the RIGHT
 /// because paths may legally contain colons.
 fn matches_finding_id(s: &str) -> bool {
@@ -210,37 +227,37 @@ fn matches_finding_id(s: &str) -> bool {
 }
 
 #[test]
-fn v1_3_bump_and_findings_validate_structurally() {
-    // v1.3 is an additive minor bump: the version marker and bundled artifact
-    // name advance together, and v1.2 remains on disk as retained history.
-    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.3");
+fn v1_4_bump_and_findings_validate_structurally() {
+    // v1.4 is an additive minor bump: the version marker and bundled artifact
+    // name advance together, and v1.3 remains on disk as retained history.
+    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.4");
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
-        "metrics.schema.v1.3.json"
+        "metrics.schema.v1.4.json"
     );
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
         format!("metrics.schema.v{}.json", perfpal::schema::SCHEMA_VERSION),
         "artifact name must stay derived from SCHEMA_VERSION"
     );
-    // The canonical v1.3 docs artifact is present and active.
+    // The canonical v1.4 docs artifact is present and active.
     let canonical: serde_json::Value =
-        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.3.json"))
-            .expect("canonical v1.3 schema parses");
-    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.3");
-    // v1.2 is retained as history — the bump did not overwrite it.
-    assert!(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("docs/schema/metrics.schema.v1.2.json")
-            .exists(),
-        "v1.2 artifact must remain as retained history"
-    );
-    // The active v1.3 artifact file IS emitted.
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.4.json"))
+            .expect("canonical v1.4 schema parses");
+    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.4");
+    // v1.3 is retained as history — the bump did not overwrite it.
     assert!(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("docs/schema/metrics.schema.v1.3.json")
             .exists(),
-        "the v1.3 artifact must be emitted by this bump"
+        "v1.3 artifact must remain as retained history"
+    );
+    // The active v1.4 artifact file IS emitted.
+    assert!(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("docs/schema/metrics.schema.v1.4.json")
+            .exists(),
+        "the v1.4 artifact must be emitted by this bump"
     );
 
     // A REAL mixed-language document: Rust findings present so the structural
@@ -250,15 +267,15 @@ fn v1_3_bump_and_findings_validate_structurally() {
     fs::write(root.join("rs_src.rs"), LOCK_RS_SRC).expect("write rs_src.rs");
     let doc = run_pipeline_and_parse("schema-lock", &root);
 
-    assert_eq!(doc["schema_version"], "1.3", "v1.3 bump in effect");
+    assert_eq!(doc["schema_version"], "1.4", "v1.4 bump in effect");
 
-    // files[].language within the v1.3 enum.
+    // files[].language within the v1.4 enum.
     let files = doc["files"].as_array().expect("files[] present");
     for f in files {
         let lang = f["language"].as_str().expect("language token");
         assert!(
             matches!(lang, "c" | "rust" | "python"),
-            "files[].language {lang:?} outside the v1.3 enum"
+            "files[].language {lang:?} outside the v1.4 enum"
         );
     }
     // scan.languages within the same enum.
@@ -266,11 +283,11 @@ fn v1_3_bump_and_findings_validate_structurally() {
         let lang = lang.as_str().expect("language token");
         assert!(
             matches!(lang, "c" | "rust" | "python"),
-            "scan.languages entry {lang:?} outside the v1.3 enum"
+            "scan.languages entry {lang:?} outside the v1.4 enum"
         );
     }
 
-    // Every finding must be a structurally valid v1.3 record AND carry the
+    // Every finding must be a structurally valid v1.4 record AND carry the
     // language-matching id prefix; at least one PERF-RS-* must be present.
     let findings = doc["findings"].as_array().expect("findings[] present");
     assert!(!findings.is_empty(), "mixed lock tree must emit findings");
@@ -280,11 +297,11 @@ fn v1_3_bump_and_findings_validate_structurally() {
         let finding_id = f["finding_id"].as_str().expect("finding_id");
         assert!(
             matches_rule_id(rule_id),
-            "rule_id {rule_id:?} violates the v1.3 pattern"
+            "rule_id {rule_id:?} violates the v1.4 pattern"
         );
         assert!(
             matches_finding_id(finding_id),
-            "finding_id {finding_id:?} violates the v1.3 pattern"
+            "finding_id {finding_id:?} violates the v1.4 pattern"
         );
         assert!(
             finding_id.starts_with(rule_id),
@@ -302,6 +319,130 @@ fn v1_3_bump_and_findings_validate_structurally() {
         rs_seen,
         "mixed document must carry PERF-RS-* findings for the structural lock"
     );
+
+    fs::remove_dir_all(&root).ok();
+}
+
+/// (6) v1.4 additive-only lock: every `required` list in the v1.4 artifact is
+/// byte-equal to the corresponding v1.3 list — the seven instrument fields
+/// and the populated distributions arrive as OPTIONAL-only additions, so a
+/// v1.3 metrics.json still parses unchanged.
+#[test]
+fn v1_4_required_lists_match_v1_3_exactly() {
+    let v1_4: serde_json::Value =
+        serde_json::from_str(perfpal::schema::EMBEDDED_SCHEMA).expect("embedded schema parses");
+    let v1_3: serde_json::Value =
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.3.json"))
+            .expect("v1.3 schema parses");
+    assert_required_equal(&v1_3, &v1_4, "$");
+
+    // The seven instrument fields ARE declared — as optional properties of
+    // stats.functions items.
+    let props = &v1_4["properties"]["stats"]["properties"]["functions"]["items"]["properties"];
+    for field in [
+        "call_fanout",
+        "call_fanin",
+        "call_depth",
+        "is_recursive",
+        "idiom_hash",
+        "error_path",
+        "alloc_family",
+    ] {
+        assert!(
+            props.get(field).is_some(),
+            "v1.4 must declare optional stats.functions[] field {field}"
+        );
+    }
+}
+
+/// Recursive parallel walk: wherever the old schema has a `required` array,
+/// the new schema must carry the identical array.
+fn assert_required_equal(old: &serde_json::Value, new: &serde_json::Value, pointer: &str) {
+    match (old, new) {
+        (serde_json::Value::Object(old_map), serde_json::Value::Object(new_map)) => {
+            if let Some(old_required) = old_map.get("required") {
+                assert_eq!(
+                    new_map.get("required"),
+                    Some(old_required),
+                    "required list changed at {pointer} — minor bumps are additive-only"
+                );
+            }
+            for (key, old_value) in old_map {
+                if let Some(new_value) = new_map.get(key) {
+                    assert_required_equal(old_value, new_value, &format!("{pointer}/{key}"));
+                }
+            }
+        }
+        (serde_json::Value::Array(old_items), serde_json::Value::Array(new_items)) => {
+            for (i, (o, n)) in old_items.iter().zip(new_items.iter()).enumerate() {
+                assert_required_equal(o, n, &format!("{pointer}[{i}]"));
+            }
+        }
+        _ => {}
+    }
+}
+
+/// (7) v1.4 skeleton emission lock: on a non-empty scan the document carries
+/// populated `stats.distributions[]` — sorted by `(metric, bucket)` with
+/// per-metric sums equal to the function count — while every
+/// `stats.functions[]` entry OMITS the seven uncomputed instrument fields
+/// (skeleton: declared-optional, never null).
+#[test]
+fn v1_4_skeleton_emits_distributions_and_omits_uncomputed_fields() {
+    let root = temp_dir("skeleton");
+    fs::write(root.join("c_src.c"), LOCK_C_SRC).expect("write c_src.c");
+    fs::write(root.join("rs_src.rs"), LOCK_RS_SRC).expect("write rs_src.rs");
+    let doc = run_pipeline_and_parse("skeleton", &root);
+
+    let functions = doc["stats"]["functions"]
+        .as_array()
+        .expect("stats.functions[] present");
+    assert!(!functions.is_empty());
+    for f in functions {
+        for absent in [
+            "call_fanout",
+            "call_fanin",
+            "call_depth",
+            "is_recursive",
+            "idiom_hash",
+            "error_path",
+            "alloc_family",
+        ] {
+            assert!(
+                f.get(absent).is_none(),
+                "uncomputed v1.4 field {absent} must be omitted, not null"
+            );
+        }
+    }
+
+    let entries = doc["stats"]["distributions"]
+        .as_array()
+        .expect("v1.4 populates stats.distributions[] on a non-empty scan");
+    assert_eq!(entries.len(), 13, "6 complexity + 7 depth buckets");
+    let keys: Vec<(String, String)> = entries
+        .iter()
+        .map(|e| {
+            (
+                e["metric"].as_str().expect("metric").to_string(),
+                e["bucket"].as_str().expect("bucket").to_string(),
+            )
+        })
+        .collect();
+    let mut sorted = keys.clone();
+    sorted.sort();
+    assert_eq!(keys, sorted, "(metric, bucket) ascending");
+    for metric in ["cyclomatic_complexity", "max_loop_depth"] {
+        let sum: u64 = entries
+            .iter()
+            .filter(|e| e["metric"] == metric)
+            .map(|e| e["count"].as_u64().expect("count"))
+            .sum();
+        assert_eq!(
+            sum,
+            functions.len() as u64,
+            "per-metric sum for {metric} must equal the function count"
+        );
+    }
 
     fs::remove_dir_all(&root).ok();
 }

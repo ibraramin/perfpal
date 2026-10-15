@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.3.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.4.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -31,9 +31,11 @@
 //! - `graphs.call_graph` ([`CallGraphSection`] / [`CallEdge`], confidence
 //!   locked to `"LOW"` per ADR-0001 name-based matching).
 //! - `components[]` ([`ComponentEntry`] / [`ComponentMetrics`]).
-//! - `stats.distributions` ([`DistributionEntry`]) — reserved-for-future:
-//!   the field exists so the `(metric, bucket)` sort contract is
-//!   implementable/testable, but no producer populates it yet.
+//! - `stats.distributions` ([`DistributionEntry`]) — v1.4 step 1 (plan
+//!   `divergence-revamp`): the aggregator now populates the
+//!   `cyclomatic_complexity` + `max_loop_depth` histograms (fixed buckets per
+//!   `docs/schema/stats-distributions-proposal.md`); the `(metric, bucket)`
+//!   sort contract is enforced by `aggregator::sort_distributions`.
 //!
 //! The call_graph and components producers LANDED in P4 (aggregator); the
 //! fields remain `Option<_>` with `skip_serializing_if` because ABSENT is
@@ -48,7 +50,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.3.json
+/// Schema version of emitted documents (metrics.schema.v1.4.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
 ///
@@ -67,19 +69,25 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// `files[].language` widened from enum ["c","rust"] to
 /// enum ["c","rust","python"] (language addition; v1.2 documents still
 /// validate).
-pub const SCHEMA_VERSION: &str = "1.3";
+///
+/// v1.3 → v1.4 (minor/additive, plan `divergence-revamp` step 1): seven
+/// OPTIONAL `stats.functions[]` instrument fields (`call_fanout`,
+/// `call_fanin`, `call_depth`, `is_recursive`, `idiom_hash`, `error_path`,
+/// `alloc_family`) plus the first populated `stats.distributions[]`
+/// histograms; v1.3 documents still validate.
+pub const SCHEMA_VERSION: &str = "1.4";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.3"` ⇒ `metrics.schema.v1.3.json`, never an elided `.0`. Kept as a
+/// `"1.4"` ⇒ `metrics.schema.v1.4.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.3.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.4.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.3.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.4.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift. The v1.2 + v1.1 + v1.0 docs copies are kept as history.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.3.json");
+/// the two cannot drift. The v1.3 + v1.2 + v1.1 + v1.0 docs copies are kept as history.
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.4.json");
 
 // ---------------------------------------------------------------------------
 // Document model — nine sections, field-for-field vs the canonical schema
@@ -155,7 +163,7 @@ pub struct ParseHealthSummary {
 pub struct FileEntry {
     /// Repo-relative POSIX path.
     pub path: String,
-    /// `"c"`, `"rust"`, or `"python"` (schema 1.3 admits all three).
+    /// `"c"`, `"rust"`, or `"python"` (schema 1.4 admits all three).
     pub language: String,
     pub loc: LocCounts,
     pub function_count: u32,
@@ -184,17 +192,20 @@ pub struct ParseHealthEntry {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StatsSection {
     pub functions: Vec<FunctionStats>,
-    /// Histograms over function-level stats. Schema-optional ⇒ omitted;
-    /// reserved-for-future (session-7 decision) — no producer populates it
-    /// this phase. Sort contract when populated: `(metric, bucket)` per
-    /// modules.md §1.
+    /// Histograms over function-level stats. Schema-optional ⇒ omitted on a
+    /// zero-function scan; otherwise populated by the aggregator (v1.4 step
+    /// 1: `cyclomatic_complexity` + `max_loop_depth`, fixed buckets, full
+    /// label sets incl. zero-count buckets). Sort contract when populated:
+    /// `(metric, bucket)` per modules.md §1.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub distributions: Option<Vec<DistributionEntry>>,
 }
 
 /// One element of `stats.functions[]` — direct lift of the IR
 /// FunctionRecord baseline metrics (catalog §2), minus IR-only fields
-/// (`param_types`) that the external contract does not carry.
+/// (`param_types`) that the external contract does not carry, plus the v1.4
+/// additive instrument fields (all `Option` + omitted when uncomputed, so
+/// v1.3 documents validate unchanged).
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct FunctionStats {
     /// Stable IR identity: `path#name#start_line:start_col` (ir-v1.md §2).
@@ -208,6 +219,38 @@ pub struct FunctionStats {
     pub max_loop_depth: u32,
     pub alloc_site_count: u32,
     pub length_lines: u32,
+    /// ADDITIVE v1.4 (plan `divergence-revamp` step 1, specs
+    /// `divergence-study`/`divergence-paper`): per-function call-shape —
+    /// distinct direct-callee count. Skeleton: `None` until a producer with a
+    /// whole-program view computes it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub call_fanout: Option<u32>,
+    /// ADDITIVE v1.4: per-function call-shape — distinct caller count.
+    /// Skeleton: `None` until computed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub call_fanin: Option<u32>,
+    /// ADDITIVE v1.4: per-function call-shape — longest static call-chain
+    /// depth rooted at this function. Skeleton: `None` until computed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub call_depth: Option<u32>,
+    /// ADDITIVE v1.4: per-function call-shape — true when the function can
+    /// reach itself statically. Skeleton: `None` until computed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_recursive: Option<bool>,
+    /// ADDITIVE v1.4: token-normalized idiom hash of the function body
+    /// (clone/idiom-rate bucketing). Skeleton: `None` until computed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub idiom_hash: Option<String>,
+    /// ADDITIVE v1.4: true when the body contains an error-handling path
+    /// (`try`/`except`, `?`/`Err`-return, `do-while(0)`, `#if 0` /
+    /// `cfg(test)` gating, error-branch `free`). Skeleton: `None` until
+    /// computed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_path: Option<bool>,
+    /// ADDITIVE v1.4: dominant allocation family (`real_alloc` vs
+    /// `empty_ctor` vs `serialize/format`). Skeleton: `None` until computed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alloc_family: Option<String>,
 }
 
 /// One element of `findings[]` — the analyzer's [`Finding`] lifted into its
@@ -533,11 +576,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.3.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.4.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.3.json drifted from \
-             docs/schema/metrics.schema.v1.3.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.4.json drifted from \
+             docs/schema/metrics.schema.v1.4.json — re-copy the canonical artifact"
         );
     }
 
@@ -614,6 +657,15 @@ mod tests {
                     max_loop_depth: 1,
                     alloc_site_count: 1,
                     length_lines: 6,
+                    // v1.4 skeleton: uncomputed instrument fields stay None
+                    // (omitted on the wire).
+                    call_fanout: None,
+                    call_fanin: None,
+                    call_depth: None,
+                    is_recursive: None,
+                    idiom_hash: None,
+                    error_path: None,
+                    alloc_family: None,
                 }],
                 distributions: None,
             },
@@ -703,6 +755,14 @@ mod tests {
             "\"components\"",
             "\"distributions\"",
             "\"call_graph\"",
+            // v1.4 skeleton: uncomputed instrument fields are omitted.
+            "\"call_fanout\"",
+            "\"call_fanin\"",
+            "\"call_depth\"",
+            "\"is_recursive\"",
+            "\"idiom_hash\"",
+            "\"error_path\"",
+            "\"alloc_family\"",
         ] {
             assert!(!out.contains(absent), "{absent} should be omitted:\n{out}");
         }

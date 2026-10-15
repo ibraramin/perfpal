@@ -33,6 +33,8 @@
 //! Non-goals: layout quality beyond "legible" (MVP bar); external
 //! charting/layout libraries are banned by ADR-0002.
 
+pub mod dot;
+
 use std::collections::BTreeMap;
 
 use crate::graph::{break_cycles, topo_layers};

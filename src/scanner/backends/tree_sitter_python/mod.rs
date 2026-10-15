@@ -641,6 +641,14 @@ fn module_unit(
         resolver_tier: ResolverTier::default(),
         is_async: false,
         is_module_scope: true,
+        // v1.4 skeleton: uncomputed by every backend this step.
+        call_fanout: None,
+        call_fanin: None,
+        call_depth: None,
+        is_recursive: None,
+        idiom_hash: None,
+        error_path: None,
+        alloc_family: None,
     };
     FunctionUnit {
         record,
@@ -697,6 +705,14 @@ fn function_unit(
         resolver_tier: ResolverTier::default(),
         is_async: infer::is_async_fn(fdef),
         is_module_scope: false,
+        // v1.4 skeleton: uncomputed by every backend this step.
+        call_fanout: None,
+        call_fanin: None,
+        call_depth: None,
+        is_recursive: None,
+        idiom_hash: None,
+        error_path: None,
+        alloc_family: None,
     };
     FunctionUnit {
         record,

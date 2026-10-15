@@ -4,8 +4,9 @@
 //! from cli. Produces: the complete metrics.json document as schema-typed
 //! data (all nine sections; P1 emitted the required set plus
 //! `parse_health_summary` and `graphs.include_graph`; P4 Wave 2b adds
-//! `graphs.call_graph` and `components[]` — `stats.distributions` stays
-//! reserved-for-future, see [`schema::MetricsDocument`]).
+//! `graphs.call_graph` and `components[]`; v1.4 step 1 (plan
+//! `divergence-revamp`) populates `stats.distributions` — see
+//! [`schema::MetricsDocument`]).
 //!
 //! Sort orders ENFORCED here (modules.md §1 Principle 2 ownership table):
 //! - `stats.functions[]`: `(path, span.start_line, span.start_col)`;
@@ -118,6 +119,7 @@ pub fn assemble(
     }
 
     let functions = function_stats(units);
+    let distributions = distributions(&functions);
     let graphs = GraphsSection {
         include_graph: include_graph(units),
         // ALWAYS Some — even with zero edges — so consumers can rely on the
@@ -148,10 +150,9 @@ pub fn assemble(
         files,
         stats: StatsSection {
             functions,
-            // reserved-for-future: the (metric, bucket) comparator is
-            // implemented + unit-tested ([`sort_distributions`]) but no
-            // producer populates the field yet.
-            distributions: None,
+            // v1.4 step 1: populated histograms (fixed buckets, full label
+            // sets); `None` only on a zero-function scan.
+            distributions,
         },
         findings: findings_with_symbols(units_sorted, findings),
         graphs: Some(graphs),
@@ -216,6 +217,15 @@ fn function_stats(units: &[FileUnit]) -> Vec<schema::FunctionStats> {
             max_loop_depth: r.max_loop_depth,
             alloc_site_count: r.alloc_site_count,
             length_lines: r.length_lines,
+            // v1.4 skeleton: lifted verbatim; no backend computes these yet
+            // so they are uniformly `None` (omitted on the wire).
+            call_fanout: r.call_fanout,
+            call_fanin: r.call_fanin,
+            call_depth: r.call_depth,
+            is_recursive: r.is_recursive,
+            idiom_hash: r.idiom_hash.clone(),
+            error_path: r.error_path,
+            alloc_family: r.alloc_family.clone(),
         })
         .collect()
 }
@@ -425,12 +435,98 @@ fn components(units: &[FileUnit], findings: &[Finding]) -> Vec<ComponentEntry> {
     entries
 }
 
+/// Fixed `cyclomatic_complexity` bucket labels (v1.4 step 1, per
+/// `docs/schema/stats-distributions-proposal.md` §3–§4): edges
+/// `[1, 5, 10, 15, 25, 50, ∞)` — 15 is CALL-002's promotion threshold, so the
+/// last three buckets are exactly the CALL-002-qualifying population.
+/// Zero-padded so LEXICOGRAPHIC order equals numeric order under the
+/// unit-locked [`sort_distributions`] comparator.
+const COMPLEXITY_BUCKETS: [&str; 6] = ["01-04", "05-09", "10-14", "15-24", "25-49", "50+"];
+
+/// Fixed `max_loop_depth` bucket labels (proposal §3.2): one bucket per
+/// integer — 3 is LOOP-001's threshold — with `6+` as the open top.
+const DEPTH_BUCKETS: [&str; 7] = ["0", "1", "2", "3", "4", "5", "6+"];
+
+/// Bucketize one cyclomatic-complexity value (schema minimum 1; sub-minimum
+/// values clamp into the first bucket).
+fn complexity_bucket(value: u32) -> &'static str {
+    if value < 5 {
+        "01-04"
+    } else if value < 10 {
+        "05-09"
+    } else if value < 15 {
+        "10-14"
+    } else if value < 25 {
+        "15-24"
+    } else if value < 50 {
+        "25-49"
+    } else {
+        "50+"
+    }
+}
+
+/// Bucketize one max-loop-depth value (open top at 6).
+fn depth_bucket(value: u32) -> &'static str {
+    match value {
+        0 => "0",
+        1 => "1",
+        2 => "2",
+        3 => "3",
+        4 => "4",
+        5 => "5",
+        _ => "6+",
+    }
+}
+
+/// `stats.distributions[]` producer (v1.4 step 1): exactly two histograms
+/// over `stats.functions[]` — `cyclomatic_complexity` and `max_loop_depth`
+/// — with the FULL fixed label set emitted per metric INCLUDING zero-count
+/// buckets (fixed buckets keep report tables diffable across runs; the
+/// per-metric count sum equals `len(functions)`). Output is sorted by
+/// `(metric, bucket)` via [`sort_distributions`]. Returns `None` on a
+/// zero-function scan so the canonical absent form is preserved there.
+///
+/// Determinism: counting goes through a `BTreeMap` keyed `(metric, bucket)`
+/// and the only ordering obligation is the aggregator-owned sort — no
+/// timestamps, floats, or environment-dependent values.
+fn distributions(functions: &[schema::FunctionStats]) -> Option<Vec<DistributionEntry>> {
+    if functions.is_empty() {
+        return None;
+    }
+    let mut counts: BTreeMap<(&str, &str), u32> = BTreeMap::new();
+    for bucket in COMPLEXITY_BUCKETS {
+        counts.insert(("cyclomatic_complexity", bucket), 0);
+    }
+    for bucket in DEPTH_BUCKETS {
+        counts.insert(("max_loop_depth", bucket), 0);
+    }
+    for f in functions {
+        if let Some(count) = counts.get_mut(&(
+            "cyclomatic_complexity",
+            complexity_bucket(f.cyclomatic_complexity),
+        )) {
+            *count += 1;
+        }
+        if let Some(count) = counts.get_mut(&("max_loop_depth", depth_bucket(f.max_loop_depth))) {
+            *count += 1;
+        }
+    }
+    let mut entries: Vec<DistributionEntry> = counts
+        .into_iter()
+        .map(|((metric, bucket), count)| DistributionEntry {
+            metric: metric.to_string(),
+            bucket: bucket.to_string(),
+            count,
+        })
+        .collect();
+    sort_distributions(&mut entries);
+    Some(entries)
+}
+
 /// Sort `stats.distributions[]` by `(metric, bucket)` ascending — the
-/// aggregator-owned contract per modules.md §1. RESERVED-FOR-FUTURE: no
-/// producer populates distributions yet, so this comparator is not called
-/// during assembly; it is unit-tested so the ownership row is proven before
-/// the first producer lands.
-#[allow(dead_code, clippy::ptr_arg)] // reserved-for-future (see doc); proven via unit test
+/// aggregator-owned contract per modules.md §1. Live since v1.4 step 1 (the
+/// [`distributions`] producer calls it during assembly); unit-tested below.
+#[allow(clippy::ptr_arg)] // Vec is the ownership-contract shape here, not a slice view
 pub(crate) fn sort_distributions(entries: &mut Vec<DistributionEntry>) {
     entries.sort_by(|a, b| a.metric.cmp(&b.metric).then(a.bucket.cmp(&b.bucket)));
 }
@@ -1024,5 +1120,99 @@ mod tests {
             duration_ms: 7,
             tool_version: env!("CARGO_PKG_VERSION").to_string(),
         }
+    }
+
+    /// v1.4 step 1 producer lock: bucket edges (incl. the CALL-002 ≥15 and
+    /// LOOP-001 ≥3 promotion zones), the full fixed label set with
+    /// zero-count buckets present, `(metric, bucket)` order, and per-metric
+    /// sums equal to the function count.
+    #[test]
+    fn distributions_populates_fixed_buckets_in_sort_order() {
+        use crate::schema::FunctionStats;
+        let stat = |complexity: u32, depth: u32| FunctionStats {
+            id: "a.c#f#1:1".to_string(),
+            name: "f".to_string(),
+            path: "a.c".to_string(),
+            span: Span::point(1, 1),
+            param_count: 0,
+            cyclomatic_complexity: complexity,
+            cognitive_complexity: 0,
+            max_loop_depth: depth,
+            alloc_site_count: 0,
+            length_lines: 3,
+            call_fanout: None,
+            call_fanin: None,
+            call_depth: None,
+            is_recursive: None,
+            idiom_hash: None,
+            error_path: None,
+            alloc_family: None,
+        };
+        let functions = vec![
+            stat(2, 0),   // 01-04, 0
+            stat(7, 3),   // 05-09, 3
+            stat(15, 6),  // 15-24, 6+
+            stat(60, 10), // 50+, 6+
+        ];
+        let entries = distributions(&functions).expect("non-empty functions ⇒ Some");
+        // Full fixed label sets: 6 complexity + 7 depth buckets.
+        assert_eq!(entries.len(), 13);
+        let keys: Vec<(String, String)> = entries
+            .iter()
+            .map(|e| (e.metric.clone(), e.bucket.clone()))
+            .collect();
+        let mut sorted_keys = keys.clone();
+        sorted_keys.sort();
+        assert_eq!(keys, sorted_keys, "(metric, bucket) ascending");
+        let count_of = |metric: &str, bucket: &str| {
+            entries
+                .iter()
+                .find(|e| e.metric == metric && e.bucket == bucket)
+                .unwrap_or_else(|| panic!("bucket {metric}/{bucket} missing"))
+                .count
+        };
+        assert_eq!(count_of("cyclomatic_complexity", "01-04"), 1);
+        assert_eq!(count_of("cyclomatic_complexity", "05-09"), 1);
+        assert_eq!(count_of("cyclomatic_complexity", "10-14"), 0);
+        assert_eq!(count_of("cyclomatic_complexity", "15-24"), 1);
+        assert_eq!(count_of("cyclomatic_complexity", "25-49"), 0);
+        assert_eq!(count_of("cyclomatic_complexity", "50+"), 1);
+        assert_eq!(count_of("max_loop_depth", "0"), 1);
+        assert_eq!(count_of("max_loop_depth", "3"), 1);
+        assert_eq!(count_of("max_loop_depth", "6+"), 2);
+        // Per-metric sums equal the function count.
+        for metric in ["cyclomatic_complexity", "max_loop_depth"] {
+            let sum: u32 = entries
+                .iter()
+                .filter(|e| e.metric == metric)
+                .map(|e| e.count)
+                .sum();
+            assert_eq!(sum, 4, "per-metric sum for {metric}");
+        }
+    }
+
+    /// Zero-function scan ⇒ `None` (canonical absent form preserved).
+    #[test]
+    fn distributions_absent_on_zero_functions() {
+        assert_eq!(distributions(&[]), None);
+    }
+
+    /// Assembly wires the producer: a unit with functions yields
+    /// `Some(distributions)`; an empty scan stays `None`.
+    #[test]
+    fn assemble_populates_distributions_for_nonempty_scans() {
+        let mut u = unit("a.c");
+        u.functions = vec![func("a.c", "f", 1, 1)];
+        let doc = assemble(&[u], &[], &prov());
+        let entries = doc
+            .stats
+            .distributions
+            .as_ref()
+            .expect("distributions populated");
+        assert_eq!(entries.len(), 13);
+        assert!(doc.stats.distributions.is_some());
+
+        let empty = assemble(&[], &[], &prov());
+        assert_eq!(empty.stats.distributions, None);
     }
 }
