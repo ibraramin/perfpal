@@ -173,12 +173,16 @@ fn root_level_doc() -> MetricsDocument {
     doc
 }
 
-fn svg_of(chart: &[(&'static str, Vec<u8>)], name: &str) -> String {
+fn svg_of(chart: &[(String, Vec<u8>)], name: &str) -> String {
     let (_, bytes) = chart
         .iter()
-        .find(|(file, _)| *file == name)
+        .find(|(file, _)| file == name)
         .unwrap_or_else(|| panic!("{name} not emitted"));
     String::from_utf8(bytes.clone()).expect("SVG must be UTF-8")
+}
+
+fn emitted_names(chart: &[(String, Vec<u8>)]) -> Vec<&str> {
+    chart.iter().map(|(name, _)| name.as_str()).collect()
 }
 
 fn costly_fn(path: &str, name: &str, cyclomatic: u32) -> FunctionStats {
@@ -471,8 +475,15 @@ fn empty_include_nodes_omit_include_graph_but_keep_component_charts() {
     });
     doc.components = Some(vec![component("src/solo", 1, 1.0)]);
     let out = render(&doc);
-    let names: Vec<&str> = out.iter().map(|(name, _)| *name).collect();
-    assert_eq!(names, ["component-coupling.svg", "hot-components.svg"]);
+    assert_eq!(
+        emitted_names(&out),
+        [
+            "component-coupling.svg",
+            "hot-components.svg",
+            "component-01-src-solo.svg",
+        ],
+        "a file-less component still yields its deterministic stub page"
+    );
 }
 
 #[test]
@@ -480,8 +491,7 @@ fn empty_components_omit_component_charts_but_keep_include_graph() {
     let mut doc = cycle_doc();
     doc.components = Some(vec![]);
     let out = render(&doc);
-    let names: Vec<&str> = out.iter().map(|(name, _)| *name).collect();
-    assert_eq!(names, ["include-graph.svg"]);
+    assert_eq!(emitted_names(&out), ["include-graph.svg"]);
 }
 
 #[test]
@@ -489,14 +499,137 @@ fn chart_emission_order_is_frozen() {
     let mut doc = cycle_doc();
     doc.components = Some(vec![component("src/x", 1, 1.0)]);
     let out = render(&doc);
-    let names: Vec<&str> = out.iter().map(|(name, _)| *name).collect();
     assert_eq!(
-        names,
+        emitted_names(&out),
         [
             "include-graph.svg",
             "component-coupling.svg",
-            "hot-components.svg"
+            "hot-components.svg",
+            // Per-component pages trail the overviews in (rank, prefix)
+            // order; src/x has no scanned file here ⇒ stub page.
+            "component-01-src-x.svg",
         ]
+    );
+}
+
+#[test]
+fn calls_doc_emits_real_per_component_pages_in_rank_order() {
+    let out = render(&calls_doc());
+    assert_eq!(
+        emitted_names(&out),
+        [
+            "include-graph.svg",
+            "component-coupling.svg",
+            "hot-components.svg",
+            "component-01-src-a.svg",
+            "component-02-src-b.svg",
+        ]
+    );
+    // Rank-1 page: the src/a file as a node, header + density caption.
+    let svg = svg_of(&out, "component-01-src-a.svg");
+    assert!(svg.contains(">src/a/x.c<"), "member file node:\n{svg}");
+    assert!(
+        svg.contains("finding density 8.00 per KLOC"),
+        "density caption:\n{svg}"
+    );
+    assert!(svg.contains("Component 1: src/a"), "header:\n{svg}");
+}
+
+#[test]
+fn component_pages_are_byte_identical_and_heat_hot_files() {
+    // Costly endpoints (cyclomatic 20) render the hottest file at max heat.
+    let mut doc = calls_doc();
+    doc.stats.functions = vec![
+        costly_fn("src/a/x.c", "hot", 20),
+        costly_fn("src/b/y.c", "warm", 2),
+    ];
+    let first = render(&doc);
+    let second = render(&doc);
+    assert_eq!(first, second, "byte-determinism violated");
+    let svg = svg_of(&first, "component-01-src-a.svg");
+    assert!(
+        svg.contains("fill=\"#b30000\""),
+        "hottest file must render at max heat:\n{svg}"
+    );
+}
+
+#[test]
+fn file_less_components_emit_deterministic_stubs() {
+    let out = render(&zero_density_doc());
+    assert_eq!(
+        emitted_names(&out),
+        [
+            "component-coupling.svg",
+            "hot-components.svg",
+            "component-01-src-quiet.svg",
+            "component-02-src-calmer.svg",
+        ]
+    );
+    for name in ["component-01-src-quiet.svg", "component-02-src-calmer.svg"] {
+        let svg = svg_of(&out, name);
+        assert!(
+            svg.contains("no files recorded"),
+            "stub caption missing in {name}:\n{svg}"
+        );
+    }
+    // Stub determinism across independent constructions.
+    assert_eq!(render(&zero_density_doc()), out);
+}
+
+#[test]
+fn component_page_escapes_hostile_prefix_and_path() {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![node("we<ird>&/ho\"st.c")],
+            edges: vec![],
+        },
+        call_graph: None,
+    });
+    doc.components = Some(vec![component("we<ird>&", 1, 1.0)]);
+    let out = render(&doc);
+    // Hostile prefix slugifies to kebab-safe ASCII (no raw metacharacters in
+    // the artifact name).
+    assert_eq!(
+        emitted_names(&out),
+        [
+            "include-graph.svg",
+            "component-coupling.svg",
+            "hot-components.svg",
+            "component-01-we-ird.svg",
+        ]
+    );
+    let svg = svg_of(&out, "component-01-we-ird.svg");
+    assert!(
+        svg.contains("we&lt;ird&gt;&amp;/ho&quot;st.c"),
+        "hostile member path not escaped:\n{svg}"
+    );
+    assert!(
+        svg.contains("Component 1: we&lt;ird&gt;&amp;"),
+        "hostile prefix not escaped in header:\n{svg}"
+    );
+    assert!(!svg.contains("we<ird>"), "raw hostile bytes leaked:\n{svg}");
+}
+
+#[test]
+fn oversized_component_is_capped_at_50_with_visible_marker() {
+    // 60 files in ONE component: the page keeps the top-50 by degree.
+    let paths: Vec<String> = (0..60).map(|i| format!("big/n{i:02}.c")).collect();
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: paths.iter().map(|p| node(p)).collect(),
+            edges: paths.windows(2).map(|p| edge(&p[0], &p[1])).collect(),
+        },
+        call_graph: None,
+    });
+    doc.components = Some(vec![component("big", 1, 1.0)]);
+    let out = render(&doc);
+    let svg = svg_of(&out, "component-01-big.svg");
+    assert_eq!(svg.matches("<rect ").count(), 50, "node cap");
+    assert!(
+        svg.contains("&#8230; 10 more files omitted"),
+        "truncation marker missing:\n{svg}"
     );
 }
 

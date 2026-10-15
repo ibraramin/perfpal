@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="690" height="272" viewBox="0 0 690 272">
+<text x="40" y="56" font-family="monospace" font-size="13">Component 2: pkg</text>
+<text x="40" y="76" font-family="monospace" font-size="11">finding density 96.77 per KLOC · 4 files</text>
+<g stroke="#999999" stroke-width="1">
+<line x1="210" y1="119" x2="260" y2="119"/>
+<line x1="210" y1="119" x2="480" y2="119"/>
+<line x1="430" y1="119" x2="480" y2="119"/>
+</g>
+<g font-family="monospace" font-size="11">
+<rect x="40" y="104" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
+<text x="49" y="123">pkg/__init__.py</text>
+<rect x="40" y="148" width="170" height="30" fill="#b30000" stroke="#4a6fa5"/>
+<text x="49" y="167">pkg/arch_helpers.py</text>
+<rect x="260" y="104" width="170" height="30" fill="#d16666" stroke="#4a6fa5"/>
+<text x="269" y="123">pkg/cycle_a.py</text>
+<rect x="480" y="104" width="170" height="30" fill="#c23333" stroke="#4a6fa5"/>
+<text x="489" y="123">pkg/cycle_b.py</text>
+</g>
+<text x="40" y="244" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
+</svg>

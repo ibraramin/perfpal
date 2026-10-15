@@ -686,17 +686,40 @@ fn render_findings(out: &mut String, doc: &MetricsDocument) {
 
 fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
     out.push_str("## 5. Architecture\n");
+    // Emitted stems (`.svg`-suffixed or bare — both forms accepted, mirroring
+    // the pipe contract in `crate::cli`); per-component detail pages are
+    // indexed under the component table below, not in the overview link list.
+    // NOTE: `component-coupling.svg` is an OVERVIEW chart — only
+    // `component-<rank>-<slug>` stems count as detail pages.
+    let emitted_stems: BTreeSet<String> = emitted_charts
+        .iter()
+        .map(|name| name.strip_suffix(".svg").unwrap_or(name).to_string())
+        .collect();
+    let mut component_stems: Vec<String> = Vec::new();
     if emitted_charts.is_empty() {
         out.push_str("No charts were emitted for this scan.\n\n");
     } else {
+        let mut any_overview = false;
+        // Emission order is preserved verbatim (the charts module owns it).
         for name in emitted_charts {
             let stem = name.strip_suffix(".svg").unwrap_or(name);
+            if is_component_page(stem) {
+                if !component_stems.iter().any(|s| s == stem) {
+                    component_stems.push(stem.to_string());
+                }
+                continue;
+            }
             // Chart names are NOT escape_md'd: output-contract §3 pins them
             // to kebab-case ASCII ([a-z0-9]+(-[a-z0-9]+)*), so they carry no
             // Markdown metacharacters by construction.
             out.push_str(&format!("[{}](charts/{stem}.svg)\n", chart_caption(stem)));
+            any_overview = true;
         }
-        out.push('\n');
+        if !any_overview && component_stems.is_empty() {
+            out.push_str("No charts were emitted for this scan.\n\n");
+        } else {
+            out.push('\n');
+        }
     }
 
     if let Some(components) = &doc.components
@@ -719,6 +742,55 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
             ));
         }
         out.push('\n');
+
+        // Per-component detail index hook (output-contract §5): one link per
+        // capped component whose page the charts module emitted, in document
+        // (rank) order. Filenames are reconstructed via the charts-owned
+        // pinning function — never guessed — and linked ONLY when present in
+        // `emitted_charts`.
+        let mut linked: BTreeSet<String> = BTreeSet::new();
+        let mut hook: Vec<String> = Vec::new();
+        for c in components {
+            let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
+            let stem = filename
+                .strip_suffix(".svg")
+                .unwrap_or(&filename)
+                .to_string();
+            if emitted_stems.contains(&stem) {
+                linked.insert(stem);
+                hook.push(format!(
+                    "[Component {} — per-file hot-path map.](charts/{filename})\n",
+                    escape_md(&c.path_prefix),
+                ));
+            }
+        }
+        if !hook.is_empty() {
+            out.push_str("Component detail pages (one per component above):\n\n");
+            for line in hook {
+                out.push_str(&line);
+            }
+            out.push('\n');
+        }
+        // Orphan fallback: an emitted component page with no matching
+        // component entry (unreachable via the pipeline — defensive only for
+        // direct `render_report` callers) still links via generic caption.
+        for stem in &component_stems {
+            if !linked.contains(stem) {
+                out.push_str(&format!("[{}](charts/{stem}.svg)\n", chart_caption(stem)));
+            }
+        }
+        if !component_stems.is_empty() && linked.len() != component_stems.len() {
+            out.push('\n');
+        }
+    } else {
+        // No component table to hook under: emitted component pages (if any
+        // were passed without components) link via generic caption.
+        for stem in &component_stems {
+            out.push_str(&format!("[{}](charts/{stem}.svg)\n", chart_caption(stem)));
+        }
+        if !component_stems.is_empty() {
+            out.push('\n');
+        }
     }
 
     out.push_str(
@@ -844,8 +916,18 @@ fn chart_caption(stem: &str) -> String {
         "hot-components" => {
             "Hot components — ranking by aggregated bottleneck metrics.".to_string()
         }
+        stem if is_component_page(stem) => {
+            "Component detail — per-file hot-path map.".to_string()
+        }
         other => format!("Chart: {other}."),
     }
+}
+
+/// Detail-page predicate: `component-<rank>-<slug>` stems ONLY —
+/// `component-coupling.svg` is an overview chart and must never be mistaken
+/// for a per-component page (its stem shares the prefix).
+fn is_component_page(stem: &str) -> bool {
+    stem != "component-coupling" && stem.starts_with("component-")
 }
 
 /// Escape Markdown metacharacters with the PINNED set [`MD_ESCAPE_CHARS`].

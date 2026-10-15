@@ -93,6 +93,23 @@ const GOLDEN_ARTIFACTS: [&str; 7] = [
     "charts/graph.dot",
 ];
 
+/// Sorted `charts/component-*.svg` page names under a report tree,
+/// excluding the `component-coupling.svg` overview (it is a fixed golden
+/// above, not a per-component page).
+fn component_page_names(root: &Path) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(root.join("charts"))
+        .expect("charts dir present")
+        .flatten()
+        .filter_map(|e| e.file_name().into_string().ok())
+        .filter(|n| {
+            n.starts_with("component-") && n.ends_with(".svg") && n != "component-coupling.svg"
+        })
+        .map(|n| format!("charts/{n}"))
+        .collect();
+    names.sort();
+    names
+}
+
 fn temp_dir(tag: &str) -> PathBuf {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -310,15 +327,34 @@ fn regenerate_goldens() {
 
         // SVGs + DOT + schema: committed byte-exact; assert they carry no
         // provenance (no year-like RFC3339 fragments, no absolute fixture
-        // path).
+        // path). The per-component detail pages join the fixed set here —
+        // discovered from the fresh output so the lock tracks the emission
+        // rule instead of a hardcoded count.
         let root_str = fixture.to_string_lossy().into_owned();
-        for name in [
-            "charts/include-graph.svg",
-            "charts/component-coupling.svg",
-            "charts/hot-components.svg",
-            "charts/graph.dot",
-            "metrics.schema.v1.4.json",
-        ] {
+        let mut provenance_free = vec![
+            "charts/include-graph.svg".to_string(),
+            "charts/component-coupling.svg".to_string(),
+            "charts/hot-components.svg".to_string(),
+            "charts/graph.dot".to_string(),
+            "metrics.schema.v1.4.json".to_string(),
+        ];
+        let mut component_pages: Vec<String> = fs::read_dir(golden.join("charts"))
+            .expect("charts dir")
+            .flatten()
+            .filter_map(|e| e.file_name().into_string().ok())
+            .filter(|n| {
+                n.starts_with("component-") && n.ends_with(".svg") && n != "component-coupling.svg"
+            })
+            .map(|n| format!("charts/{n}"))
+            .collect();
+        component_pages.sort();
+        assert!(
+            !component_pages.is_empty(),
+            "tree '{}' must emit at least one per-component detail page",
+            tree.tag
+        );
+        provenance_free.extend(component_pages);
+        for name in &provenance_free {
             let text = fs::read_to_string(golden.join(name)).expect(name);
             assert!(
                 !text.contains("2026-") && !text.contains(&root_str),
@@ -350,8 +386,9 @@ fn regenerate_goldens() {
 }
 
 /// Comparator (default gate, always runs): per tree, fresh pipeline output
-/// into a temp dir, SAME masking, compare each of the seven artifacts against
-/// the committed goldens. On mismatch the assertion names the tree and lists
+/// into a temp dir, SAME masking, compare each of the seven fixed artifacts
+/// PLUS every committed per-component detail page against the committed
+/// goldens. On mismatch the assertion names the tree and lists
 /// every differing artifact plus the regeneration command.
 #[test]
 fn report_matches_committed_goldens() {
@@ -404,6 +441,29 @@ fn report_matches_committed_goldens() {
             };
             if !equal {
                 diffs.push(name.to_string());
+            }
+        }
+
+        // Per-component detail pages: discovered from the COMMITTED golden
+        // tree (the emission rule owns the set), compared byte-exact like
+        // the overview SVGs; a fresh page with no golden twin (or vice
+        // versa) is a diff either way.
+        let golden_pages = component_page_names(&golden);
+        let fresh_pages = component_page_names(&out);
+        for name in &golden_pages {
+            if !fresh_pages.contains(name) {
+                diffs.push(format!("{name}: MISSING from fresh output"));
+                continue;
+            }
+            if fs::read(golden.join(name)).expect("golden page readable")
+                != fs::read(out.join(name)).expect("fresh page readable")
+            {
+                diffs.push(name.clone());
+            }
+        }
+        for name in &fresh_pages {
+            if !golden_pages.contains(name) {
+                diffs.push(format!("{name}: no committed golden — regenerate the tree"));
             }
         }
 

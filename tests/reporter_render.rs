@@ -520,6 +520,85 @@ fn unknown_chart_name_gets_generic_caption() {
     assert!(report.contains("[Chart: future-chart.](charts/future-chart.svg)"));
 }
 
+#[test]
+fn architecture_indexes_emitted_component_pages_under_the_table() {
+    let mut doc = base_doc();
+    doc.components = Some(vec![
+        ComponentEntry {
+            component_id: "src/a".to_string(),
+            path_prefix: "src/a".to_string(),
+            rank: 1,
+            metrics: ComponentMetrics {
+                complexity_sum: 10.0,
+                alloc_site_density: 0.0,
+                max_loop_depth: 1,
+                finding_density: 8.25,
+            },
+            finding_count: Some(2),
+        },
+        ComponentEntry {
+            component_id: "src/b".to_string(),
+            path_prefix: "src/b".to_string(),
+            rank: 2,
+            metrics: ComponentMetrics {
+                complexity_sum: 1.0,
+                alloc_site_density: 0.0,
+                max_loop_depth: 0,
+                finding_density: 0.0,
+            },
+            finding_count: Some(0),
+        },
+    ]);
+    // Only the rank-1 page was emitted: the hook links exactly that one, in
+    // document (rank) order, AFTER the component table — and the overview
+    // link list must not duplicate it.
+    let report = render_report(
+        &doc,
+        &[
+            "hot-components.svg".to_string(),
+            "component-01-src-a.svg".to_string(),
+        ],
+    );
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let table_pos = arch
+        .find("| src/a | src/a | 1 | 8.25 |")
+        .expect("table row");
+    let hook_pos = arch
+        .find("[Component src/a — per-file hot-path map.](charts/component-01-src-a.svg)")
+        .expect("index hook link");
+    assert!(table_pos < hook_pos, "hook must follow the table");
+    assert!(
+        !arch.contains("component-02-src-b"),
+        "unemitted page must not link"
+    );
+    assert_eq!(
+        arch.matches("component-01-src-a.svg").count(),
+        1,
+        "page must link exactly once (no overview duplication):\n{arch}"
+    );
+}
+
+#[test]
+fn architecture_omits_hook_when_no_component_page_emitted() {
+    let mut doc = base_doc();
+    doc.components = Some(vec![ComponentEntry {
+        component_id: "src/a".to_string(),
+        path_prefix: "src/a".to_string(),
+        rank: 1,
+        metrics: ComponentMetrics {
+            complexity_sum: 10.0,
+            alloc_site_density: 0.0,
+            max_loop_depth: 1,
+            finding_density: 8.25,
+        },
+        finding_count: Some(2),
+    }]);
+    let report = render_report(&doc, &["hot-components.svg".to_string()]);
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    assert!(!arch.contains("Component detail pages"));
+    assert!(!arch.contains("component-"));
+}
+
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------

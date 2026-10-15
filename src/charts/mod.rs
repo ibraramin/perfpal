@@ -1,14 +1,18 @@
 //! `charts` — deterministic SVG emitter (modules.md §3.7; ADR-0002).
 //!
 //! Consumes: the final document — graphs.* and components[] ONLY (ADR-0002
-//! guardrail 1). Produces: SVG bytes for chart-set v1 ([`render`]:
-//! include-graph.svg, component-coupling.svg, hot-components.svg).
+//! guardrail 1), plus `files[].path` (component membership) and
+//! `stats.functions[]` (cost heat — the same extension the coupling overlay
+//! consumes). Produces: SVG bytes for chart-set v1 ([`render`]:
+//! include-graph.svg, component-coupling.svg, hot-components.svg, plus one
+//! `component-<rank>-<slug>.svg` detail page per capped component).
 //!
 //! Responsibilities: byte-deterministic rendering by construction (ADR-0002
 //! guardrail 2); XML-escape all label/path text; deterministic node caps with
-//! in-chart truncation markers; presence rule — a chart is emitted iff its
-//! source section is present and non-empty, otherwise omitted (charts/ may be
-//! empty).
+//! in-chart truncation markers; presence rule — an overview chart is emitted
+//! iff its source section is present and non-empty; every capped component
+//! yields a detail page (a file-less component yields a deterministic stub,
+//! never an omission); otherwise omitted (charts/ may be empty).
 //!
 //! Determinism mechanics (ADR-0002 guardrail 2, pinned here where the ADR
 //! left room):
@@ -33,6 +37,7 @@
 //! Non-goals: layout quality beyond "legible" (MVP bar); external
 //! charting/layout libraries are banned by ADR-0002.
 
+pub mod component;
 pub mod dot;
 
 use std::collections::BTreeMap;
@@ -50,9 +55,10 @@ use crate::schema::{
 /// Node cap for include-graph.svg (founder-approved): applied PRE-layout,
 /// top-N by degree desc, tie path asc.
 const NODE_CAP: usize = 50;
-/// Component cap for both component charts: entries with rank > 50 dropped,
-/// then list truncated to this many after `(rank, path_prefix)` sort.
-const COMPONENT_CAP: usize = 50;
+/// Component cap for both component charts AND per-component detail pages:
+/// entries with rank > 50 dropped, then list truncated to this many after
+/// `(rank, path_prefix)` sort.
+pub(crate) const COMPONENT_CAP: usize = 50;
 /// Fixed char width for monospace label measurement (never measure fonts).
 const CHAR_W: f64 = 6.6;
 /// Max label length in chars before tail-truncation (see module docs).
@@ -95,25 +101,41 @@ const HC_STUB_W: i64 = 2;
 /// Render the chart set v1 for `doc`.
 ///
 /// Returns ordered `(filename, svg bytes)` pairs. Emission rule (ADR-0002
-/// guardrail 5): a chart appears IFF its source section is present AND
-/// non-empty; an empty document yields an empty list.
+/// guardrail 5): an overview chart appears IFF its source section is present
+/// AND non-empty; an empty document yields an empty list. Per-component
+/// detail pages follow the same gate (components present AND non-empty) —
+/// one page per capped component in `(rank, path_prefix)` order, appended
+/// AFTER the three overview charts; a file-less component yields the
+/// deterministic stub page, never an omission.
 #[must_use]
-pub fn render(doc: &MetricsDocument) -> Vec<(&'static str, Vec<u8>)> {
+pub fn render(doc: &MetricsDocument) -> Vec<(String, Vec<u8>)> {
     let mut out = Vec::new();
     if let Some(graphs) = &doc.graphs
         && !graphs.include_graph.nodes.is_empty()
     {
-        out.push(("include-graph.svg", render_include_graph(graphs)));
+        out.push((
+            "include-graph.svg".to_string(),
+            render_include_graph(graphs),
+        ));
     }
     if let Some(components) = &doc.components
         && !components.is_empty()
     {
         let graphs = doc.graphs.as_ref();
         out.push((
-            "component-coupling.svg",
+            "component-coupling.svg".to_string(),
             render_component_coupling(components, graphs, &doc.stats.functions),
         ));
-        out.push(("hot-components.svg", render_hot_components(components)));
+        out.push((
+            "hot-components.svg".to_string(),
+            render_hot_components(components),
+        ));
+        out.extend(component::render_component_pages(
+            components,
+            graphs,
+            &doc.files,
+            &doc.stats.functions,
+        ));
     }
     out
 }
@@ -160,10 +182,11 @@ pub fn truncate_label(label: &str) -> String {
     format!("…{tail}")
 }
 
-/// Heat color for coupling/bars: pure function mapping level `0..=10` onto a
-/// white→dark-red ramp (integer arithmetic only — no floats in color space).
+/// Heat color for coupling/bars/component pages: pure function mapping level
+/// `0..=10` onto a white→dark-red ramp (integer arithmetic only — no floats
+/// in color space).
 #[must_use]
-fn heat_color(level: u32) -> String {
+pub(crate) fn heat_color(level: u32) -> String {
     let level = level.min(10);
     let r = 255 - (76 * level + 5) / 10;
     let g = (255 * (10 - level) + 5) / 10;
@@ -175,8 +198,9 @@ fn heat_color(level: u32) -> String {
 /// (src/aggregator/mod.rs), whose `"."` prefixes are the coupling-matrix
 /// axis labels. A divergent root mapping here would make every
 /// root-level endpoint miss the bump-index lookup and silently drop its
-/// edges from component-coupling.svg.
-fn parent_dir(path: &str) -> &str {
+/// edges from component-coupling.svg. Shared with the per-component pages
+/// for file↔component membership (same mapping, same guarantee).
+pub(crate) fn parent_dir(path: &str) -> &str {
     match path.rfind('/') {
         Some(i) => &path[..i],
         None => ".",
@@ -189,8 +213,9 @@ fn parent_dir(path: &str) -> &str {
 
 /// Resolved internal edge pairs for charting (ADR-0002 chart policy):
 /// `resolved == true` AND `to` present. Unresolved edges (to: null) are
-/// excluded here — they surface as ARCH-001 findings instead.
-fn resolved_pairs(edges: &[IncludeEdgeDto]) -> Vec<(String, String)> {
+/// excluded here — they surface as ARCH-001 findings instead. Shared with
+/// the per-component pages (intra-component subgraph filter).
+pub(crate) fn resolved_pairs(edges: &[IncludeEdgeDto]) -> Vec<(String, String)> {
     edges
         .iter()
         .filter(|e| e.resolved)
@@ -206,8 +231,9 @@ fn resolved_pairs(edges: &[IncludeEdgeDto]) -> Vec<(String, String)> {
 /// include can resolve to a real file that is not a scanned chart node
 /// (discovery only picks `.c`/`.h`/`.rs`, e.g. a `version.inc`) — counting such
 /// phantom endpoints would let them displace real files in the degree
-/// ranking, render as nodes, and skew the truncation count.
-fn cap_nodes(nodes: &[String], pairs: &[(String, String)]) -> (Vec<String>, usize) {
+/// ranking, render as nodes, and skew the truncation count. Shared with the
+/// per-component pages (same top-50-pre-layout cap at component scope).
+pub(crate) fn cap_nodes(nodes: &[String], pairs: &[(String, String)]) -> (Vec<String>, usize) {
     if nodes.len() <= NODE_CAP {
         return (nodes.to_vec(), 0);
     }
@@ -239,7 +265,8 @@ fn cap_nodes(nodes: &[String], pairs: &[(String, String)]) -> (Vec<String>, usiz
 /// reordered by the mean position of its predecessors in the immediately
 /// preceding layer; a node with NO predecessors in that layer falls back to
 /// its current index (stability fallback, pinned). Ties break on path asc.
-fn barycenter_order(layers: &mut [Vec<String>], dag: &[(String, String)]) {
+/// Shared with the per-component pages (same 3-pass layout at scope).
+pub(crate) fn barycenter_order(layers: &mut [Vec<String>], dag: &[(String, String)]) {
     if layers.is_empty() {
         return;
     }
@@ -426,10 +453,10 @@ struct Coupling {
     call: Vec<Vec<f64>>,
 }
 
-/// Per-function cost feeding the coupling overlay (see [`Coupling`]).
-/// Missing (`None`) v1.4 fields contribute 0 — parser-free or pre-step-2
-/// documents simply overlay less.
-fn function_cost(f: &FunctionStats) -> f64 {
+/// Per-function cost feeding the coupling overlay (see [`Coupling`]) and the
+/// per-component page heat. Missing (`None`) v1.4 fields contribute 0 —
+/// parser-free or pre-step-2 documents simply overlay less.
+pub(crate) fn function_cost(f: &FunctionStats) -> f64 {
     f64::from(f.cyclomatic_complexity)
         + f64::from(f.cognitive_complexity)
         + 2.0 * f64::from(f.max_loop_depth)

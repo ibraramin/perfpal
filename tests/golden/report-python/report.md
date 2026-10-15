@@ -233,6 +233,11 @@ Component ranking (hottest first):
 | \. | \. | 1 | 105.26 |
 | pkg | pkg | 2 | 96.77 |
 
+Component detail pages (one per component above):
+
+[Component \. — per-file hot-path map.](charts/component-01-root.svg)
+[Component pkg — per-file hot-path map.](charts/component-02-pkg.svg)
+
 The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 Coupling heat blends edge counts with per-function cost (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count + call fanout/fanin/depth, +2 if recursive, +1 each for error_path / alloc_family; each edge weighs 1 + mean endpoint cost normalized by the scan maximum) — charts remain pure functions of metrics.json.
 Machine-readable graph: [graph.dot](charts/graph.dot) — deterministic DOT export of the include/call/component graphs (same source data as the SVGs above).

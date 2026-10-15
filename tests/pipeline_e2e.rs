@@ -335,8 +335,10 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         );
     }
 
-    // charts/: exactly the emission-rule-expected set — all three charts,
-    // because include-graph nodes AND components are non-empty here.
+    // charts/: exactly the emission-rule-expected set — all three overview
+    // charts (include-graph nodes AND components are non-empty here) plus
+    // one per-component detail page per capped component, in (rank, prefix)
+    // order after the overviews.
     let charts_dir = out.join("charts");
     let mut chart_files: Vec<String> = fs::read_dir(&charts_dir)
         .unwrap()
@@ -345,13 +347,32 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         .collect();
     chart_files.sort();
     chart_files.retain(|n| n.ends_with(".svg"));
+    let mut expected = vec![
+        "component-coupling.svg".to_string(),
+        "hot-components.svg".to_string(),
+        "include-graph.svg".to_string(),
+    ];
+    let mut ranked: Vec<(u64, String)> = doc1["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| {
+            (
+                c["rank"].as_u64().unwrap(),
+                c["path_prefix"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+    ranked.sort();
+    for (rank, prefix) in ranked.iter().take(50) {
+        expected.push(perfpal::charts::component::component_filename(
+            u32::try_from(*rank).unwrap(),
+            prefix,
+        ));
+    }
+    expected.sort();
     assert_eq!(
-        chart_files,
-        vec![
-            "component-coupling.svg".to_string(),
-            "hot-components.svg".to_string(),
-            "include-graph.svg".to_string()
-        ],
+        chart_files, expected,
         "chart set must match the emission rule exactly"
     );
     let mut svg_bytes1 = std::collections::BTreeMap::new();

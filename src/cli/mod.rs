@@ -227,14 +227,16 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
 
     // Derived artifacts (modules.md Principle 5): report.md and charts/ are
     // pure functions of the final document. charts::render applies the
-    // emission rule itself (a chart appears iff its source section is
-    // present and non-empty), so an empty scan yields an empty chart set —
-    // the writer still creates charts/ (output-contract §3). graphs.dot is
+    // emission rule itself (an overview chart appears iff its source section
+    // is present and non-empty; per-component detail pages follow the same
+    // gate — one page per capped component, a stub when file-less), so an
+    // empty scan yields an empty chart set — the writer still creates
+    // charts/ (output-contract §3). graphs.dot is
     // the deterministic DOT export of the same graphs (v1.4 step 2, plan
     // `divergence-revamp`): ALWAYS emitted, even on an empty scan (an empty
     // digraph), so consumers can rely on its presence.
     let charts = crate::charts::render(&document);
-    let chart_names: Vec<String> = charts.iter().map(|(name, _)| (*name).to_string()).collect();
+    let chart_names: Vec<String> = charts.iter().map(|(name, _)| name.clone()).collect();
     let report = crate::reporter::render_report(&document, &chart_names);
     let dot = crate::charts::dot::render_dot(&document);
 
