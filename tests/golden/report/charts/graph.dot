@@ -1,0 +1,9 @@
+digraph perfpal {
+  "component:src" [shape=box, label="src (rank 1)"];
+  "src/main.c" -> "src/util.h";
+  "src/main.c";
+  "src/main.c#main#121:1" -> "src/util.c" [style=dashed, label="util_init"];
+  "src/util.c" -> "src/util.h";
+  "src/util.c";
+  "src/util.h";
+}

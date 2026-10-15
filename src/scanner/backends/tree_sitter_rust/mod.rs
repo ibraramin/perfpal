@@ -965,7 +965,10 @@ fn function_unit(
         resolver_tier: ResolverTier::default(),
         is_async: false,
         is_module_scope: false,
-        // v1.4 skeleton: uncomputed by every backend this step.
+        // v1.4 step 2 (plan `divergence-revamp`): `idiom_hash` / `error_path` /
+        // `alloc_family` are populated by the scanner post-pass
+        // (`scanner::instrument::populate`, needs source text); call-shape
+        // fields stay `None` here for the aggregator's whole-program pass.
         call_fanout: None,
         call_fanin: None,
         call_depth: None,

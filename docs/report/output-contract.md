@@ -24,7 +24,8 @@ perfpal-report/
 ├── metrics.schema.v1.2.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report
 └── charts/                   # static visualizations (set defined by ADR-0002)
-    └── <chart-name>.svg      # e.g. include-graph.svg — naming rules in §3
+    ├── <chart-name>.svg      # e.g. include-graph.svg — naming rules in §3
+    └── graph.dot             # deterministic DOT export of the graphs (v1.4 step 2)
 ```
 
 Layout rules:
@@ -43,6 +44,7 @@ Layout rules:
 | Schema copy | `metrics.schema.v<MAJOR>.<MINOR>.json` | Full version always — `schema_version: "1.2"` ⇒ `metrics.schema.v1.2.json` (no elided `.0`; avoids ambiguity between "v1" = 1.0 vs the 1.x series). The file is a byte-copy of the canonical schema artifact for that version, per the per-minor re-emission policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). |
 | Human report | `report.md` | Fixed name. |
 | Charts | `charts/<name>.svg` | `<name>` matches `[a-z0-9]+(-[a-z0-9]+)*` (kebab-case ASCII). No timestamps, counters, or input-derived suffixes — the same chart has the same name across runs so directories can be diffed. |
+| Graph export | `charts/graph.dot` | Fixed name (v1.4 step 2). Deterministic DOT rendering of `graphs.*` + `components[]` (same input set as the SVG charts); always emitted, even on empty scans (an empty digraph). |
 
 Chart-set rules (binding; chart set defined by [ADR-0002](../adr/ADR-0002-visualization.md)):
 

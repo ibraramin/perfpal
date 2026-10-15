@@ -722,7 +722,8 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
     );
 
     // The comparison must not be vacuous: the canonical v1 artifact set is
-    // always present (metrics.json + bundled schema + report.md + 3 charts).
+    // always present (metrics.json + bundled schema + report.md + 3 charts +
+    // graph.dot since v1.4 step 2).
     // m6: the schema artifact name comes from the product, so an additive
     // schema bump does not break the benchmark.
     for required in ["metrics.json", "report.md", SCHEMA_ARTIFACT_NAME] {
@@ -733,8 +734,8 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
     }
     assert_eq!(
         a.keys().filter(|n| n.starts_with("charts/")).count(),
-        3,
-        "determinism proof: expected all three v1 charts"
+        4,
+        "determinism proof: expected all three v1 charts + graph.dot"
     );
 
     for (name, bytes1) in &a {
@@ -757,7 +758,8 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
                     mask_report_strict(&t2, &root).into_bytes(),
                 )
             }
-            // charts/*.svg + the bundled schema carry no provenance.
+            // charts/*.svg + charts/graph.dot + the bundled schema carry no
+            // provenance.
             _ => (bytes1.clone(), bytes2.clone()),
         };
         if normalized.0 != normalized.1 {

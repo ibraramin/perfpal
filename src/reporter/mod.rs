@@ -729,6 +729,18 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
          coupling edges.\n",
     );
     out.push_str(
+        "Coupling heat blends edge counts with per-function cost \
+         (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count \
+         + call fanout/fanin/depth, +2 if recursive, +1 each for error_path / \
+         alloc_family; each edge weighs 1 + mean endpoint cost normalized by \
+         the scan maximum) — charts remain pure functions of metrics.json.\n",
+    );
+    out.push_str(
+        "Machine-readable graph: [graph.dot](charts/graph.dot) — deterministic \
+         DOT export of the include/call/component graphs (same source data as \
+         the SVGs above).\n",
+    );
+    out.push_str(
         "Standing caveat: cross-file call edges are LOW confidence until a \
          semantic resolver tier exists (ADR-0001).\n\n",
     );

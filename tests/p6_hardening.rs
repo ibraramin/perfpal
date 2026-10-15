@@ -81,15 +81,16 @@ fn fixture_root() -> PathBuf {
 }
 
 /// Run-varying-masked artifacts under comparison. metrics.json and report.md
-/// are compared as masked text; schema + SVGs carry no provenance and are
-/// compared byte-exact (verified by `regenerate_goldens`).
-const GOLDEN_ARTIFACTS: [&str; 6] = [
+/// are compared as masked text; schema + SVGs + graph.dot carry no provenance
+/// and are compared byte-exact (verified by `regenerate_goldens`).
+const GOLDEN_ARTIFACTS: [&str; 7] = [
     "metrics.json",
     "metrics.schema.v1.4.json",
     "report.md",
     "charts/include-graph.svg",
     "charts/component-coupling.svg",
     "charts/hot-components.svg",
+    "charts/graph.dot",
 ];
 
 fn temp_dir(tag: &str) -> PathBuf {
@@ -307,13 +308,15 @@ fn regenerate_goldens() {
         )
         .expect("write masked report.md");
 
-        // SVGs + schema: committed byte-exact; assert they carry no provenance
-        // (no year-like RFC3339 fragments, no absolute fixture path).
+        // SVGs + DOT + schema: committed byte-exact; assert they carry no
+        // provenance (no year-like RFC3339 fragments, no absolute fixture
+        // path).
         let root_str = fixture.to_string_lossy().into_owned();
         for name in [
             "charts/include-graph.svg",
             "charts/component-coupling.svg",
             "charts/hot-components.svg",
+            "charts/graph.dot",
             "metrics.schema.v1.4.json",
         ] {
             let text = fs::read_to_string(golden.join(name)).expect(name);
@@ -347,7 +350,7 @@ fn regenerate_goldens() {
 }
 
 /// Comparator (default gate, always runs): per tree, fresh pipeline output
-/// into a temp dir, SAME masking, compare each of the six artifacts against
+/// into a temp dir, SAME masking, compare each of the seven artifacts against
 /// the committed goldens. On mismatch the assertion names the tree and lists
 /// every differing artifact plus the regeneration command.
 #[test]

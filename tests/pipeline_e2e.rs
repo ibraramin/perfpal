@@ -366,6 +366,13 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         svg_bytes1.insert(name.clone(), bytes);
     }
 
+    // v1.4 step 2: the deterministic DOT export rides alongside the SVGs.
+    let dot1 = fs::read_to_string(charts_dir.join("graph.dot")).expect("graph.dot present");
+    assert!(
+        dot1.starts_with("digraph perfpal {"),
+        "graph.dot must be a DOT digraph"
+    );
+
     // --- Second run into the SAME directory (swap path) ---------------------
     let code = run_with(argv(&[
         "--output",
@@ -393,7 +400,7 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         "report.md diverged beyond provenance between runs"
     );
 
-    // SVGs: byte-identical UNMASKED across runs (no provenance inside).
+    // SVGs + DOT: byte-identical UNMASKED across runs (no provenance inside).
     for name in &chart_files {
         let bytes2 = fs::read(charts_dir.join(name)).unwrap();
         assert_eq!(
@@ -402,6 +409,8 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
             "{name} not byte-stable across runs"
         );
     }
+    let dot2 = fs::read_to_string(charts_dir.join("graph.dot")).unwrap();
+    assert_eq!(dot1, dot2, "graph.dot not byte-stable across runs");
 }
 
 /// Slice `text` from the END of the `start` marker up to the `end` marker.

@@ -39,10 +39,11 @@
 //!
 //! Non-goals: rendering; interpretation; chart capping decisions.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::analyzer::{CrossFileCallEdge, Finding, cross_file_call_edges};
-use crate::ir::{FunctionRecord, IncludeForm};
+use crate::graph::{break_cycles, topo_layers};
+use crate::ir::{CalleeKind, FunctionRecord, IncludeForm};
 use crate::scanner::{FileUnit, SUPPORTED_LANGUAGES};
 use crate::schema::{
     self, CallEdge, CallGraphSection, ComponentEntry, ComponentMetrics, DistributionEntry,
@@ -118,7 +119,7 @@ pub fn assemble(
         }
     }
 
-    let functions = function_stats(units);
+    let functions = function_stats(units, &call_shape(units));
     let distributions = distributions(&functions);
     let graphs = GraphsSection {
         include_graph: include_graph(units),
@@ -193,7 +194,15 @@ fn scan_languages(units: &[FileUnit]) -> Vec<String> {
 
 /// `stats.functions[]` across ALL files, sorted
 /// `(path, span.start_line, span.start_col)` (modules.md §1 aggregator row).
-fn function_stats(units: &[FileUnit]) -> Vec<schema::FunctionStats> {
+/// The v1.4 call-shape fields come from the whole-program [`call_shape`] pass
+/// below (every function id is covered, so every DTO emits `Some`); the three
+/// source-local fields (`idiom_hash`, `error_path`, `alloc_family`) lift
+/// verbatim from the scanner post-pass (`None`/omitted for parser-free or
+/// pre-step-2 inputs).
+fn function_stats(
+    units: &[FileUnit],
+    shape: &BTreeMap<String, CallShape>,
+) -> Vec<schema::FunctionStats> {
     let mut records: Vec<&FunctionRecord> = units
         .iter()
         .flat_map(|u| u.functions.iter().map(|f| &f.record))
@@ -206,28 +215,220 @@ fn function_stats(units: &[FileUnit]) -> Vec<schema::FunctionStats> {
     });
     records
         .into_iter()
-        .map(|r| schema::FunctionStats {
-            id: r.id.clone(),
-            name: r.name.clone(),
-            path: r.path.clone(),
-            span: r.span,
-            param_count: r.param_count,
-            cyclomatic_complexity: r.cyclomatic_complexity,
-            cognitive_complexity: r.cognitive_complexity,
-            max_loop_depth: r.max_loop_depth,
-            alloc_site_count: r.alloc_site_count,
-            length_lines: r.length_lines,
-            // v1.4 skeleton: lifted verbatim; no backend computes these yet
-            // so they are uniformly `None` (omitted on the wire).
-            call_fanout: r.call_fanout,
-            call_fanin: r.call_fanin,
-            call_depth: r.call_depth,
-            is_recursive: r.is_recursive,
-            idiom_hash: r.idiom_hash.clone(),
-            error_path: r.error_path,
-            alloc_family: r.alloc_family.clone(),
+        .map(|r| {
+            let call = shape.get(&r.id).copied().unwrap_or_default();
+            schema::FunctionStats {
+                id: r.id.clone(),
+                name: r.name.clone(),
+                path: r.path.clone(),
+                span: r.span,
+                param_count: r.param_count,
+                cyclomatic_complexity: r.cyclomatic_complexity,
+                cognitive_complexity: r.cognitive_complexity,
+                max_loop_depth: r.max_loop_depth,
+                alloc_site_count: r.alloc_site_count,
+                length_lines: r.length_lines,
+                // v1.4 step 2: whole-program call-shape (computed above —
+                // always `Some`); source-local fields lift verbatim.
+                call_fanout: Some(call.fanout),
+                call_fanin: Some(call.fanin),
+                call_depth: Some(call.depth),
+                is_recursive: Some(call.recursive),
+                idiom_hash: r.idiom_hash.clone(),
+                error_path: r.error_path,
+                alloc_family: r.alloc_family.clone(),
+            }
         })
         .collect()
+}
+
+/// Per-function call-shape instrument (IR v1.4 STEP 2, plan
+/// `divergence-revamp`, specs `divergence-study`/`divergence-paper`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct CallShape {
+    /// Distinct direct-callee count (resolved function ids).
+    fanout: u32,
+    /// Distinct caller count (resolved function ids).
+    fanin: u32,
+    /// Longest-path layer index in the call DAG (0 = no in-graph callers;
+    /// cycle-broken edges excluded — see below).
+    depth: u32,
+    /// True when the function can reach itself statically (self-loop or
+    /// directed cycle on the FULL edge set, before cycle-breaking).
+    recursive: bool,
+}
+
+/// Whole-program call-shape pass (v1.4 step 2, slice A).
+///
+/// Edge resolution (deterministic; `BTree*` throughout):
+/// 1. semantic facts first — a `Direct` call carrying
+///    `semantic.resolved_definition` resolves to the function owning
+///    `(site.path, site.span)` (span intersection), even same-function
+///    (self-loop ⇒ recursive);
+/// 2. name-based fallback — the caller's OWN file defining the name exactly
+///    once wins (covers self-recursion and sibling calls — file-local-first,
+///    mirroring `cross_file_call_edges`); else the language-scoped global
+///    set must contain exactly one function of that name (the M1 uniqueness
+///    gate); zero or many ⇒ ambiguous, no edge;
+/// 3. non-`Direct` calls never resolve (the name is a variable, not a target).
+///
+/// Unlike `graphs.call_graph` (cross-file only), intra-file edges COUNT here
+/// (spec: "intra-file resolved edges emitted as stats, not findings").
+///
+/// `depth` is the [`topo_layers`] index over the [`break_cycles`] DAG —
+/// i.e. the longest caller-chain length above the function, NOT the callee
+/// subtree below it (documented reading of "depth = topo layer").
+/// `recursive` is computed on the FULL pre-break edge set (self-loop or
+/// directed reachability back to self), so cycle-breaking never hides it.
+///
+/// Sorted/deterministic: node ids sorted, edges deduped in a `BTreeSet`,
+/// counts from ordered maps — same units ⇒ same map on every run.
+fn call_shape(units: &[FileUnit]) -> BTreeMap<String, CallShape> {
+    // Indexes: id → (language, name); (language, name) → sorted ids;
+    // path → sorted ids (for own-file-first + semantic site lookup).
+    let mut id_lang: BTreeMap<String, &str> = BTreeMap::new();
+    let mut by_name: BTreeMap<(&str, &str), Vec<String>> = BTreeMap::new();
+    let mut by_path: BTreeMap<&str, Vec<&FunctionRecord>> = BTreeMap::new();
+    for unit in units {
+        for func in &unit.functions {
+            let record = &func.record;
+            id_lang.insert(record.id.clone(), unit.file.language.as_str());
+            by_name
+                .entry((unit.file.language.as_str(), record.name.as_str()))
+                .or_default()
+                .push(record.id.clone());
+            by_path
+                .entry(record.path.as_str())
+                .or_default()
+                .push(record);
+        }
+    }
+    for ids in by_name.values_mut() {
+        ids.sort();
+    }
+
+    // Resolve every Direct call to a target id (deduped per caller).
+    let mut edges: BTreeSet<(String, String)> = BTreeSet::new();
+    for unit in units {
+        for func in &unit.functions {
+            let caller = &func.record.id;
+            let language = unit.file.language.as_str();
+            let mut calls: Vec<&crate::ir::CallEvent> = func.calls.iter().collect();
+            calls.sort_by_key(|c| (c.meta.span.start_line, c.meta.span.start_col));
+            for call in calls {
+                if call.callee_kind != CalleeKind::Direct {
+                    continue;
+                }
+                // (1) Semantic fact: (path, span) → owning function.
+                if !call.meta.macro_origin
+                    && let Some(site) = call
+                        .semantic
+                        .as_ref()
+                        .and_then(|s| s.resolved_definition.as_ref())
+                    && let Some(target) = by_path.get(site.path.as_str()).and_then(|defs| {
+                        defs.iter()
+                            .find(|r| r.span.intersects(&site.span))
+                            .map(|r| &r.id)
+                    })
+                {
+                    edges.insert((caller.clone(), target.clone()));
+                    continue;
+                }
+                // (2a) Own-file-first: exactly one same-file definition wins.
+                let own: Vec<&String> = by_path
+                    .get(func.record.path.as_str())
+                    .map(|defs| {
+                        defs.iter()
+                            .filter(|r| r.name == call.callee_name)
+                            .map(|r| &r.id)
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                if own.len() == 1 {
+                    edges.insert((caller.clone(), (*own[0]).clone()));
+                    continue;
+                }
+                if !own.is_empty() {
+                    continue; // same-file overloads: ambiguous, no edge
+                }
+                // (2b) Language-scoped uniqueness gate.
+                if let Some(ids) = by_name.get(&(language, call.callee_name.as_str()))
+                    && ids.len() == 1
+                {
+                    edges.insert((caller.clone(), ids[0].clone()));
+                }
+            }
+        }
+    }
+
+    // Fanout / fanin over the deduped resolved set.
+    let mut fanout: BTreeMap<&str, u32> = BTreeMap::new();
+    let mut fanin: BTreeMap<&str, u32> = BTreeMap::new();
+    for id in id_lang.keys() {
+        fanout.insert(id.as_str(), 0);
+        fanin.insert(id.as_str(), 0);
+    }
+    for (from, to) in &edges {
+        *fanout.get_mut(from.as_str()).expect("caller indexed") += 1;
+        *fanin.get_mut(to.as_str()).expect("callee indexed") += 1;
+    }
+
+    // Depth: longest-path layering over the cycle-broken DAG.
+    let pairs: Vec<(String, String)> = edges.iter().cloned().collect();
+    let broken = break_cycles(&pairs);
+    let mut nodes: Vec<String> = id_lang.keys().cloned().collect();
+    nodes.sort();
+    let layers = topo_layers(&nodes, &broken.kept);
+    let mut depth: BTreeMap<&str, u32> = BTreeMap::new();
+    for (layer_idx, members) in layers.iter().enumerate() {
+        for member in members {
+            depth.insert(member.as_str(), layer_idx as u32);
+        }
+    }
+
+    // Recursion on the FULL edge set: self-loop or directed path back to self.
+    let mut adj: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    for id in id_lang.keys() {
+        adj.entry(id.as_str()).or_default();
+    }
+    for (from, to) in &edges {
+        adj.entry(from.as_str()).or_default().insert(to.as_str());
+    }
+    let mut out = BTreeMap::new();
+    for id in id_lang.keys() {
+        let recursive = reaches_self(&adj, id.as_str());
+        out.insert(
+            id.clone(),
+            CallShape {
+                fanout: fanout[id.as_str()],
+                fanin: fanin[id.as_str()],
+                depth: depth.get(id.as_str()).copied().unwrap_or(0),
+                recursive,
+            },
+        );
+    }
+    out
+}
+
+/// True when `start` reaches itself over `adj` in ≥1 step (self-loop or
+/// directed cycle). Iterative DFS over sorted sets — deterministic.
+fn reaches_self(adj: &BTreeMap<&str, BTreeSet<&str>>, start: &str) -> bool {
+    let mut stack: Vec<&str> = adj
+        .get(start)
+        .map(|next| next.iter().copied().collect())
+        .unwrap_or_default();
+    let mut visited: BTreeSet<&str> = BTreeSet::new();
+    while let Some(node) = stack.pop() {
+        if node == start {
+            return true;
+        }
+        if visited.insert(node)
+            && let Some(next) = adj.get(node)
+        {
+            stack.extend(next.iter().copied());
+        }
+    }
+    false
 }
 
 /// `graphs.include_graph`: nodes = every scanned file (sorted by path); edges
@@ -953,6 +1154,158 @@ mod tests {
         let solo_doc = assemble(&[unit("solo.c")], &[], &prov());
         let solo_cg = solo_doc.graphs.expect("graphs").call_graph.expect("Some");
         assert!(solo_cg.edges.is_empty());
+    }
+
+    /// v1.4 step 2 slice A locks: whole-program call-shape over resolved
+    /// edges — fanout/fanin counts, topo-layer depth, self + cyclic
+    /// recursion, own-file-first, uniqueness gate, semantic precedence.
+    #[test]
+    fn call_shape_counts_depth_and_recursion() {
+        // b.c: helper (leaf) + util calling helper (own-file-first edge).
+        let helper_def = func("b.c", "helper", 2, 1);
+        let mut util_def = func("b.c", "util", 10, 1);
+        util_def.calls = vec![direct_call("helper", 12, 5)];
+        let mut b = unit("b.c");
+        b.functions = vec![helper_def, util_def];
+
+        // a.c: main calls helper (global-unique ⇒ cross-file edge) +
+        // missing (no definition ⇒ no edge).
+        let mut main = func("a.c", "main", 4, 1);
+        main.calls = vec![direct_call("helper", 6, 5), direct_call("missing", 7, 5)];
+        let mut a = unit("a.c");
+        a.functions = vec![main];
+
+        // c.c: self-recursive.
+        let mut recurse = func("c.c", "recurse", 1, 1);
+        recurse.calls = vec![direct_call("recurse", 3, 5)];
+        let mut c = unit("c.c");
+        c.functions = vec![recurse];
+
+        // d.c ↔ e.c: two-cycle.
+        let mut cyc_a = func("d.c", "cyc_a", 1, 1);
+        cyc_a.calls = vec![direct_call("cyc_b", 2, 5)];
+        let mut d = unit("d.c");
+        d.functions = vec![cyc_a];
+        let mut cyc_b = func("e.c", "cyc_b", 1, 1);
+        cyc_b.calls = vec![direct_call("cyc_a", 2, 5)];
+        let mut e = unit("e.c");
+        e.functions = vec![cyc_b];
+
+        let doc = assemble(&[a, b, c, d, e], &[], &prov());
+        let shape = |id: &str| {
+            doc.stats
+                .functions
+                .iter()
+                .find(|f| f.id == id)
+                .unwrap_or_else(|| panic!("function {id} present"))
+        };
+
+        let main = shape("a.c#main#4:1");
+        assert_eq!(main.call_fanout, Some(1), "helper only; missing unresolved");
+        assert_eq!(main.call_fanin, Some(0));
+        let helper = shape("b.c#helper#2:1");
+        assert_eq!(helper.call_fanin, Some(2), "main + util");
+        assert_eq!(helper.call_fanout, Some(0));
+        assert_eq!(helper.call_depth, Some(1), "callee below two callers");
+        let util = shape("b.c#util#10:1");
+        assert_eq!(util.call_fanout, Some(1), "own-file-first edge to helper");
+        assert_eq!(util.call_depth, Some(0), "entries sit at layer 0");
+        assert_eq!(main.call_depth, Some(0));
+
+        let recurse = shape("c.c#recurse#1:1");
+        assert_eq!(recurse.is_recursive, Some(true), "self-loop");
+        assert_eq!(recurse.call_fanout, Some(1));
+        assert_eq!(recurse.call_fanin, Some(1));
+
+        for id in ["d.c#cyc_a#1:1", "e.c#cyc_b#1:1"] {
+            let f = shape(id);
+            assert_eq!(f.is_recursive, Some(true), "{id} is in a 2-cycle");
+            assert_eq!(f.call_fanout, Some(1));
+            assert_eq!(f.call_fanin, Some(1));
+        }
+        assert_eq!(helper.is_recursive, Some(false));
+        assert_eq!(main.is_recursive, Some(false));
+    }
+
+    /// Ambiguous names (two definitions) and undefined names yield NO edge —
+    /// the M1 uniqueness gate applies to stats as well as findings.
+    #[test]
+    fn call_shape_skips_ambiguous_and_undefined_callees() {
+        let mut d1 = unit("d1.c");
+        d1.functions = vec![func("d1.c", "dup", 1, 1)];
+        let mut d2 = unit("d2.c");
+        d2.functions = vec![func("d2.c", "dup", 1, 1)];
+        let mut caller = func("q.c", "caller", 1, 1);
+        caller.calls = vec![direct_call("dup", 2, 5), direct_call("undefined_fn", 3, 5)];
+        let mut q = unit("q.c");
+        q.functions = vec![caller];
+
+        let doc = assemble(&[d1, d2, q], &[], &prov());
+        let get = |id: &str| {
+            doc.stats
+                .functions
+                .iter()
+                .find(|f| f.id == id)
+                .unwrap_or_else(|| panic!("{id} present"))
+        };
+        assert_eq!(get("q.c#caller#1:1").call_fanout, Some(0));
+        assert_eq!(get("d1.c#dup#1:1").call_fanin, Some(0));
+        assert_eq!(get("d2.c#dup#1:1").call_fanin, Some(0));
+    }
+
+    /// Semantic facts take precedence over own-file-first: the caller file
+    /// defines `helper` locally, but the resolved definition points at y.c.
+    #[test]
+    fn call_shape_prefers_semantic_facts_over_name_matching() {
+        use crate::ir::{CallSemantic, ResolvedSite};
+
+        let mut caller = func("x.c", "caller", 1, 1);
+        let mut resolved = direct_call("helper", 2, 5);
+        resolved.semantic = Some(CallSemantic {
+            resolved_definition: Some(ResolvedSite {
+                path: "y.c".to_string(),
+                span: Span::point(1, 1),
+            }),
+            fopened_handle: false,
+            literal_args: Vec::new(),
+        });
+        caller.calls = vec![resolved];
+        let mut x = unit("x.c");
+        x.functions = vec![
+            caller,
+            func("x.c", "helper", 20, 1), // local shadow, must NOT win
+        ];
+        let mut y = unit("y.c");
+        // Span must intersect the resolved site span (point 1:1).
+        y.functions = vec![func("y.c", "helper", 1, 1)];
+
+        let doc = assemble(&[x, y], &[], &prov());
+        let get = |id: &str| {
+            doc.stats
+                .functions
+                .iter()
+                .find(|f| f.id == id)
+                .unwrap_or_else(|| panic!("{id} present"))
+        };
+        assert_eq!(get("y.c#helper#1:1").call_fanin, Some(1));
+        assert_eq!(get("x.c#helper#20:1").call_fanin, Some(0));
+        assert_eq!(get("x.c#caller#1:1").call_fanout, Some(1));
+    }
+
+    /// Same units in shuffled order ⇒ identical `stats.functions[]`
+    /// (byte-determinism of the whole-program pass).
+    #[test]
+    fn call_shape_is_deterministic_under_shuffled_input() {
+        let mut caller = func("q.c", "caller", 1, 1);
+        caller.calls = vec![direct_call("helper", 2, 5)];
+        let mut q = unit("q.c");
+        q.functions = vec![caller];
+        let mut h = unit("h.c");
+        h.functions = vec![func("h.c", "helper", 5, 1)];
+
+        let fwd = assemble(&[q.clone(), h.clone()], &[], &prov());
+        let rev = assemble(&[h, q], &[], &prov());
+        assert_eq!(fwd.stats.functions, rev.stats.functions);
     }
 
     #[test]

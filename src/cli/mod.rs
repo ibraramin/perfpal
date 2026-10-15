@@ -229,10 +229,14 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // pure functions of the final document. charts::render applies the
     // emission rule itself (a chart appears iff its source section is
     // present and non-empty), so an empty scan yields an empty chart set —
-    // the writer still creates charts/ (output-contract §3).
+    // the writer still creates charts/ (output-contract §3). graphs.dot is
+    // the deterministic DOT export of the same graphs (v1.4 step 2, plan
+    // `divergence-revamp`): ALWAYS emitted, even on an empty scan (an empty
+    // digraph), so consumers can rely on its presence.
     let charts = crate::charts::render(&document);
     let chart_names: Vec<String> = charts.iter().map(|(name, _)| (*name).to_string()).collect();
     let report = crate::reporter::render_report(&document, &chart_names);
+    let dot = crate::charts::dot::render_dot(&document);
 
     // writer: atomic directory swap (all writer failures are output errors).
     // rel paths use forward slashes; nested entries land in subdirectories.
@@ -243,6 +247,7 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
             crate::schema::EMBEDDED_SCHEMA,
         ),
         Artifact::text("report.md", report),
+        Artifact::text("charts/graph.dot", dot),
     ];
     for (name, bytes) in &charts {
         artifacts.push(Artifact {

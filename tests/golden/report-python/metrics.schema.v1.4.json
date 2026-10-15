@@ -134,13 +134,13 @@
               "max_loop_depth": { "type": "integer", "minimum": 0 },
               "alloc_site_count": { "type": "integer", "minimum": 0 },
               "length_lines": { "type": "integer", "minimum": 0 },
-              "call_fanout": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4 (divergence-study instrument, IR v1.4 step 1): per-function call-shape — distinct direct-callee count. Optional; omitted when the producer has no whole-program view." },
-              "call_fanin": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — distinct caller count. Optional; omitted when uncomputed." },
-              "call_depth": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — longest static call-chain depth rooted at this function. Optional; omitted when uncomputed." },
-              "is_recursive": { "type": "boolean", "description": "ADDITIVE v1.4: per-function call-shape — true when the function can reach itself statically. Optional; omitted when uncomputed." },
-              "idiom_hash": { "type": "string", "description": "ADDITIVE v1.4: token-normalized idiom hash of the function body (clone/idiom-rate bucketing). Optional; omitted when uncomputed." },
-              "error_path": { "type": "boolean", "description": "ADDITIVE v1.4: true when the function body contains an error-handling path (try/except, ?/Err-return, do-while(0), #if 0 / cfg(test) gating, error-branch free). Optional; omitted when uncomputed." },
-              "alloc_family": { "type": "string", "description": "ADDITIVE v1.4: dominant allocation family of the function (real_alloc vs empty_ctor vs serialize/format). Optional; omitted when uncomputed." }
+              "call_fanout": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4 (divergence-study instrument): per-function call-shape — distinct direct-callee count. Populated since IR v1.4 step 2 (whole-program resolved edges, intra-file included); omitted when uncomputed." },
+              "call_fanin": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — distinct caller count. Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "call_depth": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — longest-path layer index over the cycle-broken call DAG (0 = no in-graph callers). Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "is_recursive": { "type": "boolean", "description": "ADDITIVE v1.4: per-function call-shape — true when the function can reach itself statically (self-loop or directed cycle). Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "idiom_hash": { "type": "string", "description": "ADDITIVE v1.4: token-normalized idiom hash of the function body (comment-strip + whitespace-collapse, FNV-1a hex; clone/idiom-rate bucketing). Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "error_path": { "type": "boolean", "description": "ADDITIVE v1.4: true when the function body contains an error-handling path (try/except, ?/Err-return, do-while(0), #if 0 / cfg(test) gating, error-branch free). Conservative clear-case detectors; populated since IR v1.4 step 2; omitted when uncomputed." },
+              "alloc_family": { "type": "string", "description": "ADDITIVE v1.4: dominant allocation family of the function — one of real_alloc (true heap allocation), empty_ctor (empty-container construction: String::new/Vec::new/map-set ::new, empty vec![], zero-arg container ctors), serialize (formatting/serialization-shaped: format!/to_string/collect, str(x)). Majority over alloc-family call sites, ties toward the lexicographically smallest tag; omitted when the function has no alloc sites." }
             }
           }
         },

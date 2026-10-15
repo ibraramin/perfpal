@@ -1,12 +1,12 @@
-//! `charts::dot` — deterministic DOT stub (plan `divergence-revamp` step 1).
+//! `charts::dot` — deterministic DOT export (plan `divergence-revamp` step 2).
 //!
-//! ADR-0002 deferred non-SVG graph exports; this stub lands the deterministic
-//! serialization half: [`render_dot`] is a pure function of the final
-//! document (graphs.* + components[] ONLY — the same ADR-0002 guardrail 1
+//! ADR-0002 deferred non-SVG graph exports; this module lands the
+//! deterministic serialization half: [`render_dot`] is a pure function of the
+//! final document (graphs.* + components[] ONLY — the same ADR-0002 guardrail 1
 //! input set as the SVG charts) emitting sorted DOT for the include graph,
-//! the call graph, and the component ranking. It is NOT yet wired into the
-//! pipeline artifacts (no `graphs.dot` output file) — consumers call it
-//! directly on a parsed metrics.json.
+//! the call graph, and the component ranking. Wired into the pipeline as the
+//! `charts/graph.dot` artifact (cli) and referenced from report.md §5 —
+//! consumers call it directly on a parsed metrics.json too.
 //!
 //! Determinism mechanics (same bar as the SVG charts):
 //! - every node/edge line goes through a `BTreeSet` — sorted AND deduped;

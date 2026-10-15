@@ -39,8 +39,8 @@ use std::collections::BTreeMap;
 
 use crate::graph::{break_cycles, topo_layers};
 use crate::schema::{
-    ComponentEntry, GraphsSection, IncludeEdgeDto, MetricsDocument, format_fixed_point,
-    round_half_up,
+    ComponentEntry, FunctionStats, GraphsSection, IncludeEdgeDto, MetricsDocument,
+    format_fixed_point, round_half_up,
 };
 
 // ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ pub fn render(doc: &MetricsDocument) -> Vec<(&'static str, Vec<u8>)> {
         let graphs = doc.graphs.as_ref();
         out.push((
             "component-coupling.svg",
-            render_component_coupling(components, graphs),
+            render_component_coupling(components, graphs, &doc.stats.functions),
         ));
         out.push(("hot-components.svg", render_hot_components(components)));
     }
@@ -393,14 +393,69 @@ fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
 /// call contribution counts cross-file call edges likewise (LOW-confidence,
 /// styled distinctly). Pinned symmetry: an off-diagonal edge increments BOTH
 /// (A,B) and (B,A); a same-component edge increments the diagonal once.
+///
+/// v1.4 STEP 2 cost overlay (plan `divergence-revamp`): cells accumulate
+/// EDGE WEIGHTS, not bare counts — each edge weighs `1 + normalized endpoint
+/// cost`, so hot, deep, alloc-heavy, or highly-coupled functions pull their
+/// component's coupling cells darker. Formula (documented here AND in
+/// report.md §5 — charts stay pure-fn-of-JSON, consuming
+/// `stats.functions[]` + `components[]` only):
+///
+/// ```text
+/// cost(f) = cyclomatic + cognitive + 2*max_loop_depth + 3*alloc_site_count
+///         + call_fanout + call_fanin + call_depth
+///         + 2*[is_recursive] + [error_path] + [alloc_family present]
+/// w_include(F→T) = 1 + (avg_cost(F) + avg_cost(T)) / (2 * max_cost)
+/// w_call(caller→to) = 1 + (cost(caller) + avg_cost(to_file)) / (2 * max_cost)
+/// ```
+///
+/// `avg_cost(file)` is the mean over that file's functions (0 when the file
+/// has none). Unresolved call edges (`to_path` None) never enter the matrix
+/// (legacy admission — a hypothesis without a target file has no cell).
+/// `max_cost` is the scan maximum; when it is 0 (no functions, or all-zero
+/// metrics) every weight is exactly 1.0 and the overlay is byte-identical
+/// to the legacy count matrix (pinned by the no-functions chart tests).
+///
+/// Determinism: averages come from `BTreeMap`s, edge iteration follows
+/// document order (the aggregator's fixed sort), and per-cell float sums
+/// accumulate in that same fixed order — identical documents ⇒ identical
+/// bytes.
 struct Coupling {
     axis: Vec<String>,
-    include: Vec<Vec<u64>>,
-    call: Vec<Vec<u64>>,
+    include: Vec<Vec<f64>>,
+    call: Vec<Vec<f64>>,
+}
+
+/// Per-function cost feeding the coupling overlay (see [`Coupling`]).
+/// Missing (`None`) v1.4 fields contribute 0 — parser-free or pre-step-2
+/// documents simply overlay less.
+fn function_cost(f: &FunctionStats) -> f64 {
+    f64::from(f.cyclomatic_complexity)
+        + f64::from(f.cognitive_complexity)
+        + 2.0 * f64::from(f.max_loop_depth)
+        + 3.0 * f64::from(f.alloc_site_count)
+        + f64::from(f.call_fanout.unwrap_or(0))
+        + f64::from(f.call_fanin.unwrap_or(0))
+        + f64::from(f.call_depth.unwrap_or(0))
+        + if f.is_recursive.unwrap_or(false) {
+            2.0
+        } else {
+            0.0
+        }
+        + if f.error_path.unwrap_or(false) {
+            1.0
+        } else {
+            0.0
+        }
+        + if f.alloc_family.is_some() { 1.0 } else { 0.0 }
 }
 
 impl Coupling {
-    fn build(components: &[ComponentEntry], graphs: Option<&GraphsSection>) -> Self {
+    fn build(
+        components: &[ComponentEntry],
+        graphs: Option<&GraphsSection>,
+        functions: &[FunctionStats],
+    ) -> Self {
         let axis: Vec<String> = components.iter().map(|c| c.path_prefix.clone()).collect();
         let index: BTreeMap<String, usize> = axis
             .iter()
@@ -410,27 +465,63 @@ impl Coupling {
         let n = axis.len();
         let mut cell = Coupling {
             axis,
-            include: vec![vec![0; n]; n],
-            call: vec![vec![0; n]; n],
+            include: vec![vec![0.0; n]; n],
+            call: vec![vec![0.0; n]; n],
         };
 
-        let bump = |matrix: &mut Vec<Vec<u64>>, from: &str, to: &str| {
+        // Cost lookup tables (BTreeMaps ⇒ deterministic).
+        let max_cost = functions.iter().map(function_cost).fold(0.0_f64, f64::max);
+        let mut file_sum: BTreeMap<&str, (f64, u32)> = BTreeMap::new();
+        let mut id_cost: BTreeMap<&str, f64> = BTreeMap::new();
+        for f in functions {
+            let cost = function_cost(f);
+            id_cost.insert(f.id.as_str(), cost);
+            let slot = file_sum.entry(f.path.as_str()).or_insert((0.0, 0));
+            slot.0 += cost;
+            slot.1 += 1;
+        }
+        let file_avg = |path: &str| -> f64 {
+            file_sum
+                .get(path)
+                .map_or(0.0, |(sum, count)| sum / f64::from(*count))
+        };
+        // Normalize one endpoint-cost pair into the [0, 1] weight bonus.
+        // Zero max ⇒ legacy weight 1.0 exactly (no overlay).
+        let bonus = |a: f64, b: f64| -> f64 {
+            if max_cost <= 0.0 {
+                0.0
+            } else {
+                (a + b) / (2.0 * max_cost)
+            }
+        };
+
+        let bump = |matrix: &mut Vec<Vec<f64>>, from: &str, to: &str, weight: f64| {
             if let (Some(&i), Some(&j)) = (index.get(parent_dir(from)), index.get(parent_dir(to))) {
-                matrix[i][j] += 1;
+                matrix[i][j] += weight;
                 if i != j {
-                    matrix[j][i] += 1;
+                    matrix[j][i] += weight;
                 }
             }
         };
 
         if let Some(graphs) = graphs {
             for (from, to) in resolved_pairs(&graphs.include_graph.edges) {
-                bump(&mut cell.include, &from, &to);
+                let weight = 1.0 + bonus(file_avg(&from), file_avg(&to));
+                bump(&mut cell.include, &from, &to, weight);
             }
             if let Some(call_graph) = &graphs.call_graph {
                 for edge in &call_graph.edges {
+                    // Legacy admission: resolved edges only — unresolved
+                    // (to_path None) LOW-hypotheses without a target file
+                    // never enter the matrix (keeps the no-functions overlay
+                    // byte-identical to the legacy count matrix).
                     if let Some(to) = &edge.to_path {
-                        bump(&mut cell.call, &edge.from_path, to);
+                        let caller_cost = id_cost
+                            .get(edge.from_function.as_str())
+                            .copied()
+                            .unwrap_or(0.0);
+                        let weight = 1.0 + bonus(caller_cost, file_avg(to));
+                        bump(&mut cell.call, &edge.from_path, to, weight);
                     }
                 }
             }
@@ -438,13 +529,12 @@ impl Coupling {
         cell
     }
 
-    fn max_cell(&self) -> u64 {
+    fn max_cell(&self) -> f64 {
         self.include
             .iter()
             .zip(&self.call)
             .flat_map(|(inc, call)| inc.iter().zip(call).map(|(a, b)| a + b))
-            .max()
-            .unwrap_or(0)
+            .fold(0.0_f64, f64::max)
     }
 }
 
@@ -453,6 +543,7 @@ impl Coupling {
 fn render_component_coupling(
     components: &[ComponentEntry],
     graphs: Option<&GraphsSection>,
+    functions: &[FunctionStats],
 ) -> Vec<u8> {
     // Axis order (rank, path_prefix); rank ≤ COMPONENT_CAP, then truncate.
     let mut sorted: Vec<&ComponentEntry> = components.iter().collect();
@@ -462,7 +553,7 @@ fn render_component_coupling(
     sorted.truncate(COMPONENT_CAP);
     let owned: Vec<ComponentEntry> = sorted.into_iter().cloned().collect();
 
-    let coupling = Coupling::build(&owned, graphs);
+    let coupling = Coupling::build(&owned, graphs, functions);
     let max = coupling.max_cell();
     let n = coupling.axis.len();
 
@@ -501,16 +592,16 @@ fn render_component_coupling(
             let total = inc + coupling.call[i][j];
             let x = grid_x + j as i64 * CC_CELL;
             let y = grid_y + i as i64 * CC_CELL;
-            let fill = if max == 0 {
+            let fill = if max <= 0.0 {
                 heat_color(0) // all-zero ⇒ uniform minimal fill
             } else {
-                let level = round_half_up(total as f64 / max as f64 * 10.0, 0);
+                let level = round_half_up(total / max * 10.0, 0);
                 heat_color(level.clamp(0, 10) as u32)
             };
             svg.push_str(&format!(
                 "<rect x=\"{x}\" y=\"{y}\" width=\"{CC_CELL}\" height=\"{CC_CELL}\" fill=\"{fill}\"/>\n"
             ));
-            if coupling.call[i][j] > 0 {
+            if coupling.call[i][j] > 0.0 {
                 svg.push_str(&format!(
                     "<rect x=\"{x}\" y=\"{y}\" width=\"{CC_CELL}\" height=\"{CC_CELL}\" fill=\"{CC_CALL_FILL}\" fill-opacity=\"{CC_CALL_OPACITY}\"/>\n"
                 ));
@@ -664,6 +755,55 @@ mod tests {
         assert_eq!(truncated.chars().count(), LABEL_MAX_CHARS);
         assert!(truncated.starts_with('…'));
         assert!(long.ends_with(truncated.trim_start_matches('…')));
+    }
+
+    #[test]
+    fn function_cost_sums_documented_terms() {
+        use crate::ir::Span;
+        use crate::schema::FunctionStats;
+        let costly = FunctionStats {
+            id: "a.c#f#1:1".to_string(),
+            name: "f".to_string(),
+            path: "a.c".to_string(),
+            span: Span::point(1, 1),
+            param_count: 0,
+            cyclomatic_complexity: 3,
+            cognitive_complexity: 2,
+            max_loop_depth: 1,
+            alloc_site_count: 2,
+            length_lines: 10,
+            call_fanout: Some(4),
+            call_fanin: Some(1),
+            call_depth: Some(2),
+            is_recursive: Some(true),
+            idiom_hash: None,
+            error_path: Some(true),
+            alloc_family: Some("real_alloc".to_string()),
+        };
+        // 3 + 2 + 2*1 + 3*2 + 4 + 1 + 2 + 2 + 1 + 1 = 24.
+        assert_eq!(function_cost(&costly), 24.0);
+        let bare = FunctionStats {
+            id: "a.c#g#2:1".to_string(),
+            name: "g".to_string(),
+            path: "a.c".to_string(),
+            span: Span::point(2, 1),
+            param_count: 0,
+            cyclomatic_complexity: 1,
+            cognitive_complexity: 0,
+            max_loop_depth: 0,
+            alloc_site_count: 0,
+            length_lines: 2,
+            // Missing v1.4 fields contribute 0 (pre-step-2 documents overlay
+            // less, never NaN).
+            call_fanout: None,
+            call_fanin: None,
+            call_depth: None,
+            is_recursive: None,
+            idiom_hash: None,
+            error_path: None,
+            alloc_family: None,
+        };
+        assert_eq!(function_cost(&bare), 1.0);
     }
 
     #[test]

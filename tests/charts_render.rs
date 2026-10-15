@@ -10,8 +10,8 @@
 use perfpal::charts::render;
 use perfpal::ir::{IncludeForm, Span};
 use perfpal::schema::{
-    ComponentEntry, ComponentMetrics, GraphNode, GraphsSection, IncludeEdgeDto, IncludeGraph,
-    MetricsDocument, SCHEMA_VERSION, ScanInfo, StatsSection, ToolInfo,
+    ComponentEntry, ComponentMetrics, FunctionStats, GraphNode, GraphsSection, IncludeEdgeDto,
+    IncludeGraph, MetricsDocument, SCHEMA_VERSION, ScanInfo, StatsSection, ToolInfo,
 };
 
 // ---------------------------------------------------------------------------
@@ -179,6 +179,93 @@ fn svg_of(chart: &[(&'static str, Vec<u8>)], name: &str) -> String {
         .find(|(file, _)| *file == name)
         .unwrap_or_else(|| panic!("{name} not emitted"));
     String::from_utf8(bytes.clone()).expect("SVG must be UTF-8")
+}
+
+fn costly_fn(path: &str, name: &str, cyclomatic: u32) -> FunctionStats {
+    FunctionStats {
+        id: format!("{path}#{name}#1:1"),
+        name: name.to_string(),
+        path: path.to_string(),
+        span: Span::point(1, 1),
+        param_count: 0,
+        cyclomatic_complexity: cyclomatic,
+        cognitive_complexity: 0,
+        max_loop_depth: 0,
+        alloc_site_count: 0,
+        length_lines: 10,
+        call_fanout: Some(0),
+        call_fanin: Some(0),
+        call_depth: Some(0),
+        is_recursive: Some(false),
+        idiom_hash: None,
+        error_path: Some(false),
+        alloc_family: None,
+    }
+}
+
+/// v1.4 step-2 cost overlay: the same two-edge shape renders DIFFERENTLY
+/// with and without `stats.functions[]` — costly endpoints pull their cell
+/// to max heat while the function-less cell stays lighter; with no functions
+/// both cells sit at max (legacy count-matrix behavior, byte-identical).
+fn overlay_doc(with_functions: bool) -> MetricsDocument {
+    let mut doc = base_doc();
+    doc.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: vec![
+                node("src/a/x.c"),
+                node("src/b/y.c"),
+                node("src/a/z.c"),
+                node("src/c/w.c"),
+            ],
+            edges: vec![
+                edge("src/a/x.c", "src/b/y.c"),
+                edge("src/a/z.c", "src/c/w.c"),
+            ],
+        },
+        call_graph: None,
+    });
+    doc.components = Some(vec![
+        component("src/a", 1, 1.0),
+        component("src/b", 2, 0.5),
+        component("src/c", 3, 0.0),
+    ]);
+    if with_functions {
+        // x.c and y.c each host a costly function (cyclomatic 20 ⇒ cost 20);
+        // z.c / w.c host NONE ⇒ file avg 0. max_cost = 20:
+        // w(a→b) = 1 + (20+20)/40 = 2.0, w(a→c) = 1 + 0 = 1.0.
+        doc.stats.functions = vec![
+            costly_fn("src/a/x.c", "hot", 20),
+            costly_fn("src/b/y.c", "hot2", 20),
+        ];
+    }
+    doc
+}
+
+#[test]
+fn cost_overlay_differentiates_cells_only_with_functions() {
+    let svg = svg_of(&render(&overlay_doc(true)), "component-coupling.svg");
+    // The costly (src/a ↔ src/b) cell is the max ⇒ darkest ramp fill…
+    assert!(
+        svg.contains("fill=\"#b30000\""),
+        "costly cell must render at max heat:\n{svg}"
+    );
+    // …while the function-less (src/a ↔ src/c) cell renders LIGHTER than
+    // max — the overlay differentiated the two single-edge cells.
+    let darkest = svg.matches("fill=\"#b30000\"").count();
+    let total_cells = svg.matches("<rect ").count();
+    assert!(
+        darkest < total_cells,
+        "overlay must differentiate cells (darkest {darkest} of {total_cells}):\n{svg}"
+    );
+
+    // Legacy pin: no functions ⇒ every weight exactly 1.0 ⇒ both coupled
+    // cells (plus their symmetric twins) share the max and render darkest.
+    let legacy = svg_of(&render(&overlay_doc(false)), "component-coupling.svg");
+    assert_eq!(
+        legacy.matches("fill=\"#b30000\"").count(),
+        4,
+        "no-functions overlay must equal the legacy count matrix:\n{legacy}"
+    );
 }
 
 // ---------------------------------------------------------------------------

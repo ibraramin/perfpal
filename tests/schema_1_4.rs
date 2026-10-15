@@ -1,8 +1,10 @@
-//! metrics.json schema 1.4 end-to-end lock (plan `divergence-revamp` step 1):
-//! seven OPTIONAL `stats.functions[]` instrument fields (call-shape, idiom
-//! hash, error path, alloc family) plus the first populated
+//! metrics.json schema 1.4 end-to-end lock (plan `divergence-revamp` steps
+//! 1–2): seven OPTIONAL `stats.functions[]` instrument fields (call-shape,
+//! idiom hash, error path, alloc family) plus the first populated
 //! `stats.distributions[]` histograms — additive-only over 1.3, so every
-//! `required` list is byte-equal to the v1.3 artifact's.
+//! `required` list is byte-equal to the v1.3 artifact's. Step 1 left the
+//! seven fields `None`-stubbed; step 2 populates them (test (7) locks the
+//! populated contract).
 //!
 //! History: the `"python"` language token arrived with the 1.2 → 1.3 bump
 //! (plan `python-backend`); its locks below are RETAINED unchanged.
@@ -382,13 +384,15 @@ fn assert_required_equal(old: &serde_json::Value, new: &serde_json::Value, point
     }
 }
 
-/// (7) v1.4 skeleton emission lock: on a non-empty scan the document carries
-/// populated `stats.distributions[]` — sorted by `(metric, bucket)` with
-/// per-metric sums equal to the function count — while every
-/// `stats.functions[]` entry OMITS the seven uncomputed instrument fields
-/// (skeleton: declared-optional, never null).
+/// (7) v1.4 STEP 2 emission lock (plan `divergence-revamp` — supersedes the
+/// step-1 skeleton "omitted" lock): on a non-empty scan every
+/// `stats.functions[]` entry CARRIES the seven instrument fields with
+/// schema-legal shapes — call-shape always `Some` (whole-program pass),
+/// `idiom_hash` always `Some` (source-local), `error_path` always `Some`,
+/// `alloc_family` present iff the function has alloc-family sites — while
+/// `stats.distributions[]` stays populated as in step 1.
 #[test]
-fn v1_4_skeleton_emits_distributions_and_omits_uncomputed_fields() {
+fn v1_4_step2_populates_instrument_fields() {
     let root = temp_dir("skeleton");
     fs::write(root.join("c_src.c"), LOCK_C_SRC).expect("write c_src.c");
     fs::write(root.join("rs_src.rs"), LOCK_RS_SRC).expect("write rs_src.rs");
@@ -398,22 +402,65 @@ fn v1_4_skeleton_emits_distributions_and_omits_uncomputed_fields() {
         .as_array()
         .expect("stats.functions[] present");
     assert!(!functions.is_empty());
+    let is_hex16 = |v: &serde_json::Value| {
+        v.as_str().is_some_and(|s| {
+            s.len() == 16
+                && s.bytes()
+                    .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+        })
+    };
     for f in functions {
-        for absent in [
+        for present in [
             "call_fanout",
             "call_fanin",
             "call_depth",
             "is_recursive",
             "idiom_hash",
             "error_path",
-            "alloc_family",
         ] {
             assert!(
-                f.get(absent).is_none(),
-                "uncomputed v1.4 field {absent} must be omitted, not null"
+                f.get(present).is_some(),
+                "step-2 field {present} must be populated, got {f:?}"
+            );
+        }
+        assert!(
+            f["call_fanout"].as_u64().is_some(),
+            "call_fanout must be a non-negative integer"
+        );
+        assert!(f["call_fanin"].as_u64().is_some());
+        assert!(f["call_depth"].as_u64().is_some());
+        assert!(f["is_recursive"].as_bool().is_some());
+        assert!(
+            is_hex16(&f["idiom_hash"]),
+            "idiom_hash must be 16 lowercase hex"
+        );
+        assert!(f["error_path"].as_bool().is_some());
+        if let Some(family) = f.get("alloc_family") {
+            assert!(
+                ["real_alloc", "empty_ctor", "serialize"].contains(&family.as_str().unwrap_or("")),
+                "alloc_family outside the closed tag set: {family:?}"
             );
         }
     }
+
+    // Lock-tree value pins: the C churn allocates via malloc (real_alloc,
+    // no error vocabulary ⇒ error_path false, no callees); the Rust churn
+    // builds only empty ctors (String::new + Vec::new ⇒ empty_ctor).
+    let by_path = |path: &str| {
+        functions
+            .iter()
+            .find(|f| f["path"] == path)
+            .unwrap_or_else(|| panic!("function in {path} present"))
+    };
+    let c = by_path("c_src.c");
+    assert_eq!(c["alloc_family"], "real_alloc");
+    assert_eq!(c["error_path"], false);
+    assert_eq!(c["call_fanout"], 0);
+    assert_eq!(c["call_fanin"], 0);
+    assert_eq!(c["is_recursive"], false);
+    let rs = by_path("rs_src.rs");
+    assert_eq!(rs["alloc_family"], "empty_ctor");
+    assert_eq!(rs["error_path"], false);
 
     let entries = doc["stats"]["distributions"]
         .as_array()

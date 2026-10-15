@@ -1,0 +1,27 @@
+digraph perfpal {
+  "component:src" [shape=box, label="src (rank 1)"];
+  "src/01_alloc_churn.rs";
+  "src/02_string_building.rs";
+  "src/03_deep_nesting.rs";
+  "src/04_stdio_churn.rs";
+  "src/05_recursion_complexity.rs";
+  "src/06_memory_ops.rs";
+  "src/07_struct_by_value.rs";
+  "src/08_globals_and_chains.rs";
+  "src/09_membership_scan.rs";
+  "src/10_cross_file_and_arch.rs";
+  "src/10_cross_file_and_arch.rs#orchestrate#20:1" -> "src/01_alloc_churn.rs" [style=dashed, label="build_row_labels"];
+  "src/10_cross_file_and_arch.rs#orchestrate#20:1" -> "src/03_deep_nesting.rs" [style=dashed, label="scale_checksum"];
+  "src/10_cross_file_and_arch.rs#orchestrate#20:1" -> "src/common.rs" [style=dashed, label="shared_checksum"];
+  "src/common.rs";
+  "src/cycle_a.rs" -> "src/cycle_b.rs";
+  "src/cycle_a.rs";
+  "src/cycle_a.rs#cycle_a_step#17:1" -> "src/cycle_b.rs" [style=dashed, label="cycle_b_step"];
+  "src/cycle_b.rs" -> "src/cycle_a.rs";
+  "src/cycle_b.rs";
+  "src/cycle_b.rs#cycle_b_root#14:1" -> "src/cycle_a.rs" [style=dashed, label="cycle_a_root"];
+  "src/lib.rs" -> "src/common.rs";
+  "src/lib.rs" -> "src/cycle_a.rs";
+  "src/lib.rs" -> "src/cycle_b.rs";
+  "src/lib.rs";
+}

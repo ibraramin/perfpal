@@ -40,6 +40,7 @@
 //! scoring.
 
 pub mod backends;
+pub(crate) mod instrument;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -289,7 +290,7 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
         LanguageKind::Rust => backends::tree_sitter_rust::extract(rel_path, source),
         LanguageKind::Python => backends::tree_sitter_python::extract(rel_path, source),
     };
-    FileUnit {
+    let mut unit = FileUnit {
         file: ex.file,
         parse_health: ex.parse_health,
         includes: ex.includes,
@@ -297,7 +298,22 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
         structs: ex.structs,
         macros: ex.macros,
         functions: ex.functions,
+    };
+    // IR v1.4 STEP 2 (plan `divergence-revamp`): populate the three
+    // source-local instrument fields (`idiom_hash`, `alloc_family`,
+    // `error_path`) per function. This is the only stage holding both the
+    // record and its source text; call-shape fields stay `None` here for the
+    // aggregator's whole-program pass.
+    let language = match lang {
+        LanguageKind::C => "c",
+        LanguageKind::Rust => "rust",
+        LanguageKind::Python => "python",
+    };
+    for func in &mut unit.functions {
+        let body = instrument::body_text(source, &func.record.span);
+        instrument::populate(func, &body, language);
     }
+    unit
 }
 
 /// Per-file read failure → `ParseHealth{failed}` record, never an abort

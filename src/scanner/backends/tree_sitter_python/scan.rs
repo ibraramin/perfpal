@@ -42,7 +42,11 @@ const LOOP_KINDS: [&str; 7] = [
 /// alias-resolved final callee segment (so `pd.DataFrame` counts via
 /// `DataFrame`). A generator expression / f-string is NOT a call and never
 /// counts (ADR-0007 §9.2 ALLOC-001 honesty).
-const PY_ALLOC_FAMILY: [&str; 13] = [
+///
+/// `pub(crate)` (not private) so the v1.4 instrument pass
+/// ([`crate::scanner::instrument`]) classifies with the SAME curated set —
+/// one source of truth, mirroring [`crate::ir::RUST_ALLOC_FAMILY`].
+pub(crate) const PY_ALLOC_FAMILY: [&str; 13] = [
     "list",
     "dict",
     "set",

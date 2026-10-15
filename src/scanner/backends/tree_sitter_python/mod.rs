@@ -28,6 +28,10 @@ mod scan;
 #[cfg(test)]
 mod tests;
 
+// Re-exported for the v1.4 instrument pass (`scanner::instrument`), which
+// classifies with the SAME curated set — one source of truth.
+pub(crate) use scan::PY_ALLOC_FAMILY;
+
 use std::collections::BTreeMap;
 
 use tree_sitter::{Node, Parser};
@@ -641,7 +645,10 @@ fn module_unit(
         resolver_tier: ResolverTier::default(),
         is_async: false,
         is_module_scope: true,
-        // v1.4 skeleton: uncomputed by every backend this step.
+        // v1.4 step 2 (plan `divergence-revamp`): `idiom_hash` / `error_path` /
+        // `alloc_family` are populated by the scanner post-pass
+        // (`scanner::instrument::populate`, needs source text); call-shape
+        // fields stay `None` here for the aggregator's whole-program pass.
         call_fanout: None,
         call_fanin: None,
         call_depth: None,
@@ -705,7 +712,10 @@ fn function_unit(
         resolver_tier: ResolverTier::default(),
         is_async: infer::is_async_fn(fdef),
         is_module_scope: false,
-        // v1.4 skeleton: uncomputed by every backend this step.
+        // v1.4 step 2 (plan `divergence-revamp`): `idiom_hash` / `error_path` /
+        // `alloc_family` are populated by the scanner post-pass
+        // (`scanner::instrument::populate`, needs source text); call-shape
+        // fields stay `None` here for the aggregator's whole-program pass.
         call_fanout: None,
         call_fanin: None,
         call_depth: None,

@@ -502,20 +502,40 @@ pub struct FunctionRecord {
     /// uncomputed (`None`) this step.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_recursive: Option<bool>,
-    /// ADDITIVE v1.4 skeleton: token-normalized idiom hash of the function
-    /// body (clone/idiom-rate bucketing). Same serde-default pattern;
-    /// uncomputed (`None`) this step.
+    /// ADDITIVE v1.4: token-normalized idiom hash of the function body
+    /// (clone/idiom-rate bucketing). Populated since step 2 by the scanner
+    /// post-pass (`scanner::instrument::idiom_hash`: comment-strip +
+    /// whitespace-collapse, FNV-1a hex). Same serde-default pattern;
+    /// uncomputed (`None`) for parser-free or pre-step-2 inputs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub idiom_hash: Option<String>,
-    /// ADDITIVE v1.4 skeleton: true when the body contains an
-    /// error-handling path (`try`/`except`, `?`/`Err`-return,
-    /// `do-while(0)`, `#if 0` / `cfg(test)` gating, error-branch `free`).
-    /// Same serde-default pattern; uncomputed (`None`) this step.
+    /// ADDITIVE v1.4: true when the body contains an error-handling path
+    /// (`try`/`except`, `?`/`Err`-return, `do-while(0)`, `#if 0` /
+    /// `cfg(test)` gating, error-branch `free`). Populated since step 2 by
+    /// the scanner post-pass (`scanner::instrument::detect_error_path` —
+    /// conservative clear-case detectors, documented limits). Same
+    /// serde-default pattern; uncomputed (`None`) for parser-free or
+    /// pre-step-2 inputs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error_path: Option<bool>,
     /// ADDITIVE v1.4 skeleton: dominant allocation family (`real_alloc` vs
-    /// `empty_ctor` vs `serialize/format`). Same serde-default pattern;
-    /// uncomputed (`None`) this step.
+    /// `empty_ctor` vs `serialize`). Populated since step 2 by the scanner
+    /// post-pass (`scanner::instrument`): majority over the function's
+    /// allocation-family call sites (ties break toward the lexicographically
+    /// smallest tag), `None` (omitted on the wire) when the function has no
+    /// alloc sites. Closed value set, documented here and in the schema JSON
+    /// description (the wire type stays `string` — additive-only):
+    /// - `real_alloc` — true heap allocation (C `malloc`-family; Rust
+    ///   `Box`/`Rc`/`Arc`/`with_capacity`/`to_vec`/`to_owned`; Python sized
+    ///   constructors, `open`, `DataFrame`-family);
+    /// - `empty_ctor` — empty-container construction (Rust `String::new`/
+    ///   `Vec::new`/map-set `::new`, empty `vec![]`; Python zero-arg
+    ///   container ctors);
+    /// - `serialize` — formatting/serialization-shaped construction (Rust
+    ///   `format!`/`to_string`/`collect`; Python `str(x)`).
+    ///
+    /// Same serde-default pattern; uncomputed (`None`) for parser-free or
+    /// pre-step-2 inputs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alloc_family: Option<String>,
 }

@@ -122,7 +122,7 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
                     "report.md diverged beyond provenance"
                 );
             }
-            n if n.starts_with("charts/") && n.ends_with(".svg") => {
+            n if n.starts_with("charts/") && (n.ends_with(".svg") || n.ends_with(".dot")) => {
                 assert_eq!(
                     bytes1, bytes2,
                     "{n} must be byte-identical UNMASKED across runs"
@@ -139,7 +139,7 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
     assert!(run1.contains_key("report.md"));
     assert_eq!(
         run1.keys().filter(|n| n.starts_with("charts/")).count(),
-        3,
-        "fixture should emit all three v1 charts"
+        4,
+        "fixture should emit all three v1 charts + graph.dot"
     );
 }

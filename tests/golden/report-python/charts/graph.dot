@@ -1,0 +1,32 @@
+digraph perfpal {
+  "01_alloc_churn.py";
+  "02_string_building.py";
+  "03_deep_nesting.py";
+  "04_stdio_churn.py";
+  "05_recursion_complexity.py";
+  "06_memory_ops.py";
+  "07_membership_scan.py";
+  "08_range_len.py";
+  "09_try_in_loop.py";
+  "10_comprehension.py";
+  "11_executors.py";
+  "12_io_n1.py";
+  "13_pandas.py";
+  "14_async_blocking.py";
+  "15_cross_file_and_arch.py" -> "pkg/arch_helpers.py";
+  "15_cross_file_and_arch.py";
+  "15_cross_file_and_arch.py#use_cross_file#6:1" -> "pkg/arch_helpers.py" [style=dashed, label="clamp_value"];
+  "__init__.py";
+  "component:." [shape=box, label=". (rank 1)"];
+  "component:pkg" [shape=box, label="pkg (rank 2)"];
+  "pkg/__init__.py" -> "pkg/cycle_a.py";
+  "pkg/__init__.py" -> "pkg/cycle_b.py";
+  "pkg/__init__.py";
+  "pkg/arch_helpers.py";
+  "pkg/cycle_a.py" -> "pkg/cycle_b.py";
+  "pkg/cycle_a.py";
+  "pkg/cycle_a.py#walk_cycle#6:1" -> "pkg/cycle_b.py" [style=dashed, label="ping_b"];
+  "pkg/cycle_b.py" -> "pkg/cycle_a.py";
+  "pkg/cycle_b.py";
+  "pkg/cycle_b.py#ping_b#6:1" -> "pkg/cycle_a.py" [style=dashed, label="walk_cycle"];
+}
