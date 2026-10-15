@@ -425,6 +425,42 @@ pub fn mask_golden_report(raw: &str, root: &str) -> String {
     kept.join("\n")
 }
 
+/// Golden report.html masking (Option B slice 1): `report.html` carries NO
+/// provenance surfaces by construction (no `started_at`, no `duration_ms`,
+/// no `root_path` — the header renders schema/file/finding counts only), so
+/// this masker replaces every literal occurrence of the absolute scan `root`
+/// (plus its HTML-escaped and slash-normalized forms) with `"<ROOT>"` and is
+/// otherwise the identity. Both regen (mask in place) and the comparator go
+/// through this so a future template addition that renders a path stays
+/// machine-independent; today it is a defensive no-op on all four trees.
+#[must_use]
+pub fn mask_golden_html(raw: &str, root: &str) -> String {
+    fn html_escaped(input: &str) -> String {
+        let mut out = String::with_capacity(input.len());
+        for c in input.chars() {
+            match c {
+                '&' => out.push_str("&amp;"),
+                '<' => out.push_str("&lt;"),
+                '>' => out.push_str("&gt;"),
+                '"' => out.push_str("&quot;"),
+                '\'' => out.push_str("&#39;"),
+                _ => out.push(c),
+            }
+        }
+        out
+    }
+    let forward = root.replace('\\', "/");
+    let escaped = html_escaped(root);
+    let escaped_forward = html_escaped(&forward);
+    let mut masked = raw.to_string();
+    for needle in [root, &forward, &escaped, &escaped_forward] {
+        if !needle.is_empty() {
+            masked = masked.replace(needle, "<ROOT>");
+        }
+    }
+    masked
+}
+
 // ---------------------------------------------------------------------------
 // Kitchen-sink synthetic unit set (moved from tests/wave_a_fixtures.rs so
 // the P6 finding-id uniqueness gate can reuse the all-23-rule corpus).

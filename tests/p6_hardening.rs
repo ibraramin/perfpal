@@ -12,7 +12,9 @@
 //! The comparator test (default `cargo test`) re-runs the pipeline per tree
 //! into a temp dir, applies the SAME masking, and compares each artifact
 //! against the committed goldens: metrics.json canonicalized via a serde
-//! round-trip, report.md as line-masked text, schema copy + SVGs byte-exact.
+//! round-trip, report.md as line-masked text, report.html as
+//! absolute-root-masked text (no provenance surfaces by construction),
+//! schema copy + SVGs byte-exact.
 //!
 //! R5 Wave 2 parameterized the original single (`tests/fixtures/e2e` →
 //! `tests/golden/report`) tree into a descriptor array so the C, mixed C+Rust
@@ -80,13 +82,17 @@ fn fixture_root() -> PathBuf {
     manifest_path(GOLDEN_TREES[0].fixture)
 }
 
-/// Run-varying-masked artifacts under comparison. metrics.json and report.md
-/// are compared as masked text; schema + SVGs + graph.dot carry no provenance
-/// and are compared byte-exact (verified by `regenerate_goldens`).
-const GOLDEN_ARTIFACTS: [&str; 9] = [
+/// Run-varying-masked artifacts under comparison. metrics.json, report.md
+/// and report.html are compared as masked text; schema + SVGs + graph.dot
+/// carry no provenance and are compared byte-exact (verified by
+/// `regenerate_goldens`). report.html carries no provenance by construction
+/// (Option B slice 1: schema/file/finding counts only), so its mask is the
+/// absolute-root substitution only.
+const GOLDEN_ARTIFACTS: [&str; 10] = [
     "metrics.json",
     "metrics.schema.v1.4.json",
     "report.md",
+    "report.html",
     "charts/include-graph.svg",
     "charts/layer-file.svg",
     "charts/component-coupling.svg",
@@ -373,6 +379,16 @@ fn regenerate_goldens() {
         )
         .expect("write masked report.md");
 
+        // Mask report.html in place (absolute-root substitution only — the
+        // template carries no started_at/duration_ms/root_path surfaces, so
+        // this is a defensive no-op on today's trees).
+        let html_raw = fs::read_to_string(golden.join("report.html")).expect("report.html");
+        fs::write(
+            golden.join("report.html"),
+            common::mask_golden_html(&html_raw, &fixture.to_string_lossy()),
+        )
+        .expect("write masked report.html");
+
         // SVGs + DOT + schema: committed byte-exact; assert they carry no
         // provenance (no year-like RFC3339 fragments, no absolute fixture
         // path). The per-component detail pages join the fixed set here —
@@ -410,7 +426,9 @@ fn regenerate_goldens() {
             );
         }
 
-        // Sanity: the masked text artifacts must contain the <ROOT> sentinel.
+        // Sanity: the masked text artifacts must contain the <ROOT> sentinel
+        // (report.html is exempt: it renders no root_path, so its mask is a
+        // no-op — instead assert it is provenance-free outright).
         assert!(
             fs::read_to_string(golden.join("metrics.json"))
                 .unwrap()
@@ -425,6 +443,17 @@ fn regenerate_goldens() {
             "report.md masking (tree '{}') must have replaced the scan root",
             tree.tag
         );
+        let html_text = fs::read_to_string(golden.join("report.html")).expect("report.html");
+        assert!(
+            !html_text.contains("2026-") && !html_text.contains(&root_str),
+            "report.html (tree '{}') must be provenance-free to be committed masked-only",
+            tree.tag
+        );
+        assert!(
+            !html_text.contains("<script"),
+            "report.html (tree '{}') must contain zero JavaScript",
+            tree.tag
+        );
 
         if let Some(parent) = snapshot_parent {
             fs::remove_dir_all(parent).ok();
@@ -433,7 +462,7 @@ fn regenerate_goldens() {
 }
 
 /// Comparator (default gate, always runs): per tree, fresh pipeline output
-/// into a temp dir, SAME masking, compare each of the seven fixed artifacts
+/// into a temp dir, SAME masking, compare each of the eight fixed artifacts
 /// PLUS every committed per-component detail page against the committed
 /// goldens. On mismatch the assertion names the tree and lists
 /// every differing artifact plus the regeneration command.
@@ -482,6 +511,12 @@ fn report_matches_committed_goldens() {
                     let expected = String::from_utf8(expected).expect("golden is UTF-8");
                     common::mask_golden_report(&actual, &root_str)
                         == common::mask_golden_report(&expected, &root_str)
+                }
+                "report.html" => {
+                    let actual = String::from_utf8(actual).expect("report.html is UTF-8");
+                    let expected = String::from_utf8(expected).expect("golden is UTF-8");
+                    common::mask_golden_html(&actual, &root_str)
+                        == common::mask_golden_html(&expected, &root_str)
                 }
                 // Byte-exact for schema + SVGs (no provenance inside).
                 _ => actual == expected,

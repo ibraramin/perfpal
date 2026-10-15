@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perfpal Report — schema 1.4</title>
+<style>
+body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+figure{border:1px solid #999;padding:.5rem;margin:1rem 0}
+figcaption{margin-top:.5rem}
+img{max-width:100%;height:auto}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+<h1>Perfpal Report</h1>
+<p>schema_version 1.4 · perfpal perfpal 0.2.0-beta.1 · 14 files · 32 findings (10 hot, 9 warn, 13 info) · languages: rust</p>
+</header>
+<nav>
+<ul>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#components">Components</a></li>
+<li><a href="#files">Files</a></li>
+<li><a href="#findings">Findings</a></li>
+<li><a href="#appendix-a">Heuristic reference</a></li>
+</ul>
+</nav>
+<section id="architecture">
+<h2>Architecture</h2>
+<figure>
+<a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files."></a>
+<figcaption>Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.</figcaption>
+</figure>
+<figure>
+<a href="charts/layer-file.svg"><img src="charts/layer-file.svg" alt="File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first)."></a>
+<figcaption>File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).</figcaption>
+</figure>
+<figure>
+<a href="charts/component-coupling.svg"><img src="charts/component-coupling.svg" alt="Component coupling — cross-file call edges between components."></a>
+<figcaption>Component coupling — cross-file call edges between components.</figcaption>
+</figure>
+<figure>
+<a href="charts/hot-components.svg"><img src="charts/hot-components.svg" alt="Hot components — ranking by aggregated bottleneck metrics."></a>
+<figcaption>Hot components — ranking by aggregated bottleneck metrics.</figcaption>
+</figure>
+<figure>
+<a href="charts/layer-workspace.svg"><img src="charts/layer-workspace.svg" alt="Workspace map — components as nodes over inter-component call/include edges, heat by finding density."></a>
+<figcaption>Workspace map — components as nodes over inter-component call/include edges, heat by finding density.</figcaption>
+</figure>
+<p>Component detail pages (one per component below):</p>
+<ul>
+<li><a href="charts/component-01-src.svg">Component detail — per-file hot-path map.</a></li>
+</ul>
+<p>The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.</p>
+<p>Machine-readable graph: <a href="charts/graph.dot">graph.dot</a> — deterministic DOT export of the include/call/component graphs (same source data as the figures above).</p>
+<p>Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).</p>
+</section>
+<section id="components">
+<h2>Component index</h2>
+<table>
+<thead><tr><th>rank</th><th>prefix</th><th>finding density (per KLOC)</th><th>max loop depth</th><th>finding count</th><th>detail</th></tr></thead>
+<tbody>
+<tr id="component-01-src"><td>1</td><td>src</td><td>197.53</td><td>3</td><td>32</td><td><a href="charts/component-01-src.svg">detail</a></td></tr>
+</tbody>
+</table>
+</section>
+<section id="files">
+<h2>File drill-down</h2>
+<table>
+<thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th></tr></thead>
+<tbody>
+<tr id="file-src-cycle-a-rs"><td>src/cycle_a.rs</td><td>5</td><td>5</td><td><a href="#finding-PERF-RS-ARCH-003-src-cycle-a-rs-18-5">PERF-RS-ARCH-003:src/cycle_a.rs:18:5</a></td></tr>
+<tr id="file-src-cycle-b-rs"><td>src/cycle_b.rs</td><td>5</td><td>5</td><td><a href="#finding-PERF-RS-ARCH-001-src-cycle-b-rs-6-1">PERF-RS-ARCH-001:src/cycle_b.rs:6:1</a><br>
+<a href="#finding-PERF-RS-ARCH-003-src-cycle-b-rs-15-5">PERF-RS-ARCH-003:src/cycle_b.rs:15:5</a></td></tr>
+<tr id="file-src-10-cross-file-and-arch-rs"><td>src/10_cross_file_and_arch.rs</td><td>3</td><td>17</td><td><a href="#finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-21-16">PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:21:16</a><br>
+<a href="#finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-22-20">PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:22:20</a><br>
+<a href="#finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-23-18">PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:23:18</a></td></tr>
+<tr id="file-src-lib-rs"><td>src/lib.rs</td><td>3</td><td>0</td><td>none</td></tr>
+<tr id="file-src-common-rs"><td>src/common.rs</td><td>2</td><td>3</td><td>none</td></tr>
+<tr id="file-src-01-alloc-churn-rs"><td>src/01_alloc_churn.rs</td><td>1</td><td>49</td><td><a href="#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5">PERF-RS-ALLOC-001:src/01_alloc_churn.rs:34:5</a><br>
+<a href="#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9">PERF-RS-ALLOC-001:src/01_alloc_churn.rs:58:9</a><br>
+<a href="#finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9">PERF-RS-ALLOC-002:src/01_alloc_churn.rs:39:9</a><br>
+<a href="#finding-PERF-RS-ALLOC-003-src-01-alloc-churn-rs-49-9">PERF-RS-ALLOC-003:src/01_alloc_churn.rs:49:9</a><br>
+<a href="#finding-PERF-RS-LOOP-002-src-01-alloc-churn-rs-40-9">PERF-RS-LOOP-002:src/01_alloc_churn.rs:40:9</a><br>
+<a href="#finding-PERF-RS-MEM-002-src-01-alloc-churn-rs-61-13">PERF-RS-MEM-002:src/01_alloc_churn.rs:61:13</a></td></tr>
+<tr id="file-src-03-deep-nesting-rs"><td>src/03_deep_nesting.rs</td><td>1</td><td>19</td><td><a href="#finding-PERF-RS-LOOP-001-src-03-deep-nesting-rs-19-13">PERF-RS-LOOP-001:src/03_deep_nesting.rs:19:13</a><br>
+<a href="#finding-PERF-RS-LOOP-004-src-03-deep-nesting-rs-22-23">PERF-RS-LOOP-004:src/03_deep_nesting.rs:22:23</a></td></tr>
+<tr id="file-src-05-recursion-complexity-rs"><td>src/05_recursion_complexity.rs</td><td>0</td><td>40</td><td><a href="#finding-PERF-RS-ARCH-002-src-05-recursion-complexity-rs-20-1">PERF-RS-ARCH-002:src/05_recursion_complexity.rs:20:1</a><br>
+<a href="#finding-PERF-RS-CALL-001-src-05-recursion-complexity-rs-14-9">PERF-RS-CALL-001:src/05_recursion_complexity.rs:14:9</a><br>
+<a href="#finding-PERF-RS-CALL-002-src-05-recursion-complexity-rs-20-1">PERF-RS-CALL-002:src/05_recursion_complexity.rs:20:1</a></td></tr>
+<tr id="file-src-02-string-building-rs"><td>src/02_string_building.rs</td><td>0</td><td>33</td><td><a href="#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5">PERF-RS-ALLOC-001:src/02_string_building.rs:41:5</a><br>
+<a href="#finding-PERF-RS-STR-002-src-02-string-building-rs-32-18">PERF-RS-STR-002:src/02_string_building.rs:32:18</a><br>
+<a href="#finding-PERF-RS-STR-003-src-02-string-building-rs-62-5">PERF-RS-STR-003:src/02_string_building.rs:62:5</a></td></tr>
+<tr id="file-src-08-globals-and-chains-rs"><td>src/08_globals_and_chains.rs</td><td>0</td><td>29</td><td><a href="#finding-PERF-RS-LOOP-005-src-08-globals-and-chains-rs-41-13">PERF-RS-LOOP-005:src/08_globals_and_chains.rs:41:13</a><br>
+<a href="#finding-PERF-RS-LOOP-006-src-08-globals-and-chains-rs-43-9">PERF-RS-LOOP-006:src/08_globals_and_chains.rs:43:9</a><br>
+<a href="#finding-PERF-RS-LOOP-008-src-08-globals-and-chains-rs-59-17">PERF-RS-LOOP-008:src/08_globals_and_chains.rs:59:17</a></td></tr>
+<p>…+4 more (see findings table)</p>
+</tbody>
+</table>
+</section>
+<section id="findings">
+<h2>Findings</h2>
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5"><td>PERF-RS-ALLOC-001:src/01_alloc_churn.rs:34:5</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/01_alloc_churn.rs:34:5</td><td>build_row_labels</td><td>loop performs 3 per-iteration allocation(s) (format, to_string, vec) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td>alloc_count=3, callee=format, callees=format, to_string, vec, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9"><td>PERF-RS-ALLOC-001:src/01_alloc_churn.rs:58:9</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/01_alloc_churn.rs:58:9</td><td>grid_reset</td><td>loop performs 1 per-iteration allocation(s) (vec) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td>alloc_count=1, callee=vec, callees=vec, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5"><td>PERF-RS-ALLOC-001:src/02_string_building.rs:41:5</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/02_string_building.rs:41:5</td><td>len_with_reassignment</td><td>loop performs 1 per-iteration allocation(s) (format) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td>alloc_count=1, callee=format, callees=format, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-001-src-06-memory-ops-rs-27-9"><td>PERF-RS-ALLOC-001:src/06_memory_ops.rs:27:9</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/06_memory_ops.rs:27:9</td><td>duplicate_rows</td><td>loop performs 1 per-iteration allocation(s) (to_vec) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td>alloc_count=1, callee=to_vec, callees=to_vec, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9"><td>PERF-RS-ALLOC-002:src/01_alloc_churn.rs:39:9</td><td>PERF-RS-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/01_alloc_churn.rs:39:9</td><td>build_row_labels</td><td>deallocation via &#39;drop&#39; at loop depth 1 — repeated drop-per-iteration teardown; hoisting the drop or restructuring value ownership is a candidate optimization</td><td>alloc_cooccurrence=true, callee=drop, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-003-src-01-alloc-churn-rs-49-9"><td>PERF-RS-ALLOC-003:src/01_alloc_churn.rs:49:9</td><td>PERF-RS-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/01_alloc_churn.rs:49:9</td><td>grow_one_at_a_time</td><td>&#39;buffer.reserve&#39; grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization</td><td>callee=buffer.reserve, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-001-src-cycle-b-rs-6-1"><td>PERF-RS-ARCH-001:src/cycle_b.rs:6:1</td><td>PERF-RS-ARCH-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/cycle_b.rs:6:1</td><td>n/a</td><td>&#39;src/cycle_b.rs&#39; and &#39;src/cycle_a.rs&#39; import each other, forming a module cycle — breaking the lowest-sorted edge (here &#39;src/cycle_b.rs&#39; → &#39;src/cycle_a.rs&#39;) into a shared leaf module is a candidate optimization</td><td>coupled_with=src/cycle_a.rs, kind=cycle</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-002-src-05-recursion-complexity-rs-20-1"><td>PERF-RS-ARCH-002:src/05_recursion_complexity.rs:20:1</td><td>PERF-RS-ARCH-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/05_recursion_complexity.rs:20:1</td><td>classify</td><td>directory &#39;src&#39; aggregates complexity 86 across 40 function(s) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization</td><td>alloc_site_density=86.41975308641973, complexity_sum=86, function_count=40, max_loop_depth=3, path_prefix=src</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-21-16"><td>PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:21:16</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/10_cross_file_and_arch.rs:21:16</td><td>orchestrate</td><td>call to &#39;build_row_labels&#39; matches a definition in &#39;src/01_alloc_churn.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=build_row_labels, matched_path=src/01_alloc_churn.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-22-20"><td>PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:22:20</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/10_cross_file_and_arch.rs:22:20</td><td>orchestrate</td><td>call to &#39;scale_checksum&#39; matches a definition in &#39;src/03_deep_nesting.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=scale_checksum, matched_path=src/03_deep_nesting.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-23-18"><td>PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:23:18</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/10_cross_file_and_arch.rs:23:18</td><td>orchestrate</td><td>call to &#39;shared_checksum&#39; matches a definition in &#39;src/common.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=shared_checksum, matched_path=src/common.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-cycle-a-rs-18-5"><td>PERF-RS-ARCH-003:src/cycle_a.rs:18:5</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/cycle_a.rs:18:5</td><td>cycle_a_step</td><td>call to &#39;cycle_b_step&#39; matches a definition in &#39;src/cycle_b.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=cycle_b_step, matched_path=src/cycle_b.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-cycle-b-rs-15-5"><td>PERF-RS-ARCH-003:src/cycle_b.rs:15:5</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/cycle_b.rs:15:5</td><td>cycle_b_root</td><td>call to &#39;cycle_a_root&#39; matches a definition in &#39;src/cycle_a.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=cycle_a_root, matched_path=src/cycle_a.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-CALL-001-src-05-recursion-complexity-rs-14-9"><td>PERF-RS-CALL-001:src/05_recursion_complexity.rs:14:9</td><td>PERF-RS-CALL-001</td><td>info</td><td>HIGH</td><td>syntactic</td><td>src/05_recursion_complexity.rs:14:9</td><td>fib</td><td>&#39;fib&#39; calls itself directly at 2 site(s) — recursion keeps stack frames alive; converting to iteration or memoizing is a candidate optimization</td><td>function=fib, self_call_sites=2</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-CALL-002-src-05-recursion-complexity-rs-20-1"><td>PERF-RS-CALL-002:src/05_recursion_complexity.rs:20:1</td><td>PERF-RS-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/05_recursion_complexity.rs:20:1</td><td>classify</td><td>&#39;classify&#39; branches 17 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td>complexity=17, function=classify, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-001-src-03-deep-nesting-rs-19-13"><td>PERF-RS-LOOP-001:src/03_deep_nesting.rs:19:13</td><td>PERF-RS-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/03_deep_nesting.rs:19:13</td><td>grid_checksum</td><td>loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or using iterator combinators with early exits is a candidate optimization</td><td>max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-002-src-01-alloc-churn-rs-40-9"><td>PERF-RS-LOOP-002:src/01_alloc_churn.rs:40:9</td><td>PERF-RS-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/01_alloc_churn.rs:40:9</td><td>build_row_labels</td><td>&#39;println&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td>callee=println, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-002-src-04-stdio-churn-rs-28-9"><td>PERF-RS-LOOP-002:src/04_stdio_churn.rs:28:9</td><td>PERF-RS-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/04_stdio_churn.rs:28:9</td><td>emit_rows</td><td>&#39;println&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td>callee=println, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-002-src-04-stdio-churn-rs-29-17"><td>PERF-RS-LOOP-002:src/04_stdio_churn.rs:29:17</td><td>PERF-RS-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/04_stdio_churn.rs:29:17</td><td>emit_rows</td><td>&#39;sink.write_all&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td>callee=sink.write_all, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-003-src-04-stdio-churn-rs-19-9"><td>PERF-RS-LOOP-003:src/04_stdio_churn.rs:19:9</td><td>PERF-RS-LOOP-003</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/04_stdio_churn.rs:19:9</td><td>count_chars_per_iteration</td><td>character/byte-wise processing via &#39;text.chars&#39; as the loop body&#39;s primary statement — processing the input in buffered blocks or chunks is a candidate optimization</td><td>callee=text.chars, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-004-src-03-deep-nesting-rs-22-23"><td>PERF-RS-LOOP-004:src/03_deep_nesting.rs:22:23</td><td>PERF-RS-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/03_deep_nesting.rs:22:23</td><td>grid_checksum</td><td>&#39;%&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td>divisor=divisor, divisor_kind=identifier, op=%</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-005-src-08-globals-and-chains-rs-41-13"><td>PERF-RS-LOOP-005:src/08_globals_and_chains.rs:41:13</td><td>PERF-RS-LOOP-005</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/08_globals_and_chains.rs:41:13</td><td>run_handlers</td><td>static/const-backed &#39;GLOBAL_ACC&#39; is stored every iteration at loop depth 1 — hoisting the write out of the loop or caching it in a local is a candidate optimization</td><td>loop_depth=1, target=GLOBAL_ACC</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-006-src-08-globals-and-chains-rs-43-9"><td>PERF-RS-LOOP-006:src/08_globals_and_chains.rs:43:9</td><td>PERF-RS-LOOP-006</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/08_globals_and_chains.rs:43:9</td><td>run_handlers</td><td>indirect call through &#39;handlers[i]&#39; runs in the innermost loop at depth 1 — resolving the target once outside the loop is a candidate optimization</td><td>callee=handlers[i], loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-007-src-09-membership-scan-rs-16-16"><td>PERF-RS-LOOP-007:src/09_membership_scan.rs:16:16</td><td>PERF-RS-LOOP-007</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/09_membership_scan.rs:16:16</td><td>contains_nested</td><td>element lookup compared against a non-literal at loop depth 2 re-scans linearly on every outer iteration — using a HashSet/HashMap lookup table or sorting plus binary search is a candidate optimization</td><td>index_ident=j, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-008-src-08-globals-and-chains-rs-59-17"><td>PERF-RS-LOOP-008:src/08_globals_and_chains.rs:59:17</td><td>PERF-RS-LOOP-008</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/08_globals_and_chains.rs:59:17</td><td>read_depth</td><td>&#39;configs&#39; field/index chain of depth 4 executes in the innermost loop — caching intermediate references or flattening the structure is a candidate optimization</td><td>chain_depth=4, loop_depth=1, root=configs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-MEM-001-src-06-memory-ops-rs-15-5"><td>PERF-RS-MEM-001:src/06_memory_ops.rs:15:5</td><td>PERF-RS-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/06_memory_ops.rs:15:5</td><td>over_reserve</td><td>&#39;Vec::with_capacity&#39; receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization</td><td>callee=Vec::with_capacity, misuse=size_of_as_element_count</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-MEM-002-src-01-alloc-churn-rs-61-13"><td>PERF-RS-MEM-002:src/01_alloc_churn.rs:61:13</td><td>PERF-RS-MEM-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/01_alloc_churn.rs:61:13</td><td>grid_reset</td><td>&#39;cell.copy_from_slice&#39; copies a block every iteration at loop depth 2 — hoisting the copy, batching the copies, or reusing a buffer is a candidate optimization</td><td>callee=cell.copy_from_slice, innermost=true, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-STR-002-src-02-string-building-rs-32-18"><td>PERF-RS-STR-002:src/02_string_building.rs:32:18</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/02_string_building.rs:32:18</td><td>scan_lengths</td><td>&#39;joined.len&#39; recomputes the length of &#39;joined&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td>identifier=joined, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-STR-002-src-09-membership-scan-rs-15-21"><td>PERF-RS-STR-002:src/09_membership_scan.rs:15:21</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/09_membership_scan.rs:15:21</td><td>contains_nested</td><td>&#39;table.len&#39; recomputes the length of &#39;table&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td>identifier=table, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-STR-003-src-02-string-building-rs-62-5"><td>PERF-RS-STR-003:src/02_string_building.rs:62:5</td><td>PERF-RS-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/02_string_building.rs:62:5</td><td>unsafe_slice</td><td>&#39;std::slice::from_raw_parts&#39; performs an unchecked (unbounded) memory operation — prefer a safe/bounded variant or add an explicit length check; that is a candidate optimization</td><td>callee=std::slice::from_raw_parts</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-TYPE-001-src-07-struct-by-value-rs-40-1"><td>PERF-RS-TYPE-001:src/07_struct_by_value.rs:40:1</td><td>PERF-RS-TYPE-001</td><td>warn</td><td>LOW</td><td>syntactic</td><td>src/07_struct_by_value.rs:40:1</td><td>consume_blob</td><td>parameters &#39;BigBlob&#39; (struct &#39;BigBlob&#39;, ~32 bytes) are copied by value on every call under the LP64 estimate — taking the structs by reference (`&amp;T`) or `Box`-ing them is a candidate optimization</td><td>estimated_sizes=32, params=BigBlob, structs=BigBlob, threshold=32</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-TYPE-002-src-07-struct-by-value-rs-26-1"><td>PERF-RS-TYPE-002:src/07_struct_by_value.rs:26:1</td><td>PERF-RS-TYPE-002</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/07_struct_by_value.rs:26:1</td><td>n/a</td><td>struct &#39;PaddedLayout&#39; shows ~14 bytes of declared-order padding (aligned estimate 32 vs packed sum 18) — if the type is `#[repr(C)]`/FFI-sensitive, ordering fields largest-alignment-first is a candidate optimization; default `repr(Rust)` may already reorder fields automatically, so treat this as lower-confidence</td><td>aligned_estimate=32, packed_sum=18, padding_bytes=14, struct=PaddedLayout, threshold=8</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</section>
+<section id="appendix-a">
+<h2>Appendix A. Heuristic reference</h2>
+<table>
+<thead><tr><th>rule_id</th><th>title</th><th>description</th></tr></thead>
+<tbody>
+<tr><td>PERF-RS-ALLOC-001</td><td>Heap allocation inside loop (Rust)</td><td>Detects Rust allocation sites — qualified constructors (`Box::new`/`Rc::new`/`Arc::new`/`Vec::new`/`String::new`/collection `new`/`with_capacity`), methods (`to_vec`/`to_owned`/`to_string`/`collect`/`with_capacity`), and the `vec!`/`format!` macros — at `in_loop_depth ≥ 1` AND `is_innermost`; surviving sites are aggregated into ONE finding per innermost enclosing loop (`alloc_count` plus sorted-unique short callee tokens capped at 8 with a `+N more` suffix). Literal-receiver `&quot;…&quot;.to_string()`/`&quot;…&quot;.to_owned()` (including raw/byte-string prefixes) are suppressed.</td></tr>
+<tr><td>PERF-RS-ALLOC-002</td><td>Deallocation inside loop (Rust)</td><td>Detects a direct `drop` call inside a loop body (allocator churn pairing; escalated to hot when the same function also allocates in a loop).</td></tr>
+<tr><td>PERF-RS-ALLOC-003</td><td>Growable-buffer additive growth in loop (Rust)</td><td>REFRAMED for Rust (no `realloc`): detects additive `reserve`/`reserve_exact` capacity growth inside a loop — the `realloc(p, n+k)` analogue; multiplicative capacity growth is the fix, not the finding.</td></tr>
+<tr><td>PERF-RS-ARCH-001</td><td>Module-graph fan-out / cycles (Rust)</td><td>Detects module fan-out/fan-in, deep module chains, and cyclic module edges from resolved Rust module edges; unresolved internal `mod`/`use` edges are retained as graph data but intentionally emit no finding (their resolver cannot see crate-root or inline-module items).</td></tr>
+<tr><td>PERF-RS-ARCH-002</td><td>Hot-component aggregation (Rust)</td><td>Ranks Rust component directories by aggregated metrics (complexity sum, alloc-site density, max loop depth) — the hottest component only.</td></tr>
+<tr><td>PERF-RS-ARCH-003</td><td>Cross-module call coupling (Rust)</td><td>Detects cross-file/module call edges via name matching — LOW confidence, upgraded to MEDIUM when a semantic resolver fact resolves the definition.</td></tr>
+<tr><td>PERF-RS-CALL-001</td><td>Direct recursion (Rust)</td><td>Detects a function body containing a direct call to its own name (presence-only; recursion depth is post-MVP).</td></tr>
+<tr><td>PERF-RS-CALL-002</td><td>High cyclomatic complexity (Rust)</td><td>Detects branch-count complexity above threshold (default ≥ 15), reported per function.</td></tr>
+<tr><td>PERF-RS-LOOP-001</td><td>Deeply nested loops (Rust)</td><td>Detects loop nesting depth ≥ 3 — O(n^k) candidate zones and primary input to hotspot maps.</td></tr>
+<tr><td>PERF-RS-LOOP-002</td><td>Expensive setup or I/O call inside loop (Rust)</td><td>Detects Rust I/O/setup work nested in loops — `println!`/`print!`-family macros, reader/writer/socket methods (`read_to_string`/`write_all`/`flush`/`recv`/`send`), and `File`/`fs`/`Command`/`TcpStream`/`env` setup calls; lowered to warn when conditionally guarded. The message splits hoistable setup from intrinsic streaming transfer (recv/send/read_line — batching is the candidate); evidence carries io_kind.</td></tr>
+<tr><td>PERF-RS-LOOP-003</td><td>Character-wise processing in loop (Rust)</td><td>REFRAMED for Rust (no char stdio): detects char/byte-at-a-time iterator or reader methods (`chars`/`bytes`/`char_indices`/`byte_indices`/`read_byte`) as the primary statement of a loop body.</td></tr>
+<tr><td>PERF-RS-LOOP-004</td><td>Variable-divisor division in innermost loop (Rust)</td><td>Detects / or % with a non-literal divisor inside the innermost loop body (literal divisors skipped by design).</td></tr>
+<tr><td>PERF-RS-LOOP-005</td><td>Global variable written inside loop (Rust)</td><td>Detects assignment to a Rust `static`/`const`-backed identifier inside a loop body (name-based scope classification, MEDIUM confidence).</td></tr>
+<tr><td>PERF-RS-LOOP-006</td><td>Indirect call in innermost loop (Rust)</td><td>Detects indirect (function-pointer/trait-object) calls inside innermost loop bodies (LOW confidence; field-method/closure dispatch is classified direct and not seen).</td></tr>
+<tr><td>PERF-RS-LOOP-007</td><td>Linear membership scan nested in loop (Rust)</td><td>Detects a comparison against a subscript indexed by an enclosing loop&#39;s induction variable — hand-rolled O(n²) membership scan.</td></tr>
+<tr><td>PERF-RS-LOOP-008</td><td>Member-chain dereference in innermost loop (Rust)</td><td>Detects field/index access chains of depth ≥ 3 inside innermost loop bodies — pointer/lifetime-chasing cache-miss candidates.</td></tr>
+<tr><td>PERF-RS-MEM-001</td><td>size_of passed as an element count (Rust)</td><td>REFRAMED for Rust: detects `Vec::with_capacity`/`String::with_capacity` receiving a `size_of`/`size_of_val` byte count where an element count is expected (over-reserves by the element size).</td></tr>
+<tr><td>PERF-RS-MEM-002</td><td>Block copy/clone in loop (Rust)</td><td>REFRAMED for Rust (no explicit size argument): detects block-copy methods (`copy_from_slice`/`copy_nonoverlapping`/`extend_from_slice`) inside loops — warn in the innermost loop, info otherwise. (`clone`/`to_vec` were removed by the M1 Precision Gate: borrow-checker clones and `Copy` bit-copies are not block copies.)</td></tr>
+<tr><td>PERF-RS-STR-002</td><td>Length query recomputed in loop (Rust)</td><td>Detects `len`/`is_empty`/`capacity` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop.</td></tr>
+<tr><td>PERF-RS-STR-003</td><td>Unbounded unsafe memory operation (Rust)</td><td>REFRAMED for Rust (memory-safe by default): detects the unsafe unbounded-op family (`copy_nonoverlapping`/`copy`/`from_raw_parts`/`from_utf8_unchecked`/`set_len`) anywhere — unchecked-length surfaces.</td></tr>
+<tr><td>PERF-RS-TYPE-001</td><td>Large struct passed by value (Rust)</td><td>Detects a bare-named struct parameter whose LP64 estimate reaches the approximate-size floor (LOW confidence — no real type layout); one finding per function aggregating qualifying parameters.</td></tr>
+<tr><td>PERF-RS-TYPE-002</td><td>Struct field ordering (padding candidate, Rust)</td><td>Detects struct definitions whose declared-order aligned layout wastes padding versus the packed member sum beyond the threshold — but default `repr(Rust)` may reorder fields automatically, so this is a lower-confidence candidate (check `#[repr(C)]`/FFI).</td></tr>
+</tbody>
+</table>
+</section>
+<footer>
+<p>Generated offline — no network access, no scripts. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+</body>
+</html>

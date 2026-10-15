@@ -240,6 +240,10 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     let charts = crate::charts::render(&document);
     let chart_names: Vec<String> = charts.iter().map(|(name, _)| name.clone()).collect();
     let report = crate::reporter::render_report(&document, &chart_names);
+    // Static self-contained HTML sibling of report.md (Option B slice 1,
+    // LINKED variant — zero JavaScript): pure function of the same
+    // `(document, chart_names)` pair, so findings stay byte-identical.
+    let html = crate::reporter::render_html(&document, &chart_names);
     let dot = crate::charts::dot::render_dot(&document);
 
     // writer: atomic directory swap (all writer failures are output errors).
@@ -251,6 +255,7 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
             crate::schema::EMBEDDED_SCHEMA,
         ),
         Artifact::text("report.md", report),
+        Artifact::text("report.html", html),
         Artifact::text("charts/graph.dot", dot),
     ];
     for (name, bytes) in &charts {

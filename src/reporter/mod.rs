@@ -411,6 +411,72 @@ const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
 // Entry point
 // ---------------------------------------------------------------------------
 
+/// Escape HTML special characters (`& < > " '`) for safe embedding in
+/// element text and double-quoted attribute values (output-contract §2
+/// paths rule, HTML counterpart of [`escape_md`]).
+///
+/// Single pass over chars — `&` is escaped first by construction (match arms
+/// emit `&amp;` literally, never re-scanned), so `&` cannot be re-escaped.
+/// Every interpolated path/title/message/id/symbol in [`render_html`] goes
+/// through this function; chart filenames and captions are charset-pinned
+/// static text (output-contract §3 kebab-case) and bypass it by construction,
+/// exactly like [`escape_md`] bypasses chart names in [`render_report`].
+#[must_use]
+pub fn escape_html(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for c in input.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&#39;"),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+/// Render the full `report.html` content (Option B slice 1, LINKED variant).
+///
+/// A static self-contained page with ZERO JavaScript (no `<script>`, no
+/// event-handler attributes, no `javascript:` URLs): it references
+/// `charts/*.svg` via relative `<img src>`/`<a href>` links, so the HTML
+/// stays small on big repos while remaining fully offline within the report
+/// directory. Pure function of `(doc, emitted_charts)` — LF newlines,
+/// trailing newline, byte-deterministic with NO provenance surfaces at all
+/// (no `started_at`, no `duration_ms`, no `root_path`; header carries only
+/// `schema_version`, tool version, file/finding counts).
+///
+/// Contents: header, § architecture (the §5 chart links mirrored as linked
+/// figures), component index (rank, prefix, metrics + detail-page links),
+/// file drill-down (top files by degree/cost + their finding_id lists),
+/// findings table (full §4 parity: symbol/resolver/flags/threshold/evidence
+/// alongside `finding_id`/rule/path/span/message, sorted by
+/// `finding_id` ascending). Drill-down anchors link
+/// component → file → finding via deterministic `id` anchors derived from
+/// `(rank, slug)`, file slugs, and sanitized finding ids.
+#[must_use]
+pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
+    let mut out = String::new();
+    html_head(&mut out, doc);
+    html_header(&mut out, doc);
+    html_nav(&mut out);
+    html_architecture(&mut out, doc, emitted_charts);
+    html_components(&mut out, doc, emitted_charts);
+    html_files(&mut out, doc);
+    html_findings(&mut out, doc);
+    html_appendix_a(&mut out, doc);
+    html_footer(&mut out);
+    // Exactly one trailing newline (output-contract §2 encoding rule; the
+    // writer normalizes anyway).
+    while out.ends_with('\n') {
+        out.pop();
+    }
+    out.push('\n');
+    out
+}
+
 /// Render the full `report.md` content (output-contract §5 template).
 ///
 /// `emitted_charts` holds the chart names/filenames the charts module
@@ -893,6 +959,612 @@ fn render_appendix_b(out: &mut String) {
          `metrics.json` ever disagree, `metrics.json` wins.\n\n",
         crate::schema::SCHEMA_ARTIFACT_NAME
     ));
+}
+
+// ---------------------------------------------------------------------------
+// HTML renderer helpers (Option B slice 1, LINKED variant — zero JavaScript)
+// ---------------------------------------------------------------------------
+
+/// Emit the document head: doctype, charset, title, and a minimal inline
+/// `<style>` block (static text — no external resources, no scripts).
+fn html_head(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
+    out.push_str("<meta charset=\"utf-8\">\n");
+    out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
+    out.push_str(&format!(
+        "<title>Perfpal Report — schema {}</title>\n",
+        escape_html(&doc.schema_version),
+    ));
+    out.push_str(
+        "<style>\n\
+         body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
+         table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
+         th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
+         th{background:#eee}\n\
+         figure{border:1px solid #999;padding:.5rem;margin:1rem 0}\n\
+         figcaption{margin-top:.5rem}\n\
+         img{max-width:100%;height:auto}\n\
+         nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
+         </style>\n</head>\n<body>\n",
+    );
+}
+
+/// Header: schema version + tool version + file/finding counts ONLY — never
+/// `started_at`, `duration_ms`, or `root_path` (no provenance surfaces, so
+/// double-scan output is byte-identical UNMASKED).
+fn html_header(out: &mut String, doc: &MetricsDocument) {
+    let hot = findings_of_severity(doc, Severity::Hot).len();
+    let warn_count = doc
+        .findings
+        .iter()
+        .filter(|f| f.severity == Severity::Warn)
+        .count();
+    let info_count = doc
+        .findings
+        .iter()
+        .filter(|f| f.severity == Severity::Info)
+        .count();
+    out.push_str("<header>\n<h1>Perfpal Report</h1>\n<p>");
+    out.push_str(&format!(
+        "schema_version {} · perfpal {} {} · {} files · {} findings ({} hot, {} warn, {} info)",
+        escape_html(&doc.schema_version),
+        escape_html(&doc.tool.name),
+        escape_html(&doc.tool.version),
+        doc.scan.file_count,
+        doc.findings.len(),
+        hot,
+        warn_count,
+        info_count,
+    ));
+    if !doc.scan.languages.is_empty() {
+        // Sorted-unique by aggregator contract; re-sorted here so ordering
+        // depends only on document content.
+        let mut languages = doc.scan.languages.clone();
+        languages.sort();
+        languages.dedup();
+        out.push_str(&format!(
+            " · languages: {}",
+            escape_html(&languages.join(", "))
+        ));
+    }
+    out.push_str("</p>\n</header>\n");
+}
+
+fn html_nav(out: &mut String) {
+    out.push_str(
+        "<nav>\n<ul>\n\
+         <li><a href=\"#architecture\">Architecture</a></li>\n\
+         <li><a href=\"#components\">Components</a></li>\n\
+         <li><a href=\"#files\">Files</a></li>\n\
+         <li><a href=\"#findings\">Findings</a></li>\n\
+         <li><a href=\"#appendix-a\">Heuristic reference</a></li>\n\
+         </ul>\n</nav>\n",
+    );
+}
+
+/// Known overview chart stems (ADR-0002 chart-set-v1 + Option A slice 2
+/// layers). Overview links are allowlisted to this set: an emitted stem that
+/// is neither a known overview nor in the exact per-component detail registry
+/// is NEVER turned into an `<a href>`/`<img src>` link (unknown stems must
+/// not become links — a hostile `emitted_charts` entry cannot break out of
+/// an attribute it never enters). Every stem that DOES link is still passed
+/// through [`escape_html`] at the interpolation site.
+const KNOWN_OVERVIEW_STEMS: &[&str] = &[
+    "include-graph",
+    "component-coupling",
+    "hot-components",
+    "layer-workspace",
+    "layer-file",
+];
+
+/// Split `emitted_charts` into overview stems (emission order, linked as
+/// figures) versus per-component detail stems (exact registry, like §5).
+/// Returns `(overviews, details)`; both derived from document content +
+/// emission order only.
+///
+/// Allowlist gate (FIX 2): overviews keep ONLY [`KNOWN_OVERVIEW_STEMS`]
+/// entries — unknown stems (including hostile `"><img …>` payloads) are
+/// dropped before they can reach any `href`/`src` interpolation. Detail
+/// stems still route by the exact registry.
+fn html_chart_split(
+    doc: &MetricsDocument,
+    emitted_charts: &[String],
+) -> (Vec<String>, Vec<String>) {
+    let detail_stems: BTreeSet<String> = doc
+        .components
+        .iter()
+        .flatten()
+        .map(|c| {
+            let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
+            filename
+                .strip_suffix(".svg")
+                .unwrap_or(&filename)
+                .to_string()
+        })
+        .collect();
+    let mut overviews: Vec<String> = Vec::new();
+    let mut details: Vec<String> = Vec::new();
+    for name in emitted_charts {
+        let stem = name.strip_suffix(".svg").unwrap_or(name).to_string();
+        if detail_stems.contains(&stem) {
+            if !details.iter().any(|s| s == &stem) {
+                details.push(stem);
+            }
+        } else if KNOWN_OVERVIEW_STEMS.contains(&stem.as_str())
+            && !overviews.iter().any(|s| s == &stem)
+        {
+            overviews.push(stem);
+        }
+    }
+    (overviews, details)
+}
+
+/// Architecture section: the §5 chart links mirrored as LINKED figures
+/// (`<a href>` + `<img src>`, relative, offline) plus the standing caveat
+/// notes (static text) and the DOT export link.
+fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
+    out.push_str("<section id=\"architecture\">\n<h2>Architecture</h2>\n");
+    let (overviews, details) = html_chart_split(doc, emitted_charts);
+    if overviews.is_empty() && details.is_empty() {
+        out.push_str("<p>No charts were emitted for this scan.</p>\n");
+    } else {
+        for stem in &overviews {
+            // Stems reaching this point are allowlisted (known overviews)
+            // yet still escaped at the interpolation site — belt and
+            // suspenders. Captions are reporter-owned static text.
+            let caption = chart_caption(stem);
+            let safe_stem = escape_html(stem);
+            out.push_str(&format!(
+                "<figure>\n<a href=\"charts/{stem}.svg\"><img src=\"charts/{stem}.svg\" alt=\"{caption}\"></a>\n<figcaption>{caption}</figcaption>\n</figure>\n",
+                stem = safe_stem,
+                caption = escape_html(&caption),
+            ));
+        }
+        if !details.is_empty() {
+            out.push_str("<p>Component detail pages (one per component below):</p>\n<ul>\n");
+            for stem in &details {
+                // Registry-derived (charts-owned filenames), escaped anyway.
+                let safe_stem = escape_html(stem);
+                out.push_str(&format!(
+                    "<li><a href=\"charts/{stem}.svg\">{caption}</a></li>\n",
+                    stem = safe_stem,
+                    caption = escape_html(&detail_caption()),
+                ));
+            }
+            out.push_str("</ul>\n");
+        }
+    }
+    out.push_str(
+        "<p>The dependency graph reflects resolved internal include/module edges \
+         between scanned files — C `#include` directives and Rust `mod`/`use` \
+         module paths; unresolved internal edges are retained as data, and \
+         external (system headers/crates) dependencies are excluded from \
+         coupling edges.</p>\n",
+    );
+    out.push_str(
+        "<p>Machine-readable graph: <a href=\"charts/graph.dot\">graph.dot</a> — deterministic \
+         DOT export of the include/call/component graphs (same source data as \
+         the figures above).</p>\n",
+    );
+    out.push_str(
+        "<p>Standing caveat: cross-file call edges are LOW confidence until a \
+         semantic resolver tier exists (ADR-0001).</p>\n",
+    );
+    out.push_str("</section>\n");
+}
+
+/// Component index: rank, prefix, metrics + link to the
+/// `charts/component-<rank>-<slug>.svg` detail page when emitted.
+/// Document (rank) order preserved verbatim, no re-sort beyond the pinned
+/// `(rank, path_prefix)` defensive sort.
+fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
+    out.push_str("<section id=\"components\">\n<h2>Component index</h2>\n");
+    let Some(components) = &doc.components else {
+        out.push_str("<p>No components recorded.</p>\n</section>\n");
+        return;
+    };
+    if components.is_empty() {
+        out.push_str("<p>No components recorded.</p>\n</section>\n");
+        return;
+    }
+    let emitted_stems: BTreeSet<String> = emitted_charts
+        .iter()
+        .map(|name| name.strip_suffix(".svg").unwrap_or(name).to_string())
+        .collect();
+    let mut sorted: Vec<&crate::schema::ComponentEntry> = components.iter().collect();
+    sorted.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.path_prefix.cmp(&b.path_prefix)));
+    out.push_str(
+        "<table>\n<thead><tr><th>rank</th><th>prefix</th>\
+         <th>finding density (per KLOC)</th><th>max loop depth</th>\
+         <th>finding count</th><th>detail</th></tr></thead>\n<tbody>\n",
+    );
+    for c in sorted {
+        let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
+        let stem = filename.strip_suffix(".svg").unwrap_or(&filename);
+        let anchor = escape_html(stem);
+        let detail = if emitted_stems.contains(stem) {
+            // Charts-owned pinned filename — escaped at interpolation anyway.
+            format!(
+                "<a href=\"charts/{filename}\">detail</a>",
+                filename = escape_html(&filename)
+            )
+        } else {
+            "n/a".to_string()
+        };
+        let finding_count = match c.finding_count {
+            Some(n) => n.to_string(),
+            None => "n/a".to_string(),
+        };
+        out.push_str(&format!(
+            "<tr id=\"{anchor}\"><td>{rank}</td><td>{prefix}</td><td>{density}</td>\
+             <td>{depth}</td><td>{count}</td><td>{detail}</td></tr>\n",
+            anchor = anchor,
+            rank = c.rank,
+            prefix = escape_html(&c.path_prefix),
+            density = escape_html(&format_fixed_point(c.metrics.finding_density, 2)),
+            depth = c.metrics.max_loop_depth,
+            count = finding_count,
+            detail = detail,
+        ));
+    }
+    out.push_str("</tbody>\n</table>\n</section>\n");
+}
+
+/// File drill-down: top files by (degree desc, cost desc, path asc) with
+/// their finding_id lists linking into the findings table.
+fn html_files(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<section id=\"files\">\n<h2>File drill-down</h2>\n");
+    if doc.files.is_empty() {
+        out.push_str("<p>No files scanned.</p>\n</section>\n");
+        return;
+    }
+    // Per-file cost lookup (BTreeMap ⇒ deterministic) from the same cost
+    // function the coupling overlay consumes.
+    let mut file_cost_sum: std::collections::BTreeMap<&str, f64> =
+        std::collections::BTreeMap::new();
+    for f in &doc.stats.functions {
+        *file_cost_sum.entry(f.path.as_str()).or_insert(0.0) += crate::charts::function_cost(f);
+    }
+    let mut ranked: Vec<(&str, usize, f64)> = doc
+        .files
+        .iter()
+        .map(|f| {
+            (
+                f.path.as_str(),
+                file_degree(&f.path, doc),
+                file_cost_sum.get(f.path.as_str()).copied().unwrap_or(0.0),
+            )
+        })
+        .collect();
+    ranked.sort_by(|a, b| {
+        b.1.cmp(&a.1)
+            .then(b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal))
+            .then(a.0.cmp(b.0))
+    });
+    // Findings grouped by path, each group sorted by finding_id ascending
+    // (total order, deterministic).
+    let mut by_path: std::collections::BTreeMap<&str, Vec<&crate::schema::FindingEntry>> =
+        std::collections::BTreeMap::new();
+    for f in &doc.findings {
+        by_path.entry(f.path.as_str()).or_default().push(f);
+    }
+    for list in by_path.values_mut() {
+        list.sort_by(|a, b| a.finding_id.cmp(&b.finding_id));
+    }
+    out.push_str(
+        "<table>\n<thead><tr><th>file</th><th>degree</th><th>cost</th>\
+         <th>findings</th></tr></thead>\n<tbody>\n",
+    );
+    // Collision-free anchors (FIX 1): computed ONCE over the sorted key
+    // sets so drill-down hrefs and findings-table ids agree, including for
+    // duplicate finding_ids (per-occurrence queues consumed in the same
+    // sorted order on both sides).
+    let file_anchors = file_anchor_map(doc);
+    let mut finding_queues = finding_anchor_queues(doc);
+    for (path, degree, cost) in ranked.iter().take(10) {
+        let anchor = escape_html(
+            file_anchors
+                .get(*path)
+                .unwrap_or(&format!("file-{}", slugify(path))),
+        );
+        let finding_cells = match by_path.get(*path) {
+            Some(list) if !list.is_empty() => {
+                let links: Vec<String> = list
+                    .iter()
+                    .map(|f| {
+                        let unique = finding_queues
+                            .get_mut(&f.finding_id)
+                            .and_then(|q| q.pop_front())
+                            .unwrap_or_else(|| finding_anchor(&f.finding_id));
+                        format!(
+                            "<a href=\"#{}\">{}</a>",
+                            escape_html(&unique),
+                            escape_html(&f.finding_id),
+                        )
+                    })
+                    .collect();
+                links.join("<br>\n")
+            }
+            _ => "none".to_string(),
+        };
+        out.push_str(&format!(
+            "<tr id=\"{anchor}\"><td>{path}</td><td>{degree}</td><td>{cost}</td><td>{links}</td></tr>\n",
+            anchor = anchor,
+            path = escape_html(path),
+            degree = degree,
+            cost = escape_html(&format_fixed_point(*cost, 0)),
+            links = finding_cells,
+        ));
+    }
+    if ranked.len() > 10 {
+        out.push_str(&format!(
+            "<p>…+{} more (see findings table)</p>\n",
+            ranked.len() - 10
+        ));
+    }
+    out.push_str("</tbody>\n</table>\n</section>\n");
+}
+
+/// Findings table: every finding in `finding_id`-ascending total order with
+/// collision-free `id` anchors for the file drill-down links. §4 parity
+/// (FIX 3): renders symbol, resolver tier, flags, threshold, and evidence
+/// (values escaped — hostile evidence cannot break out) alongside the
+/// finding_id/rule/severity/confidence/location/message core.
+fn html_findings(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<section id=\"findings\">\n<h2>Findings</h2>\n");
+    if doc.findings.is_empty() {
+        out.push_str("<p>No findings.</p>\n</section>\n");
+        return;
+    }
+    let mut ordered: Vec<&crate::schema::FindingEntry> = doc.findings.iter().collect();
+    ordered.sort_by(|a, b| a.finding_id.cmp(&b.finding_id));
+    // Per-occurrence collision-free anchors aligned with this exact order;
+    // the drill-down consumes the same queues so hrefs agree.
+    let bases: Vec<String> = ordered
+        .iter()
+        .map(|f| finding_anchor(&f.finding_id))
+        .collect();
+    let anchors = disambiguate_sorted_bases(&bases);
+    out.push_str(
+        "<table>\n<thead><tr><th>finding_id</th><th>rule</th><th>severity</th>\
+         <th>confidence</th><th>resolver</th><th>location</th><th>symbol</th>\
+         <th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>\n<tbody>\n",
+    );
+    for (f, anchor) in ordered.iter().zip(anchors.iter()) {
+        let mut flags: Vec<&str> = Vec::new();
+        if f.macro_suspect {
+            flags.push("macro_suspect");
+        }
+        if f.error_node_overlap {
+            flags.push("error_node_overlap");
+        }
+        let flags_text = if flags.is_empty() {
+            "none".to_string()
+        } else {
+            escape_html(&flags.join(", "))
+        };
+        let evidence_text = if f.evidence.is_empty() {
+            "none".to_string()
+        } else {
+            // BTreeMap ⇒ keys already sorted; keys AND values escaped (FIX 3:
+            // hostile evidence values stay inert — this also closes the
+            // hostile-evidence review bypass).
+            f.evidence
+                .iter()
+                .map(|(k, v)| format!("{}={}", escape_html(k), escape_html(v)))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        out.push_str(&format!(
+            "<tr id=\"{anchor}\"><td>{id}</td><td>{rule}</td><td>{severity}</td>\
+             <td>{confidence}</td><td>{resolver}</td>\
+             <td>{path}:{line}:{col}</td><td>{symbol}</td><td>{message}</td>\
+             <td>{evidence}</td><td>{threshold}</td><td>{flags}</td></tr>\n",
+            anchor = escape_html(anchor),
+            id = escape_html(&f.finding_id),
+            rule = escape_html(&f.rule_id),
+            severity = severity_token(f.severity),
+            confidence = confidence_token(f.confidence),
+            resolver = resolver_tier_token(f.resolver_tier),
+            path = escape_html(&f.path),
+            line = f.span.start_line,
+            col = f.span.start_col,
+            symbol = escape_html(f.symbol.as_deref().unwrap_or("n/a")),
+            message = escape_html(&f.message),
+            evidence = evidence_text,
+            threshold = escape_html(&threshold_text(&f.threshold)),
+            flags = flags_text,
+        ));
+    }
+    out.push_str("</tbody>\n</table>\n</section>\n");
+}
+
+/// Render an optional threshold as `name=value` (`n/a` when absent).
+/// Text values are returned raw — the caller passes the result through
+/// [`escape_html`].
+fn threshold_text(threshold: &Option<crate::schema::Threshold>) -> String {
+    match threshold {
+        None => "n/a".to_string(),
+        Some(t) => {
+            let value = match &t.value {
+                crate::schema::ThresholdValue::Number(n) => {
+                    if n.fract() == 0.0 && n.is_finite() {
+                        format!("{}", *n as i64)
+                    } else {
+                        n.to_string()
+                    }
+                }
+                crate::schema::ThresholdValue::Text(s) => s.clone(),
+            };
+            format!("{}={}", t.name, value)
+        }
+    }
+}
+
+/// Appendix A: heuristic reference for exactly the rule_ids present in this
+/// report's findings, sorted for determinism (mirrors §5 Appendix A).
+fn html_appendix_a(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<section id=\"appendix-a\">\n<h2>Appendix A. Heuristic reference</h2>\n");
+    if doc.findings.is_empty() {
+        out.push_str("<p>No findings — no heuristics to reference.</p>\n</section>\n");
+        return;
+    }
+    let rule_ids: BTreeSet<&str> = doc.findings.iter().map(|f| f.rule_id.as_str()).collect();
+    out.push_str(
+        "<table>\n<thead><tr><th>rule_id</th><th>title</th><th>description</th></tr></thead>\n<tbody>\n",
+    );
+    for rule_id in rule_ids {
+        let (_, title, description) = HEURISTIC_CATALOG_V1
+            .iter()
+            .find(|(id, _, _)| *id == rule_id)
+            .unwrap_or_else(|| panic!("uncataloged rule_id {rule_id} reached Appendix A"));
+        out.push_str(&format!(
+            "<tr><td>{id}</td><td>{title}</td><td>{description}</td></tr>\n",
+            id = escape_html(rule_id),
+            title = escape_html(title),
+            description = escape_html(description),
+        ));
+    }
+    out.push_str("</tbody>\n</table>\n</section>\n");
+}
+
+fn html_footer(out: &mut String) {
+    out.push_str(
+        "<footer>\n<p>Generated offline — no network access, no scripts. \
+         Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>\n</footer>\n\
+         </body>\n</html>\n",
+    );
+}
+
+/// Incident-edge degree of one file: resolved include edges touching `path`
+/// (either endpoint) plus call-graph edges touching `path` (resolved
+/// `to_path` only — unresolved hypotheses have no target file and never
+/// enter the ranking).
+fn file_degree(path: &str, doc: &MetricsDocument) -> usize {
+    let mut degree: usize = 0;
+    if let Some(graphs) = &doc.graphs {
+        for edge in &graphs.include_graph.edges {
+            if !edge.resolved {
+                continue;
+            }
+            let to = edge.to.as_deref().unwrap_or("");
+            if edge.from == path || to == path {
+                degree += 1;
+            }
+        }
+        if let Some(call_graph) = &graphs.call_graph {
+            for edge in &call_graph.edges {
+                if edge.from_path == path || edge.to_path.as_deref() == Some(path) {
+                    degree += 1;
+                }
+            }
+        }
+    }
+    degree
+}
+
+/// Slugify a file path into an `id`-anchor fragment: ASCII alphanumerics
+/// kept verbatim, every other char (or run) → a single `-`, trimmed;
+/// empty ⇒ `"root"`. Mirrors the charts-owned [`crate::charts::component`]
+/// slug for components; local for files so the reporter owns the mapping.
+fn slugify(path: &str) -> String {
+    let mut slug = String::with_capacity(path.len());
+    let mut last_dash = true; // suppress leading runs
+    for c in path.chars() {
+        if c.is_ascii_alphanumeric() {
+            slug.push(c);
+            last_dash = false;
+        } else if !last_dash {
+            slug.push('-');
+            last_dash = true;
+        }
+    }
+    while slug.ends_with('-') {
+        slug.pop();
+    }
+    if slug.is_empty() {
+        "root".to_string()
+    } else {
+        slug
+    }
+}
+
+/// Sanitize a `finding_id` into an `id`-anchor fragment: ASCII alphanumerics
+/// kept, every other char → `-` (no collapsing across the fixed
+/// `rule:path:line:col` shape — each separator maps to exactly one dash, so
+/// distinct finding ids stay distinct).
+fn finding_anchor(finding_id: &str) -> String {
+    let mut anchor = String::with_capacity(finding_id.len() + 8);
+    anchor.push_str("finding-");
+    for c in finding_id.chars() {
+        if c.is_ascii_alphanumeric() {
+            anchor.push(c);
+        } else {
+            anchor.push('-');
+        }
+    }
+    anchor
+}
+
+/// Collision-free disambiguation (FIX 1): `bases` MUST arrive in sorted
+/// order (deterministic across runs); the first use of a base keeps the
+/// bare human-readable slug, subsequent colliding uses get `-2`, `-3`, …
+/// suffixes. The common (collision-free) case stays clean while uniqueness
+/// is guaranteed. Pure function of its input — byte-deterministic.
+fn disambiguate_sorted_bases(bases: &[String]) -> Vec<String> {
+    let mut counts: std::collections::BTreeMap<&str, usize> = std::collections::BTreeMap::new();
+    bases
+        .iter()
+        .map(|base| {
+            let n = counts.entry(base.as_str()).or_insert(0);
+            *n += 1;
+            if *n == 1 {
+                base.clone()
+            } else {
+                format!("{base}-{}", *n)
+            }
+        })
+        .collect()
+}
+
+/// File drill-down anchors keyed by path: bases built over the SORTED
+/// deduplicated path set, so `a-b.c` vs `a/b.c` (same slug) get
+/// `file-a-b-c` and `file-a-b-c-2` deterministically, independent of the
+/// degree/cost render order.
+fn file_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, String> {
+    let mut paths: Vec<String> = doc.files.iter().map(|f| f.path.clone()).collect();
+    paths.sort();
+    paths.dedup();
+    let bases: Vec<String> = paths
+        .iter()
+        .map(|p| format!("file-{}", slugify(p)))
+        .collect();
+    let unique = disambiguate_sorted_bases(&bases);
+    paths.into_iter().zip(unique).collect()
+}
+
+/// Findings-table anchors as per-`finding_id` FIFO queues over the
+/// `finding_id`-ascending occurrence order (same order the findings table
+/// renders). Distinct ids that slug-collide (e.g. `a/b.c` vs `a-b.c` in the
+/// path segment) get bare then `-2` suffixed anchors; duplicate ids (which
+/// should not occur — ids are derived unique) each get their own anchor.
+/// Both the table and the drill-down consume these queues, so every
+/// `href="#…"` resolves to a distinct existing `id="…"`. For duplicate ids
+/// the exact row↔link pairing is occurrence-order only — resolvability and
+/// uniqueness (the lock properties) always hold.
+fn finding_anchor_queues(
+    doc: &MetricsDocument,
+) -> std::collections::BTreeMap<String, std::collections::VecDeque<String>> {
+    let mut ids: Vec<String> = doc.findings.iter().map(|f| f.finding_id.clone()).collect();
+    ids.sort();
+    let bases: Vec<String> = ids.iter().map(|id| finding_anchor(id)).collect();
+    let unique = disambiguate_sorted_bases(&bases);
+    let mut queues: std::collections::BTreeMap<String, std::collections::VecDeque<String>> =
+        std::collections::BTreeMap::new();
+    for (id, anchor) in ids.into_iter().zip(unique) {
+        queues.entry(id).or_default().push_back(anchor);
+    }
+    queues
 }
 
 // ---------------------------------------------------------------------------
