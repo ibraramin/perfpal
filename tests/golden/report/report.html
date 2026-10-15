@@ -12,6 +12,10 @@ th{background:#eee}
 figure{border:1px solid #999;padding:.5rem;margin:1rem 0}
 figcaption{margin-top:.5rem}
 img{max-width:100%;height:auto}
+figure.pz{overflow:hidden}
+figure.pz img{touch-action:none}
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
+#filter-bar{margin:.5rem 0}
 nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </style>
 </head>
@@ -31,23 +35,23 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </nav>
 <section id="architecture">
 <h2>Architecture</h2>
-<figure>
+<figure class="pz" data-chart="include-graph">
 <a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files."></a>
 <figcaption>Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.</figcaption>
 </figure>
-<figure>
+<figure class="pz" data-chart="layer-file">
 <a href="charts/layer-file.svg"><img src="charts/layer-file.svg" alt="File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first)."></a>
 <figcaption>File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).</figcaption>
 </figure>
-<figure>
+<figure class="pz" data-chart="component-coupling">
 <a href="charts/component-coupling.svg"><img src="charts/component-coupling.svg" alt="Component coupling — cross-file call edges between components."></a>
 <figcaption>Component coupling — cross-file call edges between components.</figcaption>
 </figure>
-<figure>
+<figure class="pz" data-chart="hot-components">
 <a href="charts/hot-components.svg"><img src="charts/hot-components.svg" alt="Hot components — ranking by aggregated bottleneck metrics."></a>
 <figcaption>Hot components — ranking by aggregated bottleneck metrics.</figcaption>
 </figure>
-<figure>
+<figure class="pz" data-chart="layer-workspace">
 <a href="charts/layer-workspace.svg"><img src="charts/layer-workspace.svg" alt="Workspace map — components as nodes over inter-component call/include edges, heat by finding density."></a>
 <figcaption>Workspace map — components as nodes over inter-component call/include edges, heat by finding density.</figcaption>
 </figure>
@@ -64,7 +68,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>rank</th><th>prefix</th><th>finding density (per KLOC)</th><th>max loop depth</th><th>finding count</th><th>detail</th></tr></thead>
 <tbody>
-<tr id="component-01-src"><td>1</td><td>src</td><td>147.06</td><td>3</td><td>15</td><td><a href="charts/component-01-src.svg">detail</a></td></tr>
+<tr id="component-01-src" data-prefix="src"><td>1</td><td>src</td><td>147.06</td><td>3</td><td>15</td><td><a href="charts/component-01-src.svg">detail</a></td></tr>
 </tbody>
 </table>
 </section>
@@ -73,7 +77,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th></tr></thead>
 <tbody>
-<tr id="file-src-main-c"><td>src/main.c</td><td>2</td><td>132</td><td><a href="#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001:src/main.c:34:21</a><br>
+<tr id="file-src-main-c" data-path="src/main.c"><td>src/main.c</td><td>2</td><td>132</td><td><a href="#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001:src/main.c:34:21</a><br>
 <a href="#finding-PERF-C-ALLOC-001-src-main-c-73-15">PERF-C-ALLOC-001:src/main.c:73:15</a><br>
 <a href="#finding-PERF-C-ALLOC-002-src-main-c-37-9">PERF-C-ALLOC-002:src/main.c:37:9</a><br>
 <a href="#finding-PERF-C-ALLOC-002-src-main-c-44-9">PERF-C-ALLOC-002:src/main.c:44:9</a><br>
@@ -88,31 +92,32 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <a href="#finding-PERF-C-STR-001-src-main-c-52-9">PERF-C-STR-001:src/main.c:52:9</a><br>
 <a href="#finding-PERF-C-STR-003-src-main-c-52-9">PERF-C-STR-003:src/main.c:52:9</a><br>
 <a href="#finding-PERF-C-TYPE-001-src-main-c-113-1">PERF-C-TYPE-001:src/main.c:113:1</a></td></tr>
-<tr id="file-src-util-c"><td>src/util.c</td><td>2</td><td>3</td><td>none</td></tr>
-<tr id="file-src-util-h"><td>src/util.h</td><td>2</td><td>0</td><td>none</td></tr>
+<tr id="file-src-util-c" data-path="src/util.c"><td>src/util.c</td><td>2</td><td>3</td><td>none</td></tr>
+<tr id="file-src-util-h" data-path="src/util.h"><td>src/util.h</td><td>2</td><td>0</td><td>none</td></tr>
 </tbody>
 </table>
 </section>
 <section id="findings">
 <h2>Findings</h2>
+<div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-ALLOC-001-src-main-c-34-21"><td>PERF-C-ALLOC-001:src/main.c:34:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:34:21</td><td>process</td><td>per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td>alloc_site_index=1, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ALLOC-001-src-main-c-73-15"><td>PERF-C-ALLOC-001:src/main.c:73:15</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td>per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td>alloc_site_index=1, callee=realloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ALLOC-002-src-main-c-37-9"><td>PERF-C-ALLOC-002:src/main.c:37:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:37:9</td><td>process</td><td>deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td>alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ALLOC-002-src-main-c-44-9"><td>PERF-C-ALLOC-002:src/main.c:44:9</td><td>PERF-C-ALLOC-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:44:9</td><td>drain</td><td>deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td>callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ALLOC-003-src-main-c-73-15"><td>PERF-C-ALLOC-003:src/main.c:73:15</td><td>PERF-C-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td>&#39;realloc&#39; grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization</td><td>alloc_site_index=1, callee=realloc, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ARCH-002-src-main-c-84-1"><td>PERF-C-ARCH-002:src/main.c:84:1</td><td>PERF-C-ARCH-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td>directory &#39;src&#39; aggregates complexity 42 across 12 function(s) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization</td><td>alloc_site_density=39.2156862745098, complexity_sum=42, function_count=12, max_loop_depth=3, path_prefix=src</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ARCH-003-src-main-c-127-20"><td>PERF-C-ARCH-003:src/main.c:127:20</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:127:20</td><td>main</td><td>call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-CALL-002-src-main-c-84-1"><td>PERF-C-CALL-002:src/main.c:84:1</td><td>PERF-C-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td>&#39;dispatch&#39; branches 23 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td>complexity=23, function=dispatch, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
-<tr id="finding-PERF-C-LOOP-001-src-main-c-61-13"><td>PERF-C-LOOP-001:src/main.c:61:13</td><td>PERF-C-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:61:13</td><td>deep_sum</td><td>loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or adding early exits is a candidate optimization</td><td>max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
-<tr id="finding-PERF-C-LOOP-002-src-main-c-80-9"><td>PERF-C-LOOP-002:src/main.c:80:9</td><td>PERF-C-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:80:9</td><td>report</td><td>&#39;printf&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td>callee=printf, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-LOOP-004-src-main-c-62-24"><td>PERF-C-LOOP-004:src/main.c:62:24</td><td>PERF-C-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:62:24</td><td>deep_sum</td><td>&#39;/&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td>divisor=d, divisor_kind=identifier, op=/</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-MEM-001-src-main-c-118-19"><td>PERF-C-MEM-001:src/main.c:118:19</td><td>PERF-C-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:118:19</td><td>clone_row</td><td>&#39;malloc&#39; size argument carries a sizeof misuse shape (pointer_param_sizeof) — the allocated byte count likely does not match the element type; sizing by the pointee type is a candidate fix</td><td>callee=malloc, misuse=pointer_param_sizeof</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-STR-001-src-main-c-52-9"><td>PERF-C-STR-001:src/main.c:52:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td>&#39;strcat&#39; accumulates into &#39;out&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td>callee=strcat, dest=out, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-STR-003-src-main-c-52-9"><td>PERF-C-STR-003:src/main.c:52:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td>unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td>callee=strcat</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-TYPE-001-src-main-c-113-1"><td>PERF-C-TYPE-001:src/main.c:113:1</td><td>PERF-C-TYPE-001</td><td>warn</td><td>LOW</td><td>syntactic</td><td>src/main.c:113:1</td><td>weigh</td><td>parameters &#39;struct Big b&#39; (struct &#39;Big&#39;, ~48 bytes) are copied by value on every call under the LP64 estimate — passing pointers or taking the structs by reference is a candidate optimization</td><td>estimated_sizes=48, params=struct Big b, structs=Big, threshold=32</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-001-src-main-c-34-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:34:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:34:21</td><td>process</td><td>per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td>alloc_site_index=1, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-001-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:73:15</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td>per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td>alloc_site_index=1, callee=realloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-002-src-main-c-37-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:37:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:37:9</td><td>process</td><td>deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td>alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-002-src-main-c-44-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:44:9</td><td>PERF-C-ALLOC-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:44:9</td><td>drain</td><td>deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td>callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-003-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-003:src/main.c:73:15</td><td>PERF-C-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td>&#39;realloc&#39; grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization</td><td>alloc_site_index=1, callee=realloc, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ARCH-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-ARCH-002:src/main.c:84:1</td><td>PERF-C-ARCH-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td>directory &#39;src&#39; aggregates complexity 42 across 12 function(s) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization</td><td>alloc_site_density=39.2156862745098, complexity_sum=42, function_count=12, max_loop_depth=3, path_prefix=src</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ARCH-003-src-main-c-127-20" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:127:20</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:127:20</td><td>main</td><td>call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-CALL-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-CALL-002:src/main.c:84:1</td><td>PERF-C-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td>&#39;dispatch&#39; branches 23 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td>complexity=23, function=dispatch, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
+<tr id="finding-PERF-C-LOOP-001-src-main-c-61-13" data-path="src/main.c"><td>PERF-C-LOOP-001:src/main.c:61:13</td><td>PERF-C-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:61:13</td><td>deep_sum</td><td>loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or adding early exits is a candidate optimization</td><td>max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
+<tr id="finding-PERF-C-LOOP-002-src-main-c-80-9" data-path="src/main.c"><td>PERF-C-LOOP-002:src/main.c:80:9</td><td>PERF-C-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:80:9</td><td>report</td><td>&#39;printf&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td>callee=printf, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-LOOP-004-src-main-c-62-24" data-path="src/main.c"><td>PERF-C-LOOP-004:src/main.c:62:24</td><td>PERF-C-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:62:24</td><td>deep_sum</td><td>&#39;/&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td>divisor=d, divisor_kind=identifier, op=/</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-MEM-001-src-main-c-118-19" data-path="src/main.c"><td>PERF-C-MEM-001:src/main.c:118:19</td><td>PERF-C-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:118:19</td><td>clone_row</td><td>&#39;malloc&#39; size argument carries a sizeof misuse shape (pointer_param_sizeof) — the allocated byte count likely does not match the element type; sizing by the pointee type is a candidate fix</td><td>callee=malloc, misuse=pointer_param_sizeof</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-STR-001-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:52:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td>&#39;strcat&#39; accumulates into &#39;out&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td>callee=strcat, dest=out, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-STR-003-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:52:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td>unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td>callee=strcat</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-TYPE-001-src-main-c-113-1" data-path="src/main.c"><td>PERF-C-TYPE-001:src/main.c:113:1</td><td>PERF-C-TYPE-001</td><td>warn</td><td>LOW</td><td>syntactic</td><td>src/main.c:113:1</td><td>weigh</td><td>parameters &#39;struct Big b&#39; (struct &#39;Big&#39;, ~48 bytes) are copied by value on every call under the LP64 estimate — passing pointers or taking the structs by reference is a candidate optimization</td><td>estimated_sizes=48, params=struct Big b, structs=Big, threshold=32</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </section>
@@ -138,7 +143,42 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </table>
 </section>
 <footer>
-<p>Generated offline — no network access, no scripts. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
 </footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
 </body>
 </html>

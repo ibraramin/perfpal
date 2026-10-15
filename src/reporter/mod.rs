@@ -437,10 +437,11 @@ pub fn escape_html(input: &str) -> String {
     out
 }
 
-/// Render the full `report.html` content (Option B slice 1, LINKED variant).
+/// Render the full `report.html` content (Option B slice 2: slice-1 LINKED
+/// page plus a small fixed enhancement script).
 ///
-/// A static self-contained page with ZERO JavaScript (no `<script>`, no
-/// event-handler attributes, no `javascript:` URLs): it references
+/// A static self-contained page with ONE inline `<script>` block
+/// ([`REPORT_SCRIPT`], fixed source, no libraries): it references
 /// `charts/*.svg` via relative `<img src>`/`<a href>` links, so the HTML
 /// stays small on big repos while remaining fully offline within the report
 /// directory. Pure function of `(doc, emitted_charts)` — LF newlines,
@@ -962,11 +963,12 @@ fn render_appendix_b(out: &mut String) {
 }
 
 // ---------------------------------------------------------------------------
-// HTML renderer helpers (Option B slice 1, LINKED variant — zero JavaScript)
+// HTML renderer helpers (Option B slice 2: LINKED variant + fixed script)
 // ---------------------------------------------------------------------------
 
 /// Emit the document head: doctype, charset, title, and a minimal inline
-/// `<style>` block (static text — no external resources, no scripts).
+/// `<style>` block (static text — no external resources; the only script is
+/// the fixed [`REPORT_SCRIPT`] block appended in `html_footer`).
 fn html_head(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
     out.push_str("<meta charset=\"utf-8\">\n");
@@ -983,7 +985,11 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
          th{background:#eee}\n\
          figure{border:1px solid #999;padding:.5rem;margin:1rem 0}\n\
          figcaption{margin-top:.5rem}\n\
-         img{max-width:100%;height:auto}\n\
+          img{max-width:100%;height:auto}\n\
+          figure.pz{overflow:hidden}\n\
+          figure.pz img{touch-action:none}\n\
+          #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
+          #filter-bar{margin:.5rem 0}\n\
          nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
          </style>\n</head>\n<body>\n",
     );
@@ -1040,6 +1046,64 @@ fn html_nav(out: &mut String) {
          <li><a href=\"#appendix-a\">Heuristic reference</a></li>\n\
          </ul>\n</nav>\n",
     );
+}
+
+/// Fixed inline enhancement script (Option B slice 2): hand-rolled
+/// pan/zoom for `figure.pz` chart figures (drag + wheel + buttons via CSS
+/// transforms over the existing linked `<img>` — the SVGs are never inlined
+/// or duplicated) and click-to-filter for the findings table (pure DOM hide
+/// via `hidden` over already-rendered rows, no re-fetch, no network).
+///
+/// Byte-determinism: this source is a FIXED string constant — no timestamps,
+/// ids, or counters in the generated code. Every interpolated document value
+/// is escaped at RENDER time via [`escape_html`]; the script itself only
+/// reads `data-*` attributes and writes `textContent`/`hidden`/style (never
+/// `innerHTML`/`outerHTML`, `insertAdjacentHTML`, `document.write`, `eval` /
+/// `Function(`, string-arg timers, `fetch`/`XHR`, `Date`, or `random`). Row
+/// click-to-filter ignores clicks originating inside an inner `a[href]`
+/// (bubbling guard — following a drill-down/detail link never also filters).
+/// All handlers bind via `addEventListener` (no inline `on*=` attributes),
+/// and the page is fully usable with JS disabled (all rows present; the
+/// script only enhances).
+const REPORT_SCRIPT: &str = r##"(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})"##;
+
+/// Byte-exact accessor for the fixed enhancement script (slice-2 golden and
+/// byte-identity tests compare the emitted `<script>` block against this).
+#[must_use]
+pub fn report_script() -> &'static str {
+    REPORT_SCRIPT
 }
 
 /// Known overview chart stems (ADR-0002 chart-set-v1 + Option A slice 2
@@ -1115,7 +1179,7 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
             let caption = chart_caption(stem);
             let safe_stem = escape_html(stem);
             out.push_str(&format!(
-                "<figure>\n<a href=\"charts/{stem}.svg\"><img src=\"charts/{stem}.svg\" alt=\"{caption}\"></a>\n<figcaption>{caption}</figcaption>\n</figure>\n",
+                "<figure class=\"pz\" data-chart=\"{stem}\">\n<a href=\"charts/{stem}.svg\"><img src=\"charts/{stem}.svg\" alt=\"{caption}\"></a>\n<figcaption>{caption}</figcaption>\n</figure>\n",
                 stem = safe_stem,
                 caption = escape_html(&caption),
             ));
@@ -1196,9 +1260,10 @@ fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[St
             None => "n/a".to_string(),
         };
         out.push_str(&format!(
-            "<tr id=\"{anchor}\"><td>{rank}</td><td>{prefix}</td><td>{density}</td>\
+            "<tr id=\"{anchor}\" data-prefix=\"{prefix_attr}\"><td>{rank}</td><td>{prefix}</td><td>{density}</td>\
              <td>{depth}</td><td>{count}</td><td>{detail}</td></tr>\n",
             anchor = anchor,
+            prefix_attr = escape_html(&c.path_prefix),
             rank = c.rank,
             prefix = escape_html(&c.path_prefix),
             density = escape_html(&format_fixed_point(c.metrics.finding_density, 2)),
@@ -1241,26 +1306,28 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
             .then(b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal))
             .then(a.0.cmp(b.0))
     });
-    // Findings grouped by path, each group sorted by finding_id ascending
-    // (total order, deterministic).
-    let mut by_path: std::collections::BTreeMap<&str, Vec<&crate::schema::FindingEntry>> =
+    // Findings grouped by path: index-keyed (into `doc.findings`), each
+    // group sorted by finding_id ascending (total order, deterministic).
+    let mut by_path: std::collections::BTreeMap<&str, Vec<usize>> =
         std::collections::BTreeMap::new();
-    for f in &doc.findings {
-        by_path.entry(f.path.as_str()).or_default().push(f);
+    for (i, f) in doc.findings.iter().enumerate() {
+        by_path.entry(f.path.as_str()).or_default().push(i);
     }
     for list in by_path.values_mut() {
-        list.sort_by(|a, b| a.finding_id.cmp(&b.finding_id));
+        list.sort_by(|&a, &b| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id));
     }
     out.push_str(
         "<table>\n<thead><tr><th>file</th><th>degree</th><th>cost</th>\
          <th>findings</th></tr></thead>\n<tbody>\n",
     );
-    // Collision-free anchors (FIX 1): computed ONCE over the sorted key
-    // sets so drill-down hrefs and findings-table ids agree, including for
-    // duplicate finding_ids (per-occurrence queues consumed in the same
-    // sorted order on both sides).
+    // Collision-free anchors (FIX 1, corrected): anchors are pre-assigned
+    // per finding OCCURRENCE in finding_id order (index-keyed map), and BOTH
+    // the drill-down below and the findings table look up from that map —
+    // render order (degree/cost/path here) never decides which row owns the
+    // bare slug, so a slug-colliding pair links row↔row correctly no matter
+    // which file ranks first.
     let file_anchors = file_anchor_map(doc);
-    let mut finding_queues = finding_anchor_queues(doc);
+    let (_, finding_anchors) = finding_anchor_assignments(doc);
     for (path, degree, cost) in ranked.iter().take(10) {
         let anchor = escape_html(
             file_anchors
@@ -1271,11 +1338,9 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
             Some(list) if !list.is_empty() => {
                 let links: Vec<String> = list
                     .iter()
-                    .map(|f| {
-                        let unique = finding_queues
-                            .get_mut(&f.finding_id)
-                            .and_then(|q| q.pop_front())
-                            .unwrap_or_else(|| finding_anchor(&f.finding_id));
+                    .map(|&i| {
+                        let f = &doc.findings[i];
+                        let unique = finding_anchors[i].clone();
                         format!(
                             "<a href=\"#{}\">{}</a>",
                             escape_html(&unique),
@@ -1288,8 +1353,9 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
             _ => "none".to_string(),
         };
         out.push_str(&format!(
-            "<tr id=\"{anchor}\"><td>{path}</td><td>{degree}</td><td>{cost}</td><td>{links}</td></tr>\n",
+            "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{path}</td><td>{degree}</td><td>{cost}</td><td>{links}</td></tr>\n",
             anchor = anchor,
+            data_path = escape_html(path),
             path = escape_html(path),
             degree = degree,
             cost = escape_html(&format_fixed_point(*cost, 0)),
@@ -1312,25 +1378,27 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
 /// finding_id/rule/severity/confidence/location/message core.
 fn html_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<section id=\"findings\">\n<h2>Findings</h2>\n");
+    out.push_str(
+        "<div id=\"filter-bar\"><span id=\"filter-label\">all findings</span> \
+         <button id=\"filter-clear\" type=\"button\" hidden>clear</button></div>\n",
+    );
     if doc.findings.is_empty() {
         out.push_str("<p>No findings.</p>\n</section>\n");
         return;
     }
-    let mut ordered: Vec<&crate::schema::FindingEntry> = doc.findings.iter().collect();
-    ordered.sort_by(|a, b| a.finding_id.cmp(&b.finding_id));
-    // Per-occurrence collision-free anchors aligned with this exact order;
-    // the drill-down consumes the same queues so hrefs agree.
-    let bases: Vec<String> = ordered
-        .iter()
-        .map(|f| finding_anchor(&f.finding_id))
-        .collect();
-    let anchors = disambiguate_sorted_bases(&bases);
+    // Per-occurrence collision-free anchors pre-assigned in finding_id
+    // order; the file drill-down looks up the SAME map, so every href
+    // points at its own row even when ranked-file order differs. `order` is
+    // the stable finding_id-ascending index order the map was built over.
+    let (order, anchors) = finding_anchor_assignments(doc);
     out.push_str(
         "<table>\n<thead><tr><th>finding_id</th><th>rule</th><th>severity</th>\
          <th>confidence</th><th>resolver</th><th>location</th><th>symbol</th>\
          <th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>\n<tbody>\n",
     );
-    for (f, anchor) in ordered.iter().zip(anchors.iter()) {
+    for &i in &order {
+        let f = &doc.findings[i];
+        let anchor = &anchors[i];
         let mut flags: Vec<&str> = Vec::new();
         if f.macro_suspect {
             flags.push("macro_suspect");
@@ -1356,11 +1424,12 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
                 .join(", ")
         };
         out.push_str(&format!(
-            "<tr id=\"{anchor}\"><td>{id}</td><td>{rule}</td><td>{severity}</td>\
+            "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{id}</td><td>{rule}</td><td>{severity}</td>\
              <td>{confidence}</td><td>{resolver}</td>\
              <td>{path}:{line}:{col}</td><td>{symbol}</td><td>{message}</td>\
              <td>{evidence}</td><td>{threshold}</td><td>{flags}</td></tr>\n",
             anchor = escape_html(anchor),
+            data_path = escape_html(&f.path),
             id = escape_html(&f.finding_id),
             rule = escape_html(&f.rule_id),
             severity = severity_token(f.severity),
@@ -1430,10 +1499,16 @@ fn html_appendix_a(out: &mut String, doc: &MetricsDocument) {
 
 fn html_footer(out: &mut String) {
     out.push_str(
-        "<footer>\n<p>Generated offline — no network access, no scripts. \
-         Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>\n</footer>\n\
-         </body>\n</html>\n",
+        "<footer>\n<p>Generated offline — no network access. Interactive \
+         enhancements (pan/zoom, click-to-filter) run locally with no network. \
+         Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>\n</footer>\n",
     );
+    // Slice-2 enhancement script: fixed source (REPORT_SCRIPT), exactly one
+    // block, bound via addEventListener only. Content is static text — no
+    // document data is interpolated into the script.
+    out.push_str("<script>\n");
+    out.push_str(REPORT_SCRIPT);
+    out.push_str("\n</script>\n</body>\n</html>\n");
 }
 
 /// Incident-edge degree of one file: resolved include edges touching `path`
@@ -1543,28 +1618,33 @@ fn file_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, 
     paths.into_iter().zip(unique).collect()
 }
 
-/// Findings-table anchors as per-`finding_id` FIFO queues over the
-/// `finding_id`-ascending occurrence order (same order the findings table
-/// renders). Distinct ids that slug-collide (e.g. `a/b.c` vs `a-b.c` in the
-/// path segment) get bare then `-2` suffixed anchors; duplicate ids (which
-/// should not occur — ids are derived unique) each get their own anchor.
-/// Both the table and the drill-down consume these queues, so every
-/// `href="#…"` resolves to a distinct existing `id="…"`. For duplicate ids
-/// the exact row↔link pairing is occurrence-order only — resolvability and
-/// uniqueness (the lock properties) always hold.
-fn finding_anchor_queues(
-    doc: &MetricsDocument,
-) -> std::collections::BTreeMap<String, std::collections::VecDeque<String>> {
-    let mut ids: Vec<String> = doc.findings.iter().map(|f| f.finding_id.clone()).collect();
-    ids.sort();
-    let bases: Vec<String> = ids.iter().map(|id| finding_anchor(id)).collect();
+/// Per-occurrence finding anchors (FIX 1, corrected): pre-assigned ONCE over
+/// the stable `finding_id`-ascending occurrence order (position in that order
+/// ⇒ anchor: first use of a slug base keeps it bare, later colliding uses
+/// get `-2`, `-3`, …), keyed by the finding's index in `doc.findings`.
+/// Returns the render order alongside the index-keyed anchor map so BOTH the
+/// findings table and the file drill-down consume a single assignment —
+/// ranked-file order (degree/cost/path) can no longer steal the bare anchor
+/// from the finding_id-first colliding row. (The previous per-`finding_id`
+/// FIFO queues were popped in ranked-file order by the drill-down but
+/// assigned in `finding_id` order by the table — with two distinct ids that
+/// slug-collide, the file rendered first grabbed the bare anchor regardless
+/// of `finding_id` order, mislinking rows.) Stable sort keeps duplicate
+/// finding_ids in document order; pure function of document content —
+/// byte-deterministic.
+fn finding_anchor_assignments(doc: &MetricsDocument) -> (Vec<usize>, Vec<String>) {
+    let mut order: Vec<usize> = (0..doc.findings.len()).collect();
+    order.sort_by(|&a, &b| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id));
+    let bases: Vec<String> = order
+        .iter()
+        .map(|&i| finding_anchor(&doc.findings[i].finding_id))
+        .collect();
     let unique = disambiguate_sorted_bases(&bases);
-    let mut queues: std::collections::BTreeMap<String, std::collections::VecDeque<String>> =
-        std::collections::BTreeMap::new();
-    for (id, anchor) in ids.into_iter().zip(unique) {
-        queues.entry(id).or_default().push_back(anchor);
+    let mut anchors = vec![String::new(); doc.findings.len()];
+    for (pos, &i) in order.iter().enumerate() {
+        anchors[i] = unique[pos].clone();
     }
-    queues
+    (order, anchors)
 }
 
 // ---------------------------------------------------------------------------

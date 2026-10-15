@@ -461,6 +461,110 @@ pub fn mask_golden_html(raw: &str, root: &str) -> String {
     masked
 }
 
+/// Comparison-time neutralizer for Wave B1 resolved-edge deltas in
+/// `report.html` (HTML counterpart of [`mask_golden_semantic`], same scope):
+/// the committed goldens are produced by the DEFAULT build (name-based
+/// ARCH-003, LOW), while a `semantic-clang` feature build legitimately
+/// renders a MEDIUM-confidence resolved row for the same call site. Both
+/// sides of the golden comparison go through this: a findings-table row
+/// whose rule cell is `PERF-C-ARCH-003` AND whose evidence carries
+/// `resolved=true` is rewritten to its name-based form (confidence cell LOW,
+/// resolver cell syntactic, message cell rebuilt byte-exact from the
+/// evidence's `callee_name`/`matched_path`, `resolved` key dropped from the
+/// evidence cell). Row order needs no restoring: the findings table is in
+/// `finding_id`-ascending order on both builds, so the upgraded row never
+/// moves (unlike the §4 total order in metrics.json).
+///
+/// Strictly scoped: any row that is not exactly a MEDIUM/semantic resolved
+/// `PERF-C-ARCH-003` row with `callee_name` + `matched_path` evidence passes
+/// through UNCHANGED, so an unexpected resolver-tier variant fails the gate
+/// loudly instead of comparing clean. All other cells (finding_id, severity,
+/// location, symbol, threshold, flags) are never touched. The exact
+/// default-build rendering stays locked by arch_fixtures.rs +
+/// pipeline_e2e.rs; the resolved behavior by tests/resolver_health.rs.
+#[must_use]
+pub fn mask_golden_html_semantic(masked_html: &str) -> String {
+    let mut out = String::with_capacity(masked_html.len());
+    let mut rest = masked_html;
+    while let Some(start) = rest.find("<tr ") {
+        out.push_str(&rest[..start]);
+        let row_src = &rest[start..];
+        let end = row_src
+            .find("</tr>")
+            .map_or(row_src.len(), |i| i + "</tr>".len());
+        out.push_str(&normalize_html_arch003_row(&row_src[..end]));
+        rest = &row_src[end..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Rewrite ONE findings-table row to its name-based form when — and only
+/// when — it is a resolved `PERF-C-ARCH-003` row; identity otherwise.
+fn normalize_html_arch003_row(row: &str) -> String {
+    if !(row.contains("PERF-C-ARCH-003") && row.contains("resolved=true")) {
+        return row.to_string();
+    }
+    // Cells: 0 finding_id, 1 rule, 2 severity, 3 confidence, 4 resolver,
+    // 5 location, 6 symbol, 7 message, 8 evidence, 9 threshold, 10 flags.
+    let parts: Vec<&str> = row.split("<td>").collect();
+    if parts.len() != 12 {
+        return row.to_string();
+    }
+    let mut bodies: Vec<&str> = Vec::with_capacity(11);
+    let mut suffixes: Vec<&str> = Vec::with_capacity(11);
+    for part in parts.iter().skip(1) {
+        match part.find("</td>") {
+            Some(i) => {
+                bodies.push(&part[..i]);
+                suffixes.push(&part[i + "</td>".len()..]);
+            }
+            None => return row.to_string(),
+        }
+    }
+    if bodies[1] != "PERF-C-ARCH-003" || bodies[3] != "MEDIUM" || bodies[4] != "semantic" {
+        return row.to_string();
+    }
+    // Evidence keys are BTreeMap-sorted: callee_name, matched_path, resolved.
+    let Some(stripped) = bodies[8].strip_suffix(", resolved=true") else {
+        return row.to_string();
+    };
+    let Some(after_callee) = stripped.strip_prefix("callee_name=") else {
+        return row.to_string();
+    };
+    let Some((callee, matched)) = after_callee.split_once(", matched_path=") else {
+        return row.to_string();
+    };
+    // Rebuild the name-based message byte-exact (mirrors
+    // [`mask_golden_semantic`]; the escaped callee/matched substrings are
+    // reused verbatim since `escape_html` is deterministic).
+    let message = format!(
+        "call to &#39;{callee}&#39; matches a definition in &#39;{matched}&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization"
+    );
+    let new_bodies = [
+        bodies[0],
+        bodies[1],
+        bodies[2],
+        "LOW",
+        "syntactic",
+        bodies[5],
+        bodies[6],
+        &message,
+        stripped,
+        bodies[9],
+        bodies[10],
+    ];
+    let mut rebuilt = String::with_capacity(row.len());
+    rebuilt.push_str(parts[0]);
+    for (body, suffix) in new_bodies.iter().zip(suffixes.iter()) {
+        rebuilt.push_str("<td>");
+        rebuilt.push_str(body);
+        rebuilt.push_str("</td>");
+        rebuilt.push_str(suffix);
+    }
+    rebuilt
+}
+
 // ---------------------------------------------------------------------------
 // Kitchen-sink synthetic unit set (moved from tests/wave_a_fixtures.rs so
 // the P6 finding-id uniqueness gate can reuse the all-23-rule corpus).

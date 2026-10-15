@@ -1,4 +1,5 @@
-//! `report.html` locks (Option B slice 1, LINKED variant — zero JavaScript).
+//! `report.html` locks (Option B slice 2: slice-1 LINKED page + one fixed
+//! enhancement script — pan/zoom + click-to-filter, no libraries).
 //!
 //! The HTML artifact is a pure function of `(doc, emitted_charts)` with NO
 //! provenance surfaces (no `started_at` / `duration_ms` / `root_path`), so
@@ -16,10 +17,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use perfpal::analyzer::{Confidence, Severity};
 use perfpal::cli::run_with;
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
-use perfpal::reporter::{escape_html, render_html};
+use perfpal::reporter::{escape_html, render_html, report_script};
 use perfpal::schema::{
-    ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, MetricsDocument, ParseHealthEntry,
-    ParseHealthSummary, ScanInfo, StatsSection, Threshold, ThresholdValue, ToolInfo,
+    ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, FunctionStats, MetricsDocument,
+    ParseHealthEntry, ParseHealthSummary, ScanInfo, StatsSection, Threshold, ThresholdValue,
+    ToolInfo,
 };
 
 mod common;
@@ -185,9 +187,11 @@ fn hostile_path_and_message_are_fully_escaped() {
         !html.contains(hostile_message),
         "raw hostile message leaked into report.html"
     );
-    // No live scriptable markup from the payload.
+    // No live scriptable markup from the payload (the page's own fixed
+    // slice-2 script block is the only `<script>` allowed — see the
+    // fixed-script test below).
     assert!(
-        !html.contains("<script"),
+        !html.contains("<script>alert"),
         "payload broke out into a script element"
     );
     assert!(
@@ -204,31 +208,63 @@ fn hostile_path_and_message_are_fully_escaped() {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Zero JavaScript + LINKED (not inline) charts
+// 3. Fixed enhancement script + LINKED (not inline) charts (slice 2)
 // ---------------------------------------------------------------------------
 
+/// Extract the single inline `<script>` block body (between `<script>\n` and
+/// `\n</script>`), asserting there is exactly one script block.
+fn script_body(html: &str) -> &str {
+    assert_eq!(
+        html.matches("<script>").count(),
+        1,
+        "exactly one inline script block expected"
+    );
+    assert_eq!(
+        html.matches("</script>").count(),
+        1,
+        "exactly one inline script close expected"
+    );
+    let from = html.find("<script>").unwrap() + "<script>".len();
+    let to = html.find("</script>").unwrap();
+    html[from..to].trim_matches('\n')
+}
+
 #[test]
-fn zero_javascript_and_linked_chart_references() {
+fn fixed_script_and_linked_chart_references() {
     let mut doc = base_doc();
     doc.components = Some(vec![component(1, "src")]);
     let charts = vec![
         "include-graph.svg".to_string(),
         "component-coupling.svg".to_string(),
         "hot-components.svg".to_string(),
+        "layer-workspace.svg".to_string(),
+        "layer-file.svg".to_string(),
         "component-01-src.svg".to_string(),
     ];
     let html = render_html(&doc, &charts);
 
-    // Zero JavaScript surface.
-    assert!(!html.contains("<script"));
-    assert!(!html.contains("javascript:"));
+    // Exactly one inline script block, byte-identical to the fixed source
+    // (deterministic output — no timestamps/ids/counters in generated code).
+    assert_eq!(script_body(&html), report_script());
+    assert!(report_script().lines().count() < 60);
+    // No libraries, no vendoring, no external references.
+    assert!(!html.contains("http://"));
+    assert!(!html.contains("https://"));
+    assert!(!html.contains("src=\"http"));
+    // No inline event-handler attributes — binding is via addEventListener
+    // in the one script block.
     assert!(!html.contains("onclick"));
     assert!(!html.contains("onerror"));
     assert!(!html.contains("onload"));
+    assert!(!html.contains("javascript:"));
     // LINKED variant: relative links, no inlined SVG content.
     assert!(html.contains("<img src=\"charts/include-graph.svg\""));
     assert!(html.contains("<a href=\"charts/include-graph.svg\""));
     assert!(!html.contains("<svg"));
+    // Pan/zoom figures carry the enhancement hook (buttons are added by the
+    // script at runtime, so no-JS output stays fully usable static).
+    assert!(html.contains("<figure class=\"pz\" data-chart=\"layer-workspace\">"));
+    assert!(html.contains("<figure class=\"pz\" data-chart=\"layer-file\">"));
     // Component detail page linked by pinned filename.
     assert!(html.contains("charts/component-01-src.svg"));
     // Still offline/self-contained: no external references.
@@ -416,6 +452,158 @@ fn colliding_slugs_yield_unique_anchors_and_all_hrefs_resolve() {
 }
 
 // ---------------------------------------------------------------------------
+// 7b. BLOCK-remediation lock: slug-colliding findings link to their OWN rows
+// even when ranked-file order disagrees with finding_id order
+// ---------------------------------------------------------------------------
+
+/// One costly function in `path` (cost = cyclomatic) to flip the file
+/// drill-down ranking without touching any finding identity.
+fn costly_fn(path: &str) -> FunctionStats {
+    FunctionStats {
+        id: format!("{path}#work#1:1"),
+        name: "work".to_string(),
+        path: path.to_string(),
+        span: Span::point(1, 1),
+        param_count: 0,
+        cyclomatic_complexity: 50,
+        cognitive_complexity: 0,
+        max_loop_depth: 0,
+        alloc_site_count: 0,
+        length_lines: 10,
+        call_fanout: Some(0),
+        call_fanin: Some(0),
+        call_depth: Some(0),
+        is_recursive: Some(false),
+        idiom_hash: None,
+        error_path: Some(false),
+        alloc_family: None,
+        cfg_gated: None,
+    }
+}
+
+/// Value of attribute `name="…"` in a tag/row fragment.
+fn attr_value(fragment: &str, name: &str) -> Option<String> {
+    let needle = format!("{name}=\"");
+    let from = fragment.find(&needle)? + needle.len();
+    let to = fragment[from..].find('"')?;
+    Some(fragment[from..from + to].to_string())
+}
+
+/// `(data-path, href-target)` for every `href="#…"` in each `<tr …>` row of
+/// a section, in row order (file drill-down rows carry the finding links).
+fn file_row_links(files_section: &str) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    for chunk in files_section.split("<tr ").skip(1) {
+        let row = &chunk[..chunk.find("</tr>").expect("row close")];
+        let path = attr_value(row, "data-path").expect("file row data-path");
+        let mut rest = row;
+        while let Some(i) = rest.find("href=\"#") {
+            let from = i + "href=\"#".len();
+            let to = rest[from..].find('"').expect("href close");
+            out.push((path.clone(), rest[from..from + to].to_string()));
+            rest = &rest[from + to + 1..];
+        }
+    }
+    out
+}
+
+/// `id="…" → data-path="…"` for every `<tr …>` row of a section (findings
+/// table rows: anchor → owning file).
+fn row_paths_by_id(findings_section: &str) -> BTreeMap<String, String> {
+    let mut map = BTreeMap::new();
+    for chunk in findings_section.split("<tr ").skip(1) {
+        let row = &chunk[..chunk.find("</tr>").expect("row close")];
+        let id = attr_value(row, "id").expect("finding row id");
+        let path = attr_value(row, "data-path").expect("finding row data-path");
+        map.insert(id, path);
+    }
+    map
+}
+
+#[test]
+fn slug_colliding_findings_link_to_own_rows_despite_ranked_order() {
+    // Same rule/line/col on two paths whose finding anchors slug-collide
+    // (`-` vs `/` both map to `-`): distinct ids sharing one bare anchor.
+    let mut doc = base_doc();
+    doc.files = vec![file_entry("a-b.c", 10), file_entry("a/b.c", 10)];
+    doc.scan.file_count = 2;
+    doc.findings = vec![
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a-b.c"),
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a/b.c"),
+    ];
+    let id_lo = "PERF-C-ALLOC-001:a-b.c:7:9";
+    let id_hi = "PERF-C-ALLOC-001:a/b.c:7:9";
+    assert_eq!(doc.findings[0].finding_id, id_lo);
+    assert_eq!(doc.findings[1].finding_id, id_hi);
+    assert!(
+        id_lo < id_hi,
+        "test needs `-` (0x2D) to sort before `/` (0x2F)"
+    );
+    // Cost flips the ranked file order (degree 0 = 0, cost 50 > 0): the `/`
+    // file renders FIRST while its finding_id sorts SECOND.
+    doc.stats.functions = vec![costly_fn("a/b.c")];
+
+    let html = render_html(&doc, &[]);
+    let files = section(&html, "<section id=\"files\">", "</section>");
+    let findings = section(&html, "<section id=\"findings\">", "</section>");
+
+    // Precondition: ranked-file order really disagrees with finding_id order.
+    let pos_hi_file = files.find("data-path=\"a/b.c\"").expect("hi file row");
+    let pos_lo_file = files.find("data-path=\"a-b.c\"").expect("lo file row");
+    assert!(
+        pos_hi_file < pos_lo_file,
+        "ranked order not flipped — lock precondition broken:\n{files}"
+    );
+    // Findings table keeps finding_id-ascending order: the `-` row owns the
+    // bare slug, the `/` row the `-2` suffixed anchor.
+    let bare = "finding-PERF-C-ALLOC-001-a-b-c-7-9";
+    let suffixed = "finding-PERF-C-ALLOC-001-a-b-c-7-9-2";
+    let owners = row_paths_by_id(findings);
+    assert_eq!(
+        owners.get(bare),
+        Some(&"a-b.c".to_string()),
+        "bare anchor owned by the wrong row: {owners:?}"
+    );
+    assert_eq!(
+        owners.get(suffixed),
+        Some(&"a/b.c".to_string()),
+        "suffixed anchor owned by the wrong row: {owners:?}"
+    );
+    let pos_lo_row = findings.find(bare).expect("bare row");
+    let pos_hi_row = findings.find(suffixed).expect("suffixed row");
+    assert!(
+        pos_lo_row < pos_hi_row,
+        "findings table not in finding_id order:\n{findings}"
+    );
+    // Row↔link pairing: each file row's drill-down href resolves to the
+    // findings row with the SAME data-path (not merely to a live anchor).
+    let links = file_row_links(files);
+    assert_eq!(
+        links.len(),
+        2,
+        "one drill-down link per file row: {links:?}"
+    );
+    for (file_path, target) in &links {
+        let owner = owners
+            .get(target)
+            .unwrap_or_else(|| panic!("drill-down href #{target} has no findings row"));
+        assert_eq!(
+            owner, file_path,
+            "file row {file_path} links to #{target} owned by {owner}"
+        );
+    }
+    // Exact pairing (the old queue-pop order handed the first-rendered file
+    // the bare anchor): `-` file → bare, `/` file → `-2`.
+    for (file_path, target) in &links {
+        let expected = if file_path == "a-b.c" { bare } else { suffixed };
+        assert_eq!(
+            target, expected,
+            "file row {file_path} links to #{target}, expected #{expected}"
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
 // 8. FIX 2 lock: hostile chart stems never become links
 // ---------------------------------------------------------------------------
 
@@ -567,7 +755,145 @@ fn double_scan_report_html_byte_identical_unmasked() {
         "report.html diverged between scans (must be byte-identical UNMASKED)"
     );
     let text = String::from_utf8(first).expect("report.html is UTF-8");
-    assert!(!text.contains("<script"));
+    // Slice-2 fixed script block present and byte-identical to the source.
+    assert_eq!(script_body(&text), report_script());
     assert!(text.ends_with('\n'));
     assert!(!text.contains(&target), "absolute scan root leaked");
+}
+
+// ---------------------------------------------------------------------------
+// 11. Slice-2 locks: banned script APIs absent from the emitted page
+// ---------------------------------------------------------------------------
+
+#[test]
+fn enhancement_script_contains_no_banned_apis() {
+    let mut doc = base_doc();
+    doc.files = vec![file_entry("b.c", 30), file_entry("a.c", 10)];
+    doc.scan.file_count = 2;
+    doc.findings = vec![
+        finding_at("PERF-C-STR-002", Severity::Warn, Confidence::Medium, "b.c"),
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
+    ];
+    doc.components = Some(vec![component(1, "src")]);
+    let charts = vec![
+        "layer-workspace.svg".to_string(),
+        "layer-file.svg".to_string(),
+    ];
+    let html = render_html(&doc, &charts);
+    let script = script_body(&html);
+
+    // Hard JS safety rules: none of these may appear in the emitted page
+    // (script or markup).
+    for banned in [
+        "Date(",
+        "random(",
+        "fetch(",
+        "XMLHttpRequest",
+        "eval(",
+        "Function(",
+        "setTimeout",
+        "setInterval",
+        "innerHTML",
+        "outerHTML",
+        "insertAdjacentHTML",
+        "document.write",
+    ] {
+        assert!(
+            !html.contains(banned),
+            "banned API {banned:?} present in report.html"
+        );
+    }
+    // No inline event-handler ATTRIBUTES anywhere in the template
+    // (all binding is via addEventListener in the one script block).
+    // Scan attribute positions only (`="`), so handler *method* names in
+    // the script (addEventListener("click"…)) do not false-positive.
+    let mut rest = html.as_str();
+    while let Some(i) = rest.find('=') {
+        let attr_start = rest[..i].rfind([' ', '<']).map_or(0, |j| j + 1);
+        let attr = &rest[attr_start..i];
+        assert!(
+            !attr.to_lowercase().starts_with("on"),
+            "inline event-handler attribute {attr:?} in report.html"
+        );
+        rest = &rest[i + 1..];
+    }
+    assert!(script.contains("addEventListener"));
+    assert!(script.contains("textContent"));
+    // No data duplication for JS: the script carries no finding payload —
+    // filtering runs over existing DOM ids/anchors only.
+    assert!(!script.contains("finding_id"));
+    assert!(!script.contains("PERF-C-"));
+}
+
+// ---------------------------------------------------------------------------
+// 12. Slice-2 locks: click-to-filter controls + DOM hooks present
+// ---------------------------------------------------------------------------
+
+#[test]
+fn click_to_filter_controls_and_hooks_present() {
+    let mut doc = base_doc();
+    doc.files = vec![file_entry("b.c", 30), file_entry("a.c", 10)];
+    doc.scan.file_count = 2;
+    doc.findings = vec![
+        finding_at("PERF-C-STR-002", Severity::Warn, Confidence::Medium, "b.c"),
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
+    ];
+    doc.components = Some(vec![component(1, "src")]);
+    let html = render_html(&doc, &["include-graph.svg".to_string()]);
+
+    // Visible filter bar with a reset control (hidden until a filter applies).
+    assert!(html.contains("<div id=\"filter-bar\">"));
+    assert!(html.contains("<span id=\"filter-label\">all findings</span>"));
+    assert!(html.contains("<button id=\"filter-clear\" type=\"button\" hidden>clear</button>"));
+    // Findings rows carry the filter key (escaped at render time).
+    assert!(html.contains("data-path=\"a.c\""));
+    assert!(html.contains("data-path=\"b.c\""));
+    // File + component rows carry the click-source keys.
+    let files = section(&html, "<section id=\"files\">", "</section>");
+    assert!(files.contains("data-path=\"a.c\""));
+    let comps = section(&html, "<section id=\"components\">", "</section>");
+    assert!(comps.contains("data-prefix=\"src\""));
+}
+
+// ---------------------------------------------------------------------------
+// 13. Slice-2 locks: no-JS content completeness (all rows present static)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn all_content_present_without_javascript() {
+    let mut doc = base_doc();
+    doc.files = vec![file_entry("b.c", 30), file_entry("a.c", 10)];
+    doc.scan.file_count = 2;
+    doc.findings = vec![
+        finding_at("PERF-C-STR-002", Severity::Warn, Confidence::Medium, "b.c"),
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
+        finding_at("PERF-C-LOOP-001", Severity::Info, Confidence::Low, "a.c"),
+    ];
+    doc.components = Some(vec![component(1, "src")]);
+    let html = render_html(&doc, &["include-graph.svg".to_string()]);
+
+    // The script only ENHANCES: every row is already in the static markup.
+    let table = section(&html, "<section id=\"findings\">", "</section>");
+    assert_eq!(
+        table.matches("<tr id=\"finding-").count(),
+        3,
+        "every finding must render statically (no-JS degradation)"
+    );
+    // No row is hidden by default — filtering only ever hides at runtime
+    // (the single static `hidden` is the clear-button reset control).
+    assert_eq!(
+        table.matches("hidden").count(),
+        1,
+        "only the filter-clear button may carry `hidden` statically"
+    );
+    let files = section(&html, "<section id=\"files\">", "</section>");
+    assert_eq!(files.matches("<tr id=\"file-").count(), 2);
+    // Figures + captions render without JS.
+    assert!(html.contains("<figure class=\"pz\""));
+    assert!(html.contains("<figcaption>"));
+    // Findings order unchanged by slice 2 (finding_id ascending).
+    let pos_alloc = table.find("PERF-C-ALLOC-001").expect("alloc row");
+    let pos_loop = table.find("PERF-C-LOOP-001").expect("loop row");
+    let pos_str = table.find("PERF-C-STR-002").expect("str row");
+    assert!(pos_alloc < pos_loop && pos_loop < pos_str);
 }

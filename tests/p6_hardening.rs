@@ -87,7 +87,8 @@ fn fixture_root() -> PathBuf {
 /// carry no provenance and are compared byte-exact (verified by
 /// `regenerate_goldens`). report.html carries no provenance by construction
 /// (Option B slice 1: schema/file/finding counts only), so its mask is the
-/// absolute-root substitution only.
+/// absolute-root substitution plus the Wave B1 resolved-ARCH-003 row
+/// neutralizer (see common::mask_golden_html_semantic).
 const GOLDEN_ARTIFACTS: [&str; 10] = [
     "metrics.json",
     "metrics.schema.v1.4.json",
@@ -450,8 +451,9 @@ fn regenerate_goldens() {
             tree.tag
         );
         assert!(
-            !html_text.contains("<script"),
-            "report.html (tree '{}') must contain zero JavaScript",
+            html_text.matches("<script>").count() == 1
+                && html_text.matches("</script>").count() == 1,
+            "report.html (tree '{}') must contain exactly one fixed enhancement script block",
             tree.tag
         );
 
@@ -515,8 +517,14 @@ fn report_matches_committed_goldens() {
                 "report.html" => {
                     let actual = String::from_utf8(actual).expect("report.html is UTF-8");
                     let expected = String::from_utf8(expected).expect("golden is UTF-8");
-                    common::mask_golden_html(&actual, &root_str)
-                        == common::mask_golden_html(&expected, &root_str)
+                    let actual = common::mask_golden_html(&actual, &root_str);
+                    let expected = common::mask_golden_html(&expected, &root_str);
+                    // Wave B1 resolved-edge delta (MEDIUM resolved ARCH-003 row
+                    // under `semantic-clang` vs the goldens' default-build LOW
+                    // row — see common::mask_golden_html_semantic), no-op on
+                    // trees that emit no resolved `PERF-C-ARCH-003`.
+                    common::mask_golden_html_semantic(&actual)
+                        == common::mask_golden_html_semantic(&expected)
                 }
                 // Byte-exact for schema + SVGs (no provenance inside).
                 _ => actual == expected,
