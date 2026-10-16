@@ -557,3 +557,6 @@
 {"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-081", "status": "done", "action": "Digestibility research DONE -> B implemented (group-and-fold); C-split seamed for later"}}
 {"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-083", "status": "done", "action": "C-split DONE (findings-detail.md/html + S5-cap, django humans 65.6KB); re-owed pixel glance still open for when vision backend returns"}}
 {"demoted_from_hot":"2026-10-17","record":{"id":"A-pf-008","status":"active","action":"Housekeeping remainder: stats.distributions activation = MINOR schema bump when founder accepts (SPDX + modules drift DONE 2689e64)"}}
+{"demoted_from_hot":"2026-10-17","record":{"id":"A-pf-085","status":"done","action":"NEXT SESSION (/new): R1 algorithms research -> docs/research/map-algorithms.md; then R2/R3/R4-gate/I1-I5 per map-research + map-build"}}
+{"demoted_from_hot":"2026-10-17","record":{"id":"A-pf-051","status":"active","action":"B6: publish pre-release + smoke-test + hand inventory to website"}}
+{"demoted_from_hot":"2026-10-17","record":{"id":"A-pf-073","status":"active","action":"NEXT SESSION: evidence-beta M5 (first release) -> un-park beta-release (clear B-pf-001/B-pf-002, publish v0.2.0-beta.1 --prerelease --latest=false, T2 packaging). "}}

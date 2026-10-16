@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "R1 DONE (map-algorithms.md, dual APPROVED); R2 precedents queued; paper+JS+TS parked; M5 gated B-pf-001/002.",
+  "current_phase": "R1-REDO DONE (evidence-backed map-algorithms.md, strict review clean); R2 precedents queued; paper+JS+TS parked; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -155,19 +155,9 @@
       "action": "R3 follow-ups: Rust resolver, TYPE-002 repr(C), CI schema validator"
     },
     {
-      "id": "A-pf-051",
-      "status": "active",
-      "action": "B6: publish pre-release + smoke-test + hand inventory to website"
-    },
-    {
       "id": "A-pf-055",
       "status": "active",
       "action": "B6 founder-gated finish: contact, secrets, tag, publish, review"
-    },
-    {
-      "id": "A-pf-073",
-      "status": "active",
-      "action": "NEXT SESSION: evidence-beta M5 (first release) -> un-park beta-release (clear B-pf-001/B-pf-002, publish v0.2.0-beta.1 --prerelease --latest=false, T2 packaging). "
     },
     {
       "id": "A-pf-074",
@@ -193,11 +183,6 @@
       "id": "A-pf-084",
       "status": "active",
       "action": "NEXT SESSION (/new): semantic-deepening burst — trip-count/cost gating + invariance + Rust receiver-type + reachability + runtime spot-checks; maintainer birdseye (entry-point-stratified cost map); then corpus scans + prereg + N=26 campaign"
-    },
-    {
-      "id": "A-pf-085",
-      "status": "done",
-      "action": "NEXT SESSION (/new): R1 algorithms research -> docs/research/map-algorithms.md; then R2/R3/R4-gate/I1-I5 per map-research + map-build"
     },
     {
       "id": "A-pf-086",

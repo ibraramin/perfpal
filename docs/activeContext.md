@@ -1,9 +1,10 @@
 # Active Context
 
 ## Current Task
-R1 DONE — `docs/research/map-algorithms.md` committed (7 families, fit/misfit
-matrix, dual review APPROVED). R2 precedents queued for fresh session per
-founder order (one session per R/I, each commits).
+R1-REDO DONE — `docs/research/map-algorithms.md` rewritten from fetched sources
+only (3 lanes, 36 dated citations, dead ends listed; strict review clean after
+2 citation fixes) + LL-012 filed on the first-pass failure. R2 precedents queued
+for fresh session (one session per R/I, each commits).
 
 ## Recent Decisions
 - **D-pf-215 (live):** map-first direction LOCKED — maintainer birdseye map is the core feature;

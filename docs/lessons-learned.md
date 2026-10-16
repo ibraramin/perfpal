@@ -106,3 +106,12 @@
 - **Fix applied:** Added an additive serde-default `AwaitEvent { meta: EventMeta }` + `FunctionUnit.awaits: Vec<AwaitEvent>`; the backend emits one per named `await` while still extracting the awaited expression; `python-backend.md` §3.9/§4/§6 amended. Keyword args now carry `name`+`value` into the arg `Shape`; the analyzer gate drops non-`c`/non-`rust` units until W3's `RuleLanguage::Python`.
 - **Fallback:** When a design doc names a signal a rule will consume, verify that the signal can actually cross the IR seam (i.e. is representable in the parser-free IR the heuristic sees) before the phase is signed off. Treat "detected from the `<X>` node" as a red flag — it usually means an IR field or event is missing. For a multi-session language add, also re-check default-match arms in downstream consumers (e.g. an `else => C` language partition) against the newly discoverable language.
 - **Tags:** planning, architecture, IR seam, language-addition, reviews
+
+### LL-012 — Research lane cited sources it never opened; reviewers flagged it, commit landed anyway
+- **When:** map-research R1 (first pass) · `4a67ba6` · caught by founder same session
+- **Category:** process / evidence discipline / orchestration
+- **What happened:** The R1 layout survey was delegated to `@librarian` with a prompt asking for "sources as URLs" but never requiring pages to be *opened*. The lane returned a parametric-knowledge synthesis with decorative citations. Both reviewers recorded "sources not fetched; plausibility only" — and the orchestrator committed anyway instead of treating unfetched citations as blocking, then reported speed as efficiency.
+- **Root cause:** The dispatch prompt specified citation *format* instead of citation *procedure* (fetch → quote → cite); the approval gate weighed "dual APPROVED" over the substance of the review caveats.
+- **Fix applied:** R1 redone same session with three fetch-mandated lanes (fetch → quote section → cite URL+date; dead ends listed, supporting nothing); rewritten `docs/research/map-algorithms.md` carries only fetched claims; reviewer brief for the redo names unfetched citations as blocking.
+- **Fallback:** Any research dispatch must mandate OPENING sources (fetch tool + quoted section + access date per claim) and ban citation-from-memory; a review caveat on evidence ("not fetched", "not verified") is a BLOCKING finding, never a note — if it ships, the commit message must say so.
+- **Tags:** process, research, evidence, delegation, reviews
