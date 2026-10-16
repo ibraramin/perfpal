@@ -13,7 +13,7 @@
 #![allow(dead_code)]
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
 
 use perfpal::analyzer::Finding;
@@ -23,6 +23,7 @@ use perfpal::ir::{
     IncludeForm, LocCounts, LoopKind, LoopNode, ParseHealth, ResolverTier, ScopeClass, Shape,
     ShapeKind, Span, StatementRole, StorageClass, StructDef, StructKind, StructMember,
 };
+use perfpal::reporter::MD_ESCAPE_CHARS;
 use perfpal::scanner::{FileUnit, FunctionUnit};
 
 /// All findings of one rule, preserving document order.
@@ -119,7 +120,27 @@ pub fn copy_tree_excluding(from: &Path, to: &Path, excluded_dir: &str) {
     for entry in fs::read_dir(from).expect("read source tree").flatten() {
         let src = entry.path();
         let dst = to.join(entry.file_name());
-        if src.is_dir() {
+        // `file_type` does NOT follow symlinks (unlike `Path::is_dir`), so a
+        // symlinked directory is never recursed into and links are recreated
+        // as links — the snapshot keeps parity with the live tree instead of
+        // inlining linked content or panicking on a dangling link.
+        let file_type = entry.file_type().expect("read entry file type");
+        if file_type.is_symlink() {
+            let link_target = fs::read_link(&src).expect("read symlink target");
+            #[cfg(unix)]
+            std::os::unix::fs::symlink(&link_target, &dst).expect("recreate symlink");
+            #[cfg(windows)]
+            {
+                if src.is_dir() {
+                    std::os::windows::fs::symlink_dir(&link_target, &dst)
+                } else {
+                    std::os::windows::fs::symlink_file(&link_target, &dst)
+                }
+                .expect("recreate symlink");
+            }
+            #[cfg(not(any(unix, windows)))]
+            panic!("symlink copy unsupported on this platform");
+        } else if file_type.is_dir() {
             if entry.file_name().to_str() == Some(excluded_dir) {
                 continue;
             }
@@ -341,20 +362,11 @@ pub fn mask_golden_semantic(masked_metrics: &str) -> String {
     value.to_string()
 }
 
-/// Markdown metacharacter set escaped by the reporter's `escape_md`
-/// (`src/reporter/mod.rs::MD_ESCAPE_CHARS`). Duplicated here because the
-/// helper is private to the crate and the golden masker must reproduce the
-/// escaping to neutralize ABSOLUTE scan roots whose characters get
-/// backslash-escaped in report.md (e.g. `-` in `e2e-mixed`, `examples-rust`).
-/// If the reporter's pinned set ever changes, `regenerate_goldens`' `<ROOT>`
-/// sentinel assertion fails loudly.
-const MD_ESCAPE_CHARS: &[char] = &[
-    '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '<', '>', '&',
-];
-
-/// Reproduce `escape_md` for the absolute-root needle. Public so the M2
-/// benchmark's strict provenance-only report mask (`tests/benchmark/mod.rs`)
-/// can build the SAME escaped root needles as [`mask_golden_report`] without
+/// Reproduce `escape_md` for the absolute-root needle over the reporter's
+/// PINNED set ([`MD_ESCAPE_CHARS`], imported — single source of truth, so a
+/// reporter-side change fails to compile here instead of silently diverging).
+/// Public so the M2 benchmark's strict provenance-only report mask
+/// (`tests/benchmark/mod.rs`) can build the SAME escaped root needles as [`mask_golden_report`] without
 /// duplicating the Markdown metacharacter set. Adding `pub` does not change
 /// this function's behavior for any existing suite.
 pub fn markdown_escaped(input: &str) -> String {
@@ -582,6 +594,52 @@ fn normalize_html_arch003_row(row: &str) -> String {
         rebuilt.push_str(suffix);
     }
     rebuilt
+}
+
+// ---------------------------------------------------------------------------
+// RAII temp dirs: panic-safe cleanup for harness-owned snapshot parents.
+// ---------------------------------------------------------------------------
+
+/// RAII temp dir: created under the system temp dir, removed on drop — even
+/// on panic — so a failing test cannot leak snapshot trees. (The M2
+/// benchmark's private `TempTree` already provides this for its own rungs;
+/// this shared guard covers the p6 golden snapshot parents.)
+pub struct TempDir {
+    path: PathBuf,
+}
+
+impl TempDir {
+    /// Create a uniquely-named temp dir for `tag`.
+    ///
+    /// # Panics
+    /// Panics when the clock is before the epoch or the dir cannot be
+    /// created — a broken temp dir is a test-authoring bug.
+    #[must_use]
+    pub fn new(tag: &str) -> Self {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock before epoch")
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!(
+            "perfpal-common-{tag}-{}-{nanos}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&path).expect("create temp dir");
+        Self { path }
+    }
+
+    /// The temp dir root.
+    #[must_use]
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        fs::remove_dir_all(&self.path).ok();
+    }
 }
 
 // ---------------------------------------------------------------------------

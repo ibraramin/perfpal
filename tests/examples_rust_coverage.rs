@@ -138,7 +138,7 @@ const SILENT_CONTROLS: [Control; 13] = [
         file: "src/01_alloc_churn.rs",
         line: 21,
         rule: RS_ALLOC_001_RULE_ID,
-        needle: "Vec::new()",
+        needle: "scratch: Vec<u8> = Vec::new()",
     },
     Control {
         file: "src/01_alloc_churn.rs",
@@ -156,7 +156,7 @@ const SILENT_CONTROLS: [Control; 13] = [
         file: "src/02_string_building.rs",
         line: 43,
         rule: RS_STR_002_RULE_ID,
-        needle: "s.len()",
+        needle: "total += s.len()",
     },
     Control {
         file: "src/02_string_building.rs",
@@ -192,7 +192,7 @@ const SILENT_CONTROLS: [Control; 13] = [
         file: "src/08_globals_and_chains.rs",
         line: 51,
         rule: RS_LOOP_006_RULE_ID,
-        needle: "direct_handler()",
+        needle: "direct_handler(); // control",
     },
     Control {
         file: "src/08_globals_and_chains.rs",
@@ -204,7 +204,7 @@ const SILENT_CONTROLS: [Control; 13] = [
         file: "src/09_membership_scan.rs",
         line: 28,
         rule: RS_LOOP_007_RULE_ID,
-        needle: "table[j] == key",
+        needle: "if table[j] == key {",
     },
     Control {
         file: "src/10_cross_file_and_arch.rs",
@@ -358,6 +358,15 @@ fn examples_rust_corpus_fires_exactly_the_22_rust_rules() {
             control.file,
             control.line,
             control.needle
+        );
+
+        assert!(
+            source.matches(control.needle).count() == 1,
+            "control needle {:?} in {} is ambiguous (occurs {}x) — lengthen it \
+             so the anti-typo pin cannot match a silent alternate line",
+            control.needle,
+            control.file,
+            source.matches(control.needle).count()
         );
 
         // (b) the target rule must NOT fire on the control construct.

@@ -48,7 +48,10 @@ const HUMAN_CAP: usize = 10;
 /// Pinned Markdown metacharacter escape set (output-contract §2 paths rule).
 /// Every char here is backslash-escaped wherever document-derived text is
 /// embedded. `|` inclusion makes table cells safe without a second pass.
-const MD_ESCAPE_CHARS: &[char] = &[
+///
+/// `pub` (not private) so the integration-test harness imports this single
+/// source of truth instead of hand-mirroring it.
+pub const MD_ESCAPE_CHARS: &[char] = &[
     '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '<', '>', '&',
 ];
 

@@ -42,6 +42,11 @@ struct GoldenTree {
     fixture: &'static str,
     /// Committed golden report tree relative to `CARGO_MANIFEST_DIR`.
     golden: &'static str,
+    /// When `Some(dir)`, the fixture is snapshotted into a tempdir EXCLUDING
+    /// `dir` at every depth (see [`common::copy_tree_excluding`]); when
+    /// `None`, the fixture is scanned in place. A descriptor field — never a
+    /// `tag`-string match — drives the dispatch.
+    snapshot_exclude: Option<&'static str>,
 }
 
 /// The four locked trees. `c` is the original (T1 uniqueness stays pointed
@@ -53,21 +58,25 @@ const GOLDEN_TREES: [GoldenTree; 4] = [
         tag: "c",
         fixture: "tests/fixtures/e2e",
         golden: "tests/golden/report",
+        snapshot_exclude: None,
     },
     GoldenTree {
         tag: "mixed",
         fixture: "tests/fixtures/e2e-mixed",
         golden: "tests/golden/report-mixed",
+        snapshot_exclude: None,
     },
     GoldenTree {
         tag: "rust",
         fixture: "examples-rust",
         golden: "tests/golden/report-rust",
+        snapshot_exclude: Some("target"),
     },
     GoldenTree {
         tag: "python",
         fixture: "examples-python",
         golden: "tests/golden/report-python",
+        snapshot_exclude: None,
     },
 ];
 
@@ -316,20 +325,22 @@ fn kitchen_sink_finding_ids_are_globally_unique() {
 // T4 — golden report directories
 // ===========================================================================
 
-/// Materialize the scan target for a tree. The Rust tree (`examples-rust`) is
-/// snapshotted into a tempdir EXCLUDING any `target/` directory: `scanner::discover`
-/// does not skip it, so a future `cargo build` in the corpus would silently
-/// inflate the scan. Relative paths are preserved, so the snapshot is
-/// byte-identical to the live tree modulo the (masked) absolute root. The C and
-/// mixed fixtures are scanned in place.
+/// Materialize the scan target for a tree. A tree carrying
+/// [`GoldenTree::snapshot_exclude`] is snapshotted into a tempdir with that
+/// directory excluded at every depth: `scanner::discover` does not skip it,
+/// so a future `cargo build` in the corpus would silently inflate the scan.
+/// Relative paths are preserved, so the snapshot is byte-identical to the
+/// live tree modulo the (masked) absolute root. All other fixtures are
+/// scanned in place.
 ///
-/// Returns the scan root plus, for snapshotted trees, the temp parent to clean
-/// up once the run is done.
-fn materialize_fixture(tree: &GoldenTree) -> (PathBuf, Option<PathBuf>) {
-    if tree.tag == "rust" {
-        let parent = temp_dir(&format!("corpus-{}", tree.tag));
-        let snapshot = parent.join("corpus");
-        common::copy_tree_excluding(&manifest_path(tree.fixture), &snapshot, "target");
+/// Returns the scan root plus, for snapshotted trees, the RAII temp parent:
+/// dropping the guard removes the snapshot — even on panic — so no manual
+/// `remove_dir_all` (which a panic would skip) is needed at the call sites.
+fn materialize_fixture(tree: &GoldenTree) -> (PathBuf, Option<common::TempDir>) {
+    if let Some(excluded) = tree.snapshot_exclude {
+        let parent = common::TempDir::new(&format!("corpus-{}", tree.tag));
+        let snapshot = parent.path().join("corpus");
+        common::copy_tree_excluding(&manifest_path(tree.fixture), &snapshot, excluded);
         (snapshot, Some(parent))
     } else {
         (manifest_path(tree.fixture), None)
@@ -350,7 +361,7 @@ fn regenerate_goldens() {
     }
 
     for tree in &GOLDEN_TREES {
-        let (fixture, snapshot_parent) = materialize_fixture(tree);
+        let (fixture, _snapshot_guard) = materialize_fixture(tree);
         let golden = manifest_path(tree.golden);
         // --force is REQUIRED here by design: the committed golden tree is a
         // plain directory in git and may exist without a fresh metrics.json
@@ -507,10 +518,8 @@ fn regenerate_goldens() {
             "findings-detail.html (tree '{}') must contain exactly one fixed enhancement script block",
             tree.tag
         );
-
-        if let Some(parent) = snapshot_parent {
-            fs::remove_dir_all(parent).ok();
-        }
+        // The snapshot tempdir (when any) is removed by `_snapshot_guard`'s
+        // drop — even on panic — so no manual cleanup belongs here.
     }
 }
 
@@ -522,7 +531,7 @@ fn regenerate_goldens() {
 #[test]
 fn report_matches_committed_goldens() {
     for tree in &GOLDEN_TREES {
-        let (fixture, snapshot_parent) = materialize_fixture(tree);
+        let (fixture, _snapshot_guard) = materialize_fixture(tree);
         let golden = manifest_path(tree.golden);
         let (out, _doc) = run_pipeline_and_parse(&format!("golden-{}", tree.tag), &fixture);
 
@@ -630,9 +639,7 @@ fn report_matches_committed_goldens() {
              PERFPAL_REGEN_GOLDEN=1 cargo test --test p6_hardening regenerate_goldens",
             tree.tag
         );
-
-        if let Some(parent) = snapshot_parent {
-            fs::remove_dir_all(parent).ok();
-        }
+        // The snapshot tempdir (when any) is removed by `_snapshot_guard`'s
+        // drop — even on panic — so no manual cleanup belongs here.
     }
 }

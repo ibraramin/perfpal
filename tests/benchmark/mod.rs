@@ -857,9 +857,16 @@ fn mask_report_strict(raw: &str, root: &str) -> String {
 
 /// Replace the value token following `"<key>":` with `replacement`, leaving
 /// every other byte (key order, separators, whitespace) untouched. The three
-/// provenance keys occur exactly once each in the v1 metrics.json.
+/// provenance keys occur exactly once each in the v1 metrics.json — asserted,
+/// so a second same-named key (e.g. a future nested `root_path`) fails loudly
+/// instead of masking only the first occurrence.
 fn replace_json_value(raw: &str, key: &str, replacement: &str) -> String {
     let needle = format!("\"{key}\":");
+    assert_eq!(
+        raw.matches(&needle).count(),
+        1,
+        "provenance key {key} must occur exactly once in metrics.json"
+    );
     let Some(colon) = raw.find(&needle) else {
         return raw.to_string();
     };
