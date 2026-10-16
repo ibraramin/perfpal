@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Perfpal Findings Detail — schema 1.4</title>
+<style>
+body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+#findings table{min-width:72rem}
+#findings tbody td{white-space:nowrap}
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
+figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}
+figcaption{margin-top:.5rem}
+img{max-width:100%;height:auto}
+figure.pz img{max-width:none;touch-action:none}
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
+#filter-bar{margin:.5rem 0}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
+</style>
+</head>
+<body>
+<header>
+<h1>Perfpal Report</h1>
+<p>schema_version 1.4 · perfpal perfpal 0.2.0-beta.1 · 14 files · 32 findings (10 hot, 9 warn, 13 info) · languages: rust</p>
+</header>
+<nav>
+<ul>
+<li><a href="report.html">Report</a></li>
+<li><a href="#findings">Findings detail</a></li>
+</ul>
+</nav>
+<section id="findings">
+<h2>Findings detail</h2>
+<div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>22 rules: 32 of 32 total findings (10 hot, 9 warn, 13 info).</p>
+<p><a href="report.html">Back to report.html</a>.</p>
+<section id="rule-PERF-RS-ALLOC-001">
+<h3><code>PERF-RS-ALLOC-001</code> — 4 findings (4 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5" data-path="src/01_alloc_churn.rs"><td>PERF-RS-ALLOC-001:src/01_alloc_churn.rs:34:5</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/01_alloc_churn.rs:34:5</td><td>build_row_labels</td><td class="wrap">loop performs 3 per-iteration allocation(s) (format, to_string, vec) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td class="wrap">alloc_count=3, callee=format, callees=format, to_string, vec, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9" data-path="src/01_alloc_churn.rs"><td>PERF-RS-ALLOC-001:src/01_alloc_churn.rs:58:9</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/01_alloc_churn.rs:58:9</td><td>grid_reset</td><td class="wrap">loop performs 1 per-iteration allocation(s) (vec) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td class="wrap">alloc_count=1, callee=vec, callees=vec, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5" data-path="src/02_string_building.rs"><td>PERF-RS-ALLOC-001:src/02_string_building.rs:41:5</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/02_string_building.rs:41:5</td><td>len_with_reassignment</td><td class="wrap">loop performs 1 per-iteration allocation(s) (format) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td class="wrap">alloc_count=1, callee=format, callees=format, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-001-src-06-memory-ops-rs-27-9" data-path="src/06_memory_ops.rs"><td>PERF-RS-ALLOC-001:src/06_memory_ops.rs:27:9</td><td>PERF-RS-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/06_memory_ops.rs:27:9</td><td>duplicate_rows</td><td class="wrap">loop performs 1 per-iteration allocation(s) (to_vec) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</td><td class="wrap">alloc_count=1, callee=to_vec, callees=to_vec, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-002">
+<h3><code>PERF-RS-LOOP-002</code> — 3 findings (3 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-002-src-01-alloc-churn-rs-40-9" data-path="src/01_alloc_churn.rs"><td>PERF-RS-LOOP-002:src/01_alloc_churn.rs:40:9</td><td>PERF-RS-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/01_alloc_churn.rs:40:9</td><td>build_row_labels</td><td class="wrap">&#39;println&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td class="wrap">callee=println, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-002-src-04-stdio-churn-rs-28-9" data-path="src/04_stdio_churn.rs"><td>PERF-RS-LOOP-002:src/04_stdio_churn.rs:28:9</td><td>PERF-RS-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/04_stdio_churn.rs:28:9</td><td>emit_rows</td><td class="wrap">&#39;println&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td class="wrap">callee=println, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-LOOP-002-src-04-stdio-churn-rs-29-17" data-path="src/04_stdio_churn.rs"><td>PERF-RS-LOOP-002:src/04_stdio_churn.rs:29:17</td><td>PERF-RS-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/04_stdio_churn.rs:29:17</td><td>emit_rows</td><td class="wrap">&#39;sink.write_all&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td class="wrap">callee=sink.write_all, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-ALLOC-002">
+<h3><code>PERF-RS-ALLOC-002</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9" data-path="src/01_alloc_churn.rs"><td>PERF-RS-ALLOC-002:src/01_alloc_churn.rs:39:9</td><td>PERF-RS-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/01_alloc_churn.rs:39:9</td><td>build_row_labels</td><td class="wrap">deallocation via &#39;drop&#39; at loop depth 1 — repeated drop-per-iteration teardown; hoisting the drop or restructuring value ownership is a candidate optimization</td><td class="wrap">alloc_cooccurrence=true, callee=drop, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-ALLOC-003">
+<h3><code>PERF-RS-ALLOC-003</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ALLOC-003-src-01-alloc-churn-rs-49-9" data-path="src/01_alloc_churn.rs"><td>PERF-RS-ALLOC-003:src/01_alloc_churn.rs:49:9</td><td>PERF-RS-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/01_alloc_churn.rs:49:9</td><td>grow_one_at_a_time</td><td class="wrap">&#39;buffer.reserve&#39; grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization</td><td class="wrap">callee=buffer.reserve, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-ARCH-002">
+<h3><code>PERF-RS-ARCH-002</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ARCH-002-src-05-recursion-complexity-rs-20-1" data-path="src/05_recursion_complexity.rs"><td>PERF-RS-ARCH-002:src/05_recursion_complexity.rs:20:1</td><td>PERF-RS-ARCH-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/05_recursion_complexity.rs:20:1</td><td>classify</td><td class="wrap">directory &#39;src&#39; aggregates complexity 86 across 40 function(s) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization</td><td class="wrap">alloc_site_density=86.41975308641973, complexity_sum=86, function_count=40, max_loop_depth=3, path_prefix=src</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-STR-002">
+<h3><code>PERF-RS-STR-002</code> — 2 findings (0 hot, 2 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-STR-002-src-02-string-building-rs-32-18" data-path="src/02_string_building.rs"><td>PERF-RS-STR-002:src/02_string_building.rs:32:18</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/02_string_building.rs:32:18</td><td>scan_lengths</td><td class="wrap">&#39;joined.len&#39; recomputes the length of &#39;joined&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=joined, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-STR-002-src-09-membership-scan-rs-15-21" data-path="src/09_membership_scan.rs"><td>PERF-RS-STR-002:src/09_membership_scan.rs:15:21</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/09_membership_scan.rs:15:21</td><td>contains_nested</td><td class="wrap">&#39;table.len&#39; recomputes the length of &#39;table&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=table, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-ARCH-001">
+<h3><code>PERF-RS-ARCH-001</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ARCH-001-src-cycle-b-rs-6-1" data-path="src/cycle_b.rs"><td>PERF-RS-ARCH-001:src/cycle_b.rs:6:1</td><td>PERF-RS-ARCH-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/cycle_b.rs:6:1</td><td>n/a</td><td class="wrap">&#39;src/cycle_b.rs&#39; and &#39;src/cycle_a.rs&#39; import each other, forming a module cycle — breaking the lowest-sorted edge (here &#39;src/cycle_b.rs&#39; → &#39;src/cycle_a.rs&#39;) into a shared leaf module is a candidate optimization</td><td class="wrap">coupled_with=src/cycle_a.rs, kind=cycle</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-CALL-002">
+<h3><code>PERF-RS-CALL-002</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-CALL-002-src-05-recursion-complexity-rs-20-1" data-path="src/05_recursion_complexity.rs"><td>PERF-RS-CALL-002:src/05_recursion_complexity.rs:20:1</td><td>PERF-RS-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/05_recursion_complexity.rs:20:1</td><td>classify</td><td class="wrap">&#39;classify&#39; branches 17 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td class="wrap">complexity=17, function=classify, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-001">
+<h3><code>PERF-RS-LOOP-001</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-001-src-03-deep-nesting-rs-19-13" data-path="src/03_deep_nesting.rs"><td>PERF-RS-LOOP-001:src/03_deep_nesting.rs:19:13</td><td>PERF-RS-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/03_deep_nesting.rs:19:13</td><td>grid_checksum</td><td class="wrap">loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or using iterator combinators with early exits is a candidate optimization</td><td class="wrap">max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-MEM-001">
+<h3><code>PERF-RS-MEM-001</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-MEM-001-src-06-memory-ops-rs-15-5" data-path="src/06_memory_ops.rs"><td>PERF-RS-MEM-001:src/06_memory_ops.rs:15:5</td><td>PERF-RS-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/06_memory_ops.rs:15:5</td><td>over_reserve</td><td class="wrap">&#39;Vec::with_capacity&#39; receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization</td><td class="wrap">callee=Vec::with_capacity, misuse=size_of_as_element_count</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-MEM-002">
+<h3><code>PERF-RS-MEM-002</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-MEM-002-src-01-alloc-churn-rs-61-13" data-path="src/01_alloc_churn.rs"><td>PERF-RS-MEM-002:src/01_alloc_churn.rs:61:13</td><td>PERF-RS-MEM-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/01_alloc_churn.rs:61:13</td><td>grid_reset</td><td class="wrap">&#39;cell.copy_from_slice&#39; copies a block every iteration at loop depth 2 — hoisting the copy, batching the copies, or reusing a buffer is a candidate optimization</td><td class="wrap">callee=cell.copy_from_slice, innermost=true, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-STR-003">
+<h3><code>PERF-RS-STR-003</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-STR-003-src-02-string-building-rs-62-5" data-path="src/02_string_building.rs"><td>PERF-RS-STR-003:src/02_string_building.rs:62:5</td><td>PERF-RS-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/02_string_building.rs:62:5</td><td>unsafe_slice</td><td class="wrap">&#39;std::slice::from_raw_parts&#39; performs an unchecked (unbounded) memory operation — prefer a safe/bounded variant or add an explicit length check; that is a candidate optimization</td><td class="wrap">callee=std::slice::from_raw_parts</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-TYPE-001">
+<h3><code>PERF-RS-TYPE-001</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-TYPE-001-src-07-struct-by-value-rs-40-1" data-path="src/07_struct_by_value.rs"><td>PERF-RS-TYPE-001:src/07_struct_by_value.rs:40:1</td><td>PERF-RS-TYPE-001</td><td>warn</td><td>LOW</td><td>syntactic</td><td>src/07_struct_by_value.rs:40:1</td><td>consume_blob</td><td class="wrap">parameters &#39;BigBlob&#39; (struct &#39;BigBlob&#39;, ~32 bytes) are copied by value on every call under the LP64 estimate — taking the structs by reference (`&amp;T`) or `Box`-ing them is a candidate optimization</td><td class="wrap">estimated_sizes=32, params=BigBlob, structs=BigBlob, threshold=32</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-ARCH-003">
+<h3><code>PERF-RS-ARCH-003</code> — 5 findings (0 hot, 0 warn, 5 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-21-16" data-path="src/10_cross_file_and_arch.rs"><td>PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:21:16</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/10_cross_file_and_arch.rs:21:16</td><td>orchestrate</td><td class="wrap">call to &#39;build_row_labels&#39; matches a definition in &#39;src/01_alloc_churn.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=build_row_labels, matched_path=src/01_alloc_churn.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-22-20" data-path="src/10_cross_file_and_arch.rs"><td>PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:22:20</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/10_cross_file_and_arch.rs:22:20</td><td>orchestrate</td><td class="wrap">call to &#39;scale_checksum&#39; matches a definition in &#39;src/03_deep_nesting.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=scale_checksum, matched_path=src/03_deep_nesting.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-23-18" data-path="src/10_cross_file_and_arch.rs"><td>PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:23:18</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/10_cross_file_and_arch.rs:23:18</td><td>orchestrate</td><td class="wrap">call to &#39;shared_checksum&#39; matches a definition in &#39;src/common.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=shared_checksum, matched_path=src/common.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-cycle-a-rs-18-5" data-path="src/cycle_a.rs"><td>PERF-RS-ARCH-003:src/cycle_a.rs:18:5</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/cycle_a.rs:18:5</td><td>cycle_a_step</td><td class="wrap">call to &#39;cycle_b_step&#39; matches a definition in &#39;src/cycle_b.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=cycle_b_step, matched_path=src/cycle_b.rs</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ARCH-003-src-cycle-b-rs-15-5" data-path="src/cycle_b.rs"><td>PERF-RS-ARCH-003:src/cycle_b.rs:15:5</td><td>PERF-RS-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/cycle_b.rs:15:5</td><td>cycle_b_root</td><td class="wrap">call to &#39;cycle_a_root&#39; matches a definition in &#39;src/cycle_a.rs&#39; by name only — LOW-confidence hypothesis; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=cycle_a_root, matched_path=src/cycle_a.rs</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-CALL-001">
+<h3><code>PERF-RS-CALL-001</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-CALL-001-src-05-recursion-complexity-rs-14-9" data-path="src/05_recursion_complexity.rs"><td>PERF-RS-CALL-001:src/05_recursion_complexity.rs:14:9</td><td>PERF-RS-CALL-001</td><td>info</td><td>HIGH</td><td>syntactic</td><td>src/05_recursion_complexity.rs:14:9</td><td>fib</td><td class="wrap">&#39;fib&#39; calls itself directly at 2 site(s) — recursion keeps stack frames alive; converting to iteration or memoizing is a candidate optimization</td><td class="wrap">function=fib, self_call_sites=2</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-003">
+<h3><code>PERF-RS-LOOP-003</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-003-src-04-stdio-churn-rs-19-9" data-path="src/04_stdio_churn.rs"><td>PERF-RS-LOOP-003:src/04_stdio_churn.rs:19:9</td><td>PERF-RS-LOOP-003</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/04_stdio_churn.rs:19:9</td><td>count_chars_per_iteration</td><td class="wrap">character/byte-wise processing via &#39;text.chars&#39; as the loop body&#39;s primary statement — processing the input in buffered blocks or chunks is a candidate optimization</td><td class="wrap">callee=text.chars, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-004">
+<h3><code>PERF-RS-LOOP-004</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-004-src-03-deep-nesting-rs-22-23" data-path="src/03_deep_nesting.rs"><td>PERF-RS-LOOP-004:src/03_deep_nesting.rs:22:23</td><td>PERF-RS-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/03_deep_nesting.rs:22:23</td><td>grid_checksum</td><td class="wrap">&#39;%&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td class="wrap">divisor=divisor, divisor_kind=identifier, op=%</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-005">
+<h3><code>PERF-RS-LOOP-005</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-005-src-08-globals-and-chains-rs-41-13" data-path="src/08_globals_and_chains.rs"><td>PERF-RS-LOOP-005:src/08_globals_and_chains.rs:41:13</td><td>PERF-RS-LOOP-005</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/08_globals_and_chains.rs:41:13</td><td>run_handlers</td><td class="wrap">static/const-backed &#39;GLOBAL_ACC&#39; is stored every iteration at loop depth 1 — hoisting the write out of the loop or caching it in a local is a candidate optimization</td><td class="wrap">loop_depth=1, target=GLOBAL_ACC</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-006">
+<h3><code>PERF-RS-LOOP-006</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-006-src-08-globals-and-chains-rs-43-9" data-path="src/08_globals_and_chains.rs"><td>PERF-RS-LOOP-006:src/08_globals_and_chains.rs:43:9</td><td>PERF-RS-LOOP-006</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/08_globals_and_chains.rs:43:9</td><td>run_handlers</td><td class="wrap">indirect call through &#39;handlers[i]&#39; runs in the innermost loop at depth 1 — resolving the target once outside the loop is a candidate optimization</td><td class="wrap">callee=handlers[i], loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-007">
+<h3><code>PERF-RS-LOOP-007</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-007-src-09-membership-scan-rs-16-16" data-path="src/09_membership_scan.rs"><td>PERF-RS-LOOP-007:src/09_membership_scan.rs:16:16</td><td>PERF-RS-LOOP-007</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/09_membership_scan.rs:16:16</td><td>contains_nested</td><td class="wrap">element lookup compared against a non-literal at loop depth 2 re-scans linearly on every outer iteration — using a HashSet/HashMap lookup table or sorting plus binary search is a candidate optimization</td><td class="wrap">index_ident=j, loop_depth=2</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-LOOP-008">
+<h3><code>PERF-RS-LOOP-008</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-LOOP-008-src-08-globals-and-chains-rs-59-17" data-path="src/08_globals_and_chains.rs"><td>PERF-RS-LOOP-008:src/08_globals_and_chains.rs:59:17</td><td>PERF-RS-LOOP-008</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/08_globals_and_chains.rs:59:17</td><td>read_depth</td><td class="wrap">&#39;configs&#39; field/index chain of depth 4 executes in the innermost loop — caching intermediate references or flattening the structure is a candidate optimization</td><td class="wrap">chain_depth=4, loop_depth=1, root=configs</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-TYPE-002">
+<h3><code>PERF-RS-TYPE-002</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-TYPE-002-src-07-struct-by-value-rs-26-1" data-path="src/07_struct_by_value.rs"><td>PERF-RS-TYPE-002:src/07_struct_by_value.rs:26:1</td><td>PERF-RS-TYPE-002</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/07_struct_by_value.rs:26:1</td><td>n/a</td><td class="wrap">struct &#39;PaddedLayout&#39; shows ~14 bytes of declared-order padding (aligned estimate 32 vs packed sum 18) — if the type is `#[repr(C)]`/FFI-sensitive, ordering fields largest-alignment-first is a candidate optimization; default `repr(Rust)` may already reorder fields automatically, so treat this as lower-confidence</td><td class="wrap">aligned_estimate=32, packed_sum=18, padding_bytes=14, struct=PaddedLayout, threshold=8</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<footer>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
+</body>
+</html>

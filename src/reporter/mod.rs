@@ -35,6 +35,16 @@ use crate::schema::{DistributionEntry, FindingEntry, MetricsDocument, format_fix
 // Pinned constants
 // ---------------------------------------------------------------------------
 
+/// Human-report cap (output-contract §4 bounded-human rule, C-full-split
+/// follow-up): the §5 component table / Component index and the per-file
+/// finding-link lists stay bounded at any scale. Same `take(10)` precedent
+/// as the §3 top-files table and the `#files` drill-down. Full component and
+/// finding data stays in `metrics.json` (machine source of truth) and the
+/// uncapped `findings-detail.*` artifacts — the caps only bound the human
+/// pages, with honest `showing top … of M` / `…+N more` counts so a cap can
+/// never silently drop rows without breaking the header.
+const HUMAN_CAP: usize = 10;
+
 /// Pinned Markdown metacharacter escape set (output-contract §2 paths rule).
 /// Every char here is backslash-escaped wherever document-derived text is
 /// embedded. `|` inclusion makes table cells safe without a second pass.
@@ -451,14 +461,15 @@ pub fn escape_html(input: &str) -> String {
 /// `schema_version`, tool version, file/finding counts).
 ///
 /// Contents: header, § architecture (the §5 chart links mirrored as linked
-/// figures), component index (rank, prefix, metrics + detail-page links),
-/// file drill-down (top files by degree/cost + their finding_id lists),
-/// findings section (per-rule `<details><summary>` groups in the pinned
-/// group order, each expanding to that rule's rows in the full-table markup:
-/// symbol/resolver/flags/threshold/evidence alongside
-/// `finding_id`/rule/path/span/message, members in `finding_id` ascending). Drill-down anchors link
+/// figures), component index (top-10 rank, prefix, metrics + detail-page
+/// links, with an honest `showing top … of M` note), file drill-down (top
+/// files by degree/cost + their top-10 finding_id lists linking into
+/// `findings-detail.html`), findings section (C-split: per-rule
+/// `<details><summary>` groups ONLY, each linking to the detail page
+/// anchors — zero per-finding rows here). Drill-down anchors link
 /// component → file → finding via deterministic `id` anchors derived from
-/// `(rank, slug)`, file slugs, and sanitized finding ids.
+/// `(rank, slug)`, file slugs, and sanitized finding ids (finding-row ids
+/// live in the detail artifact).
 #[must_use]
 pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
     let mut out = String::new();
@@ -487,6 +498,10 @@ pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
 /// links ONLY for names in this list. Pure function of `(doc,
 /// emitted_charts)` — LF newlines, trailing newline, byte-deterministic
 /// modulo `scan.started_at` / `scan.duration_ms`.
+///
+/// Human-scale bound (C-split): `report.md` carries NO per-finding rows —
+/// the uncapped detail lives in the `findings-detail.md` artifact
+/// ([`render_findings_detail`]); Appendix C is a link stub only.
 #[must_use]
 pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
     let mut out = String::new();
@@ -500,6 +515,63 @@ pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String
     render_appendix_b(&mut out);
     render_appendix_c(&mut out, doc);
     // Exactly one trailing newline (output-contract §2 encoding rule).
+    while out.ends_with('\n') {
+        out.pop();
+    }
+    out.push('\n');
+    out
+}
+
+/// Render the standalone `findings-detail.md` artifact (C-split promotion
+/// of [`render_findings_full_detail` — called VERBATIM, never reimplemented).
+///
+/// Bounded-human companion to [`render_report`]: the full uncapped
+/// per-finding detail in the legacy total order (stable severity partition
+/// hot→warn→info; document order within a group). Pure function of `doc` —
+/// LF newlines, trailing newline, byte-deterministic with NO provenance
+/// surfaces at all (no `started_at`, no `duration_ms`, no `root_path`), so
+/// double-render output is byte-identical UNMASKED.
+#[must_use]
+pub fn render_findings_detail(doc: &MetricsDocument) -> String {
+    let mut out = String::new();
+    out.push_str("# Perfpal Findings Detail\n");
+    if doc.findings.is_empty() {
+        out.push_str("\nNo findings.\n");
+    } else {
+        out.push_str(&format!(
+            "\n{} of {} total findings.\n\n",
+            doc.findings.len(),
+            doc.findings.len(),
+        ));
+        render_findings_full_detail(&mut out, doc);
+    }
+    while out.ends_with('\n') {
+        out.pop();
+    }
+    out.push('\n');
+    out
+}
+
+/// Render the standalone `findings-detail.html` artifact (C-split promotion
+/// of [`html_findings_table`]/[`html_finding_row`] — called VERBATIM, never
+/// reimplemented — inside a standalone page reusing the existing
+/// head/style/table markup and the fixed [`REPORT_SCRIPT`] enhancement).
+///
+/// Per-rule sections in the pinned [`group_findings_by_rule`] order, each
+/// with a `rule-<rule_id>` anchor plus that rule's rows in the shared full
+/// table markup; finding-row anchors come from the SAME
+/// [`finding_anchor_assignments`] map as `report.html`, so every
+/// `findings-detail.html#…` link in the human page resolves here. Pure
+/// function of `doc` — LF newlines, trailing newline, byte-deterministic
+/// with NO provenance surfaces at all.
+#[must_use]
+pub fn render_findings_detail_html(doc: &MetricsDocument) -> String {
+    let mut out = String::new();
+    html_detail_head(&mut out, doc);
+    html_header(&mut out, doc);
+    html_detail_nav(&mut out);
+    html_detail_findings(&mut out, doc);
+    html_footer(&mut out);
     while out.ends_with('\n') {
         out.pop();
     }
@@ -700,10 +772,10 @@ fn render_findings(out: &mut String, doc: &MetricsDocument) {
     // rule with an honest "R rules: N of M total" header (N always equals M
     // today — every finding is represented via its rule group — so a future
     // cap cannot silently drop rows without breaking the header). The
-    // uncapped per-finding detail lives in Appendix C
-    // ([`render_appendix_c`] → [`render_findings_full_detail`], kept as a
-    // SEPARATE function so the future option-C artifact split can promote it
-    // into its own artifact without re-cutting §4).
+    // uncapped per-finding detail lives in the `findings-detail.md`
+    // artifact ([`render_findings_detail`] → [`render_findings_full_detail`]);
+    // the exemplar cites the exact finding_id so it cross-references the
+    // detail artifact mechanically.
     let groups = group_findings_by_rule(doc);
     let (hot_count, warn_count, info_count) = severity_counts(doc);
     out.push_str(&format!(
@@ -872,12 +944,20 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
     if let Some(components) = &doc.components
         && !components.is_empty()
     {
-        out.push_str("Component ranking (hottest first):\n\n");
+        // Human-scale bound (C-full-split follow-up): top-10 in document
+        // (rank) order with an honest `showing top … of M` header — same
+        // take(10) precedent as §3. Full component data stays in
+        // metrics.json; the detail-page hook below links only shown rows.
+        let total = components.len();
+        let shown = total.min(HUMAN_CAP);
+        out.push_str(&format!(
+            "Component ranking (hottest first — showing top {shown} of {total} components):\n\n"
+        ));
         out.push_str("| component | path prefix | rank | finding density (per KLOC) |\n");
         out.push_str("|---|---|---:|---:|\n");
         // Document order IS the ranked emission order (rank, path_prefix)
         // per the aggregator contract — preserved verbatim, no re-sort.
-        for c in components {
+        for c in components.iter().take(HUMAN_CAP) {
             out.push_str(&format!(
                 "| {} | {} | {} | {} |\n",
                 escape_md(&c.component_id),
@@ -891,13 +971,14 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
         out.push('\n');
 
         // Per-component detail index hook (output-contract §5): one link per
-        // capped component whose page the charts module emitted, in document
-        // (rank) order. Filenames are reconstructed via the charts-owned
-        // pinning function — never guessed — and linked ONLY when present in
+        // SHOWN (top-10 capped, same order as the table above) component
+        // whose page the charts module emitted, in document (rank) order.
+        // Filenames are reconstructed via the charts-owned pinning function
+        // — never guessed — and linked ONLY when present in
         // `emitted_charts`.
         let mut linked: BTreeSet<String> = BTreeSet::new();
         let mut hook: Vec<String> = Vec::new();
-        for c in components {
+        for c in components.iter().take(HUMAN_CAP) {
             let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
             let stem = filename
                 .strip_suffix(".svg")
@@ -1018,23 +1099,29 @@ fn render_appendix_b(out: &mut String) {
     ));
 }
 
-/// Appendix C: the UNCAPPED per-finding detail (group-and-fold companion to
-/// §4). Every finding renders in full via [`render_findings_full_detail`];
-/// the honest header ties the count back to §4 (`N of M total` — both sides
-/// always agree today). The future option-C artifact split promotes this
-/// section into its own artifact.
+/// Appendix C (C-split): link stub ONLY — the UNCAPPED per-finding detail
+/// lives in the `findings-detail.md` artifact
+/// ([`render_findings_detail`] → [`render_findings_full_detail`]). The
+/// honest header ties the count back to §4 (`N of M total` — both sides
+/// always agree today) so a future row cap cannot silently drop rows
+/// without breaking the header. `report.md` carries zero per-finding rows
+/// by construction (locked by `tests/findings_detail_split.rs`).
 fn render_appendix_c(out: &mut String, doc: &MetricsDocument) {
     out.push_str("## Appendix C. All findings (full detail)\n");
     if doc.findings.is_empty() {
         out.push_str("No findings.\n\n");
         return;
     }
+    let groups = group_findings_by_rule(doc);
     out.push_str(&format!(
-        "{} of {} total findings.\n\n",
+        "{} of {} total findings.\n\nFull per-finding detail has moved to \
+         [findings-detail.md](findings-detail.md) ({} rules, same {} of {} total).\n\n",
+        doc.findings.len(),
+        doc.findings.len(),
+        groups.len(),
         doc.findings.len(),
         doc.findings.len(),
     ));
-    render_findings_full_detail(out, doc);
 }
 
 // ---------------------------------------------------------------------------
@@ -1128,7 +1215,18 @@ fn html_nav(out: &mut String) {
          <li><a href=\"#components\">Components</a></li>\n\
          <li><a href=\"#files\">Files</a></li>\n\
          <li><a href=\"#findings\">Findings</a></li>\n\
+         <li><a href=\"findings-detail.html\">Findings detail</a></li>\n\
          <li><a href=\"#appendix-a\">Heuristic reference</a></li>\n\
+         </ul>\n</nav>\n",
+    );
+}
+
+/// Detail-page nav: link back to the human page plus in-page anchors.
+fn html_detail_nav(out: &mut String) {
+    out.push_str(
+        "<nav>\n<ul>\n\
+         <li><a href=\"report.html\">Report</a></li>\n\
+         <li><a href=\"#findings\">Findings detail</a></li>\n\
          </ul>\n</nav>\n",
     );
 }
@@ -1305,7 +1403,10 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
 /// Component index: rank, prefix, metrics + link to the
 /// `charts/component-<rank>-<slug>.svg` detail page when emitted.
 /// Document (rank) order preserved verbatim, no re-sort beyond the pinned
-/// `(rank, path_prefix)` defensive sort.
+/// `(rank, path_prefix)` defensive sort. Human-scale bound (C-full-split
+/// follow-up): top-10 rows with an honest `showing top … of M` note — same
+/// take(10) precedent as the `#files` drill-down; full component data stays
+/// in `metrics.json`.
 fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
     out.push_str("<section id=\"components\">\n<h2>Component index</h2>\n");
     let Some(components) = &doc.components else {
@@ -1316,6 +1417,11 @@ fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[St
         out.push_str("<p>No components recorded.</p>\n</section>\n");
         return;
     }
+    let total = components.len();
+    let shown = total.min(HUMAN_CAP);
+    out.push_str(&format!(
+        "<p>showing top {shown} of {total} components</p>\n"
+    ));
     let emitted_stems: BTreeSet<String> = emitted_charts
         .iter()
         .map(|name| name.strip_suffix(".svg").unwrap_or(name).to_string())
@@ -1327,7 +1433,7 @@ fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[St
          <th>finding density (per KLOC)</th><th>max loop depth</th>\
          <th>finding count</th><th>detail</th></tr></thead>\n<tbody>\n",
     );
-    for c in sorted {
+    for c in sorted.into_iter().take(HUMAN_CAP) {
         let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
         let stem = filename.strip_suffix(".svg").unwrap_or(&filename);
         let anchor = escape_html(stem);
@@ -1361,7 +1467,10 @@ fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[St
 }
 
 /// File drill-down: top files by (degree desc, cost desc, path asc) with
-/// their finding_id lists linking into the findings table.
+/// their finding_id lists linking into the findings table. Each file's
+/// link list is capped at the top 10 by severity-rank → finding_id (with
+/// an honest `…+N more` marker); the full per-file lists stay in
+/// `metrics.json`.
 fn html_files(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<section id=\"files\">\n<h2>File drill-down</h2>\n");
     if doc.files.is_empty() {
@@ -1392,14 +1501,20 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
             .then(a.0.cmp(b.0))
     });
     // Findings grouped by path: index-keyed (into `doc.findings`), each
-    // group sorted by finding_id ascending (total order, deterministic).
+    // group sorted by severity-rank ascending then finding_id ascending
+    // (total order, deterministic) so the per-file top-10 cap below keeps
+    // the hottest findings.
     let mut by_path: std::collections::BTreeMap<&str, Vec<usize>> =
         std::collections::BTreeMap::new();
     for (i, f) in doc.findings.iter().enumerate() {
         by_path.entry(f.path.as_str()).or_default().push(i);
     }
     for list in by_path.values_mut() {
-        list.sort_by(|&a, &b| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id));
+        list.sort_by(|&a, &b| {
+            severity_rank(doc.findings[a].severity)
+                .cmp(&severity_rank(doc.findings[b].severity))
+                .then_with(|| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id))
+        });
     }
     out.push_str(
         "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>file</th><th>degree</th><th>cost</th>\
@@ -1421,19 +1536,31 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
         );
         let finding_cells = match by_path.get(*path) {
             Some(list) if !list.is_empty() => {
+                // C-split: per-finding rows live in findings-detail.html, so
+                // drill-down links point at the detail page anchors (same
+                // anchor map as the detail page — every href resolves).
+                // Human-scale bound (C-full-split follow-up): top-10 links
+                // per file (severity-rank order, assigned above) with an
+                // honest `…+N more` marker reusing the slice-1 pattern —
+                // the full per-file list stays in metrics.json.
                 let links: Vec<String> = list
                     .iter()
+                    .take(HUMAN_CAP)
                     .map(|&i| {
                         let f = &doc.findings[i];
                         let unique = finding_anchors[i].clone();
                         format!(
-                            "<a href=\"#{}\">{}</a>",
+                            "<a href=\"findings-detail.html#{}\">{}</a>",
                             escape_html(&unique),
                             escape_html(&f.finding_id),
                         )
                     })
                     .collect();
-                links.join("<br>\n")
+                let mut cell = links.join("<br>\n");
+                if list.len() > HUMAN_CAP {
+                    cell.push_str(&format!("<br>\n…+{} more", list.len() - HUMAN_CAP));
+                }
+                cell
             }
             _ => "none".to_string(),
         };
@@ -1456,21 +1583,13 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
     out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
-/// Findings section: per-rule `<details><summary>` groups (group-and-fold
-/// companion to `report.md` §4) with zero-JS progressive disclosure — the
-/// summary carries rule + count + severity split + top-exemplar link, and the
-/// expanded body is that rule's rows in the shared [`html_findings_table`]
-/// markup. Every row is present statically (the fixed enhancement script only
-/// hides/shows for click-to-filter, which keeps working: rows keep their
-/// `<tr id data-path>` shape and the `#findings tbody tr` selector still
-/// matches inside `<details>`).
-///
-/// Anchors: per-occurrence collision-free `id` anchors pre-assigned in
-/// `finding_id` order ([`finding_anchor_assignments`]); the file drill-down
-/// looks up the SAME map, so every href points at its own row even when
-/// ranked-file order differs. Group/summary order is the pinned
-/// [`group_findings_by_rule`] order; members within a group are in
-/// `finding_id`-ascending order.
+/// Findings section (C-split): per-rule `<details><summary>` groups ONLY —
+/// zero per-finding rows in `report.html` by construction. The summary
+/// carries rule + count + severity split + top-exemplar link into the
+/// `findings-detail.html` artifact, plus a per-group "full detail" link.
+/// Group/summary order is the pinned [`group_findings_by_rule`] order.
+/// Finding-row anchors come from the SAME [`finding_anchor_assignments`]
+/// map the detail page uses, so every exemplar href resolves there.
 fn html_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<section id=\"findings\">\n<h2>Findings</h2>\n");
     out.push_str(
@@ -1493,17 +1612,24 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
         warn_count,
         info_count,
     ));
+    out.push_str("<p>Full per-finding tables: <a href=\"findings-detail.html\">findings-detail.html</a>.</p>\n");
     // `anchors[i]` is the collision-free anchor for `doc.findings[i]`
-    // (finding_id-order assignment shared with the file drill-down).
+    // (finding_id-order assignment shared with the file drill-down AND the
+    // detail page).
     let (_, anchors) = finding_anchor_assignments(doc);
     for group in &groups {
         // Exemplar: first member in finding_id order (deterministic), linked
-        // to its row anchor — every exemplar href resolves by construction.
+        // to its DETAIL-page row anchor — every exemplar href resolves by
+        // construction (locked by `tests/findings_detail_split.rs`).
         let exemplar = &doc.findings[group.members[0]];
         let exemplar_anchor = &anchors[group.members[0]];
+        let group_anchor = format!("rule-{}", group.rule_id);
         out.push_str(&format!(
             "<details>\n<summary><code>{rule}</code> — {n} findings ({h} hot, {w} warn, {i} info); \
-             top exemplar: <a href=\"#{anchor}\">{id}</a></summary>\n",
+             top exemplar: <a href=\"findings-detail.html#{anchor}\">{id}</a> — \
+             <a href=\"findings-detail.html#{group}\">full detail</a></summary>\n\
+             <p><a href=\"findings-detail.html#{group}\">View full detail table for {rule} ({n} findings)</a></p>\n\
+             </details>\n",
             rule = escape_html(group.rule_id),
             n = group.members.len(),
             h = group.hot,
@@ -1511,19 +1637,103 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
             i = group.info,
             anchor = escape_html(exemplar_anchor),
             id = escape_html(&exemplar.finding_id),
+            group = escape_html(&group_anchor),
         ));
-        html_findings_table(out, doc, &group.members, &anchors);
-        out.push_str("</details>\n");
     }
     out.push_str("</section>\n");
 }
 
+/// Detail-page findings: per-rule sections in the pinned
+/// [`group_findings_by_rule`] order, each with a `rule-<rule_id>` anchor
+/// plus that rule's rows in the shared [`html_findings_table`] markup
+/// (promoted VERBATIM — this is the C-split seam). Finding-row anchors come
+/// from the SAME [`finding_anchor_assignments`] map as `report.html`, so
+/// every `findings-detail.html#…` link resolves here. The `#findings`
+/// section id + `filter-bar` controls are reused verbatim so the fixed
+/// [`REPORT_SCRIPT`] click-to-filter keeps working on this page.
+fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<section id=\"findings\">\n<h2>Findings detail</h2>\n");
+    out.push_str(
+        "<div id=\"filter-bar\"><span id=\"filter-label\">all findings</span> \
+         <button id=\"filter-clear\" type=\"button\" hidden>clear</button></div>\n",
+    );
+    if doc.findings.is_empty() {
+        out.push_str("<p>No findings.</p>\n</section>\n");
+        return;
+    }
+    let groups = group_findings_by_rule(doc);
+    let (hot_count, warn_count, info_count) = severity_counts(doc);
+    out.push_str(&format!(
+        "<p>{} rules: {} of {} total findings ({} hot, {} warn, {} info).</p>\n",
+        groups.len(),
+        doc.findings.len(),
+        doc.findings.len(),
+        hot_count,
+        warn_count,
+        info_count,
+    ));
+    out.push_str("<p><a href=\"report.html\">Back to report.html</a>.</p>\n");
+    let (_, anchors) = finding_anchor_assignments(doc);
+    for group in &groups {
+        let group_anchor = format!("rule-{}", group.rule_id);
+        out.push_str(&format!(
+            "<section id=\"{group}\">\n<h3><code>{rule}</code> — {n} findings ({h} hot, {w} warn, {i} info)</h3>\n",
+            group = escape_html(&group_anchor),
+            rule = escape_html(group.rule_id),
+            n = group.members.len(),
+            h = group.hot,
+            w = group.warn,
+            i = group.info,
+        ));
+        html_findings_table(out, doc, &group.members, &anchors);
+        out.push_str("</section>\n");
+    }
+    out.push_str("</section>\n");
+}
+
+/// Detail-page head: same markup as [`html_head`] (doctype, charset,
+/// viewport, empty favicon, inline `<style>`), titled for the findings
+/// detail artifact. The style block is intentionally identical to the
+/// report page so table/filter/figure rendering is shared.
+fn html_detail_head(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
+    out.push_str("<meta charset=\"utf-8\">\n");
+    out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
+    out.push_str("<link rel=\"icon\" href=\"data:,\">\n");
+    out.push_str(&format!(
+        "<title>Perfpal Findings Detail — schema {}</title>\n",
+        escape_html(&doc.schema_version),
+    ));
+    out.push_str(
+        "<style>\n\
+         body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
+         .table-scroll{overflow-x:auto;max-width:100%}\n\
+         table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
+         th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
+         th{background:#eee}\n\
+         #findings table{min-width:72rem}\n\
+         #findings tbody td{white-space:nowrap}\n\
+         #findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
+         figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}\n\
+         figcaption{margin-top:.5rem}\n\
+         img{max-width:100%;height:auto}\n\
+         figure.pz img{max-width:none;touch-action:none}\n\
+         #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
+         #filter-bar{margin:.5rem 0}\n\
+         nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
+         #findings summary{cursor:pointer;list-style:none}\n\
+         #findings summary::-webkit-details-marker{display:none}\n\
+         #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
+         #findings details[open]>summary::before{transform:rotate(90deg)}\n\
+         </style>\n</head>\n<body>\n",
+    );
+}
+
 /// Full findings-table renderer, kept as a SEPARATE function by design
-/// (group-and-fold seam): the complete `<table>` (shared head + one
+/// (C-split seam): the complete `<table>` (shared head + one
 /// [`html_finding_row`] per index) for EXACTLY the findings in `indices`.
-/// The grouped `#findings` section calls it once per rule group, reusing the
-/// existing table markup verbatim; the future option-C artifact split promotes
-/// THIS function into its own artifact — do not delete it or inline its
+/// The `findings-detail.html` artifact calls it once per rule group, reusing
+/// the existing table markup verbatim — do not delete it or inline its
 /// markup into the section wrapper.
 fn html_findings_table(
     out: &mut String,

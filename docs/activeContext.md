@@ -1,32 +1,31 @@
 # Active Context
 
 ## Current Task
-Session-49 group-and-fold burst COMPLETE — committing now (13 files + EOL state, founder-approved).
-B built with C-seams; django §4 4175× collapse; 613 tests green; dual review APPROVED.
+Session-50 audit + C-full burst COMPLETE — committing now (plan archive + C-full + §5-cap +
+EOL state, founder-approved). Django humans 65.6KB; 626 tests green; dual review APPROVED ×2.
 
 ## Recent Decisions
-- **D-pf-210 (live):** vision backend flaky again — final spot covered structurally; re-owed glance in A-pf-083.
-- **D-pf-209 (live):** B-now/C-later — group-and-fold built, C-split = future promotion of preserved fns.
-- **D-pf-208 (live):** founder digestibility verdict → research boundary (now consumed: A-pf-081 done).
-- **D-pf-207 (live):** vision-defect burst COMMITTED `9a8766b` (A-pf-082 done).
-- *(D-pf-197/198/199 demoted to cold ledger; D-pf-206/207 + A-pf-076/079/082 are next demote candidates — hot state 7787B.)*
+- **D-pf-212 (live):** C-full + §5-cap shipped; vision backend still down (structural substitute).
+- **D-pf-211 (live):** first alignment audit — 3 active plans pillar-aligned, 7 done archived, counter reset.
+- **D-pf-209 (live):** B-now/C-later (C now built).
+- **D-pf-208 (live):** digestibility direction (consumed).
+- *(Settled demotions to cold ledger: D-pf-197/198/199/206/207, A-pf-062/075/076/079/082.)*
 
 ## In Progress
 - Committing the burst now. Nothing else open.
 
 ## Next
-- **NEXT SESSION:** alignment audit DUE (counter 10/10) — run at start per AGENTS.md L6. Then
-  candidate C-split scoping (A-pf-083) or founder's pick. Signpost: plan `divergence-revamp`
-  (B ✅ committed), specs parked; commits `e05c2bc`..`9a8766b` + this burst.
-- M5 un-park still needs B-pf-001 (contact) + B-pf-002 (secrets) — founder action (A-pf-080).
-- Ablation PARKED (A-pf-078); bands layer (A-pf-077).
+- Candidate: ablation campaign (A-pf-078, labor-cost) or founder's pick. M5 needs B-pf-001 +
+  B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077). Re-owed pixel glance when vision
+  backend returns.
+- Signpost: plans active = `divergence-revamp`, `evidence-beta`, `beta-release` (7 archived);
+  commits `e05c2bc`..`fd52723` + this burst.
 
 ## Blockers
 - **M5 publish:** `B-pf-001` + `B-pf-002` — unchanged, founder-owned.
-- **Hygiene:** hot state 7787/8192 B — demote settled items next session.
+- **Hygiene:** hot state 7428/8192 B.
 
 ## History
-- **L2 state split (2026-09-29)** · **L6 north-star pinned (2026-10-01)** · audit counter 10/10.
-- **Sessions 47+ (2026-10-16):** divergence mega-burst; paper parked; high-assurance mode.
-- **Session 48 (2026-10-16):** vision restored → pixel reviews → 8-BLOCKER fix burst (`9a8766b`).
-- **Session 49 (2026-10-16):** digestibility research → B group-and-fold (+touch-ups), C seamed.
+- **L2 split (2026-09-29)** · **L6 pinned (2026-10-01)** · **first audit (2026-10-16)**.
+- **Sessions 47–49:** instrument mega-burst → vision fixes (`9a8766b`) → group-fold (`fd52723`).
+- **Session 50:** audit + archive + C-full + §5-cap.

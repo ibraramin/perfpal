@@ -122,6 +122,25 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
                     "report.md diverged beyond provenance"
                 );
             }
+            // C-split detail artifacts carry no provenance surfaces (no
+            // started_at/duration_ms/root_path — relative paths only), so
+            // the provenance mask is a defensive no-op and the comparison
+            // is effectively byte-exact UNMASKED.
+            "findings-detail.md" => {
+                let text1 = String::from_utf8(bytes1.clone()).expect("findings-detail.md UTF-8");
+                let text2 = String::from_utf8(bytes2.clone()).expect("findings-detail.md UTF-8");
+                assert_eq!(
+                    common::mask_report_provenance(&text1),
+                    common::mask_report_provenance(&text2),
+                    "findings-detail.md diverged between runs"
+                );
+            }
+            "findings-detail.html" => {
+                assert_eq!(
+                    bytes1, bytes2,
+                    "findings-detail.html must be byte-identical UNMASKED across runs"
+                );
+            }
             n if n.starts_with("charts/") && (n.ends_with(".svg") || n.ends_with(".dot")) => {
                 assert_eq!(
                     bytes1, bytes2,
@@ -133,10 +152,13 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
         }
     }
 
-    // Sanity: this fixture must actually exercise all three derived-artifact
+    // Sanity: this fixture must actually exercise all derived-artifact
     // kinds, or the comparisons above prove nothing.
     assert!(run1.contains_key("metrics.json"));
     assert!(run1.contains_key("report.md"));
+    assert!(run1.contains_key("report.html"));
+    assert!(run1.contains_key("findings-detail.md"));
+    assert!(run1.contains_key("findings-detail.html"));
     // Three overview charts + two layered overviews + graph.dot + one detail
     // page per capped component (count derived from metrics.json, not
     // hardcoded).

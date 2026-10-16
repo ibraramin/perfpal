@@ -368,19 +368,21 @@ pub fn markdown_escaped(input: &str) -> String {
     out
 }
 
-/// Golden report.md masking: the [`mask_report_provenance`] surfaces
-/// (`started <RFC3339>`, `duration <n> ms`) PLUS every literal occurrence
-/// of the absolute scan `root` → `"<ROOT>"` (the header blockquote and the
-/// §2 "Scan root" line are the only surfaces, per the §5 template) PLUS the
-/// Markdown-ESCAPED form of the root (the reporter runs every embedded path
-/// through `escape_md`, so e.g. `…/e2e-mixed` appears as `…/e2e\-mixed`)
-/// PLUS the Wave B1 ARCH-003 full-detail block strip: a `semantic-clang`
-/// feature build legitimately renders the resolved finding
-/// (MEDIUM/semantic/resolved evidence) at a DIFFERENT full-detail position
-/// (Appendix C) than the default build's name-based block, so string-level
-/// normalization cannot restore order — the whole block (header
-/// `#### Cross\-file call coupling` through the next blank line, or the next
-/// `#### ` finding header defensively) is dropped on BOTH sides. The header
+/// Golden human-`report.md` AND `findings-detail.md` masking (shared: the
+/// detail artifact carries the Appendix C content post-split): the
+/// [`mask_report_provenance`] surfaces (`started <RFC3339>`, `duration <n>
+/// ms`) PLUS every literal occurrence of the absolute scan `root` →
+/// `"<ROOT>"` (the header blockquote and the §2 "Scan root" line are the
+/// only surfaces, per the §5 template) PLUS the Markdown-ESCAPED form of
+/// the root (the reporter runs every embedded path through `escape_md`, so
+/// e.g. `…/e2e-mixed` appears as `…/e2e\-mixed`) PLUS the Wave B1 ARCH-003
+/// full-detail block strip: a `semantic-clang` feature build legitimately
+/// renders the resolved finding (MEDIUM/semantic/resolved evidence) at a
+/// DIFFERENT full-detail position (the detail artifact) than the default
+/// build's name-based block, so string-level normalization cannot restore
+/// order — the whole block (header `#### Cross\-file call coupling` through
+/// the next blank line, or the next `#### ` finding header defensively) is
+/// dropped on BOTH sides. The header
 /// terminator is explicit (`"#### "` with the trailing space, pushed back
 /// onto the output) IN ADDITION to the blank-line rule — a future evidence
 /// line containing a blank line ends the skip at that blank line exactly as

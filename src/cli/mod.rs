@@ -244,6 +244,11 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // LINKED variant — zero JavaScript): pure function of the same
     // `(document, chart_names)` pair, so findings stay byte-identical.
     let html = crate::reporter::render_html(&document, &chart_names);
+    // C-split detail artifacts: the uncapped per-finding detail promoted out
+    // of the bounded human files — pure functions of `document` alone (no
+    // chart input, no provenance surfaces), so findings stay byte-identical.
+    let detail_md = crate::reporter::render_findings_detail(&document);
+    let detail_html = crate::reporter::render_findings_detail_html(&document);
     let dot = crate::charts::dot::render_dot(&document);
 
     // writer: atomic directory swap (all writer failures are output errors).
@@ -256,6 +261,8 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         ),
         Artifact::text("report.md", report),
         Artifact::text("report.html", html),
+        Artifact::text("findings-detail.md", detail_md),
+        Artifact::text("findings-detail.html", detail_html),
         Artifact::text("charts/graph.dot", dot),
     ];
     for (name, bytes) in &charts {

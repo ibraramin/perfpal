@@ -281,10 +281,30 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         );
     }
 
-    // --- Derived artifacts: report.md + charts/ -----------------------------
+    // --- Derived artifacts: report.md + detail artifacts + charts/ --------
     let report_path = out.join("report.md");
     assert!(report_path.is_file(), "report.md missing");
+    // C-split: the uncapped per-finding detail rides alongside the bounded
+    // human files through the same CLI artifact pipe.
+    assert!(
+        out.join("findings-detail.md").is_file(),
+        "findings-detail.md missing"
+    );
+    assert!(
+        out.join("findings-detail.html").is_file(),
+        "findings-detail.html missing"
+    );
     let report1 = fs::read_to_string(&report_path).unwrap();
+    // Human report.md carries zero per-finding rows (bounded at any scale).
+    assert_eq!(
+        report1.matches("#### ").count(),
+        0,
+        "report.md must carry zero per-finding detail rows"
+    );
+    assert!(
+        report1.contains("[findings-detail.md](findings-detail.md)"),
+        "report.md Appendix C must link the detail artifact"
+    );
 
     // Section headings present, in the fixed §5 template order.
     let headings = [
@@ -396,6 +416,16 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         "graph.dot must be a DOT digraph"
     );
 
+    // C-split detail artifacts: snapshot run-1 bytes for the UNMASKED
+    // byte-identity check after the swap-path second run below.
+    let mut detail_bytes1 = std::collections::BTreeMap::new();
+    for name in ["findings-detail.md", "findings-detail.html", "report.html"] {
+        detail_bytes1.insert(
+            name.to_string(),
+            fs::read(out.join(name)).unwrap_or_else(|_| panic!("{name} missing after run 1")),
+        );
+    }
+
     // --- Second run into the SAME directory (swap path) ---------------------
     let code = run_with(argv(&[
         "--output",
@@ -421,6 +451,23 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         common::mask_report_provenance(&report1),
         common::mask_report_provenance(&report2),
         "report.md diverged beyond provenance between runs"
+    );
+
+    // C-split detail artifacts: byte-identical UNMASKED across runs (no
+    // provenance surfaces — relative paths only).
+    for name in ["findings-detail.md", "findings-detail.html", "report.html"] {
+        let bytes2 = fs::read(out.join(name)).expect("detail artifact readable");
+        assert_eq!(
+            detail_bytes1[name], bytes2,
+            "{name} not byte-stable across runs"
+        );
+    }
+    let detail_md1 = String::from_utf8(detail_bytes1["findings-detail.md"].clone())
+        .expect("findings-detail.md is UTF-8");
+    assert_eq!(
+        detail_md1.matches("#### ").count(),
+        doc1["findings"].as_array().unwrap().len(),
+        "findings-detail.md must render every finding"
     );
 
     // SVGs + DOT: byte-identical UNMASKED across runs (no provenance inside).

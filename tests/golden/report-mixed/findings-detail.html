@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Perfpal Findings Detail — schema 1.4</title>
+<style>
+body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+#findings table{min-width:72rem}
+#findings tbody td{white-space:nowrap}
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
+figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}
+figcaption{margin-top:.5rem}
+img{max-width:100%;height:auto}
+figure.pz img{max-width:none;touch-action:none}
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
+#filter-bar{margin:.5rem 0}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
+</style>
+</head>
+<body>
+<header>
+<h1>Perfpal Report</h1>
+<p>schema_version 1.4 · perfpal perfpal 0.2.0-beta.1 · 4 files · 9 findings (4 hot, 4 warn, 1 info) · languages: c, rust</p>
+</header>
+<nav>
+<ul>
+<li><a href="report.html">Report</a></li>
+<li><a href="#findings">Findings detail</a></li>
+</ul>
+</nav>
+<section id="findings">
+<h2>Findings detail</h2>
+<div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>8 rules: 9 of 9 total findings (4 hot, 4 warn, 1 info).</p>
+<p><a href="report.html">Back to report.html</a>.</p>
+<section id="rule-PERF-C-ALLOC-001">
+<h3><code>PERF-C-ALLOC-001</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-ALLOC-001-src-main-c-27-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:27:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:27:21</td><td>c_loop</td><td class="wrap">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=2, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-C-ALLOC-002">
+<h3><code>PERF-C-ALLOC-002</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-ALLOC-002-src-main-c-29-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:29:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:29:9</td><td>c_loop</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-C-STR-001">
+<h3><code>PERF-C-STR-001</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-STR-001-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:28:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td class="wrap">&#39;strcat&#39; accumulates into &#39;acc&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td class="wrap">callee=strcat, dest=acc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-ALLOC-003">
+<h3><code>PERF-RS-ALLOC-003</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-ALLOC-003-src-lib-rs-20-9" data-path="src/lib.rs"><td>PERF-RS-ALLOC-003:src/lib.rs:20:9</td><td>PERF-RS-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:20:9</td><td>build</td><td class="wrap">&#39;out.reserve&#39; grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization</td><td class="wrap">callee=out.reserve, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-STR-002">
+<h3><code>PERF-RS-STR-002</code> — 2 findings (0 hot, 2 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-STR-002-src-lib-rs-22-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:22:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:22:17</td><td>build</td><td class="wrap">&#39;s.len&#39; recomputes the length of &#39;s&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=s, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-STR-002-src-lib-rs-23-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:23:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:23:17</td><td>build</td><td class="wrap">&#39;tmp.len&#39; recomputes the length of &#39;tmp&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=tmp, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-C-STR-003">
+<h3><code>PERF-C-STR-003</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-STR-003-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:28:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td class="wrap">unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td class="wrap">callee=strcat</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-RS-MEM-001">
+<h3><code>PERF-RS-MEM-001</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-MEM-001-src-lib-rs-25-22" data-path="src/lib.rs"><td>PERF-RS-MEM-001:src/lib.rs:25:22</td><td>PERF-RS-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:25:22</td><td>build</td><td class="wrap">&#39;Vec::with_capacity&#39; receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization</td><td class="wrap">callee=Vec::with_capacity, misuse=size_of_as_element_count</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-C-ARCH-003">
+<h3><code>PERF-C-ARCH-003</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-ARCH-003-src-main-c-32-12" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:32:12</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:32:12</td><td>c_loop</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<footer>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
+</body>
+</html>

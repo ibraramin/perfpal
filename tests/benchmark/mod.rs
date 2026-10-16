@@ -265,7 +265,8 @@ pub fn run_suite() {
     println!("`scan.started_at`, `scan.duration_ms`, `scan.root_path` by textual value");
     println!("substitution (no JSON re-serialization; the producer's exact key order and byte");
     println!("layout are preserved); report.md masks ONLY the header `started`/`duration`");
-    println!("instants and the absolute scan root. The report §4 findings block, charts/*.svg");
+    println!("instants and the absolute scan root (findings-detail.md masks the same way).");
+    println!("The detail findings blocks, report.html, charts/*.svg");
     println!("and the bundled schema are compared byte-exact (nothing stripped or reordered).");
     println!("\n## Overall verdict\n");
     println!("PASS — all measured per-rule precision/recall meet or exceed the baseline,");
@@ -727,7 +728,14 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
     // per-component detail page per capped component).
     // m6: the schema artifact name comes from the product, so an additive
     // schema bump does not break the benchmark.
-    for required in ["metrics.json", "report.md", SCHEMA_ARTIFACT_NAME] {
+    for required in [
+        "metrics.json",
+        "report.md",
+        "report.html",
+        "findings-detail.md",
+        "findings-detail.html",
+        SCHEMA_ARTIFACT_NAME,
+    ] {
         assert!(
             a.contains_key(required),
             "determinism proof: expected artifact {required} missing"
@@ -771,8 +779,19 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
                     mask_report_strict(&t2, &root).into_bytes(),
                 )
             }
-            // charts/*.svg + charts/graph.dot + the bundled schema carry no
-            // provenance.
+            // C-split: findings-detail.md masks like report.md (provenance
+            // no-op — no header surfaces — plus absolute-root substitution).
+            "findings-detail.md" => {
+                let t1 = String::from_utf8_lossy(bytes1).into_owned();
+                let t2 = String::from_utf8_lossy(bytes2).into_owned();
+                let root = scan.to_string_lossy();
+                (
+                    mask_report_strict(&t1, &root).into_bytes(),
+                    mask_report_strict(&t2, &root).into_bytes(),
+                )
+            }
+            // report.html + findings-detail.html + charts/*.svg +
+            // charts/graph.dot + the bundled schema carry no provenance.
             _ => (bytes1.clone(), bytes2.clone()),
         };
         if normalized.0 != normalized.1 {

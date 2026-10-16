@@ -1,88 +1,82 @@
 # Handoff — Latest
 
 ## Objective
-Session-49 digestibility burst — founder chose **B morphing into C**: researched 8 industry
-patterns, built **group-and-fold** (§4 one-row-per-rule + App.C full detail + `<details>`
-groups, C-split seamed via preserved separate fns), fixed vision-flagged residuals, verified
-behind high-assurance gates. Commit pending as the closing step of this burst.
+Session-50 audit + C-full burst — ran the due L6 alignment audit (counter was 10/10, reset),
+archived 7 done plans, and built the founder-approved **C-full artifact split** plus the
+**§5-cap follow-up**: human report files bounded at every section, full detail in dedicated
+artifacts, django humans 34MB → 65.6KB. Committing as the closing step.
 
 ## Phase
-POST-MVP. `divergence-revamp` instrument + usefulness ✅; vision-defect burst COMMITTED
-`9a8766b`; **group-and-fold B ✅ (uncommitted → committing now)**; C-split FUTURE (A-pf-083);
-ablation PARKED; paper PARKED; `evidence-beta` M1–M4 ✅ + deep dive ✅; M5 parked.
+POST-MVP. `divergence-revamp` instrument + usefulness + digestibility ✅ (IR v1.4, viz,
+group-fold, C-full, §5-cap); ablation apparatus ✅ / campaign PARKED; paper PARKED;
+`evidence-beta` M1–M4 ✅ + deep dive ✅; M5 parked behind B-pf-001/002.
 
 ## Alignment (L6)
 - **Goal restated:** Perfpal is a CLI (Rust) that scans a codebase and emits (a) language performance
   heuristics, (b) architecture-level bottleneck visualization, and (c) LLM-consumable quantified
   metrics, so humans see bottlenecks and LLMs optimize with explicit signals (`docs/NORTH-STAR.md`).
-- **Phase restated:** POST-MVP, `stage: dev`; human-digestibility of the findings report repaired
-  (fold, don't just shorten) while the machine artifact stays complete — both audiences served.
-- **How this session serves the north-star:** §4 went from 26,089-row wall to 19 scannable rule
-  groups on django (4175×), exemplars front-and-center, totals honest — humans get verdicts,
-  LLMs keep every row in App.C/metrics.json.
-- **Drift flag: NONE.** B-now/C-later is founder-directed (D-pf-209). **Audit counter hit 10/10 —
-  alignment audit DUE at next session start.**
+- **Phase restated:** POST-MVP, `stage: dev`; the human/machine output split is now structural —
+  bounded human reports, complete machine artifacts — serving both audiences without compromise.
+- **How this session serves the north-star:** audit retired stale plans (focus), C-full made pillar-2
+  outputs reviewable at real-repo scale while keeping every signal for the LLM consumer.
+- **Drift flag: NONE.** Audit found 3 active plans all pillar-aligned. Counter reset 10 → 0,
+  `last_alignment_audit` 2026-10-16.
 
 ## This session — work summary
-1. **Research (librarian):** 8 digestibility patterns (verdict-first, severity gating, group-fold,
-   top-N + honest counts, progressive disclosure, verdict tables, human/machine split, zero-JS viz).
-2. **Anatomy (explorer):** sole unbounded loop `render_findings:689` + `html_findings:1382`;
-   scale ladder goldens 9–38KB → django 15–18MB; hook points identified.
-3. **Proposal → founder chose B morphing into C** (A too shallow, C too big for one burst).
-4. **fix-4 (build):** grouped §4 (`R rules: N of M`, severity→count→rule_id order, exemplar
-   first-in-order), App.C via preserved `render_findings_full_detail`, `<details>` groups via
-   `html_findings_table/row` fns, output-contract amended, 8 goldens regen.
-5. **fix-5 (touch-up):** CSS chevron affordance; location `34-21` proven line:col (not a bug) →
-   unambiguous `path:line:col` + locking test.
-6. **Django measured (/tmp, sweep untouched):** §4 15,110,055B → 3,619B (19 rows); totals flat
-   by design (App.C 15.1MB) — C-split payoff seamed, not taken.
+1. **Audit (D-pf-211):** surveyed 10 plans (3 active / 7 done); no drift; archived 7 →
+   `docs/plans/archive/`; narrowed `divergence-revamp`; demoted settled hot items to cold ledger.
+2. **fix-6 (C-full):** `findings-detail.md`/`.html` promoted verbatim, CLI pipe emits 12 artifacts,
+   humans carry zero per-finding rows, output-contract amended, 8 goldens + 8 new detail goldens.
+3. **req-4 held on <200KB** (377KB actual) → founder delegated the call → my recommendation (a):
+   **fix-7 (§5-cap):** `HUMAN_CAP=10` on §5 table + Component index + per-file links, honest
+   `top S of M` / `…+N more` markers. Django humans: **65,627 B combined (3× under target)**.
+4. **Vision backend down 3rd time** (`model_coming_soon` ×3 incl. this burst) — structural locks
+   substituted throughout; re-owed glance recorded.
+5. Demo sweep outputs untouched (all scale proofs rendered to /tmp).
 
 ## Process notes (high-assurance mode, founder-ordered)
-- Dual review satisfied: `@reviewer` ALL-HOLD (cited) + `@requirements-reviewer` APPROVED +
-  `@vision` "materially better" with 2/3 mild issues fixed in-burst (3rd = known deferred cosmetic).
-- Vision backend died again on the final spot (2× `model_coming_soon`) — chevron/location covered
-  structurally (CSS + golden grep + dedicated test). Small re-owed glance recorded (A-pf-083).
-- Count note: 612 tests after build, **613** after touch-up (orchestrator reruns both times).
-- Semantic-clang gate skipped (no cfg-gated code touched; libclang env absent this burst).
+- Dual review per wave: C-full rev-3 ALL-HOLD + req-4 conditional (drove fix-7); §5-cap rev-4
+  ALL-HOLD + req-5 APPROVED. No unresolved disagreement.
+- My aspirational numbers as DoD discipline worked as designed: the <200KB bar I set caught the
+  §5 residual that scope-discipline would otherwise have deferred.
+- Semantic-clang gate skipped (no cfg-gated code touched).
 
 ## Verification (gates observed by orchestrator on final worktree)
 | Claim | Command | Result |
 |---|---|---|
 | Format | `cargo fmt --all -- --check` | exit 0 |
 | Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0, 0 warnings |
-| Tests | `cargo test --locked` | **613 passed; 0 failed** |
-| Findings stability | finding_id diff HEAD vs worktree, all 4 goldens | IDENTICAL (15/9/32/29); 0 metrics.json in diff |
-| Group math | counts-sum + exemplar-order + determinism tests | pass (new locks) |
+| Tests | `cargo test --locked` | **626 passed; 0 failed** |
+| Findings stability | finding_id/md5 diff HEAD vs worktree, all 4 goldens | IDENTICAL (15/9/32/29); 0 metrics.json in diff |
+| Scale proof | django re-render to /tmp | md 19,928 + html 45,699 = **65,627 B** (was 34MB) |
 | 67-rule catalog | untouched | `baseline.json` never modified |
-
-**Reviewer agreement:** no disagreement — reviewer ALL-HOLD, requirements APPROVED, vision
- healthissues fixed or previously deferred with founder visibility.
 
 ## Risks / Open
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`** (high; EULA/PRIVACY
   contact placeholder), **`R-pf-082`** (medium; synthetic-corpus credibility — complemented by M4),
   **`R-pf-007`** (medium; differentiation claims rest on one survey pass), **`R-pf-094`** (low),
   **`R-pf-095`** (low; Windows residuals).
-- **New/changed this session:** A-pf-081 DONE (research→B built); A-pf-082 DONE (9a8766b);
-  A-pf-083 opened (C-split + re-owed glance); D-pf-209/210 live; audit counter 10/10 (AUDIT DUE).
+- **Vision backend:** flaky across 2 sessions (worked vis-1..5, `model_coming_soon` ever since) —
+  agent works when its model is provisioned; infra issue, not a code issue.
 - **Blockers (unchanged):** **`B-pf-001`** (contact address); **`B-pf-002`** (repo secrets).
-- **Hot-state hygiene:** `state/session-state.json` = **7787 B / 8192 B** — tight; next session
-  should demote settled items (D-pf-206/207, A-pf-076/079/082) to cold ledger per pattern.
+- **Hot-state hygiene:** **7428 B / 8192 B**; settled items demoted this session.
 
 ## Next Actions
-1. **Commit this burst** (13 files + EOL state) — founder-approved, executing now.
-2. **Next session: alignment audit DUE** (counter 10/10) + candidate C-split scoping (A-pf-083).
-3. M5 un-park still needs B-pf-001 + B-pf-002 (founder action, A-pf-080).
-4. Ablation PARKED (A-pf-078); bands layer (A-pf-077); carry R-pf-094/095/077/078/080/082.
+1. **Commit this burst** (plan archive + C-full + §5-cap + EOL state) — approved, executing now.
+2. Candidate next: ablation campaign (A-pf-078, labor not spend) or founder's pick; M5 needs
+   B-pf-001 + B-pf-002 (A-pf-080); bands layer (A-pf-077).
+3. Re-owed pixel glance when vision backend returns.
 
 ## Change set (this session)
-- **Product code:** `src/reporter/mod.rs` (grouping fns, grouped §4, App.C, `<details>` groups,
-  chevron CSS, `path:line:col` exemplars).
-- **Tests:** `reporter_render.rs`, `report_html.rs`, `common/mod.rs` (masker docs + newline fix).
-- **Docs:** `docs/report/output-contract.md` (§4 rewrite, App.C, order rule).
-- **Goldens:** 8 regen files; `metrics.json`/charts/dot/schema untouched.
-- **State/docs:** hot state, this handoff, activeContext, CHANGELOG (committing with burst).
+- **Plans:** 7 done → `docs/plans/archive/` (git moves).
+- **Product code:** `src/reporter/mod.rs` (detail artifacts, grouped §4, App.C stub, HUMAN_CAP,
+  cross-page links, chevron CSS), `src/cli/mod.rs` (12-artifact pipe).
+- **Tests:** `findings_detail_split.rs` (new, 8), `reporter_render`, `report_html`, `common`,
+  `p6_hardening` (10→12), `p4_determinism`, `pipeline_e2e`, `benchmark`.
+- **Docs:** `output-contract.md` (layout, artifacts, caps, order); CHANGELOG (2 entries).
+- **Goldens:** 8 regen + 8 new detail files ×4 trees; metrics/charts/dot/schema untouched.
+- **State:** hot state, this handoff, activeContext.
 
 ## L2 state split / L6 north-star (history)
-Hot/cold split landed 2026-09-29; north-star pinned 2026-10-01 (`north_star_ref` in hot state).
-B-now/C-later digestibility direction is founder verdict (D-pf-208/209); audit due next session.
+Hot/cold split 2026-09-29; north-star pinned 2026-10-01; first periodic audit completed
+2026-10-16 (D-pf-211, counter reset). B-now/C-later direction: founder verdict D-pf-208/209.

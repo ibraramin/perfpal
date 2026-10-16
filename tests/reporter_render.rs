@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use perfpal::analyzer::{Confidence, Severity};
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
-use perfpal::reporter::render_report;
+use perfpal::reporter::{render_findings_detail, render_report};
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, MetricsDocument, ParseHealthEntry,
     ParseHealthSummary, ScanInfo, StatsSection, ToolInfo,
@@ -190,6 +190,16 @@ fn sections_present_in_fixed_order() {
     // Encoding contract: LF newlines, trailing newline.
     assert!(report.ends_with('\n'));
     assert!(!report.contains("\r"));
+    // C-split: report.md carries zero per-finding rows — Appendix C is a
+    // link stub into the findings-detail.md artifact.
+    assert!(
+        !report.contains("#### "),
+        "report.md must not render per-finding detail rows"
+    );
+    assert!(
+        report.contains("[findings-detail.md](findings-detail.md)"),
+        "Appendix C stub must link the detail artifact"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -289,7 +299,8 @@ fn findings_section4_groups_by_rule_in_pinned_group_order() {
     assert!(sec4_plain.contains("| `PERF-C-CALL-002` | 1 | 0 | 1 | 0 |"));
     assert!(sec4_plain.contains("| `PERF-C-CALL-001` | 3 | 0 | 0 | 3 |"));
 
-    // §4 carries NO per-finding detail headers — those live in Appendix C.
+    // §4 carries NO per-finding detail headers — those live in the
+    // findings-detail.md artifact.
     assert!(
         !sec4.contains("#### "),
         "§4 must not render per-finding detail:\n{sec4}"
@@ -389,14 +400,22 @@ fn group_counts_sum_to_total_and_match_appendix_c() {
     assert_eq!(row_sum, 6, "group counts must sum to total:\n{sec4}");
     assert!(sec4.contains("5 rules: 6 of 6 total findings"));
 
-    // Appendix C lists every finding uncapped: one #### header per finding.
+    // C-split: report.md Appendix C is a link stub (zero rows); the uncapped
+    // per-finding detail lives in findings-detail.md — one #### per finding.
     let appendix_c = section(&report, "## Appendix C.", "## Appendix B.");
     assert_eq!(
         appendix_c.matches("#### ").count(),
-        6,
-        "Appendix C must render every finding:\n{appendix_c}"
+        0,
+        "Appendix C stub must carry zero detail rows:\n{appendix_c}"
     );
-    assert!(appendix_c.contains("6 of 6 total findings."));
+    assert!(appendix_c.contains("[findings-detail.md](findings-detail.md)"));
+    let detail = render_findings_detail(&doc);
+    assert_eq!(
+        detail.matches("#### ").count(),
+        6,
+        "findings-detail.md must render every finding:\n{detail}"
+    );
+    assert!(detail.contains("6 of 6 total findings."));
     for id in [
         "PERF-C-ALLOC-001:a.c:7:9",
         "PERF-C-LOOP-002:b.c:7:9",
@@ -407,8 +426,8 @@ fn group_counts_sum_to_total_and_match_appendix_c() {
     ] {
         let escaped = id.replace('-', "\\-").replace('.', "\\.");
         assert!(
-            appendix_c.contains(&format!("(`{escaped}`)")),
-            "{id} missing from Appendix C:\n{appendix_c}"
+            detail.contains(&format!("(`{escaped}`)")),
+            "{id} missing from findings-detail.md:\n{detail}"
         );
     }
 }
@@ -436,21 +455,26 @@ fn grouped_output_is_deterministic_regardless_of_input_order() {
         sec4_a, sec4_b,
         "§4 must be byte-identical regardless of input order"
     );
+    // C-split: Appendix C is a link stub (identical — no rows to order);
+    // the findings-detail.md artifact preserves the legacy document-order
+    // total order, so it legitimately differs — but the SORTED citation
+    // multiset must agree.
     let app_a = section(&report_a, "## Appendix C.", "## Appendix B.");
     let app_b = section(&report_b, "## Appendix C.", "## Appendix B.");
-    // Appendix C preserves the legacy document-order total order, so it
-    // legitimately differs — but the SORTED citation multiset must agree.
-    let mut cites_a: Vec<&str> = app_a
+    assert_eq!(app_a, app_b, "Appendix C stub must be order-independent");
+    let detail_a = render_findings_detail(&doc_a);
+    let detail_b = render_findings_detail(&doc_b);
+    let mut cites_a: Vec<&str> = detail_a
         .match_indices("(`PERF")
-        .map(|(i, _)| &app_a[i..i + 32])
+        .map(|(i, _)| &detail_a[i..i + 32])
         .collect();
-    let mut cites_b: Vec<&str> = app_b
+    let mut cites_b: Vec<&str> = detail_b
         .match_indices("(`PERF")
-        .map(|(i, _)| &app_b[i..i + 32])
+        .map(|(i, _)| &detail_b[i..i + 32])
         .collect();
     cites_a.sort_unstable();
     cites_b.sort_unstable();
-    assert_eq!(cites_a, cites_b, "Appendix C citation sets differ");
+    assert_eq!(cites_a, cites_b, "findings-detail.md citation sets differ");
 }
 
 #[test]
@@ -464,6 +488,11 @@ fn empty_findings_render_no_findings_in_section4_and_appendix_c() {
     assert!(
         appendix_c.contains("No findings."),
         "Appendix C must handle the empty scan:\n{appendix_c}"
+    );
+    let detail = render_findings_detail(&doc);
+    assert!(
+        detail.contains("No findings."),
+        "findings-detail.md must handle the empty scan:\n{detail}"
     );
 }
 
@@ -490,9 +519,10 @@ fn flags_and_evidence_clauses_appear_only_when_applicable() {
             "clean.c",
         ),
     ];
-    let report = render_report(&doc, &[]);
+    // C-split: per-finding clauses live in findings-detail.md, not report.md.
+    let detail = render_findings_detail(&doc);
 
-    let flagged_section = &report[report.find("#### ").unwrap()..];
+    let flagged_section = &detail[detail.find("#### ").unwrap()..];
     assert!(flagged_section.contains("- Flags: macro_suspect, error_node_overlap"));
     // Evidence keys are escape_md'd too (`_` → `\_`).
     assert!(flagged_section.contains(r"- Evidence: loop\_depth=3"));
@@ -599,6 +629,77 @@ fn top_ten_files_pinned_with_path_tiebreak() {
     assert!(
         !table.contains("drop_me"),
         "11th-ranked file leaked into top-10"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// 5b. Component table caps at top-10 with honest counts (C-full-split
+// follow-up: same defect class as the §3 take(10) precedent)
+// ---------------------------------------------------------------------------
+
+fn component_entry(rank: u32, prefix: &str) -> ComponentEntry {
+    ComponentEntry {
+        component_id: format!("comp-{prefix}"),
+        path_prefix: prefix.to_string(),
+        rank,
+        metrics: ComponentMetrics {
+            complexity_sum: 1.0,
+            alloc_site_density: 0.0,
+            max_loop_depth: 0,
+            finding_density: 1.0,
+        },
+        finding_count: Some(1),
+    }
+}
+
+#[test]
+fn component_table_caps_at_top_ten_with_honest_header() {
+    let mut doc = base_doc();
+    doc.components = Some(
+        (1..=12)
+            .map(|r| component_entry(r, &format!("c{r:02}")))
+            .collect(),
+    );
+    let report = render_report(&doc, &[]);
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+
+    // Honest header: showing top 10 of 12.
+    assert!(
+        arch.contains("showing top 10 of 12 components"),
+        "honest cap header missing:\n{arch}"
+    );
+    // Exactly 10 data rows in document (rank) order; ranks 11-12 absent.
+    // Cells are escape_md'd (`-` → `\-`) — strip backslashes to compare.
+    let plain = arch.replace('\\', "");
+    let rows: Vec<&str> = plain.lines().filter(|l| l.starts_with("| comp-")).collect();
+    assert_eq!(rows.len(), 10, "component table must cap at 10:\n{arch}");
+    assert!(
+        plain.contains("| comp-c10 | c10 | 10 |"),
+        "rank 10 row missing"
+    );
+    assert!(
+        !plain.contains("c11") && !plain.contains("c12"),
+        "ranks beyond top-10 leaked:\n{arch}"
+    );
+    // Double-render byte-identical modulo provenance (cap is content-only).
+    let again = render_report(&doc, &[]);
+    assert_eq!(report, again, "capped §5 must double-render byte-identical");
+}
+
+#[test]
+fn component_table_shows_honest_counts_when_under_cap() {
+    let mut doc = base_doc();
+    doc.components = Some(vec![component_entry(1, "c01"), component_entry(2, "c02")]);
+    let report = render_report(&doc, &[]);
+    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    assert!(
+        arch.contains("showing top 2 of 2 components"),
+        "under-cap header must stay honest:\n{arch}"
+    );
+    let plain = arch.replace('\\', "");
+    assert_eq!(
+        plain.lines().filter(|l| l.starts_with("| comp-")).count(),
+        2
     );
 }
 

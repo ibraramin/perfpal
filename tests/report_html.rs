@@ -17,7 +17,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use perfpal::analyzer::{Confidence, Severity};
 use perfpal::cli::run_with;
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
-use perfpal::reporter::{escape_html, render_html, report_script};
+use perfpal::reporter::{escape_html, render_findings_detail_html, render_html, report_script};
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, FunctionStats, MetricsDocument,
     ParseHealthEntry, ParseHealthSummary, ScanInfo, StatsSection, Threshold, ThresholdValue,
@@ -175,36 +175,53 @@ fn hostile_path_and_message_are_fully_escaped() {
     f.finding_id = format!("PERF-C-STR-003:{hostile_path}:7:9");
     doc.findings = vec![f];
 
+    // C-split: the human page carries the hostile path (drill-down +
+    // exemplar finding_id) but NOT the message; the full message lives in
+    // the detail artifact. Both pages must escape.
     let html = render_html(&doc, &[]);
+    let detail = render_findings_detail_html(&doc);
 
     // The raw payloads must not appear anywhere (element text, attributes,
     // or drill-down hrefs).
+    for (page, name) in [(&html, "report.html"), (&detail, "findings-detail.html")] {
+        assert!(
+            !page.contains(hostile_path),
+            "raw hostile path leaked into {name}"
+        );
+        assert!(
+            !page.contains(hostile_message),
+            "raw hostile message leaked into {name}"
+        );
+        // No live scriptable markup from the payload (each page's own fixed
+        // script block is the only `<script>` allowed — see the
+        // fixed-script test below).
+        assert!(
+            !page.contains("<script>alert"),
+            "payload broke out into a script element in {name}"
+        );
+        assert!(
+            !page.contains("<img src=x"),
+            "payload broke out into an attacker-controlled img element in {name}"
+        );
+        // The escaped forms ARE present (content preserved, neutralized).
+        assert!(
+            page.contains("&lt;img src=x onerror=alert(1)&gt;.c"),
+            "escaped hostile path missing in {name}"
+        );
+        // Encoding contract: LF only, exactly one trailing newline.
+        assert!(!page.contains('\r'), "CR leaked into {name}");
+        assert!(page.ends_with('\n'), "trailing newline missing in {name}");
+        assert!(!page.ends_with("\n\n"), "double trailing newline in {name}");
+    }
+    // The message renders (escaped) only in the detail artifact.
     assert!(
-        !html.contains(hostile_path),
-        "raw hostile path leaked into report.html"
+        !html.contains("&lt;script&gt;"),
+        "message leaked into report.html"
     );
     assert!(
-        !html.contains(hostile_message),
-        "raw hostile message leaked into report.html"
+        detail.contains("&lt;script&gt;"),
+        "escaped message missing in detail"
     );
-    // No live scriptable markup from the payload (the page's own fixed
-    // slice-2 script block is the only `<script>` allowed — see the
-    // fixed-script test below).
-    assert!(
-        !html.contains("<script>alert"),
-        "payload broke out into a script element"
-    );
-    assert!(
-        !html.contains("<img src=x"),
-        "payload broke out into an attacker-controlled img element"
-    );
-    // The escaped forms ARE present (content preserved, neutralized).
-    assert!(html.contains("&lt;img src=x onerror=alert(1)&gt;.c"));
-    assert!(html.contains("&lt;script&gt;"));
-    // Encoding contract: LF only, exactly one trailing newline.
-    assert!(!html.contains('\r'));
-    assert!(html.ends_with('\n'));
-    assert!(!html.ends_with("\n\n"));
 }
 
 // ---------------------------------------------------------------------------
@@ -294,6 +311,13 @@ fn no_provenance_surfaces_and_double_render_byte_identical() {
         a, b,
         "report.html must be byte-identical across provenance changes (no mask)"
     );
+    // C-split: the detail artifact carries no provenance either.
+    let da = render_findings_detail_html(&doc_a);
+    let db = render_findings_detail_html(&doc_b);
+    assert_eq!(
+        da, db,
+        "findings-detail.html must be byte-identical across provenance changes (no mask)"
+    );
 
     // Neither provenance value may surface anywhere.
     for needle in [
@@ -304,11 +328,16 @@ fn no_provenance_surfaces_and_double_render_byte_identical() {
         "duration ",
     ] {
         assert!(!a.contains(needle), "provenance leaked: {needle}");
+        assert!(
+            !da.contains(needle),
+            "provenance leaked into detail: {needle}"
+        );
     }
     // Header still carries the deterministic counts.
     assert!(a.contains("schema_version 1.4"));
     assert!(a.contains("1 files"));
     assert!(a.contains("1 findings"));
+    assert!(da.contains("1 findings"));
 }
 
 // ---------------------------------------------------------------------------
@@ -329,32 +358,76 @@ fn findings_sorted_and_all_anchors_resolve() {
     doc.components = Some(vec![component(1, "src")]);
 
     let html = render_html(&doc, &["include-graph.svg".to_string()]);
+    let detail = render_findings_detail_html(&doc);
 
     // Grouped findings order: hottest rule-group first (ALLOC hot), then
     // warn (STR), then info (LOOP) — the pinned severity-rank → count-desc →
     // rule_id-asc group order; members within a group stay finding_id-asc.
-    let table = section(&html, "<section id=\"findings\">", "</section>");
-    let pos_alloc = table.find("PERF-C-ALLOC-001").expect("alloc row");
-    let pos_str = table.find("PERF-C-STR-002").expect("str row");
-    let pos_loop = table.find("PERF-C-LOOP-001").expect("loop row");
-    assert!(
-        pos_alloc < pos_str && pos_str < pos_loop,
-        "findings not in pinned group order:\n{table}"
+    // C-split: groups render in BOTH pages (summaries in report.html, full
+    // tables in the detail artifact).
+    // The detail page nests one rule-section per group — slice it
+    // depth-aware; the human page has no nesting.
+    let report_table = section(&html, "<section id=\"findings\">", "</section>");
+    let detail_table = section_nested(&detail, "<section id=\"findings\">");
+    for (table, name) in [(&report_table, "report.html"), (&detail_table, "detail")] {
+        let pos_alloc = table.find("PERF-C-ALLOC-001").expect("alloc group");
+        let pos_str = table.find("PERF-C-STR-002").expect("str group");
+        let pos_loop = table.find("PERF-C-LOOP-001").expect("loop group");
+        assert!(
+            pos_alloc < pos_str && pos_str < pos_loop,
+            "findings not in pinned group order in {name}:\n{table}"
+        );
+    }
+    // C-split: report.html carries zero per-finding rows; the detail page
+    // carries all three.
+    let report_findings = section(&html, "<section id=\"findings\">", "</section>");
+    assert_eq!(
+        report_findings.matches("<tr id=\"finding-").count(),
+        0,
+        "report.html must carry zero per-finding rows"
+    );
+    let detail_findings = section_nested(&detail, "<section id=\"findings\">");
+    assert_eq!(
+        detail_findings.matches("<tr id=\"finding-").count(),
+        3,
+        "detail page must carry every finding row"
     );
 
-    // Every internal href="#..." target exists as an id="...".
+    // Every internal href="#..." target exists as an id="..." in the SAME
+    // page; every findings-detail.html#... target exists in the detail page.
     let ids = collect_ids(&html);
+    let detail_ids = collect_ids(&detail);
     for href in collect_hrefs(&html) {
-        // External/relative file links (charts/...) are not anchors.
+        // External/relative file links (charts/..., *.html) are not anchors.
         if let Some(target) = href.strip_prefix('#') {
             assert!(
                 ids.iter().any(|id| id == target),
                 "drill-down link #{target} has no matching id anchor"
             );
+        } else if let Some(hash) = href.find('#') {
+            let (page, target) = href.split_at(hash);
+            let target = &target[1..];
+            assert_eq!(
+                page, "findings-detail.html",
+                "unexpected cross-page link {href}"
+            );
+            assert!(
+                detail_ids.iter().any(|id| id == target),
+                "detail link {href} has no matching id anchor in findings-detail.html"
+            );
         }
     }
-    // The three findings + two files + one component anchors all exist.
-    assert!(ids.iter().any(|id| id.starts_with("finding-")));
+    for href in collect_hrefs(&detail) {
+        if let Some(target) = href.strip_prefix('#') {
+            assert!(
+                detail_ids.iter().any(|id| id == target),
+                "detail in-page link #{target} has no matching id anchor"
+            );
+        }
+    }
+    // The three finding anchors live in the detail page; files + component
+    // anchors stay in the human page.
+    assert!(detail_ids.iter().any(|id| id.starts_with("finding-")));
     assert!(ids.iter().any(|id| id.starts_with("file-")));
     assert!(ids.iter().any(|id| id.starts_with("component-")));
 }
@@ -367,6 +440,36 @@ fn section<'a>(html: &'a str, start: &str, end: &str) -> &'a str {
     let rest = &html[from..];
     let to = rest.find(end).unwrap_or_else(|| panic!("{end} missing"));
     &rest[..to + end.len()]
+}
+
+/// Extract the `<section ...>` element starting at `start`, matching nested
+/// `<section>` elements by depth (the C-split detail page nests one
+/// `rule-…` section per firing rule inside `#findings`, so the naive
+/// first-`</section>` slice would truncate after the first group).
+fn section_nested<'a>(html: &'a str, start: &str) -> &'a str {
+    let from = html
+        .find(start)
+        .unwrap_or_else(|| panic!("{start} missing"));
+    let rest = &html[from..];
+    let mut depth = 0usize;
+    let mut i = 0usize;
+    while i < rest.len() {
+        if rest[i..].starts_with("<section") {
+            depth += 1;
+            i += "<section".len();
+        } else if rest[i..].starts_with("</section>") {
+            depth -= 1;
+            i += "</section>".len();
+            if depth == 0 {
+                return &rest[..i];
+            }
+        } else {
+            // Char-boundary-safe advance (the template carries multibyte
+            // `—`/`…`/`▸` literals).
+            i += rest[i..].chars().next().map_or(1, |c| c.len_utf8());
+        }
+    }
+    panic!("unbalanced <section> elements from {start}");
 }
 
 /// Collect every `id="..."` value in document order.
@@ -417,18 +520,24 @@ fn colliding_slugs_yield_unique_anchors_and_all_hrefs_resolve() {
         finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a/b.c"),
     ];
 
+    // C-split: file anchors live in report.html, finding anchors in the
+    // detail artifact (same assignment map — every cross-page href resolves).
     let html = render_html(&doc, &[]);
+    let detail = render_findings_detail_html(&doc);
     let ids = collect_ids(&html);
+    let detail_ids = collect_ids(&detail);
 
-    // All id= values unique.
-    let mut deduped = ids.clone();
-    deduped.sort();
-    deduped.dedup();
-    assert_eq!(
-        ids.len(),
-        deduped.len(),
-        "duplicate id anchors survive disambiguation: {ids:?}"
-    );
+    // All id= values unique within each page.
+    for (page_ids, name) in [(&ids, "report.html"), (&detail_ids, "detail")] {
+        let mut deduped = page_ids.clone();
+        deduped.sort();
+        deduped.dedup();
+        assert_eq!(
+            page_ids.len(),
+            deduped.len(),
+            "duplicate id anchors survive disambiguation in {name}: {page_ids:?}"
+        );
+    }
     // First colliding use keeps the bare slug, the second gets -2.
     assert!(
         ids.iter().any(|id| id == "file-a-b-c"),
@@ -438,16 +547,38 @@ fn colliding_slugs_yield_unique_anchors_and_all_hrefs_resolve() {
         ids.iter().any(|id| id == "file-a-b-c-2"),
         "disambiguator suffix missing: {ids:?}"
     );
-    let finding_ids: Vec<&String> = ids.iter().filter(|id| id.starts_with("finding-")).collect();
-    assert_eq!(finding_ids.len(), 2, "both findings need anchors: {ids:?}");
+    let finding_ids: Vec<&String> = detail_ids
+        .iter()
+        .filter(|id| id.starts_with("finding-"))
+        .collect();
+    assert_eq!(
+        finding_ids.len(),
+        2,
+        "both findings need anchors in the detail page: {detail_ids:?}"
+    );
     assert_ne!(finding_ids[0], finding_ids[1]);
 
-    // Every href="#…" resolves to an existing id="…".
+    // Every href="#…" resolves in-page; every findings-detail.html#…
+    // resolves in the detail page.
     for href in collect_hrefs(&html) {
         if let Some(target) = href.strip_prefix('#') {
             assert!(
                 ids.iter().any(|id| id == target),
                 "drill-down link #{target} has no matching id anchor"
+            );
+        } else if let Some(hash) = href.find('#') {
+            let target = &href[hash + 1..];
+            assert!(
+                detail_ids.iter().any(|id| id == target),
+                "detail link {href} has no matching id anchor"
+            );
+        }
+    }
+    for href in collect_hrefs(&detail) {
+        if let Some(target) = href.strip_prefix('#') {
+            assert!(
+                detail_ids.iter().any(|id| id == target),
+                "detail in-page link #{target} has no matching id anchor"
             );
         }
     }
@@ -491,18 +622,23 @@ fn attr_value(fragment: &str, name: &str) -> Option<String> {
     Some(fragment[from..from + to].to_string())
 }
 
-/// `(data-path, href-target)` for every `href="#…"` in each `<tr …>` row of
-/// a section, in row order (file drill-down rows carry the finding links).
+/// `(data-path, href-target)` for every finding link in each `<tr …>` row
+/// of a section, in row order (file drill-down rows carry the finding
+/// links — C-split: `href="findings-detail.html#…"` cross-page targets;
+/// the `#` fragment is returned so callers compare anchors directly).
 fn file_row_links(files_section: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     for chunk in files_section.split("<tr ").skip(1) {
         let row = &chunk[..chunk.find("</tr>").expect("row close")];
         let path = attr_value(row, "data-path").expect("file row data-path");
         let mut rest = row;
-        while let Some(i) = rest.find("href=\"#") {
-            let from = i + "href=\"#".len();
+        while let Some(i) = rest.find("href=\"") {
+            let from = i + "href=\"".len();
             let to = rest[from..].find('"').expect("href close");
-            out.push((path.clone(), rest[from..from + to].to_string()));
+            let href = &rest[from..from + to];
+            if let Some(hash) = href.find('#') {
+                out.push((path.clone(), href[hash + 1..].to_string()));
+            }
             rest = &rest[from + to + 1..];
         }
     }
@@ -545,9 +681,12 @@ fn slug_colliding_findings_link_to_own_rows_despite_ranked_order() {
     // file renders FIRST while its finding_id sorts SECOND.
     doc.stats.functions = vec![costly_fn("a/b.c")];
 
+    // C-split: file rows stay in report.html, finding rows live in the
+    // detail artifact (same anchor map — pairing is cross-page).
     let html = render_html(&doc, &[]);
+    let detail = render_findings_detail_html(&doc);
     let files = section(&html, "<section id=\"files\">", "</section>");
-    let findings = section(&html, "<section id=\"findings\">", "</section>");
+    let findings = section_nested(&detail, "<section id=\"findings\">");
 
     // Precondition: ranked-file order really disagrees with finding_id order.
     let pos_hi_file = files.find("data-path=\"a/b.c\"").expect("hi file row");
@@ -651,8 +790,17 @@ fn findings_table_renders_full_section4_parity() {
     ]);
     doc.findings = vec![f];
 
+    // C-split: the full §4-parity table lives in findings-detail.html;
+    // report.html carries groups only.
     let html = render_html(&doc, &[]);
-    let table = section(&html, "<section id=\"findings\">", "</section>");
+    let detail = render_findings_detail_html(&doc);
+    let report_findings = section(&html, "<section id=\"findings\">", "</section>");
+    assert_eq!(
+        report_findings.matches("<tr id=\"finding-").count(),
+        0,
+        "report.html must carry zero per-finding rows"
+    );
+    let table = section_nested(&detail, "<section id=\"findings\">");
 
     // LOOP-002 messages reference io_kind — it must be present.
     assert!(
@@ -712,6 +860,180 @@ fn file_drilldown_marks_hidden_files_beyond_top10() {
 }
 
 // ---------------------------------------------------------------------------
+// 15. C-full-split follow-up: component index caps at top-10 with honest
+// counts (same defect class as the #files take(10) precedent)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn component_index_caps_at_top_ten_with_honest_note() {
+    let mut doc = base_doc();
+    doc.components = Some(
+        (1..=12)
+            .map(|r| component(r, &format!("c{r:02}")))
+            .collect(),
+    );
+    let html = render_html(&doc, &[]);
+    let comps = section(&html, "<section id=\"components\">", "</section>");
+    assert!(
+        comps.contains("<p>showing top 10 of 12 components</p>"),
+        "honest cap note missing:\n{comps}"
+    );
+    assert_eq!(
+        comps.matches("<tr id=\"component-").count(),
+        10,
+        "component index must cap at 10 rows:\n{comps}"
+    );
+    // Rank order preserved: c01 first, c10 last; c11/c12 absent.
+    let first = comps.find(">c01<").expect("c01 row");
+    let tenth = comps.find(">c10<").expect("c10 row");
+    assert!(first < tenth, "rank order broken:\n{comps}");
+    assert!(
+        !comps.contains(">c11<") && !comps.contains(">c12<"),
+        "rows beyond top-10 leaked:\n{comps}"
+    );
+    // Under-cap docs stay honest; component-less docs carry no note.
+    let mut small = base_doc();
+    small.components = Some(vec![component(1, "c01"), component(2, "c02")]);
+    let small_html = render_html(&small, &[]);
+    let small_comps = section(&small_html, "<section id=\"components\">", "</section>");
+    assert!(small_comps.contains("<p>showing top 2 of 2 components</p>"));
+    let none_html = render_html(&base_doc(), &[]);
+    let none_comps = section(&none_html, "<section id=\"components\">", "</section>");
+    assert!(none_comps.contains("No components recorded."));
+    assert!(!none_comps.contains("showing top"));
+}
+
+// ---------------------------------------------------------------------------
+// 16. C-full-split follow-up: per-file finding links cap at top-10 by
+// severity-rank with an honest `…+N more` marker
+// ---------------------------------------------------------------------------
+
+/// One finding of `rule_id` at `path:line:9` (distinct finding_ids within
+/// one file via the line number).
+fn finding_at_line(rule_id: &str, severity: Severity, path: &str, line: u32) -> FindingEntry {
+    let mut f = finding_at(rule_id, severity, Confidence::High, path);
+    f.span = Span::point(line, 9);
+    f.finding_id = format!("{rule_id}:{path}:{line}:9");
+    f
+}
+
+/// Link text of every drill-down finding link in a `#files` section, in
+/// render order.
+fn drilldown_link_texts(files_section: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = files_section;
+    while let Some(i) = rest.find("findings-detail.html#finding-") {
+        let text_start = rest[i..].find('>').expect("link text open") + i + 1;
+        let text_end = rest[text_start..].find("</a>").expect("link close") + text_start;
+        out.push(rest[text_start..text_end].to_string());
+        rest = &rest[text_end..];
+    }
+    out
+}
+
+#[test]
+fn file_drilldown_caps_finding_links_at_top_ten_by_severity_rank() {
+    // 13 findings in one file: hot findings sit at HIGH lines (11-13) so
+    // finding_id order alone would bury them — severity-rank must win.
+    let mut findings: Vec<FindingEntry> = (1..=8)
+        .map(|line| finding_at_line("PERF-C-LOOP-001", Severity::Info, "big.c", line))
+        .collect();
+    findings.extend(
+        [9, 10].map(|line| finding_at_line("PERF-C-LOOP-001", Severity::Warn, "big.c", line)),
+    );
+    findings.extend(
+        [11, 12, 13].map(|line| finding_at_line("PERF-C-LOOP-001", Severity::Hot, "big.c", line)),
+    );
+    let mut doc = base_doc();
+    doc.files = vec![file_entry("big.c", 100)];
+    doc.scan.file_count = 1;
+    doc.findings = findings;
+    let html = render_html(&doc, &[]);
+    let files = section(&html, "<section id=\"files\">", "</section>");
+
+    // Exactly 10 links + an honest `…+3 more` marker.
+    assert_eq!(
+        files.matches("findings-detail.html#finding-").count(),
+        10,
+        "per-file links must cap at 10:\n{files}"
+    );
+    assert!(
+        files.contains("…+3 more"),
+        "honest hidden-link marker missing:\n{files}"
+    );
+    // Severity-rank order: hot (11-13), then warn (10, 9 — finding_id
+    // string order within rank), then info (1-5); lines 6-8 hidden.
+    let texts = drilldown_link_texts(files);
+    let expected: Vec<String> = [11, 12, 13, 10, 9, 1, 2, 3, 4, 5]
+        .iter()
+        .map(|line| format!("PERF-C-LOOP-001:big.c:{line}:9"))
+        .collect();
+    assert_eq!(texts, expected, "per-file links not in severity-rank order");
+    for hidden in [6, 7, 8] {
+        assert!(
+            !files.contains(&format!("big.c:{hidden}:9")),
+            "line {hidden} leaked past the cap:\n{files}"
+        );
+    }
+    // Every SHOWN href still resolves in the detail artifact (the cap only
+    // removes links — full data stays in findings-detail.html).
+    let detail = render_findings_detail_html(&doc);
+    let detail_ids = collect_ids(&detail);
+    for href in collect_hrefs(&html) {
+        if let Some(hash) = href.find('#')
+            && href.starts_with("findings-detail.html#")
+        {
+            let target = &href[hash + 1..];
+            assert!(
+                detail_ids.iter().any(|id| id == target),
+                "capped link {href} has no matching id anchor"
+            );
+        }
+    }
+    assert_eq!(
+        detail.matches("<tr id=\"finding-").count(),
+        13,
+        "detail artifact must keep every finding uncapped"
+    );
+    // Determinism: shuffled input order ⇒ byte-identical section.
+    let mut shuffled = doc;
+    shuffled.findings.reverse();
+    let html_b = render_html(&shuffled, &[]);
+    let files_b = section(&html_b, "<section id=\"files\">", "</section>").to_string();
+    assert_eq!(
+        files, files_b,
+        "capped drill-down must be input-order independent"
+    );
+}
+
+#[test]
+fn file_drilldown_shows_no_marker_when_links_fit() {
+    let mut doc = base_doc();
+    doc.files = vec![file_entry("big.c", 100)];
+    doc.scan.file_count = 1;
+    doc.findings = vec![
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "big.c"),
+        finding_at(
+            "PERF-C-STR-002",
+            Severity::Warn,
+            Confidence::Medium,
+            "big.c",
+        ),
+    ];
+    let html = render_html(&doc, &[]);
+    let files = section(&html, "<section id=\"files\">", "</section>");
+    assert_eq!(
+        files.matches("findings-detail.html#finding-").count(),
+        2,
+        "all links must render when under cap:\n{files}"
+    );
+    assert!(
+        !files.contains("more"),
+        "marker must not appear when nothing is hidden:\n{files}"
+    );
+}
+
+// ---------------------------------------------------------------------------
 // 6. Double-scan byte-identical proof (full pipeline, unmasked)
 // ---------------------------------------------------------------------------
 
@@ -749,18 +1071,39 @@ fn double_scan_report_html_byte_identical_unmasked() {
 
     assert_eq!(run_with(argv(&out_str, &target)), 0);
     let first = fs::read(out.join("report.html")).expect("report.html emitted");
+    let first_detail_html =
+        fs::read(out.join("findings-detail.html")).expect("findings-detail.html emitted");
+    let first_detail_md =
+        fs::read(out.join("findings-detail.md")).expect("findings-detail.md emitted");
     assert_eq!(run_with(argv(&out_str, &target)), 0);
     let second = fs::read(out.join("report.html")).expect("report.html emitted");
+    let second_detail_html = fs::read(out.join("findings-detail.html")).expect("detail emitted");
+    let second_detail_md = fs::read(out.join("findings-detail.md")).expect("detail md emitted");
 
     assert_eq!(
         first, second,
         "report.html diverged between scans (must be byte-identical UNMASKED)"
+    );
+    // C-split: detail artifacts carry no provenance — byte-identical UNMASKED.
+    assert_eq!(
+        first_detail_html, second_detail_html,
+        "findings-detail.html diverged between scans (must be byte-identical UNMASKED)"
+    );
+    assert_eq!(
+        first_detail_md, second_detail_md,
+        "findings-detail.md diverged between scans (must be byte-identical UNMASKED)"
     );
     let text = String::from_utf8(first).expect("report.html is UTF-8");
     // Slice-2 fixed script block present and byte-identical to the source.
     assert_eq!(script_body(&text), report_script());
     assert!(text.ends_with('\n'));
     assert!(!text.contains(&target), "absolute scan root leaked");
+    let detail_text = String::from_utf8(first_detail_html).expect("detail HTML is UTF-8");
+    assert_eq!(script_body(&detail_text), report_script());
+    assert!(
+        !detail_text.contains(&target),
+        "absolute scan root leaked into detail"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -843,13 +1186,27 @@ fn click_to_filter_controls_and_hooks_present() {
     doc.components = Some(vec![component(1, "src")]);
     let html = render_html(&doc, &["include-graph.svg".to_string()]);
 
-    // Visible filter bar with a reset control (hidden until a filter applies).
-    assert!(html.contains("<div id=\"filter-bar\">"));
-    assert!(html.contains("<span id=\"filter-label\">all findings</span>"));
-    assert!(html.contains("<button id=\"filter-clear\" type=\"button\" hidden>clear</button>"));
-    // Findings rows carry the filter key (escaped at render time).
-    assert!(html.contains("data-path=\"a.c\""));
-    assert!(html.contains("data-path=\"b.c\""));
+    // Visible filter bar with a reset control (hidden until a filter applies)
+    // on BOTH pages (the detail page reuses the bar so click-to-filter keeps
+    // working over its rows).
+    let detail = render_findings_detail_html(&doc);
+    for (page, name) in [(&html, "report.html"), (&detail, "detail")] {
+        assert!(
+            page.contains("<div id=\"filter-bar\">"),
+            "filter bar missing in {name}"
+        );
+        assert!(
+            page.contains("<span id=\"filter-label\">all findings</span>"),
+            "filter label missing in {name}"
+        );
+        assert!(
+            page.contains("<button id=\"filter-clear\" type=\"button\" hidden>clear</button>"),
+            "filter clear missing in {name}"
+        );
+    }
+    // Detail findings rows carry the filter key (escaped at render time).
+    assert!(detail.contains("data-path=\"a.c\""));
+    assert!(detail.contains("data-path=\"b.c\""));
     // File + component rows carry the click-source keys.
     let files = section(&html, "<section id=\"files\">", "</section>");
     assert!(files.contains("data-path=\"a.c\""));
@@ -873,32 +1230,53 @@ fn all_content_present_without_javascript() {
     ];
     doc.components = Some(vec![component(1, "src")]);
     let html = render_html(&doc, &["include-graph.svg".to_string()]);
+    let detail = render_findings_detail_html(&doc);
 
-    // The script only ENHANCES: every row is already in the static markup.
-    let table = section(&html, "<section id=\"findings\">", "</section>");
+    // C-split: the script only ENHANCES — every row is already in the
+    // static markup of the page that owns it (groups in report.html, rows
+    // in the detail artifact).
+    let report_findings = section(&html, "<section id=\"findings\">", "</section>");
+    assert_eq!(
+        report_findings.matches("<details>").count(),
+        3,
+        "every rule group must render statically (no-JS degradation)"
+    );
+    assert_eq!(
+        report_findings.matches("<tr id=\"finding-").count(),
+        0,
+        "report.html carries zero rows post-split"
+    );
+    let table = section_nested(&detail, "<section id=\"findings\">");
     assert_eq!(
         table.matches("<tr id=\"finding-").count(),
         3,
-        "every finding must render statically (no-JS degradation)"
+        "every finding must render statically in the detail page (no-JS degradation)"
     );
     // No row is hidden by default — filtering only ever hides at runtime
     // (the single static `hidden` is the clear-button reset control).
-    assert_eq!(
-        table.matches("hidden").count(),
-        1,
-        "only the filter-clear button may carry `hidden` statically"
-    );
+    for (page_section, name) in [(&report_findings, "report"), (&table, "detail")] {
+        assert_eq!(
+            page_section.matches("hidden").count(),
+            1,
+            "only the filter-clear button may carry `hidden` statically in {name}"
+        );
+    }
     let files = section(&html, "<section id=\"files\">", "</section>");
     assert_eq!(files.matches("<tr id=\"file-").count(), 2);
     // Figures + captions render without JS.
     assert!(html.contains("<figure class=\"pz\""));
     assert!(html.contains("<figcaption>"));
     // Grouped order (severity-rank → count-desc → rule_id-asc): the hot
-    // ALLOC group folds first, then warn STR, then info LOOP.
-    let pos_alloc = table.find("PERF-C-ALLOC-001").expect("alloc row");
-    let pos_str = table.find("PERF-C-STR-002").expect("str row");
-    let pos_loop = table.find("PERF-C-LOOP-001").expect("loop row");
-    assert!(pos_alloc < pos_str && pos_str < pos_loop);
+    // ALLOC group folds first, then warn STR, then info LOOP — in both pages.
+    for (page_section, name) in [(&report_findings, "report"), (&table, "detail")] {
+        let pos_alloc = page_section.find("PERF-C-ALLOC-001").expect("alloc group");
+        let pos_str = page_section.find("PERF-C-STR-002").expect("str group");
+        let pos_loop = page_section.find("PERF-C-LOOP-001").expect("loop group");
+        assert!(
+            pos_alloc < pos_str && pos_str < pos_loop,
+            "order wrong in {name}"
+        );
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -917,13 +1295,22 @@ fn findings_fold_into_per_rule_details_with_honest_summary() {
         finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::Medium, "b.c"),
     ];
     let html = render_html(&doc, &["include-graph.svg".to_string()]);
+    let detail = render_findings_detail_html(&doc);
     let findings = section(&html, "<section id=\"findings\">", "</section>");
 
-    // Honest header: 2 rules, 3 of 3 total.
-    assert!(
-        findings.contains("<p>2 rules: 3 of 3 total findings (2 hot, 1 warn, 0 info).</p>"),
-        "honest-counts header missing:\n{findings}"
-    );
+    // Honest header: 2 rules, 3 of 3 total — mirrored in the detail page.
+    for (page_section, name) in [
+        (&findings, "report"),
+        (
+            &section_nested(&detail, "<section id=\"findings\">"),
+            "detail",
+        ),
+    ] {
+        assert!(
+            page_section.contains("<p>2 rules: 3 of 3 total findings (2 hot, 1 warn, 0 info).</p>"),
+            "honest-counts header missing in {name}:\n{page_section}"
+        );
+    }
     // One <details> group per firing rule, hottest group first.
     assert_eq!(
         findings.matches("<details>").count(),
@@ -945,11 +1332,18 @@ fn findings_fold_into_per_rule_details_with_honest_summary() {
             .contains("<summary><code>PERF-C-STR-002</code> — 1 findings (0 hot, 1 warn, 0 info);"),
         "str summary shape wrong:\n{findings}"
     );
-    // No-JS completeness: every row present statically, exactly once.
+    // C-split: zero rows in report.html; every row present statically in
+    // the detail page, exactly once.
     assert_eq!(
         findings.matches("<tr id=\"finding-").count(),
+        0,
+        "report.html must carry zero rows:\n{findings}"
+    );
+    let detail_findings = section_nested(&detail, "<section id=\"findings\">");
+    assert_eq!(
+        detail_findings.matches("<tr id=\"finding-").count(),
         3,
-        "every finding row must render statically:\n{findings}"
+        "every finding row must render statically in the detail page:\n{detail_findings}"
     );
     // Exemplar is the first finding in finding_id order: the a.c ALLOC row
     // (finding_id `PERF-C-ALLOC-001:a.c:7:9`) sorts before the b.c one.
@@ -962,13 +1356,35 @@ fn findings_fold_into_per_rule_details_with_honest_summary() {
         summary.contains("PERF-C-ALLOC-001:a.c:7:9"),
         "exemplar must be first in finding_id order:\n{summary}"
     );
-    // Every exemplar href="#…" resolves to a rendered row id.
-    let ids = collect_ids(&html);
+    // Exemplar links point cross-page into the detail artifact…
+    assert!(
+        summary.contains("findings-detail.html#finding-"),
+        "exemplar must link the detail page:\n{summary}"
+    );
+    assert!(
+        summary.contains("findings-detail.html#rule-PERF-C-ALLOC-001"),
+        "group detail link missing:\n{summary}"
+    );
+    // …and every cross-page href resolves to a rendered detail id
+    // (`#…` in-page nav anchors resolve in report.html itself).
+    let detail_ids = collect_ids(&detail);
+    let report_ids = collect_ids(&html);
     for href in collect_hrefs(&html) {
         if let Some(target) = href.strip_prefix('#') {
             assert!(
-                ids.iter().any(|id| id == target),
-                "exemplar/drill-down link #{target} has no matching id anchor"
+                report_ids.iter().any(|id| id == target),
+                "in-page link #{target} has no matching id in report.html"
+            );
+        } else if let Some(hash) = href.find('#') {
+            let (page, target) = href.split_at(hash);
+            let target = &target[1..];
+            assert_eq!(
+                page, "findings-detail.html",
+                "unexpected cross-page link {href}"
+            );
+            assert!(
+                detail_ids.iter().any(|id| id == target),
+                "link {href} has no matching id anchor in findings-detail.html"
             );
         }
     }
@@ -983,7 +1399,8 @@ fn findings_fold_into_per_rule_details_with_honest_summary() {
 #[test]
 fn grouped_findings_double_render_byte_identical() {
     // Shuffled input order ⇒ byte-identical findings section (groups and
-    // exemplars depend only on document content, never on input order).
+    // exemplars depend only on document content, never on input order) —
+    // on BOTH the human page and the detail artifact.
     let mut doc_a = base_doc();
     doc_a.findings = vec![
         finding_at("PERF-C-STR-002", Severity::Warn, Confidence::Medium, "b.c"),
@@ -998,5 +1415,10 @@ fn grouped_findings_double_render_byte_identical() {
         render_html(&doc_a, &[]),
         render_html(&doc_b, &[]),
         "grouped #findings must be byte-identical regardless of input order"
+    );
+    assert_eq!(
+        render_findings_detail_html(&doc_a),
+        render_findings_detail_html(&doc_b),
+        "detail #findings must be byte-identical regardless of input order"
     );
 }
