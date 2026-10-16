@@ -1,101 +1,107 @@
 # Handoff — Latest
 
 ## Objective
-Session 46 — **performance-findings deep dive** (the session-45-locked Next Action 1): hand-triage
-**every production-code `hot` finding** Perfpal emitted on the four pinned M4 corpora and hunt for a
-genuine **L3+L4 hero bug**. Deliverable: `docs/evidence/findings-deep-dive.md` + machine-readable
-per-repo verdicts `docs/evidence/showcase/<repo>/triage.json`. **No product code changed.**
+Sessions 47+ mega-burst — **`divergence-revamp` instrument + usefulness track**: IR v1.4
+(schema → producers → precision), corpus pinning, bird's-eye visualization (static + interactive),
+ablation apparatus, and a 9-repo demo sweep. Paper track **PARKED** per founder; M5 still gated.
 
 ## Phase
-POST-MVP. Plans: `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ ·
-`rust-backend` ✅ · `beta-release` ✅ code (publish **PARKED** = M5) · **`evidence-beta` ACTIVE (M1 ✅ · M2 ✅ · M3 ✅ · M4 ✅)** · **`python-backend` ✅ COMPLETE (W0–W4)** · session-46 deep dive ✅ (follow-on).
+POST-MVP. `divergence-revamp` instrument bullets 1–4 ✅ (additive fields, distributions/DOT/cost,
+precision fixes, corpus pins) + usefulness (viz A+B ✅, ablation apparatus ✅, campaign ⏳) +
+demo sweep ✅. Paper/stats/Zenodo/draft PARKED. `evidence-beta` M1–M4 ✅ + deep dive ✅; M5 parked.
 
 ## Alignment (L6)
-- **Goal restated:** Perfpal is a CLI (Rust) that scans a codebase and emits (a) language performance heuristics,
-  (b) architecture-level bottleneck visualization, and (c) LLM-consumable quantified metrics, so humans see
-  bottlenecks and LLMs optimize with explicit signals (`docs/NORTH-STAR.md`).
-- **Phase restated:** POST-MVP, `stage: dev`; `evidence-beta` M1–M4 ✅; session-46 deep dive is the user-locked
-  follow-on before M5.
-- **How this session serves the north-star:** it stress-tests the **truth claim** ("Perfpal finds things
-  maintainers also consider real") on real code by hand-checking the highest-severity tier and reporting an
-  **honest negative** on the L4 bar — the north-star's "verifiable truth per finding", made concrete.
-- **Drift flag: NONE.** Deep dive is exactly the queued next task. Audit counter 6 → 7 (threshold 10; not due).
+- **Goal restated:** Perfpal is a CLI (Rust) that scans a codebase and emits (a) language performance
+  heuristics, (b) architecture-level bottleneck visualization, and (c) LLM-consumable quantified
+  metrics, so humans see bottlenecks and LLMs optimize with explicit signals (`docs/NORTH-STAR.md`).
+- **Phase restated:** POST-MVP, `stage: dev`; instrument + bird's-eye (pillars 1b/2) landed behind
+  high-assurance gates; usefulness measured via ablation apparatus, not claimed.
+- **How this session serves the north-star:** shipped the deterministic instrument (IR v1.4),
+  the human-visible bottleneck view (component pages + layers + interactive HTML), and the tool that
+  will *prove* usefulness (ablation) — pillars 1b + 2 made concrete.
+- **Drift flag: NONE.** Paper deferral + usefulness focus are founder-directed. Audit counter 7 → 8
+  (threshold 10; not due).
 
-## This session (46) — findings deep dive
-- **Corpora.** The four pinned M4 checkouts at `/var/tmp/opencode/m4-showcase/` (Aider `v0.86.0` `a4be6ccd…`,
-  chunkhound `v6.0.0` `a8553ae6…`, ripgrep `14.1.1` `4649aa97…`, curl `curl-8_11_1` `75a2079d…`), all four
-  **un-shallowed to full history** (`git fetch --unshallow`) for the L4 search.
-- **Scope reconciliation (259 → 181).** The session-45 lock said "~259 (curl 199)". chunkhound 26 ✓ and
-  ripgrep 34 ✓ reproduce exactly under the production filter (exclude `tests/`,`testing/`,`testdata/`,`benches/`,
-  `examples/`,`fixtures/` + files `test_*`/`*_test`/`testutil.*`/`util.rs`); **curl is 121, not 199** — `199 =
-  225 − 26` (chunkhound's total subtracted from curl's). **True prod-`hot` total = 181** (chunkhound 26,
-  ripgrep 34, curl 121, aider 0); curl's raw→prod drop of 104 = `tests/*` (81) + `docs/examples/*` (23).
-- **Triage.** 5 read-only agents (chunkhound, ripgrep, curl × 4 rule-group lanes) opened every span and classified
-  **GENUINE / REAL_BUT_MINOR / FP** with a cited reason. Result: **9 GENUINE / 124 REAL_BUT_MINOR / 48 FP**.
-- **Hero-bug hunt (L2→L3→L4).** Strongest = chunkhound `src/db/duckdb_backend/write.rs:239` — `serde_json::to_string(emb)`
-  serialises the whole embedding vector per row inside a depth-3 loop on the DB-write hot path (**L2** reachable via
-  `write_batch_incremental:615` / `write_batches_in_one_txn:684`; **L3** per-embedding serialize→parse round-trip,
-  ~10–30 KB text × every stored embedding). **Verdict: NO exact-spot L4 hero** — chunkhound `main` (tip `a131f5b`)
-  still contains the line (unchanged since the initial Rust port `5f9ddfd "Main rust flow (#380)"`); L4-negatives
-  documented: ripgrep `GlobSet::new` (PR #1915 — maintainer: allocations there are "a pittance"); curl
-  `parse_netscape` (PR #15826, exact spot, but reworked for a **const-input crash**, not perf).
-- **Deliverables.** `docs/evidence/findings-deep-dive.md` (method + L1–L4 ladder + full verdict inventory +
-  FP-class catalogue + hero hunt + honest limitations); `docs/evidence/showcase/{chunkhound,ripgrep,curl}/triage.json`.
-- **Docs/state.** CHANGELOG entry; `activeContext.md`; hot state (demoted `D-pf-195`/`D-pf-196` to cold ledger,
-  appended `D-pf-199`; ≤ 8 KB).
+## This session — commit chain
+1. **`e05c2bc`** (prior): plan `divergence-revamp` + specs `divergence-study`/`divergence-paper` +
+   north-star realignment.
+2. **`f899c11`** — IR v1.4 skeleton: schema 1.3→1.4, 7 optional per-function fields (serde-defaulted,
+   old JSON parses), populated `distributions[]`, deterministic DOT stub. 536 tests.
+3. **`37d0981`** — step-2 producers: whole-program call-shape pass, `alloc_family`/`error_path`
+   post-pass (`src/scanner/instrument.rs`), FNV-1a `idiom_hash`, `charts/graph.dot` wired,
+   cost-weighted coupling overlay. 556 tests. Zero finding changes.
+4. **`fb8fe8d`** — 5 precision FP fixes (do-while0 gate, `#if 0` suppression, empty-ctor exclusion,
+   realloc guard, LOOP-002 streaming split), silent fixtures + labels, TP/recall pinned. 566 tests.
+   Golden impact: exactly ONE removed finding (intended FP).
+5. **`24021cc`** — corpus packet (docs-only): 10 pinned + 4 proposed cells (M4 anchors reused,
+   every SHA git-verified), `corpus.json`, `scripts/pin-corpus.sh`. No scans run (slots PENDING).
+6. **`96c72ba`** — Option A slice 1: per-component SVG pages + §5 index hook.
+7. **`5f7f524`** — Option A slice 2: workspace/file layer SVGs; remediated 6 adversarial BLOCKs
+   (intra-degree cap, single-winner hot-path, honest coverage, exact page registry, symmetric
+   stubs, pinned page sets). 592 tests.
+8. **`f1c43f4`** — ablation apparatus (docs+script only): N=26 versioned tasks,paired WITH/WITHOUT,
+   non-vacuity scorer guard, append-merge results, N=2 pilot shakedown (not quotable).
+9. **`9581575`** — Option B slice 1: static zero-JS `report.html` (collision-free anchors, stem
+   allowlist, §4 parity). 602 tests.
+10. **`7ac3e22`** — Option B slice 2: pan/zoom + click-filter (fixed 33-line script), anchor-pairing
+    fix, semantic masker parity. 606 default / 611 semantic tests.
+11. **Demo sweep (uncommitted):** 9 repos (C/Rust/Python × small/med/large) cloned to
+    `../perfpal-test`, scanned clean; founder reviewing raw `out-*/report.html` directly.
 
-## Verification
+## Process notes (high-assurance mode, founder-ordered)
+- Adopted mid-session: adversarial review + independent finding-diff audit + real-repo run with
+  eyeball after EVERY major change. Caught pre-commit: 6 BLOCKs (slice 2), 3 (report.html),
+  1 mislink (slice-2 JS), 2 (ablation scorer clobber/vacuity).
+- Vision backend down all session (`deepseek-v4-flash-vision-exp` missing) — eyeballs were
+  structural (XML geometry/labels), never pixels. **Owed: one human pixel glance** (A-pf-076).
+- Semantic-only golden failure chased to root cause (missing resolver masker on new comparator),
+  fixed with parity masker — not filed away.
+
+## Verification (final gates observed by orchestrator)
 | Claim | Command | Result |
 |---|---|---|
-| Prod-`hot` set reproduces | filter script over M4 `out1-*/metrics.json` | **181** (aider 0 / chunkhound 26 / ripgrep 34 / curl 121) |
-| Triage coverage | sum of `docs/evidence/showcase/<repo>/triage.json` | **181 = 9 GENUINE / 124 REAL_BUT_MINOR / 48 FP** |
-| Format | `$HOME/.cargo/bin/cargo fmt --all -- --check` | exit 0 |
-| Lint (default) | `$HOME/.cargo/bin/cargo clippy --locked --all-targets -- -D warnings` | exit 0, 0 warnings |
-| Tests (default) | `$HOME/.cargo/bin/cargo test --locked` | **526 total passed; 0 failed** |
-| Byte-determinism | `! grep -q preserve_order Cargo.lock` | exit 0 |
-| No product code changed | `git status` (this session) | only docs/evidence + state files |
+| Format | `cargo fmt --all -- --check` | exit 0 (every burst) |
+| Lint | `cargo clippy --locked --all-targets -- -D warnings` (both feature sets) | exit 0, 0 warnings |
+| Tests default | `cargo test --locked` | **606 passed; 0 failed** (526 → 606 across session) |
+| Tests semantic | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | **611 passed; 0 failed** |
+| Licenses | `cargo deny check licenses` | ok |
+| Byte-determinism | `! grep -q preserve_order Cargo.lock` + double-scan proofs | exit 0 / identical |
+| Findings stability | finding_id diff HEAD vs worktree, all 4 goldens, every code burst | IDENTICAL except 1 intended FP removal (fb8fe8d) |
+| 67-rule catalog | `active.len()==67` lock | green throughout; `baseline.json` untouched at git level |
 
-**Dual review (both APPROVED).** `@requirements-reviewer` **APPROVED** (every prod-`hot` candidate triaged;
-deliverable path exact; 259→181 deviation disclosed & justified). `@reviewer` **CHANGES_REQUESTED (round 1)** —
-1 blocking factual item: §6.1 named the wrong caller of `insert_embeddings_txn` (`write_batch_inner` →
-**`write_batch_incremental`**, verified: defs `write_batch_inner:510` / `write_batch_incremental:585` /
-`write_batches_in_one_txn:662`) — plus nits (an absent `testutil.rs` citation, unstated curl exclusions, a §6.4
-GlobSet tension, a typo, an unverifiable PR). **All fixed** → **round-2 APPROVED** (no numeric drift).
-**No unresolved reviewer disagreement.**
+**Dual/adversarial review:** every code burst got review + requirements/adversarial passes; all
+BLOCKs remediated and re-verified (ALL-HOLD) before commit. No unresolved disagreement.
 
 ## Risks / Open
-- **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`** (high; EULA/PRIVACY contact
-  placeholder), **`R-pf-082`** (medium; synthetic-corpus credibility — complemented by M4), **`R-pf-007`** (medium;
-  differentiation claims rest on one survey pass), **`R-pf-094`** (low), **`R-pf-095`** (low; Windows residuals).
-- **NEW follow-up (not a risk record yet):** the deep dive distilled concrete **precision opportunities** for the
-  `hot` tier — (1) suppress inactive `#if 0`/`#ifdef`/`#[cfg(test)]` regions (≈19 FP); (2) guard the `do{…}while(0)`
-  idiom (4 FP); (3) treat `String::new()`/`vec![]` as no-alloc (≈6 FP); (4) capacity-guard `realloc` (≈5 FP);
-  (5) rule-recommendation ≠ detection for streaming/channel I/O. Any fix must be **precision-measured** (M1 KPI +
-  M2 benchmark) and never lower a ratchet.
-- **Blockers (hot, unchanged):** **`B-pf-001`** (contact address); **`B-pf-002`** (repo secrets).
-- **Hot-state hygiene:** `state/session-state.json` = **6790 B / 8192 B**; session 46 demoted `D-pf-195`/`D-pf-196`
-  to cold `state/archive/ledger.jsonl` (append-only; 535 → 537 records).
+- **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`** (high; EULA/PRIVACY
+  contact placeholder), **`R-pf-082`** (medium; synthetic-corpus credibility — complemented by M4),
+  **`R-pf-007`** (medium; differentiation claims rest on one survey pass), **`R-pf-094`** (low),
+  **`R-pf-095`** (low; Windows residuals).
+- **New/changed this session:** vision-backend gap (A-pf-076); bands third layer deferred (A-pf-077);
+  ablation campaign unrun (A-pf-078); demo feedback pending (A-pf-079).
+- **Blockers (unchanged):** **`B-pf-001`** (contact address); **`B-pf-002`** (repo secrets).
+- **Hot-state hygiene:** `state/session-state.json` = **6206 B / 8192 B**; demoted D-pf-197/198/199 +
+  A-pf-075/062 to cold `state/archive/ledger.jsonl` (append-only).
 
 ## Next Actions
-1. **NEXT SESSION (`/new`) = `evidence-beta` M5** (first release): with **M2 run ✅ and M4 verified ✅**, un-park
-   `beta-release` — clear `B-pf-001`/`B-pf-002`, publish `v0.2.0-beta.1` as a clearly-labelled pre-release
-   (`--prerelease --latest=false`, never displacing `v0.1.0` as Latest), then T2 packaging
-   (winget portable, own Scoop bucket, own Homebrew tap, AUR `-bin`, cargo-binstall). Read state + this handoff first.
-2. **Optional precision follow-ups** (from this session, not gate-blocking): the 5 FP-class fixes above
-   (`#if`/`cfg(test)` reachability, `do/while(0)` guard, no-alloc constructors, `realloc` capacity guard).
-3. Optional **M4 precision follow-ups**: Rust name-matching FP classes (`CALL-001`/`TYPE-001`/`TYPE-002`/`STR-002`/`STR-003`)
-   + `ARCH-003` receiver-type awareness — precision-measured before landing.
-4. Carry **`R-pf-094`** (low) and **`R-pf-095`** (low).
-5. Carry (from M1/M2/M4): `R-pf-077` (USR-ambiguity), `R-pf-078` (LOOP-008 deref-chain), `R-pf-080` (`r#` receiver), `R-pf-082`.
+1. **Founder reviews 9 raw demo reports** (`../perfpal-test/out-*/report.html`); feedback drives next
+   burst (A-pf-079). Suggested open order: hyperfine → bat → django.
+2. **26-task ablation campaign** — needs model-call spend approval (A-pf-078).
+3. **Owed pixel glance** at 1 component SVG + report.html (A-pf-076).
+4. **M5 un-park** still needs B-pf-001 + B-pf-002 (founder action, A-pf-080).
+5. Bands third layer (A-pf-077); carry R-pf-094/095/077/078/080/082.
 
 ## Change set (this session)
-- **Added:** `docs/evidence/findings-deep-dive.md`; `docs/evidence/showcase/{chunkhound,ripgrep,curl}/triage.json`.
-- **Modified:** `CHANGELOG.md`; `docs/activeContext.md`; `state/session-state.json`; `state/archive/ledger.jsonl`; `state/handoff/latest.md`.
-- **Excluded / untracked:** `brag-output/`, `perfpal-report/`, `docs/research/` (unrelated working dirs).
-
-## Commit
-1. **`<work>`** — findings deep dive: 181 prod-`hot` triage + `findings-deep-dive.md` + per-repo `triage.json`.
-2. **(EOL)** — state/doc truth-up for session 46.
+- **Product code:** `src/ir`, `src/schema`, `src/scanner` (+new `instrument.rs`), `src/aggregator`,
+  `src/analyzer/heuristics` (5 FP gates), `src/charts` (+`component.rs`, `layers.rs`, `dot.rs`),
+  `src/reporter` (`render_html`, §5 hooks), `src/cli`, `src/writer` (unchanged), `src/graph` (reused).
+- **Tests:** 526 → 606 (+80 locks); goldens regen across 4 trees (new artifacts only + 1 intended
+  FP removal); `baseline.json` + `labels.json` baselines never lowered.
+- **Docs/evidence/scripts:** `corpus-packet.md` + `corpus.json` + `pin-corpus.sh`; `ablation-design.md`
+  + `ablation-tasks.json` + `ablation-results.md` + `run-ablation.sh`; output-contract; CHANGELOG.
+- **Excluded / untracked:** `brag-output/`, `perfpal-report/`, `docs/research/`, `../perfpal-test/`
+  (all outside-the-repo working dirs).
 
 ## L2 state split / L6 north-star (history)
-The L2 hot/cold split landed **2026-09-29**: hot `state/session-state.json` is compact schema v2 and ≤ 8 KB, with full history in cold `state/archive/ledger.jsonl` (greppable, never auto-read). The L6 north-star (`docs/NORTH-STAR.md`, founder-owned goal / non-goals / stage / metrics) was pinned **2026-10-01** and referenced by `north_star_ref` in hot state.
+Hot/cold split landed 2026-09-29; north-star pinned 2026-10-01 (`north_star_ref` in hot state).
+Paper track parked + usefulness focus are founder directives recorded this session (D-pf-201/204).
