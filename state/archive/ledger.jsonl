@@ -556,3 +556,4 @@
 {"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-065", "status": "done", "action": "M2 follow-ups: single-key assert, expose rule-id accessor, ladder"}}
 {"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-081", "status": "done", "action": "Digestibility research DONE -> B implemented (group-and-fold); C-split seamed for later"}}
 {"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-083", "status": "done", "action": "C-split DONE (findings-detail.md/html + S5-cap, django humans 65.6KB); re-owed pixel glance still open for when vision backend returns"}}
+{"demoted_from_hot":"2026-10-17","record":{"id":"A-pf-008","status":"active","action":"Housekeeping remainder: stats.distributions activation = MINOR schema bump when founder accepts (SPDX + modules drift DONE 2689e64)"}}

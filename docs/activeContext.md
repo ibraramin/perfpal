@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current Task
-Map-first planning COMPLETE — spec `maintainer-map` + plans `map-research` (R1–R4) + `map-build`
-(I1–I5) created, all repo specs linked, north-star realigned (birdseye map = core feature; JS+TS
-and paper queue behind it). Committing now, then R1 starts in a fresh session per founder order.
+R1 DONE — `docs/research/map-algorithms.md` committed (7 families, fit/misfit
+matrix, dual review APPROVED). R2 precedents queued for fresh session per
+founder order (one session per R/I, each commits).
 
 ## Recent Decisions
 - **D-pf-215 (live):** map-first direction LOCKED — maintainer birdseye map is the core feature;
@@ -18,9 +18,11 @@ and paper queue behind it). Committing now, then R1 starts in a fresh session pe
 - Committing map-first planning set now. Nothing else open.
 
 ## Next
-- **NEXT SESSION (`/new`): R1 algorithms research** — layout survey with fit/misfit vs Perfpal
-  constraints → `docs/research/map-algorithms.md`. Signpost: spec `maintainer-map`, plans
-  `map-research` + `map-build`, this planning commit after `e4c2993`.
+- **NEXT SESSION (`/new`): R2 precedents research** — teardown 6+ tools
+  (Sourcetrail, code2flow, NDepend/Structure101/Lattix, CodeSee/Gource,
+  madge/depcruise), helpful-vs-eyecandy verdicts with sources →
+  `docs/research/map-precedents.md`. Signpost: spec `maintainer-map`, plans
+  `map-research` + `map-build`, R1 commit + this handoff.
 - Then R2 → R3 → R4 (ADR gate) → I1–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077) folds into I3.
