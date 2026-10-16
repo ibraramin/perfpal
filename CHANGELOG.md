@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Hygiene: SPDX marker + CLI-doc drift + examples README (no behavior change).** `Cargo.toml` license is now `LicenseRef-PolyForm-Strict-1.0.0` (SPDX custom-ref form — the bare `PolyForm-Strict-1.0.0` id is not on the SPDX list and cargo-deny 0.20.2 rejects it; `deny.toml` allowlist + `README.md` license line match; `cargo deny check licenses` green). `docs/architecture/modules.md` §8.1 output-default wording + §8.2 exit-3 serialization path corrected to code. New `examples/README.md` (run instructions, per-file rule map). 626 tests green; dual review APPROVED.
+
+### Fixed
+- **Hygiene: test-harness hardening — 5 R5 MINORs + M2 single-key assert (test-only; findings byte-identical).** `MD_ESCAPE_CHARS` hand-mirror replaced by reporter-const import, symlink-aware `copy_tree_excluding`, RAII temp-dir cleanup on panic paths, descriptor-driven `materialize_fixture` dispatch (no `tag=="rust"`), 4 file-unique control needles + `matches==1`, `replace_json_value` single-key assert. 626 tests green, goldens byte-identical; dual review APPROVED.
 - **Human/machine report split + bounded human sections (findings byte-identical).** New `findings-detail.md`/`.html` artifacts carry every per-finding row (promoted verbatim from the preserved full-detail renderers; 12 artifacts total); human `report.md`/`.html` carry zero per-finding rows — grouped §4, `<details>` rule groups, top-10 §5/component/drill-down sections behind pinned `HUMAN_CAP=10` with honest `top S of M` / `…+N more` markers linking to detail anchors. Full data stays in `metrics.json` + detail artifacts. Django scale: human files 34MB → 65,627 B combined (md 19,928 / html 45,699); detail artifacts hold all 26,089 findings. `docs/report/output-contract.md` amended (layout, artifact set, caps, order). Findings IDENTICAL on all four golden trees (15/9/32/29); 626 tests green; reviewer ALL-HOLD + requirements APPROVED (×2 waves).
 
 ### Fixed

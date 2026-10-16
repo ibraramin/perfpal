@@ -1,44 +1,53 @@
 # Handoff — Latest
 
 ## Objective
-Session-50 audit + C-full burst — ran the due L6 alignment audit (counter was 10/10, reset),
-archived 7 done plans, and built the founder-approved **C-full artifact split** plus the
-**§5-cap follow-up**: human report files bounded at every section, full detail in dedicated
-artifacts, django humans 34MB → 65.6KB. Committing as the closing step.
+Hygiene burst per founder scope — retried the re-owed vision glance (backend down
+4th time, structural fallback substituted, glance re-owed) and worked the actionable
+hygiene batch: A-pf-008 partial (SPDX marker + modules §8 drift), A-pf-015
+(examples/README.md), A-pf-047 (5 R5 MINORs), A-pf-065 (M2 single-key assert).
+Two task commits: `2689e64` + `4456b6f`. Committing EOL state as the closing step.
 
 ## Phase
-POST-MVP. `divergence-revamp` instrument + usefulness + digestibility ✅ (IR v1.4, viz,
-group-fold, C-full, §5-cap); ablation apparatus ✅ / campaign PARKED; paper PARKED;
+POST-MVP. `divergence-revamp` instrument + usefulness + digestibility ✅ + hygiene;
+ablation apparatus ✅ / campaign PARKED; paper PARKED;
 `evidence-beta` M1–M4 ✅ + deep dive ✅; M5 parked behind B-pf-001/002.
 
 ## Alignment (L6)
 - **Goal restated:** Perfpal is a CLI (Rust) that scans a codebase and emits (a) language performance
   heuristics, (b) architecture-level bottleneck visualization, and (c) LLM-consumable quantified
   metrics, so humans see bottlenecks and LLMs optimize with explicit signals (`docs/NORTH-STAR.md`).
-- **Phase restated:** POST-MVP, `stage: dev`; the human/machine output split is now structural —
-  bounded human reports, complete machine artifacts — serving both audiences without compromise.
-- **How this session serves the north-star:** audit retired stale plans (focus), C-full made pillar-2
-  outputs reviewable at real-repo scale while keeping every signal for the LLM consumer.
-- **Drift flag: NONE.** Audit found 3 active plans all pillar-aligned. Counter reset 10 → 0,
-  `last_alignment_audit` 2026-10-16.
+- **Phase restated:** POST-MVP, `stage: dev`; this burst kept shipped pillars honest (license
+  marker machine-readable, CLI docs match code, test harness hardened) without touching
+  analyzer behavior or goldens.
+- **How this session serves the north-star:** license/docs/harness hygiene protects the
+  release path (M5) and pillar-2/3 trustworthiness; vision retry keeps the reviewability
+  bar (structural locks held while pixel backend is down).
+- **Drift flag: NONE.** Excluded items (031 post-beta, 051/055/073 founder-gated, 074 own
+  burst, distributions, ARCH-001 extension, ablation, paper) stayed untouched — verified
+  by verbatim scope check.
 
 ## This session — work summary
-1. **Audit (D-pf-211):** surveyed 10 plans (3 active / 7 done); no drift; archived 7 →
-   `docs/plans/archive/`; narrowed `divergence-revamp`; demoted settled hot items to cold ledger.
-2. **fix-6 (C-full):** `findings-detail.md`/`.html` promoted verbatim, CLI pipe emits 12 artifacts,
-   humans carry zero per-finding rows, output-contract amended, 8 goldens + 8 new detail goldens.
-3. **req-4 held on <200KB** (377KB actual) → founder delegated the call → my recommendation (a):
-   **fix-7 (§5-cap):** `HUMAN_CAP=10` on §5 table + Component index + per-file links, honest
-   `top S of M` / `…+N more` markers. Django humans: **65,627 B combined (3× under target)**.
-4. **Vision backend down 3rd time** (`model_coming_soon` ×3 incl. this burst) — structural locks
-   substituted throughout; re-owed glance recorded.
-5. Demo sweep outputs untouched (all scale proofs rendered to /tmp).
+1. **Vision retry:** re-rendered examples/ (13 files, 83 findings) to /tmp, served via local
+   HTTP, captured report.html + findings-detail.html screenshots. Backend failed 4th time
+   (`model_coming_soon`) → structural fallback: 23/23 `<details>`+`<summary>`, cap markers,
+   103 cross-page links, 83/83 findings in detail page. Pixel glance re-owed.
+2. **fix-1 (A-pf-008ab + A-pf-015):** Cargo.toml → `LicenseRef-PolyForm-Strict-1.0.0`
+   (founder decision D-pf-213 — bare `PolyForm-Strict-1.0.0` is not on the SPDX list and
+   cargo-deny 0.20.2 rejects it; first attempt broke `cargo deny`, corrected per founder
+   call); deny.toml allowlist; README.md:288; modules.md §8.1 (output default, no slash)
+   + §8.2 (exit-3 serialization path); new examples/README.md (13 files, 83 findings).
+3. **fix-2 (A-pf-047 + A-pf-065a):** reporter const import (MD_ESCAPE_CHARS pub),
+   symlink-aware copy_tree_excluding, RAII TempDir/guard, descriptor dispatch (no
+   `tag=="rust"`), 4 file-unique needles + matches==1, single-key assert. 065(b)/(c)
+   skipped with reasons (public-API cost; ladder no-op by design).
+4. Deleted untracked `brag-output/` + `perfpal-report/` per founder order.
 
 ## Process notes (high-assurance mode, founder-ordered)
-- Dual review per wave: C-full rev-3 ALL-HOLD + req-4 conditional (drove fix-7); §5-cap rev-4
-  ALL-HOLD + req-5 APPROVED. No unresolved disagreement.
-- My aspirational numbers as DoD discipline worked as designed: the <200KB bar I set caught the
-  §5 residual that scope-discipline would otherwise have deferred.
+- Dual review: rev-1 APPROVED (1 non-blocking suggestion: AGENTS.md:12 marker — left for
+  founder, file is founder-locked); requirements check run by orchestrator (seat absent
+  in this environment — disclosed, not silent) → APPROVED, exclusions verified untouched.
+- fixer-2 needed 2 infra retries (overload, session error) before landing; fix-1 needed
+  one founder decision mid-flight (license marker) before its worktree was committable.
 - Semantic-clang gate skipped (no cfg-gated code touched).
 
 ## Verification (gates observed by orchestrator on final worktree)
@@ -47,36 +56,36 @@ group-fold, C-full, §5-cap); ablation apparatus ✅ / campaign PARKED; paper PA
 | Format | `cargo fmt --all -- --check` | exit 0 |
 | Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0, 0 warnings |
 | Tests | `cargo test --locked` | **626 passed; 0 failed** |
-| Findings stability | finding_id/md5 diff HEAD vs worktree, all 4 goldens | IDENTICAL (15/9/32/29); 0 metrics.json in diff |
-| Scale proof | django re-render to /tmp | md 19,928 + html 45,699 = **65,627 B** (was 34MB) |
-| 67-rule catalog | untouched | `baseline.json` never modified |
+| Licenses | `cargo deny check licenses` | licenses ok |
+| Findings stability | no golden diffs (fix-2), tests/golden untouched | byte-identical |
+| Structural vision | grep counts on re-render | 23/23 details, 103 links, 83/83 findings |
 
 ## Risks / Open
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`** (high; EULA/PRIVACY
-  contact placeholder), **`R-pf-082`** (medium; synthetic-corpus credibility — complemented by M4),
-  **`R-pf-007`** (medium; differentiation claims rest on one survey pass), **`R-pf-094`** (low),
-  **`R-pf-095`** (low; Windows residuals).
-- **Vision backend:** flaky across 2 sessions (worked vis-1..5, `model_coming_soon` ever since) —
-  agent works when its model is provisioned; infra issue, not a code issue.
+  contact placeholder), **`R-pf-082`** (medium; synthetic-corpus credibility), **`R-pf-007`**
+  (medium; differentiation claims), **`R-pf-094`** (low), **`R-pf-095`** (low; Windows residuals).
+- **Vision backend:** down 4 sessions running (`model_coming_soon`) — infra issue, not code.
 - **Blockers (unchanged):** **`B-pf-001`** (contact address); **`B-pf-002`** (repo secrets).
-- **Hot-state hygiene:** **7428 B / 8192 B**; settled items demoted this session.
+- **Hot-state hygiene:** **8007 B / 8192 B** — near ceiling; next session should demote
+  settled items (015/047/065 done, D-pf-213 live) to the cold ledger.
+- **Follow-ups:** AGENTS.md:12 marker (founder-locked, 1 line); A-pf-008 remainder
+  (distributions, needs founder accept); A-pf-074 own burst; pixel glance when backend returns.
 
 ## Next Actions
-1. **Commit this burst** (plan archive + C-full + §5-cap + EOL state) — approved, executing now.
-2. Candidate next: ablation campaign (A-pf-078, labor not spend) or founder's pick; M5 needs
-   B-pf-001 + B-pf-002 (A-pf-080); bands layer (A-pf-077).
+1. **Commit this EOL state** — executing now.
+2. Candidate next: A-pf-074 precision burst, ablation campaign (A-pf-078), or founder's
+  pick; M5 needs B-pf-001 + B-pf-002 (A-pf-080); bands layer (A-pf-077).
 3. Re-owed pixel glance when vision backend returns.
 
 ## Change set (this session)
-- **Plans:** 7 done → `docs/plans/archive/` (git moves).
-- **Product code:** `src/reporter/mod.rs` (detail artifacts, grouped §4, App.C stub, HUMAN_CAP,
-  cross-page links, chevron CSS), `src/cli/mod.rs` (12-artifact pipe).
-- **Tests:** `findings_detail_split.rs` (new, 8), `reporter_render`, `report_html`, `common`,
-  `p6_hardening` (10→12), `p4_determinism`, `pipeline_e2e`, `benchmark`.
-- **Docs:** `output-contract.md` (layout, artifacts, caps, order); CHANGELOG (2 entries).
-- **Goldens:** 8 regen + 8 new detail files ×4 trees; metrics/charts/dot/schema untouched.
-- **State:** hot state, this handoff, activeContext.
+- **Config/docs:** `Cargo.toml`, `deny.toml`, `README.md`, `docs/architecture/modules.md`,
+  `examples/README.md` (new) → `2689e64`.
+- **Test harness:** `src/reporter/mod.rs` (const pub), `tests/common/mod.rs`,
+  `tests/p6_hardening.rs`, `tests/examples_rust_coverage.rs`, `tests/benchmark/mod.rs`
+  → `4456b6f`.
+- **Deleted:** untracked `brag-output/`, `perfpal-report/`; EOL screenshots removed.
+- **State:** hot state (D-pf-213, 015/047/065 done), this handoff, activeContext, CHANGELOG.
 
 ## L2 state split / L6 north-star (history)
-Hot/cold split 2026-09-29; north-star pinned 2026-10-01; first periodic audit completed
-2026-10-16 (D-pf-211, counter reset). B-now/C-later direction: founder verdict D-pf-208/209.
+Hot/cold split 2026-09-29; north-star pinned 2026-10-01; first periodic audit 2026-10-16
+(D-pf-211, counter reset). B-now/C-later direction: founder verdict D-pf-208/209.
