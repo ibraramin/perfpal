@@ -545,3 +545,14 @@
 {"demoted_from_hot": "2026-10-16", "record": {"id": "A-pf-076", "status": "done", "action": "Owed pixel glance CLOSED: vision restored, 5 SVGs + 4 report screenshots pixel-reviewed, re-glance FIXED"}}
 {"demoted_from_hot": "2026-10-16", "record": {"id": "A-pf-079", "status": "done", "action": "Demo feedback RECEIVED: data insightful but overwhelming for humans -> superseded by A-pf-081 digestibility research"}}
 {"demoted_from_hot": "2026-10-16", "record": {"id": "A-pf-082", "status": "done", "action": "Vision-fix burst COMMITTED 9a8766b"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-200", "status": "live", "title": "IR v1.4 instrument COMPLETE: skeleton f899c11 + producers 37d0981 + 5 FP fixes fb8fe8d; ratchets held, 566 tests"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-201", "status": "live", "title": "Corpus pinned 24021cc (10+4 cells, M4 anchors, scan script); paper track PARKED per founder"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-202", "status": "live", "title": "High-assurance mode adopted: adversarial review + finding-diff audit + real-repo eyeball per major change; caught 6+3+2 BLOCKs pre-commit"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-203", "status": "live", "title": "Bird's-eye viz COMPLETE: component pages 96c72ba + layers 5f7f524 + interactive report.html 9581575/7ac3e22; zero new deps, offline"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-204", "status": "live", "title": "Ablation apparatus COMPLETE f1c43f4 (N=26 versioned tasks, pilot N=2 shakedown); full campaign unrun (spend decision)"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-205", "status": "live", "title": "9-repo demo sweep in ../perfpal-test (uncommitted outputs); founder reviewing raw reports"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-015", "status": "done", "action": "Examples follow-ups: examples/README.md + ARCH-001 hub extension"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-047", "status": "done", "action": "5 R5 deferred MINOR test items remain OPEN"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-065", "status": "done", "action": "M2 follow-ups: single-key assert, expose rule-id accessor, ladder"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-081", "status": "done", "action": "Digestibility research DONE -> B implemented (group-and-fold); C-split seamed for later"}}
+{"demoted_from_hot": "2026-10-17", "record": {"id": "A-pf-083", "status": "done", "action": "C-split DONE (findings-detail.md/html + S5-cap, django humans 65.6KB); re-owed pixel glance still open for when vision backend returns"}}

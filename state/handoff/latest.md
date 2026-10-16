@@ -1,91 +1,72 @@
 # Handoff — Latest
 
 ## Objective
-Hygiene burst per founder scope — retried the re-owed vision glance (backend down
-4th time, structural fallback substituted, glance re-owed) and worked the actionable
-hygiene batch: A-pf-008 partial (SPDX marker + modules §8 drift), A-pf-015
-(examples/README.md), A-pf-047 (5 R5 MINORs), A-pf-065 (M2 single-key assert).
-Two task commits: `2689e64` + `4456b6f`. Committing EOL state as the closing step.
+Grading burst on the post-`e05c2bc` revamp (16 commits, 141 files, +16050/−1408): triple-lane review
+(correctness + plan-compliance + depth) via background specialists, then EOL with the deepening +
+maintainer-birdseye change list queued for a fresh session per founder order. No product code changed.
 
 ## Phase
-POST-MVP. `divergence-revamp` instrument + usefulness + digestibility ✅ + hygiene;
-ablation apparatus ✅ / campaign PARKED; paper PARKED;
+POST-MVP. `divergence-revamp` instrument + usefulness + digestibility ✅ + hygiene ✅;
+ablation apparatus ✅ / campaign PARKED; paper PARKED (prereg/stats/Zenodo MISSING);
 `evidence-beta` M1–M4 ✅ + deep dive ✅; M5 parked behind B-pf-001/002.
 
 ## Alignment (L6)
 - **Goal restated:** Perfpal is a CLI (Rust) that scans a codebase and emits (a) language performance
   heuristics, (b) architecture-level bottleneck visualization, and (c) LLM-consumable quantified
-  metrics, so humans see bottlenecks and LLMs optimize with explicit signals (`docs/NORTH-STAR.md`).
-- **Phase restated:** POST-MVP, `stage: dev`; this burst kept shipped pillars honest (license
-  marker machine-readable, CLI docs match code, test harness hardened) without touching
-  analyzer behavior or goldens.
-- **How this session serves the north-star:** license/docs/harness hygiene protects the
-  release path (M5) and pillar-2/3 trustworthiness; vision retry keeps the reviewability
-  bar (structural locks held while pixel backend is down).
-- **Drift flag: NONE.** Excluded items (031 post-beta, 051/055/073 founder-gated, 074 own
-  burst, distributions, ARCH-001 extension, ablation, paper) stayed untouched — verified
-  by verbatim scope check.
+  metrics, so humans see bottlenecks and LLMs optimize with explicit signals (`docs/NORTH-STAR.md`,
+  now carrying the divergence-instrument paragraph + no-tool-only-paper non-goal).
+- **Phase restated:** POST-MVP, `stage: dev`; this burst graded the revamp, did not extend it.
+- **How this session serves the north-star:** the grade protects the truth claim (correctness
+  APPROVED with evidence) while refusing to oversell depth (C-, BLOCKED on the paper track) —
+  exactly the honest-uncertainty contract the north-star demands.
+- **Drift flag: NONE.** Grading only; no scope added. Audit counter stays 0 (audited 2026-10-16).
 
-## This session — work summary
-1. **Vision retry:** re-rendered examples/ (13 files, 83 findings) to /tmp, served via local
-   HTTP, captured report.html + findings-detail.html screenshots. Backend failed 4th time
-   (`model_coming_soon`) → structural fallback: 23/23 `<details>`+`<summary>`, cap markers,
-   103 cross-page links, 83/83 findings in detail page. Pixel glance re-owed.
-2. **fix-1 (A-pf-008ab + A-pf-015):** Cargo.toml → `LicenseRef-PolyForm-Strict-1.0.0`
-   (founder decision D-pf-213 — bare `PolyForm-Strict-1.0.0` is not on the SPDX list and
-   cargo-deny 0.20.2 rejects it; first attempt broke `cargo deny`, corrected per founder
-   call); deny.toml allowlist; README.md:288; modules.md §8.1 (output default, no slash)
-   + §8.2 (exit-3 serialization path); new examples/README.md (13 files, 83 findings).
-3. **fix-2 (A-pf-047 + A-pf-065a):** reporter const import (MD_ESCAPE_CHARS pub),
-   symlink-aware copy_tree_excluding, RAII TempDir/guard, descriptor dispatch (no
-   `tag=="rust"`), 4 file-unique needles + matches==1, single-key assert. 065(b)/(c)
-   skipped with reasons (public-API cost; ladder no-op by design).
-4. Deleted untracked `brag-output/` + `perfpal-report/` per founder order.
+## This session — grading verdicts (all three stand, different lenses)
+- **Correctness: APPROVED** (rev-1, round 1/3). v1.4 additive-only holds, determinism preserved,
+  67-rule ratchets intact, viz caps/stubs disclosed, group-fold/C-split byte-identical, ablation
+  vacuity guard negatively tested. Queued fix: ARCH-003 tasks need multi-file context (3/26).
+  Scope ambiguity noted: clone buckets + alloc histogram live analysis-side, not IR — needs a
+  one-line scope note. Verification commands were caller-run listed, not executed (read-only review).
+- **Plan compliance: BLOCKED** (req-1, scope-incomplete not misrepresentation). Steps 1–3 DONE,
+  4 PARTIAL (pin ✅ / scans+proofs ❌), 5 MISSING, 6 split (apparatus ✅ / campaign+Zenodo+draft ❌).
+  Spec deltas: no `clone_bucket`, no alloc invariant/variant split. 5 creep items credited elsewhere.
+- **Depth: C-** (ora-2, steelman). Syntactic ceiling is structural (IR `syntactic`-only, single-assignment
+  NO dataflow, C-only resolver default-OFF). Top-5 deepenings by paper-ROI: (1) trip-count/cost gating,
+  (2) invariance on alloc/serialize args, (3) Rust receiver-type + clone/ownership, (4) interprocedural
+  reachability from entry points, (5) runtime spot-checks. Falsifiability bar: one preregistered dim
+  with Cliff's δ surviving controls on ≥8 paired snapshots, κ ≥ 0.6, or trip-gating doubling GENUINE share.
+- **Founder thread:** maintainer bird's-eye confirmed as the right next pillar — entry-point-stratified
+  cost map over reachability, not more finding rows. Queued as A-pf-084 with the deepening burst.
 
-## Process notes (high-assurance mode, founder-ordered)
-- Dual review: rev-1 APPROVED (1 non-blocking suggestion: AGENTS.md:12 marker — left for
-  founder, file is founder-locked); requirements check run by orchestrator (seat absent
-  in this environment — disclosed, not silent) → APPROVED, exclusions verified untouched.
-- fixer-2 needed 2 infra retries (overload, session error) before landing; fix-1 needed
-  one founder decision mid-flight (license marker) before its worktree was committable.
-- Semantic-clang gate skipped (no cfg-gated code touched).
-
-## Verification (gates observed by orchestrator on final worktree)
+## Verification
 | Claim | Command | Result |
 |---|---|---|
-| Format | `cargo fmt --all -- --check` | exit 0 |
-| Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0, 0 warnings |
-| Tests | `cargo test --locked` | **626 passed; 0 failed** |
-| Licenses | `cargo deny check licenses` | licenses ok |
-| Findings stability | no golden diffs (fix-2), tests/golden untouched | byte-identical |
-| Structural vision | grep counts on re-render | 23/23 details, 103 links, 83/83 findings |
+| Triple review reconciled | rev-1 + req-1 + ora-2 terminal results | APPROVED / BLOCKED / C-, no disagreement suppressed |
+| No product code changed | `git status` (this session) | state + docs only |
+| Hot-state hygiene | python byte count post-demotion | **6770 B / 8192 B** (was 8007) |
 
 ## Risks / Open
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`** (high; EULA/PRIVACY
   contact placeholder), **`R-pf-082`** (medium; synthetic-corpus credibility), **`R-pf-007`**
   (medium; differentiation claims), **`R-pf-094`** (low), **`R-pf-095`** (low; Windows residuals).
-- **Vision backend:** down 4 sessions running (`model_coming_soon`) — infra issue, not code.
 - **Blockers (unchanged):** **`B-pf-001`** (contact address); **`B-pf-002`** (repo secrets).
-- **Hot-state hygiene:** **8007 B / 8192 B** — near ceiling; next session should demote
-  settled items (015/047/065 done, D-pf-213 live) to the cold ledger.
-- **Follow-ups:** AGENTS.md:12 marker (founder-locked, 1 line); A-pf-008 remainder
-  (distributions, needs founder accept); A-pf-074 own burst; pixel glance when backend returns.
+- **Hot-state hygiene:** **6770 B / 8192 B** — demoted D-pf-200–205 + done A-pf-015/047/065/081/083
+  to cold `state/archive/ledger.jsonl` (append-only); D-pf-214 live, A-pf-084 queued.
+- **Follow-ups:** ARCH-003 multi-file campaign fix; clone-bucket scope note; A-pf-008 remainder
+  (distributions, needs founder accept); pixel glance when vision backend returns.
 
 ## Next Actions
-1. **Commit this EOL state** — executing now.
-2. Candidate next: A-pf-074 precision burst, ablation campaign (A-pf-078), or founder's
-  pick; M5 needs B-pf-001 + B-pf-002 (A-pf-080); bands layer (A-pf-077).
-3. Re-owed pixel glance when vision backend returns.
+1. **NEXT SESSION (`/new`): A-pf-084 semantic-deepening + maintainer-birdseye burst** — trip-count/cost
+   gating, invariance, Rust receiver-type, reachability from entry points, runtime spot-checks;
+   entry-point-stratified cost map; then corpus scans + prereg + N=26 campaign. Read state + this handoff first.
+2. Alternative (founder call): paired completion experiment (human vs AI, same tasks) instead of era mining.
+3. M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077).
 
 ## Change set (this session)
-- **Config/docs:** `Cargo.toml`, `deny.toml`, `README.md`, `docs/architecture/modules.md`,
-  `examples/README.md` (new) → `2689e64`.
-- **Test harness:** `src/reporter/mod.rs` (const pub), `tests/common/mod.rs`,
-  `tests/p6_hardening.rs`, `tests/examples_rust_coverage.rs`, `tests/benchmark/mod.rs`
-  → `4456b6f`.
-- **Deleted:** untracked `brag-output/`, `perfpal-report/`; EOL screenshots removed.
-- **State:** hot state (D-pf-213, 015/047/065 done), this handoff, activeContext, CHANGELOG.
+- **State:** `state/session-state.json` (D-pf-214 live, A-pf-084 queued, demotions, 6770 B),
+  `state/archive/ledger.jsonl` (+11 demotion records), this handoff, `docs/activeContext.md`, `CHANGELOG.md`.
+- **Excluded / untracked:** `brag-output/`, `docs/research/`, `perfpal-report/` (unrelated working dirs).
 
 ## L2 state split / L6 north-star (history)
-Hot/cold split 2026-09-29; north-star pinned 2026-10-01; first periodic audit 2026-10-16
-(D-pf-211, counter reset). B-now/C-later direction: founder verdict D-pf-208/209.
+Hot/cold split 2026-09-29; north-star pinned 2026-10-01, realigned to divergence-instrument
+2026-10-17 (founder-permitted); first periodic audit 2026-10-16 (D-pf-211, counter reset to 0).

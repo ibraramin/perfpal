@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Reviewed
+- **Revamp grading burst — correctness APPROVED / plan BLOCKED / depth C- (no behavior change).** Triple-lane review of the 16-commit post-`e05c2bc` revamp: (1) correctness APPROVED — v1.4 additive-only contract, determinism, 67-rule ratchets, honest viz caps, byte-identical digestibility, ablation vacuity guard; queued fix: ARCH-003 ablation tasks need multi-file context (3/26). (2) Plan compliance BLOCKED — steps 1–3 done, corpus pin done/scans pending, prereg/stats/zenodo/campaign missing (honestly PARKED). (3) Depth C- — syntactic ceiling is structural; top-5 deepenings queued for new session (trip-count/cost gating, invariance, Rust receiver-type, reachability from entry points, runtime spot-checks) plus maintainer bird's-eye (entry-point-stratified cost map). State hygiene: demoted settled D-pf-200–205 + done A-pf-015/047/065/081/083 to cold ledger; hot 8007→6770 B; D-pf-214 live, A-pf-084 queued.
+
 ### Fixed
 - **Hygiene: SPDX marker + CLI-doc drift + examples README (no behavior change).** `Cargo.toml` license is now `LicenseRef-PolyForm-Strict-1.0.0` (SPDX custom-ref form — the bare `PolyForm-Strict-1.0.0` id is not on the SPDX list and cargo-deny 0.20.2 rejects it; `deny.toml` allowlist + `README.md` license line match; `cargo deny check licenses` green). `docs/architecture/modules.md` §8.1 output-default wording + §8.2 exit-3 serialization path corrected to code. New `examples/README.md` (run instructions, per-file rule map). 626 tests green; dual review APPROVED.
 
