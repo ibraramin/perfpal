@@ -20,4 +20,5 @@ Five implementation sessions building the maintainer birdseye map after the R4 A
 - evidence-beta-spec
 - perfpal-core-spec
 - divergence-study
+- birdseye-map
 <!-- SPECS_END -->
