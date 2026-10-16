@@ -37,7 +37,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
-    COMPONENT_CAP, barycenter_order, cap_nodes, escape_xml, function_cost, heat_color, parent_dir,
+    COMPONENT_CAP, HEAT_LEGEND_W, barycenter_order, cap_nodes, escape_xml, est_text_w,
+    function_cost, heat_color, heat_ink, legend_band, legend_top, parent_dir, push_heat_legend,
     resolved_pairs, truncate_label,
 };
 use crate::graph::{break_cycles, topo_layers};
@@ -65,8 +66,11 @@ const LF_NODE_W: i64 = 170;
 const LF_NODE_H: i64 = 30;
 const LF_CAPTION_BAND: i64 = 40;
 
-/// Distinct outline for the hot-path file(s): the highest-cost node(s).
-const LF_HOT_STROKE: &str = "#b30000";
+/// Hot-path outline: near-black at 2px — perceivable on BOTH the dark-red
+/// max-heat fill (`#b30000` renders the hot file, so a red-on-red outline
+/// would be invisible) AND the white page (a white outline's outer half
+/// merges with the background). Single-stroke like every sibling chart.
+const LF_HOT_STROKE: &str = "#1a1a1a";
 /// Default node outline (same hue as the other layered charts).
 const LAYER_NODE_STROKE: &str = "#4a6fa5";
 
@@ -157,59 +161,91 @@ pub fn render_layer_workspace(
     let all_zero = max_density <= 0.0;
 
     let rows = layers.iter().map(Vec::len).max().unwrap_or(1);
-    let width = 2 * LW_MARGIN + (layers.len().saturating_sub(1)) as i64 * LW_LAYER_W + LW_NODE_W;
-    let height = 2 * LW_MARGIN + LW_HEADER_BAND + rows as i64 * LW_ROW_H + LW_CAPTION_BAND;
-
-    let mut svg = String::with_capacity(4096);
-    svg.push_str(&format!(
-        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
-    ));
-    svg.push_str(&format!(
-        "<text x=\"{LW_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">Workspace — {} {}</text>\n",
-        LW_MARGIN + 16,
+    let grid_w = 2 * LW_MARGIN + (layers.len().saturating_sub(1)) as i64 * LW_LAYER_W + LW_NODE_W;
+    let title = format!(
+        "Workspace — {} {}",
         nodes.len(),
         if nodes.len() == 1 {
             "component"
         } else {
             "components"
         },
+    );
+    let subtitle = "heat = finding density per KLOC";
+    // Caption rows bottom-first: cap marker, all-zero note, cycle note.
+    let mut captions: Vec<String> = Vec::new();
+    if overflow {
+        captions.push("… more components omitted".to_string());
+    }
+    if all_zero {
+        captions.push("no findings recorded".to_string());
+    }
+    if broken_count > 0 {
+        captions.push(format!(
+            "{broken_count} cyclic edges broken (see ARCH-001 findings)"
+        ));
+    }
+    // Narrow grids are widened so the title, subtitle, legend, and every
+    // caption keeps ≥10px from the right edge (never clipped).
+    let mut width = grid_w
+        .max(LW_MARGIN + est_text_w(&title, 13.0) + 10)
+        .max(LW_MARGIN + est_text_w(subtitle, 11.0) + 10)
+        .max(LW_MARGIN + HEAT_LEGEND_W + 10);
+    for caption in &captions {
+        width = width.max(LW_MARGIN + est_text_w(caption, 11.0) + 10);
+    }
+    let height =
+        2 * LW_MARGIN + LW_HEADER_BAND + rows as i64 * LW_ROW_H + legend_band(captions.len());
+
+    let mut svg = String::with_capacity(4096);
+    svg.push_str(&format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
     ));
     svg.push_str(&format!(
-        "<text x=\"{LW_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">heat = finding density per KLOC</text>\n",
+        "<text x=\"{LW_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">{}</text>\n",
+        LW_MARGIN + 16,
+        escape_xml(&title),
+    ));
+    svg.push_str(&format!(
+        "<text x=\"{LW_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{subtitle}</text>\n",
         LW_MARGIN + 36,
     ));
 
-    // Edges first (under nodes): kept inter-component DAG edges only.
-    svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
-    for (from, to) in &cycle.kept {
-        let Some(&(fx, fy)) = pos.get(from.as_str()) else {
-            continue;
-        };
-        let Some(&(tx, ty)) = pos.get(to.as_str()) else {
-            continue;
-        };
-        let x1 = fx + LW_NODE_W;
-        let y1 = fy + LW_NODE_H / 2;
-        let y2 = ty + LW_NODE_H / 2;
-        svg.push_str(&format!(
-            "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
-        ));
+    // Edges first (under nodes): kept inter-component DAG edges only. The
+    // group is omitted outright when empty (no empty `<g stroke>` in output).
+    if !cycle.kept.is_empty() {
+        svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
+        for (from, to) in &cycle.kept {
+            let Some(&(fx, fy)) = pos.get(from.as_str()) else {
+                continue;
+            };
+            let Some(&(tx, ty)) = pos.get(to.as_str()) else {
+                continue;
+            };
+            let x1 = fx + LW_NODE_W;
+            let y1 = fy + LW_NODE_H / 2;
+            let y2 = ty + LW_NODE_H / 2;
+            svg.push_str(&format!(
+                "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
+            ));
+        }
+        svg.push_str("</g>\n");
     }
-    svg.push_str("</g>\n");
 
     // Nodes: heat-filled rect + `rank prefix density` label, fixed order.
+    // Labels on dark fills (level ≥ 7) take white ink for contrast.
     svg.push_str("<g font-family=\"monospace\" font-size=\"11\">\n");
     for node in &nodes {
         let Some(&(x, y)) = pos.get(node.as_str()) else {
             continue;
         };
-        let fill = if all_zero {
-            heat_color(0)
+        let level = if all_zero {
+            0
         } else {
             let d = density.get(node.as_str()).copied().unwrap_or(0.0);
-            let level = round_half_up(d / max_density * 10.0, 0);
-            heat_color(level.clamp(0, 10) as u32)
+            round_half_up(d / max_density * 10.0, 0).clamp(0, 10) as u32
         };
+        let fill = heat_color(level);
         let rank = sorted
             .iter()
             .find(|c| c.path_prefix == *node)
@@ -222,31 +258,27 @@ pub fn render_layer_workspace(
         ));
         let text_x = x + 6 + 2; // ≈ CHAR_W/2 + 2 in the overview's fixed metric
         let text_y = y + LW_NODE_H / 2 + 4;
+        let ink = match heat_ink(level) {
+            Some(ink) => format!(" fill=\"{ink}\""),
+            None => String::new(),
+        };
         svg.push_str(&format!(
             "<rect x=\"{x}\" y=\"{y}\" width=\"{LW_NODE_W}\" height=\"{LW_NODE_H}\" fill=\"{fill}\" stroke=\"{LAYER_NODE_STROKE}\"/>\n"
         ));
         svg.push_str(&format!(
-            "<text x=\"{text_x}\" y=\"{text_y}\">{label}</text>\n"
+            "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
         ));
     }
     svg.push_str("</g>\n");
 
-    let caption_y = height - 12;
-    if overflow {
+    // Heat-scale legend (the subtitle defines "heat ="), then captions
+    // bottom row first so the band fits content exactly.
+    push_heat_legend(&mut svg, LW_MARGIN, legend_top(height, captions.len()));
+    for (k, caption) in captions.iter().enumerate() {
+        let y = height - 12 - k as i64 * 16;
+        let out = caption.replace('…', "&#8230;");
         svg.push_str(&format!(
-            "<text x=\"{LW_MARGIN}\" y=\"{caption_y}\" font-family=\"monospace\" font-size=\"11\">&#8230; more components omitted</text>\n"
-        ));
-    }
-    if all_zero {
-        svg.push_str(&format!(
-            "<text x=\"{LW_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">no findings recorded</text>\n",
-            caption_y - 16
-        ));
-    }
-    if broken_count > 0 {
-        svg.push_str(&format!(
-            "<text x=\"{LW_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{broken_count} cyclic edges broken (see ARCH-001 findings)</text>\n",
-            caption_y - 32
+            "<text x=\"{LW_MARGIN}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{out}</text>\n"
         ));
     }
     svg.push_str("</svg>\n");
@@ -326,56 +358,93 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
     };
 
     let rows = layers.iter().map(Vec::len).max().unwrap_or(1);
-    let width = 2 * LF_MARGIN + (layers.len().saturating_sub(1)) as i64 * LF_LAYER_W + LF_NODE_W;
-    let height = 2 * LF_MARGIN + LF_HEADER_BAND + rows as i64 * LF_ROW_H + LF_CAPTION_BAND;
+    let grid_w = 2 * LF_MARGIN + (layers.len().saturating_sub(1)) as i64 * LF_LAYER_W + LF_NODE_W;
+    let title = format!(
+        "File hot-path map — {} {}",
+        nodes.len(),
+        if nodes.len() == 1 { "file" } else { "files" },
+    );
+    let subtitle = "heat = function cost; hot-path outlined (top-50 scope)";
+    // Caption rows bottom-first: cap marker, cost/hot-path note, cycle note.
+    let mut captions: Vec<String> = Vec::new();
+    if dropped > 0 {
+        captions.push(format!("… {dropped} more files omitted"));
+    }
+    if max_cost <= 0.0 {
+        captions.push("no function cost recorded".to_string());
+    } else if let Some(h) = hot {
+        captions.push(format!(
+            "hot-path: {} at max cost among shown files",
+            truncate_label(h)
+        ));
+    }
+    if broken_count > 0 {
+        captions.push(format!(
+            "{broken_count} cyclic edges broken (see ARCH-001 findings)"
+        ));
+    }
+    // Narrow grids are widened so the title, subtitle, legend, and every
+    // caption keeps ≥10px from the right edge (never clipped).
+    let mut width = grid_w
+        .max(LF_MARGIN + est_text_w(&title, 13.0) + 10)
+        .max(LF_MARGIN + est_text_w(subtitle, 11.0) + 10)
+        .max(LF_MARGIN + HEAT_LEGEND_W + 10);
+    for caption in &captions {
+        width = width.max(LF_MARGIN + est_text_w(caption, 11.0) + 10);
+    }
+    let height =
+        2 * LF_MARGIN + LF_HEADER_BAND + rows as i64 * LF_ROW_H + legend_band(captions.len());
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
     ));
     svg.push_str(&format!(
-        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">File hot-path map — {} {}</text>\n",
+        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">{}</text>\n",
         LF_MARGIN + 16,
-        nodes.len(),
-        if nodes.len() == 1 { "file" } else { "files" },
+        escape_xml(&title),
     ));
     svg.push_str(&format!(
-        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">heat = function cost; hot-path outlined (top-50 scope)</text>\n",
+        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{subtitle}</text>\n",
         LF_MARGIN + 36,
     ));
 
-    // Edges first (under nodes): kept DAG edges only.
-    svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
-    for (from, to) in &cycle.kept {
-        let Some(&(fx, fy)) = pos.get(from.as_str()) else {
-            continue;
-        };
-        let Some(&(tx, ty)) = pos.get(to.as_str()) else {
-            continue;
-        };
-        let x1 = fx + LF_NODE_W;
-        let y1 = fy + LF_NODE_H / 2;
-        let y2 = ty + LF_NODE_H / 2;
-        svg.push_str(&format!(
-            "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
-        ));
+    // Edges first (under nodes): kept DAG edges only. The group is omitted
+    // outright when empty (no empty `<g stroke>` in output).
+    if !cycle.kept.is_empty() {
+        svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
+        for (from, to) in &cycle.kept {
+            let Some(&(fx, fy)) = pos.get(from.as_str()) else {
+                continue;
+            };
+            let Some(&(tx, ty)) = pos.get(to.as_str()) else {
+                continue;
+            };
+            let x1 = fx + LF_NODE_W;
+            let y1 = fy + LF_NODE_H / 2;
+            let y2 = ty + LF_NODE_H / 2;
+            svg.push_str(&format!(
+                "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
+            ));
+        }
+        svg.push_str("</g>\n");
     }
-    svg.push_str("</g>\n");
 
     // Nodes: heat-filled rect + label; hot-path files get the distinct
-    // outline, everything else the shared node stroke.
+    // outline, everything else the shared node stroke. Labels on dark fills
+    // (level ≥ 7) take white ink for contrast.
     svg.push_str("<g font-family=\"monospace\" font-size=\"11\">\n");
     for node in &nodes {
         let Some(&(x, y)) = pos.get(node.as_str()) else {
             continue;
         };
-        let fill = if max_cost <= 0.0 {
-            heat_color(0)
+        let level = if max_cost <= 0.0 {
+            0
         } else {
             let cost = file_cost.get(node.as_str()).copied().unwrap_or(0.0);
-            let level = round_half_up(cost / max_cost * 10.0, 0);
-            heat_color(level.clamp(0, 10) as u32)
+            round_half_up(cost / max_cost * 10.0, 0).clamp(0, 10) as u32
         };
+        let fill = heat_color(level);
         let (stroke, stroke_w) = if hot == Some(node.as_str()) {
             (LF_HOT_STROKE, 2)
         } else {
@@ -384,37 +453,27 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
         let label = escape_xml(&truncate_label(node));
         let text_x = x + 6 + 2; // ≈ CHAR_W/2 + 2 in the overview's fixed metric
         let text_y = y + LF_NODE_H / 2 + 4;
+        let ink = match heat_ink(level) {
+            Some(ink) => format!(" fill=\"{ink}\""),
+            None => String::new(),
+        };
         svg.push_str(&format!(
             "<rect x=\"{x}\" y=\"{y}\" width=\"{LF_NODE_W}\" height=\"{LF_NODE_H}\" fill=\"{fill}\" stroke=\"{stroke}\" stroke-width=\"{stroke_w}\"/>\n"
         ));
         svg.push_str(&format!(
-            "<text x=\"{text_x}\" y=\"{text_y}\">{label}</text>\n"
+            "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
         ));
     }
     svg.push_str("</g>\n");
 
-    let caption_y = height - 12;
-    if dropped > 0 {
+    // Heat-scale legend (the subtitle defines "heat ="), then captions
+    // bottom row first so the band fits content exactly.
+    push_heat_legend(&mut svg, LF_MARGIN, legend_top(height, captions.len()));
+    for (k, caption) in captions.iter().enumerate() {
+        let y = height - 12 - k as i64 * 16;
+        let out = escape_xml(caption).replace('…', "&#8230;");
         svg.push_str(&format!(
-            "<text x=\"{LF_MARGIN}\" y=\"{caption_y}\" font-family=\"monospace\" font-size=\"11\">&#8230; {dropped} more files omitted</text>\n"
-        ));
-    }
-    if max_cost <= 0.0 {
-        svg.push_str(&format!(
-            "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">no function cost recorded</text>\n",
-            caption_y - 16
-        ));
-    } else if let Some(h) = hot {
-        svg.push_str(&format!(
-            "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">hot-path: {} at max cost among shown files</text>\n",
-            caption_y - 16,
-            escape_xml(&truncate_label(h)),
-        ));
-    }
-    if broken_count > 0 {
-        svg.push_str(&format!(
-            "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{broken_count} cyclic edges broken (see ARCH-001 findings)</text>\n",
-            caption_y - 32
+            "<text x=\"{LF_MARGIN}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{out}</text>\n"
         ));
     }
     svg.push_str("</svg>\n");
@@ -580,7 +639,7 @@ mod tests {
             .map(|r| comp(&format!("dir{r:02}"), r, 0.0))
             .collect();
         let text = String::from_utf8(render_layer_workspace(&comps, None)).expect("SVG UTF-8");
-        assert_eq!(text.matches("<rect ").count(), COMPONENT_CAP);
+        assert_eq!(text.matches("width=\"170\"").count(), COMPONENT_CAP);
         assert!(
             !text.contains("dir51"),
             "rank-51 component must be dropped like the overviews drop it"
@@ -596,7 +655,7 @@ mod tests {
         assert_eq!(first, second, "byte-determinism violated");
         let text = String::from_utf8(first).expect("SVG UTF-8");
         assert!(
-            text.contains("stroke=\"#b30000\" stroke-width=\"2\""),
+            text.contains("stroke=\"#1a1a1a\" stroke-width=\"2\""),
             "hot-path outline missing:\n{text}"
         );
         assert!(
@@ -621,7 +680,7 @@ mod tests {
         assert_eq!(first, second, "byte-determinism violated");
         let text = String::from_utf8(first).expect("SVG UTF-8");
         assert_eq!(
-            text.matches("stroke=\"#b30000\" stroke-width=\"2\"")
+            text.matches("stroke=\"#1a1a1a\" stroke-width=\"2\"")
                 .count(),
             1,
             "tie must outline exactly one file:\n{text}"
@@ -638,7 +697,7 @@ mod tests {
         let text = String::from_utf8(render_layer_file(&g, &[])).expect("SVG UTF-8");
         assert!(text.contains("no function cost recorded"));
         assert!(
-            !text.contains(LF_HOT_STROKE),
+            !text.contains("stroke=\"#1a1a1a\" stroke-width=\"2\""),
             "no hot outline without cost:\n{text}"
         );
     }

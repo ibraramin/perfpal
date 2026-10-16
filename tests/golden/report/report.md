@@ -146,7 +146,7 @@ Distribution — max\_loop\_depth:
 - Evidence: divisor=d, divisor\_kind=identifier, op=/
 
 ## 5. Architecture
-[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)
+[Dependency graph — internal #include dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
 [Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
@@ -162,7 +162,7 @@ Component detail pages (one per component above):
 
 [Component src — per-file hot-path map.](charts/component-01-src.svg)
 
-The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
+The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 Coupling heat blends edge counts with per-function cost (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count + call fanout/fanin/depth, +2 if recursive, +1 each for error_path / alloc_family; each edge weighs 1 + mean endpoint cost normalized by the scan maximum) — charts remain pure functions of metrics.json.
 Machine-readable graph: [graph.dot](charts/graph.dot) — deterministic DOT export of the include/call/component graphs (same source data as the SVGs above).
 Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).

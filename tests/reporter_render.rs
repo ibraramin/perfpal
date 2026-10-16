@@ -504,7 +504,7 @@ fn architecture_renders_links_only_for_emitted_charts() {
     let report = render_report(&doc, &charts);
     let arch = section(&report, "## 5. Architecture", "## Appendix A.");
 
-    assert!(arch.contains("[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)"));
+    assert!(arch.contains("[Dependency graph — internal #include dependencies between scanned files.](charts/include-graph.svg)"));
     assert!(arch.contains("](charts/hot-components.svg)"));
     assert!(
         !arch.contains("component-coupling"),
@@ -621,7 +621,7 @@ fn architecture_links_layered_overviews_in_emission_order() {
     let workspace = "[Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)";
     let file = "[File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)";
     for expected in [
-        "[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)",
+        "[Dependency graph — internal #include dependencies between scanned files.](charts/include-graph.svg)",
         file,
         "[Component coupling — cross-file call edges between components.](charts/component-coupling.svg)",
         "[Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)",

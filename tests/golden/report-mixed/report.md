@@ -111,7 +111,7 @@ Distribution — max\_loop\_depth:
 - Evidence: callee=Vec::with\_capacity, misuse=size\_of\_as\_element\_count
 
 ## 5. Architecture
-[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)
+[Dependency graph — internal #include, mod/use dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
 [Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)

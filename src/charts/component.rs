@@ -19,7 +19,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
-    COMPONENT_CAP, barycenter_order, cap_nodes, escape_xml, function_cost, heat_color, parent_dir,
+    COMPONENT_CAP, HEAT_LEGEND_W, barycenter_order, cap_nodes, escape_xml, est_text_w,
+    function_cost, heat_color, heat_ink, legend_band, legend_top, parent_dir, push_heat_legend,
     resolved_pairs, truncate_label,
 };
 use crate::graph::{break_cycles, topo_layers};
@@ -150,14 +151,20 @@ pub fn render_component_pages(
 // ---------------------------------------------------------------------------
 
 /// Deterministic stub for a file-less component: header + caption, no nodes.
+/// The canvas widens past the stub grid when the header lines need it, so
+/// long prefixes keep ≥10px from the right edge (never clipped).
 fn render_component_stub(comp: &ComponentEntry) -> Vec<u8> {
-    let width = 2 * PC_MARGIN + PC_NODE_W;
+    let (title, subtitle) = header_lines(comp, 0);
+    let grid_w = 2 * PC_MARGIN + PC_NODE_W;
+    let width = grid_w
+        .max(PC_MARGIN + est_text_w(&title, 13.0) + 10)
+        .max(PC_MARGIN + est_text_w(&subtitle, 11.0) + 10);
     let height = PC_MARGIN + PC_HEADER_BAND + PC_CAPTION_BAND;
     let mut svg = String::with_capacity(1024);
     svg.push_str(&format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
     ));
-    push_header(&mut svg, comp, 0);
+    push_header(&mut svg, &title, &subtitle);
     svg.push_str(&format!(
         "<text x=\"{PC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">no files recorded</text>\n",
         height - 12
@@ -224,91 +231,125 @@ fn render_component_page(
         .fold(0.0_f64, f64::max);
 
     let rows = layers.iter().map(Vec::len).max().unwrap_or(1);
-    let width = 2 * PC_MARGIN + (layers.len().saturating_sub(1)) as i64 * PC_LAYER_W + PC_NODE_W;
-    let height = 2 * PC_MARGIN + PC_HEADER_BAND + rows as i64 * PC_ROW_H + PC_CAPTION_BAND;
+    let grid_w = 2 * PC_MARGIN + (layers.len().saturating_sub(1)) as i64 * PC_LAYER_W + PC_NODE_W;
+    let (title, subtitle) = header_lines(comp, nodes.len());
+    // Caption rows bottom-first: cap marker, then the cycle note.
+    let mut captions: Vec<String> = Vec::new();
+    if dropped > 0 {
+        captions.push(format!("… {dropped} more files omitted"));
+    }
+    if broken_count > 0 {
+        captions.push(format!(
+            "{broken_count} cyclic edges broken (see ARCH-001 findings)"
+        ));
+    }
+    // Narrow (e.g. single-column) pages widen past the grid when the header,
+    // legend, or any caption needs it — text keeps ≥10px from the right edge.
+    let mut width = grid_w
+        .max(PC_MARGIN + est_text_w(&title, 13.0) + 10)
+        .max(PC_MARGIN + est_text_w(&subtitle, 11.0) + 10)
+        .max(PC_MARGIN + HEAT_LEGEND_W + 10);
+    for caption in &captions {
+        width = width.max(PC_MARGIN + est_text_w(caption, 11.0) + 10);
+    }
+    let height =
+        2 * PC_MARGIN + PC_HEADER_BAND + rows as i64 * PC_ROW_H + legend_band(captions.len());
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
     ));
-    push_header(&mut svg, comp, nodes.len());
+    push_header(&mut svg, &title, &subtitle);
 
-    // Edges first (under nodes): kept intra-component DAG edges only.
-    svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
-    for (from, to) in &cycle.kept {
-        let Some(&(fx, fy)) = pos.get(from.as_str()) else {
-            continue;
-        };
-        let Some(&(tx, ty)) = pos.get(to.as_str()) else {
-            continue;
-        };
-        let x1 = fx + PC_NODE_W;
-        let y1 = fy + PC_NODE_H / 2;
-        let y2 = ty + PC_NODE_H / 2;
-        svg.push_str(&format!(
-            "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
-        ));
+    // Edges first (under nodes): kept intra-component DAG edges only. The
+    // group is omitted outright when empty (no empty `<g stroke>` in output).
+    if !cycle.kept.is_empty() {
+        svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
+        for (from, to) in &cycle.kept {
+            let Some(&(fx, fy)) = pos.get(from.as_str()) else {
+                continue;
+            };
+            let Some(&(tx, ty)) = pos.get(to.as_str()) else {
+                continue;
+            };
+            let x1 = fx + PC_NODE_W;
+            let y1 = fy + PC_NODE_H / 2;
+            let y2 = ty + PC_NODE_H / 2;
+            svg.push_str(&format!(
+                "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
+            ));
+        }
+        svg.push_str("</g>\n");
     }
-    svg.push_str("</g>\n");
 
-    // Nodes: heat-filled rect + label, fixed attribute order.
+    // Nodes: heat-filled rect + label, fixed attribute order. Labels on dark
+    // fills (level ≥ 7) take white ink for contrast.
     svg.push_str("<g font-family=\"monospace\" font-size=\"11\">\n");
     for node in &nodes {
         let Some(&(x, y)) = pos.get(node.as_str()) else {
             continue;
         };
-        let fill = if max_cost <= 0.0 {
-            heat_color(0)
+        let level = if max_cost <= 0.0 {
+            0
         } else {
             let cost = file_cost.get(node).copied().unwrap_or(0.0);
-            let level = round_half_up(cost / max_cost * 10.0, 0);
-            heat_color(level.clamp(0, 10) as u32)
+            round_half_up(cost / max_cost * 10.0, 0).clamp(0, 10) as u32
         };
+        let fill = heat_color(level);
         let label = escape_xml(&truncate_label(node));
         let text_x = x + 9; // ≈ CHAR_W/2 + 2 in the overview's fixed metric
         let text_y = y + PC_NODE_H / 2 + 4;
+        let ink = match heat_ink(level) {
+            Some(ink) => format!(" fill=\"{ink}\""),
+            None => String::new(),
+        };
         svg.push_str(&format!(
             "<rect x=\"{x}\" y=\"{y}\" width=\"{PC_NODE_W}\" height=\"{PC_NODE_H}\" fill=\"{fill}\" stroke=\"#4a6fa5\"/>\n"
         ));
         svg.push_str(&format!(
-            "<text x=\"{text_x}\" y=\"{text_y}\">{label}</text>\n"
+            "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
         ));
     }
     svg.push_str("</g>\n");
 
-    let caption_y = height - 12;
-    if dropped > 0 {
+    // Heat-scale legend (same band as the layer overviews), then captions
+    // bottom row first so the band fits content exactly.
+    push_heat_legend(&mut svg, PC_MARGIN, legend_top(height, captions.len()));
+    for (k, caption) in captions.iter().enumerate() {
+        let y = height - 12 - k as i64 * 16;
+        let out = caption.replace('…', "&#8230;");
         svg.push_str(&format!(
-            "<text x=\"{PC_MARGIN}\" y=\"{caption_y}\" font-family=\"monospace\" font-size=\"11\">&#8230; {dropped} more files omitted</text>\n"
-        ));
-    }
-    if broken_count > 0 {
-        svg.push_str(&format!(
-            "<text x=\"{PC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{broken_count} cyclic edges broken (see ARCH-001 findings)</text>\n",
-            caption_y - 16
+            "<text x=\"{PC_MARGIN}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{out}</text>\n"
         ));
     }
     svg.push_str("</svg>\n");
     svg.into_bytes()
 }
 
-/// Shared page header: component identity + finding-density caption
-/// (density via the shared HALF-UP fixed-point formatter, scale 2 — the same
-/// numeric text the reporter prints for the same component).
-fn push_header(out: &mut String, comp: &ComponentEntry, file_count: usize) {
-    let title = escape_xml(&truncate_label(&format!(
-        "Component {}: {}",
-        comp.rank, comp.path_prefix
-    )));
-    out.push_str(&format!(
-        "<text x=\"{PC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">{title}</text>\n",
-        PC_MARGIN + 16
-    ));
+/// Shared page header lines (rendered form): component identity title +
+/// finding-density subtitle (density via the shared HALF-UP fixed-point
+/// formatter, scale 2 — the same numeric text the reporter prints).
+fn header_lines(comp: &ComponentEntry, file_count: usize) -> (String, String) {
+    let title = truncate_label(&format!("Component {}: {}", comp.rank, comp.path_prefix));
     let files_word = if file_count == 1 { "file" } else { "files" };
-    out.push_str(&format!(
-        "<text x=\"{PC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">finding density {} per KLOC · {file_count} {files_word}</text>\n",
-        PC_MARGIN + 36,
+    let subtitle = format!(
+        "finding density {} per KLOC · {file_count} {files_word}",
         format_fixed_point(comp.metrics.finding_density, 2),
+    );
+    (title, subtitle)
+}
+
+/// Shared page header: component identity + finding-density caption.
+fn push_header(out: &mut String, title: &str, subtitle: &str) {
+    out.push_str(&format!(
+        "<text x=\"{PC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">{}</text>\n",
+        PC_MARGIN + 16,
+        escape_xml(title),
+    ));
+    out.push_str(&format!(
+        "<text x=\"{PC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{}</text>\n",
+        PC_MARGIN + 36,
+        escape_xml(subtitle),
     ));
 }
 
@@ -447,7 +488,7 @@ mod tests {
         let pages = render_component_pages(&[comp("big", 1, 1.0)], Some(&graphs), &[], &[]);
         assert_eq!(pages.len(), 1);
         let text = String::from_utf8(pages[0].1.clone()).expect("SVG UTF-8");
-        assert_eq!(text.matches("<rect ").count(), 50, "node cap");
+        assert_eq!(text.matches("width=\"170\"").count(), 50, "node cap");
         assert!(
             text.contains(">big/f00.c<"),
             "high-intra victim must survive the cap:\n{text}"

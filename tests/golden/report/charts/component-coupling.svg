@@ -1,11 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="254" height="218" viewBox="0 0 254 218">
+<svg xmlns="http://www.w3.org/2000/svg" width="367" height="202" viewBox="0 0 367 202">
 <g font-family="monospace" font-size="11">
 <text x="204" y="166" text-anchor="end">src</text>
 <text transform="translate(226,144) rotate(-90)">src</text>
 </g>
 <g stroke="#dddddd" stroke-width="1">
 <rect x="210" y="150" width="24" height="24" fill="#b30000"/>
-<rect x="210" y="150" width="24" height="24" fill="#3a3aff" fill-opacity="0.55"/>
 </g>
-<text x="20" y="206" font-family="monospace" font-size="11">call edges are LOW-confidence hypotheses (ADR-0001)</text>
+<text x="20" y="190" font-family="monospace" font-size="11">call edges are LOW-confidence hypotheses (ADR-0001)</text>
 </svg>

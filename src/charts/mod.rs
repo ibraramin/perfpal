@@ -82,25 +82,23 @@ const IG_LAYER_W: i64 = 220;
 const IG_ROW_H: i64 = 44;
 const IG_NODE_W: i64 = 170;
 const IG_NODE_H: i64 = 30;
-const IG_CAPTION_BAND: i64 = 40;
 
 // component-coupling.svg geometry
 const CC_MARGIN: i64 = 20;
 const CC_ROW_LABEL_W: i64 = 190;
 const CC_COL_LABEL_H: i64 = 130;
 const CC_CELL: i64 = 24;
-const CC_LEGEND_BAND: i64 = 44;
-/// Distinct overlay hue for LOW-confidence call-edge contribution.
-const CC_CALL_FILL: &str = "#3a3aff";
-const CC_CALL_OPACITY: &str = "0.55";
+/// Caption rows stack 16px apart with a 12px bottom pad (see [`caption_band`]).
+const CC_CAPTION_GAP: i64 = 16;
+const CC_CAPTION_PAD: i64 = 12;
 
 // hot-components.svg geometry
 const HC_MARGIN: i64 = 20;
+const HC_HEADER_BAND: i64 = 64;
 const HC_LABEL_W: i64 = 300;
 const HC_PLOT_W: i64 = 420;
 const HC_ROW_PITCH: i64 = 26;
 const HC_BAR_H: i64 = 16;
-const HC_CAPTION_BAND: i64 = 44;
 /// Bar fill: hottest palette color (pure constant, not value-dependent).
 const HC_BAR_FILL: &str = "#b30000";
 /// Stub bar length when every density is zero ("minimal stub bars").
@@ -220,6 +218,74 @@ pub(crate) fn heat_color(level: u32) -> String {
     let r = 255 - (76 * level + 5) / 10;
     let g = (255 * (10 - level) + 5) / 10;
     format!("#{r:02x}{g:02x}{g:02x}")
+}
+
+/// Label ink for text drawn directly ON a heat fill: dark fills (level ≥ 7)
+/// take white (`#ffffff`, ≈7.2:1 on `#b30000`); lighter fills keep the
+/// default black ink (the caller omits the `fill` attribute then).
+#[must_use]
+pub(crate) fn heat_ink(level: u32) -> Option<&'static str> {
+    if level >= 7 { Some("#ffffff") } else { None }
+}
+
+/// Estimated monospace text width in px at `font_size` — linear scale of the
+/// fixed [`CHAR_W`] metric (pinned for font-size 11), ceiled. `text` must be
+/// the RENDERED form (entities resolved: `…`, not `&#8230;`).
+#[must_use]
+pub(crate) fn est_text_w(text: &str, font_size: f64) -> i64 {
+    (text.chars().count() as f64 * CHAR_W * font_size / 11.0).ceil() as i64
+}
+
+/// Bottom caption band fitting exactly `lines` caption rows (16px rows + 12px
+/// bottom pad); zero when no caption is emitted, so canvases fit content.
+#[must_use]
+pub(crate) fn caption_band(lines: usize) -> i64 {
+    if lines == 0 {
+        0
+    } else {
+        CC_CAPTION_PAD + lines as i64 * CC_CAPTION_GAP
+    }
+}
+
+/// Bottom band for charts carrying a heat-scale legend above `caps` caption
+/// rows: 12px bottom pad + caption rows + 8px gap + 12px swatches.
+#[must_use]
+pub(crate) fn legend_band(caps: usize) -> i64 {
+    CC_CAPTION_PAD + caps as i64 * CC_CAPTION_GAP + 8 + 12
+}
+
+/// Top y of the legend swatch row given canvas `height` and `caps` caption
+/// rows below it.
+#[must_use]
+pub(crate) fn legend_top(height: i64, caps: usize) -> i64 {
+    height - CC_CAPTION_PAD - caps as i64 * CC_CAPTION_GAP - 8 - 12
+}
+
+/// Heat-scale legend row (`cool` + ramp swatches `0..=10` + `hot`) with
+/// swatch tops at `y` (12px swatches, 10px text baseline offset). Fixed
+/// ≈191px wide at font-size 11 — callers widen narrow canvases via
+/// [`HEAT_LEGEND_W`].
+pub(crate) const HEAT_LEGEND_W: i64 = 191;
+
+pub(crate) fn push_heat_legend(out: &mut String, x: i64, y: i64) {
+    const SW: i64 = 12;
+    out.push_str(&format!(
+        "<text x=\"{x}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">cool</text>\n",
+        y + 10
+    ));
+    let mut sx = x + (4.0 * CHAR_W).ceil() as i64 + 6;
+    for level in 0..=10 {
+        let fill = heat_color(level);
+        out.push_str(&format!(
+            "<rect x=\"{sx}\" y=\"{y}\" width=\"{SW}\" height=\"12\" fill=\"{fill}\"/>\n"
+        ));
+        sx += SW;
+    }
+    out.push_str(&format!(
+        "<text x=\"{}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">hot</text>\n",
+        sx + 6,
+        y + 10
+    ));
 }
 
 /// Repo-relative parent directory of a POSIX path; root-level files map to
@@ -379,7 +445,17 @@ fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
 
     let rows = layers.iter().map(Vec::len).max().unwrap_or(1);
     let width = 2 * IG_MARGIN + (layers.len().saturating_sub(1)) as i64 * IG_LAYER_W + IG_NODE_W;
-    let height = 2 * IG_MARGIN + rows as i64 * IG_ROW_H + IG_CAPTION_BAND;
+    // Caption rows bottom-first: truncation marker, then the cycle note.
+    let mut captions: Vec<String> = Vec::new();
+    if dropped > 0 {
+        captions.push(format!("&#8230; {dropped} more files omitted"));
+    }
+    if broken_count > 0 {
+        captions.push(format!(
+            "{broken_count} cyclic edges broken (see ARCH-001 findings)"
+        ));
+    }
+    let height = 2 * IG_MARGIN + rows as i64 * IG_ROW_H + caption_band(captions.len());
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
@@ -387,23 +463,26 @@ fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
     ));
 
     // Edges first (under nodes): kept DAG edges only — broken cyclic edges
-    // are NOT drawn (they live in ARCH-001 findings + caption).
-    svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
-    for (from, to) in &cycle.kept {
-        let Some(&(fx, fy)) = pos.get(from.as_str()) else {
-            continue;
-        };
-        let Some(&(tx, ty)) = pos.get(to.as_str()) else {
-            continue;
-        };
-        let x1 = fx + IG_NODE_W;
-        let y1 = fy + IG_NODE_H / 2;
-        let y2 = ty + IG_NODE_H / 2;
-        svg.push_str(&format!(
-            "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
-        ));
+    // are NOT drawn (they live in ARCH-001 findings + caption). The group is
+    // omitted outright when empty (no empty `<g stroke>` in output).
+    if !cycle.kept.is_empty() {
+        svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
+        for (from, to) in &cycle.kept {
+            let Some(&(fx, fy)) = pos.get(from.as_str()) else {
+                continue;
+            };
+            let Some(&(tx, ty)) = pos.get(to.as_str()) else {
+                continue;
+            };
+            let x1 = fx + IG_NODE_W;
+            let y1 = fy + IG_NODE_H / 2;
+            let y2 = ty + IG_NODE_H / 2;
+            svg.push_str(&format!(
+                "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
+            ));
+        }
+        svg.push_str("</g>\n");
     }
-    svg.push_str("</g>\n");
 
     // Nodes: rect + label, fixed attribute order.
     svg.push_str("<g font-family=\"monospace\" font-size=\"11\">\n");
@@ -423,17 +502,12 @@ fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
     }
     svg.push_str("</g>\n");
 
-    // Captions: truncation marker first (never silent), then cycle note.
-    let caption_y = height - 12;
-    if dropped > 0 {
+    // Captions: truncation marker first (never silent), then cycle note —
+    // bottom row first so the band fits content exactly.
+    for (k, caption) in captions.iter().enumerate() {
+        let y = height - CC_CAPTION_PAD - k as i64 * CC_CAPTION_GAP;
         svg.push_str(&format!(
-            "<text x=\"{IG_MARGIN}\" y=\"{caption_y}\" font-family=\"monospace\" font-size=\"11\">&#8230; {dropped} more files omitted</text>\n"
-        ));
-    }
-    if broken_count > 0 {
-        svg.push_str(&format!(
-            "<text x=\"{IG_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{broken_count} cyclic edges broken (see ARCH-001 findings)</text>\n",
-            caption_y - 16
+            "<text x=\"{IG_MARGIN}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{caption}</text>\n"
         ));
     }
     svg.push_str("</svg>\n");
@@ -446,8 +520,10 @@ fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
 
 /// Coupling weights between axis components. Include contribution counts
 /// resolved internal include edges between the two parent directories;
-/// call contribution counts cross-file call edges likewise (LOW-confidence,
-/// styled distinctly). Pinned symmetry: an off-diagonal edge increments BOTH
+/// call contribution counts cross-file call edges likewise (LOW-confidence —
+/// folded into the SAME cell heat as the include weight, flagged by the
+/// ADR-0001 caveat caption; there is exactly one fill rect per cell, never a
+/// full-cell overlay that would bury the heat color). Pinned symmetry: an off-diagonal edge increments BOTH
 /// (A,B) and (B,A); a same-component edge increments the diagonal once.
 ///
 /// v1.4 STEP 2 cost overlay (plan `divergence-revamp`): cells accumulate
@@ -613,8 +689,21 @@ fn render_component_coupling(
     let max = coupling.max_cell();
     let n = coupling.axis.len();
 
-    let width = CC_MARGIN + CC_ROW_LABEL_W + n as i64 * CC_CELL + CC_MARGIN;
-    let height = CC_MARGIN + CC_COL_LABEL_H + n as i64 * CC_CELL + CC_LEGEND_BAND;
+    let grid_w = CC_MARGIN + CC_ROW_LABEL_W + n as i64 * CC_CELL + CC_MARGIN;
+    // Legend/caption band: the standing ADR-0001 caveat always, plus the
+    // truncation marker when capped — bottom row first.
+    let legend = "call edges are LOW-confidence hypotheses (ADR-0001)";
+    let mut captions: Vec<String> = vec![legend.to_string()];
+    if overflow {
+        captions.push("… more components omitted".to_string());
+    }
+    // The caveat caption is wider than narrow grids: widen the canvas so the
+    // longest caption keeps ≥10px from the right edge (never clipped).
+    let mut width = grid_w;
+    for caption in &captions {
+        width = width.max(CC_MARGIN + est_text_w(caption, 11.0) + 10);
+    }
+    let height = CC_MARGIN + CC_COL_LABEL_H + n as i64 * CC_CELL + caption_band(captions.len());
     let grid_x = CC_MARGIN + CC_ROW_LABEL_W;
     let grid_y = CC_MARGIN + CC_COL_LABEL_H;
 
@@ -641,7 +730,8 @@ fn render_component_coupling(
     }
     svg.push_str("</g>\n");
 
-    // Cells: include heat rect, then distinct call overlay when present.
+    // Cells: ONE heat rect per cell (include + call weights folded into the
+    // same heat — a full-cell call overlay would bury the heat color).
     svg.push_str("<g stroke=\"#dddddd\" stroke-width=\"1\">\n");
     for (i, row_inc) in coupling.include.iter().enumerate() {
         for (j, inc) in row_inc.iter().enumerate() {
@@ -657,24 +747,19 @@ fn render_component_coupling(
             svg.push_str(&format!(
                 "<rect x=\"{x}\" y=\"{y}\" width=\"{CC_CELL}\" height=\"{CC_CELL}\" fill=\"{fill}\"/>\n"
             ));
-            if coupling.call[i][j] > 0.0 {
-                svg.push_str(&format!(
-                    "<rect x=\"{x}\" y=\"{y}\" width=\"{CC_CELL}\" height=\"{CC_CELL}\" fill=\"{CC_CALL_FILL}\" fill-opacity=\"{CC_CALL_OPACITY}\"/>\n"
-                ));
-            }
         }
     }
     svg.push_str("</g>\n");
 
-    // Legend/caption band: standing ADR-0001 caveat + truncation marker.
-    let legend_y = height - 12;
-    svg.push_str(&format!(
-        "<text x=\"{CC_MARGIN}\" y=\"{legend_y}\" font-family=\"monospace\" font-size=\"11\">call edges are LOW-confidence hypotheses (ADR-0001)</text>\n"
-    ));
-    if overflow {
+    // Legend/caption band: standing ADR-0001 caveat + truncation marker,
+    // bottom row first so the band fits content exactly. Captions are stored
+    // rendered (`…` = 1 glyph for width); the emitter spells it as the
+    // `&#8230;` entity like every other chart.
+    for (k, caption) in captions.iter().enumerate() {
+        let y = height - CC_CAPTION_PAD - k as i64 * CC_CAPTION_GAP;
+        let out = caption.replace('…', "&#8230;");
         svg.push_str(&format!(
-            "<text x=\"{CC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">&#8230; more components omitted</text>\n",
-            legend_y - 16
+            "<text x=\"{CC_MARGIN}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{out}</text>\n"
         ));
     }
     svg.push_str("</svg>\n");
@@ -702,13 +787,41 @@ fn render_hot_components(components: &[ComponentEntry]) -> Vec<u8> {
         .fold(0.0_f64, f64::max);
     let all_zero = max_density <= 0.0;
 
+    // Caption rows bottom-first: the all-zero note, then the cap marker.
+    let mut captions: Vec<String> = Vec::new();
+    if all_zero {
+        captions.push("no findings recorded".to_string());
+    }
+    if overflow {
+        captions.push("… more components omitted".to_string());
+    }
     let width = 2 * HC_MARGIN + HC_LABEL_W + HC_PLOT_W;
-    let height = 2 * HC_MARGIN + sorted.len() as i64 * HC_ROW_PITCH + HC_CAPTION_BAND;
+    let height = 2 * HC_MARGIN
+        + HC_HEADER_BAND
+        + sorted.len() as i64 * HC_ROW_PITCH
+        + caption_band(captions.len());
     let plot_x = HC_MARGIN + HC_LABEL_W;
 
     let mut svg = String::with_capacity(2048);
     svg.push_str(&format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
+    ));
+    // Heading + scale reference: the subtitle names the unit AND the value a
+    // full-width bar represents, so bar lengths are interpretable.
+    svg.push_str(&format!(
+        "<text x=\"{HC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">Hot components — {} {}</text>\n",
+        HC_MARGIN + 16,
+        sorted.len(),
+        if sorted.len() == 1 {
+            "component"
+        } else {
+            "components"
+        },
+    ));
+    svg.push_str(&format!(
+        "<text x=\"{HC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">bar = finding density per KLOC; max {}</text>\n",
+        HC_MARGIN + 36,
+        format_fixed_point(max_density, 2),
     ));
     svg.push_str("<g font-family=\"monospace\" font-size=\"11\">\n");
     for (i, comp) in sorted.iter().enumerate() {
@@ -720,16 +833,19 @@ fn render_hot_components(components: &[ComponentEntry]) -> Vec<u8> {
                 0,
             )
         };
-        let y = HC_MARGIN + i as i64 * HC_ROW_PITCH;
+        let y = HC_MARGIN + HC_HEADER_BAND + i as i64 * HC_ROW_PITCH;
         let label = escape_xml(&format!(
             "{} {} {}",
             comp.rank,
             truncate_label(&comp.path_prefix),
             format_fixed_point(comp.metrics.finding_density, 2)
         ));
+        // Row labels are right-aligned into the label gutter (closing the
+        // label↔bar gap) and vertically centered on their bar.
         svg.push_str(&format!(
-            "<text x=\"{HC_MARGIN}\" y=\"{}\">{label}</text>\n",
-            y + HC_BAR_H
+            "<text x=\"{}\" y=\"{}\" text-anchor=\"end\">{label}</text>\n",
+            plot_x - 8,
+            y + HC_BAR_H / 2 + 4
         ));
         svg.push_str(&format!(
             "<rect x=\"{plot_x}\" y=\"{y}\" width=\"{bar_len}\" height=\"{HC_BAR_H}\" fill=\"{HC_BAR_FILL}\"/>\n"
@@ -737,16 +853,11 @@ fn render_hot_components(components: &[ComponentEntry]) -> Vec<u8> {
     }
     svg.push_str("</g>\n");
 
-    let caption_y = height - 12;
-    if all_zero {
+    for (k, caption) in captions.iter().enumerate() {
+        let y = height - CC_CAPTION_PAD - k as i64 * CC_CAPTION_GAP;
+        let out = caption.replace('…', "&#8230;");
         svg.push_str(&format!(
-            "<text x=\"{HC_MARGIN}\" y=\"{caption_y}\" font-family=\"monospace\" font-size=\"11\">no findings recorded</text>\n"
-        ));
-    }
-    if overflow {
-        svg.push_str(&format!(
-            "<text x=\"{}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">&#8230; more components omitted</text>\n",
-            HC_MARGIN, caption_y - 16
+            "<text x=\"{HC_MARGIN}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{out}</text>\n"
         ));
     }
     svg.push_str("</svg>\n");

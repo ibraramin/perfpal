@@ -797,7 +797,10 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
             // Chart names are NOT escape_md'd: output-contract §3 pins them
             // to kebab-case ASCII ([a-z0-9]+(-[a-z0-9]+)*), so they carry no
             // Markdown metacharacters by construction.
-            out.push_str(&format!("[{}](charts/{stem}.svg)\n", chart_caption(stem)));
+            out.push_str(&format!(
+                "[{}](charts/{stem}.svg)\n",
+                chart_caption(stem, &doc.scan.languages)
+            ));
             any_overview = true;
         }
         if !any_overview && component_stems.is_empty() {
@@ -881,13 +884,7 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
         }
     }
 
-    out.push_str(
-        "The dependency graph reflects resolved internal include/module edges \
-         between scanned files — C `#include` directives and Rust `mod`/`use` \
-         module paths; unresolved internal edges are retained as data, and \
-         external (system headers/crates) dependencies are excluded from \
-         coupling edges.\n",
-    );
+    out.push_str(&dependency_paragraph(&doc.scan.languages, escape_md));
     out.push_str(
         "Coupling heat blends edge counts with per-function cost \
          (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count \
@@ -973,6 +970,9 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
     out.push_str("<meta charset=\"utf-8\">\n");
     out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
+    // Inline empty data-URI favicon: kills the /favicon.ico 404 console error
+    // with zero bytes fetched (no network, fully offline).
+    out.push_str("<link rel=\"icon\" href=\"data:,\">\n");
     out.push_str(&format!(
         "<title>Perfpal Report — schema {}</title>\n",
         escape_html(&doc.schema_version),
@@ -980,16 +980,19 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
     out.push_str(
         "<style>\n\
          body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
+         .table-scroll{overflow-x:auto;max-width:100%}\n\
          table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
          th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
          th{background:#eee}\n\
-         figure{border:1px solid #999;padding:.5rem;margin:1rem 0}\n\
+         #findings table{min-width:72rem}\n\
+         #findings tbody td{white-space:nowrap}\n\
+         #findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
+         figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}\n\
          figcaption{margin-top:.5rem}\n\
-          img{max-width:100%;height:auto}\n\
-          figure.pz{overflow:hidden}\n\
-          figure.pz img{touch-action:none}\n\
-          #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
-          #filter-bar{margin:.5rem 0}\n\
+         img{max-width:100%;height:auto}\n\
+         figure.pz img{max-width:none;touch-action:none}\n\
+         #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
+         #filter-bar{margin:.5rem 0}\n\
          nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
          </style>\n</head>\n<body>\n",
     );
@@ -1175,8 +1178,9 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
         for stem in &overviews {
             // Stems reaching this point are allowlisted (known overviews)
             // yet still escaped at the interpolation site — belt and
-            // suspenders. Captions are reporter-owned static text.
-            let caption = chart_caption(stem);
+            // suspenders. Captions are reporter-owned static text, except the
+            // include-graph arm which reflects the scanned languages.
+            let caption = chart_caption(stem, &doc.scan.languages);
             let safe_stem = escape_html(stem);
             out.push_str(&format!(
                 "<figure class=\"pz\" data-chart=\"{stem}\">\n<a href=\"charts/{stem}.svg\"><img src=\"charts/{stem}.svg\" alt=\"{caption}\"></a>\n<figcaption>{caption}</figcaption>\n</figure>\n",
@@ -1198,13 +1202,12 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
             out.push_str("</ul>\n");
         }
     }
-    out.push_str(
-        "<p>The dependency graph reflects resolved internal include/module edges \
-         between scanned files — C `#include` directives and Rust `mod`/`use` \
-         module paths; unresolved internal edges are retained as data, and \
-         external (system headers/crates) dependencies are excluded from \
-         coupling edges.</p>\n",
-    );
+    // Known-language fragments are pinned static text (safe verbatim in
+    // HTML); unknown language names are escaped inside `dependency_clause`.
+    out.push_str(&format!(
+        "<p>{}</p>\n",
+        dependency_paragraph(&doc.scan.languages, escape_html)
+    ));
     out.push_str(
         "<p>Machine-readable graph: <a href=\"charts/graph.dot\">graph.dot</a> — deterministic \
          DOT export of the include/call/component graphs (same source data as \
@@ -1238,7 +1241,7 @@ fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[St
     let mut sorted: Vec<&crate::schema::ComponentEntry> = components.iter().collect();
     sorted.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.path_prefix.cmp(&b.path_prefix)));
     out.push_str(
-        "<table>\n<thead><tr><th>rank</th><th>prefix</th>\
+        "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>rank</th><th>prefix</th>\
          <th>finding density (per KLOC)</th><th>max loop depth</th>\
          <th>finding count</th><th>detail</th></tr></thead>\n<tbody>\n",
     );
@@ -1272,7 +1275,7 @@ fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[St
             detail = detail,
         ));
     }
-    out.push_str("</tbody>\n</table>\n</section>\n");
+    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
 /// File drill-down: top files by (degree desc, cost desc, path asc) with
@@ -1317,7 +1320,7 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
         list.sort_by(|&a, &b| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id));
     }
     out.push_str(
-        "<table>\n<thead><tr><th>file</th><th>degree</th><th>cost</th>\
+        "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>file</th><th>degree</th><th>cost</th>\
          <th>findings</th></tr></thead>\n<tbody>\n",
     );
     // Collision-free anchors (FIX 1, corrected): anchors are pre-assigned
@@ -1368,7 +1371,7 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
             ranked.len() - 10
         ));
     }
-    out.push_str("</tbody>\n</table>\n</section>\n");
+    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
 /// Findings table: every finding in `finding_id`-ascending total order with
@@ -1392,7 +1395,7 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
     // the stable finding_id-ascending index order the map was built over.
     let (order, anchors) = finding_anchor_assignments(doc);
     out.push_str(
-        "<table>\n<thead><tr><th>finding_id</th><th>rule</th><th>severity</th>\
+        "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>finding_id</th><th>rule</th><th>severity</th>\
          <th>confidence</th><th>resolver</th><th>location</th><th>symbol</th>\
          <th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>\n<tbody>\n",
     );
@@ -1426,8 +1429,8 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
         out.push_str(&format!(
             "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{id}</td><td>{rule}</td><td>{severity}</td>\
              <td>{confidence}</td><td>{resolver}</td>\
-             <td>{path}:{line}:{col}</td><td>{symbol}</td><td>{message}</td>\
-             <td>{evidence}</td><td>{threshold}</td><td>{flags}</td></tr>\n",
+             <td>{path}:{line}:{col}</td><td>{symbol}</td><td class=\"wrap\">{message}</td>\
+             <td class=\"wrap\">{evidence}</td><td>{threshold}</td><td>{flags}</td></tr>\n",
             anchor = escape_html(anchor),
             data_path = escape_html(&f.path),
             id = escape_html(&f.finding_id),
@@ -1445,7 +1448,7 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
             flags = flags_text,
         ));
     }
-    out.push_str("</tbody>\n</table>\n</section>\n");
+    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
 /// Render an optional threshold as `name=value` (`n/a` when absent).
@@ -1480,7 +1483,7 @@ fn html_appendix_a(out: &mut String, doc: &MetricsDocument) {
     }
     let rule_ids: BTreeSet<&str> = doc.findings.iter().map(|f| f.rule_id.as_str()).collect();
     out.push_str(
-        "<table>\n<thead><tr><th>rule_id</th><th>title</th><th>description</th></tr></thead>\n<tbody>\n",
+        "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>rule_id</th><th>title</th><th>description</th></tr></thead>\n<tbody>\n",
     );
     for rule_id in rule_ids {
         let (_, title, description) = HEURISTIC_CATALOG_V1
@@ -1494,7 +1497,7 @@ fn html_appendix_a(out: &mut String, doc: &MetricsDocument) {
             description = escape_html(description),
         ));
     }
-    out.push_str("</tbody>\n</table>\n</section>\n");
+    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
 fn html_footer(out: &mut String) {
@@ -1674,15 +1677,15 @@ fn group_by_metric(entries: &[DistributionEntry]) -> Vec<(&str, Vec<&Distributio
 
 /// Fixed caption per known chart-set-v1 name (ADR-0002); unknown names get a
 /// generic caption (forward compatibility: consumers tolerate new charts).
-/// Captions are reporter-owned static text — safe by construction, never
-/// document-derived (the dynamic name is charset-pinned per output-contract
-/// §3), so they bypass [`escape_md`].
-fn chart_caption(stem: &str) -> String {
+/// Captions are reporter-owned static text EXCEPT the include-graph arm,
+/// which names the dependency mechanisms of the ACTUAL scanned languages
+/// ([`include_graph_caption`]) — safe by construction (pinned per-language
+/// fragments; anything else is escaped by the caller), never document-derived
+/// (the dynamic name is charset-pinned per output-contract §3), so they
+/// bypass [`escape_md`].
+fn chart_caption(stem: &str, languages: &[String]) -> String {
     match stem {
-        "include-graph" => {
-            "Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files."
-                .to_string()
-        }
+        "include-graph" => include_graph_caption(languages),
         "component-coupling" => {
             "Component coupling — cross-file call edges between components.".to_string()
         }
@@ -1702,6 +1705,119 @@ fn chart_caption(stem: &str) -> String {
         // component — take the generic overview path.
         other => format!("Chart: {other}."),
     }
+}
+
+/// Dependency mechanisms of the scanned languages in PINNED order
+/// (c → rust → python, then any other language sorted ascending by name).
+/// Pure function of the language list — deterministic regardless of document
+/// order. Unknown languages pass through as bare names (escaped by the
+/// caller — see [`dependency_clause`]).
+fn dependency_mechanisms(languages: &[String]) -> Vec<String> {
+    let mut parts: Vec<String> = Vec::new();
+    if languages.iter().any(|l| l == "c") {
+        parts.push("#include".to_string());
+    }
+    if languages.iter().any(|l| l == "rust") {
+        parts.push("mod/use".to_string());
+    }
+    if languages.iter().any(|l| l == "python") {
+        parts.push("import".to_string());
+    }
+    let mut others: Vec<&String> = languages
+        .iter()
+        .filter(|l| l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python")
+        .collect();
+    others.sort();
+    others.dedup();
+    for lang in others {
+        parts.push(lang.clone());
+    }
+    parts
+}
+
+/// Caption for the include-graph overview, conditioned on the ACTUAL scanned
+/// languages: a Python-only scan never claims "internal #include (C)".
+/// `c + rust` renders "internal #include, mod/use dependencies …" (the old
+/// hardcoded "(C) … (Rust)" parentheticals are gone everywhere).
+#[must_use]
+fn include_graph_caption(languages: &[String]) -> String {
+    let parts = dependency_mechanisms(languages);
+    if parts.is_empty() {
+        "Dependency graph — internal dependencies between scanned files.".to_string()
+    } else {
+        format!(
+            "Dependency graph — internal {} dependencies between scanned files.",
+            parts.join(", ")
+        )
+    }
+}
+
+/// Oxford-joined clause over 1–3+ parts ("A", "A and B", "A, B, and C").
+/// Pure function — byte-deterministic.
+fn oxford_join(mut parts: Vec<String>) -> String {
+    match parts.len() {
+        0 => String::new(),
+        1 => parts.remove(0),
+        2 => format!("{} and {}", parts[0], parts[1]),
+        _ => {
+            let last = parts.pop().unwrap_or_default();
+            format!("{}, and {}", parts.join(", "), last)
+        }
+    }
+}
+
+/// Edge-kind clause for the architecture paragraph ("C `#include`
+/// directives and Rust `mod`/`use` module paths"), conditioned on the ACTUAL
+/// scanned languages — same registry as [`dependency_mechanisms`]. `None`
+/// when no language names an edge kind (the paragraph then falls back to the
+/// generic sentence). Known-language fragments are pinned static text (they
+/// carry backticks that must render as Markdown code spans / literal HTML);
+/// unknown language names are document-derived and go through `escape`.
+#[must_use]
+fn dependency_clause(languages: &[String], escape: impl Fn(&str) -> String) -> Option<String> {
+    let mut parts: Vec<String> = Vec::new();
+    if languages.iter().any(|l| l == "c") {
+        parts.push("C `#include` directives".to_string());
+    }
+    if languages.iter().any(|l| l == "rust") {
+        parts.push("Rust `mod`/`use` module paths".to_string());
+    }
+    if languages.iter().any(|l| l == "python") {
+        parts.push("Python `import` bindings".to_string());
+    }
+    let mut others: Vec<&String> = languages
+        .iter()
+        .filter(|l| l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python")
+        .collect();
+    others.sort();
+    others.dedup();
+    for lang in others {
+        parts.push(format!("{} module edges", escape(lang)));
+    }
+    if parts.is_empty() {
+        None
+    } else {
+        Some(oxford_join(parts))
+    }
+}
+
+/// Full architecture dependency sentence for the scanned languages (shared
+/// by the Markdown §5 and the HTML page): the edge-kind clause names ONLY the
+/// mechanisms of the actual scanned languages ([`dependency_clause`]); with
+/// no clause the generic sentence stands alone. `c + rust` renders
+/// byte-identical to the historical hardcoded sentence.
+#[must_use]
+fn dependency_paragraph(languages: &[String], escape: impl Fn(&str) -> String) -> String {
+    let middle = match dependency_clause(languages, escape) {
+        Some(clause) => format!(" — {clause}"),
+        None => String::new(),
+    };
+    format!(
+        "The dependency graph reflects resolved internal include/module edges \
+         between scanned files{middle}; unresolved internal edges are retained \
+         as data, and external (system headers/crates) dependencies are \
+         excluded from coupling edges.\n",
+    )
 }
 
 /// Caption for registry-confirmed per-component detail pages (orphan links

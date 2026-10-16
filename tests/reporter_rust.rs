@@ -1,6 +1,6 @@
 //! Rust reporter integration tests (plan `rust-backend` R3 workstream D1):
 //! Appendix A catalog coverage for every `PERF-RS-*` rule id and the
-//! language-neutral architecture prose.
+//! language-conditional architecture prose.
 //!
 //! Regression lock for the D1 blocker: before this workstream, any Rust
 //! finding reaching Appendix A hit `unwrap_or_else(|| panic!("uncataloged
@@ -222,7 +222,7 @@ fn rust_appendix_descriptions_are_read_code_accurate() {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn architecture_prose_is_language_neutral_for_rust_only_scan() {
+fn architecture_prose_is_language_conditional_for_rust_only_scan() {
     let findings = vec![rs_finding(
         RS_ALLOC_001_RULE_ID,
         Severity::Hot,
@@ -232,19 +232,21 @@ fn architecture_prose_is_language_neutral_for_rust_only_scan() {
     let report = render_report(&rust_doc(findings), &charts);
     let arch = section(&report, "## 5. Architecture", "## Appendix A.");
 
-    // Both languages' edge kinds are named…
+    // The Rust edge kind is named…
     assert!(
         arch.contains("Rust `mod`/`use` module paths"),
         "Rust module edges not described:\n{arch}"
     );
+    // …and the C-only edge kind is ABSENT (language-conditional prose: a
+    // Rust-only scan must not claim `#include` edges).
     assert!(
-        arch.contains("C `#include` directives"),
-        "C include edges not described:\n{arch}"
+        !arch.contains("C `#include` directives"),
+        "C include edges leaked into a Rust-only scan:\n{arch}"
     );
-    // …the chart caption is language-neutral too…
+    // …the chart caption is language-conditional too…
     assert!(
-        arch.contains("[Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.](charts/include-graph.svg)"),
-        "chart caption not language-neutral:\n{arch}"
+        arch.contains("[Dependency graph — internal mod/use dependencies between scanned files.](charts/include-graph.svg)"),
+        "chart caption not language-conditional:\n{arch}"
     );
     // …and the retired C-only wording is gone.
     assert!(

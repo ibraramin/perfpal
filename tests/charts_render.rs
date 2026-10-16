@@ -325,13 +325,27 @@ fn oversized_graph_is_capped_at_50_with_visible_marker() {
 }
 
 #[test]
-fn call_edges_are_distinctly_styled_with_low_confidence_legend() {
+fn call_edges_fold_into_single_heat_fill_with_low_confidence_legend() {
     let out = render(&calls_doc());
     let svg = svg_of(&out, "component-coupling.svg");
-    assert!(
-        svg.contains("fill=\"#3a3aff\" fill-opacity=\"0.55\""),
-        "call overlay rect missing:\n{svg}"
+    // Exactly one fill rect per cell (n² = 4): no full-cell call overlay may
+    // bury the heat color (a same-size blue@morphism over red reads purple).
+    assert_eq!(
+        svg.matches("<rect ").count(),
+        4,
+        "one heat rect per cell:\n{svg}"
     );
+    assert!(
+        !svg.contains("#3a3aff"),
+        "call overlay rect must be gone:\n{svg}"
+    );
+    // The coupled cell still renders at max heat (include + call weights
+    // folded into the same heat)…
+    assert!(
+        svg.contains("fill=\"#b30000\""),
+        "coupled cell value not rendered at max heat:\n{svg}"
+    );
+    // …with the mandatory ADR-0001 caveat line.
     assert!(
         svg.contains("call edges are LOW-confidence hypotheses (ADR-0001)"),
         "mandatory caveat line missing:\n{svg}"
@@ -680,7 +694,9 @@ fn oversized_component_is_capped_at_50_with_visible_marker() {
     doc.components = Some(vec![component("big", 1, 1.0)]);
     let out = render(&doc);
     let svg = svg_of(&out, "component-01-big.svg");
-    assert_eq!(svg.matches("<rect ").count(), 50, "node cap");
+    // Node rects are 170px wide; the heat-legend swatches are 12px, so a
+    // width-170 count pins the cap without tripping over the legend.
+    assert_eq!(svg.matches("width=\"170\"").count(), 50, "node cap");
     assert!(
         svg.contains("&#8230; 10 more files omitted"),
         "truncation marker missing:\n{svg}"
@@ -779,7 +795,7 @@ fn layered_overviews_are_byte_identical_and_capped() {
     let first = render(&big_doc());
     assert_eq!(first, render(&big_doc()));
     let file = svg_of(&first, "layer-file.svg");
-    assert_eq!(file.matches("<rect ").count(), 50, "node cap");
+    assert_eq!(file.matches("width=\"170\"").count(), 50, "node cap");
     assert!(
         file.contains("&#8230; 10 more files omitted"),
         "truncation marker missing:\n{file}"
@@ -808,7 +824,7 @@ fn layer_file_escapes_hostile_paths_and_highlights_hot_path() {
         "raw unescaped hostile bytes leaked:\n{file}"
     );
     assert!(
-        file.contains("stroke=\"#b30000\" stroke-width=\"2\""),
+        file.contains("stroke=\"#1a1a1a\" stroke-width=\"2\""),
         "hot-path outline missing:\n{file}"
     );
     assert!(

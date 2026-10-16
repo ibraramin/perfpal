@@ -3,17 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>Perfpal Report — schema 1.4</title>
 <style>
 body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
 table{border-collapse:collapse;width:100%;margin:1rem 0}
 th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
 th{background:#eee}
-figure{border:1px solid #999;padding:.5rem;margin:1rem 0}
+#findings table{min-width:72rem}
+#findings tbody td{white-space:nowrap}
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
+figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}
 figcaption{margin-top:.5rem}
 img{max-width:100%;height:auto}
-figure.pz{overflow:hidden}
-figure.pz img{touch-action:none}
+figure.pz img{max-width:none;touch-action:none}
 #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
 #filter-bar{margin:.5rem 0}
 nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
@@ -36,8 +40,8 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <section id="architecture">
 <h2>Architecture</h2>
 <figure class="pz" data-chart="include-graph">
-<a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files."></a>
-<figcaption>Dependency graph — internal #include (C) and mod/use (Rust) dependencies between scanned files.</figcaption>
+<a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal #include, mod/use dependencies between scanned files."></a>
+<figcaption>Dependency graph — internal #include, mod/use dependencies between scanned files.</figcaption>
 </figure>
 <figure class="pz" data-chart="layer-file">
 <a href="charts/layer-file.svg"><img src="charts/layer-file.svg" alt="File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first)."></a>
@@ -59,21 +63,25 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <ul>
 <li><a href="charts/component-01-src.svg">Component detail — per-file hot-path map.</a></li>
 </ul>
-<p>The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.</p>
+<p>The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
+</p>
 <p>Machine-readable graph: <a href="charts/graph.dot">graph.dot</a> — deterministic DOT export of the include/call/component graphs (same source data as the figures above).</p>
 <p>Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).</p>
 </section>
 <section id="components">
 <h2>Component index</h2>
+<div class="table-scroll">
 <table>
 <thead><tr><th>rank</th><th>prefix</th><th>finding density (per KLOC)</th><th>max loop depth</th><th>finding count</th><th>detail</th></tr></thead>
 <tbody>
 <tr id="component-01-src" data-prefix="src"><td>1</td><td>src</td><td>250.00</td><td>1</td><td>9</td><td><a href="charts/component-01-src.svg">detail</a></td></tr>
 </tbody>
 </table>
+</div>
 </section>
 <section id="files">
 <h2>File drill-down</h2>
+<div class="table-scroll">
 <table>
 <thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th></tr></thead>
 <tbody>
@@ -90,27 +98,31 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <a href="#finding-PERF-RS-STR-002-src-lib-rs-23-17">PERF-RS-STR-002:src/lib.rs:23:17</a></td></tr>
 </tbody>
 </table>
+</div>
 </section>
 <section id="findings">
 <h2>Findings</h2>
 <div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<div class="table-scroll">
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-ALLOC-001-src-main-c-27-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:27:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:27:21</td><td>c_loop</td><td>per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td>alloc_site_index=2, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ALLOC-002-src-main-c-29-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:29:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:29:9</td><td>c_loop</td><td>deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td>alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ARCH-003-src-main-c-32-12" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:32:12</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:32:12</td><td>c_loop</td><td>call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td>callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-STR-001-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:28:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td>&#39;strcat&#39; accumulates into &#39;acc&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td>callee=strcat, dest=acc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-STR-003-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:28:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td>unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td>callee=strcat</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-RS-ALLOC-003-src-lib-rs-20-9" data-path="src/lib.rs"><td>PERF-RS-ALLOC-003:src/lib.rs:20:9</td><td>PERF-RS-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:20:9</td><td>build</td><td>&#39;out.reserve&#39; grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization</td><td>callee=out.reserve, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-RS-MEM-001-src-lib-rs-25-22" data-path="src/lib.rs"><td>PERF-RS-MEM-001:src/lib.rs:25:22</td><td>PERF-RS-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:25:22</td><td>build</td><td>&#39;Vec::with_capacity&#39; receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization</td><td>callee=Vec::with_capacity, misuse=size_of_as_element_count</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-RS-STR-002-src-lib-rs-22-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:22:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:22:17</td><td>build</td><td>&#39;s.len&#39; recomputes the length of &#39;s&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td>identifier=s, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-RS-STR-002-src-lib-rs-23-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:23:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:23:17</td><td>build</td><td>&#39;tmp.len&#39; recomputes the length of &#39;tmp&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td>identifier=tmp, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-001-src-main-c-27-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:27:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:27:21</td><td>c_loop</td><td class="wrap">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=2, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-002-src-main-c-29-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:29:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:29:9</td><td>c_loop</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ARCH-003-src-main-c-32-12" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:32:12</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:32:12</td><td>c_loop</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-STR-001-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:28:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td class="wrap">&#39;strcat&#39; accumulates into &#39;acc&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td class="wrap">callee=strcat, dest=acc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-STR-003-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:28:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td class="wrap">unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td class="wrap">callee=strcat</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-ALLOC-003-src-lib-rs-20-9" data-path="src/lib.rs"><td>PERF-RS-ALLOC-003:src/lib.rs:20:9</td><td>PERF-RS-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:20:9</td><td>build</td><td class="wrap">&#39;out.reserve&#39; grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization</td><td class="wrap">callee=out.reserve, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-MEM-001-src-lib-rs-25-22" data-path="src/lib.rs"><td>PERF-RS-MEM-001:src/lib.rs:25:22</td><td>PERF-RS-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:25:22</td><td>build</td><td class="wrap">&#39;Vec::with_capacity&#39; receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization</td><td class="wrap">callee=Vec::with_capacity, misuse=size_of_as_element_count</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-STR-002-src-lib-rs-22-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:22:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:22:17</td><td>build</td><td class="wrap">&#39;s.len&#39; recomputes the length of &#39;s&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=s, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-RS-STR-002-src-lib-rs-23-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:23:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:23:17</td><td>build</td><td class="wrap">&#39;tmp.len&#39; recomputes the length of &#39;tmp&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=tmp, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
+</div>
 </section>
 <section id="appendix-a">
 <h2>Appendix A. Heuristic reference</h2>
+<div class="table-scroll">
 <table>
 <thead><tr><th>rule_id</th><th>title</th><th>description</th></tr></thead>
 <tbody>
@@ -124,6 +136,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <tr><td>PERF-RS-STR-002</td><td>Length query recomputed in loop (Rust)</td><td>Detects `len`/`is_empty`/`capacity` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop.</td></tr>
 </tbody>
 </table>
+</div>
 </section>
 <footer>
 <p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
