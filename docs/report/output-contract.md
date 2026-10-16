@@ -47,7 +47,7 @@ Layout rules:
 | Raw data | `metrics.json` | Fixed name. |
 | Schema copy | `metrics.schema.v<MAJOR>.<MINOR>.json` | Full version always — `schema_version: "1.2"` ⇒ `metrics.schema.v1.2.json` (no elided `.0`; avoids ambiguity between "v1" = 1.0 vs the 1.x series). The file is a byte-copy of the canonical schema artifact for that version, per the per-minor re-emission policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). |
 | Human report | `report.md` | Fixed name. |
-| HTML report | `report.html` | Fixed name (Option B slice 2). Static, self-contained, LINKED variant plus exactly ONE inline `<script>` block with a FIXED hand-rolled source (no libraries, no vendoring, under 60 lines — byte-identical every render, so the file stays byte-identical across runs UNMASKED): pan/zoom over the `layer-workspace`/`layer-file` figures (drag + wheel + buttons via CSS transforms on the existing linked `<img>` — SVGs never inlined, no data duplicated for JS) and click-to-filter on the findings table (component/file row clicks hide non-matching rows via `hidden` over already-rendered DOM `data-*` keys, with a visible `filter: X — clear` reset control; no re-fetch, no network). Safety: no `Date`/`random`/`fetch`/XHR/`eval`/`Function(`/string-arg timers/`innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write` (interpolated strings pass through the shared escaper at RENDER time; the script only reads `data-*` and writes `textContent`/`hidden`/style), no inline event-handler attributes (all binding via `addEventListener`), row clicks originating inside an inner `a[href]` never filter (bubbling guard — following a link never also filters), fully usable with JS disabled (all rows/figures present statically — the script only enhances), and fully offline (no external refs). Header carries schema/file/finding counts only — no timestamps, durations, or absolute paths. Contents: header, architecture figures mirroring the §5 chart links (overview links allowlisted to the five known stems — unknown stems never become links; every stem/filename escaped at the interpolation site; same exact-registry detail routing; layer figures carry the `figure.pz` pan/zoom hook), component index with detail-page links (rows carry `data-prefix` click keys), file drill-down (top-10 by degree desc/cost desc/path asc + finding_id lists, rows carry `data-path` click keys, with a `…+N more (see findings table)` marker when capped), findings table (full §4 parity: `finding_id`/rule/severity/confidence/resolver/location/symbol/message/evidence/threshold/flags, `finding_id`-ascending; evidence keys and values escaped; rows carry `data-path` filter keys; filter bar with `all findings` label + `clear` reset), Appendix A. Drill-down anchors link component → file → finding via deterministic collision-free `id` anchors (first colliding slug keeps the bare form, later uses get `-2`, `-3`, … in sorted order). All interpolated paths/titles/messages pass through the reporter's shared HTML escaper. Consumers tolerate its absence (pre-slice-1 directories); charts/`metrics.json` remain the data sources, never the HTML. |
+| HTML report | `report.html` | Fixed name (Option B slice 2). Static, self-contained, LINKED variant plus exactly ONE inline `<script>` block with a FIXED hand-rolled source (no libraries, no vendoring, under 60 lines — byte-identical every render, so the file stays byte-identical across runs UNMASKED): pan/zoom over the `layer-workspace`/`layer-file` figures (drag + wheel + buttons via CSS transforms on the existing linked `<img>` — SVGs never inlined, no data duplicated for JS) and click-to-filter on the findings table (component/file row clicks hide non-matching rows via `hidden` over already-rendered DOM `data-*` keys, with a visible `filter: X — clear` reset control; no re-fetch, no network). Safety: no `Date`/`random`/`fetch`/XHR/`eval`/`Function(`/string-arg timers/`innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write` (interpolated strings pass through the shared escaper at RENDER time; the script only reads `data-*` and writes `textContent`/`hidden`/style), no inline event-handler attributes (all binding via `addEventListener`), row clicks originating inside an inner `a[href]` never filter (bubbling guard — following a link never also filters), fully usable with JS disabled (all rows/figures present statically — the script only enhances), and fully offline (no external refs). Header carries schema/file/finding counts only — no timestamps, durations, or absolute paths. Contents: header, architecture figures mirroring the §5 chart links (overview links allowlisted to the five known stems — unknown stems never become links; every stem/filename escaped at the interpolation site; same exact-registry detail routing; layer figures carry the `figure.pz` pan/zoom hook), component index with detail-page links (rows carry `data-prefix` click keys), file drill-down (top-10 by degree desc/cost desc/path asc + finding_id lists, rows carry `data-path` click keys, with a `…+N more (see findings table)` marker when capped), findings section (group-and-fold: one `<details><summary>` group per firing rule in severity-rank → count-desc → rule_id-asc order — summary carries rule + count + hot/warn/info split + top-exemplar link; each group expands to that rule's rows in the full-table markup: `finding_id`/rule/severity/confidence/resolver/location/symbol/message/evidence/threshold/flags, members `finding_id`-ascending; evidence keys and values escaped; rows carry `data-path` filter keys; honest `<R> rules: <N> of <M> total findings` header; filter bar with `all findings` label + `clear` reset; fully usable with JS disabled — every row present statically), Appendix A. Drill-down anchors link component → file → finding via deterministic collision-free `id` anchors (first colliding slug keeps the bare form, later uses get `-2`, `-3`, … in sorted order). All interpolated paths/titles/messages pass through the reporter's shared HTML escaper. Consumers tolerate its absence (pre-slice-1 directories); charts/`metrics.json` remain the data sources, never the HTML. |
 | Charts | `charts/<name>.svg` | `<name>` matches `[a-z0-9]+(-[a-z0-9]+)*` (kebab-case ASCII). No timestamps, counters, or input-derived suffixes — the same chart has the same name across runs so directories can be diffed. |
 | Component pages | `charts/component-<rank>-<slug>.svg` | One page per capped component (same rank ≤ 50 + top-50 cap as the overview component charts), in `(rank, path_prefix)` order after the overviews. `<rank>` is the zero-padded component rank (`01`–`50`); `<slug>` is the lowercased `path_prefix` with every non-`[a-z0-9]` run collapsed to a single `-` (the `"."` root ⇒ `root`). Each page keeps the top-50 files by INTRA-component degree (edges with both endpoints in the component — cross-component edges never influence the ranking). A file-less component yields a deterministic stub page (`no files recorded`), never an omission. |
 | Layered overviews | `charts/layer-workspace.svg`, `charts/layer-file.svg` | Option A slice 2 zoom levels, in emission order after the three v1 overviews and before the component pages. `layer-workspace.svg` shows capped components as nodes over aggregated inter-component call/include edges (heat = finding density per KLOC); emitted whenever `components` is present (deterministic `no components recorded` stub when empty). `layer-file.svg` shows top files by degree over the include DAG (heat = per-file function cost; the hot-path highlight outlines a SINGLE file — highest cost among the drawn files, ties → path-asc first, caption states the post-cap scope); emitted whenever `graphs` is present (deterministic `no files recorded` stub when the node list is empty). Same top-50 caps, same byte-determinism bar as every other chart. Honest coverage note: the per-component pages draw intra-component file edges only and the workspace draws aggregates, so a cross-component FILE edge is currently visible ONLY as an aggregated component-level edge — in neither the workspace nor any detail page. The middle "files-under-component-bands" layer that would draw those edges across bands was deliberately NOT built in this slice; it is recorded as an explicit follow-up third layer, never a silent reshape of these two. |
@@ -102,18 +102,22 @@ distributions from stats.distributions (complexity buckets, loop depth,
 function length) rendered as compact tables.
 
 ## 4. Findings
-Grouped by severity: hot → warn → info. Within a group sorted by
-confidence (HIGH → MEDIUM → LOW), then rule_id, then path, then
-span.start_line, then span.start_col — a total order. When `findings`
-is empty, this section renders a single line: "No findings." Each
-finding renders as:
+Group-and-fold summary: ONE row per firing rule plus an honest header
+line `<R> rules: <N> of <M> total findings (<h> hot, <w> warn, <i> info).`
+`N` always equals `M` today — every finding is represented via its rule
+group — so a future row cap cannot silently drop findings without breaking
+the header. Row columns: rule_id, finding count, hot/warn/info split, and
+the top exemplar (the first finding in `finding_id` order, cited by exact
+`finding_id` + `path:start_line:start_col` — the unambiguous three-part
+location, never a range — so it cross-references Appendix C
+mechanically). When `findings` is empty, this section renders a single
+line: "No findings." The uncapped per-finding detail lives in Appendix C.
 
-#### <title>  (`finding_id`)
-- Location: `path:start_line` (symbol, if present)
-- Message: <message verbatim>
-- Confidence / severity / resolver_tier
-- Flags: macro_suspect, error_node_overlap (only when true)
-- Evidence: key/value list from evidence (only when present)
+Group order (binding, deterministic): severity-rank ascending — the hottest
+severity present in the group first (`hot` 0 → `warn` 1 → `info` 2) — then
+member count descending, then `rule_id` ascending. Members within a group
+are in `finding_id`-ascending order regardless of analyzer emission order,
+so exemplars are deterministic.
 
 ## 5. Architecture
 Embedded charts via relative links (charts/<name>.svg), each with a
@@ -136,11 +140,28 @@ present in this report's findings.
 Confidence/severity semantics (catalog §1, §6); optimization-candidate
 framing — findings are candidates for review, never certainties;
 pointer to metrics.json + bundled schema for programmatic consumption.
+
+## Appendix C. All findings (full detail)
+The uncapped per-finding detail the §4 summary folds: an honest
+`<N> of <M> total findings.` header (always agreeing with §4 today) plus
+every finding rendered in full in the legacy total order (stable severity
+partition hot → warn → info; document order within a group):
+
+#### <title>  (`finding_id`)
+- Location: `path:start_line` (symbol, if present)
+- Message: <message verbatim>
+- Confidence / severity / resolver_tier
+- Flags: macro_suspect, error_node_overlap (only when true)
+- Evidence: key/value list from evidence (only when present)
+
+When `findings` is empty, this section renders a single line:
+"No findings." Kept behind a separate renderer by design: the future
+option-C artifact split promotes this section into its own artifact.
 ```
 
 Determinism rules:
 
-- Ordering above is total and depends only on `metrics.json` content — same input ⇒ same section content byte-for-byte, except provenance values (`started_at`, `duration_ms`) which legitimately vary between runs. This presupposes deterministic `files[]` ordering in `metrics.json` (scanner responsibility: emit sorted by path).
+- Ordering above is total and depends only on `metrics.json` content — same input ⇒ same section content byte-for-byte, except provenance values (`started_at`, `duration_ms`) which legitimately vary between runs. This presupposes deterministic `files[]` ordering in `metrics.json` (scanner responsibility: emit sorted by path). Finding-group order (§4 rows, `#findings` groups) never depends on analyzer emission order: groups sort by severity-rank → count-desc → `rule_id`-asc and members by `finding_id`-asc.
 - Fields that are optional in the schema (`duration_ms`, `loc_total`, `parse_health_summary`, `stats.distributions`, `graphs`, `components`) render as `n/a` inline or cause their clause/table to be omitted; the report remains well-formed on a trivial scan.
 - Findings are cited by their exact `finding_id` strings so consumers can cross-reference `report.md` ↔ `metrics.json` mechanically ([identity format](../schema/metrics-json-v1.md#4-finding-identity)).
 

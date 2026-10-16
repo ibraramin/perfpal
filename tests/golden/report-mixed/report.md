@@ -62,6 +62,62 @@ Distribution — max\_loop\_depth:
 | 6\+ | 0 |
 
 ## 4. Findings
+8 rules: 9 of 9 total findings (4 hot, 4 warn, 1 info).
+
+| rule_id | findings | hot | warn | info | top exemplar |
+|---|---:|---:|---:|---:|---|
+| `PERF\-C\-ALLOC\-001` | 1 | 1 | 0 | 0 | Heap allocation inside loop (`PERF\-C\-ALLOC\-001:src/main\.c:27:21`) — `src/main\.c:27:21` |
+| `PERF\-C\-ALLOC\-002` | 1 | 1 | 0 | 0 | Deallocation inside loop (`PERF\-C\-ALLOC\-002:src/main\.c:29:9`) — `src/main\.c:29:9` |
+| `PERF\-C\-STR\-001` | 1 | 1 | 0 | 0 | String accumulation in loop (`PERF\-C\-STR\-001:src/main\.c:28:9`) — `src/main\.c:28:9` |
+| `PERF\-RS\-ALLOC\-003` | 1 | 1 | 0 | 0 | Growable\-buffer additive growth in loop \(Rust\) (`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`) — `src/lib\.rs:20:9` |
+| `PERF\-RS\-STR\-002` | 2 | 0 | 2 | 0 | Length query recomputed in loop \(Rust\) (`PERF\-RS\-STR\-002:src/lib\.rs:22:17`) — `src/lib\.rs:22:17` |
+| `PERF\-C\-STR\-003` | 1 | 0 | 1 | 0 | Unbounded string operation (`PERF\-C\-STR\-003:src/main\.c:28:9`) — `src/main\.c:28:9` |
+| `PERF\-RS\-MEM\-001` | 1 | 0 | 1 | 0 | size\_of passed as an element count \(Rust\) (`PERF\-RS\-MEM\-001:src/lib\.rs:25:22`) — `src/lib\.rs:25:22` |
+| `PERF\-C\-ARCH\-003` | 1 | 0 | 0 | 1 | Cross\-file call coupling (`PERF\-C\-ARCH\-003:src/main\.c:32:12`) — `src/main\.c:32:12` |
+
+## 5. Architecture
+[Dependency graph — internal #include, mod/use dependencies between scanned files.](charts/include-graph.svg)
+[File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
+[Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
+[Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
+[Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)
+
+Component ranking (hottest first):
+
+| component | path prefix | rank | finding density (per KLOC) |
+|---|---|---:|---:|
+| src | src | 1 | 250.00 |
+
+Component detail pages (one per component above):
+
+[Component src — per-file hot-path map.](charts/component-01-src.svg)
+
+The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
+Coupling heat blends edge counts with per-function cost (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count + call fanout/fanin/depth, +2 if recursive, +1 each for error_path / alloc_family; each edge weighs 1 + mean endpoint cost normalized by the scan maximum) — charts remain pure functions of metrics.json.
+Machine-readable graph: [graph.dot](charts/graph.dot) — deterministic DOT export of the include/call/component graphs (same source data as the SVGs above).
+Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).
+
+## Appendix A. Heuristic reference
+| rule_id | title | description |
+|---|---|---|
+| `PERF\-C\-ALLOC\-001` | Heap allocation inside loop | Detects malloc/calloc/realloc/aligned\_alloc/strdup calls nested anywhere inside a loop body\. |
+| `PERF\-C\-ALLOC\-002` | \`free\(\)\` inside loop | Detects free\(\) directly inside a loop body \(paired with ALLOC\-001 it indicates allocator churn\)\. |
+| `PERF\-C\-ARCH\-003` | Cross\-file call coupling \(name\-based\) | Detects cross\-file call edges via name matching — LOW confidence until a semantic resolver tier exists\. |
+| `PERF\-C\-STR\-001` | String accumulation in loop \(\`strcat\` family\) | Detects strcat/strncat with a destination reused across loop iterations \(O\(n²\) rescan\)\. |
+| `PERF\-C\-STR\-003` | Unbounded copy family \(\`strcpy\`/\`sprintf\`/\`gets\`\) | Detects unbounded copy calls \(strcpy, strcat, sprintf, gets, scanf %s\) — unbounded\-latency hotspots\. |
+| `PERF\-RS\-ALLOC\-003` | Growable\-buffer additive growth in loop \(Rust\) | REFRAMED for Rust \(no \`realloc\`\): detects additive \`reserve\`/\`reserve\_exact\` capacity growth inside a loop — the \`realloc\(p, n\+k\)\` analogue; multiplicative capacity growth is the fix, not the finding\. |
+| `PERF\-RS\-MEM\-001` | size\_of passed as an element count \(Rust\) | REFRAMED for Rust: detects \`Vec::with\_capacity\`/\`String::with\_capacity\` receiving a \`size\_of\`/\`size\_of\_val\` byte count where an element count is expected \(over\-reserves by the element size\)\. |
+| `PERF\-RS\-STR\-002` | Length query recomputed in loop \(Rust\) | Detects \`len\`/\`is\_empty\`/\`capacity\` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop\. |
+
+## Appendix B. How to read this report
+**Severity** bands (`hot`, `warn`, `info`) rank expected runtime or architecture impact: review `hot` findings first, schedule `warn`, and treat `info` as context signal feeding aggregation.
+**Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
+Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
+For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.4.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.
+
+## Appendix C. All findings (full detail)
+9 of 9 total findings.
+
 #### Heap allocation inside loop  (`PERF\-C\-ALLOC\-001:src/main\.c:27:21`)
 - Location: `src/main\.c:27` (c\_loop)
 - Message: per\-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization
@@ -109,43 +165,3 @@ Distribution — max\_loop\_depth:
 - Message: 'Vec::with\_capacity' receives a \`size\_of\` byte count where an element COUNT is expected — that over\-reserves by a factor of the element size; passing the element count is a candidate optimization
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=Vec::with\_capacity, misuse=size\_of\_as\_element\_count
-
-## 5. Architecture
-[Dependency graph — internal #include, mod/use dependencies between scanned files.](charts/include-graph.svg)
-[File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
-[Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
-[Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
-[Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)
-
-Component ranking (hottest first):
-
-| component | path prefix | rank | finding density (per KLOC) |
-|---|---|---:|---:|
-| src | src | 1 | 250.00 |
-
-Component detail pages (one per component above):
-
-[Component src — per-file hot-path map.](charts/component-01-src.svg)
-
-The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives and Rust `mod`/`use` module paths; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
-Coupling heat blends edge counts with per-function cost (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count + call fanout/fanin/depth, +2 if recursive, +1 each for error_path / alloc_family; each edge weighs 1 + mean endpoint cost normalized by the scan maximum) — charts remain pure functions of metrics.json.
-Machine-readable graph: [graph.dot](charts/graph.dot) — deterministic DOT export of the include/call/component graphs (same source data as the SVGs above).
-Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).
-
-## Appendix A. Heuristic reference
-| rule_id | title | description |
-|---|---|---|
-| `PERF\-C\-ALLOC\-001` | Heap allocation inside loop | Detects malloc/calloc/realloc/aligned\_alloc/strdup calls nested anywhere inside a loop body\. |
-| `PERF\-C\-ALLOC\-002` | \`free\(\)\` inside loop | Detects free\(\) directly inside a loop body \(paired with ALLOC\-001 it indicates allocator churn\)\. |
-| `PERF\-C\-ARCH\-003` | Cross\-file call coupling \(name\-based\) | Detects cross\-file call edges via name matching — LOW confidence until a semantic resolver tier exists\. |
-| `PERF\-C\-STR\-001` | String accumulation in loop \(\`strcat\` family\) | Detects strcat/strncat with a destination reused across loop iterations \(O\(n²\) rescan\)\. |
-| `PERF\-C\-STR\-003` | Unbounded copy family \(\`strcpy\`/\`sprintf\`/\`gets\`\) | Detects unbounded copy calls \(strcpy, strcat, sprintf, gets, scanf %s\) — unbounded\-latency hotspots\. |
-| `PERF\-RS\-ALLOC\-003` | Growable\-buffer additive growth in loop \(Rust\) | REFRAMED for Rust \(no \`realloc\`\): detects additive \`reserve\`/\`reserve\_exact\` capacity growth inside a loop — the \`realloc\(p, n\+k\)\` analogue; multiplicative capacity growth is the fix, not the finding\. |
-| `PERF\-RS\-MEM\-001` | size\_of passed as an element count \(Rust\) | REFRAMED for Rust: detects \`Vec::with\_capacity\`/\`String::with\_capacity\` receiving a \`size\_of\`/\`size\_of\_val\` byte count where an element count is expected \(over\-reserves by the element size\)\. |
-| `PERF\-RS\-STR\-002` | Length query recomputed in loop \(Rust\) | Detects \`len\`/\`is\_empty\`/\`capacity\` recomputed inside a loop where the receiver is not reassigned in the innermost enclosing loop\. |
-
-## Appendix B. How to read this report
-**Severity** bands (`hot`, `warn`, `info`) rank expected runtime or architecture impact: review `hot` findings first, schedule `warn`, and treat `info` as context signal feeding aggregation.
-**Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
-Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
-For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.4.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.

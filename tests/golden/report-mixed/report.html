@@ -21,6 +21,10 @@ figure.pz img{max-width:none;touch-action:none}
 #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
 #filter-bar{margin:.5rem 0}
 nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -103,22 +107,96 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <section id="findings">
 <h2>Findings</h2>
 <div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>8 rules: 9 of 9 total findings (4 hot, 4 warn, 1 info).</p>
+<details>
+<summary><code>PERF-C-ALLOC-001</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-ALLOC-001-src-main-c-27-21">PERF-C-ALLOC-001:src/main.c:27:21</a></summary>
 <div class="table-scroll">
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
 <tr id="finding-PERF-C-ALLOC-001-src-main-c-27-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:27:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:27:21</td><td>c_loop</td><td class="wrap">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=2, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-ALLOC-002</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-ALLOC-002-src-main-c-29-9">PERF-C-ALLOC-002:src/main.c:29:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-ALLOC-002-src-main-c-29-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:29:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:29:9</td><td>c_loop</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ARCH-003-src-main-c-32-12" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:32:12</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:32:12</td><td>c_loop</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-STR-001</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-STR-001-src-main-c-28-9">PERF-C-STR-001:src/main.c:28:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-STR-001-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:28:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td class="wrap">&#39;strcat&#39; accumulates into &#39;acc&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td class="wrap">callee=strcat, dest=acc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-STR-003-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:28:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td class="wrap">unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td class="wrap">callee=strcat</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-RS-ALLOC-003</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9">PERF-RS-ALLOC-003:src/lib.rs:20:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-RS-ALLOC-003-src-lib-rs-20-9" data-path="src/lib.rs"><td>PERF-RS-ALLOC-003:src/lib.rs:20:9</td><td>PERF-RS-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:20:9</td><td>build</td><td class="wrap">&#39;out.reserve&#39; grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization</td><td class="wrap">callee=out.reserve, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-RS-MEM-001-src-lib-rs-25-22" data-path="src/lib.rs"><td>PERF-RS-MEM-001:src/lib.rs:25:22</td><td>PERF-RS-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:25:22</td><td>build</td><td class="wrap">&#39;Vec::with_capacity&#39; receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization</td><td class="wrap">callee=Vec::with_capacity, misuse=size_of_as_element_count</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-RS-STR-002</code> — 2 findings (0 hot, 2 warn, 0 info); top exemplar: <a href="#finding-PERF-RS-STR-002-src-lib-rs-22-17">PERF-RS-STR-002:src/lib.rs:22:17</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-RS-STR-002-src-lib-rs-22-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:22:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:22:17</td><td>build</td><td class="wrap">&#39;s.len&#39; recomputes the length of &#39;s&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=s, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 <tr id="finding-PERF-RS-STR-002-src-lib-rs-23-17" data-path="src/lib.rs"><td>PERF-RS-STR-002:src/lib.rs:23:17</td><td>PERF-RS-STR-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/lib.rs:23:17</td><td>build</td><td class="wrap">&#39;tmp.len&#39; recomputes the length of &#39;tmp&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</td><td class="wrap">identifier=tmp, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
+</details>
+<details>
+<summary><code>PERF-C-STR-003</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-C-STR-003-src-main-c-28-9">PERF-C-STR-003:src/main.c:28:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-STR-003-src-main-c-28-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:28:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:28:9</td><td>c_loop</td><td class="wrap">unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td class="wrap">callee=strcat</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-RS-MEM-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-RS-MEM-001-src-lib-rs-25-22">PERF-RS-MEM-001:src/lib.rs:25:22</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-RS-MEM-001-src-lib-rs-25-22" data-path="src/lib.rs"><td>PERF-RS-MEM-001:src/lib.rs:25:22</td><td>PERF-RS-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/lib.rs:25:22</td><td>build</td><td class="wrap">&#39;Vec::with_capacity&#39; receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization</td><td class="wrap">callee=Vec::with_capacity, misuse=size_of_as_element_count</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-ARCH-003</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-C-ARCH-003-src-main-c-32-12">PERF-C-ARCH-003:src/main.c:32:12</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-ARCH-003-src-main-c-32-12" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:32:12</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:32:12</td><td>c_loop</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
 </section>
 <section id="appendix-a">
 <h2>Appendix A. Heuristic reference</h2>

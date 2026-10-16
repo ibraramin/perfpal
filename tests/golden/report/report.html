@@ -21,6 +21,10 @@ figure.pz img{max-width:none;touch-action:none}
 #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
 #filter-bar{margin:.5rem 0}
 nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -109,28 +113,152 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <section id="findings">
 <h2>Findings</h2>
 <div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>13 rules: 15 of 15 total findings (7 hot, 6 warn, 2 info).</p>
+<details>
+<summary><code>PERF-C-ALLOC-001</code> — 2 findings (2 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001:src/main.c:34:21</a></summary>
 <div class="table-scroll">
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
 <tr id="finding-PERF-C-ALLOC-001-src-main-c-34-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:34:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:34:21</td><td>process</td><td class="wrap">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 <tr id="finding-PERF-C-ALLOC-001-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:73:15</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td class="wrap">per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=realloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-ALLOC-002</code> — 2 findings (1 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-C-ALLOC-002-src-main-c-37-9">PERF-C-ALLOC-002:src/main.c:37:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-ALLOC-002-src-main-c-37-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:37:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:37:9</td><td>process</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 <tr id="finding-PERF-C-ALLOC-002-src-main-c-44-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:44:9</td><td>PERF-C-ALLOC-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:44:9</td><td>drain</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-ALLOC-003</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-ALLOC-003-src-main-c-73-15">PERF-C-ALLOC-003:src/main.c:73:15</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-ALLOC-003-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-003:src/main.c:73:15</td><td>PERF-C-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td class="wrap">&#39;realloc&#39; grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=realloc, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-ARCH-002</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-ARCH-002-src-main-c-84-1">PERF-C-ARCH-002:src/main.c:84:1</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-ARCH-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-ARCH-002:src/main.c:84:1</td><td>PERF-C-ARCH-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td class="wrap">directory &#39;src&#39; aggregates complexity 42 across 12 function(s) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization</td><td class="wrap">alloc_site_density=39.2156862745098, complexity_sum=42, function_count=12, max_loop_depth=3, path_prefix=src</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ARCH-003-src-main-c-127-20" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:127:20</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:127:20</td><td>main</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-CALL-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-CALL-002:src/main.c:84:1</td><td>PERF-C-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td class="wrap">&#39;dispatch&#39; branches 23 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td class="wrap">complexity=23, function=dispatch, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
-<tr id="finding-PERF-C-LOOP-001-src-main-c-61-13" data-path="src/main.c"><td>PERF-C-LOOP-001:src/main.c:61:13</td><td>PERF-C-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:61:13</td><td>deep_sum</td><td class="wrap">loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or adding early exits is a candidate optimization</td><td class="wrap">max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-LOOP-002</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-LOOP-002-src-main-c-80-9">PERF-C-LOOP-002:src/main.c:80:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-LOOP-002-src-main-c-80-9" data-path="src/main.c"><td>PERF-C-LOOP-002:src/main.c:80:9</td><td>PERF-C-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:80:9</td><td>report</td><td class="wrap">&#39;printf&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td class="wrap">callee=printf, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-LOOP-004-src-main-c-62-24" data-path="src/main.c"><td>PERF-C-LOOP-004:src/main.c:62:24</td><td>PERF-C-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:62:24</td><td>deep_sum</td><td class="wrap">&#39;/&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td class="wrap">divisor=d, divisor_kind=identifier, op=/</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-MEM-001-src-main-c-118-19" data-path="src/main.c"><td>PERF-C-MEM-001:src/main.c:118:19</td><td>PERF-C-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:118:19</td><td>clone_row</td><td class="wrap">&#39;malloc&#39; size argument carries a sizeof misuse shape (pointer_param_sizeof) — the allocated byte count likely does not match the element type; sizing by the pointee type is a candidate fix</td><td class="wrap">callee=malloc, misuse=pointer_param_sizeof</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-STR-001</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="#finding-PERF-C-STR-001-src-main-c-52-9">PERF-C-STR-001:src/main.c:52:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-STR-001-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:52:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td class="wrap">&#39;strcat&#39; accumulates into &#39;out&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td class="wrap">callee=strcat, dest=out, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-CALL-002</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-C-CALL-002-src-main-c-84-1">PERF-C-CALL-002:src/main.c:84:1</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-CALL-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-CALL-002:src/main.c:84:1</td><td>PERF-C-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td class="wrap">&#39;dispatch&#39; branches 23 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td class="wrap">complexity=23, function=dispatch, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-LOOP-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-C-LOOP-001-src-main-c-61-13">PERF-C-LOOP-001:src/main.c:61:13</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-LOOP-001-src-main-c-61-13" data-path="src/main.c"><td>PERF-C-LOOP-001:src/main.c:61:13</td><td>PERF-C-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:61:13</td><td>deep_sum</td><td class="wrap">loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or adding early exits is a candidate optimization</td><td class="wrap">max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-MEM-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-C-MEM-001-src-main-c-118-19">PERF-C-MEM-001:src/main.c:118:19</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-MEM-001-src-main-c-118-19" data-path="src/main.c"><td>PERF-C-MEM-001:src/main.c:118:19</td><td>PERF-C-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:118:19</td><td>clone_row</td><td class="wrap">&#39;malloc&#39; size argument carries a sizeof misuse shape (pointer_param_sizeof) — the allocated byte count likely does not match the element type; sizing by the pointee type is a candidate fix</td><td class="wrap">callee=malloc, misuse=pointer_param_sizeof</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-STR-003</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-C-STR-003-src-main-c-52-9">PERF-C-STR-003:src/main.c:52:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-STR-003-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:52:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td class="wrap">unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td class="wrap">callee=strcat</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-TYPE-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-C-TYPE-001-src-main-c-113-1">PERF-C-TYPE-001:src/main.c:113:1</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
 <tr id="finding-PERF-C-TYPE-001-src-main-c-113-1" data-path="src/main.c"><td>PERF-C-TYPE-001:src/main.c:113:1</td><td>PERF-C-TYPE-001</td><td>warn</td><td>LOW</td><td>syntactic</td><td>src/main.c:113:1</td><td>weigh</td><td class="wrap">parameters &#39;struct Big b&#39; (struct &#39;Big&#39;, ~48 bytes) are copied by value on every call under the LP64 estimate — passing pointers or taking the structs by reference is a candidate optimization</td><td class="wrap">estimated_sizes=48, params=struct Big b, structs=Big, threshold=32</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
+</details>
+<details>
+<summary><code>PERF-C-ARCH-003</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-C-ARCH-003-src-main-c-127-20">PERF-C-ARCH-003:src/main.c:127:20</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-ARCH-003-src-main-c-127-20" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:127:20</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:127:20</td><td>main</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-C-LOOP-004</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-C-LOOP-004-src-main-c-62-24">PERF-C-LOOP-004:src/main.c:62:24</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-C-LOOP-004-src-main-c-62-24" data-path="src/main.c"><td>PERF-C-LOOP-004:src/main.c:62:24</td><td>PERF-C-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:62:24</td><td>deep_sum</td><td class="wrap">&#39;/&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td class="wrap">divisor=d, divisor_kind=identifier, op=/</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
 </section>
 <section id="appendix-a">
 <h2>Appendix A. Heuristic reference</h2>

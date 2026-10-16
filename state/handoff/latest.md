@@ -1,97 +1,88 @@
 # Handoff — Latest
 
 ## Objective
-Session 48 vision burst — founder restored the vision backend; ran the **owed pixel
-reviews** (5 golden SVGs + golden/hyperfine/bat report screenshots), fixed all 8 BLOCKERs +
-safe nits in two parallel lanes + one touch-up, and received **founder demo feedback**
-(data insightful, presentation overwhelming) which re-scoped the next boundary to
-**human-digestibility research**. Ablation campaign parked; paper track still PARKED; M5 gated.
+Session-49 digestibility burst — founder chose **B morphing into C**: researched 8 industry
+patterns, built **group-and-fold** (§4 one-row-per-rule + App.C full detail + `<details>`
+groups, C-split seamed via preserved separate fns), fixed vision-flagged residuals, verified
+behind high-assurance gates. Commit pending as the closing step of this burst.
 
 ## Phase
-POST-MVP. `divergence-revamp` instrument + usefulness ✅ (prior session, committed
-`e05c2bc → a80fd78`); **vision-defect fix burst ✅ (uncommitted, 40 files, pending founder
-commit approval)**; digestibility-research NEXT (A-pf-081); ablation PARKED (A-pf-078);
-paper/stats/Zenodo/draft PARKED; `evidence-beta` M1–M4 ✅ + deep dive ✅; M5 parked.
+POST-MVP. `divergence-revamp` instrument + usefulness ✅; vision-defect burst COMMITTED
+`9a8766b`; **group-and-fold B ✅ (uncommitted → committing now)**; C-split FUTURE (A-pf-083);
+ablation PARKED; paper PARKED; `evidence-beta` M1–M4 ✅ + deep dive ✅; M5 parked.
 
 ## Alignment (L6)
 - **Goal restated:** Perfpal is a CLI (Rust) that scans a codebase and emits (a) language performance
   heuristics, (b) architecture-level bottleneck visualization, and (c) LLM-consumable quantified
   metrics, so humans see bottlenecks and LLMs optimize with explicit signals (`docs/NORTH-STAR.md`).
-- **Phase restated:** POST-MVP, `stage: dev`; pixel fidelity of the human-visible bottleneck view
-  (pillar 2) repaired behind high-assurance gates; founder verdict redirects next effort from
-  measurement (ablation) to human-digestibility research.
-- **How this session serves the north-star:** made the bottleneck visualizations and report
-  actually readable (contrast, clipping, overflow, table crush) — pillar 2 legibility — and
-  converted founder feedback into a scoped research boundary.
-- **Drift flag: NONE.** Digestibility focus + ablation deferral are founder-directed. Audit counter
-  8 → 9 (threshold 10; not due).
+- **Phase restated:** POST-MVP, `stage: dev`; human-digestibility of the findings report repaired
+  (fold, don't just shorten) while the machine artifact stays complete — both audiences served.
+- **How this session serves the north-star:** §4 went from 26,089-row wall to 19 scannable rule
+  groups on django (4175×), exemplars front-and-center, totals honest — humans get verdicts,
+  LLMs keep every row in App.C/metrics.json.
+- **Drift flag: NONE.** B-now/C-later is founder-directed (D-pf-209). **Audit counter hit 10/10 —
+  alignment audit DUE at next session start.**
 
-## This session — work summary (UNCOMMITTED, pending approval)
-1. **Vision restored** — founder fixed the backend (`deepseek-v4-flash-vision-exp` missing all
-   prior session). A-pf-076 now closable.
-2. **vis-1 (SVG pixels):** 5 golden charts → 4 BLOCKERs (coupling caption clipped at x=253,
-   coupling cell purple rgb(113,32,140), hot-components no title/axis/scale, black-on-red 2.92:1)
-   + 7 nits. **vis-2 (page screenshots):** golden full-page + hyperfine/bat viewports → 4 BLOCKERs
-   (bat page-level overflow, findings-table crush/garble, unreadable arch diagrams, django 18.7MB
-   unrenderable) + nits. The two passes corroborated each other.
-3. **Lane A (charts, background fixer):** `heat_ink()` white labels, fitted canvases, single-fill
-   coupling (367px), hot-components title+scale, `#ffffff` hot outline, legends, empty-`<g>` removal.
-4. **Lane B (reporter, background fixer):** `.table-scroll` in-panel scroll, findings `min-width:72rem`
-   + wrap classes, language-conditional captions, `data:` favicon. Stray black rect investigated in
-   3 captures + code audit → NOT REPRODUCIBLE, transient artifact, nothing removed.
-5. **fix-3 touch-up:** layer-file outline `#ffffff`→`#1a1a1a`, component-page heat legends.
-6. **Ablation survey (explorer):** harness makes ZERO model calls — A-pf-078 "spend" is labor, not API.
+## This session — work summary
+1. **Research (librarian):** 8 digestibility patterns (verdict-first, severity gating, group-fold,
+   top-N + honest counts, progressive disclosure, verdict tables, human/machine split, zero-JS viz).
+2. **Anatomy (explorer):** sole unbounded loop `render_findings:689` + `html_findings:1382`;
+   scale ladder goldens 9–38KB → django 15–18MB; hook points identified.
+3. **Proposal → founder chose B morphing into C** (A too shallow, C too big for one burst).
+4. **fix-4 (build):** grouped §4 (`R rules: N of M`, severity→count→rule_id order, exemplar
+   first-in-order), App.C via preserved `render_findings_full_detail`, `<details>` groups via
+   `html_findings_table/row` fns, output-contract amended, 8 goldens regen.
+5. **fix-5 (touch-up):** CSS chevron affordance; location `34-21` proven line:col (not a bug) →
+   unambiguous `path:line:col` + locking test.
+6. **Django measured (/tmp, sweep untouched):** §4 15,110,055B → 3,619B (19 rows); totals flat
+   by design (App.C 15.1MB) — C-split payoff seamed, not taken.
 
 ## Process notes (high-assurance mode, founder-ordered)
-- Dual review satisfied: `@reviewer` ALL-HOLD + `@requirements-reviewer` APPROVED (evidence-embedded
-  re-run after tooling BLOCK) + `@vision` re-glance FIXED on all re-checked items.
-- Count note: Lane A claimed 612 tests; orchestrator ground-truth rerun = **606 passed, 0 failed**
-  (Lane A's new test verifiably present inside the 606 — counting noise, not missing coverage).
-- Deferred by orchestrator ruling (founder's research boundary owns redesign): findings-table
-  internal-scroll tradeoff, residual cosmetic whitespace. Reopen on founder word.
-- Django 18MB root cause (out of scope, untouched): 26,089 findings, no capping/pagination.
+- Dual review satisfied: `@reviewer` ALL-HOLD (cited) + `@requirements-reviewer` APPROVED +
+  `@vision` "materially better" with 2/3 mild issues fixed in-burst (3rd = known deferred cosmetic).
+- Vision backend died again on the final spot (2× `model_coming_soon`) — chevron/location covered
+  structurally (CSS + golden grep + dedicated test). Small re-owed glance recorded (A-pf-083).
+- Count note: 612 tests after build, **613** after touch-up (orchestrator reruns both times).
+- Semantic-clang gate skipped (no cfg-gated code touched; libclang env absent this burst).
 
 ## Verification (gates observed by orchestrator on final worktree)
 | Claim | Command | Result |
 |---|---|---|
 | Format | `cargo fmt --all -- --check` | exit 0 |
 | Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0, 0 warnings |
-| Tests | `cargo test --locked` | **606 passed; 0 failed** |
-| Findings stability | finding_id diff HEAD vs worktree, all 4 goldens | IDENTICAL (15/9/32/29); metrics sha256 equal |
-| Bat-scale render | headless Chromium @1536px | scrollWidth 1184 < 1536 (was 3516); 0 failed requests |
+| Tests | `cargo test --locked` | **613 passed; 0 failed** |
+| Findings stability | finding_id diff HEAD vs worktree, all 4 goldens | IDENTICAL (15/9/32/29); 0 metrics.json in diff |
+| Group math | counts-sum + exemplar-order + determinism tests | pass (new locks) |
 | 67-rule catalog | untouched | `baseline.json` never modified |
 
-**Reviewer agreement:** no disagreement — reviewer ALL-HOLD, requirements APPROVED, vision FIXED.
-Single orchestrator judgment call (table-scroll/cosmetic deferral) surfaced to founder, not picked silently.
+**Reviewer agreement:** no disagreement — reviewer ALL-HOLD, requirements APPROVED, vision
+ healthissues fixed or previously deferred with founder visibility.
 
 ## Risks / Open
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`** (high; EULA/PRIVACY
   contact placeholder), **`R-pf-082`** (medium; synthetic-corpus credibility — complemented by M4),
   **`R-pf-007`** (medium; differentiation claims rest on one survey pass), **`R-pf-094`** (low),
   **`R-pf-095`** (low; Windows residuals).
-- **New/changed this session:** A-pf-076 CLOSED; A-pf-079 CLOSED (feedback received);
-  A-pf-078 reframed (labor not spend) + PARKED; A-pf-081 (digestibility research) + A-pf-082
-  (commit approval) opened; D-pf-206/207/208 live.
+- **New/changed this session:** A-pf-081 DONE (research→B built); A-pf-082 DONE (9a8766b);
+  A-pf-083 opened (C-split + re-owed glance); D-pf-209/210 live; audit counter 10/10 (AUDIT DUE).
 - **Blockers (unchanged):** **`B-pf-001`** (contact address); **`B-pf-002`** (repo secrets).
-- **Hot-state hygiene:** `state/session-state.json` = **7337 B / 8192 B**; audit counter 9/10.
+- **Hot-state hygiene:** `state/session-state.json` = **7787 B / 8192 B** — tight; next session
+  should demote settled items (D-pf-206/207, A-pf-076/079/082) to cold ledger per pattern.
 
 ## Next Actions
-1. **Founder: approve commit** of the vision-fix burst (40 files, +1041/−481) + EOL state (A-pf-082).
-2. **Next boundary (`/new`): digestibility research** for reports + images (A-pf-081) — includes
-   table-reflow, 18MB-scale strategy, cosmetic pass. Ablation parked behind it.
+1. **Commit this burst** (13 files + EOL state) — founder-approved, executing now.
+2. **Next session: alignment audit DUE** (counter 10/10) + candidate C-split scoping (A-pf-083).
 3. M5 un-park still needs B-pf-001 + B-pf-002 (founder action, A-pf-080).
-4. Bands third layer (A-pf-077); carry R-pf-094/095/077/078/080/082.
+4. Ablation PARKED (A-pf-078); bands layer (A-pf-077); carry R-pf-094/095/077/078/080/082.
 
-## Change set (this session, UNCOMMITTED)
-- **Product code:** `src/charts/{mod,component,layers}.rs` (heat ink, fitted bands, single-fill
-  coupling, titles/scales, legends, `#1a1a1a` hot outline), `src/reporter/mod.rs` (scroll wrappers,
-  column layout, conditional captions, favicon).
-- **Tests:** `charts_render.rs`, `reporter_render.rs`, `reporter_rust.rs` (visual-intent assertions only).
-- **Goldens:** 33 regen files (SVGs + report.html/md across 4 trees); `metrics.json`/dot/schema untouched.
-- **State/docs:** hot state, this handoff, activeContext, CHANGELOG (pending commit with burst).
-- **Cleaned:** vision temp PNGs, `.playwright-mcp/`, local servers :8931/:8932 stopped.
+## Change set (this session)
+- **Product code:** `src/reporter/mod.rs` (grouping fns, grouped §4, App.C, `<details>` groups,
+  chevron CSS, `path:line:col` exemplars).
+- **Tests:** `reporter_render.rs`, `report_html.rs`, `common/mod.rs` (masker docs + newline fix).
+- **Docs:** `docs/report/output-contract.md` (§4 rewrite, App.C, order rule).
+- **Goldens:** 8 regen files; `metrics.json`/charts/dot/schema untouched.
+- **State/docs:** hot state, this handoff, activeContext, CHANGELOG (committing with burst).
 
 ## L2 state split / L6 north-star (history)
 Hot/cold split landed 2026-09-29; north-star pinned 2026-10-01 (`north_star_ref` in hot state).
-Paper track parked + usefulness focus are founder directives (D-pf-201/204); digestibility pivot is
-founder verdict recorded this session (D-pf-208).
+B-now/C-later digestibility direction is founder verdict (D-pf-208/209); audit due next session.

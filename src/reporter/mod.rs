@@ -8,8 +8,9 @@
 //! Appendix A descriptions from the built-in catalog (frozen v1).
 //!
 //! Determinism: ordering depends ONLY on document content (files[] are
-//! re-sorted here for the §3 table; findings keep the analyzer's total order,
-//! partitioned hot→warn→info WITHOUT re-sorting within a group). Double-render
+//! re-sorted here for the §3 table; findings are grouped by rule_id in the
+//! pinned group order severity-rank → count-desc → rule_id-asc, with members
+//! in `finding_id`-ascending order regardless of input order). Double-render
 //! byte-equality modulo provenance fields (`started_at`, `duration_ms`) is a
 //! standing test obligation ([`tests/reporter_render.rs`]).
 //!
@@ -452,9 +453,10 @@ pub fn escape_html(input: &str) -> String {
 /// Contents: header, § architecture (the §5 chart links mirrored as linked
 /// figures), component index (rank, prefix, metrics + detail-page links),
 /// file drill-down (top files by degree/cost + their finding_id lists),
-/// findings table (full §4 parity: symbol/resolver/flags/threshold/evidence
-/// alongside `finding_id`/rule/path/span/message, sorted by
-/// `finding_id` ascending). Drill-down anchors link
+/// findings section (per-rule `<details><summary>` groups in the pinned
+/// group order, each expanding to that rule's rows in the full-table markup:
+/// symbol/resolver/flags/threshold/evidence alongside
+/// `finding_id`/rule/path/span/message, members in `finding_id` ascending). Drill-down anchors link
 /// component → file → finding via deterministic `id` anchors derived from
 /// `(rank, slug)`, file slugs, and sanitized finding ids.
 #[must_use]
@@ -496,6 +498,7 @@ pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String
     render_architecture(&mut out, doc, emitted_charts);
     render_appendix_a(&mut out, doc);
     render_appendix_b(&mut out);
+    render_appendix_c(&mut out, doc);
     // Exactly one trailing newline (output-contract §2 encoding rule).
     while out.ends_with('\n') {
         out.pop();
@@ -555,7 +558,7 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
         warn_count,
         info_count,
     ));
-    // First 3 HOT findings in §4 order (all if fewer than 3).
+    // First 3 HOT findings in document order (all if fewer than 3).
     for f in hot.iter().take(3) {
         out.push_str(&format!(
             "- {} ({})\n",
@@ -693,6 +696,62 @@ fn render_findings(out: &mut String, doc: &MetricsDocument) {
         out.push_str("No findings.\n\n");
         return;
     }
+    // Group-and-fold summary (output-contract §5 §4): ONE row per firing
+    // rule with an honest "R rules: N of M total" header (N always equals M
+    // today — every finding is represented via its rule group — so a future
+    // cap cannot silently drop rows without breaking the header). The
+    // uncapped per-finding detail lives in Appendix C
+    // ([`render_appendix_c`] → [`render_findings_full_detail`], kept as a
+    // SEPARATE function so the future option-C artifact split can promote it
+    // into its own artifact without re-cutting §4).
+    let groups = group_findings_by_rule(doc);
+    let (hot_count, warn_count, info_count) = severity_counts(doc);
+    out.push_str(&format!(
+        "{} rules: {} of {} total findings ({} hot, {} warn, {} info).\n\n",
+        groups.len(),
+        doc.findings.len(),
+        doc.findings.len(),
+        hot_count,
+        warn_count,
+        info_count,
+    ));
+    out.push_str("| rule_id | findings | hot | warn | info | top exemplar |\n");
+    out.push_str("|---|---:|---:|---:|---:|---|\n");
+    for group in &groups {
+        // Exemplar: first member in finding_id order (deterministic); cited
+        // by exact finding_id so it cross-references Appendix C mechanically.
+        // The trailing location is the unambiguous three-part
+        // `path:start_line:start_col` (matching the HTML row location cell) —
+        // never a range: the second number is a column, not an end line.
+        let exemplar = &doc.findings[group.members[0]];
+        out.push_str(&format!(
+            "| `{}` | {} | {} | {} | {} | {} (`{}`) — `{}:{}:{}` |\n",
+            escape_md(group.rule_id),
+            group.members.len(),
+            group.hot,
+            group.warn,
+            group.info,
+            escape_md(&exemplar.title),
+            escape_md(&exemplar.finding_id),
+            escape_md(&exemplar.path),
+            exemplar.span.start_line,
+            exemplar.span.start_col,
+        ));
+    }
+    out.push('\n');
+}
+
+/// The UNCAPPED per-finding detail renderer, kept as a SEPARATE function by
+/// design (group-and-fold seam): §4 above summarizes, this renders every
+/// finding in full. The future option-C artifact split promotes THIS function
+/// into its own artifact — do not delete it, inline it into §4, or render a
+/// second copy of its rows anywhere else in `report.md`.
+///
+/// Ordering (legacy total order, preserved verbatim): stable severity
+/// partition hot→warn→info; WITHIN a group document order is preserved
+/// EXACTLY (the analyzer already emits the total order
+/// severity→confidence→rule_id→path→start_line→start_col — do NOT re-sort).
+fn render_findings_full_detail(out: &mut String, doc: &MetricsDocument) {
     // Stable severity partition hot→warn→info; WITHIN a group document order
     // is preserved EXACTLY (the analyzer already emits the total order
     // severity→confidence→rule_id→path→start_line→start_col — do NOT re-sort).
@@ -959,6 +1018,25 @@ fn render_appendix_b(out: &mut String) {
     ));
 }
 
+/// Appendix C: the UNCAPPED per-finding detail (group-and-fold companion to
+/// §4). Every finding renders in full via [`render_findings_full_detail`];
+/// the honest header ties the count back to §4 (`N of M total` — both sides
+/// always agree today). The future option-C artifact split promotes this
+/// section into its own artifact.
+fn render_appendix_c(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("## Appendix C. All findings (full detail)\n");
+    if doc.findings.is_empty() {
+        out.push_str("No findings.\n\n");
+        return;
+    }
+    out.push_str(&format!(
+        "{} of {} total findings.\n\n",
+        doc.findings.len(),
+        doc.findings.len(),
+    ));
+    render_findings_full_detail(out, doc);
+}
+
 // ---------------------------------------------------------------------------
 // HTML renderer helpers (Option B slice 2: LINKED variant + fixed script)
 // ---------------------------------------------------------------------------
@@ -994,6 +1072,10 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
          #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
          #filter-bar{margin:.5rem 0}\n\
          nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
+         #findings summary{cursor:pointer;list-style:none}\n\
+         #findings summary::-webkit-details-marker{display:none}\n\
+         #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
+         #findings details[open]>summary::before{transform:rotate(90deg)}\n\
          </style>\n</head>\n<body>\n",
     );
 }
@@ -1374,11 +1456,21 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
     out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
-/// Findings table: every finding in `finding_id`-ascending total order with
-/// collision-free `id` anchors for the file drill-down links. §4 parity
-/// (FIX 3): renders symbol, resolver tier, flags, threshold, and evidence
-/// (values escaped — hostile evidence cannot break out) alongside the
-/// finding_id/rule/severity/confidence/location/message core.
+/// Findings section: per-rule `<details><summary>` groups (group-and-fold
+/// companion to `report.md` §4) with zero-JS progressive disclosure — the
+/// summary carries rule + count + severity split + top-exemplar link, and the
+/// expanded body is that rule's rows in the shared [`html_findings_table`]
+/// markup. Every row is present statically (the fixed enhancement script only
+/// hides/shows for click-to-filter, which keeps working: rows keep their
+/// `<tr id data-path>` shape and the `#findings tbody tr` selector still
+/// matches inside `<details>`).
+///
+/// Anchors: per-occurrence collision-free `id` anchors pre-assigned in
+/// `finding_id` order ([`finding_anchor_assignments`]); the file drill-down
+/// looks up the SAME map, so every href points at its own row even when
+/// ranked-file order differs. Group/summary order is the pinned
+/// [`group_findings_by_rule`] order; members within a group are in
+/// `finding_id`-ascending order.
 fn html_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<section id=\"findings\">\n<h2>Findings</h2>\n");
     out.push_str(
@@ -1389,66 +1481,117 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
         out.push_str("<p>No findings.</p>\n</section>\n");
         return;
     }
-    // Per-occurrence collision-free anchors pre-assigned in finding_id
-    // order; the file drill-down looks up the SAME map, so every href
-    // points at its own row even when ranked-file order differs. `order` is
-    // the stable finding_id-ascending index order the map was built over.
-    let (order, anchors) = finding_anchor_assignments(doc);
+    // Honest header (mirrors the §4 "R rules: N of M total" line).
+    let groups = group_findings_by_rule(doc);
+    let (hot_count, warn_count, info_count) = severity_counts(doc);
+    out.push_str(&format!(
+        "<p>{} rules: {} of {} total findings ({} hot, {} warn, {} info).</p>\n",
+        groups.len(),
+        doc.findings.len(),
+        doc.findings.len(),
+        hot_count,
+        warn_count,
+        info_count,
+    ));
+    // `anchors[i]` is the collision-free anchor for `doc.findings[i]`
+    // (finding_id-order assignment shared with the file drill-down).
+    let (_, anchors) = finding_anchor_assignments(doc);
+    for group in &groups {
+        // Exemplar: first member in finding_id order (deterministic), linked
+        // to its row anchor — every exemplar href resolves by construction.
+        let exemplar = &doc.findings[group.members[0]];
+        let exemplar_anchor = &anchors[group.members[0]];
+        out.push_str(&format!(
+            "<details>\n<summary><code>{rule}</code> — {n} findings ({h} hot, {w} warn, {i} info); \
+             top exemplar: <a href=\"#{anchor}\">{id}</a></summary>\n",
+            rule = escape_html(group.rule_id),
+            n = group.members.len(),
+            h = group.hot,
+            w = group.warn,
+            i = group.info,
+            anchor = escape_html(exemplar_anchor),
+            id = escape_html(&exemplar.finding_id),
+        ));
+        html_findings_table(out, doc, &group.members, &anchors);
+        out.push_str("</details>\n");
+    }
+    out.push_str("</section>\n");
+}
+
+/// Full findings-table renderer, kept as a SEPARATE function by design
+/// (group-and-fold seam): the complete `<table>` (shared head + one
+/// [`html_finding_row`] per index) for EXACTLY the findings in `indices`.
+/// The grouped `#findings` section calls it once per rule group, reusing the
+/// existing table markup verbatim; the future option-C artifact split promotes
+/// THIS function into its own artifact — do not delete it or inline its
+/// markup into the section wrapper.
+fn html_findings_table(
+    out: &mut String,
+    doc: &MetricsDocument,
+    indices: &[usize],
+    anchors: &[String],
+) {
     out.push_str(
         "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>finding_id</th><th>rule</th><th>severity</th>\
          <th>confidence</th><th>resolver</th><th>location</th><th>symbol</th>\
          <th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>\n<tbody>\n",
     );
-    for &i in &order {
-        let f = &doc.findings[i];
-        let anchor = &anchors[i];
-        let mut flags: Vec<&str> = Vec::new();
-        if f.macro_suspect {
-            flags.push("macro_suspect");
-        }
-        if f.error_node_overlap {
-            flags.push("error_node_overlap");
-        }
-        let flags_text = if flags.is_empty() {
-            "none".to_string()
-        } else {
-            escape_html(&flags.join(", "))
-        };
-        let evidence_text = if f.evidence.is_empty() {
-            "none".to_string()
-        } else {
-            // BTreeMap ⇒ keys already sorted; keys AND values escaped (FIX 3:
-            // hostile evidence values stay inert — this also closes the
-            // hostile-evidence review bypass).
-            f.evidence
-                .iter()
-                .map(|(k, v)| format!("{}={}", escape_html(k), escape_html(v)))
-                .collect::<Vec<_>>()
-                .join(", ")
-        };
-        out.push_str(&format!(
-            "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{id}</td><td>{rule}</td><td>{severity}</td>\
-             <td>{confidence}</td><td>{resolver}</td>\
-             <td>{path}:{line}:{col}</td><td>{symbol}</td><td class=\"wrap\">{message}</td>\
-             <td class=\"wrap\">{evidence}</td><td>{threshold}</td><td>{flags}</td></tr>\n",
-            anchor = escape_html(anchor),
-            data_path = escape_html(&f.path),
-            id = escape_html(&f.finding_id),
-            rule = escape_html(&f.rule_id),
-            severity = severity_token(f.severity),
-            confidence = confidence_token(f.confidence),
-            resolver = resolver_tier_token(f.resolver_tier),
-            path = escape_html(&f.path),
-            line = f.span.start_line,
-            col = f.span.start_col,
-            symbol = escape_html(f.symbol.as_deref().unwrap_or("n/a")),
-            message = escape_html(&f.message),
-            evidence = evidence_text,
-            threshold = escape_html(&threshold_text(&f.threshold)),
-            flags = flags_text,
-        ));
+    for &i in indices {
+        html_finding_row(out, &doc.findings[i], &anchors[i]);
     }
-    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
+    out.push_str("</tbody>\n</table>\n</div>\n");
+}
+
+/// One findings-table row: full §4 parity (FIX 3) — symbol, resolver tier,
+/// flags, threshold, and evidence (values escaped — hostile evidence cannot
+/// break out) alongside the finding_id/rule/severity/confidence/location/
+/// message core.
+fn html_finding_row(out: &mut String, f: &FindingEntry, anchor: &str) {
+    let mut flags: Vec<&str> = Vec::new();
+    if f.macro_suspect {
+        flags.push("macro_suspect");
+    }
+    if f.error_node_overlap {
+        flags.push("error_node_overlap");
+    }
+    let flags_text = if flags.is_empty() {
+        "none".to_string()
+    } else {
+        escape_html(&flags.join(", "))
+    };
+    let evidence_text = if f.evidence.is_empty() {
+        "none".to_string()
+    } else {
+        // BTreeMap ⇒ keys already sorted; keys AND values escaped (FIX 3:
+        // hostile evidence values stay inert — this also closes the
+        // hostile-evidence review bypass).
+        f.evidence
+            .iter()
+            .map(|(k, v)| format!("{}={}", escape_html(k), escape_html(v)))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    out.push_str(&format!(
+        "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{id}</td><td>{rule}</td><td>{severity}</td>\
+         <td>{confidence}</td><td>{resolver}</td>\
+         <td>{path}:{line}:{col}</td><td>{symbol}</td><td class=\"wrap\">{message}</td>\
+         <td class=\"wrap\">{evidence}</td><td>{threshold}</td><td>{flags}</td></tr>\n",
+        anchor = escape_html(anchor),
+        data_path = escape_html(&f.path),
+        id = escape_html(&f.finding_id),
+        rule = escape_html(&f.rule_id),
+        severity = severity_token(f.severity),
+        confidence = confidence_token(f.confidence),
+        resolver = resolver_tier_token(f.resolver_tier),
+        path = escape_html(&f.path),
+        line = f.span.start_line,
+        col = f.span.start_col,
+        symbol = escape_html(f.symbol.as_deref().unwrap_or("n/a")),
+        message = escape_html(&f.message),
+        evidence = evidence_text,
+        threshold = escape_html(&threshold_text(&f.threshold)),
+        flags = flags_text,
+    ));
 }
 
 /// Render an optional threshold as `name=value` (`n/a` when absent).
@@ -1660,6 +1803,98 @@ fn findings_of_severity(doc: &MetricsDocument, severity: Severity) -> Vec<&Findi
         .iter()
         .filter(|f| f.severity == severity)
         .collect()
+}
+
+/// `(hot, warn, info)` finding counts for the honest §4 / findings-section
+/// headers.
+fn severity_counts(doc: &MetricsDocument) -> (usize, usize, usize) {
+    let mut hot = 0;
+    let mut warn = 0;
+    let mut info = 0;
+    for f in &doc.findings {
+        match f.severity {
+            Severity::Hot => hot += 1,
+            Severity::Warn => warn += 1,
+            Severity::Info => info += 1,
+        }
+    }
+    (hot, warn, info)
+}
+
+/// Severity rank for finding-group ordering (output-contract §5 §4):
+/// `hot` (0) → `warn` (1) → `info` (2).
+fn severity_rank(severity: Severity) -> u8 {
+    match severity {
+        Severity::Hot => 0,
+        Severity::Warn => 1,
+        Severity::Info => 2,
+    }
+}
+
+/// One firing rule's findings (group-and-fold unit shared by `report.md` §4
+/// and `report.html` `#findings`).
+struct RuleGroup<'a> {
+    rule_id: &'a str,
+    /// Document indices of the member findings in `finding_id`-ascending
+    /// order (input order is never trusted); index 0 is the group's
+    /// deterministic top exemplar.
+    members: Vec<usize>,
+    /// Hottest severity present (minimum [`severity_rank`]) — the primary
+    /// group sort key.
+    rank: u8,
+    hot: usize,
+    warn: usize,
+    info: usize,
+}
+
+/// Group findings by `rule_id` in the pinned group order (output-contract §5
+/// §4): severity-rank ascending (hottest group first), then member count
+/// descending, then `rule_id` ascending. Members within a group are in
+/// `finding_id`-ascending order, so exemplars are deterministic regardless of
+/// analyzer emission order. Pure function of document content —
+/// byte-deterministic.
+fn group_findings_by_rule(doc: &MetricsDocument) -> Vec<RuleGroup<'_>> {
+    // BTreeMap ⇒ rule iteration in rule_id-ascending order (the final sort
+    // re-establishes the full order anyway; this keeps construction tidy).
+    let mut by_rule: std::collections::BTreeMap<&str, Vec<usize>> =
+        std::collections::BTreeMap::new();
+    for (index, finding) in doc.findings.iter().enumerate() {
+        by_rule
+            .entry(finding.rule_id.as_str())
+            .or_default()
+            .push(index);
+    }
+    let mut groups: Vec<RuleGroup<'_>> = by_rule
+        .into_iter()
+        .map(|(rule_id, mut members)| {
+            members.sort_by(|&a, &b| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id));
+            let (mut rank, mut hot, mut warn, mut info) = (2u8, 0usize, 0usize, 0usize);
+            for &index in &members {
+                let finding = &doc.findings[index];
+                rank = rank.min(severity_rank(finding.severity));
+                match finding.severity {
+                    Severity::Hot => hot += 1,
+                    Severity::Warn => warn += 1,
+                    Severity::Info => info += 1,
+                }
+            }
+            RuleGroup {
+                rule_id,
+                members,
+                rank,
+                hot,
+                warn,
+                info,
+            }
+        })
+        .collect();
+    groups.sort_by(|a, b| {
+        a.rank
+            .cmp(&b.rank)
+            .then_with(|| b.members.len().cmp(&a.members.len()))
+            .then_with(|| a.rule_id.cmp(b.rule_id))
+    });
+    groups
 }
 
 /// Group distribution entries by metric, preserving document order within

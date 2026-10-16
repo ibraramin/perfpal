@@ -177,6 +177,7 @@ fn sections_present_in_fixed_order() {
         "## 5. Architecture",
         "## Appendix A. Heuristic reference",
         "## Appendix B. How to read this report",
+        "## Appendix C. All findings (full detail)",
     ];
     let mut cursor = 0;
     for heading in headings {
@@ -236,43 +237,233 @@ fn per_language_totals_render_in_codebase_statistics_not_provenance() {
 // 3. Findings grouping, citation format, conditional clauses
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// 3. Findings §4 is group-and-fold: ONE row per firing rule in the pinned
+// group order (severity-rank → count-desc → rule_id-asc); full detail lives
+// uncapped in Appendix C.
+// ---------------------------------------------------------------------------
+
 #[test]
-fn findings_grouped_hot_warn_info_with_document_order_within_group() {
+fn findings_section4_groups_by_rule_in_pinned_group_order() {
     let mut doc = base_doc();
     doc.findings = vec![
-        // Document order deliberately interleaves severities and scrambles
-        // sort keys within a group — the reporter must partition stably.
+        // Document order deliberately scrambles groups and members — §4
+        // must still group by rule in severity-rank → count-desc →
+        // rule_id-asc order, with the exemplar first in finding_id order.
+        finding("PERF-C-CALL-001", Severity::Info, Confidence::High, "z.c"),
+        finding("PERF-C-LOOP-002", Severity::Hot, Confidence::High, "b.c"),
+        finding("PERF-C-CALL-002", Severity::Warn, Confidence::High, "m.c"),
+        finding("PERF-C-LOOP-002", Severity::Hot, Confidence::Medium, "a.c"),
+        finding("PERF-C-STR-002", Severity::Warn, Confidence::Low, "n.c"),
+        finding("PERF-C-CALL-001", Severity::Info, Confidence::Low, "y.c"),
+        finding("PERF-C-CALL-001", Severity::Info, Confidence::Low, "x.c"),
+    ];
+    let report = render_report(&doc, &[]);
+    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+
+    // Pinned order: hot groups first (LOOP-002 ×2 before ALLOC-less single),
+    // then warn (CALL-002 before STR-002 by rule_id tie-break), then info
+    // (CALL-001 ×3 last despite the highest count — severity-rank dominates).
+    let order: Vec<usize> = [
+        "PERF-C-LOOP-002",
+        "PERF-C-CALL-002",
+        "PERF-C-STR-002",
+        "PERF-C-CALL-001",
+    ]
+    .iter()
+    .map(|rule| {
+        // Rule cells are escape_md'd (`-`→`\-`).
+        let escaped = rule.replace('-', "\\-");
+        sec4.find(&format!("| `{escaped}` |"))
+            .unwrap_or_else(|| panic!("{rule} group row missing:\n{sec4}"))
+    })
+    .collect();
+    let mut sorted = order.clone();
+    sorted.sort_unstable();
+    assert_eq!(order, sorted, "§4 group rows out of order:\n{sec4}");
+
+    // Group counts: LOOP-002 ×2 (2 hot), CALL-002 ×1 (1 warn),
+    // STR-002 ×1 (1 warn), CALL-001 ×3 (3 info).
+    let sec4_plain = sec4.replace('\\', "");
+    assert!(sec4_plain.contains("| `PERF-C-LOOP-002` | 2 | 2 | 0 | 0 |"));
+    assert!(sec4_plain.contains("| `PERF-C-CALL-002` | 1 | 0 | 1 | 0 |"));
+    assert!(sec4_plain.contains("| `PERF-C-CALL-001` | 3 | 0 | 0 | 3 |"));
+
+    // §4 carries NO per-finding detail headers — those live in Appendix C.
+    assert!(
+        !sec4.contains("#### "),
+        "§4 must not render per-finding detail:\n{sec4}"
+    );
+
+    // Honest header: 4 rules, 7 of 7 total.
+    assert!(
+        sec4.contains("4 rules: 7 of 7 total findings (2 hot, 2 warn, 3 info)."),
+        "honest-counts header missing or wrong:\n{sec4}"
+    );
+}
+
+#[test]
+fn group_exemplar_is_first_finding_in_finding_id_order() {
+    let mut doc = base_doc();
+    doc.findings = vec![
+        finding("PERF-C-LOOP-002", Severity::Hot, Confidence::High, "b.c"),
+        finding("PERF-C-LOOP-002", Severity::Hot, Confidence::Medium, "a.c"),
+    ];
+    let report = render_report(&doc, &[]);
+    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+    // `a.c` sorts before `b.c`: the exemplar must be the a.c finding even
+    // though document order lists b.c first.
+    let sec4_plain = sec4.replace('\\', "");
+    assert!(
+        sec4_plain.contains("(`PERF-C-LOOP-002:a.c:7:9`)"),
+        "exemplar must be the first finding in finding_id order:\n{sec4}"
+    );
+    assert!(
+        !sec4_plain.contains("(`PERF-C-LOOP-002:b.c:7:9`)"),
+        "§4 must cite only the exemplar, not every member:\n{sec4}"
+    );
+}
+
+#[test]
+fn group_exemplar_location_renders_unambiguous_path_line_col() {
+    // Vision-flag lock: `src/main.c:34:21` is line 34, col 21 (the
+    // `rule:path:line:col` finding identity — col 21 < line 34 is normal,
+    // a column is not an end line), NOT an inverted range. The §4 exemplar
+    // cell must therefore carry the unambiguous three-part `path:line:col`
+    // form, matching the HTML row location cell.
+    let mut doc = base_doc();
+    doc.findings = vec![FindingEntry {
+        finding_id: "PERF-C-ALLOC-001:src/main.c:34:21".to_string(),
+        rule_id: "PERF-C-ALLOC-001".to_string(),
+        title: "Title for PERF-C-ALLOC-001".to_string(),
+        path: "src/main.c".to_string(),
+        symbol: None,
+        span: Span::point(34, 21),
+        confidence: Confidence::High,
+        severity: Severity::Hot,
+        resolver_tier: ResolverTier::Syntactic,
+        macro_suspect: false,
+        error_node_overlap: false,
+        threshold: None,
+        message: "Message for PERF-C-ALLOC-001".to_string(),
+        evidence: BTreeMap::new(),
+    }];
+    let report = render_report(&doc, &[]);
+    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+    let sec4_plain = sec4.replace('\\', "");
+    assert!(
+        sec4_plain.contains("— `src/main.c:34:21`"),
+        "exemplar location must render unambiguous path:line:col:\n{sec4}"
+    );
+}
+
+#[test]
+fn group_counts_sum_to_total_and_match_appendix_c() {
+    let mut doc = base_doc();
+    doc.findings = vec![
         finding("PERF-C-CALL-001", Severity::Info, Confidence::High, "z.c"),
         finding("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
         finding("PERF-C-STR-002", Severity::Warn, Confidence::High, "m.c"),
         finding("PERF-C-LOOP-002", Severity::Hot, Confidence::Medium, "b.c"),
         finding("PERF-C-CALL-002", Severity::Warn, Confidence::Low, "n.c"),
-        finding("PERF-C-LOOP-003", Severity::Info, Confidence::Low, "y.c"),
+        finding("PERF-C-LOOP-002", Severity::Hot, Confidence::Low, "c.c"),
     ];
     let report = render_report(&doc, &[]);
+    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+    let sec4_plain = sec4.replace('\\', "");
 
-    let order: Vec<usize> = [
+    // Per-row counts sum to the honest total (5 rules, 6 findings).
+    let mut row_sum = 0;
+    for line in sec4_plain.lines() {
+        if line.starts_with("| `PERF") {
+            let count: usize = line
+                .split('|')
+                .nth(2)
+                .expect("group row shape")
+                .trim()
+                .parse()
+                .expect("group count parses");
+            row_sum += count;
+        }
+    }
+    assert_eq!(row_sum, 6, "group counts must sum to total:\n{sec4}");
+    assert!(sec4.contains("5 rules: 6 of 6 total findings"));
+
+    // Appendix C lists every finding uncapped: one #### header per finding.
+    let appendix_c = section(&report, "## Appendix C.", "## Appendix B.");
+    assert_eq!(
+        appendix_c.matches("#### ").count(),
+        6,
+        "Appendix C must render every finding:\n{appendix_c}"
+    );
+    assert!(appendix_c.contains("6 of 6 total findings."));
+    for id in [
         "PERF-C-ALLOC-001:a.c:7:9",
         "PERF-C-LOOP-002:b.c:7:9",
+        "PERF-C-LOOP-002:c.c:7:9",
         "PERF-C-STR-002:m.c:7:9",
         "PERF-C-CALL-002:n.c:7:9",
         "PERF-C-CALL-001:z.c:7:9",
-        "PERF-C-LOOP-003:y.c:7:9",
-    ]
-    .iter()
-    .map(|id| {
-        // Citations are escape_md'd (`-`→`\-`, `.`→`\.`).
+    ] {
         let escaped = id.replace('-', "\\-").replace('.', "\\.");
-        report
-            .find(&format!("(`{escaped}`)"))
-            .unwrap_or_else(|| panic!("{id} not cited:\n{report}"))
-    })
-    .collect();
-    let mut sorted = order.clone();
-    sorted.sort_unstable();
+        assert!(
+            appendix_c.contains(&format!("(`{escaped}`)")),
+            "{id} missing from Appendix C:\n{appendix_c}"
+        );
+    }
+}
+
+#[test]
+fn grouped_output_is_deterministic_regardless_of_input_order() {
+    // Same findings, shuffled document order ⇒ identical §4 + Appendix C.
+    let findings_a = vec![
+        finding("PERF-C-CALL-001", Severity::Info, Confidence::High, "z.c"),
+        finding("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
+        finding("PERF-C-STR-002", Severity::Warn, Confidence::High, "m.c"),
+    ];
+    let mut findings_b = findings_a.clone();
+    findings_b.reverse();
+    // FindingEntry must be Clone for this — build via two docs instead.
+    let mut doc_a = base_doc();
+    doc_a.findings = findings_a;
+    let mut doc_b = base_doc();
+    doc_b.findings = findings_b;
+    let report_a = render_report(&doc_a, &[]);
+    let report_b = render_report(&doc_b, &[]);
+    let sec4_a = section(&report_a, "## 4. Findings", "## 5. Architecture");
+    let sec4_b = section(&report_b, "## 4. Findings", "## 5. Architecture");
     assert_eq!(
-        order, sorted,
-        "findings not grouped hot→warn→info:\n{report}"
+        sec4_a, sec4_b,
+        "§4 must be byte-identical regardless of input order"
+    );
+    let app_a = section(&report_a, "## Appendix C.", "## Appendix B.");
+    let app_b = section(&report_b, "## Appendix C.", "## Appendix B.");
+    // Appendix C preserves the legacy document-order total order, so it
+    // legitimately differs — but the SORTED citation multiset must agree.
+    let mut cites_a: Vec<&str> = app_a
+        .match_indices("(`PERF")
+        .map(|(i, _)| &app_a[i..i + 32])
+        .collect();
+    let mut cites_b: Vec<&str> = app_b
+        .match_indices("(`PERF")
+        .map(|(i, _)| &app_b[i..i + 32])
+        .collect();
+    cites_a.sort_unstable();
+    cites_b.sort_unstable();
+    assert_eq!(cites_a, cites_b, "Appendix C citation sets differ");
+}
+
+#[test]
+fn empty_findings_render_no_findings_in_section4_and_appendix_c() {
+    let mut doc = base_doc();
+    doc.findings = vec![];
+    let report = render_report(&doc, &[]);
+    let findings_section = section(&report, "## 4. Findings", "## 5. Architecture");
+    assert_eq!(findings_section.trim(), "## 4. Findings\n\nNo findings.");
+    let appendix_c = section(&report, "## Appendix C.", "## Appendix B.");
+    assert!(
+        appendix_c.contains("No findings."),
+        "Appendix C must handle the empty scan:\n{appendix_c}"
     );
 }
 

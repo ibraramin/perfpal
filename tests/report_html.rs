@@ -330,14 +330,16 @@ fn findings_sorted_and_all_anchors_resolve() {
 
     let html = render_html(&doc, &["include-graph.svg".to_string()]);
 
-    // Findings-table order is finding_id-ascending regardless of input order.
+    // Grouped findings order: hottest rule-group first (ALLOC hot), then
+    // warn (STR), then info (LOOP) — the pinned severity-rank → count-desc →
+    // rule_id-asc group order; members within a group stay finding_id-asc.
     let table = section(&html, "<section id=\"findings\">", "</section>");
     let pos_alloc = table.find("PERF-C-ALLOC-001").expect("alloc row");
-    let pos_loop = table.find("PERF-C-LOOP-001").expect("loop row");
     let pos_str = table.find("PERF-C-STR-002").expect("str row");
+    let pos_loop = table.find("PERF-C-LOOP-001").expect("loop row");
     assert!(
-        pos_alloc < pos_loop && pos_loop < pos_str,
-        "findings table not in finding_id order:\n{table}"
+        pos_alloc < pos_str && pos_str < pos_loop,
+        "findings not in pinned group order:\n{table}"
     );
 
     // Every internal href="#..." target exists as an id="...".
@@ -891,9 +893,110 @@ fn all_content_present_without_javascript() {
     // Figures + captions render without JS.
     assert!(html.contains("<figure class=\"pz\""));
     assert!(html.contains("<figcaption>"));
-    // Findings order unchanged by slice 2 (finding_id ascending).
+    // Grouped order (severity-rank → count-desc → rule_id-asc): the hot
+    // ALLOC group folds first, then warn STR, then info LOOP.
     let pos_alloc = table.find("PERF-C-ALLOC-001").expect("alloc row");
-    let pos_loop = table.find("PERF-C-LOOP-001").expect("loop row");
     let pos_str = table.find("PERF-C-STR-002").expect("str row");
-    assert!(pos_alloc < pos_loop && pos_loop < pos_str);
+    let pos_loop = table.find("PERF-C-LOOP-001").expect("loop row");
+    assert!(pos_alloc < pos_str && pos_str < pos_loop);
+}
+
+// ---------------------------------------------------------------------------
+// 14. Group-and-fold locks: per-rule <details> groups, honest header,
+// exemplar links, determinism, no-JS completeness
+// ---------------------------------------------------------------------------
+
+#[test]
+fn findings_fold_into_per_rule_details_with_honest_summary() {
+    let mut doc = base_doc();
+    doc.files = vec![file_entry("b.c", 30), file_entry("a.c", 10)];
+    doc.scan.file_count = 2;
+    doc.findings = vec![
+        finding_at("PERF-C-STR-002", Severity::Warn, Confidence::Medium, "b.c"),
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::Medium, "b.c"),
+    ];
+    let html = render_html(&doc, &["include-graph.svg".to_string()]);
+    let findings = section(&html, "<section id=\"findings\">", "</section>");
+
+    // Honest header: 2 rules, 3 of 3 total.
+    assert!(
+        findings.contains("<p>2 rules: 3 of 3 total findings (2 hot, 1 warn, 0 info).</p>"),
+        "honest-counts header missing:\n{findings}"
+    );
+    // One <details> group per firing rule, hottest group first.
+    assert_eq!(
+        findings.matches("<details>").count(),
+        2,
+        "one details group per rule:\n{findings}"
+    );
+    let pos_alloc = findings.find("PERF-C-ALLOC-001").expect("alloc group");
+    let pos_str = findings.find("PERF-C-STR-002").expect("str group");
+    assert!(pos_alloc < pos_str, "hot group must fold first");
+    // Summaries carry rule + count + severity split + exemplar link.
+    assert!(
+        findings.contains(
+            "<summary><code>PERF-C-ALLOC-001</code> — 2 findings (2 hot, 0 warn, 0 info);"
+        ),
+        "alloc summary shape wrong:\n{findings}"
+    );
+    assert!(
+        findings
+            .contains("<summary><code>PERF-C-STR-002</code> — 1 findings (0 hot, 1 warn, 0 info);"),
+        "str summary shape wrong:\n{findings}"
+    );
+    // No-JS completeness: every row present statically, exactly once.
+    assert_eq!(
+        findings.matches("<tr id=\"finding-").count(),
+        3,
+        "every finding row must render statically:\n{findings}"
+    );
+    // Exemplar is the first finding in finding_id order: the a.c ALLOC row
+    // (finding_id `PERF-C-ALLOC-001:a.c:7:9`) sorts before the b.c one.
+    let summary_end = pos_alloc
+        + findings[pos_alloc..]
+            .find("</summary>")
+            .expect("summary close");
+    let summary = &findings[pos_alloc..summary_end];
+    assert!(
+        summary.contains("PERF-C-ALLOC-001:a.c:7:9"),
+        "exemplar must be first in finding_id order:\n{summary}"
+    );
+    // Every exemplar href="#…" resolves to a rendered row id.
+    let ids = collect_ids(&html);
+    for href in collect_hrefs(&html) {
+        if let Some(target) = href.strip_prefix('#') {
+            assert!(
+                ids.iter().any(|id| id == target),
+                "exemplar/drill-down link #{target} has no matching id anchor"
+            );
+        }
+    }
+    // No row hidden by default; groups fold via <details>, not `hidden`.
+    assert_eq!(
+        findings.matches("hidden").count(),
+        1,
+        "only the filter-clear button may carry `hidden` statically"
+    );
+}
+
+#[test]
+fn grouped_findings_double_render_byte_identical() {
+    // Shuffled input order ⇒ byte-identical findings section (groups and
+    // exemplars depend only on document content, never on input order).
+    let mut doc_a = base_doc();
+    doc_a.findings = vec![
+        finding_at("PERF-C-STR-002", Severity::Warn, Confidence::Medium, "b.c"),
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
+    ];
+    let mut doc_b = base_doc();
+    doc_b.findings = vec![
+        finding_at("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
+        finding_at("PERF-C-STR-002", Severity::Warn, Confidence::Medium, "b.c"),
+    ];
+    assert_eq!(
+        render_html(&doc_a, &[]),
+        render_html(&doc_b, &[]),
+        "grouped #findings must be byte-identical regardless of input order"
+    );
 }

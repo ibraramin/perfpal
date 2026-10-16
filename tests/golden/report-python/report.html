@@ -21,6 +21,10 @@ figure.pz img{max-width:none;touch-action:none}
 #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
 #filter-bar{margin:.5rem 0}
 nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -114,42 +118,256 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <section id="findings">
 <h2>Findings</h2>
 <div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>22 rules: 29 of 29 total findings (0 hot, 12 warn, 17 info).</p>
+<details>
+<summary><code>PERF-PY-ALLOC-003</code> — 3 findings (0 hot, 3 warn, 0 info); top exemplar: <a href="#finding-PERF-PY-ALLOC-003-01-alloc-churn-py-23-15">PERF-PY-ALLOC-003:01_alloc_churn.py:23:15</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-ALLOC-003-01-alloc-churn-py-23-15" data-path="01_alloc_churn.py"><td>PERF-PY-ALLOC-003:01_alloc_churn.py:23:15</td><td>PERF-PY-ALLOC-003</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.py:23:15</td><td>&lt;module&gt;</td><td class="wrap">&#39;acc&#39; is grown with non-in-place &#39;+&#39; inside a loop at depth 1 — CPython rebuilds and copies the whole list each pass (list_resize + memcpy), making the loop O(n²); using &#39;append&#39;/&#39;extend&#39; (or a list comprehension) is a candidate optimization</td><td class="wrap">binding_kind=list, growth=concat, loop_depth=1, target=acc</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-PY-ALLOC-003-10-comprehension-py-12-9" data-path="10_comprehension.py"><td>PERF-PY-ALLOC-003:10_comprehension.py:12:9</td><td>PERF-PY-ALLOC-003</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>10_comprehension.py:12:9</td><td>&lt;module&gt;</td><td class="wrap">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</td><td class="wrap">binding_kind=list, growth=append, loop_depth=1, receiver_root=out</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-PY-ALLOC-003-10-comprehension-py-21-9" data-path="10_comprehension.py"><td>PERF-PY-ALLOC-003:10_comprehension.py:21:9</td><td>PERF-PY-ALLOC-003</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>10_comprehension.py:21:9</td><td>&lt;module&gt;</td><td class="wrap">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</td><td class="wrap">binding_kind=list, growth=append, loop_depth=1, receiver_root=out</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-LOOP-007</code> — 3 findings (0 hot, 3 warn, 0 info); top exemplar: <a href="#finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18">PERF-PY-LOOP-007:07_membership_scan.py:19:18</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18" data-path="07_membership_scan.py"><td>PERF-PY-LOOP-007:07_membership_scan.py:19:18</td><td>PERF-PY-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_membership_scan.py:19:18</td><td>&lt;module&gt;</td><td class="wrap">list &#39;data&#39; is indexed by loop variable &#39;i&#39; at depth 1 — CPython&#39;s list subscript is O(1) per access, but a scan over the whole list re-walks it per outer iteration (O(n²)); iterating directly, using `enumerate`, or building a set/dict lookup is a candidate optimization</td><td class="wrap">binding_kind=list, index_ident=i, loop_depth=1, root=data</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-PY-LOOP-007-07-membership-scan-py-28-18" data-path="07_membership_scan.py"><td>PERF-PY-LOOP-007:07_membership_scan.py:28:18</td><td>PERF-PY-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_membership_scan.py:28:18</td><td>&lt;module&gt;</td><td class="wrap">list &#39;data&#39; is scanned with `.index()` inside a loop at depth 1 — CPython&#39;s list `.index()` is an O(n) linear scan, so re-scanning per outer iteration is O(n²); building a set/dict lookup or a positional map is a candidate optimization</td><td class="wrap">binding_kind=list, loop_depth=1, method=index, root=data</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-PY-LOOP-007-07-membership-scan-py-9-12" data-path="07_membership_scan.py"><td>PERF-PY-LOOP-007:07_membership_scan.py:9:12</td><td>PERF-PY-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_membership_scan.py:9:12</td><td>&lt;module&gt;</td><td class="wrap">list &#39;table&#39; is tested with &#39;in&#39; inside a loop at depth 1 — CPython&#39;s list membership is an O(n) linear scan, so re-testing per outer iteration is O(n²); building a set/dict lookup or iterating directly is a candidate optimization</td><td class="wrap">binding_kind=list, loop_depth=1, operator=in, root=table</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-ASYNC-001</code> — 2 findings (0 hot, 2 warn, 0 info); top exemplar: <a href="#finding-PERF-PY-ASYNC-001-14-async-blocking-py-10-12">PERF-PY-ASYNC-001:14_async_blocking.py:10:12</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-ASYNC-001-14-async-blocking-py-10-12" data-path="14_async_blocking.py"><td>PERF-PY-ASYNC-001:14_async_blocking.py:10:12</td><td>PERF-PY-ASYNC-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>14_async_blocking.py:10:12</td><td>&lt;module&gt;</td><td class="wrap">&#39;get&#39; blocks inside an `async def` — the synchronous call stalls the single event-loop thread and every other task; using the async equivalent (`asyncio.sleep`, an async HTTP/DB client) is a candidate optimization</td><td class="wrap">callee=requests.get, loop_depth=0, receiver_root=requests</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-PY-ASYNC-001-14-async-blocking-py-15-5" data-path="14_async_blocking.py"><td>PERF-PY-ASYNC-001:14_async_blocking.py:15:5</td><td>PERF-PY-ASYNC-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>14_async_blocking.py:15:5</td><td>&lt;module&gt;</td><td class="wrap">&#39;sleep&#39; blocks inside an `async def` — the synchronous call stalls the single event-loop thread and every other task; using the async equivalent (`asyncio.sleep`, an async HTTP/DB client) is a candidate optimization</td><td class="wrap">callee=time.sleep, loop_depth=0, receiver_root=time</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-ASYNC-002</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-PY-ASYNC-002-14-async-blocking-py-27-16">PERF-PY-ASYNC-002:14_async_blocking.py:27:16</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-ASYNC-002-14-async-blocking-py-27-16" data-path="14_async_blocking.py"><td>PERF-PY-ASYNC-002:14_async_blocking.py:27:16</td><td>PERF-PY-ASYNC-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>14_async_blocking.py:27:16</td><td>&lt;module&gt;</td><td class="wrap">an `await` runs inside a loop at depth 1 — awaiting sequentially serialises each coroutine&#39;s latency; collecting the coroutines and awaiting `asyncio.gather(...)` is a candidate optimization</td><td class="wrap">loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-LOOP-002</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14">PERF-PY-LOOP-002:04_stdio_churn.py:8:14</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14" data-path="04_stdio_churn.py"><td>PERF-PY-LOOP-002:04_stdio_churn.py:8:14</td><td>PERF-PY-LOOP-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>04_stdio_churn.py:8:14</td><td>&lt;module&gt;</td><td class="wrap">&#39;open&#39; acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization</td><td class="wrap">callee=open, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-N1-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-PY-N1-001-12-io-n1-py-8-16">PERF-PY-N1-001:12_io_n1.py:8:16</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-N1-001-12-io-n1-py-8-16" data-path="12_io_n1.py"><td>PERF-PY-N1-001:12_io_n1.py:8:16</td><td>PERF-PY-N1-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>12_io_n1.py:8:16</td><td>&lt;module&gt;</td><td class="wrap">&#39;conn.execute&#39; issues a db round-trip every iteration at loop depth 1 — the N+1 pattern (one query/request per element); batching into a single `IN (...)`, JOIN, or bulk request is a candidate optimization</td><td class="wrap">callee=conn.execute, family=db, loop_depth=1, receiver_root=conn</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-STR-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="#finding-PERF-PY-STR-001-02-string-building-py-8-9">PERF-PY-STR-001:02_string_building.py:8:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-STR-001-02-string-building-py-8-9" data-path="02_string_building.py"><td>PERF-PY-STR-001:02_string_building.py:8:9</td><td>PERF-PY-STR-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>02_string_building.py:8:9</td><td>&lt;module&gt;</td><td class="wrap">string &#39;s&#39; is accumulated with &#39;+=&#39; inside a loop at depth 1 — CPython strings are immutable, so each pass allocates a new string and copies both operands (O(n²)); accumulating pieces in a list and calling `str.join` once is a candidate optimization</td><td class="wrap">binding_kind=str, form=in_place, identifier=s, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-ARCH-003</code> — 3 findings (0 hot, 0 warn, 3 info); top exemplar: <a href="#finding-PERF-PY-ARCH-003-15-cross-file-and-arch-py-8-12">PERF-PY-ARCH-003:15_cross_file_and_arch.py:8:12</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-ARCH-003-15-cross-file-and-arch-py-8-12" data-path="15_cross_file_and_arch.py"><td>PERF-PY-ARCH-003:15_cross_file_and_arch.py:8:12</td><td>PERF-PY-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>15_cross_file_and_arch.py:8:12</td><td>&lt;module&gt;</td><td class="wrap">call to &#39;clamp_value&#39; matches a definition in &#39;pkg/arch_helpers.py&#39; by name only — LOW-confidence hypothesis (Python duck typing makes name coupling noisy); confirming the match or co-locating hot callees is a candidate optimization</td><td class="wrap">callee_name=clamp_value, matched_path=pkg/arch_helpers.py, resolved=false</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-PY-ARCH-003-pkg-cycle-a-py-8-12" data-path="pkg/cycle_a.py"><td>PERF-PY-ARCH-003:pkg/cycle_a.py:8:12</td><td>PERF-PY-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>pkg/cycle_a.py:8:12</td><td>&lt;module&gt;</td><td class="wrap">call to &#39;ping_b&#39; matches a definition in &#39;pkg/cycle_b.py&#39; by name only — LOW-confidence hypothesis (Python duck typing makes name coupling noisy); confirming the match or co-locating hot callees is a candidate optimization</td><td class="wrap">callee_name=ping_b, matched_path=pkg/cycle_b.py, resolved=false</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-PY-ARCH-003-pkg-cycle-b-py-9-16" data-path="pkg/cycle_b.py"><td>PERF-PY-ARCH-003:pkg/cycle_b.py:9:16</td><td>PERF-PY-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>pkg/cycle_b.py:9:16</td><td>&lt;module&gt;</td><td class="wrap">call to &#39;walk_cycle&#39; matches a definition in &#39;pkg/cycle_a.py&#39; by name only — LOW-confidence hypothesis (Python duck typing makes name coupling noisy); confirming the match or co-locating hot callees is a candidate optimization</td><td class="wrap">callee_name=walk_cycle, matched_path=pkg/cycle_a.py, resolved=false</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-ALLOC-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-ALLOC-001-01-alloc-churn-py-9-15">PERF-PY-ALLOC-001:01_alloc_churn.py:9:15</a></summary>
 <div class="table-scroll">
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
 <tr id="finding-PERF-PY-ALLOC-001-01-alloc-churn-py-9-15" data-path="01_alloc_churn.py"><td>PERF-PY-ALLOC-001:01_alloc_churn.py:9:15</td><td>PERF-PY-ALLOC-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.py:9:15</td><td>&lt;module&gt;</td><td class="wrap">&#39;dict&#39; constructs a fresh value on every iteration at loop depth 1 — CPython allocates a new object header and backing store each pass (and deallocates it on rebind); hoisting the loop-invariant construction is a candidate optimization</td><td class="wrap">callee=dict, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ALLOC-003-01-alloc-churn-py-23-15" data-path="01_alloc_churn.py"><td>PERF-PY-ALLOC-003:01_alloc_churn.py:23:15</td><td>PERF-PY-ALLOC-003</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.py:23:15</td><td>&lt;module&gt;</td><td class="wrap">&#39;acc&#39; is grown with non-in-place &#39;+&#39; inside a loop at depth 1 — CPython rebuilds and copies the whole list each pass (list_resize + memcpy), making the loop O(n²); using &#39;append&#39;/&#39;extend&#39; (or a list comprehension) is a candidate optimization</td><td class="wrap">binding_kind=list, growth=concat, loop_depth=1, target=acc</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ALLOC-003-10-comprehension-py-12-9" data-path="10_comprehension.py"><td>PERF-PY-ALLOC-003:10_comprehension.py:12:9</td><td>PERF-PY-ALLOC-003</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>10_comprehension.py:12:9</td><td>&lt;module&gt;</td><td class="wrap">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</td><td class="wrap">binding_kind=list, growth=append, loop_depth=1, receiver_root=out</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ALLOC-003-10-comprehension-py-21-9" data-path="10_comprehension.py"><td>PERF-PY-ALLOC-003:10_comprehension.py:21:9</td><td>PERF-PY-ALLOC-003</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>10_comprehension.py:21:9</td><td>&lt;module&gt;</td><td class="wrap">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</td><td class="wrap">binding_kind=list, growth=append, loop_depth=1, receiver_root=out</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ALLOC-004-01-alloc-churn-py-42-22" data-path="01_alloc_churn.py"><td>PERF-PY-ALLOC-004:01_alloc_churn.py:42:22</td><td>PERF-PY-ALLOC-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.py:42:22</td><td>&lt;module&gt;</td><td class="wrap">&#39;list&#39; called with a non-literal iterable every iteration at loop depth 1 — CPython eagerly allocates and copies the whole sequence, defeating lazy iteration; keeping the lazy generator (or hoisting) is a candidate optimization</td><td class="wrap">arg_kind=identifier, callee=list, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ARCH-001-pkg-cycle-b-py-3-1" data-path="pkg/cycle_b.py"><td>PERF-PY-ARCH-001:pkg/cycle_b.py:3:1</td><td>PERF-PY-ARCH-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>pkg/cycle_b.py:3:1</td><td>&lt;module&gt;</td><td class="wrap">&#39;pkg/cycle_b.py&#39; and &#39;pkg/cycle_a.py&#39; import each other, forming a cycle — CPython executes a partially-initialised module during the cycle, and the coupling resists testing; breaking the lowest-sorted edge into a shared leaf module is a candidate optimization</td><td class="wrap">coupled_with=pkg/cycle_a.py, kind=cycle</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ARCH-002-05-recursion-complexity-py-16-1" data-path="05_recursion_complexity.py"><td>PERF-PY-ARCH-002:05_recursion_complexity.py:16:1</td><td>PERF-PY-ARCH-002</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>05_recursion_complexity.py:16:1</td><td>&lt;module&gt;</td><td class="wrap">directory &#39;.&#39; aggregates complexity 111 across 60 function(s) — the hottest component in this scan (thresholds are conservative and not yet measured on Python); splitting or simplifying its hottest functions is a candidate optimization</td><td class="wrap">complexity_sum=111, function_count=60, max_loop_depth=3, path_prefix=.</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ARCH-003-15-cross-file-and-arch-py-8-12" data-path="15_cross_file_and_arch.py"><td>PERF-PY-ARCH-003:15_cross_file_and_arch.py:8:12</td><td>PERF-PY-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>15_cross_file_and_arch.py:8:12</td><td>&lt;module&gt;</td><td class="wrap">call to &#39;clamp_value&#39; matches a definition in &#39;pkg/arch_helpers.py&#39; by name only — LOW-confidence hypothesis (Python duck typing makes name coupling noisy); confirming the match or co-locating hot callees is a candidate optimization</td><td class="wrap">callee_name=clamp_value, matched_path=pkg/arch_helpers.py, resolved=false</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ARCH-003-pkg-cycle-a-py-8-12" data-path="pkg/cycle_a.py"><td>PERF-PY-ARCH-003:pkg/cycle_a.py:8:12</td><td>PERF-PY-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>pkg/cycle_a.py:8:12</td><td>&lt;module&gt;</td><td class="wrap">call to &#39;ping_b&#39; matches a definition in &#39;pkg/cycle_b.py&#39; by name only — LOW-confidence hypothesis (Python duck typing makes name coupling noisy); confirming the match or co-locating hot callees is a candidate optimization</td><td class="wrap">callee_name=ping_b, matched_path=pkg/cycle_b.py, resolved=false</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ARCH-003-pkg-cycle-b-py-9-16" data-path="pkg/cycle_b.py"><td>PERF-PY-ARCH-003:pkg/cycle_b.py:9:16</td><td>PERF-PY-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>pkg/cycle_b.py:9:16</td><td>&lt;module&gt;</td><td class="wrap">call to &#39;walk_cycle&#39; matches a definition in &#39;pkg/cycle_a.py&#39; by name only — LOW-confidence hypothesis (Python duck typing makes name coupling noisy); confirming the match or co-locating hot callees is a candidate optimization</td><td class="wrap">callee_name=walk_cycle, matched_path=pkg/cycle_a.py, resolved=false</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ASYNC-001-14-async-blocking-py-10-12" data-path="14_async_blocking.py"><td>PERF-PY-ASYNC-001:14_async_blocking.py:10:12</td><td>PERF-PY-ASYNC-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>14_async_blocking.py:10:12</td><td>&lt;module&gt;</td><td class="wrap">&#39;get&#39; blocks inside an `async def` — the synchronous call stalls the single event-loop thread and every other task; using the async equivalent (`asyncio.sleep`, an async HTTP/DB client) is a candidate optimization</td><td class="wrap">callee=requests.get, loop_depth=0, receiver_root=requests</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ASYNC-001-14-async-blocking-py-15-5" data-path="14_async_blocking.py"><td>PERF-PY-ASYNC-001:14_async_blocking.py:15:5</td><td>PERF-PY-ASYNC-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>14_async_blocking.py:15:5</td><td>&lt;module&gt;</td><td class="wrap">&#39;sleep&#39; blocks inside an `async def` — the synchronous call stalls the single event-loop thread and every other task; using the async equivalent (`asyncio.sleep`, an async HTTP/DB client) is a candidate optimization</td><td class="wrap">callee=time.sleep, loop_depth=0, receiver_root=time</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-ASYNC-002-14-async-blocking-py-27-16" data-path="14_async_blocking.py"><td>PERF-PY-ASYNC-002:14_async_blocking.py:27:16</td><td>PERF-PY-ASYNC-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>14_async_blocking.py:27:16</td><td>&lt;module&gt;</td><td class="wrap">an `await` runs inside a loop at depth 1 — awaiting sequentially serialises each coroutine&#39;s latency; collecting the coroutines and awaiting `asyncio.gather(...)` is a candidate optimization</td><td class="wrap">loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-CALL-001-05-recursion-complexity-py-8-12" data-path="05_recursion_complexity.py"><td>PERF-PY-CALL-001:05_recursion_complexity.py:8:12</td><td>PERF-PY-CALL-001</td><td>info</td><td>HIGH</td><td>syntactic</td><td>05_recursion_complexity.py:8:12</td><td>&lt;module&gt;</td><td class="wrap">&#39;walk_down&#39; calls itself directly at 1 site(s) — each recursive frame costs a CPython call and risks `RecursionError` at the interpreter recursion limit; converting to iteration or memoizing is a candidate optimization</td><td class="wrap">function=walk_down, self_call_sites=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-CALL-002-05-recursion-complexity-py-16-1" data-path="05_recursion_complexity.py"><td>PERF-PY-CALL-002:05_recursion_complexity.py:16:1</td><td>PERF-PY-CALL-002</td><td>info</td><td>HIGH</td><td>syntactic</td><td>05_recursion_complexity.py:16:1</td><td>&lt;module&gt;</td><td class="wrap">&#39;branchy&#39; branches 17 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td class="wrap">complexity=17, function=branchy, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
-<tr id="finding-PERF-PY-COMPREHENSION-001-10-comprehension-py-12-9" data-path="10_comprehension.py"><td>PERF-PY-COMPREHENSION-001:10_comprehension.py:12:9</td><td>PERF-PY-COMPREHENSION-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>10_comprehension.py:12:9</td><td>&lt;module&gt;</td><td class="wrap">loop body appends to list &#39;out&#39; as its only statement at loop depth 1 — a list comprehension compiles to a specialised `LIST_APPEND` with inline iteration, avoiding the loop branch and per-element method lookup; rewriting it as a comprehension is a candidate optimization</td><td class="wrap">loop_depth=1, receiver_root=out</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-EXECUTOR-001-11-executors-py-9-14" data-path="11_executors.py"><td>PERF-PY-EXECUTOR-001:11_executors.py:9:14</td><td>PERF-PY-EXECUTOR-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>11_executors.py:9:14</td><td>&lt;module&gt;</td><td class="wrap">&#39;concurrent.futures.ThreadPoolExecutor&#39; is constructed every iteration at loop depth 1 — CPython spawns worker threads/processes or allocates a new event loop (selector + self-pipe) each pass, never amortising the setup; creating the executor once outside the loop is a candidate optimization</td><td class="wrap">callee=concurrent.futures.ThreadPoolExecutor, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-LOOP-001-03-deep-nesting-py-9-13" data-path="03_deep_nesting.py"><td>PERF-PY-LOOP-001:03_deep_nesting.py:9:13</td><td>PERF-PY-LOOP-001</td><td>info</td><td>HIGH</td><td>syntactic</td><td>03_deep_nesting.py:9:13</td><td>&lt;module&gt;</td><td class="wrap">loops nest 3 deep here (chain reaches depth 3) — CPython runs an interpreted loop body per element, so an O(n^k) nest is the primary hotspot zone; flattening the nesting or using itertools early-exit helpers is a candidate optimization</td><td class="wrap">max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
-<tr id="finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14" data-path="04_stdio_churn.py"><td>PERF-PY-LOOP-002:04_stdio_churn.py:8:14</td><td>PERF-PY-LOOP-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>04_stdio_churn.py:8:14</td><td>&lt;module&gt;</td><td class="wrap">&#39;open&#39; acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization</td><td class="wrap">callee=open, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-LOOP-003-08-range-len-py-8-18" data-path="08_range_len.py"><td>PERF-PY-LOOP-003:08_range_len.py:8:18</td><td>PERF-PY-LOOP-003</td><td>info</td><td>HIGH</td><td>syntactic</td><td>08_range_len.py:8:18</td><td>&lt;module&gt;</td><td class="wrap">`range(len(...))` at loop depth 1 indexes the sequence by position and re-runs `len` each pass — iterating the sequence directly or using `enumerate` is a candidate optimization</td><td class="wrap">callee=range, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18" data-path="07_membership_scan.py"><td>PERF-PY-LOOP-007:07_membership_scan.py:19:18</td><td>PERF-PY-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_membership_scan.py:19:18</td><td>&lt;module&gt;</td><td class="wrap">list &#39;data&#39; is indexed by loop variable &#39;i&#39; at depth 1 — CPython&#39;s list subscript is O(1) per access, but a scan over the whole list re-walks it per outer iteration (O(n²)); iterating directly, using `enumerate`, or building a set/dict lookup is a candidate optimization</td><td class="wrap">binding_kind=list, index_ident=i, loop_depth=1, root=data</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-LOOP-007-07-membership-scan-py-28-18" data-path="07_membership_scan.py"><td>PERF-PY-LOOP-007:07_membership_scan.py:28:18</td><td>PERF-PY-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_membership_scan.py:28:18</td><td>&lt;module&gt;</td><td class="wrap">list &#39;data&#39; is scanned with `.index()` inside a loop at depth 1 — CPython&#39;s list `.index()` is an O(n) linear scan, so re-scanning per outer iteration is O(n²); building a set/dict lookup or a positional map is a candidate optimization</td><td class="wrap">binding_kind=list, loop_depth=1, method=index, root=data</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-LOOP-007-07-membership-scan-py-9-12" data-path="07_membership_scan.py"><td>PERF-PY-LOOP-007:07_membership_scan.py:9:12</td><td>PERF-PY-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_membership_scan.py:9:12</td><td>&lt;module&gt;</td><td class="wrap">list &#39;table&#39; is tested with &#39;in&#39; inside a loop at depth 1 — CPython&#39;s list membership is an O(n) linear scan, so re-testing per outer iteration is O(n²); building a set/dict lookup or iterating directly is a candidate optimization</td><td class="wrap">binding_kind=list, loop_depth=1, operator=in, root=table</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-LOOP-009-09-try-in-loop-py-8-9" data-path="09_try_in_loop.py"><td>PERF-PY-LOOP-009:09_try_in_loop.py:8:9</td><td>PERF-PY-LOOP-009</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>09_try_in_loop.py:8:9</td><td>&lt;module&gt;</td><td class="wrap">a `try`/`except` sits inside a loop body at depth 1 — CPython sets up exception-handling state for the block, so per-iteration `try` adds work on the hot path (the zero-cost-`try` optimization is version-dependent: CPython ≥ 3.11). Hoisting the `try` out of the loop or narrowing it is a candidate optimization</td><td class="wrap">loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-MEM-002-06-memory-ops-py-10-16" data-path="06_memory_ops.py"><td>PERF-PY-MEM-002:06_memory_ops.py:10:16</td><td>PERF-PY-MEM-002</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>06_memory_ops.py:10:16</td><td>&lt;module&gt;</td><td class="wrap">&#39;deepcopy&#39; copies a whole container every iteration at loop depth 1 — CPython allocates and fills a new object (`deepcopy` also walks the graph with a memo dict); copying once outside the loop or reusing the buffer is a candidate optimization</td><td class="wrap">callee=copy.deepcopy, loop_depth=1, receiver_root=copy</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-N1-001-12-io-n1-py-8-16" data-path="12_io_n1.py"><td>PERF-PY-N1-001:12_io_n1.py:8:16</td><td>PERF-PY-N1-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>12_io_n1.py:8:16</td><td>&lt;module&gt;</td><td class="wrap">&#39;conn.execute&#39; issues a db round-trip every iteration at loop depth 1 — the N+1 pattern (one query/request per element); batching into a single `IN (...)`, JOIN, or bulk request is a candidate optimization</td><td class="wrap">callee=conn.execute, family=db, loop_depth=1, receiver_root=conn</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-PANDAS-001-13-pandas-py-9-19" data-path="13_pandas.py"><td>PERF-PY-PANDAS-001:13_pandas.py:9:19</td><td>PERF-PY-PANDAS-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>13_pandas.py:9:19</td><td>&lt;module&gt;</td><td class="wrap">&#39;df.iterrows&#39; iterates row by row — pandas materialises a Python object per row (`iterrows` builds a `Series` with dtype coercion), so the per-row overhead dwarfs the vectorised work; column arithmetic or `groupby`/`itertuples`-free vectorisation is a candidate optimization</td><td class="wrap">callee=df.iterrows, loop_depth=0, receiver_root=df</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-PANDAS-002-13-pandas-py-18-15" data-path="13_pandas.py"><td>PERF-PY-PANDAS-002:13_pandas.py:18:15</td><td>PERF-PY-PANDAS-002</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>13_pandas.py:18:15</td><td>&lt;module&gt;</td><td class="wrap">&#39;pandas.concat&#39; rebuilds the whole DataFrame every iteration at loop depth 1 — pandas copies the full frame on each `concat`/`append` (O(n²)); collecting rows in a list and concatenating once after the loop is a candidate optimization</td><td class="wrap">callee=pandas.concat, loop_depth=1, receiver_root=pd</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-PY-STR-001-02-string-building-py-8-9" data-path="02_string_building.py"><td>PERF-PY-STR-001:02_string_building.py:8:9</td><td>PERF-PY-STR-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>02_string_building.py:8:9</td><td>&lt;module&gt;</td><td class="wrap">string &#39;s&#39; is accumulated with &#39;+=&#39; inside a loop at depth 1 — CPython strings are immutable, so each pass allocates a new string and copies both operands (O(n²)); accumulating pieces in a list and calling `str.join` once is a candidate optimization</td><td class="wrap">binding_kind=str, form=in_place, identifier=s, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
+</details>
+<details>
+<summary><code>PERF-PY-ALLOC-004</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-ALLOC-004-01-alloc-churn-py-42-22">PERF-PY-ALLOC-004:01_alloc_churn.py:42:22</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-ALLOC-004-01-alloc-churn-py-42-22" data-path="01_alloc_churn.py"><td>PERF-PY-ALLOC-004:01_alloc_churn.py:42:22</td><td>PERF-PY-ALLOC-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.py:42:22</td><td>&lt;module&gt;</td><td class="wrap">&#39;list&#39; called with a non-literal iterable every iteration at loop depth 1 — CPython eagerly allocates and copies the whole sequence, defeating lazy iteration; keeping the lazy generator (or hoisting) is a candidate optimization</td><td class="wrap">arg_kind=identifier, callee=list, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-ARCH-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-ARCH-001-pkg-cycle-b-py-3-1">PERF-PY-ARCH-001:pkg/cycle_b.py:3:1</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-ARCH-001-pkg-cycle-b-py-3-1" data-path="pkg/cycle_b.py"><td>PERF-PY-ARCH-001:pkg/cycle_b.py:3:1</td><td>PERF-PY-ARCH-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>pkg/cycle_b.py:3:1</td><td>&lt;module&gt;</td><td class="wrap">&#39;pkg/cycle_b.py&#39; and &#39;pkg/cycle_a.py&#39; import each other, forming a cycle — CPython executes a partially-initialised module during the cycle, and the coupling resists testing; breaking the lowest-sorted edge into a shared leaf module is a candidate optimization</td><td class="wrap">coupled_with=pkg/cycle_a.py, kind=cycle</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-ARCH-002</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-ARCH-002-05-recursion-complexity-py-16-1">PERF-PY-ARCH-002:05_recursion_complexity.py:16:1</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-ARCH-002-05-recursion-complexity-py-16-1" data-path="05_recursion_complexity.py"><td>PERF-PY-ARCH-002:05_recursion_complexity.py:16:1</td><td>PERF-PY-ARCH-002</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>05_recursion_complexity.py:16:1</td><td>&lt;module&gt;</td><td class="wrap">directory &#39;.&#39; aggregates complexity 111 across 60 function(s) — the hottest component in this scan (thresholds are conservative and not yet measured on Python); splitting or simplifying its hottest functions is a candidate optimization</td><td class="wrap">complexity_sum=111, function_count=60, max_loop_depth=3, path_prefix=.</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-CALL-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-CALL-001-05-recursion-complexity-py-8-12">PERF-PY-CALL-001:05_recursion_complexity.py:8:12</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-CALL-001-05-recursion-complexity-py-8-12" data-path="05_recursion_complexity.py"><td>PERF-PY-CALL-001:05_recursion_complexity.py:8:12</td><td>PERF-PY-CALL-001</td><td>info</td><td>HIGH</td><td>syntactic</td><td>05_recursion_complexity.py:8:12</td><td>&lt;module&gt;</td><td class="wrap">&#39;walk_down&#39; calls itself directly at 1 site(s) — each recursive frame costs a CPython call and risks `RecursionError` at the interpreter recursion limit; converting to iteration or memoizing is a candidate optimization</td><td class="wrap">function=walk_down, self_call_sites=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-CALL-002</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-CALL-002-05-recursion-complexity-py-16-1">PERF-PY-CALL-002:05_recursion_complexity.py:16:1</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-CALL-002-05-recursion-complexity-py-16-1" data-path="05_recursion_complexity.py"><td>PERF-PY-CALL-002:05_recursion_complexity.py:16:1</td><td>PERF-PY-CALL-002</td><td>info</td><td>HIGH</td><td>syntactic</td><td>05_recursion_complexity.py:16:1</td><td>&lt;module&gt;</td><td class="wrap">&#39;branchy&#39; branches 17 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td class="wrap">complexity=17, function=branchy, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-COMPREHENSION-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-COMPREHENSION-001-10-comprehension-py-12-9">PERF-PY-COMPREHENSION-001:10_comprehension.py:12:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-COMPREHENSION-001-10-comprehension-py-12-9" data-path="10_comprehension.py"><td>PERF-PY-COMPREHENSION-001:10_comprehension.py:12:9</td><td>PERF-PY-COMPREHENSION-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>10_comprehension.py:12:9</td><td>&lt;module&gt;</td><td class="wrap">loop body appends to list &#39;out&#39; as its only statement at loop depth 1 — a list comprehension compiles to a specialised `LIST_APPEND` with inline iteration, avoiding the loop branch and per-element method lookup; rewriting it as a comprehension is a candidate optimization</td><td class="wrap">loop_depth=1, receiver_root=out</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-EXECUTOR-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-EXECUTOR-001-11-executors-py-9-14">PERF-PY-EXECUTOR-001:11_executors.py:9:14</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-EXECUTOR-001-11-executors-py-9-14" data-path="11_executors.py"><td>PERF-PY-EXECUTOR-001:11_executors.py:9:14</td><td>PERF-PY-EXECUTOR-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>11_executors.py:9:14</td><td>&lt;module&gt;</td><td class="wrap">&#39;concurrent.futures.ThreadPoolExecutor&#39; is constructed every iteration at loop depth 1 — CPython spawns worker threads/processes or allocates a new event loop (selector + self-pipe) each pass, never amortising the setup; creating the executor once outside the loop is a candidate optimization</td><td class="wrap">callee=concurrent.futures.ThreadPoolExecutor, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-LOOP-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-LOOP-001-03-deep-nesting-py-9-13">PERF-PY-LOOP-001:03_deep_nesting.py:9:13</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-LOOP-001-03-deep-nesting-py-9-13" data-path="03_deep_nesting.py"><td>PERF-PY-LOOP-001:03_deep_nesting.py:9:13</td><td>PERF-PY-LOOP-001</td><td>info</td><td>HIGH</td><td>syntactic</td><td>03_deep_nesting.py:9:13</td><td>&lt;module&gt;</td><td class="wrap">loops nest 3 deep here (chain reaches depth 3) — CPython runs an interpreted loop body per element, so an O(n^k) nest is the primary hotspot zone; flattening the nesting or using itertools early-exit helpers is a candidate optimization</td><td class="wrap">max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-LOOP-003</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-LOOP-003-08-range-len-py-8-18">PERF-PY-LOOP-003:08_range_len.py:8:18</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-LOOP-003-08-range-len-py-8-18" data-path="08_range_len.py"><td>PERF-PY-LOOP-003:08_range_len.py:8:18</td><td>PERF-PY-LOOP-003</td><td>info</td><td>HIGH</td><td>syntactic</td><td>08_range_len.py:8:18</td><td>&lt;module&gt;</td><td class="wrap">`range(len(...))` at loop depth 1 indexes the sequence by position and re-runs `len` each pass — iterating the sequence directly or using `enumerate` is a candidate optimization</td><td class="wrap">callee=range, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-LOOP-009</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-LOOP-009-09-try-in-loop-py-8-9">PERF-PY-LOOP-009:09_try_in_loop.py:8:9</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-LOOP-009-09-try-in-loop-py-8-9" data-path="09_try_in_loop.py"><td>PERF-PY-LOOP-009:09_try_in_loop.py:8:9</td><td>PERF-PY-LOOP-009</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>09_try_in_loop.py:8:9</td><td>&lt;module&gt;</td><td class="wrap">a `try`/`except` sits inside a loop body at depth 1 — CPython sets up exception-handling state for the block, so per-iteration `try` adds work on the hot path (the zero-cost-`try` optimization is version-dependent: CPython ≥ 3.11). Hoisting the `try` out of the loop or narrowing it is a candidate optimization</td><td class="wrap">loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-MEM-002</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-MEM-002-06-memory-ops-py-10-16">PERF-PY-MEM-002:06_memory_ops.py:10:16</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-MEM-002-06-memory-ops-py-10-16" data-path="06_memory_ops.py"><td>PERF-PY-MEM-002:06_memory_ops.py:10:16</td><td>PERF-PY-MEM-002</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>06_memory_ops.py:10:16</td><td>&lt;module&gt;</td><td class="wrap">&#39;deepcopy&#39; copies a whole container every iteration at loop depth 1 — CPython allocates and fills a new object (`deepcopy` also walks the graph with a memo dict); copying once outside the loop or reusing the buffer is a candidate optimization</td><td class="wrap">callee=copy.deepcopy, loop_depth=1, receiver_root=copy</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-PANDAS-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-PANDAS-001-13-pandas-py-9-19">PERF-PY-PANDAS-001:13_pandas.py:9:19</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-PANDAS-001-13-pandas-py-9-19" data-path="13_pandas.py"><td>PERF-PY-PANDAS-001:13_pandas.py:9:19</td><td>PERF-PY-PANDAS-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>13_pandas.py:9:19</td><td>&lt;module&gt;</td><td class="wrap">&#39;df.iterrows&#39; iterates row by row — pandas materialises a Python object per row (`iterrows` builds a `Series` with dtype coercion), so the per-row overhead dwarfs the vectorised work; column arithmetic or `groupby`/`itertuples`-free vectorisation is a candidate optimization</td><td class="wrap">callee=df.iterrows, loop_depth=0, receiver_root=df</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
+<details>
+<summary><code>PERF-PY-PANDAS-002</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="#finding-PERF-PY-PANDAS-002-13-pandas-py-18-15">PERF-PY-PANDAS-002:13_pandas.py:18:15</a></summary>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-PY-PANDAS-002-13-pandas-py-18-15" data-path="13_pandas.py"><td>PERF-PY-PANDAS-002:13_pandas.py:18:15</td><td>PERF-PY-PANDAS-002</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>13_pandas.py:18:15</td><td>&lt;module&gt;</td><td class="wrap">&#39;pandas.concat&#39; rebuilds the whole DataFrame every iteration at loop depth 1 — pandas copies the full frame on each `concat`/`append` (O(n²)); collecting rows in a list and concatenating once after the loop is a candidate optimization</td><td class="wrap">callee=pandas.concat, loop_depth=1, receiver_root=pd</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</details>
 </section>
 <section id="appendix-a">
 <h2>Appendix A. Heuristic reference</h2>

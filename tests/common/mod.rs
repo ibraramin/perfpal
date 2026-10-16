@@ -374,20 +374,22 @@ pub fn markdown_escaped(input: &str) -> String {
 /// §2 "Scan root" line are the only surfaces, per the §5 template) PLUS the
 /// Markdown-ESCAPED form of the root (the reporter runs every embedded path
 /// through `escape_md`, so e.g. `…/e2e-mixed` appears as `…/e2e\-mixed`)
-/// PLUS the Wave B1 ARCH-003 §4 block strip: a `semantic-clang` feature
-/// build legitimately renders the resolved finding (MEDIUM/semantic/resolved
-/// evidence) at a DIFFERENT §4 position than the default build's name-based
-/// block, so string-level normalization cannot restore order — the whole
-/// block (header `#### Cross\-file call coupling` through the next blank
-/// line, or the next `#### ` finding header defensively) is dropped on BOTH
-/// sides. The header terminator is explicit (`"#### "` with the trailing
-/// space, pushed back onto the output) IN ADDITION to the blank-line rule —
-/// a future evidence line containing a blank line ends the skip at that
-/// blank line exactly as before, and only a real finding header (never a
-/// `#`-starting evidence line) can end it otherwise, so neither
-/// over-stripping nor under-stripping is possible.
-/// ARCH-003 §4 rendering stays locked by arch_fixtures.rs + pipeline_e2e.rs
-/// (name-based) and tests/resolver_health.rs (resolved variant).
+/// PLUS the Wave B1 ARCH-003 full-detail block strip: a `semantic-clang`
+/// feature build legitimately renders the resolved finding
+/// (MEDIUM/semantic/resolved evidence) at a DIFFERENT full-detail position
+/// (Appendix C) than the default build's name-based block, so string-level
+/// normalization cannot restore order — the whole block (header
+/// `#### Cross\-file call coupling` through the next blank line, or the next
+/// `#### ` finding header defensively) is dropped on BOTH sides. The header
+/// terminator is explicit (`"#### "` with the trailing space, pushed back
+/// onto the output) IN ADDITION to the blank-line rule — a future evidence
+/// line containing a blank line ends the skip at that blank line exactly as
+/// before, and only a real finding header (never a `#`-starting evidence
+/// line) can end it otherwise, so neither over-stripping nor under-stripping
+/// is possible.
+/// ARCH-003 full-detail rendering stays locked by arch_fixtures.rs +
+/// pipeline_e2e.rs (name-based) and tests/resolver_health.rs (resolved
+/// variant).
 /// Backslash→slash normalization is applied to the SEARCH PATH ONLY (never
 /// to the document, which legitimately contains Markdown escapes), so the
 /// comparison is separator-agnostic.
@@ -422,7 +424,21 @@ pub fn mask_golden_report(raw: &str, root: &str) -> String {
         }
         kept.push(line);
     }
-    kept.join("\n")
+    // Trailing-newline normalization (group-and-fold follow-up): the strip
+    // can leave a separator blank line at EOF (the stripped block is now the
+    // LAST Appendix C block on some trees), while `lines()` swallows a lone
+    // trailing newline — so without this the masker is not idempotent and
+    // regen output disagrees with re-masked goldens by one `\n`. Drop blank
+    // lines the strip leaves at EOF, then restore exactly one trailing
+    // newline (the encoding contract), making mask(mask(x)) == mask(x).
+    while kept.last().is_some_and(|line| line.trim().is_empty()) {
+        kept.pop();
+    }
+    let mut normalized = kept.join("\n");
+    if !normalized.is_empty() {
+        normalized.push('\n');
+    }
+    normalized
 }
 
 /// Golden report.html masking (Option B slice 1): `report.html` carries NO
@@ -471,9 +487,10 @@ pub fn mask_golden_html(raw: &str, root: &str) -> String {
 /// `resolved=true` is rewritten to its name-based form (confidence cell LOW,
 /// resolver cell syntactic, message cell rebuilt byte-exact from the
 /// evidence's `callee_name`/`matched_path`, `resolved` key dropped from the
-/// evidence cell). Row order needs no restoring: the findings table is in
-/// `finding_id`-ascending order on both builds, so the upgraded row never
-/// moves (unlike the §4 total order in metrics.json).
+/// evidence cell). Row order needs no restoring: members within a rule group
+/// are in `finding_id`-ascending order on both builds, so the upgraded row
+/// never moves groups (unlike the legacy pre-grouping §4 total order in
+/// metrics.json).
 ///
 /// Strictly scoped: any row that is not exactly a MEDIUM/semantic resolved
 /// `PERF-C-ARCH-003` row with `callee_name` + `matched_path` evidence passes
