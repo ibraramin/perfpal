@@ -13,7 +13,11 @@
 ## Goal
 A CLI (Rust) that scans a codebase and produces quantifiable, performance-oriented insight — language
 heuristics, architecture-level bottleneck visualization, and LLM-consumable metrics — so humans can see
-bottlenecks and LLMs can optimize code with **explicit, quantified signals instead of guessing**. Beta
+bottlenecks and LLMs can optimize code with **explicit, quantified signals instead of guessing**. The
+**maintainer birdseye map is the core feature**: one visual answering where to look first (ranked
+hot-spots per KLOC), what breaks if touched (coupling/blast-radius), and where time might plausibly go
+(static cost hints, profile-to-confirm) — findings ride as annotations on the map, never as a list
+to cross-reference by hand. Beta
 framing: **"Perfpal audits what AI wrote"** (primary audience = developers working with AI-generated code).
 Perfpal doubles as a **deterministic divergence instrument**: it measures how AI-era code *diverges* from
 human code in perf idioms via **rates and distributions, never raw counts** (call-shape, idiom/clone rate,
@@ -34,8 +38,9 @@ error-vs-hot stratification, alloc-family histogram). (`docs/specs/perfpal-core-
 ## Current stage
 **dev** — `v0.1.0` published; `v0.2.0-beta.1` code-complete but **publish PARKED behind the gate**;
 `evidence-beta` M1✅ M2✅ M3✅ M4✅ + session-46 deep dive (181 prod-`hot` = 9 GENUINE / 124 minor / 48 FP,
-no L4 hero); entering **divergence-revamp** (IR v1.4 additive stats: call-shape, idiom/clone rate,
-error-path flag, alloc histogram + DOT/cost viz + agent loop). (`state/session-state.json`;
+no L4 hero); grading burst (correctness APPROVED / plan BLOCKED / depth C-, D-pf-214); entering
+**map-first** (spec `maintainer-map`: plans `map-research` R1–R4 then `map-build` I1–I5 — the birdseye
+map is the core feature; JS+TS backends and the paper queue behind it). (`state/session-state.json`;
 `docs/roadmap.md:64-71`; `state/handoff/latest.md:7`.)
 
 ## Success metrics

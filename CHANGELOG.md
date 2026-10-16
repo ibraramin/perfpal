@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Map-first planning set — maintainer map locked as the core feature (docs only).** New spec `maintainer-map` (3 maintainer questions, 3-level composition, honesty contract, static-only constraints; JS+TS + paper queue behind the map) plus plans `map-research` (R1 algorithms → R2 precedents → R3 honesty → R4 ADR gate, each with a named `docs/research/` deliverable) and `map-build` (I1 entry-points → I2 cost-v2 → I3 map layer → I4 annotations → I5 proof+demo with 3-action maintainer test), all repo specs linked. North-star realigned (birdseye map = core; findings as annotations). D-pf-215 live, A-pf-085 queues R1 in a fresh session.
+
 ### Reviewed
 - **Revamp grading burst — correctness APPROVED / plan BLOCKED / depth C- (no behavior change).** Triple-lane review of the 16-commit post-`e05c2bc` revamp: (1) correctness APPROVED — v1.4 additive-only contract, determinism, 67-rule ratchets, honest viz caps, byte-identical digestibility, ablation vacuity guard; queued fix: ARCH-003 ablation tasks need multi-file context (3/26). (2) Plan compliance BLOCKED — steps 1–3 done, corpus pin done/scans pending, prereg/stats/zenodo/campaign missing (honestly PARKED). (3) Depth C- — syntactic ceiling is structural; top-5 deepenings queued for new session (trip-count/cost gating, invariance, Rust receiver-type, reachability from entry points, runtime spot-checks) plus maintainer bird's-eye (entry-point-stratified cost map). State hygiene: demoted settled D-pf-200–205 + done A-pf-015/047/065/081/083 to cold ledger; hot 8007→6770 B; D-pf-214 live, A-pf-084 queued.
 
