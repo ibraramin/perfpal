@@ -255,7 +255,7 @@ Owned here per output-contract §6. `metrics.json` remains the machine contract;
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
 | `<path>` | positional | `.` | scan target (directory or single file) |
-| `-o`, `--output` | directory | `perfpal-report/` | report directory; internal layout fixed by output-contract §2 |
+| `-o`, `--output` | directory | `perfpal-report` | report directory; internal layout fixed by output-contract §2 |
 | `--force` | — | off | allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
 | `--version` | — | — | print `perfpal <version> (metrics schema <schema_version>)`, exit 0 |
 | `-h`, `--help` | — | — | usage text, exit 0 |
@@ -271,7 +271,7 @@ Explicitly out of MVP (post-MVP list): include/exclude path filters, config file
 | `0` | Success — report written. Findings never affect the exit code (they are data, Principle 4). Zero-file scans succeed with a valid empty report. | |
 | `1` | Usage error | unknown flag; missing/unreadable target path |
 | `2` | Output error | cannot create output dir; safety-guard refusal without `--force`; disk/write failure |
-| `3` | Internal error | unexpected panic/crash — always a bug |
+| `3` | Internal error | unexpected panic/crash, or `metrics.json` serialization failure — always a bug |
 
 ### 8.3 stdout / stderr
 

@@ -4,7 +4,7 @@ version = "0.2.0-beta.1"
 edition = "2024"
 rust-version = "1.92.0" # validated floor; pinned via rust-toolchain.toml (modules.md §6)
 description = "Static-analysis CLI that extracts performance-relevant heuristics from C and Rust codebases and emits LLM-consumable metrics."
-license = "LicenseRef-Proprietary"
+license = "LicenseRef-PolyForm-Strict-1.0.0" # SPDX custom-ref: PolyForm Strict 1.0.0 is not on the SPDX list (bare id rejected by cargo-deny)
 publish = false
 # License: source-available proprietary (free to use; modification/redistribution
 # require explicit founder permission). Dependency policy: no copyleft (GPL-family)
