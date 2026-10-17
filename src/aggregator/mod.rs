@@ -120,10 +120,20 @@ pub fn assemble(
     }
 
     let shape = call_shape(units);
-    // v1.5 I1a (plan `map-build`): C entry + reachability pass (C-only
-    // gate inside; Rust/Python units never contribute).
-    let entries = detect_c_entries(units);
-    let reachable = c_reachable(&entries, &resolved_c_edges(units));
+    // v1.5 I1a+I1b (plan `map-build`): C + Rust entry + reachability
+    // passes (per-language gates inside; Python units never contribute —
+    // I1c owns them).
+    let c_entries = detect_c_entries(units);
+    let rust_entries = detect_rust_entries(units);
+    let mut entries = c_entries.clone();
+    entries.extend(rust_entries.clone());
+    let c_edges = resolved_c_edges(units);
+    let rust_edges = resolved_rust_edges(units);
+    // Union of the per-language BFS closures == the combined BFS: edge
+    // sets are language-disjoint (each resolver gates both ends to its own
+    // language ids), so no cross-language path exists to merge.
+    let mut reachable = c_reachable(&c_entries, &c_edges);
+    reachable.extend(rust_reachable(&rust_entries, &rust_edges));
     let functions = function_stats(units, &shape, &entries, &reachable);
     let distributions = distributions(&functions);
     let graphs = GraphsSection {
@@ -204,9 +214,9 @@ fn scan_languages(units: &[FileUnit]) -> Vec<String> {
 /// source-local fields (`idiom_hash`, `error_path`, `alloc_family`) lift
 /// verbatim from the scanner post-pass (`None`/omitted for parser-free or
 /// pre-step-2 inputs). The v1.5 entry/reachability fields come from the
-/// whole-program [`detect_c_entries`] + [`c_reachable`] passes — `Some` for
-/// every C function (C-only gate this burst; Rust/Python stay
-/// `None`/omitted).
+/// whole-program [`detect_c_entries`] + [`detect_rust_entries`] and
+/// [`c_reachable`] + [`rust_reachable`] passes — `Some` for every C and Rust
+/// function (C+Rust gate since I1b; Python stays `None`/omitted — I1c).
 fn function_stats(
     units: &[FileUnit],
     shape: &BTreeMap<String, CallShape>,
@@ -216,8 +226,8 @@ fn function_stats(
     let mut records: Vec<(bool, &FunctionRecord)> = units
         .iter()
         .flat_map(|u| {
-            let is_c = u.file.language.as_str() == "c";
-            u.functions.iter().map(move |f| (is_c, &f.record))
+            let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust");
+            u.functions.iter().map(move |f| (entry_scoped, &f.record))
         })
         .collect();
     records.sort_by(|a, b| {
@@ -228,9 +238,9 @@ fn function_stats(
     });
     records
         .into_iter()
-        .map(|(is_c, r)| {
+        .map(|(entry_scoped, r)| {
             let call = shape.get(&r.id).copied().unwrap_or_default();
-            let (entry_kind, entry_confidence) = if is_c {
+            let (entry_kind, entry_confidence) = if entry_scoped {
                 entries
                     .get(&r.id)
                     .map(|(kind, confidence)| (Some(kind.clone()), Some(confidence.clone())))
@@ -259,14 +269,14 @@ fn function_stats(
                 error_path: r.error_path,
                 alloc_family: r.alloc_family.clone(),
                 cfg_gated: r.cfg_gated,
-                // v1.5 I1a (plan `map-build`): whole-program entry pass —
-                // `Some` for entries, `None` (omitted) for C non-entries and
-                // for every non-C function (C-only gate this burst).
+                // v1.5 I1a+I1b (plan `map-build`): whole-program entry
+                // passes — `Some` for entries, `None` (omitted) for C/Rust
+                // non-entries and for every Python function (I1c owns it).
                 entry_kind,
                 entry_confidence,
-                // v1.5 I1a: BFS membership over resolved edges — `Some` for
-                // every C function, `None` (omitted) for non-C.
-                reachable_from_entry: if is_c {
+                // v1.5 I1a+I1b: BFS membership over resolved edges — `Some`
+                // for every C/Rust function, `None` (omitted) for Python.
+                reachable_from_entry: if entry_scoped {
                     Some(reachable.contains(&r.id))
                 } else {
                     None
@@ -483,9 +493,9 @@ const ENTRY_LOW: &str = "LOW";
 /// `*handler*/*callback*/*dispatch*`).
 const HANDLER_FRAGMENTS: [&str; 3] = ["handler", "callback", "dispatch"];
 
-/// C entry-point detection (plan `map-build` I1a — THIS BURST IS C ONLY;
-/// Rust/Python units are never consulted, so their DTO fields stay
-/// `None`/omitted).
+/// C entry-point detection (plan `map-build` I1a; Rust has its own
+/// [`detect_rust_entries`] since I1b, Python units are never consulted by
+/// either detector — their DTO fields stay `None`/omitted until I1c).
 ///
 /// Returns `function id → (entry_kind, entry_confidence)`, deterministic
 /// (`BTreeMap`, path-asc tie-break by construction — ids embed
@@ -507,11 +517,15 @@ const HANDLER_FRAGMENTS: [&str; 3] = ["handler", "callback", "dispatch"];
 /// (`None`/omitted on the wire) — absence means "not an entry", not
 /// "unknown".
 fn detect_c_entries(units: &[FileUnit]) -> BTreeMap<String, (String, String)> {
-    let c_functions: Vec<&FunctionRecord> = units
+    let mut c_functions: Vec<&FunctionRecord> = units
         .iter()
         .filter(|u| u.file.language.as_str() == "c")
         .flat_map(|u| u.functions.iter().map(|f| &f.record))
         .collect();
+    // Defensive input sort (rev-1 nit from I1a): output is a `BTreeMap`
+    // either way, but sorted input keeps precedence claims and stub
+    // insertion order input-independent.
+    c_functions.sort_by(|a, b| a.id.cmp(&b.id));
     // Main-less check is per PATH: a file contributes lib-roots only when no
     // `main`-named C definition lives in that path.
     let files_with_main: BTreeSet<&str> = c_functions
@@ -624,11 +638,11 @@ fn resolved_c_edges(units: &[FileUnit]) -> BTreeSet<(String, String)> {
     edges
 }
 
-/// Reachability BFS from C entries over RESOLVED edges only (plan
-/// `map-build` I1a). Returns the reachable function-id set — entries
+/// Shared entry-reachability BFS core (plans `map-build` I1a+I1b): the
+/// reachable function-id set over the given RESOLVED edges — entries
 /// themselves are included (distance 0). Iterative DFS over sorted
 /// adjacency — deterministic; same inputs ⇒ same set on every run.
-fn c_reachable(
+fn entry_reachable(
     entries: &BTreeMap<String, (String, String)>,
     edges: &BTreeSet<(String, String)>,
 ) -> BTreeSet<String> {
@@ -647,6 +661,202 @@ fn c_reachable(
         }
     }
     seen
+}
+
+/// Reachability BFS from C entries over RESOLVED edges only (plan
+/// `map-build` I1a). Delegates to [`entry_reachable`]; I1a behavior
+/// unchanged — the C-only edge gate lives in [`resolved_c_edges`].
+fn c_reachable(
+    entries: &BTreeMap<String, (String, String)>,
+    edges: &BTreeSet<(String, String)>,
+) -> BTreeSet<String> {
+    entry_reachable(entries, edges)
+}
+
+/// Rust bin-target test (plan `map-build` I1b): `true` when `path` is a
+/// binary crate root — a bare `main.rs` single-file target or any
+/// `<pkg>/src/main.rs` (Cargo default layout AND workspace layouts like
+/// `crates/foo/src/main.rs`, via the trailing `/main.rs` suffix).
+/// Bin-owned files never contribute lib-roots — their surface is reachable
+/// from the bin `main` instead (the C with-main-file rule, mirrored). The
+/// path-suffix approximation in `src/scanner/mod.rs`
+/// (`is_crate_root_dir_fallback`) is deliberately NOT reused: entry
+/// detection needs the coarser bin-vs-lib file split, not
+/// module-resolution roots. Revisit only if golden tests prove this
+/// suffix rule wrong.
+fn is_rust_bin_path(path: &str) -> bool {
+    path == "main.rs" || path.ends_with("/main.rs")
+}
+
+/// Rust entry-point detection (plan `map-build` I1b — founder-approved
+/// option 1: entries + honest-empty reachability).
+///
+/// Mirrors [`detect_c_entries`] with the Rust bin/lib split:
+/// 1. `main` — exact name match (any file): `(main, HIGH)`;
+/// 2. handler heuristic — case-insensitive `*handler*`/`*callback*`/
+///    `*dispatch*` substring: `(handler, MEDIUM)`. Precedence: `main` wins
+///    (checked first);
+/// 3. lib-roots — exported-looking (`is_static != Some(true)` — the Rust
+///    backend always leaves `is_static` as `None`, so every Rust function
+///    counts as exported-looking) functions in MAIN-LESS, non-bin files
+///    (`src/lib.rs` or any other non-`main.rs` file with no `main`-named
+///    definition in that path): `(lib-root, MEDIUM)`. Bin-owned files
+///    ([`is_rust_bin_path`]) contribute no lib-roots — their surface is
+///    reachable from the bin `main` instead;
+/// 4. honest `unknown-entry` stub — when steps 1–3 yield ZERO entries but
+///    Rust functions exist, EVERY Rust function becomes
+///    `(unknown-entry, LOW)` so reachability stays total instead of
+///    silently empty (never a blank — maintainer-map honesty contract).
+///
+/// Rust non-entries are ABSENT from the map (`None`/omitted on the wire) —
+/// absence means "not an entry", not "unknown".
+fn detect_rust_entries(units: &[FileUnit]) -> BTreeMap<String, (String, String)> {
+    let mut rust_functions: Vec<&FunctionRecord> = units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "rust")
+        .flat_map(|u| u.functions.iter().map(|f| &f.record))
+        .collect();
+    // Defensive input sort (rev-1 nit from I1a, applied to both detectors):
+    // output is a `BTreeMap` either way, but sorted input keeps precedence
+    // claims and stub insertion order input-independent.
+    rust_functions.sort_by(|a, b| a.id.cmp(&b.id));
+    // Main-less check is per PATH (mirrors C): a file contributes
+    // lib-roots only when no `main`-named Rust definition lives in it.
+    let files_with_main: BTreeSet<&str> = rust_functions
+        .iter()
+        .filter(|r| r.name == "main")
+        .map(|r| r.path.as_str())
+        .collect();
+
+    let mut entries: BTreeMap<String, (String, String)> = BTreeMap::new();
+    for record in &rust_functions {
+        if record.name == "main" {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_MAIN.to_string(), ENTRY_HIGH.to_string()),
+            );
+            continue;
+        }
+        let lowered = record.name.to_lowercase();
+        if HANDLER_FRAGMENTS.iter().any(|frag| lowered.contains(frag)) {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_HANDLER.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+        }
+    }
+    for record in &rust_functions {
+        if entries.contains_key(&record.id) {
+            continue; // main/handler precedence already claimed it
+        }
+        // Lib-root = exported-looking in a main-less, non-bin file.
+        // `is_static` is `None` for every Rust function (the backend never
+        // populates it — no `static`-linkage concept is surfaced), so the
+        // `!= Some(true)` test treats all of them as exported.
+        if !files_with_main.contains(record.path.as_str())
+            && !is_rust_bin_path(&record.path)
+            && record.is_static != Some(true)
+        {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_LIB_ROOT.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+        }
+    }
+    if entries.is_empty() && !rust_functions.is_empty() {
+        // Honest stub (birdseye-map.md F1): no heuristic fired anywhere in
+        // the Rust corpus — every Rust function is an unknown entry (LOW)
+        // so the reachability BFS below stays total. Captioned, never
+        // silent.
+        for record in &rust_functions {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_UNKNOWN.to_string(), ENTRY_LOW.to_string()),
+            );
+        }
+    }
+    entries
+}
+
+/// RESOLVED Rust call edges as `(caller id, callee id)` (plan `map-build`
+/// I1b).
+///
+/// Mirrors [`resolved_c_edges`] resolution step (1) ONLY —
+/// semantic-fact-backed (`semantic.resolved_definition` → span-intersecting
+/// definition, intra-file INCLUDED — this set is never built from
+/// `cross_file_call_edges`, which excludes same-file pairs). The
+/// name-based fallbacks are DELIBERATELY EXCLUDED: reachability rides
+/// MEDIUM+ edges only (birdseye-map.md F1, ADR-0008 third layer).
+/// Rust-only gate: both ends must be Rust function ids.
+///
+/// Honestly EMPTY in this milestone: Rust is syntactic-tier only
+/// (`src/analyzer/heuristics/rust/arch.rs:490-493` — every Rust edge is
+/// the LOW name-based fallback), so a default build carries no semantic
+/// facts and this set is empty; reachability is then entries-only BY
+/// CONSTRUCTION, never by fallback to LOW/name-based edges (option 3 was
+/// explicitly rejected).
+///
+/// Sorted/deterministic: `BTreeSet` over `(caller, callee)` id pairs.
+fn resolved_rust_edges(units: &[FileUnit]) -> BTreeSet<(String, String)> {
+    let rust_ids: BTreeSet<&str> = units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "rust")
+        .flat_map(|u| u.functions.iter().map(|f| f.record.id.as_str()))
+        .collect();
+    let mut by_path: BTreeMap<&str, Vec<&FunctionRecord>> = BTreeMap::new();
+    for unit in units.iter().filter(|u| u.file.language.as_str() == "rust") {
+        for func in &unit.functions {
+            by_path
+                .entry(func.record.path.as_str())
+                .or_default()
+                .push(&func.record);
+        }
+    }
+
+    let mut edges: BTreeSet<(String, String)> = BTreeSet::new();
+    for unit in units.iter().filter(|u| u.file.language.as_str() == "rust") {
+        for func in &unit.functions {
+            let mut calls: Vec<&crate::ir::CallEvent> = func.calls.iter().collect();
+            calls.sort_by_key(|c| (c.meta.span.start_line, c.meta.span.start_col));
+            for call in calls {
+                if call.callee_kind != CalleeKind::Direct || call.meta.macro_origin {
+                    continue;
+                }
+                let Some(site) = call
+                    .semantic
+                    .as_ref()
+                    .and_then(|s| s.resolved_definition.as_ref())
+                else {
+                    continue; // no semantic fact ⇒ LOW-tier name match at
+                    // best — excluded from reachability
+                };
+                let Some(target) = by_path.get(site.path.as_str()).and_then(|defs| {
+                    defs.iter()
+                        .find(|r| r.span.intersects(&site.span))
+                        .map(|r| &r.id)
+                }) else {
+                    continue;
+                };
+                if rust_ids.contains(func.record.id.as_str()) && rust_ids.contains(target.as_str())
+                {
+                    edges.insert((func.record.id.clone(), (*target).clone()));
+                }
+            }
+        }
+    }
+    edges
+}
+
+/// Reachability BFS from Rust entries over RESOLVED edges only (plan
+/// `map-build` I1b). Mirrors [`c_reachable`] via the shared
+/// [`entry_reachable`] core. In this milestone the edge set is honestly
+/// empty (see [`resolved_rust_edges`]), so the result is entries at
+/// distance 0 only — total, never silently empty.
+fn rust_reachable(
+    entries: &BTreeMap<String, (String, String)>,
+    edges: &BTreeSet<(String, String)>,
+) -> BTreeSet<String> {
+    entry_reachable(entries, edges)
 }
 
 /// `graphs.include_graph`: nodes = every scanned file (sorted by path); edges

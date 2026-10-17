@@ -95,6 +95,12 @@ fn rust_unit(path: &str, name: &str) -> FileUnit {
     unit
 }
 
+fn python_unit(path: &str, name: &str) -> FileUnit {
+    let mut unit = c_unit(path, vec![func(c_record(path, name, 1, None), vec![])]);
+    unit.file.language = "python".to_string();
+    unit
+}
+
 fn prov() -> Provenance {
     Provenance {
         root_path: ".".to_string(),
@@ -292,18 +298,22 @@ fn c_low_confidence_name_edges_excluded_from_reachability() {
 }
 
 // ---------------------------------------------------------------------------
-// C-only gate — Rust functions never carry entry/reachability fields
+// Language gates — Python functions never carry entry/reachability fields
+// (I1c owns Python; since I1b the Rust `main` below IS claimed — see
+// `tests/i1b_entry_rust.rs` lock 5 for the Rust-side assertions).
 // ---------------------------------------------------------------------------
 
 #[test]
-fn c_only_gate_leaves_rust_functions_unmarked() {
+fn language_gates_leave_python_functions_unmarked() {
     let units = vec![
         c_unit(
             "app.c",
             vec![func(c_record("app.c", "main", 1, Some(false)), vec![])],
         ),
-        // A Rust `main` must NOT be claimed by the C entry pass (I1b owns it).
-        rust_unit("main.rs", "main"),
+        // A Rust `main` IS claimed by the Rust entry pass since I1b.
+        rust_unit("src/main.rs", "main"),
+        // Python stays unmarked until I1c.
+        python_unit("app.py", "main"),
     ];
     let doc = assemble(&units, &[], &prov());
 
@@ -312,11 +322,20 @@ fn c_only_gate_leaves_rust_functions_unmarked() {
         .stats
         .functions
         .iter()
-        .find(|f| f.path == "main.rs")
+        .find(|f| f.path == "src/main.rs")
         .expect("rust function present");
-    assert_eq!(rs.entry_kind, None);
-    assert_eq!(rs.entry_confidence, None);
-    assert_eq!(rs.reachable_from_entry, None);
+    assert_eq!(rs.entry_kind.as_deref(), Some("main"));
+    assert_eq!(rs.entry_confidence.as_deref(), Some("HIGH"));
+    assert_eq!(rs.reachable_from_entry, Some(true));
+    let py = doc
+        .stats
+        .functions
+        .iter()
+        .find(|f| f.path == "app.py")
+        .expect("python function present");
+    assert_eq!(py.entry_kind, None);
+    assert_eq!(py.entry_confidence, None);
+    assert_eq!(py.reachable_from_entry, None);
 }
 
 // ---------------------------------------------------------------------------
