@@ -1,10 +1,10 @@
 # Active Context
 
 ## Current Task
-R1-REDO DONE — `docs/research/map-algorithms.md` rewritten from fetched sources
-only (3 lanes, 36 dated citations, dead ends listed; strict review clean after
-2 citation fixes) + LL-012 filed on the first-pass failure. R2 precedents queued
-for fresh session (one session per R/I, each commits).
+R2 DONE — `docs/research/map-precedents.md` (10 tools, verdict matrix,
+gh_grep CI usage, local overlap table; strict APPROVED + requirements
+BLOCKED→fixed→re-APPROVED on B1/B2, all fetched 2026-10-17). R3 honesty
+queued for fresh session.
 
 ## Recent Decisions
 - **D-pf-215 (live):** map-first direction LOCKED — maintainer birdseye map is the core feature;
@@ -19,11 +19,11 @@ for fresh session (one session per R/I, each commits).
 - Committing map-first planning set now. Nothing else open.
 
 ## Next
-- **NEXT SESSION (`/new`): R2 precedents research** — teardown 6+ tools
-  (Sourcetrail, code2flow, NDepend/Structure101/Lattix, CodeSee/Gource,
-  madge/depcruise), helpful-vs-eyecandy verdicts with sources →
-  `docs/research/map-precedents.md`. Signpost: spec `maintainer-map`, plans
-  `map-research` + `map-build`, R1 commit + this handoff.
+- **NEXT SESSION (`/new`): R3 honesty research** — cost-without-lying idioms,
+  cap/omission markers, maintainer-needs literature (ICSE/CHI/TOSEM, fetched
+  never cited-blind) → `docs/research/map-honesty.md` under the hardened plan's
+  fetch-mandate (≥5 venue papers/examples). Signpost: spec `maintainer-map`,
+  plans `map-research` + `map-build`, R2 commit + this handoff.
 - Then R2 → R3 → R4 (ADR gate) → I1–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077) folds into I3.
