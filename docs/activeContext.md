@@ -1,10 +1,9 @@
 # Active Context
 
 ## Current Task
-R2 DONE — `docs/research/map-precedents.md` (10 tools, verdict matrix,
-gh_grep CI usage, local overlap table; strict APPROVED + requirements
-BLOCKED→fixed→re-APPROVED on B1/B2, all fetched 2026-10-17). R3 honesty
-queued for fresh session.
+R3 DONE — `docs/research/map-honesty.md` (212 lines, 117 dated cites:
+cost-without-lying idioms, cap/omission markers, 7 venue papers; strict
+APPROVED + requirements APPROVED). R4 gate queued for fresh session.
 
 ## Recent Decisions
 - **D-pf-215 (live):** map-first direction LOCKED — maintainer birdseye map is the core feature;
@@ -19,12 +18,12 @@ queued for fresh session.
 - Committing map-first planning set now. Nothing else open.
 
 ## Next
-- **NEXT SESSION (`/new`): R3 honesty research** — cost-without-lying idioms,
-  cap/omission markers, maintainer-needs literature (ICSE/CHI/TOSEM, fetched
-  never cited-blind) → `docs/research/map-honesty.md` under the hardened plan's
-  fetch-mandate (≥5 venue papers/examples). Signpost: spec `maintainer-map`,
-  plans `map-research` + `map-build`, R2 commit + this handoff.
-- Then R2 → R3 → R4 (ADR gate) → I1–I5. FEATURE-spec question for both plans: skipped by
+- **NEXT SESSION (`/new`): R4 gate research** — matrix vs non-negotiables,
+  recommended idiom per map level + rejected alternatives, zero new external
+  claims (all evidence from R1–R3) → `docs/research/map-decision.md` + ADR
+  under the hardened plan. Signpost: spec `maintainer-map`,
+  plans `map-research` + `map-build`, R3 commit + this handoff.
+- Then R4 (ADR gate) → I1–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077) folds into I3.
   Re-owed pixel glance when vision backend returns.

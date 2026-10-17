@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "R2 DONE (map-precedents.md 10 tools, dual gate clean); R3 honesty queued; paper+JS+TS parked; M5 gated B-pf-001/002.",
+  "current_phase": "R3 DONE (map-honesty.md 7 venue papers, dual gate clean); R4 gate queued; paper+JS+TS parked; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -191,8 +191,13 @@
     },
     {
       "id": "A-pf-087",
+      "status": "done",
+      "action": "R3 honesty research -> docs/research/map-honesty.md (fetch-mandated per LL-012); then R4-gate/I1-I5"
+    },
+    {
+      "id": "A-pf-088",
       "status": "active",
-      "action": "NEXT SESSION (/new): R3 honesty research -> docs/research/map-honesty.md (fetch-mandated per LL-012); then R4-gate/I1-I5"
+      "action": "NEXT SESSION (/new): R4 gate -> docs/research/map-decision.md + ADR (zero new external claims, matrix cites R1/R2/R3); then map-build I1-I5"
     }
   ],
   "last_updated": "2026-10-17"
