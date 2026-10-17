@@ -8,9 +8,12 @@ Concrete build contract for the maintainer birdseye map. The repo spec states th
 rules; this spec states exactly what gets built, in what order, and how each piece is accepted.
 
 ## Feature deliverables
-- **F1 entry-points + reachability:** per-language entry detection (`main`, handlers, lib roots;
-  heuristic + honest `unknown-entry` stub), reachability sets over resolved call edges only
-  (LOW-confidence edges excluded, captioned). Additive IR/schema fields, serde-defaulted.
+- **F1 entry-points + reachability (sequenced C → Rust → Python, one burst per language):**
+  per-language entry detection (`main`, handlers, lib roots; heuristic + honest `unknown-entry`
+  stub), reachability sets over resolved call edges only (LOW-confidence edges excluded,
+  captioned). Additive IR/schema fields, serde-defaulted. C first (resolver + `main`
+  conventions strongest), then Rust (`main` + bin/lib targets), then Python (`if __name__` +
+  entry scripts); each language commits independently with `cargo test --locked` green.
 - **F2 cost-v2:** trip-count gating + per-iteration weights; `function_cost` successor versioned
   alongside (old formula kept until cutover); reachability-aware cap election preserving
   entry-reachable tails past the top-50 cutoff.

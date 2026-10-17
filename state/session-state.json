@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "R4 DONE (decision+ADR-0008 dual OK); I1 queued; paper/JS+TS parked; M5 gated B-pf-001/002.",
+  "current_phase": "R4 DONE (decision+ADR-0008 dual OK); I1 queued; paper/JS+TS parked; M5 gated B-pf-001/002. I1 sequenced C-first (D-pf-217); A-pf-090 queues I1a.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -58,21 +58,6 @@
       "title": "CLI surface v1 + exit codes 0/1/2/3"
     },
     {
-      "id": "D-pf-208",
-      "status": "live",
-      "title": "Founder verdict: demo data insightful but presentation overwhelming; digestibility research = next boundary; ablation parked behind it; django 18MB root-caused (26089 findings, no capping)"
-    },
-    {
-      "id": "D-pf-209",
-      "status": "live",
-      "title": "Group-and-fold B BUILT with C-seams: S4 one-row-per-rule + App.C full detail (separate fns); django S4 15.1MB->3.6KB, totals flat by design; 613 tests, dual review APPROVED"
-    },
-    {
-      "id": "D-pf-210",
-      "status": "live",
-      "title": "Vision backend flaky again (2x model_coming_soon on final spot); chevron/location covered structurally; small re-owed pixel glance when backend returns"
-    },
-    {
       "id": "D-pf-211",
       "status": "live",
       "title": "Alignment audit 2026-10-16 (counter hit 10): 3 plans active (divergence-revamp, evidence-beta, beta-release), 7 done proposed for archive; no drift; counter reset"
@@ -101,6 +86,11 @@
       "id": "D-pf-216",
       "status": "live",
       "title": "R4: L0 DSM, L1 Sugiyama, L2 treemap+HEB, 3rd entry-stratified; dual OK"
+    },
+    {
+      "id": "D-pf-217",
+      "status": "live",
+      "title": "I1 sequenced per-language (founder): C then Rust then Python, one burst each; map-build I1a/b/c + birdseye F1 amended"
     }
   ],
   "open_risks": [
@@ -208,6 +198,11 @@
       "id": "A-pf-089",
       "status": "active",
       "action": "I1 entry+reachability per map-build (ADR-0008 gate)"
+    },
+    {
+      "id": "A-pf-090",
+      "status": "active",
+      "action": "NEXT SESSION (/new): I1a entry-points C -> additive fields + reachability locks, cargo test green, independent commit"
     }
   ],
   "last_updated": "2026-10-17"
