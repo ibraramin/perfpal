@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "R4 DONE (decision+ADR-0008 dual OK); I1 queued; paper/JS+TS parked; M5 gated B-pf-001/002. I1 sequenced C-first (D-pf-217); A-pf-090 queues I1a.",
+  "current_phase": "I1a DONE (C entry+reachability, schema 1.5, e758681); I1b Rust queued; paper/JS+TS parked; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -91,6 +91,11 @@
       "id": "D-pf-217",
       "status": "live",
       "title": "I1 sequenced per-language (founder): C then Rust then Python, one burst each; map-build I1a/b/c + birdseye F1 amended"
+    },
+    {
+      "id": "D-pf-218",
+      "status": "live",
+      "title": "I1a DONE C entry+reachability lib-roots, schema 1.5, e758681"
     }
   ],
   "open_risks": [
@@ -201,8 +206,13 @@
     },
     {
       "id": "A-pf-090",
+      "status": "done",
+      "action": "I1a C entry+reachability lib-roots DONE (schema 1.5, e758681)"
+    },
+    {
+      "id": "A-pf-091",
       "status": "active",
-      "action": "NEXT SESSION (/new): I1a entry-points C -> additive fields + reachability locks, cargo test green, independent commit"
+      "action": "NEXT SESSION (/new): I1b Rust entry+reachability, same contract, cargo test green"
     }
   ],
   "last_updated": "2026-10-17"

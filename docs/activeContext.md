@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current Task
-R4 DONE — `docs/research/map-decision.md` (183 lines, 7×5 matrix, 4 level
-idioms, 7 rejections, 11 legends) + `docs/adr/ADR-0008` (119 lines, Proposed);
-zero http, strict APPROVED + requirements APPROVED. I1 queued.
+I1a DONE — C entry-points + reachability (lib-roots variant, schema 1.5,
+commit `e758681`); 7 `i1a_entry_c` locks green, 634 tests pass, rev-1
+APPROVED + requirements code-clauses 7/7 PASS. I1b (Rust) queued.
 
 ## Recent Decisions
 - **D-pf-216 (live):** R4 idioms — L0 DSM, L1 Sugiyama-native, L2 treemap+HEB
@@ -17,12 +17,13 @@ zero http, strict APPROVED + requirements APPROVED. I1 queued.
 - *(Cold `state/archive/ledger.jsonl`: D-pf-195–207 batches, A-pf-062/075/076/079/082, D-pf-200–205, done A-pf-015/047/065/081/083 — append-only.)*
 
 ## In Progress
-- Committing R4 gate now. Nothing else open.
+- Committing I1a state closeout now. Nothing else open.
 
 ## Next
-- **NEXT SESSION (`/new`): I1 entry-points + reachability** per `map-build`,
-  gated on ADR-0008 leaving Proposed. Signpost: spec `maintainer-map`,
-  plans `map-research` + `map-build`, R4 commit + handoff.
+- **NEXT SESSION (`/new`): I1b Rust entry-points + reachability** — same
+  contract (`main` + bin/lib targets), additive only, green tests,
+  independent commit. Signpost: plan `map-build`, spec `birdseye-map` F1,
+  I1a commit `e758681` + handoff.
 - Then I2–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077) folds into I3.

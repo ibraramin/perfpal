@@ -1,15 +1,16 @@
 # Handoff — Latest
 
 ## Objective
-R4 decision burst: matrix vs non-negotiables → `docs/research/map-decision.md`
-+ `docs/adr/ADR-0008-map-idiom-decision.md` (zero new external claims, all
-cells cite R1/R2/R3), dual-gated (strict APPROVED; requirements APPROVED).
-Docs only; no product code changed.
+I1a DONE: C entry-point detection + reachability (lib-roots variant,
+founder-approved) — `main` HIGH + handler MEDIUM + lib-root MEDIUM +
+honest `unknown-entry` LOW stub; BFS over resolved MEDIUM+ edges only
+(LOW excluded+captioned); additive IR/schema 1.5 serde-defaulted;
+7 new `i1a_entry_c` locks. Commit `e758681` (code) + state closeout.
 
 ## Phase
-POST-MVP map-first. `map-research` R1 ✅ R2 ✅ R3 ✅ R4 ✅ (all evidence-backed);
-`map-build` I1 queued (gated on ADR-0008 leaving Proposed). Paper + JS+TS
-parked behind map; M5 parked behind B-pf-001/002.
+POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1a ✅ (C),
+I1b (Rust) queued next session. Paper + JS+TS parked behind map;
+M5 parked behind B-pf-001/002.
 
 ## Alignment (L6)
 - **Goal restated:** Perfpal is a CLI (Rust) emitting heuristics + the maintainer
@@ -42,11 +43,14 @@ parked behind map; M5 parked behind B-pf-001/002.
 ## Verification
 | Claim | Command | Result |
 |---|---|---|
-| Zero http in new files | `rg "https?://" docs/research/map-decision.md docs/adr/ADR-0008*` | no matches (exit 1) |
-| Sizes | `wc -l` | 183 + 119 lines |
-| Reviews | rev-1 + req-1 terminal | APPROVED / APPROVED |
-| No product code changed | `git status --short` | research + adr + state/docs only |
-| Hot-state hygiene | byte count | **8171 B / 8192 B** (D-pf-216 added, A-pf-088 done, A-pf-089 queues I1) |
+| fmt | `cargo fmt --all -- --check` | exit 0 |
+| clippy | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
+| tests | `cargo test --locked` | 634 passed / 0 failed |
+| licenses | `cargo deny check licenses` | ok (exit 0) |
+| ratchets | `cargo test --locked --test benchmark --test precision_kpi` + `git diff --name-only` | 1+1 pass, NO_RATCHET_FILES_TOUCHED |
+| rev-1 | read-only review | APPROVED, no blocking findings |
+| rev-2 | requirements check (7 clauses) | code 7/7 PASS; procedural gaps closed by gate evidence above |
+| commit | `git log --oneline -1` | `e758681` I1a code, independent |
 
 ## Risks / Open
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`**
@@ -59,18 +63,18 @@ parked behind map; M5 parked behind B-pf-001/002.
   rejection amends birdseye F3 via new ADR, never silent.
 
 ## Next Actions
-1. **NEXT SESSION (`/new`): I1 entry-points + reachability** per `map-build`
-   (gated on ADR-0008 leaving Proposed — founder accept). Read state + this
-   handoff first.
-2. Then I2–I5. M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080).
+1. **NEXT SESSION (`/new`): I1b Rust entry-points + reachability** — same
+   contract (`main` + bin/lib targets), additive only, `cargo test` green,
+   independent commit.
+2. Then I1c (Python) → I2 cost-v2 → I3 map layer → I4 annotations → I5 proof+demo.
+   M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080).
 
 ## Change set (this session)
-- **Research:** `docs/research/map-decision.md` (new, 183 lines).
-- **ADR:** `docs/adr/ADR-0008-map-idiom-decision.md` (new, 119 lines).
-- **State:** `state/session-state.json` (phase R4 DONE, D-pf-216 live, A-pf-088
-  done, A-pf-089 queues I1; 8171 B), this handoff, `docs/activeContext.md`,
-  `CHANGELOG.md`.
-- **Unchanged:** ledger (no demotions needed this session).
+- **Code:** IR+schema 1.5, C detector + reachability, `tests/i1a_entry_c.rs`
+  (7 locks), goldens regen (findings byte-identical) — commit `e758681`.
+- **State/docs:** `state/session-state.json` (D-pf-218 live, A-pf-090 done,
+  A-pf-091 queues I1b), this handoff, `docs/activeContext.md`, `CHANGELOG.md`
+  (state commit follows code commit).
 
 ## L2 state split / L6 north-star (history)
 Hot/cold split 2026-09-29; north-star pinned 2026-10-01, realigned to
