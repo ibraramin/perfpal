@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "R3 DONE (map-honesty.md 7 venue papers, dual gate clean); R4 gate queued; paper+JS+TS parked; M5 gated B-pf-001/002.",
+  "current_phase": "R4 DONE (decision+ADR-0008 dual OK); I1 queued; paper/JS+TS parked; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -96,6 +96,11 @@
       "id": "D-pf-215",
       "status": "live",
       "title": "Map-first LOCKED: maintainer-map spec + map-research R1-R4 + map-build I1-I5; birdseye map is core; JS+TS/paper queue behind"
+    },
+    {
+      "id": "D-pf-216",
+      "status": "live",
+      "title": "R4: L0 DSM, L1 Sugiyama, L2 treemap+HEB, 3rd entry-stratified; dual OK"
     }
   ],
   "open_risks": [
@@ -196,8 +201,13 @@
     },
     {
       "id": "A-pf-088",
+      "status": "done",
+      "action": "R4 gate -> map-decision.md + ADR (zero new claims, cites R1/R2/R3); then I1-I5"
+    },
+    {
+      "id": "A-pf-089",
       "status": "active",
-      "action": "NEXT SESSION (/new): R4 gate -> docs/research/map-decision.md + ADR (zero new external claims, matrix cites R1/R2/R3); then map-build I1-I5"
+      "action": "I1 entry+reachability per map-build (ADR-0008 gate)"
     }
   ],
   "last_updated": "2026-10-17"

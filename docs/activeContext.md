@@ -1,11 +1,13 @@
 # Active Context
 
 ## Current Task
-R3 DONE — `docs/research/map-honesty.md` (212 lines, 117 dated cites:
-cost-without-lying idioms, cap/omission markers, 7 venue papers; strict
-APPROVED + requirements APPROVED). R4 gate queued for fresh session.
+R4 DONE — `docs/research/map-decision.md` (183 lines, 7×5 matrix, 4 level
+idioms, 7 rejections, 11 legends) + `docs/adr/ADR-0008` (119 lines, Proposed);
+zero http, strict APPROVED + requirements APPROVED. I1 queued.
 
 ## Recent Decisions
+- **D-pf-216 (live):** R4 idioms — L0 DSM, L1 Sugiyama-native, L2 treemap+HEB
+  (intra-component only), 3rd entry-stratified Sugiyama; A5 demo is reversal trigger.
 - **D-pf-215 (live):** map-first direction LOCKED — maintainer birdseye map is the core feature;
   exhaustive sessionized research (R1 algorithms → R2 precedents → R3 honesty → R4 ADR gate) before
   any implementation (I1 entry-points → I2 cost-v2 → I3 map layer → I4 annotations → I5 proof+demo).
@@ -15,15 +17,13 @@ APPROVED + requirements APPROVED). R4 gate queued for fresh session.
 - *(Cold `state/archive/ledger.jsonl`: D-pf-195–207 batches, A-pf-062/075/076/079/082, D-pf-200–205, done A-pf-015/047/065/081/083 — append-only.)*
 
 ## In Progress
-- Committing map-first planning set now. Nothing else open.
+- Committing R4 gate now. Nothing else open.
 
 ## Next
-- **NEXT SESSION (`/new`): R4 gate research** — matrix vs non-negotiables,
-  recommended idiom per map level + rejected alternatives, zero new external
-  claims (all evidence from R1–R3) → `docs/research/map-decision.md` + ADR
-  under the hardened plan. Signpost: spec `maintainer-map`,
-  plans `map-research` + `map-build`, R3 commit + this handoff.
-- Then R4 (ADR gate) → I1–I5. FEATURE-spec question for both plans: skipped by
+- **NEXT SESSION (`/new`): I1 entry-points + reachability** per `map-build`,
+  gated on ADR-0008 leaving Proposed. Signpost: spec `maintainer-map`,
+  plans `map-research` + `map-build`, R4 commit + handoff.
+- Then I2–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077) folds into I3.
   Re-owed pixel glance when vision backend returns.
