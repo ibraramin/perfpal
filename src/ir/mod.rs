@@ -549,6 +549,40 @@ pub struct FunctionRecord {
     /// for parser-free or pre-fix inputs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cfg_gated: Option<bool>,
+    /// ADDITIVE v1.5 linkage fact (plan `map-build` I1a, C only): `Some(true)`
+    /// when the definition carries `static` (internal linkage — NOT exported,
+    /// so never a lib-root); `Some(false)` for external-linkage definitions
+    /// (exported — lib-root candidates in main-less files); `None`
+    /// (omitted) when unknown or for non-C backends (Rust/Python leave it
+    /// `None`). Populated by the C backend at scan time (direct
+    /// `storage_class_specifier` child of the `function_definition` node).
+    /// Same serde-default pattern; IR-internal like `param_types` (the schema
+    /// DTO does NOT mirror it — entry/reachability is the wire surface).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_static: Option<bool>,
+    /// ADDITIVE v1.5 entry kind (plan `map-build` I1a, C only): closed set
+    /// `main` | `handler` | `lib-root` | `unknown-entry`. Whole-program
+    /// (aggregator-owned, exactly like the v1.4 call-shape fields): backends
+    /// leave it `None`; the aggregator's entry pass resolves it for C
+    /// functions (other languages stay `None`/omitted this burst). Same
+    /// serde-default pattern.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_kind: Option<String>,
+    /// ADDITIVE v1.5 entry confidence (plan `map-build` I1a, C only): closed
+    /// set `HIGH` (`main`) | `MEDIUM` (`handler`, `lib-root`) | `LOW`
+    /// (`unknown-entry` stub). Same ownership/serde-default pattern as
+    /// [`FunctionRecord::entry_kind`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_confidence: Option<String>,
+    /// ADDITIVE v1.5 reachability membership (plan `map-build` I1a, C only):
+    /// `Some(true)` when the function is reachable from a C entry over
+    /// RESOLVED call edges only (semantic-fact-backed, MEDIUM+ — the
+    /// LOW-confidence name-based fallback is EXCLUDED and captioned in the
+    /// aggregator); `Some(false)` when unreachable; `None` (omitted) for
+    /// non-C languages this burst. Same ownership/serde-default pattern as
+    /// [`FunctionRecord::entry_kind`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reachable_from_entry: Option<bool>,
 }
 
 /// Resolver tier tag carried by every event (ir-v1.md §2). v1 emits only

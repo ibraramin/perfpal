@@ -690,6 +690,24 @@ fn function_unit(
     }
 
     let id = format!("{path}#{name}#{}:{}", span.start_line, span.start_col);
+    // I1a linkage fact: `static` arrives as a DIRECT `storage_class_specifier`
+    // child of the `function_definition` node (same shape `collect_global_vars`
+    // already matches on `declaration`). Anything else (including explicit
+    // `extern`) is external linkage ⇒ exported.
+    let mut is_static = false;
+    let mut declarator_cursor = fdef.walk();
+    if declarator_cursor.goto_first_child() {
+        loop {
+            let child = declarator_cursor.node();
+            if child.kind() == "storage_class_specifier" && text(child, source) == "static" {
+                is_static = true;
+                break;
+            }
+            if !declarator_cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
     let record = crate::ir::FunctionRecord {
         id,
         name,
@@ -717,6 +735,13 @@ fn function_unit(
         error_path: None,
         alloc_family: None,
         cfg_gated: None,
+        // v1.5 I1a (plan `map-build`): linkage is scan-local; entry and
+        // reachability need the whole-program view, so they stay `None` here
+        // for the aggregator's entry pass.
+        is_static: Some(is_static),
+        entry_kind: None,
+        entry_confidence: None,
+        reachable_from_entry: None,
     };
     FunctionUnit {
         record,
@@ -1460,6 +1485,29 @@ int process(int n, char *buf) {
         assert_eq!(ex.global_vars.len(), 1);
         assert_eq!(ex.global_vars[0].name, "g_count");
         assert_eq!(ex.global_vars[0].storage, crate::ir::StorageClass::Static);
+    }
+
+    /// v1.5 I1a (plan `map-build`): the linkage fact feeding lib-root
+    /// detection — `static` definitions report `Some(true)`, everything else
+    /// (including explicit `extern`) reports `Some(false)`.
+    #[test]
+    fn function_static_linkage_recorded() {
+        let src = "static int hidden(void) { return 1; }\n\
+                   int shown(void) { return hidden(); }\n\
+                   extern int declared(void) { return 0; }\n";
+        let ex = extract("t.c", src.as_bytes());
+        assert_eq!(ex.functions.len(), 3);
+        let flag = |name: &str| {
+            ex.functions
+                .iter()
+                .find(|f| f.record.name == name)
+                .unwrap_or_else(|| panic!("function {name} present"))
+                .record
+                .is_static
+        };
+        assert_eq!(flag("hidden"), Some(true));
+        assert_eq!(flag("shown"), Some(false));
+        assert_eq!(flag("declared"), Some(false));
     }
 
     #[test]

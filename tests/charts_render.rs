@@ -205,6 +205,9 @@ fn costly_fn(path: &str, name: &str, cyclomatic: u32) -> FunctionStats {
         error_path: Some(false),
         alloc_family: None,
         cfg_gated: None,
+        entry_kind: None,
+        entry_confidence: None,
+        reachable_from_entry: None,
     }
 }
 

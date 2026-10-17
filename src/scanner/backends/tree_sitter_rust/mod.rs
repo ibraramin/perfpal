@@ -977,6 +977,12 @@ fn function_unit(
         error_path: None,
         alloc_family: None,
         cfg_gated: None,
+        // v1.5 I1a (plan `map-build`): C-only this burst — linkage, entry
+        // and reachability stay `None` for Rust (I1b owns them).
+        is_static: None,
+        entry_kind: None,
+        entry_confidence: None,
+        reachable_from_entry: None,
     };
     FunctionUnit {
         record,

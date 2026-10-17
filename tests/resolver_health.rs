@@ -204,7 +204,7 @@ fn no_enrichment_facts_without_feature() {
 /// and the bundled schema uses the full v1.4 artifact name.
 #[test]
 #[cfg(not(feature = "semantic-clang"))]
-fn e2e_metrics_show_schema_1_4_and_absent_resolver() {
+fn e2e_metrics_show_schema_1_5_and_absent_resolver() {
     let out = temp_dir("e2e11").join("perfpal-report");
     let code = run_with(argv(&[
         "--output",
@@ -214,7 +214,7 @@ fn e2e_metrics_show_schema_1_4_and_absent_resolver() {
     assert_eq!(code, 0, "pipeline over the e2e fixture must succeed");
     let raw = fs::read_to_string(out.join("metrics.json")).expect("metrics.json present");
     let doc: serde_json::Value = serde_json::from_str(&raw).expect("metrics.json parses");
-    assert_eq!(doc["schema_version"], "1.4");
+    assert_eq!(doc["schema_version"], "1.5");
     let files = doc["files"].as_array().expect("files[] present");
     assert!(!files.is_empty());
     for file in files {

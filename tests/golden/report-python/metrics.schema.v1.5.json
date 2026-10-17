@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.4.json",
-  "title": "Perfpal metrics.json schema v1.4",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.5.json",
+  "title": "Perfpal metrics.json schema v1.5",
   "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, Rust, Python). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.4",
+      "const": "1.5",
       "description": "Schema version of this document. MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
@@ -141,7 +141,10 @@
               "idiom_hash": { "type": "string", "description": "ADDITIVE v1.4: token-normalized idiom hash of the function body (comment-strip + whitespace-collapse, FNV-1a hex; clone/idiom-rate bucketing). Populated since IR v1.4 step 2; omitted when uncomputed." },
               "error_path": { "type": "boolean", "description": "ADDITIVE v1.4: true when the function body contains an error-handling path (try/except, ?/Err-return, do-while(0), #if 0 / cfg(test) gating, error-branch free). Conservative clear-case detectors; populated since IR v1.4 step 2; omitted when uncomputed." },
               "alloc_family": { "type": "string", "description": "ADDITIVE v1.4: dominant allocation family of the function — one of real_alloc (true heap allocation), empty_ctor (empty-container construction: String::new/Vec::new/map-set ::new, empty vec![], zero-arg container ctors), serialize (formatting/serialization-shaped: format!/to_string/collect, str(x)). Majority over alloc-family call sites, ties toward the lexicographically smallest tag; omitted when the function has no alloc sites." },
-              "cfg_gated": { "type": "boolean", "description": "ADDITIVE precision-gate flag (precision FP-class fix 2): true only when the function is defined inside a provably-dead configuration region (C #if 0 — the code never compiles). Omitted when uncomputed or live." }
+              "cfg_gated": { "type": "boolean", "description": "ADDITIVE precision-gate flag (precision FP-class fix 2): true only when the function is defined inside a provably-dead configuration region (C #if 0 — the code never compiles). Omitted when uncomputed or live." },
+              "entry_kind": { "type": "string", "enum": ["main", "handler", "lib-root", "unknown-entry"], "description": "ADDITIVE v1.5 (map-build I1a, C only): entry kind of the function — main (program entry, HIGH confidence), handler (*handler*/*callback*/*dispatch* name heuristic, MEDIUM), lib-root (exported non-static function in a main-less file, MEDIUM), unknown-entry (honest stub when the C corpus yields zero entries, LOW). Omitted when the function is not an entry, or for non-C languages." },
+              "entry_confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"], "description": "ADDITIVE v1.5: entry confidence matching entry_kind — HIGH for main, MEDIUM for handler/lib-root, LOW for the unknown-entry stub. Omitted exactly when entry_kind is omitted." },
+              "reachable_from_entry": { "type": "boolean", "description": "ADDITIVE v1.5: true when the function is reachable from a C entry over RESOLVED call edges only (semantic-fact-backed, MEDIUM or better — LOW-confidence name-based edges are excluded). Populated for every C function; omitted for non-C languages." }
             }
           }
         },

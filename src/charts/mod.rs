@@ -947,6 +947,10 @@ mod tests {
             error_path: Some(true),
             alloc_family: Some("real_alloc".to_string()),
             cfg_gated: None,
+            // v1.5: entry/reachability play no role in cost.
+            entry_kind: None,
+            entry_confidence: None,
+            reachable_from_entry: None,
         };
         // 3 + 2 + 2*1 + 3*2 + 4 + 1 + 2 + 2 + 1 + 1 = 24.
         assert_eq!(function_cost(&costly), 24.0);
@@ -971,6 +975,9 @@ mod tests {
             error_path: None,
             alloc_family: None,
             cfg_gated: None,
+            entry_kind: None,
+            entry_confidence: None,
+            reachable_from_entry: None,
         };
         assert_eq!(function_cost(&bare), 1.0);
     }

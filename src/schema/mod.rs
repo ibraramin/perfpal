@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.4.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.5.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -50,7 +50,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.4.json
+/// Schema version of emitted documents (metrics.schema.v1.5.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
 ///
@@ -75,19 +75,24 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// `call_fanin`, `call_depth`, `is_recursive`, `idiom_hash`, `error_path`,
 /// `alloc_family`) plus the first populated `stats.distributions[]`
 /// histograms; v1.3 documents still validate.
-pub const SCHEMA_VERSION: &str = "1.4";
+///
+/// v1.4 → v1.5 (minor/additive, plan `map-build` I1a): three OPTIONAL
+/// `stats.functions[]` entry/reachability fields (`entry_kind`,
+/// `entry_confidence`, `reachable_from_entry`, populated for C only);
+/// v1.4 documents still validate.
+pub const SCHEMA_VERSION: &str = "1.5";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.4"` ⇒ `metrics.schema.v1.4.json`, never an elided `.0`. Kept as a
+/// `"1.5"` ⇒ `metrics.schema.v1.5.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.4.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.5.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.4.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.5.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift. The v1.3 + v1.2 + v1.1 + v1.0 docs copies are kept as history.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.4.json");
+/// the two cannot drift. The v1.4 + v1.3 + v1.2 + v1.1 + v1.0 docs copies are kept as history.
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.5.json");
 
 // ---------------------------------------------------------------------------
 // Document model — nine sections, field-for-field vs the canonical schema
@@ -163,7 +168,7 @@ pub struct ParseHealthSummary {
 pub struct FileEntry {
     /// Repo-relative POSIX path.
     pub path: String,
-    /// `"c"`, `"rust"`, or `"python"` (schema 1.4 admits all three).
+    /// `"c"`, `"rust"`, or `"python"` (schema 1.5 admits all three).
     pub language: String,
     pub loc: LocCounts,
     pub function_count: u32,
@@ -256,6 +261,26 @@ pub struct FunctionStats {
     /// region (C `#if 0`). Omitted when uncomputed or live.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cfg_gated: Option<bool>,
+    /// ADDITIVE v1.5 (plan `map-build` I1a, C only): entry kind — closed set
+    /// `main` | `handler` | `lib-root` | `unknown-entry`. `Some` only for C
+    /// functions (the aggregator's entry pass covers every C function id, so
+    /// a C function with no entry role carries `None`/omitted, NOT a stub —
+    /// the `unknown-entry` stub fires only when the whole C corpus yields
+    /// zero entries); `None` (omitted) for Rust/Python this burst.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_kind: Option<String>,
+    /// ADDITIVE v1.5: entry confidence — closed set `HIGH` (`main`) |
+    /// `MEDIUM` (`handler`, `lib-root`) | `LOW` (`unknown-entry` stub).
+    /// `Some` exactly when [`FunctionStats::entry_kind`] is `Some`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_confidence: Option<String>,
+    /// ADDITIVE v1.5: true when the function is reachable from a C entry over
+    /// RESOLVED call edges only (semantic-fact-backed, MEDIUM+ — the
+    /// LOW-confidence name-based fallback is EXCLUDED, so a uniquely-named
+    /// callee with no semantic fact still reports `false`). `Some` for every
+    /// C function; `None` (omitted) for Rust/Python this burst.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reachable_from_entry: Option<bool>,
 }
 
 /// One element of `findings[]` — the analyzer's [`Finding`] lifted into its
@@ -581,11 +606,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.4.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.5.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.4.json drifted from \
-             docs/schema/metrics.schema.v1.4.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.5.json drifted from \
+             docs/schema/metrics.schema.v1.5.json — re-copy the canonical artifact"
         );
     }
 
@@ -672,6 +697,11 @@ mod tests {
                     error_path: None,
                     alloc_family: None,
                     cfg_gated: None,
+                    // v1.5: uncomputed entry/reachability fields stay None
+                    // (omitted on the wire).
+                    entry_kind: None,
+                    entry_confidence: None,
+                    reachable_from_entry: None,
                 }],
                 distributions: None,
             },
@@ -769,6 +799,10 @@ mod tests {
             "\"idiom_hash\"",
             "\"error_path\"",
             "\"alloc_family\"",
+            // v1.5: uncomputed entry/reachability fields are omitted.
+            "\"entry_kind\"",
+            "\"entry_confidence\"",
+            "\"reachable_from_entry\"",
         ] {
             assert!(!out.contains(absent), "{absent} should be omitted:\n{out}");
         }

@@ -226,6 +226,11 @@ pub(crate) mod test_support {
                 error_path: None,
                 alloc_family: None,
                 cfg_gated: None,
+                // v1.5 I1a: C-only — Python test fixtures stay unmarked.
+                is_static: None,
+                entry_kind: None,
+                entry_confidence: None,
+                reachable_from_entry: None,
             },
             calls,
             assignments,

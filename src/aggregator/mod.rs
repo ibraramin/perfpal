@@ -119,7 +119,12 @@ pub fn assemble(
         }
     }
 
-    let functions = function_stats(units, &call_shape(units));
+    let shape = call_shape(units);
+    // v1.5 I1a (plan `map-build`): C entry + reachability pass (C-only
+    // gate inside; Rust/Python units never contribute).
+    let entries = detect_c_entries(units);
+    let reachable = c_reachable(&entries, &resolved_c_edges(units));
+    let functions = function_stats(units, &shape, &entries, &reachable);
     let distributions = distributions(&functions);
     let graphs = GraphsSection {
         include_graph: include_graph(units),
@@ -198,25 +203,41 @@ fn scan_languages(units: &[FileUnit]) -> Vec<String> {
 /// below (every function id is covered, so every DTO emits `Some`); the three
 /// source-local fields (`idiom_hash`, `error_path`, `alloc_family`) lift
 /// verbatim from the scanner post-pass (`None`/omitted for parser-free or
-/// pre-step-2 inputs).
+/// pre-step-2 inputs). The v1.5 entry/reachability fields come from the
+/// whole-program [`detect_c_entries`] + [`c_reachable`] passes — `Some` for
+/// every C function (C-only gate this burst; Rust/Python stay
+/// `None`/omitted).
 fn function_stats(
     units: &[FileUnit],
     shape: &BTreeMap<String, CallShape>,
+    entries: &BTreeMap<String, (String, String)>,
+    reachable: &BTreeSet<String>,
 ) -> Vec<schema::FunctionStats> {
-    let mut records: Vec<&FunctionRecord> = units
+    let mut records: Vec<(bool, &FunctionRecord)> = units
         .iter()
-        .flat_map(|u| u.functions.iter().map(|f| &f.record))
+        .flat_map(|u| {
+            let is_c = u.file.language.as_str() == "c";
+            u.functions.iter().map(move |f| (is_c, &f.record))
+        })
         .collect();
     records.sort_by(|a, b| {
-        a.path
-            .cmp(&b.path)
-            .then(a.span.start_line.cmp(&b.span.start_line))
-            .then(a.span.start_col.cmp(&b.span.start_col))
+        a.1.path
+            .cmp(&b.1.path)
+            .then(a.1.span.start_line.cmp(&b.1.span.start_line))
+            .then(a.1.span.start_col.cmp(&b.1.span.start_col))
     });
     records
         .into_iter()
-        .map(|r| {
+        .map(|(is_c, r)| {
             let call = shape.get(&r.id).copied().unwrap_or_default();
+            let (entry_kind, entry_confidence) = if is_c {
+                entries
+                    .get(&r.id)
+                    .map(|(kind, confidence)| (Some(kind.clone()), Some(confidence.clone())))
+                    .unwrap_or((None, None))
+            } else {
+                (None, None)
+            };
             schema::FunctionStats {
                 id: r.id.clone(),
                 name: r.name.clone(),
@@ -238,6 +259,18 @@ fn function_stats(
                 error_path: r.error_path,
                 alloc_family: r.alloc_family.clone(),
                 cfg_gated: r.cfg_gated,
+                // v1.5 I1a (plan `map-build`): whole-program entry pass —
+                // `Some` for entries, `None` (omitted) for C non-entries and
+                // for every non-C function (C-only gate this burst).
+                entry_kind,
+                entry_confidence,
+                // v1.5 I1a: BFS membership over resolved edges — `Some` for
+                // every C function, `None` (omitted) for non-C.
+                reachable_from_entry: if is_c {
+                    Some(reachable.contains(&r.id))
+                } else {
+                    None
+                },
             }
         })
         .collect()
@@ -430,6 +463,190 @@ fn reaches_self(adj: &BTreeMap<&str, BTreeSet<&str>>, start: &str) -> bool {
         }
     }
     false
+}
+
+/// Entry-kind tokens (plan `map-build` I1a, C only) — the closed
+/// `stats.functions[].entry_kind` value set, mirrored in
+/// `docs/schema/metrics.schema.v1.5.json`.
+const ENTRY_MAIN: &str = "main";
+const ENTRY_HANDLER: &str = "handler";
+const ENTRY_LIB_ROOT: &str = "lib-root";
+const ENTRY_UNKNOWN: &str = "unknown-entry";
+
+/// Entry-confidence tokens — closed `entry_confidence` value set.
+const ENTRY_HIGH: &str = "HIGH";
+const ENTRY_MEDIUM: &str = "MEDIUM";
+const ENTRY_LOW: &str = "LOW";
+
+/// Handler-heuristic name fragments (plan `map-build` I1a): matched
+/// case-insensitively against the function name (birdseye-map.md F1 —
+/// `*handler*/*callback*/*dispatch*`).
+const HANDLER_FRAGMENTS: [&str; 3] = ["handler", "callback", "dispatch"];
+
+/// C entry-point detection (plan `map-build` I1a — THIS BURST IS C ONLY;
+/// Rust/Python units are never consulted, so their DTO fields stay
+/// `None`/omitted).
+///
+/// Returns `function id → (entry_kind, entry_confidence)`, deterministic
+/// (`BTreeMap`, path-asc tie-break by construction — ids embed
+/// `path#line:col`):
+/// 1. `main` — exact name match (any file, any linkage): `(main, HIGH)`;
+/// 2. handler heuristic — case-insensitive `*handler*`/`*callback*`/
+///    `*dispatch*` substring: `(handler, MEDIUM)`. Precedence: `main` wins
+///    (checked first);
+/// 3. lib-roots — exported (non-`static`, i.e. `is_static != Some(true)`)
+///    functions in MAIN-LESS files (no `main`-named definition in that
+///    path): `(lib-root, MEDIUM)`. Files WITH a `main` contribute no
+///    lib-roots — their surface is reachable from `main` instead;
+/// 4. honest `unknown-entry` stub — when steps 1–3 yield ZERO entries but C
+///    functions exist, EVERY C function becomes `(unknown-entry, LOW)` so
+///    reachability stays total instead of silently empty (never a blank —
+///    maintainer-map honesty contract).
+///
+/// C non-entries (e.g. `static` helpers, callees) are ABSENT from the map
+/// (`None`/omitted on the wire) — absence means "not an entry", not
+/// "unknown".
+fn detect_c_entries(units: &[FileUnit]) -> BTreeMap<String, (String, String)> {
+    let c_functions: Vec<&FunctionRecord> = units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "c")
+        .flat_map(|u| u.functions.iter().map(|f| &f.record))
+        .collect();
+    // Main-less check is per PATH: a file contributes lib-roots only when no
+    // `main`-named C definition lives in that path.
+    let files_with_main: BTreeSet<&str> = c_functions
+        .iter()
+        .filter(|r| r.name == "main")
+        .map(|r| r.path.as_str())
+        .collect();
+
+    let mut entries: BTreeMap<String, (String, String)> = BTreeMap::new();
+    for record in &c_functions {
+        if record.name == "main" {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_MAIN.to_string(), ENTRY_HIGH.to_string()),
+            );
+            continue;
+        }
+        let lowered = record.name.to_lowercase();
+        if HANDLER_FRAGMENTS.iter().any(|frag| lowered.contains(frag)) {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_HANDLER.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+        }
+    }
+    for record in &c_functions {
+        if entries.contains_key(&record.id) {
+            continue; // main/handler precedence already claimed it
+        }
+        // Lib-root = exported (non-static) in a main-less file. `is_static`
+        // is `None` only for pre-I1a inputs — treated as exported (the C
+        // default linkage) rather than silently dropped.
+        if !files_with_main.contains(record.path.as_str()) && record.is_static != Some(true) {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_LIB_ROOT.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+        }
+    }
+    if entries.is_empty() && !c_functions.is_empty() {
+        // Honest stub (birdseye-map.md F1): no heuristic fired anywhere in
+        // the C corpus — every C function is an unknown entry (LOW) so the
+        // reachability BFS below stays total. Captioned, never silent.
+        for record in &c_functions {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_UNKNOWN.to_string(), ENTRY_LOW.to_string()),
+            );
+        }
+    }
+    entries
+}
+
+/// RESOLVED C call edges as `(caller id, callee id)` (plan `map-build` I1a).
+///
+/// Mirrors [`call_shape`] resolution step (1) ONLY — semantic-fact-backed
+/// (`semantic.resolved_definition` → span-intersecting definition, either
+/// file). The name-based fallbacks (call_shape steps 2a/2b — own-file-single
+/// and language-unique matching, the LOW-confidence tier) are DELIBERATELY
+/// EXCLUDED: reachability rides MEDIUM+ edges only (birdseye-map.md F1,
+/// ADR-0008 third layer). C-only gate: both ends must be C function ids.
+///
+/// Sorted/deterministic: `BTreeSet` over `(caller, callee)` id pairs.
+fn resolved_c_edges(units: &[FileUnit]) -> BTreeSet<(String, String)> {
+    let c_ids: BTreeSet<&str> = units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "c")
+        .flat_map(|u| u.functions.iter().map(|f| f.record.id.as_str()))
+        .collect();
+    let mut by_path: BTreeMap<&str, Vec<&FunctionRecord>> = BTreeMap::new();
+    for unit in units.iter().filter(|u| u.file.language.as_str() == "c") {
+        for func in &unit.functions {
+            by_path
+                .entry(func.record.path.as_str())
+                .or_default()
+                .push(&func.record);
+        }
+    }
+
+    let mut edges: BTreeSet<(String, String)> = BTreeSet::new();
+    for unit in units.iter().filter(|u| u.file.language.as_str() == "c") {
+        for func in &unit.functions {
+            let mut calls: Vec<&crate::ir::CallEvent> = func.calls.iter().collect();
+            calls.sort_by_key(|c| (c.meta.span.start_line, c.meta.span.start_col));
+            for call in calls {
+                if call.callee_kind != CalleeKind::Direct || call.meta.macro_origin {
+                    continue;
+                }
+                let Some(site) = call
+                    .semantic
+                    .as_ref()
+                    .and_then(|s| s.resolved_definition.as_ref())
+                else {
+                    continue; // no semantic fact ⇒ LOW-tier name match at
+                    // best — excluded from reachability
+                };
+                let Some(target) = by_path.get(site.path.as_str()).and_then(|defs| {
+                    defs.iter()
+                        .find(|r| r.span.intersects(&site.span))
+                        .map(|r| &r.id)
+                }) else {
+                    continue;
+                };
+                if c_ids.contains(func.record.id.as_str()) && c_ids.contains(target.as_str()) {
+                    edges.insert((func.record.id.clone(), (*target).clone()));
+                }
+            }
+        }
+    }
+    edges
+}
+
+/// Reachability BFS from C entries over RESOLVED edges only (plan
+/// `map-build` I1a). Returns the reachable function-id set — entries
+/// themselves are included (distance 0). Iterative DFS over sorted
+/// adjacency — deterministic; same inputs ⇒ same set on every run.
+fn c_reachable(
+    entries: &BTreeMap<String, (String, String)>,
+    edges: &BTreeSet<(String, String)>,
+) -> BTreeSet<String> {
+    let mut adj: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    for (from, to) in edges {
+        adj.entry(from.as_str()).or_default().insert(to.as_str());
+    }
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    let mut stack: Vec<&str> = entries.keys().map(String::as_str).collect();
+    while let Some(node) = stack.pop() {
+        if !seen.insert(node.to_string()) {
+            continue;
+        }
+        if let Some(next) = adj.get(node) {
+            stack.extend(next.iter().copied());
+        }
+    }
+    seen
 }
 
 /// `graphs.include_graph`: nodes = every scanned file (sorted by path); edges
@@ -1502,6 +1719,10 @@ mod tests {
             error_path: None,
             alloc_family: None,
             cfg_gated: None,
+            // v1.5: entry/reachability play no role in distributions.
+            entry_kind: None,
+            entry_confidence: None,
+            reachable_from_entry: None,
         };
         let functions = vec![
             stat(2, 0),   // 01-04, 0

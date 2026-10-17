@@ -753,6 +753,11 @@ fn func(
             error_path: None,
             alloc_family: None,
             cfg_gated: None,
+            // v1.5 I1a: fixture helper leaves linkage/entry unmarked.
+            is_static: None,
+            entry_kind: None,
+            entry_confidence: None,
+            reachable_from_entry: None,
         },
         calls,
         assignments: Vec::new(),

@@ -79,6 +79,11 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 error_path: None,
                 alloc_family: None,
                 cfg_gated: None,
+                // v1.5 I1a: fixture helper leaves linkage/entry unmarked.
+                is_static: None,
+                entry_kind: None,
+                entry_confidence: None,
+                reachable_from_entry: None,
             },
             calls: vec![call],
             assignments: Vec::new(),
@@ -270,6 +275,11 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                 error_path: None,
                 alloc_family: None,
                 cfg_gated: None,
+                // v1.5 I1a: fixture helper leaves linkage/entry unmarked.
+                is_static: None,
+                entry_kind: None,
+                entry_confidence: None,
+                reachable_from_entry: None,
             },
             calls,
             assignments: Vec::new(),
