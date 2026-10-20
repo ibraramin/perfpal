@@ -265,20 +265,6 @@ impl FuncScan<'_> {
         } else {
             Vec::new()
         };
-        self.loops.push(LoopNode {
-            kind,
-            depth,
-            induction_vars,
-            span,
-            resolver_tier: ResolverTier::Syntactic,
-            macro_origin: false,
-            // I2 scope: C only (D-pf-217 one-language-per-burst); Python
-            // `range()`/range-literal inference is a follow-up => honest unknown.
-            trip_count: None,
-            // No do-while shape in Python: the `(0)`-wrapper gate never fires.
-            condition_is_zero: false,
-        });
-
         // A Python `for` iterable is evaluated once, before the body — visit it
         // at the OUTER depth and skip it in the body walk (same fix as Rust R4).
         // A `while` condition keeps the inner depth (re-evaluated each pass).
@@ -287,6 +273,25 @@ impl FuncScan<'_> {
         } else {
             None
         };
+        // I2c: canonical `range(...)`-over-integer-literals iterables are the
+        // only statically known Python trip counts; everything else stays
+        // honestly unknown (`None`).
+        let trip_count = if kind == LoopKind::For {
+            iterable.and_then(|it| canonical_range_trip_count(it, self.source))
+        } else {
+            None
+        };
+        self.loops.push(LoopNode {
+            kind,
+            depth,
+            induction_vars,
+            span,
+            resolver_tier: ResolverTier::Syntactic,
+            macro_origin: false,
+            trip_count,
+            // No do-while shape in Python: the `(0)`-wrapper gate never fires.
+            condition_is_zero: false,
+        });
         if let Some(it) = iterable {
             self.visit(it);
         }
@@ -335,6 +340,11 @@ impl FuncScan<'_> {
                         .child_by_field_name("left")
                         .map(|l| pattern_identifiers(l, self.source))
                         .unwrap_or_default();
+                    let iterable = clause.child_by_field_name("right");
+                    // I2c: comprehension clauses use the same canonical
+                    // `range(...)` literal gate as statement loops.
+                    let trip_count =
+                        iterable.and_then(|it| canonical_range_trip_count(it, self.source));
                     self.loops.push(LoopNode {
                         kind: LoopKind::For,
                         depth,
@@ -342,12 +352,10 @@ impl FuncScan<'_> {
                         span: ir_span(*clause, self.source),
                         resolver_tier: ResolverTier::Syntactic,
                         macro_origin: false,
-                        // I2 scope: C only; comprehension trip counts unknown.
-                        trip_count: None,
+                        trip_count,
                         // Comprehension clause: never a `(0)`-wrapper.
                         condition_is_zero: false,
                     });
-                    let iterable = clause.child_by_field_name("right");
                     self.loop_depth = depth - 1;
                     self.nesting = nesting;
                     if let Some(it) = iterable {
@@ -872,4 +880,144 @@ fn call_position(node: Node<'_>) -> (StatementRole, bool) {
         return (StatementRole::Unknown, false);
     }
     (role, guarded)
+}
+
+/// Canonical Python `range(...)` trip count (plan `map-build` I2c; completes
+/// I2 for C/Rust/Python).
+///
+/// The ONLY admitted shape is a plain `range(...)` call (bare `range`
+/// identifier callee, not an attribute) whose positional arguments are
+/// integer literals (decimal or `0x`/`0o`/`0b`, `_` separators, optional
+/// unary minus):
+/// - `range(N)` ⇒ `N` for `N > 0`;
+/// - `range(A, B)` ⇒ `B - A` when `B > A` (`range(-5, 5)` ⇒ 10);
+/// - `range(A, B, 1)` ⇒ `B - A`; any other literal step ⇒ `None`.
+///
+/// Everything else is honestly unknown: variable/computed bounds
+/// (`range(n)`, `range(len(x))`), floats, non-`range` calls, keyword
+/// arguments, zero or more than three arguments, empty/descending ranges,
+/// parenthesized bounds, attribute callees (`builtins.range`), and `while`
+/// loops (never routed here). Arbitrary-precision literals saturate, then
+/// clamp to [`crate::ir::MAX_TRIP`].
+fn canonical_range_trip_count(iterable: Node<'_>, source: &[u8]) -> Option<u64> {
+    if iterable.kind() != "call" {
+        return None;
+    }
+    let function = iterable.child_by_field_name("function")?;
+    if function.kind() != "identifier" || text(function, source) != "range" {
+        return None;
+    }
+    let arguments = iterable.child_by_field_name("arguments")?;
+    if arguments.kind() != "argument_list" {
+        return None;
+    }
+    let mut args: Vec<Node<'_>> = Vec::new();
+    let mut cursor = arguments.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            if child.is_named() {
+                args.push(child);
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    let trips = match args.as_slice() {
+        [end] => {
+            let end = python_int_literal_value(*end, source)?;
+            if end <= 0 {
+                return None; // range(0) / negative bound is an empty range
+            }
+            end
+        }
+        [start, end] => {
+            let start = python_int_literal_value(*start, source)?;
+            let end = python_int_literal_value(*end, source)?;
+            if end <= start {
+                return None; // empty / descending range
+            }
+            end.saturating_sub(start)
+        }
+        [start, end, step] => {
+            if python_int_literal_value(*step, source)? != 1 {
+                return None; // any step != 1 (negative included) is unknown
+            }
+            let start = python_int_literal_value(*start, source)?;
+            let end = python_int_literal_value(*end, source)?;
+            if end <= start {
+                return None;
+            }
+            end.saturating_sub(start)
+        }
+        _ => return None, // 0 args, >3 args, keyword args, `*args`
+    };
+    let trips = u64::try_from(trips).unwrap_or(u64::MAX);
+    Some(trips.min(crate::ir::MAX_TRIP))
+}
+
+/// Parse a Python `integer` node (optionally under a unary `-`) into `i128`.
+///
+/// Accepts decimal and `0x`/`0o`/`0b` radixes with `_` separators; only the
+/// unary minus sign is admitted (a `+`/`~` prefix, float, or expression is
+/// honestly unknown). Digits accumulate with saturating arithmetic, so an
+/// arbitrary-precision literal saturates instead of overflowing; the caller
+/// clamps to [`crate::ir::MAX_TRIP`].
+fn python_int_literal_value(node: Node<'_>, source: &[u8]) -> Option<i128> {
+    match node.kind() {
+        "integer" => parse_python_int(text(node, source)),
+        "unary_operator" => {
+            let operator = node.child_by_field_name("operator")?;
+            if text(operator, source) != "-" {
+                return None;
+            }
+            let inner = node.child_by_field_name("argument")?;
+            if inner.kind() != "integer" {
+                return None;
+            }
+            parse_python_int(text(inner, source)).map(i128::saturating_neg)
+        }
+        _ => None,
+    }
+}
+
+/// Parse Python integer-literal text with an optional radix prefix and `_`
+/// separators. Returns `None` for empty/invalid digits.
+fn parse_python_int(raw: &str) -> Option<i128> {
+    let trimmed = raw.trim();
+    let (radix, digits) = if let Some(rest) = trimmed
+        .strip_prefix("0x")
+        .or_else(|| trimmed.strip_prefix("0X"))
+    {
+        (16u32, rest)
+    } else if let Some(rest) = trimmed
+        .strip_prefix("0o")
+        .or_else(|| trimmed.strip_prefix("0O"))
+    {
+        (8u32, rest)
+    } else if let Some(rest) = trimmed
+        .strip_prefix("0b")
+        .or_else(|| trimmed.strip_prefix("0B"))
+    {
+        (2u32, rest)
+    } else {
+        (10u32, trimmed)
+    };
+    if digits.is_empty() {
+        return None;
+    }
+    let mut value: i128 = 0;
+    let mut seen_digit = false;
+    for ch in digits.chars() {
+        if ch == '_' {
+            continue;
+        }
+        let digit = ch.to_digit(radix)?;
+        value = value
+            .saturating_mul(i128::from(radix))
+            .saturating_add(i128::from(digit));
+        seen_digit = true;
+    }
+    if seen_digit { Some(value) } else { None }
 }

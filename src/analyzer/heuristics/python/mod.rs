@@ -383,7 +383,9 @@ pub(crate) mod test_support {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
-            // I2 scope: C only (D-pf-217); Python range() inference is a follow-up.
+            // Synthetic fixtures carry no iterable node, so the scanner's I2c
+            // canonical `range(...)` literal gate cannot run here; the honest
+            // value for a fabricated loop is unknown.
             trip_count: None,
             condition_is_zero: false,
         }

@@ -908,10 +908,10 @@ pub enum LoopKind {
 }
 
 /// Upper bound on a statically inferred loop trip count (plan `map-build`
-/// I2). The C and Rust backends clamp here so cost arithmetic can never
-/// overflow even on absurd literal bounds (`for (i = 0; i <
-/// 18446744073709551615u; i++)`); the aggregator clamps again when consuming
-/// synthetic IR.
+/// I2/I2b/I2c). The C, Rust, and Python backends clamp here so cost
+/// arithmetic can never overflow even on absurd literal bounds (`for (i = 0;
+/// i < 18446744073709551615u; i++)`, `range(10**100)`-sized literals); the
+/// aggregator clamps again when consuming synthetic IR.
 pub const MAX_TRIP: u64 = 1_000_000;
 
 /// Loop record — loops anchor nesting chains (ir-v1.md §3.3).
@@ -925,7 +925,7 @@ pub struct LoopNode {
     pub span: Span,
     pub resolver_tier: ResolverTier,
     pub macro_origin: bool,
-    /// ADDITIVE v1.6 (plan `map-build` I2/I2b): statically known trip count
+    /// ADDITIVE v1.6 (plan `map-build` I2/I2b/I2c): statically known trip count
     /// for a CANONICAL counted loop.
     ///
     /// - C: init `i = 0` (integer literal 0), condition `i < N` / `i <= N`
@@ -934,12 +934,14 @@ pub struct LoopNode {
     /// - Rust: `for` whose iterable is a range with BOTH bounds as
     ///   non-negative integer literals, ascending — `0..10` ⇒ 10,
     ///   `5..15` ⇒ 10, `0..=10` ⇒ 11.
+    /// - Python (I2c): `for`/comprehension whose iterable is a canonical
+    ///   `range(...)` call with integer-literal args — `range(10)` ⇒ 10,
+    ///   `range(-5, 5)` ⇒ 10, `range(0, 10, 1)` ⇒ 10.
     ///
     /// Every non-canonical shape (while/do-while/loop, macro or non-literal
     /// bound, descending range, `step_by(...)`, `.rev()`, multiple induction
-    /// vars, parenthesized bound) reports `None` — honest unknown, never a
-    /// guess. Clamped to [`MAX_TRIP`]. Python deliberately leaves this
-    /// `None` (no range-literal inference yet).
+    /// vars, parenthesized bound, Python non-literal/step≠1 ranges) reports
+    /// `None` — honest unknown, never a guess. Clamped to [`MAX_TRIP`].
     ///
     /// `FunctionUnit.loops` carries the stream, so the value reaches the
     /// aggregator without any extra FileUnit/FunctionUnit field; the schema

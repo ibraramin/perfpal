@@ -253,7 +253,7 @@ fn v1_is_unchanged_and_v2_math_is_pinned() {
 }
 
 // ---------------------------------------------------------------------------
-// (c) unknown-trip honesty: Rust/Python stay unknown; C canonical is known
+// (c) unknown-trip honesty: non-canonical Rust/Python stay unknown; C canonical is known
 // ---------------------------------------------------------------------------
 
 #[test]
@@ -268,10 +268,12 @@ fn unknown_trip_loops_are_honest_for_rust_and_python() {
         "pub fn run(parts: &[i32]) { for i in 0..parts.len() { let _ = parts[i]; } }\n",
     )
     .expect("write Rust fixture");
+    // I2c: Python literal `range(10)` is now KNOWN, so the honesty fixture
+    // uses a non-literal bound (`range(len(items))`) to stay honestly unknown.
     let python_root = temp_dir("honest-python");
     fs::write(
         python_root.join("app.py"),
-        "def run(items):\n    for i in range(10):\n        print(items[i])\n",
+        "def run(items):\n    for i in range(len(items)):\n        print(items[i])\n",
     )
     .expect("write Python fixture");
 
@@ -282,7 +284,7 @@ fn unknown_trip_loops_are_honest_for_rust_and_python() {
             for l in &f.loops {
                 assert_eq!(
                     l.trip_count, None,
-                    "{}: non-C trip counts stay honest-unknown",
+                    "{}: non-canonical trip counts stay honest-unknown",
                     f.record.id
                 );
             }
