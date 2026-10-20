@@ -563,3 +563,15 @@
 {"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-208", "status": "live", "title": "Founder verdict: demo data insightful but presentation overwhelming; digestibility research = next boundary; ablation parked behind it; django 18MB root-caused (26089 findings, no capping)"}}
 {"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-209", "status": "live", "title": "Group-and-fold B BUILT with C-seams: S4 one-row-per-rule + App.C full detail (separate fns); django S4 15.1MB->3.6KB, totals flat by design; 613 tests, dual review APPROVED"}}
 {"demoted_from_hot": "2026-10-17", "record": {"id": "D-pf-210", "status": "live", "title": "Vision backend flaky again (2x model_coming_soon on final spot); chevron/location covered structurally; small re-owed pixel glance when backend returns"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"D-pf-211","status":"live","title":"Alignment audit 2026-10-16 (counter hit 10): 3 plans active (divergence-revamp, evidence-beta, beta-release), 7 done proposed for archive; no drift; counter reset"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"D-pf-212","status":"live","title":"C-full + S5-cap SHIPPED: findings-detail.md/html split, HUMAN_CAP=10 everywhere, django humans 34MB->65.6KB; rev ALL-HOLD + req APPROVED; vision backend still down (3rd fail), structural locks substituted"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"D-pf-213","status":"live","title":"License marker LicenseRef-PolyForm-Strict-1.0.0 (SPDX custom-ref; bare PolyForm-Strict-1.0.0 rejected by cargo-deny 0.20.2); distributions activation still needs founder accept"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"D-pf-214","status":"live","title":"Revamp graded: correctness APPROVED / plan BLOCKED (paper track missing) / depth C-; top-5 deepenings queued for new session"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"D-pf-215","status":"live","title":"Map-first LOCKED: maintainer-map spec + map-research R1-R4 + map-build I1-I5; birdseye map is core; JS+TS/paper queue behind"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"D-pf-216","status":"live","title":"R4: L0 DSM, L1 Sugiyama, L2 treemap+HEB, 3rd entry-stratified; dual OK"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-086","status":"done","action":"NEXT SESSION (/new): R2 precedents research -> docs/research/map-precedents.md; then R3/R4-gate/I1-I5 per map-research + map-build"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-087","status":"done","action":"R3 honesty research -> docs/research/map-honesty.md (fetch-mandated per LL-012); then R4-gate/I1-I5"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-088","status":"done","action":"R4 gate -> map-decision.md + ADR (zero new claims, cites R1/R2/R3); then I1-I5"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-090","status":"done","action":"I1a DONE (e758681)"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-091","status":"done","action":"I1b DONE (e62184e)"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-092","status":"done","action":"I1c DONE (27b2967)"}}

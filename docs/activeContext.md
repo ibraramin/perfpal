@@ -1,9 +1,10 @@
 # Active Context
 
 ## Current Task
-I1 COMPLETE — I1c Python (guard-flag + mirror, enum +`script`, `27b2967`);
-8 i1c locks + 2 backend unit tests green, 651 tests pass, rev APPROVED ×2
-(enum AGREE). I2 cost-v2 queued.
+I2 DONE — cost-v2 (C trip-counts, per-iteration weights, reachable caps,
+schema 1.6, `daffa62`); 9 i2 locks + 2 unit tests, 662 tests pass, rev-code
+APPROVED / rev-req CHANGES_REQUESTED → option-A fix → APPROVED. I3 map layer
+queued.
 
 ## Recent Decisions
 - **D-pf-216 (live):** R4 idioms — L0 DSM, L1 Sugiyama-native, L2 treemap+HEB
@@ -17,13 +18,13 @@ I1 COMPLETE — I1c Python (guard-flag + mirror, enum +`script`, `27b2967`);
 - *(Cold `state/archive/ledger.jsonl`: D-pf-195–207 batches, A-pf-062/075/076/079/082, D-pf-200–205, done A-pf-015/047/065/081/083 — append-only.)*
 
 ## In Progress
-- Committing I1 state closeout now. Nothing else open.
+- Committing I1+I2 state closeout now. Nothing else open.
 
 ## Next
-- **NEXT: I2 cost-v2** — trip-count gating + per-iteration weights +
-  reachability-aware cap election; GENUINE share up, ratchets unlowered.
-  Signpost: plan `map-build`, spec `birdseye-map` F2, I1 commits
-  `e758681`/`e62184e`/`27b2967` + handoff.
+- **NEXT: I3 map layer** — entry-stratified cost map (third stem) + deferred
+  middle-bands layout; goldens byte-stable on double-scan. Signpost: plan
+  `map-build`, spec `birdseye-map` F3, I2 commit `daffa62` + handoff.
+- Then I4 annotations → I5 proof+demo (incl. A-pf-095 true GENUINE triage).
 - Then I2–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077) folds into I3.

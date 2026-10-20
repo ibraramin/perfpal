@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "I1 DONE all langs (a:e758681 b:e62184e c:27b2967); I2 cost-v2 queued; M5 gated B-pf-001/002.",
+  "current_phase": "I2 DONE (cost-v2, daffa62); I3 map layer queued; true GENUINE manual at I5; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -58,36 +58,6 @@
       "title": "CLI surface v1 + exit codes 0/1/2/3"
     },
     {
-      "id": "D-pf-211",
-      "status": "live",
-      "title": "Alignment audit 2026-10-16 (counter hit 10): 3 plans active (divergence-revamp, evidence-beta, beta-release), 7 done proposed for archive; no drift; counter reset"
-    },
-    {
-      "id": "D-pf-212",
-      "status": "live",
-      "title": "C-full + S5-cap SHIPPED: findings-detail.md/html split, HUMAN_CAP=10 everywhere, django humans 34MB->65.6KB; rev ALL-HOLD + req APPROVED; vision backend still down (3rd fail), structural locks substituted"
-    },
-    {
-      "id": "D-pf-213",
-      "status": "live",
-      "title": "License marker LicenseRef-PolyForm-Strict-1.0.0 (SPDX custom-ref; bare PolyForm-Strict-1.0.0 rejected by cargo-deny 0.20.2); distributions activation still needs founder accept"
-    },
-    {
-      "id": "D-pf-214",
-      "status": "live",
-      "title": "Revamp graded: correctness APPROVED / plan BLOCKED (paper track missing) / depth C-; top-5 deepenings queued for new session"
-    },
-    {
-      "id": "D-pf-215",
-      "status": "live",
-      "title": "Map-first LOCKED: maintainer-map spec + map-research R1-R4 + map-build I1-I5; birdseye map is core; JS+TS/paper queue behind"
-    },
-    {
-      "id": "D-pf-216",
-      "status": "live",
-      "title": "R4: L0 DSM, L1 Sugiyama, L2 treemap+HEB, 3rd entry-stratified; dual OK"
-    },
-    {
       "id": "D-pf-217",
       "status": "live",
       "title": "I1 sequenced per-language (founder): C then Rust then Python, one burst each; map-build I1a/b/c + birdseye F1 amended"
@@ -96,6 +66,11 @@
       "id": "D-pf-218",
       "status": "live",
       "title": "I1a DONE C entry+reachability lib-roots, schema 1.5, e758681"
+    },
+    {
+      "id": "D-pf-219",
+      "status": "live",
+      "title": "I2 DONE cost-v2 (trip gating C-only, reachable caps, schema 1.6, daffa62); GENUINE proxy uplift measured, true share manual at I5"
     }
   ],
   "open_risks": [
@@ -185,45 +160,25 @@
       "action": "NEXT SESSION (/new): semantic-deepening burst — trip-count/cost gating + invariance + Rust receiver-type + reachability + runtime spot-checks; maintainer birdseye (entry-point-stratified cost map); then corpus scans + prereg + N=26 campaign"
     },
     {
-      "id": "A-pf-086",
-      "status": "done",
-      "action": "NEXT SESSION (/new): R2 precedents research -> docs/research/map-precedents.md; then R3/R4-gate/I1-I5 per map-research + map-build"
-    },
-    {
-      "id": "A-pf-087",
-      "status": "done",
-      "action": "R3 honesty research -> docs/research/map-honesty.md (fetch-mandated per LL-012); then R4-gate/I1-I5"
-    },
-    {
-      "id": "A-pf-088",
-      "status": "done",
-      "action": "R4 gate -> map-decision.md + ADR (zero new claims, cites R1/R2/R3); then I1-I5"
-    },
-    {
       "id": "A-pf-089",
-      "status": "active",
+      "status": "done",
       "action": "I1 entry+reachability per map-build (ADR-0008 gate)"
     },
     {
-      "id": "A-pf-090",
-      "status": "done",
-      "action": "I1a DONE (e758681)"
-    },
-    {
-      "id": "A-pf-091",
-      "status": "done",
-      "action": "I1b DONE (e62184e)"
-    },
-    {
-      "id": "A-pf-092",
-      "status": "done",
-      "action": "I1c DONE (27b2967)"
-    },
-    {
       "id": "A-pf-093",
-      "status": "active",
+      "status": "done",
       "action": "NEXT: I2 cost-v2"
+    },
+    {
+      "id": "A-pf-094",
+      "status": "active",
+      "action": "NEXT: I3 map layer (entry-stratified cost map + middle-bands; goldens byte-stable)"
+    },
+    {
+      "id": "A-pf-095",
+      "status": "active",
+      "action": "I5: measure true GENUINE share via manual triage (I2 landed proxy uplift only)"
     }
   ],
-  "last_updated": "2026-10-17"
+  "last_updated": "2026-10-21"
 }
