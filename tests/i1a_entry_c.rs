@@ -39,6 +39,9 @@ fn c_record(path: &str, name: &str, line: u32, is_static: Option<bool>) -> Funct
         path: path.to_string(),
         span: Span::point(line, 1),
         is_static,
+        // v1.5 I1c: synthetic-fixture records never carry the backend-owned
+        // `__name__` guard fact.
+        has_main_guard: None,
         ..Default::default()
     }
 }
@@ -298,13 +301,13 @@ fn c_low_confidence_name_edges_excluded_from_reachability() {
 }
 
 // ---------------------------------------------------------------------------
-// Language gates — Python functions never carry entry/reachability fields
-// (I1c owns Python; since I1b the Rust `main` below IS claimed — see
-// `tests/i1b_entry_rust.rs` lock 5 for the Rust-side assertions).
+// Language gates — every language's entries are claimed by its own pass
+// (C since I1a, Rust since I1b, Python since I1c — see
+// `tests/i1c_entry_python.rs` for the Python-side locks).
 // ---------------------------------------------------------------------------
 
 #[test]
-fn language_gates_leave_python_functions_unmarked() {
+fn language_gates_claim_all_three_languages() {
     let units = vec![
         c_unit(
             "app.c",
@@ -312,7 +315,9 @@ fn language_gates_leave_python_functions_unmarked() {
         ),
         // A Rust `main` IS claimed by the Rust entry pass since I1b.
         rust_unit("src/main.rs", "main"),
-        // Python stays unmarked until I1c.
+        // A Python `main`-named def IS claimed by the Python entry pass
+        // since I1c — as a guard-less, non-underscore lib-root (Python has
+        // no `main`-HIGH rule; HIGH is reserved for guarded scripts).
         python_unit("app.py", "main"),
     ];
     let doc = assemble(&units, &[], &prov());
@@ -333,9 +338,9 @@ fn language_gates_leave_python_functions_unmarked() {
         .iter()
         .find(|f| f.path == "app.py")
         .expect("python function present");
-    assert_eq!(py.entry_kind, None);
-    assert_eq!(py.entry_confidence, None);
-    assert_eq!(py.reachable_from_entry, None);
+    assert_eq!(py.entry_kind.as_deref(), Some("lib-root"));
+    assert_eq!(py.entry_confidence.as_deref(), Some("MEDIUM"));
+    assert_eq!(py.reachable_from_entry, Some(true));
 }
 
 // ---------------------------------------------------------------------------

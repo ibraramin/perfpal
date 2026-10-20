@@ -48,8 +48,10 @@ fn rust_record(path: &str, name: &str, line: u32) -> FunctionRecord {
         span: Span::point(line, 1),
         // The Rust backend never populates `is_static` (no surfaced
         // static-linkage concept) — every Rust function counts as
-        // exported-looking for lib-root purposes.
+        // exported-looking for lib-root purposes. The `__name__` guard fact
+        // is Python-backend-owned (I1c) — Rust fixtures leave it `None`.
         is_static: None,
+        has_main_guard: None,
         ..Default::default()
     }
 }
@@ -61,6 +63,7 @@ fn c_record(path: &str, name: &str, line: u32, is_static: Option<bool>) -> Funct
         path: path.to_string(),
         span: Span::point(line, 1),
         is_static,
+        has_main_guard: None,
         ..Default::default()
     }
 }

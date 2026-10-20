@@ -504,3 +504,53 @@ fn augmented_assignment_emits_binary_op_event() {
     assert_eq!(aug.left.name.as_deref(), Some("s"));
     assert_eq!(aug.right.name.as_deref(), Some("x"));
 }
+
+/// I1c: the exact `__name__ == "__main__"` idiom marks the synthetic
+/// `<module>` record `has_main_guard == Some(true)` — double- or
+/// single-quoted, either operand order. Real `def` records stay `None`.
+#[test]
+fn main_guard_flag_set_on_exact_idiom() {
+    for src in [
+        "if __name__ == \"__main__\":\n    run()\n",
+        "if __name__ == '__main__':\n    run()\n",
+        "if \"__main__\" == __name__:\n    run()\n",
+    ] {
+        let ex = extract_py(src);
+        let module = &ex.functions[0];
+        assert_eq!(module.record.name, "<module>");
+        assert_eq!(
+            module.record.has_main_guard,
+            Some(true),
+            "guard idiom must set the flag: {src:?}"
+        );
+    }
+    // Real `def`s never carry the flag, even in a guarded file.
+    let ex = extract_py("def run():\n    pass\nif __name__ == \"__main__\":\n    run()\n");
+    let run = function(&ex, "run");
+    assert_eq!(run.record.has_main_guard, None);
+}
+
+/// I1c: guard-less modules report `Some(false)`; `__name__` compared against
+/// anything else (`!=`, `is`, another name) never sets the flag.
+#[test]
+fn main_guard_flag_absent_or_negative_comparison() {
+    // No guard at all — explicit `Some(false)`, never `None`.
+    let ex = extract_py("def run():\n    pass\n");
+    assert_eq!(ex.functions[0].record.has_main_guard, Some(false));
+
+    // Near-miss comparisons: wrong operator, wrong literal, name-vs-name.
+    for src in [
+        "if __name__ != \"__main__\":\n    run()\n",
+        "if __name__ is \"__main__\":\n    run()\n",
+        "if __name__ == \"__other__\":\n    run()\n",
+        "if __name__ == __name__:\n    run()\n",
+        "if name == \"__main__\":\n    run()\n",
+    ] {
+        let ex = extract_py(src);
+        assert_eq!(
+            ex.functions[0].record.has_main_guard,
+            Some(false),
+            "near-miss must not set the flag: {src:?}"
+        );
+    }
+}

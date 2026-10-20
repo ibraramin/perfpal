@@ -76,10 +76,10 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// `alloc_family`) plus the first populated `stats.distributions[]`
 /// histograms; v1.3 documents still validate.
 ///
-/// v1.4 → v1.5 (minor/additive, plan `map-build` I1a C + I1b Rust): three
-/// OPTIONAL `stats.functions[]` entry/reachability fields (`entry_kind`,
-/// `entry_confidence`, `reachable_from_entry`, populated for C and Rust;
-/// Python stays omitted until I1c); v1.4 documents still validate.
+/// v1.4 → v1.5 (minor/additive, plan `map-build` I1a C + I1b Rust + I1c
+/// Python): three OPTIONAL `stats.functions[]` entry/reachability fields
+/// (`entry_kind`, `entry_confidence`, `reachable_from_entry`, populated for
+/// C, Rust and Python); v1.4 documents still validate.
 pub const SCHEMA_VERSION: &str = "1.5";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
@@ -261,25 +261,27 @@ pub struct FunctionStats {
     /// region (C `#if 0`). Omitted when uncomputed or live.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cfg_gated: Option<bool>,
-    /// ADDITIVE v1.5 (plan `map-build` I1a C + I1b Rust): entry kind —
-    /// closed set `main` | `handler` | `lib-root` | `unknown-entry`. `Some`
-    /// only for C/Rust functions (the aggregator's entry passes cover every
-    /// C/Rust function id, so a function with no entry role carries
-    /// `None`/omitted, NOT a stub — the `unknown-entry` stub fires only
-    /// when the whole per-language corpus yields zero entries); `None`
-    /// (omitted) for Python until I1c.
+    /// ADDITIVE v1.5 (plan `map-build` I1a C + I1b Rust + I1c Python):
+    /// entry kind — closed set `main` | `script` | `handler` | `lib-root` |
+    /// `unknown-entry` (`script` is Python-only: a guarded `<module>`
+    /// record). `Some` only for entries (the aggregator's entry passes
+    /// cover every function id of each language, so a function with no
+    /// entry role carries `None`/omitted, NOT a stub — the `unknown-entry`
+    /// stub fires only when the whole per-language corpus yields zero
+    /// entries).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entry_kind: Option<String>,
-    /// ADDITIVE v1.5: entry confidence — closed set `HIGH` (`main`) |
-    /// `MEDIUM` (`handler`, `lib-root`) | `LOW` (`unknown-entry` stub).
-    /// `Some` exactly when [`FunctionStats::entry_kind`] is `Some`.
+    /// ADDITIVE v1.5: entry confidence — closed set `HIGH` (`main`,
+    /// `script`) | `MEDIUM` (`handler`, `lib-root`) | `LOW`
+    /// (`unknown-entry` stub). `Some` exactly when
+    /// [`FunctionStats::entry_kind`] is `Some`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entry_confidence: Option<String>,
-    /// ADDITIVE v1.5: true when the function is reachable from a C/Rust entry
-    /// over RESOLVED call edges only (semantic-fact-backed, MEDIUM+ — the
-    /// LOW-confidence name-based fallback is EXCLUDED, so a uniquely-named
-    /// callee with no semantic fact still reports `false`). `Some` for every
-    /// C/Rust function; `None` (omitted) for Python until I1c.
+    /// ADDITIVE v1.5: true when the function is reachable from an entry of
+    /// its own language over RESOLVED call edges only (semantic-fact-backed,
+    /// MEDIUM+ — the LOW-confidence name-based fallback is EXCLUDED, so a
+    /// uniquely-named callee with no semantic fact still reports `false`).
+    /// `Some` for every function.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reachable_from_entry: Option<bool>,
 }

@@ -754,7 +754,9 @@ fn func(
             alloc_family: None,
             cfg_gated: None,
             // v1.5 I1a: fixture helper leaves linkage/entry unmarked.
+            // v1.5 I1c keeps the `__name__` guard fact backend-owned.
             is_static: None,
+            has_main_guard: None,
             entry_kind: None,
             entry_confidence: None,
             reachable_from_entry: None,

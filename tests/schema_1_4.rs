@@ -1,7 +1,7 @@
-//! metrics.json schema 1.5 end-to-end lock (plan `map-build` I1a): three
-//! OPTIONAL `stats.functions[]` entry/reachability fields (`entry_kind`,
-//! `entry_confidence`, `reachable_from_entry`, populated for C only) —
-//! additive-only over 1.4, so every `required` list is byte-equal to the
+//! metrics.json schema 1.5 end-to-end lock (plan `map-build` I1a + I1b Rust +
+//! I1c Python): three OPTIONAL `stats.functions[]` entry/reachability
+//! fields (`entry_kind`, `entry_confidence`, `reachable_from_entry`,
+//! populated for C, Rust and Python) — additive-only over 1.4, so every `required` list is byte-equal to the
 //! v1.4 artifact's. Retains the 1.4 locks below as history: the seven v1.4
 //! instrument fields + populated distributions (tests (6)–(7)), the language
 //! enum + structural finding-id locks (tests (1)–(5)).
@@ -363,10 +363,11 @@ fn v1_5_required_lists_match_v1_4_and_v1_3_exactly() {
             "v1.5 must declare optional stats.functions[] field {field}"
         );
     }
-    // Closed value sets on the wire.
+    // Closed value sets on the wire (`script` joined in I1c for Python
+    // guarded modules — still the v1.5 artifact, no version bump).
     assert_eq!(
         props["entry_kind"]["enum"],
-        serde_json::json!(["main", "handler", "lib-root", "unknown-entry"])
+        serde_json::json!(["main", "script", "handler", "lib-root", "unknown-entry"])
     );
     assert_eq!(
         props["entry_confidence"]["enum"],

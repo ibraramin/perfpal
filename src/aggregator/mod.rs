@@ -120,20 +120,23 @@ pub fn assemble(
     }
 
     let shape = call_shape(units);
-    // v1.5 I1a+I1b (plan `map-build`): C + Rust entry + reachability
-    // passes (per-language gates inside; Python units never contribute —
-    // I1c owns them).
+    // v1.5 I1a+I1b+I1c (plan `map-build`): C + Rust + Python entry +
+    // reachability passes (per-language gates inside).
     let c_entries = detect_c_entries(units);
     let rust_entries = detect_rust_entries(units);
+    let python_entries = detect_python_entries(units);
     let mut entries = c_entries.clone();
     entries.extend(rust_entries.clone());
+    entries.extend(python_entries.clone());
     let c_edges = resolved_c_edges(units);
     let rust_edges = resolved_rust_edges(units);
+    let python_edges = resolved_python_edges(units);
     // Union of the per-language BFS closures == the combined BFS: edge
     // sets are language-disjoint (each resolver gates both ends to its own
     // language ids), so no cross-language path exists to merge.
     let mut reachable = c_reachable(&c_entries, &c_edges);
     reachable.extend(rust_reachable(&rust_entries, &rust_edges));
+    reachable.extend(python_reachable(&python_entries, &python_edges));
     let functions = function_stats(units, &shape, &entries, &reachable);
     let distributions = distributions(&functions);
     let graphs = GraphsSection {
@@ -214,9 +217,10 @@ fn scan_languages(units: &[FileUnit]) -> Vec<String> {
 /// source-local fields (`idiom_hash`, `error_path`, `alloc_family`) lift
 /// verbatim from the scanner post-pass (`None`/omitted for parser-free or
 /// pre-step-2 inputs). The v1.5 entry/reachability fields come from the
-/// whole-program [`detect_c_entries`] + [`detect_rust_entries`] and
-/// [`c_reachable`] + [`rust_reachable`] passes — `Some` for every C and Rust
-/// function (C+Rust gate since I1b; Python stays `None`/omitted — I1c).
+/// whole-program [`detect_c_entries`] + [`detect_rust_entries`] +
+/// [`detect_python_entries`] and [`c_reachable`] + [`rust_reachable`] +
+/// [`python_reachable`] passes — `Some` for every C, Rust and Python
+/// function.
 fn function_stats(
     units: &[FileUnit],
     shape: &BTreeMap<String, CallShape>,
@@ -226,7 +230,7 @@ fn function_stats(
     let mut records: Vec<(bool, &FunctionRecord)> = units
         .iter()
         .flat_map(|u| {
-            let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust");
+            let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python");
             u.functions.iter().map(move |f| (entry_scoped, &f.record))
         })
         .collect();
@@ -269,13 +273,12 @@ fn function_stats(
                 error_path: r.error_path,
                 alloc_family: r.alloc_family.clone(),
                 cfg_gated: r.cfg_gated,
-                // v1.5 I1a+I1b (plan `map-build`): whole-program entry
-                // passes — `Some` for entries, `None` (omitted) for C/Rust
-                // non-entries and for every Python function (I1c owns it).
+                // v1.5 I1a+I1b+I1c: whole-program entry passes — `Some`
+                // for entries, `None` (omitted) for non-entries.
                 entry_kind,
                 entry_confidence,
-                // v1.5 I1a+I1b: BFS membership over resolved edges — `Some`
-                // for every C/Rust function, `None` (omitted) for Python.
+                // v1.5 I1a+I1b+I1c: BFS membership over resolved edges —
+                // `Some` for every function.
                 reachable_from_entry: if entry_scoped {
                     Some(reachable.contains(&r.id))
                 } else {
@@ -479,6 +482,9 @@ fn reaches_self(adj: &BTreeMap<&str, BTreeSet<&str>>, start: &str) -> bool {
 /// `stats.functions[].entry_kind` value set, mirrored in
 /// `docs/schema/metrics.schema.v1.5.json`.
 const ENTRY_MAIN: &str = "main";
+/// Python-only entry kind (plan `map-build` I1c): a guarded `<module>`
+/// record (`has_main_guard == Some(true)`), confidence HIGH like `main`.
+const ENTRY_SCRIPT: &str = "script";
 const ENTRY_HANDLER: &str = "handler";
 const ENTRY_LIB_ROOT: &str = "lib-root";
 const ENTRY_UNKNOWN: &str = "unknown-entry";
@@ -494,8 +500,8 @@ const ENTRY_LOW: &str = "LOW";
 const HANDLER_FRAGMENTS: [&str; 3] = ["handler", "callback", "dispatch"];
 
 /// C entry-point detection (plan `map-build` I1a; Rust has its own
-/// [`detect_rust_entries`] since I1b, Python units are never consulted by
-/// either detector — their DTO fields stay `None`/omitted until I1c).
+/// [`detect_rust_entries`] since I1b, Python its own
+/// [`detect_python_entries`] since I1c).
 ///
 /// Returns `function id → (entry_kind, entry_confidence)`, deterministic
 /// (`BTreeMap`, path-asc tie-break by construction — ids embed
@@ -853,6 +859,188 @@ fn resolved_rust_edges(units: &[FileUnit]) -> BTreeSet<(String, String)> {
 /// empty (see [`resolved_rust_edges`]), so the result is entries at
 /// distance 0 only — total, never silently empty.
 fn rust_reachable(
+    entries: &BTreeMap<String, (String, String)>,
+    edges: &BTreeSet<(String, String)>,
+) -> BTreeSet<String> {
+    entry_reachable(entries, edges)
+}
+
+/// Python entry-point detection (plan `map-build` I1c — founder-approved
+/// option 1: backend guard flag + aggregator mirror).
+///
+/// Mirrors [`detect_c_entries`]/[`detect_rust_entries`] with the guard split:
+/// 1. guard-module scripts — a `<module>` record carrying
+///    `has_main_guard == Some(true)` (the backend's exact
+///    `__name__ == "__main__"` idiom fact): `(script, HIGH)`;
+/// 2. handler heuristic — case-insensitive `*handler*`/`*callback*`/
+///    `*dispatch*` substring on `def` names: `(handler, MEDIUM)`.
+///    Precedence: `script` wins (checked first);
+/// 3. lib-roots — non-underscore-prefixed `def`s in GUARD-LESS files (no
+///    guarded `<module>` record in that path): `(lib-root, MEDIUM)`.
+///    Underscore-prefixed (`_private`, `__dunder__`) defs NEVER qualify —
+///    the leading underscore is the privacy convention — and the synthetic
+///    `<module>` record itself is not a `def`, so it never qualifies either.
+///    Files WITH a guard contribute no lib-roots — their surface is the
+///    script entry instead;
+/// 4. honest `unknown-entry` stub — when steps 1–3 yield ZERO entries but
+///    Python functions exist, EVERY Python function becomes
+///    `(unknown-entry, LOW)` so reachability stays total instead of
+///    silently empty (never a blank — maintainer-map honesty contract).
+///
+/// Python non-entries are ABSENT from the map (`None`/omitted on the wire) —
+/// absence means "not an entry", not "unknown".
+fn detect_python_entries(units: &[FileUnit]) -> BTreeMap<String, (String, String)> {
+    let mut python_functions: Vec<&FunctionRecord> = units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "python")
+        .flat_map(|u| u.functions.iter().map(|f| &f.record))
+        .collect();
+    // Defensive input sort (rev-1 nit from I1a, applied to all detectors):
+    // output is a `BTreeMap` either way, but sorted input keeps precedence
+    // claims and stub insertion order input-independent.
+    python_functions.sort_by(|a, b| a.id.cmp(&b.id));
+    // Guarded-path set: a file is guard-less only when NO guarded `<module>`
+    // record lives in that path (the flag lives on the synthetic record, so
+    // any `Some(true)` marks its whole file guarded).
+    let guarded_paths: BTreeSet<&str> = python_functions
+        .iter()
+        .filter(|r| r.has_main_guard == Some(true))
+        .map(|r| r.path.as_str())
+        .collect();
+
+    let mut entries: BTreeMap<String, (String, String)> = BTreeMap::new();
+    for record in &python_functions {
+        if record.has_main_guard == Some(true) {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_SCRIPT.to_string(), ENTRY_HIGH.to_string()),
+            );
+        }
+    }
+    for record in &python_functions {
+        if entries.contains_key(&record.id) {
+            continue; // script precedence already claimed it
+        }
+        let lowered = record.name.to_lowercase();
+        if HANDLER_FRAGMENTS.iter().any(|frag| lowered.contains(frag)) {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_HANDLER.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+        }
+    }
+    for record in &python_functions {
+        if entries.contains_key(&record.id) {
+            continue; // script/handler precedence already claimed it
+        }
+        // Lib-root = a real `def` (never the synthetic `<module>`), with no
+        // leading underscore (the privacy convention), in a guard-less file.
+        if !record.is_module_scope
+            && !record.name.starts_with('_')
+            && !guarded_paths.contains(record.path.as_str())
+        {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_LIB_ROOT.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+        }
+    }
+    if entries.is_empty() && !python_functions.is_empty() {
+        // Honest stub (birdseye-map.md F1): no heuristic fired anywhere in
+        // the Python corpus — every Python function is an unknown entry
+        // (LOW) so the reachability BFS below stays total. Captioned, never
+        // silent.
+        for record in &python_functions {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_UNKNOWN.to_string(), ENTRY_LOW.to_string()),
+            );
+        }
+    }
+    entries
+}
+
+/// RESOLVED Python call edges as `(caller id, callee id)` (plan `map-build`
+/// I1c).
+///
+/// Mirrors [`resolved_c_edges`] resolution step (1) ONLY —
+/// semantic-fact-backed (`semantic.resolved_definition` → span-intersecting
+/// definition, intra-file INCLUDED — this set is never built from
+/// `cross_file_call_edges`, which excludes same-file pairs). The name-based
+/// fallbacks are DELIBERATELY EXCLUDED: reachability rides MEDIUM+ edges
+/// only (birdseye-map.md F1, ADR-0008 third layer). Python-only gate: both
+/// ends must be Python function ids.
+///
+/// Honestly EMPTY in production: Python is all-LOW in this milestone
+/// (syntactic tier only — the Python backend emits no semantic facts, so no
+/// call carries `semantic.resolved_definition`), so this set is empty and
+/// reachability is then entries-only BY CONSTRUCTION, never by fallback to
+/// LOW/name-based edges (option 3 was explicitly rejected).
+///
+/// Sorted/deterministic: `BTreeSet` over `(caller, callee)` id pairs.
+fn resolved_python_edges(units: &[FileUnit]) -> BTreeSet<(String, String)> {
+    let python_ids: BTreeSet<&str> = units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "python")
+        .flat_map(|u| u.functions.iter().map(|f| f.record.id.as_str()))
+        .collect();
+    let mut by_path: BTreeMap<&str, Vec<&FunctionRecord>> = BTreeMap::new();
+    for unit in units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "python")
+    {
+        for func in &unit.functions {
+            by_path
+                .entry(func.record.path.as_str())
+                .or_default()
+                .push(&func.record);
+        }
+    }
+
+    let mut edges: BTreeSet<(String, String)> = BTreeSet::new();
+    for unit in units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "python")
+    {
+        for func in &unit.functions {
+            let mut calls: Vec<&crate::ir::CallEvent> = func.calls.iter().collect();
+            calls.sort_by_key(|c| (c.meta.span.start_line, c.meta.span.start_col));
+            for call in calls {
+                if call.callee_kind != CalleeKind::Direct || call.meta.macro_origin {
+                    continue;
+                }
+                let Some(site) = call
+                    .semantic
+                    .as_ref()
+                    .and_then(|s| s.resolved_definition.as_ref())
+                else {
+                    continue; // no semantic fact ⇒ LOW-tier name match at
+                    // best — excluded from reachability
+                };
+                let Some(target) = by_path.get(site.path.as_str()).and_then(|defs| {
+                    defs.iter()
+                        .find(|r| r.span.intersects(&site.span))
+                        .map(|r| &r.id)
+                }) else {
+                    continue;
+                };
+                if python_ids.contains(func.record.id.as_str())
+                    && python_ids.contains(target.as_str())
+                {
+                    edges.insert((func.record.id.clone(), (*target).clone()));
+                }
+            }
+        }
+    }
+    edges
+}
+
+/// Reachability BFS from Python entries over RESOLVED edges only (plan
+/// `map-build` I1c). Mirrors [`c_reachable`]/[`rust_reachable`] via the
+/// shared [`entry_reachable`] core. In this milestone the edge set is
+/// honestly empty (see [`resolved_python_edges`]), so the result is entries
+/// at distance 0 only — total, never silently empty.
+fn python_reachable(
     entries: &BTreeMap<String, (String, String)>,
     edges: &BTreeSet<(String, String)>,
 ) -> BTreeSet<String> {

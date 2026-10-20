@@ -38,9 +38,9 @@ use tree_sitter::{Node, Parser};
 
 use super::Extraction;
 use crate::ir::{
-    FileRecord, FunctionRecord, GlobalVar, IncludeCounts, IncludeEdge, IncludeForm, LocCounts,
-    MacroEvent, MacroEventKind, NativePoint, ParseHealth, ParseStatus, ResolverTier, Span,
-    StorageClass, StructDef, StructKind, StructMember,
+    ComparisonEvent, FileRecord, FunctionRecord, GlobalVar, IncludeCounts, IncludeEdge,
+    IncludeForm, LocCounts, MacroEvent, MacroEventKind, NativePoint, ParseHealth, ParseStatus,
+    ResolverTier, ShapeKind, Span, StorageClass, StructDef, StructKind, StructMember,
 };
 use crate::scanner::FunctionUnit;
 use infer::AliasMap;
@@ -618,6 +618,32 @@ fn inside_class_body(node: Node<'_>) -> bool {
     false
 }
 
+/// I1c guard rule (plan `map-build`): true when the comparison is the exact
+/// `__name__ == "__main__"` idiom — operator `==`, the `__name__`
+/// identifier on one side, the `"__main__"` string literal (single- or
+/// double-quoted source text) on the other. Conservative by construction:
+/// `!=`/`is`/`is not`/`in`, a `__name__` compared against anything else,
+/// and non-identifier/non-literal operands never match. Nested `def`/`class`
+/// bodies never reach this check — the module scan does not descend into
+/// them — so the flag is strictly a top-level fact.
+fn is_main_guard_comparison(comparison: &ComparisonEvent) -> bool {
+    if comparison.operator != "==" {
+        return false;
+    }
+    let name_side = |shape: &crate::ir::Shape| {
+        shape.kind == ShapeKind::Identifier && shape.name.as_deref() == Some("__name__")
+    };
+    let main_side = |shape: &crate::ir::Shape| {
+        shape.kind == ShapeKind::Literal
+            && matches!(
+                shape.value.as_deref(),
+                Some("\"__main__\"") | Some("'__main__'")
+            )
+    };
+    (name_side(&comparison.left) && main_side(&comparison.right))
+        || (name_side(&comparison.right) && main_side(&comparison.left))
+}
+
 /// The synthetic module-scope function: all top-level statements extracted as
 /// if in one body, `is_module_scope = true`, name `"<module>"`.
 fn module_unit(
@@ -630,6 +656,10 @@ fn module_unit(
     let span = ir_span(root, source);
     let binding = infer::build_lattice(root, &BTreeMap::new(), alias, source);
     let result = scan::scan(root, source, alias, &[], global_names, &binding);
+    // v1.5 I1c (plan `map-build`): the `__name__ == "__main__"` guard is a
+    // scan-local fact on the synthetic record (the aggregator's Python entry
+    // pass reads it); real `def`s and all non-Python records leave it `None`.
+    let has_main_guard = result.comparisons.iter().any(is_main_guard_comparison);
     let record = FunctionRecord {
         id: format!("{path}#<module>#{}:{}", span.start_line, span.start_col),
         name: "<module>".to_string(),
@@ -658,8 +688,10 @@ fn module_unit(
         alloc_family: None,
         cfg_gated: None,
         // v1.5 I1a (plan `map-build`): C-only this burst — linkage, entry
-        // and reachability stay `None` for Python (I1c owns them).
+        // and reachability stay `None` on the synthetic record; v1.5 I1c
+        // adds the scan-local `__name__` guard fact above.
         is_static: None,
+        has_main_guard: Some(has_main_guard),
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
@@ -732,8 +764,10 @@ fn function_unit(
         alloc_family: None,
         cfg_gated: None,
         // v1.5 I1a (plan `map-build`): C-only this burst — linkage, entry
-        // and reachability stay `None` for Python (I1c owns them).
+        // and reachability stay `None` for real `def`s; v1.5 I1c keeps the
+        // `__name__` guard fact on the synthetic `<module>` record only.
         is_static: None,
+        has_main_guard: None,
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,

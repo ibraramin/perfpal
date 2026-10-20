@@ -560,26 +560,40 @@ pub struct FunctionRecord {
     /// DTO does NOT mirror it — entry/reachability is the wire surface).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_static: Option<bool>,
-    /// ADDITIVE v1.5 entry kind (plan `map-build` I1a C + I1b Rust):
-    /// closed set `main` | `handler` | `lib-root` | `unknown-entry`.
-    /// Whole-program (aggregator-owned, exactly like the v1.4 call-shape
-    /// fields): backends leave it `None`; the aggregator's entry passes
-    /// resolve it for C and Rust functions (Python stays `None`/omitted
-    /// until I1c). Same serde-default pattern.
+    /// ADDITIVE v1.5 guard fact (plan `map-build` I1c, Python only):
+    /// `Some(true)` on the synthetic `<module>` record when the module's
+    /// top-level comparisons contain the exact `__name__ == "__main__"`
+    /// idiom (operator `==`, `__name__` identifier on either side,
+    /// `"__main__"`/`'__main__'` string on the other); `Some(false)` on
+    /// guard-less module records; `None` (omitted) on every real `def`
+    /// and on all C/Rust records. The aggregator's Python entry pass reads
+    /// it (guarded modules ⇒ `script` entries); the schema DTO does NOT
+    /// mirror it — entry/reachability is the wire surface. Same
+    /// serde-default pattern; IR-internal like `is_static`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub has_main_guard: Option<bool>,
+    /// ADDITIVE v1.5 entry kind (plan `map-build` I1a C + I1b Rust + I1c
+    /// Python): closed set `main` | `script` | `handler` | `lib-root` |
+    /// `unknown-entry` (`script` is Python-only — a guarded `<module>`
+    /// record). Whole-program (aggregator-owned, exactly like the v1.4
+    /// call-shape fields): backends leave it `None`; the aggregator's entry
+    /// passes resolve it for C, Rust and Python functions. Same
+    /// serde-default pattern; `None` (omitted) marks non-entries.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entry_kind: Option<String>,
     /// ADDITIVE v1.5 entry confidence (plan `map-build` I1a C + I1b
-    /// Rust): closed set `HIGH` (`main`) | `MEDIUM` (`handler`, `lib-root`)
-    /// | `LOW` (`unknown-entry` stub). Same ownership/serde-default pattern
+    /// Rust + I1c Python): closed set `HIGH` (`main`, `script`) |
+    /// `MEDIUM` (`handler`, `lib-root`) | `LOW` (`unknown-entry` stub).
+    /// Same ownership/serde-default pattern
     /// as [`FunctionRecord::entry_kind`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entry_confidence: Option<String>,
-    /// ADDITIVE v1.5 reachability membership (plan `map-build` I1a C + I1b
-    /// Rust): `Some(true)` when the function is reachable from a C/Rust
-    /// entry over RESOLVED call edges only (semantic-fact-backed, MEDIUM+
-    /// — the LOW-confidence name-based fallback is EXCLUDED and captioned
-    /// in the aggregator); `Some(false)` when unreachable; `None`
-    /// (omitted) for Python until I1c. Same ownership/serde-default
+    /// ADDITIVE v1.5 reachability membership (plan `map-build` I1a C +
+    /// I1b Rust + I1c Python): `Some(true)` when the function is reachable
+    /// from an entry of its own language over RESOLVED call edges only
+    /// (semantic-fact-backed, MEDIUM+ — the LOW-confidence name-based
+    /// fallback is EXCLUDED and captioned in the aggregator);
+    /// `Some(false)` when unreachable. Same ownership/serde-default
     /// pattern as [`FunctionRecord::entry_kind`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reachable_from_entry: Option<bool>,

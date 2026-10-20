@@ -80,7 +80,9 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 alloc_family: None,
                 cfg_gated: None,
                 // v1.5 I1a: fixture helper leaves linkage/entry unmarked.
+                // v1.5 I1c keeps the `__name__` guard fact backend-owned.
                 is_static: None,
+                has_main_guard: None,
                 entry_kind: None,
                 entry_confidence: None,
                 reachable_from_entry: None,
@@ -276,7 +278,9 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                 alloc_family: None,
                 cfg_gated: None,
                 // v1.5 I1a: fixture helper leaves linkage/entry unmarked.
+                // v1.5 I1c keeps the `__name__` guard fact backend-owned.
                 is_static: None,
+                has_main_guard: None,
                 entry_kind: None,
                 entry_confidence: None,
                 reachable_from_entry: None,

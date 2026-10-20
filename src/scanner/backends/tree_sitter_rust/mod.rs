@@ -980,6 +980,9 @@ fn function_unit(
         // v1.5 I1a (plan `map-build`): C-only this burst — linkage, entry
         // and reachability stay `None` for Rust (I1b owns them).
         is_static: None,
+        // v1.5 I1c (plan `map-build`): the `__name__` guard fact is
+        // Python-only — Rust records never carry it.
+        has_main_guard: None,
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,

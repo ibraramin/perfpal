@@ -739,6 +739,9 @@ fn function_unit(
         // reachability need the whole-program view, so they stay `None` here
         // for the aggregator's entry pass.
         is_static: Some(is_static),
+        // v1.5 I1c (plan `map-build`): the `__name__` guard fact is
+        // Python-only — C records never carry it.
+        has_main_guard: None,
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
