@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "I2 DONE (cost-v2, daffa62); I3 map layer queued; true GENUINE manual at I5; M5 gated B-pf-001/002.",
+  "current_phase": "I2 DONE all 3 langs (C daffa62 / Rust e8faa33 / Python a7eb78d); I3 map layer queued; true GENUINE manual at I5; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -71,6 +71,11 @@
       "id": "D-pf-219",
       "status": "live",
       "title": "I2 DONE cost-v2 (trip gating C-only, reachable caps, schema 1.6, daffa62); GENUINE proxy uplift measured, true share manual at I5"
+    },
+    {
+      "id": "D-pf-220",
+      "status": "live",
+      "title": "I2 COMPLETE all 3 langs: C/Rust/Python canonical trip counts, schema 1.6 unchanged; true GENUINE manual at I5"
     }
   ],
   "open_risks": [

@@ -1,10 +1,11 @@
 # Active Context
 
 ## Current Task
-I2 DONE — cost-v2 (C trip-counts, per-iteration weights, reachable caps,
-schema 1.6, `daffa62`); 9 i2 locks + 2 unit tests, 662 tests pass, rev-code
-APPROVED / rev-req CHANGES_REQUESTED → option-A fix → APPROVED. I3 map layer
-queued.
+I2 COMPLETE all 3 languages — C `daffa62` (trip gating, v2 cost, reachable
+caps, schema 1.6), Rust `e8faa33` (literal ranges), Python `a7eb78d`
+(canonical `range()`, saturating i128 span). 668 tests pass; each increment
+dual-reviewed (two blockers caught and fixed: vacuous GENUINE proxy, stale
+schema prose, i128 overflow panic). I3 map layer queued.
 
 ## Recent Decisions
 - **D-pf-216 (live):** R4 idioms — L0 DSM, L1 Sugiyama-native, L2 treemap+HEB
@@ -23,7 +24,8 @@ queued.
 ## Next
 - **NEXT: I3 map layer** — entry-stratified cost map (third stem) + deferred
   middle-bands layout; goldens byte-stable on double-scan. Signpost: plan
-  `map-build`, spec `birdseye-map` F3, I2 commit `daffa62` + handoff.
+  `map-build`, spec `birdseye-map` F3, I2 commits
+  `daffa62`/`e8faa33`/`a7eb78d` + handoff.
 - Then I4 annotations → I5 proof+demo (incl. A-pf-095 true GENUINE triage).
 - Then I2–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
