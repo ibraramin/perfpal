@@ -30,6 +30,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <body>
 <header>
 <h1>Perfpal Report</h1>
+<p class="breadcrumb"><a href="#map">Map</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
 <p>schema_version 1.6 · perfpal perfpal 0.2.0-beta.1 · 14 files · 32 findings (10 hot, 9 warn, 13 info) · languages: rust</p>
 </header>
 <nav>
@@ -42,6 +43,26 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <li><a href="#appendix-a">Heuristic reference</a></li>
 </ul>
 </nav>
+<section id="map">
+<h2>Map</h2>
+<figure class="pz" data-chart="layer-workspace">
+<a href="charts/layer-workspace.svg"><img src="charts/layer-workspace.svg" alt="Workspace map — components as nodes over inter-component call/include edges, heat by finding density."></a>
+<figcaption>Workspace map — components as nodes over inter-component call/include edges, heat by finding density.</figcaption>
+</figure>
+<p class="legend">finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm</p>
+<p>showing top 1 of 1 components</p>
+<div class="table-scroll">
+<table>
+<thead><tr><th>Component</th><th>Findings</th><th>Top findings</th></tr></thead>
+<tbody>
+<tr><td><a href="charts/component-01-src.svg">src</a></td><td>32 (10/9/13) · confidence 13 high / 10 medium / 9 low</td><td><a href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5">PERF-RS-ALLOC-001:src/01_alloc_churn.rs:34:5</a><br>
+<a href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9">PERF-RS-ALLOC-001:src/01_alloc_churn.rs:58:9</a><br>
+<a href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5">PERF-RS-ALLOC-001:src/02_string_building.rs:41:5</a><br>
+…+29 more</td></tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="architecture">
 <h2>Architecture</h2>
 <figure class="pz" data-chart="include-graph">
@@ -72,6 +93,10 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <a href="charts/layer-bands.svg"><img src="charts/layer-bands.svg" alt="Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands."></a>
 <figcaption>Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.</figcaption>
 </figure>
+<figure class="pz" data-chart="layer-findings">
+<a href="charts/layer-findings.svg"><img src="charts/layer-findings.svg" alt="Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm."></a>
+<figcaption>Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm.</figcaption>
+</figure>
 <p>Component detail pages (one per component below):</p>
 <ul>
 <li><a href="charts/component-01-src.svg">Component detail — per-file hot-path map.</a></li>
@@ -97,33 +122,33 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <h2>File drill-down</h2>
 <div class="table-scroll">
 <table>
-<thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th></tr></thead>
+<thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th><th>component</th></tr></thead>
 <tbody>
-<tr id="file-src-cycle-a-rs" data-path="src/cycle_a.rs"><td>src/cycle_a.rs</td><td>5</td><td>5</td><td><a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-cycle-a-rs-18-5">PERF-RS-ARCH-003:src/cycle_a.rs:18:5</a></td></tr>
+<tr id="file-src-cycle-a-rs" data-path="src/cycle_a.rs"><td>src/cycle_a.rs</td><td>5</td><td>5</td><td><a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-cycle-a-rs-18-5">PERF-RS-ARCH-003:src/cycle_a.rs:18:5</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-cycle-b-rs" data-path="src/cycle_b.rs"><td>src/cycle_b.rs</td><td>5</td><td>5</td><td><a href="findings-detail.html#finding-PERF-RS-ARCH-001-src-cycle-b-rs-6-1">PERF-RS-ARCH-001:src/cycle_b.rs:6:1</a><br>
-<a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-cycle-b-rs-15-5">PERF-RS-ARCH-003:src/cycle_b.rs:15:5</a></td></tr>
+<a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-cycle-b-rs-15-5">PERF-RS-ARCH-003:src/cycle_b.rs:15:5</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-10-cross-file-and-arch-rs" data-path="src/10_cross_file_and_arch.rs"><td>src/10_cross_file_and_arch.rs</td><td>3</td><td>19</td><td><a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-21-16">PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:21:16</a><br>
 <a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-22-20">PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:22:20</a><br>
-<a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-23-18">PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:23:18</a></td></tr>
-<tr id="file-src-lib-rs" data-path="src/lib.rs"><td>src/lib.rs</td><td>3</td><td>0</td><td>none</td></tr>
-<tr id="file-src-common-rs" data-path="src/common.rs"><td>src/common.rs</td><td>2</td><td>3</td><td>none</td></tr>
+<a href="findings-detail.html#finding-PERF-RS-ARCH-003-src-10-cross-file-and-arch-rs-23-18">PERF-RS-ARCH-003:src/10_cross_file_and_arch.rs:23:18</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
+<tr id="file-src-lib-rs" data-path="src/lib.rs"><td>src/lib.rs</td><td>3</td><td>0</td><td>none</td><td><a href="charts/component-01-src.svg">component</a></td></tr>
+<tr id="file-src-common-rs" data-path="src/common.rs"><td>src/common.rs</td><td>2</td><td>3</td><td>none</td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-01-alloc-churn-rs" data-path="src/01_alloc_churn.rs"><td>src/01_alloc_churn.rs</td><td>1</td><td>58</td><td><a href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5">PERF-RS-ALLOC-001:src/01_alloc_churn.rs:34:5</a><br>
 <a href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9">PERF-RS-ALLOC-001:src/01_alloc_churn.rs:58:9</a><br>
 <a href="findings-detail.html#finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9">PERF-RS-ALLOC-002:src/01_alloc_churn.rs:39:9</a><br>
 <a href="findings-detail.html#finding-PERF-RS-ALLOC-003-src-01-alloc-churn-rs-49-9">PERF-RS-ALLOC-003:src/01_alloc_churn.rs:49:9</a><br>
 <a href="findings-detail.html#finding-PERF-RS-LOOP-002-src-01-alloc-churn-rs-40-9">PERF-RS-LOOP-002:src/01_alloc_churn.rs:40:9</a><br>
-<a href="findings-detail.html#finding-PERF-RS-MEM-002-src-01-alloc-churn-rs-61-13">PERF-RS-MEM-002:src/01_alloc_churn.rs:61:13</a></td></tr>
+<a href="findings-detail.html#finding-PERF-RS-MEM-002-src-01-alloc-churn-rs-61-13">PERF-RS-MEM-002:src/01_alloc_churn.rs:61:13</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-03-deep-nesting-rs" data-path="src/03_deep_nesting.rs"><td>src/03_deep_nesting.rs</td><td>1</td><td>28</td><td><a href="findings-detail.html#finding-PERF-RS-LOOP-001-src-03-deep-nesting-rs-19-13">PERF-RS-LOOP-001:src/03_deep_nesting.rs:19:13</a><br>
-<a href="findings-detail.html#finding-PERF-RS-LOOP-004-src-03-deep-nesting-rs-22-23">PERF-RS-LOOP-004:src/03_deep_nesting.rs:22:23</a></td></tr>
+<a href="findings-detail.html#finding-PERF-RS-LOOP-004-src-03-deep-nesting-rs-22-23">PERF-RS-LOOP-004:src/03_deep_nesting.rs:22:23</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-02-string-building-rs" data-path="src/02_string_building.rs"><td>src/02_string_building.rs</td><td>0</td><td>41</td><td><a href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5">PERF-RS-ALLOC-001:src/02_string_building.rs:41:5</a><br>
 <a href="findings-detail.html#finding-PERF-RS-STR-002-src-02-string-building-rs-32-18">PERF-RS-STR-002:src/02_string_building.rs:32:18</a><br>
-<a href="findings-detail.html#finding-PERF-RS-STR-003-src-02-string-building-rs-62-5">PERF-RS-STR-003:src/02_string_building.rs:62:5</a></td></tr>
+<a href="findings-detail.html#finding-PERF-RS-STR-003-src-02-string-building-rs-62-5">PERF-RS-STR-003:src/02_string_building.rs:62:5</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-05-recursion-complexity-rs" data-path="src/05_recursion_complexity.rs"><td>src/05_recursion_complexity.rs</td><td>0</td><td>40</td><td><a href="findings-detail.html#finding-PERF-RS-ARCH-002-src-05-recursion-complexity-rs-20-1">PERF-RS-ARCH-002:src/05_recursion_complexity.rs:20:1</a><br>
 <a href="findings-detail.html#finding-PERF-RS-CALL-002-src-05-recursion-complexity-rs-20-1">PERF-RS-CALL-002:src/05_recursion_complexity.rs:20:1</a><br>
-<a href="findings-detail.html#finding-PERF-RS-CALL-001-src-05-recursion-complexity-rs-14-9">PERF-RS-CALL-001:src/05_recursion_complexity.rs:14:9</a></td></tr>
+<a href="findings-detail.html#finding-PERF-RS-CALL-001-src-05-recursion-complexity-rs-14-9">PERF-RS-CALL-001:src/05_recursion_complexity.rs:14:9</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-08-globals-and-chains-rs" data-path="src/08_globals_and_chains.rs"><td>src/08_globals_and_chains.rs</td><td>0</td><td>39</td><td><a href="findings-detail.html#finding-PERF-RS-LOOP-005-src-08-globals-and-chains-rs-41-13">PERF-RS-LOOP-005:src/08_globals_and_chains.rs:41:13</a><br>
 <a href="findings-detail.html#finding-PERF-RS-LOOP-006-src-08-globals-and-chains-rs-43-9">PERF-RS-LOOP-006:src/08_globals_and_chains.rs:43:9</a><br>
-<a href="findings-detail.html#finding-PERF-RS-LOOP-008-src-08-globals-and-chains-rs-59-17">PERF-RS-LOOP-008:src/08_globals_and_chains.rs:59:17</a></td></tr>
+<a href="findings-detail.html#finding-PERF-RS-LOOP-008-src-08-globals-and-chains-rs-59-17">PERF-RS-LOOP-008:src/08_globals_and_chains.rs:59:17</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <p>…+4 more (see findings table)</p>
 </tbody>
 </table>

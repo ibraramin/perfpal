@@ -6,6 +6,7 @@
 //! document, so each test also locks byte-determinism across two renders.
 
 use perfpal::analyzer::Confidence;
+use perfpal::charts::FindingIndex;
 use perfpal::charts::layers::{render_layer_bands, render_layer_entry};
 use perfpal::ir::{IncludeCounts, IncludeForm, LocCounts, ParseStatus, Span};
 use perfpal::schema::{
@@ -132,8 +133,8 @@ fn entry_layer_is_deterministic_and_excludes_low_edges() {
         vec![call("a.c", "b.c", Confidence::Low)],
     );
     let functions = vec![function("a.c", Some("main"), Some(9))];
-    let first = render_layer_entry(&g, &functions);
-    let second = render_layer_entry(&g, &functions);
+    let first = render_layer_entry(&g, &functions, &FindingIndex::default());
+    let second = render_layer_entry(&g, &functions, &FindingIndex::default());
     assert_eq!(first, second, "byte-determinism violated");
     let text = svg_text(first);
 
@@ -166,8 +167,11 @@ fn entry_layer_draws_resolved_edges_into_depth_columns() {
         function("a.c", Some("main"), Some(9)),
         function("b.c", None, Some(2)),
     ];
-    let first = render_layer_entry(&g, &functions);
-    assert_eq!(first, render_layer_entry(&g, &functions));
+    let first = render_layer_entry(&g, &functions, &FindingIndex::default());
+    assert_eq!(
+        first,
+        render_layer_entry(&g, &functions, &FindingIndex::default())
+    );
     let text = svg_text(first);
 
     assert!(text.contains(">entry</text>"), "entry column:\n{text}");
@@ -202,7 +206,7 @@ fn entry_first_cap_keeps_a_path_late_entry_file() {
     let g = graphs(&node_refs, &[], vec![]);
     let functions = vec![function("z99.c", Some("main"), Some(3))];
 
-    let text = svg_text(render_layer_entry(&g, &functions));
+    let text = svg_text(render_layer_entry(&g, &functions, &FindingIndex::default()));
     assert!(
         text.contains(">z99.c<"),
         "path-late entry file was cut:\n{text}"
@@ -216,8 +220,8 @@ fn entry_first_cap_keeps_a_path_late_entry_file() {
 #[test]
 fn entry_layer_empty_universe_yields_the_stub() {
     let g = graphs(&[], &[], vec![]);
-    let first = render_layer_entry(&g, &[]);
-    let second = render_layer_entry(&g, &[]);
+    let first = render_layer_entry(&g, &[], &FindingIndex::default());
+    let second = render_layer_entry(&g, &[], &FindingIndex::default());
     assert_eq!(first, second, "stub must be byte-deterministic");
     let text = svg_text(first);
     assert!(
@@ -245,8 +249,11 @@ fn bands_aggregate_cross_component_edges_into_one_counted_ribbon() {
         vec![],
     );
     // src/c/outside.c has no shown component ⇒ one outside cross edge.
-    let first = render_layer_bands(&comps, Some(&g), &files, &[]);
-    assert_eq!(first, render_layer_bands(&comps, Some(&g), &files, &[]));
+    let first = render_layer_bands(&comps, Some(&g), &files, &[], &FindingIndex::default());
+    assert_eq!(
+        first,
+        render_layer_bands(&comps, Some(&g), &files, &[], &FindingIndex::default())
+    );
     let text = svg_text(first);
 
     assert!(
@@ -283,7 +290,13 @@ fn bands_cap_each_file_row_and_mark_the_hidden_count() {
     let paths: Vec<String> = (0..12).map(|i| format!("src/a/f{i:02}.c")).collect();
     let node_refs: Vec<&str> = paths.iter().map(String::as_str).collect();
     let g = graphs(&node_refs, &[], vec![]);
-    let text = svg_text(render_layer_bands(&comps, Some(&g), &[], &[]));
+    let text = svg_text(render_layer_bands(
+        &comps,
+        Some(&g),
+        &[],
+        &[],
+        &FindingIndex::default(),
+    ));
 
     assert!(
         text.contains("1. src/a — 12 files"),
@@ -300,8 +313,8 @@ fn bands_cap_each_file_row_and_mark_the_hidden_count() {
 #[test]
 fn bands_fileless_components_render_stub_bands() {
     let comps = vec![component("src/empty", 1), component("src/also", 2)];
-    let first = render_layer_bands(&comps, None, &[], &[]);
-    let second = render_layer_bands(&comps, None, &[], &[]);
+    let first = render_layer_bands(&comps, None, &[], &[], &FindingIndex::default());
+    let second = render_layer_bands(&comps, None, &[], &[], &FindingIndex::default());
     assert_eq!(first, second, "stub bands must be byte-deterministic");
     let text = svg_text(first);
 
@@ -330,8 +343,11 @@ fn entry_layer_ignores_unknown_entry_stubs() {
         vec![call("a.c", "b.c", Confidence::Medium)],
     );
     let functions = vec![function("a.c", Some("unknown-entry"), Some(1))];
-    let first = render_layer_entry(&g, &functions);
-    assert_eq!(first, render_layer_entry(&g, &functions));
+    let first = render_layer_entry(&g, &functions, &FindingIndex::default());
+    assert_eq!(
+        first,
+        render_layer_entry(&g, &functions, &FindingIndex::default())
+    );
     let text = svg_text(first);
 
     assert!(
@@ -360,7 +376,7 @@ fn entry_layer_depth_axis_folds_past_cap() {
         .collect();
     let g = graphs(&refs, &[], calls);
     let functions = vec![function("a00.c", Some("main"), Some(1))];
-    let text = svg_text(render_layer_entry(&g, &functions));
+    let text = svg_text(render_layer_entry(&g, &functions, &FindingIndex::default()));
 
     assert!(text.contains(">depth 8</text>"), "depth 8 column:\n{text}");
     assert!(
@@ -396,7 +412,7 @@ fn entry_layer_reserve_keeps_reachable_cut_file() {
     let refs: Vec<&str> = paths.iter().map(String::as_str).collect();
     let g = graphs(&refs, &[], calls);
     let functions = vec![function("z.c", Some("main"), Some(1))];
-    let text = svg_text(render_layer_entry(&g, &functions));
+    let text = svg_text(render_layer_entry(&g, &functions, &FindingIndex::default()));
 
     assert!(
         text.contains(">zz_r.c<"),
@@ -421,7 +437,13 @@ fn bands_component_cap_and_low_caption() {
         &[],
         vec![call("c00/f.c", "c01/f.c", Confidence::Low)],
     );
-    let text = svg_text(render_layer_bands(&comps, Some(&g), &files, &[]));
+    let text = svg_text(render_layer_bands(
+        &comps,
+        Some(&g),
+        &files,
+        &[],
+        &FindingIndex::default(),
+    ));
 
     assert!(
         text.contains("showing top 50 of 51 components"),

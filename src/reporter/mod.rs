@@ -25,7 +25,7 @@
 //! Non-goals: reading source, IR, or scanner state; inventing aggregations
 //! beyond the output-contract §5 template.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::analyzer::{Confidence, Severity};
 use crate::ir::ResolverTier;
@@ -477,11 +477,15 @@ pub fn escape_html(input: &str) -> String {
 pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
     let mut out = String::new();
     html_head(&mut out, doc);
-    html_header(&mut out, doc);
+    // Report-only breadcrumb (inside the shared header, right after the h1):
+    // findings-detail.html calls the same header WITHOUT it, keeping that
+    // artifact's bytes a hard contract.
+    html_header(&mut out, doc, true);
     html_nav(&mut out);
+    html_map(&mut out, doc, emitted_charts);
     html_architecture(&mut out, doc, emitted_charts);
     html_components(&mut out, doc, emitted_charts);
-    html_files(&mut out, doc);
+    html_files(&mut out, doc, emitted_charts);
     html_findings(&mut out, doc);
     html_appendix_a(&mut out, doc);
     html_footer(&mut out);
@@ -571,7 +575,7 @@ pub fn render_findings_detail(doc: &MetricsDocument) -> String {
 pub fn render_findings_detail_html(doc: &MetricsDocument) -> String {
     let mut out = String::new();
     html_detail_head(&mut out, doc);
-    html_header(&mut out, doc);
+    html_header(&mut out, doc, false);
     html_detail_nav(&mut out);
     html_detail_findings(&mut out, doc);
     html_footer(&mut out);
@@ -1173,7 +1177,7 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
 /// Header: schema version + tool version + file/finding counts ONLY — never
 /// `started_at`, `duration_ms`, or `root_path` (no provenance surfaces, so
 /// double-scan output is byte-identical UNMASKED).
-fn html_header(out: &mut String, doc: &MetricsDocument) {
+fn html_header(out: &mut String, doc: &MetricsDocument, breadcrumb: bool) {
     let hot = findings_of_severity(doc, Severity::Hot).len();
     let warn_count = doc
         .findings
@@ -1185,7 +1189,11 @@ fn html_header(out: &mut String, doc: &MetricsDocument) {
         .iter()
         .filter(|f| f.severity == Severity::Info)
         .count();
-    out.push_str("<header>\n<h1>Perfpal Report</h1>\n<p>");
+    out.push_str("<header>\n<h1>Perfpal Report</h1>\n");
+    if breadcrumb {
+        html_breadcrumb(out);
+    }
+    out.push_str("<p>");
     out.push_str(&format!(
         "schema_version {} · perfpal {} {} · {} files · {} findings ({} hot, {} warn, {} info)",
         escape_html(&doc.schema_version),
@@ -1209,6 +1217,19 @@ fn html_header(out: &mut String, doc: &MetricsDocument) {
         ));
     }
     out.push_str("</p>\n</header>\n");
+}
+
+/// Report-only breadcrumb line (after `<h1>`): the overview → drill path.
+/// Every label is escaped at the interpolation site (static text today, but
+/// the escaper keeps the contract uniform); no JavaScript.
+fn html_breadcrumb(out: &mut String) {
+    out.push_str(&format!(
+        "<p class=\"breadcrumb\"><a href=\"#map\">{}</a> › <a href=\"#components\">{}</a> › <a href=\"#files\">{}</a> › <a href=\"findings-detail.html\">{}</a></p>\n",
+        escape_html("Map"),
+        escape_html("Components"),
+        escape_html("Files"),
+        escape_html("Findings detail"),
+    ));
 }
 
 fn html_nav(out: &mut String) {
@@ -1307,6 +1328,7 @@ const KNOWN_OVERVIEW_STEMS: &[&str] = &[
     "layer-file",
     "layer-entry",
     "layer-bands",
+    "layer-findings",
 ];
 
 /// Split `emitted_charts` into overview stems (emission order, linked as
@@ -1366,12 +1388,7 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
             // suspenders. Captions are reporter-owned static text, except the
             // include-graph arm which reflects the scanned languages.
             let caption = chart_caption(stem, &doc.scan.languages);
-            let safe_stem = escape_html(stem);
-            out.push_str(&format!(
-                "<figure class=\"pz\" data-chart=\"{stem}\">\n<a href=\"charts/{stem}.svg\"><img src=\"charts/{stem}.svg\" alt=\"{caption}\"></a>\n<figcaption>{caption}</figcaption>\n</figure>\n",
-                stem = safe_stem,
-                caption = escape_html(&caption),
-            ));
+            push_chart_figure(out, stem, &caption);
         }
         if !details.is_empty() {
             out.push_str("<p>Component detail pages (one per component below):</p>\n<ul>\n");
@@ -1403,6 +1420,129 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
          semantic resolver tier exists (ADR-0001).</p>\n",
     );
     out.push_str("</section>\n");
+}
+
+/// Shared linked-chart figure (used by the architecture section AND the
+/// `#map` section): one `figure.pz` hooking the fixed pan/zoom enhancement,
+/// a relative `<a href>`/`<img src>` pair, and an escaped caption.
+fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
+    let safe_stem = escape_html(stem);
+    out.push_str(&format!(
+        "<figure class=\"pz\" data-chart=\"{stem}\">\n<a href=\"charts/{stem}.svg\"><img src=\"charts/{stem}.svg\" alt=\"{caption}\"></a>\n<figcaption>{caption}</figcaption>\n</figure>\n",
+        stem = safe_stem,
+        caption = escape_html(caption),
+    ));
+}
+
+/// `#map` — the top of the report drill path (I4): the workspace figure, the
+/// annotation legend, and a bounded component drill table that links into the
+/// per-component chart pages and the `findings-detail.html` anchors.
+///
+/// The table is capped at [`HUMAN_CAP`] rows in `(rank, path_prefix)` order
+/// with an honest note; every finding link reuses the SAME
+/// [`finding_anchor_assignments`] map as the detail page, so each href
+/// resolves. No per-finding rows are rendered here — links only.
+fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
+    out.push_str("<section id=\"map\">\n<h2>Map</h2>\n");
+    let emitted_stems: BTreeSet<String> = emitted_charts
+        .iter()
+        .map(|name| name.strip_suffix(".svg").unwrap_or(name).to_string())
+        .collect();
+    if emitted_stems.contains("layer-workspace") {
+        let caption = chart_caption("layer-workspace", &doc.scan.languages);
+        push_chart_figure(out, "layer-workspace", &caption);
+    } else {
+        out.push_str("<p>Workspace map not available for this scan.</p>\n");
+    }
+    out.push_str(&format!(
+        "<p class=\"legend\">{}</p>\n",
+        escape_html(crate::charts::FINDING_LEGEND)
+    ));
+
+    let Some(components) = &doc.components else {
+        out.push_str("<p>No components recorded.</p>\n</section>\n");
+        return;
+    };
+    if components.is_empty() {
+        out.push_str("<p>No components recorded.</p>\n</section>\n");
+        return;
+    }
+    let total = components.len();
+    let shown = total.min(HUMAN_CAP);
+    out.push_str(&format!(
+        "<p>showing top {shown} of {total} components</p>\n"
+    ));
+    let mut sorted: Vec<&crate::schema::ComponentEntry> = components.iter().collect();
+    sorted.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.path_prefix.cmp(&b.path_prefix)));
+
+    // Component → finding occurrences (exact `parent_dir` membership), each
+    // in the deterministic severity-rank → finding_id order used elsewhere.
+    let mut by_component: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
+    for (i, finding) in doc.findings.iter().enumerate() {
+        by_component
+            .entry(crate::charts::parent_dir(&finding.path))
+            .or_default()
+            .push(i);
+    }
+    for list in by_component.values_mut() {
+        list.sort_by(|&a, &b| {
+            severity_rank(doc.findings[a].severity)
+                .cmp(&severity_rank(doc.findings[b].severity))
+                .then_with(|| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id))
+        });
+    }
+    let anchors = finding_anchor_assignments(doc).1;
+    let index = crate::charts::FindingIndex::new(&doc.findings);
+
+    out.push_str(
+        "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>Component</th>\
+         <th>Findings</th><th>Top findings</th></tr></thead>\n<tbody>\n",
+    );
+    for c in sorted.into_iter().take(HUMAN_CAP) {
+        let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
+        let stem = filename.strip_suffix(".svg").unwrap_or(&filename);
+        let component_cell = if emitted_stems.contains(stem) {
+            format!(
+                "<a href=\"charts/{}\">{}</a>",
+                escape_html(&filename),
+                escape_html(&c.path_prefix)
+            )
+        } else {
+            escape_html(&c.path_prefix)
+        };
+        let findings_cell = match index.for_component(&c.path_prefix) {
+            Some(dot) => format!(
+                "{} ({}/{}/{}) · confidence {} high / {} medium / {} low",
+                dot.total, dot.hot, dot.warn, dot.info, dot.high, dot.medium, dot.low
+            ),
+            None => "0 (0/0/0)".to_string(),
+        };
+        let top = match by_component.get(c.path_prefix.as_str()) {
+            Some(list) if !list.is_empty() => {
+                let mut cell = list
+                    .iter()
+                    .take(3)
+                    .map(|&i| {
+                        format!(
+                            "<a href=\"findings-detail.html#{}\">{}</a>",
+                            escape_html(&anchors[i]),
+                            escape_html(&doc.findings[i].finding_id),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("<br>\n");
+                if list.len() > 3 {
+                    cell.push_str(&format!("<br>\n…+{} more", list.len() - 3));
+                }
+                cell
+            }
+            _ => "none".to_string(),
+        };
+        out.push_str(&format!(
+            "<tr><td>{component_cell}</td><td>{findings_cell}</td><td>{top}</td></tr>\n"
+        ));
+    }
+    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
 /// Component index: rank, prefix, metrics + link to the
@@ -1476,7 +1616,7 @@ fn html_components(out: &mut String, doc: &MetricsDocument, emitted_charts: &[St
 /// link list is capped at the top 10 by severity-rank → finding_id (with
 /// an honest `…+N more` marker); the full per-file lists stay in
 /// `metrics.json`.
-fn html_files(out: &mut String, doc: &MetricsDocument) {
+fn html_files(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
     out.push_str("<section id=\"files\">\n<h2>File drill-down</h2>\n");
     if doc.files.is_empty() {
         out.push_str("<p>No files scanned.</p>\n</section>\n");
@@ -1524,8 +1664,27 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
     }
     out.push_str(
         "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>file</th><th>degree</th><th>cost</th>\
-         <th>findings</th></tr></thead>\n<tbody>\n",
+         <th>findings</th><th>component</th></tr></thead>\n<tbody>\n",
     );
+    // Component-page membership for the per-file drill link: exact
+    // `parent_dir` prefix → pinned detail stem, restricted to emitted pages.
+    let emitted_stems: BTreeSet<String> = emitted_charts
+        .iter()
+        .map(|name| name.strip_suffix(".svg").unwrap_or(name).to_string())
+        .collect();
+    let component_stems: BTreeMap<&str, String> = doc
+        .components
+        .iter()
+        .flatten()
+        .map(|c| {
+            let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
+            let stem = filename
+                .strip_suffix(".svg")
+                .unwrap_or(&filename)
+                .to_string();
+            (c.path_prefix.as_str(), stem)
+        })
+        .collect();
     // Collision-free anchors (FIX 1, corrected): anchors are pre-assigned
     // per finding OCCURRENCE in finding_id order (index-keyed map), and BOTH
     // the drill-down below and the findings table look up from that map —
@@ -1570,8 +1729,15 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
             }
             _ => "none".to_string(),
         };
+        let component_cell = component_stems
+            .get(crate::charts::parent_dir(path))
+            .filter(|stem| emitted_stems.contains(stem.as_str()))
+            .map_or_else(
+                || "n/a".to_string(),
+                |stem| format!("<a href=\"charts/{}.svg\">component</a>", escape_html(stem)),
+            );
         out.push_str(&format!(
-            "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{path}</td><td>{degree}</td><td>{cost}</td><td>{links}</td></tr>\n",
+            "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{path}</td><td>{degree}</td><td>{cost}</td><td>{links}</td><td>{component_cell}</td></tr>\n",
             anchor = anchor,
             data_path = escape_html(path),
             path = escape_html(path),
@@ -2154,6 +2320,9 @@ fn chart_caption(stem: &str, languages: &[String]) -> String {
         }
         "layer-bands" => {
             "Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.".to_string()
+        }
+        "layer-findings" => {
+            "Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm.".to_string()
         }
         // Detail pages never reach this caption: routing is by the exact
         // `detail_stems` registry in `render_architecture`, and orphan

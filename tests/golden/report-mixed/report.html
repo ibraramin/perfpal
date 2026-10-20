@@ -30,6 +30,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <body>
 <header>
 <h1>Perfpal Report</h1>
+<p class="breadcrumb"><a href="#map">Map</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
 <p>schema_version 1.6 · perfpal perfpal 0.2.0-beta.1 · 4 files · 9 findings (4 hot, 4 warn, 1 info) · languages: c, rust</p>
 </header>
 <nav>
@@ -42,6 +43,26 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <li><a href="#appendix-a">Heuristic reference</a></li>
 </ul>
 </nav>
+<section id="map">
+<h2>Map</h2>
+<figure class="pz" data-chart="layer-workspace">
+<a href="charts/layer-workspace.svg"><img src="charts/layer-workspace.svg" alt="Workspace map — components as nodes over inter-component call/include edges, heat by finding density."></a>
+<figcaption>Workspace map — components as nodes over inter-component call/include edges, heat by finding density.</figcaption>
+</figure>
+<p class="legend">finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm</p>
+<p>showing top 1 of 1 components</p>
+<div class="table-scroll">
+<table>
+<thead><tr><th>Component</th><th>Findings</th><th>Top findings</th></tr></thead>
+<tbody>
+<tr><td><a href="charts/component-01-src.svg">src</a></td><td>9 (4/4/1) · confidence 6 high / 2 medium / 1 low</td><td><a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-27-21">PERF-C-ALLOC-001:src/main.c:27:21</a><br>
+<a href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-29-9">PERF-C-ALLOC-002:src/main.c:29:9</a><br>
+<a href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-28-9">PERF-C-STR-001:src/main.c:28:9</a><br>
+…+6 more</td></tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="architecture">
 <h2>Architecture</h2>
 <figure class="pz" data-chart="include-graph">
@@ -72,6 +93,10 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <a href="charts/layer-bands.svg"><img src="charts/layer-bands.svg" alt="Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands."></a>
 <figcaption>Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.</figcaption>
 </figure>
+<figure class="pz" data-chart="layer-findings">
+<a href="charts/layer-findings.svg"><img src="charts/layer-findings.svg" alt="Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm."></a>
+<figcaption>Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm.</figcaption>
+</figure>
 <p>Component detail pages (one per component below):</p>
 <ul>
 <li><a href="charts/component-01-src.svg">Component detail — per-file hot-path map.</a></li>
@@ -97,19 +122,19 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <h2>File drill-down</h2>
 <div class="table-scroll">
 <table>
-<thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th></tr></thead>
+<thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th><th>component</th></tr></thead>
 <tbody>
 <tr id="file-src-main-c" data-path="src/main.c"><td>src/main.c</td><td>2</td><td>15</td><td><a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-27-21">PERF-C-ALLOC-001:src/main.c:27:21</a><br>
 <a href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-29-9">PERF-C-ALLOC-002:src/main.c:29:9</a><br>
 <a href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-28-9">PERF-C-STR-001:src/main.c:28:9</a><br>
 <a href="findings-detail.html#finding-PERF-C-STR-003-src-main-c-28-9">PERF-C-STR-003:src/main.c:28:9</a><br>
-<a href="findings-detail.html#finding-PERF-C-ARCH-003-src-main-c-32-12">PERF-C-ARCH-003:src/main.c:32:12</a></td></tr>
-<tr id="file-src-util-c" data-path="src/util.c"><td>src/util.c</td><td>2</td><td>3</td><td>none</td></tr>
-<tr id="file-src-util-h" data-path="src/util.h"><td>src/util.h</td><td>2</td><td>0</td><td>none</td></tr>
+<a href="findings-detail.html#finding-PERF-C-ARCH-003-src-main-c-32-12">PERF-C-ARCH-003:src/main.c:32:12</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
+<tr id="file-src-util-c" data-path="src/util.c"><td>src/util.c</td><td>2</td><td>3</td><td>none</td><td><a href="charts/component-01-src.svg">component</a></td></tr>
+<tr id="file-src-util-h" data-path="src/util.h"><td>src/util.h</td><td>2</td><td>0</td><td>none</td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 <tr id="file-src-lib-rs" data-path="src/lib.rs"><td>src/lib.rs</td><td>0</td><td>21</td><td><a href="findings-detail.html#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9">PERF-RS-ALLOC-003:src/lib.rs:20:9</a><br>
 <a href="findings-detail.html#finding-PERF-RS-MEM-001-src-lib-rs-25-22">PERF-RS-MEM-001:src/lib.rs:25:22</a><br>
 <a href="findings-detail.html#finding-PERF-RS-STR-002-src-lib-rs-22-17">PERF-RS-STR-002:src/lib.rs:22:17</a><br>
-<a href="findings-detail.html#finding-PERF-RS-STR-002-src-lib-rs-23-17">PERF-RS-STR-002:src/lib.rs:23:17</a></td></tr>
+<a href="findings-detail.html#finding-PERF-RS-STR-002-src-lib-rs-23-17">PERF-RS-STR-002:src/lib.rs:23:17</a></td><td><a href="charts/component-01-src.svg">component</a></td></tr>
 </tbody>
 </table>
 </div>

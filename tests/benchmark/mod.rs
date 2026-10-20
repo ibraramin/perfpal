@@ -751,8 +751,8 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
         .count();
     assert_eq!(
         a.keys().filter(|n| n.starts_with("charts/")).count(),
-        8 + component_pages,
-        "determinism proof: expected all three v1 charts + four layered/map overviews + graph.dot + one page per component"
+        9 + component_pages,
+        "determinism proof: expected all three v1 charts + five layered/map overviews + graph.dot + one page per component"
     );
     assert!(
         component_pages >= 1,

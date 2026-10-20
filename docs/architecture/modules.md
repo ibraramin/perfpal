@@ -125,9 +125,9 @@ Each module lists Consumes / Produces / Responsibilities / Non-goals.
 
 ### 3.7 `charts` — SVG emitter
 
-- **Consumes:** the final document — `graphs.*` and `components[]` only (ADR-0002 guardrail 1).
-- **Produces:** SVG bytes for the seven overview stems (`include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, in that emission order) plus one `component-<rank>-<slug>.svg` detail page per capped component.
-- **Responsibilities:** byte-deterministic rendering (ADR-0002 guardrail 2); XML-escape all label/path text; deterministic node caps with in-chart truncation markers; presence rule — ranked charts (`include-graph`, `component-coupling`, `hot-components`) require a present non-empty source and are otherwise omitted, while the layered/map stems emit deterministic stubs when their source section is present but empty (`layer-file`/`layer-entry` on `graphs`, `layer-workspace`/`layer-bands` on `components`); per-component pages require non-empty components. `charts/` may still be empty on an empty scan.
+- **Consumes:** the final document — `graphs.*`, `components[]`, and `findings[]` (annotation dots; ADR-0002 guardrail 1).
+- **Produces:** SVG bytes for the eight overview stems (`include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, `layer-findings.svg`, in that emission order) plus one `component-<rank>-<slug>.svg` detail page per capped component.
+- **Responsibilities:** byte-deterministic rendering (ADR-0002 guardrail 2); XML-escape all label/path text; deterministic node caps with in-chart truncation markers; presence rule — ranked charts (`include-graph`, `component-coupling`, `hot-components`) require a present non-empty source and are otherwise omitted, while the layered/map stems emit deterministic stubs when their source section is present but empty (`layer-file`/`layer-entry`/`layer-findings` on `graphs`, `layer-workspace`/`layer-bands` on `components`); per-component pages require non-empty components. `charts/` may still be empty on an empty scan.
 - **Non-goals:** layout quality beyond "legible" (MVP bar); consuming anything but schema types.
 
 ### 3.8 `writer` — atomic output management

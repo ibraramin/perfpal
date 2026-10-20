@@ -505,6 +505,7 @@ fn empty_include_nodes_omit_include_graph_but_keep_component_charts() {
             "hot-components.svg",
             "layer-workspace.svg",
             "layer-bands.svg",
+            "layer-findings.svg",
             "component-01-src-solo.svg",
         ],
         "a file-less component still yields its deterministic stub page"
@@ -532,6 +533,7 @@ fn empty_components_emit_workspace_stub_but_omit_ranked_charts() {
             "layer-entry.svg",
             "layer-workspace.svg",
             "layer-bands.svg",
+            "layer-findings.svg",
         ]
     );
     let stub = svg_of(&out, "layer-workspace.svg");
@@ -563,6 +565,7 @@ fn present_but_empty_sections_emit_exactly_the_two_layer_stubs() {
             "layer-entry.svg",
             "layer-workspace.svg",
             "layer-bands.svg",
+            "layer-findings.svg",
         ],
         "symmetric stubs only"
     );
@@ -588,6 +591,7 @@ fn chart_emission_order_is_frozen() {
             "hot-components.svg",
             "layer-workspace.svg",
             "layer-bands.svg",
+            "layer-findings.svg",
             // Per-component pages trail the overviews in (rank, prefix)
             // order; src/x has no scanned file here ⇒ stub page.
             "component-01-src-x.svg",
@@ -608,6 +612,7 @@ fn calls_doc_emits_real_per_component_pages_in_rank_order() {
             "hot-components.svg",
             "layer-workspace.svg",
             "layer-bands.svg",
+            "layer-findings.svg",
             "component-01-src-a.svg",
             "component-02-src-b.svg",
         ]
@@ -689,6 +694,7 @@ fn component_page_escapes_hostile_prefix_and_path() {
             "hot-components.svg",
             "layer-workspace.svg",
             "layer-bands.svg",
+            "layer-findings.svg",
             "component-01-we-ird.svg",
         ]
     );
@@ -798,7 +804,8 @@ fn layered_overviews_ride_their_source_gates_in_emission_order() {
     assert_eq!(names[entry_pos + 1], "component-coupling.svg");
     assert_eq!(names[workspace_pos - 1], "hot-components.svg");
     assert_eq!(names[workspace_pos + 1], "layer-bands.svg");
-    assert_eq!(names[bands_pos + 1], "component-01-src-a.svg");
+    assert_eq!(names[bands_pos + 1], "layer-findings.svg");
+    assert_eq!(names[bands_pos + 2], "component-01-src-a.svg");
 
     // Workspace content: both components as nodes over one coupling edge.
     let workspace = svg_of(&out, "layer-workspace.svg");

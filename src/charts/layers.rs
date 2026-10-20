@@ -47,13 +47,15 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use super::{
-    COMPONENT_CAP, HEAT_LEGEND_W, NODE_CAP, REACHABLE_OVERFLOW, barycenter_order, cap_nodes,
-    escape_xml, est_text_w, file_heat_costs, heat_color, heat_ink, legend_band, legend_top,
-    parent_dir, push_heat_legend, reachable_files, resolved_pairs, truncate_label,
+    COMPONENT_CAP, FINDING_LEGEND, FINDING_LEGEND_ROW, FindingIndex, HEAT_LEGEND_W, NODE_CAP,
+    REACHABLE_OVERFLOW, barycenter_order, cap_nodes, escape_xml, est_text_w, file_heat_costs,
+    heat_color, heat_ink, legend_band, legend_top, parent_dir, push_finding_dot,
+    push_finding_legend, push_heat_legend, reachable_files, resolved_pairs, truncate_label,
 };
 use crate::graph::{break_cycles, topo_layers};
 use crate::schema::{
-    ComponentEntry, FileEntry, FunctionStats, GraphsSection, format_fixed_point, round_half_up,
+    ComponentEntry, FileEntry, FindingEntry, FunctionStats, GraphsSection, format_fixed_point,
+    round_half_up,
 };
 
 // ---------------------------------------------------------------------------
@@ -125,6 +127,7 @@ const LAYER_NODE_STROKE: &str = "#4a6fa5";
 pub fn render_layer_workspace(
     components: &[ComponentEntry],
     graphs: Option<&GraphsSection>,
+    findings: &FindingIndex,
 ) -> Vec<u8> {
     let mut sorted: Vec<&ComponentEntry> = components.iter().collect();
     sorted.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.path_prefix.cmp(&b.path_prefix)));
@@ -222,12 +225,16 @@ pub fn render_layer_workspace(
     let mut width = grid_w
         .max(LW_MARGIN + est_text_w(&title, 13.0) + 10)
         .max(LW_MARGIN + est_text_w(subtitle, 11.0) + 10)
-        .max(LW_MARGIN + HEAT_LEGEND_W + 10);
+        .max(LW_MARGIN + HEAT_LEGEND_W + 10)
+        .max(LW_MARGIN + est_text_w(FINDING_LEGEND, 11.0) + 10);
     for caption in &captions {
         width = width.max(LW_MARGIN + est_text_w(caption, 11.0) + 10);
     }
-    let height =
-        2 * LW_MARGIN + LW_HEADER_BAND + rows as i64 * LW_ROW_H + legend_band(captions.len());
+    let height = 2 * LW_MARGIN
+        + LW_HEADER_BAND
+        + rows as i64 * LW_ROW_H
+        + legend_band(captions.len())
+        + FINDING_LEGEND_ROW;
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
@@ -300,12 +307,17 @@ pub fn render_layer_workspace(
         svg.push_str(&format!(
             "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
         ));
+        if let Some(dot) = findings.for_component(node) {
+            push_finding_dot(&mut svg, x + LW_NODE_W - 5, y + 5, dot, LW_NODE_W >= 56);
+        }
     }
     svg.push_str("</g>\n");
 
-    // Heat-scale legend (the subtitle defines "heat ="), then captions
-    // bottom row first so the band fits content exactly.
-    push_heat_legend(&mut svg, LW_MARGIN, legend_top(height, captions.len()));
+    // Annotation legend (above the heat ramp), then the heat legend, then
+    // captions bottom row first so the band fits content exactly.
+    let legend_y = legend_top(height, captions.len());
+    push_finding_legend(&mut svg, LW_MARGIN, legend_y - FINDING_LEGEND_ROW + 10);
+    push_heat_legend(&mut svg, LW_MARGIN, legend_y);
     for (k, caption) in captions.iter().enumerate() {
         let y = height - 12 - k as i64 * 16;
         let out = caption.replace('…', "&#8230;");
@@ -328,7 +340,11 @@ pub fn render_layer_workspace(
 ///
 /// An empty node list yields the deterministic stub.
 #[must_use]
-pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) -> Vec<u8> {
+pub fn render_layer_file(
+    graphs: &GraphsSection,
+    functions: &[FunctionStats],
+    findings: &FindingIndex,
+) -> Vec<u8> {
     let mut nodes: Vec<String> = graphs
         .include_graph
         .nodes
@@ -420,12 +436,16 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
     let mut width = grid_w
         .max(LF_MARGIN + est_text_w(&title, 13.0) + 10)
         .max(LF_MARGIN + est_text_w(subtitle, 11.0) + 10)
-        .max(LF_MARGIN + HEAT_LEGEND_W + 10);
+        .max(LF_MARGIN + HEAT_LEGEND_W + 10)
+        .max(LF_MARGIN + est_text_w(FINDING_LEGEND, 11.0) + 10);
     for caption in &captions {
         width = width.max(LF_MARGIN + est_text_w(caption, 11.0) + 10);
     }
-    let height =
-        2 * LF_MARGIN + LF_HEADER_BAND + rows as i64 * LF_ROW_H + legend_band(captions.len());
+    let height = 2 * LF_MARGIN
+        + LF_HEADER_BAND
+        + rows as i64 * LF_ROW_H
+        + legend_band(captions.len())
+        + FINDING_LEGEND_ROW;
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
@@ -495,12 +515,17 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
         svg.push_str(&format!(
             "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
         ));
+        if let Some(dot) = findings.for_file(node) {
+            push_finding_dot(&mut svg, x + LF_NODE_W - 5, y + 5, dot, LF_NODE_W >= 56);
+        }
     }
     svg.push_str("</g>\n");
 
-    // Heat-scale legend (the subtitle defines "heat ="), then captions
-    // bottom row first so the band fits content exactly.
-    push_heat_legend(&mut svg, LF_MARGIN, legend_top(height, captions.len()));
+    // Annotation legend (above the heat ramp), then the heat legend, then
+    // captions bottom row first so the band fits content exactly.
+    let legend_y = legend_top(height, captions.len());
+    push_finding_legend(&mut svg, LF_MARGIN, legend_y - FINDING_LEGEND_ROW + 10);
+    push_heat_legend(&mut svg, LF_MARGIN, legend_y);
     for (k, caption) in captions.iter().enumerate() {
         let y = height - 12 - k as i64 * 16;
         let out = escape_xml(caption).replace('…', "&#8230;");
@@ -535,7 +560,11 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
 ///
 /// An empty node list yields the deterministic stub.
 #[must_use]
-pub fn render_layer_entry(graphs: &GraphsSection, functions: &[FunctionStats]) -> Vec<u8> {
+pub fn render_layer_entry(
+    graphs: &GraphsSection,
+    functions: &[FunctionStats],
+    findings: &FindingIndex,
+) -> Vec<u8> {
     let mut universe: Vec<String> = graphs
         .include_graph
         .nodes
@@ -887,12 +916,16 @@ pub fn render_layer_entry(graphs: &GraphsSection, functions: &[FunctionStats]) -
     let mut width = grid_w
         .max(LF_MARGIN + est_text_w(&title, 13.0) + 10)
         .max(LF_MARGIN + est_text_w(subtitle, 11.0) + 10)
-        .max(LF_MARGIN + HEAT_LEGEND_W + 10);
+        .max(LF_MARGIN + HEAT_LEGEND_W + 10)
+        .max(LF_MARGIN + est_text_w(FINDING_LEGEND, 11.0) + 10);
     for caption in &captions {
         width = width.max(LF_MARGIN + est_text_w(caption, 11.0) + 10);
     }
-    let height =
-        2 * LF_MARGIN + LF_HEADER_BAND + row_max as i64 * LF_ROW_H + legend_band(captions.len());
+    let height = 2 * LF_MARGIN
+        + LF_HEADER_BAND
+        + row_max as i64 * LF_ROW_H
+        + legend_band(captions.len())
+        + FINDING_LEGEND_ROW;
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
@@ -967,10 +1000,17 @@ pub fn render_layer_entry(graphs: &GraphsSection, functions: &[FunctionStats]) -
         svg.push_str(&format!(
             "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
         ));
+        if let Some(dot) = findings.for_file(node) {
+            push_finding_dot(&mut svg, x + LF_NODE_W - 5, y + 5, dot, LF_NODE_W >= 56);
+        }
     }
     svg.push_str("</g>\n");
 
-    push_heat_legend(&mut svg, LF_MARGIN, legend_top(height, captions.len()));
+    // Annotation legend (above the heat ramp), then the heat legend, then
+    // captions bottom row first so the band fits content exactly.
+    let legend_y = legend_top(height, captions.len());
+    push_finding_legend(&mut svg, LF_MARGIN, legend_y - FINDING_LEGEND_ROW + 10);
+    push_heat_legend(&mut svg, LF_MARGIN, legend_y);
     for (k, caption) in captions.iter().enumerate() {
         let y = height - 12 - k as i64 * 16;
         let out = escape_xml(caption).replace('…', "&#8230;");
@@ -1005,6 +1045,7 @@ pub fn render_layer_bands(
     graphs: Option<&GraphsSection>,
     files: &[FileEntry],
     functions: &[FunctionStats],
+    findings: &FindingIndex,
 ) -> Vec<u8> {
     let total_components = components.len();
     let mut sorted: Vec<&ComponentEntry> = components.iter().collect();
@@ -1193,12 +1234,14 @@ pub fn render_layer_bands(
     width = width
         .max(LB_MARGIN + est_text_w(&title, 13.0) + 10)
         .max(LB_MARGIN + est_text_w(subtitle, 11.0) + 10)
-        .max(LB_MARGIN + HEAT_LEGEND_W + 10);
+        .max(LB_MARGIN + HEAT_LEGEND_W + 10)
+        .max(LB_MARGIN + est_text_w(FINDING_LEGEND, 11.0) + 10);
     for caption in &captions {
         width = width.max(LB_MARGIN + est_text_w(caption, 11.0) + 10);
     }
     let bands_h = bands.len() as i64 * (LB_BAND_H + LB_BAND_GAP);
-    let height = 2 * LB_MARGIN + LB_HEADER_BAND + bands_h + legend_band(captions.len());
+    let height =
+        2 * LB_MARGIN + LB_HEADER_BAND + bands_h + legend_band(captions.len()) + FINDING_LEGEND_ROW;
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
@@ -1310,11 +1353,18 @@ pub fn render_layer_bands(
             svg.push_str(&format!(
                 "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
             ));
+            if let Some(dot) = findings.for_file(path) {
+                push_finding_dot(&mut svg, x + LB_FILE_W - 5, y + 5, dot, LB_FILE_W >= 56);
+            }
         }
     }
     svg.push_str("</g>\n");
 
-    push_heat_legend(&mut svg, LB_MARGIN, legend_top(height, captions.len()));
+    // Annotation legend (above the heat ramp), then the heat legend, then
+    // captions bottom row first so the band fits content exactly.
+    let legend_y = legend_top(height, captions.len());
+    push_finding_legend(&mut svg, LB_MARGIN, legend_y - FINDING_LEGEND_ROW + 10);
+    push_heat_legend(&mut svg, LB_MARGIN, legend_y);
     for (k, caption) in captions.iter().enumerate() {
         let y = height - 12 - k as i64 * 16;
         let out = escape_xml(caption).replace('…', "&#8230;");
@@ -1333,6 +1383,211 @@ fn band_header(rank: u32, prefix: &str, full_count: usize) -> String {
         let word = if full_count == 1 { "file" } else { "files" };
         format!("{rank}. {} — {full_count} {word}", truncate_label(prefix))
     }
+}
+
+/// Render `charts/layer-findings.svg` (I4, `map-build`): a severity-weighted
+/// findings map.
+///
+/// Node set = include-graph nodes UNION the file paths that carry findings
+/// (sorted). When the universe exceeds [`NODE_CAP`], nodes are elected by
+/// `(weighted desc, path asc)` where `weighted = 3*hot + 2*warn + 1*info`
+/// (fixed weights, stated in the subtitle); the kept set is re-sorted
+/// path-ascending for the shared DAG layout (break cycles → topo layers →
+/// 3-pass barycenter). Heat level = node weight / max shown weight (0..10).
+/// Every node carries its finding dot; the single hottest shown file is
+/// outlined (weight desc, then path asc). Zero findings yields a
+/// deterministic stub — never a blank chart.
+///
+/// `index` is the shared roll-up built ONCE by [`super::render`] (this
+/// renderer never rebuilds it); `findings` supplies the exact set of paths
+/// to union in and the empty-document stub signal.
+#[must_use]
+pub fn render_layer_findings(
+    graphs: Option<&GraphsSection>,
+    findings: &[FindingEntry],
+    index: &FindingIndex,
+) -> Vec<u8> {
+    if findings.is_empty() {
+        return findings_stub();
+    }
+
+    let mut universe: BTreeSet<String> = BTreeSet::new();
+    if let Some(graphs) = graphs {
+        for node in &graphs.include_graph.nodes {
+            universe.insert(node.path.clone());
+        }
+    }
+    for finding in findings {
+        universe.insert(finding.path.clone());
+    }
+    let total = universe.len();
+    let weight_of = |path: &str| index.for_file(path).map_or(0, |dot| dot.weighted());
+
+    let mut ranked: Vec<String> = universe.into_iter().collect();
+    ranked.sort_by(|a, b| weight_of(b).cmp(&weight_of(a)).then_with(|| a.cmp(b)));
+    ranked.truncate(NODE_CAP);
+    ranked.sort();
+    let nodes = ranked;
+    let node_set: BTreeSet<&str> = nodes.iter().map(String::as_str).collect();
+
+    let all_pairs: Vec<(String, String)> = graphs
+        .map(|g| resolved_pairs(&g.include_graph.edges))
+        .unwrap_or_default();
+    let pairs: Vec<(String, String)> = all_pairs
+        .into_iter()
+        .filter(|(from, to)| node_set.contains(from.as_str()) && node_set.contains(to.as_str()))
+        .collect();
+
+    let cycle = break_cycles(&pairs);
+    let broken_count = cycle.broken.len();
+    let mut layers = topo_layers(&nodes, &cycle.kept);
+    barycenter_order(&mut layers, &cycle.kept);
+
+    let mut pos: BTreeMap<&str, (i64, i64)> = BTreeMap::new();
+    for (l, layer_members) in layers.iter().enumerate() {
+        for (i, node) in layer_members.iter().enumerate() {
+            pos.insert(
+                node.as_str(),
+                (
+                    LF_MARGIN + l as i64 * LF_LAYER_W,
+                    LF_MARGIN + LF_HEADER_BAND + i as i64 * LF_ROW_H,
+                ),
+            );
+        }
+    }
+
+    let max_weight = nodes.iter().map(|n| weight_of(n)).max().unwrap_or(0);
+    // Single hottest shown file: weight desc, path asc (ties discriminate).
+    let hot: Option<&str> = if max_weight == 0 {
+        None
+    } else {
+        nodes
+            .iter()
+            .filter(|n| weight_of(n) >= max_weight)
+            .map(String::as_str)
+            .min()
+    };
+
+    let rows = layers.iter().map(Vec::len).max().unwrap_or(1);
+    let grid_w = 2 * LF_MARGIN + (layers.len().saturating_sub(1)) as i64 * LF_LAYER_W + LF_NODE_W;
+    let title = format!(
+        "Findings map — {} {}",
+        nodes.len(),
+        if nodes.len() == 1 { "file" } else { "files" },
+    );
+    let subtitle = "heat = severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate) — profile to confirm";
+    let mut captions: Vec<String> = Vec::new();
+    if total > nodes.len() {
+        captions.push(format!(
+            "showing top {} of {} files by weighted findings (…+{} more)",
+            nodes.len(),
+            total,
+            total - nodes.len()
+        ));
+    }
+    if broken_count > 0 {
+        captions.push(format!(
+            "{broken_count} cyclic edges broken (see ARCH-001 findings)"
+        ));
+    }
+
+    let mut width = grid_w
+        .max(LF_MARGIN + est_text_w(&title, 13.0) + 10)
+        .max(LF_MARGIN + est_text_w(subtitle, 11.0) + 10)
+        .max(LF_MARGIN + HEAT_LEGEND_W + 10)
+        .max(LF_MARGIN + est_text_w(FINDING_LEGEND, 11.0) + 10);
+    for caption in &captions {
+        width = width.max(LF_MARGIN + est_text_w(caption, 11.0) + 10);
+    }
+    let height = 2 * LF_MARGIN
+        + LF_HEADER_BAND
+        + rows as i64 * LF_ROW_H
+        + legend_band(captions.len())
+        + FINDING_LEGEND_ROW;
+
+    let mut svg = String::with_capacity(4096);
+    svg.push_str(&format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
+    ));
+    svg.push_str(&format!(
+        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">{}</text>\n",
+        LF_MARGIN + 16,
+        escape_xml(&title),
+    ));
+    svg.push_str(&format!(
+        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{}</text>\n",
+        LF_MARGIN + 36,
+        escape_xml(subtitle),
+    ));
+
+    // Edges first (under nodes): kept DAG edges only.
+    if !cycle.kept.is_empty() {
+        svg.push_str("<g stroke=\"#999999\" stroke-width=\"1\">\n");
+        for (from, to) in &cycle.kept {
+            let Some(&(fx, fy)) = pos.get(from.as_str()) else {
+                continue;
+            };
+            let Some(&(tx, ty)) = pos.get(to.as_str()) else {
+                continue;
+            };
+            let x1 = fx + LF_NODE_W;
+            let y1 = fy + LF_NODE_H / 2;
+            let y2 = ty + LF_NODE_H / 2;
+            svg.push_str(&format!(
+                "<line x1=\"{x1}\" y1=\"{y1}\" x2=\"{tx}\" y2=\"{y2}\"/>\n"
+            ));
+        }
+        svg.push_str("</g>\n");
+    }
+
+    svg.push_str("<g font-family=\"monospace\" font-size=\"11\">\n");
+    for node in &nodes {
+        let Some(&(x, y)) = pos.get(node.as_str()) else {
+            continue;
+        };
+        let weight = weight_of(node);
+        let level = if max_weight == 0 {
+            0
+        } else {
+            round_half_up(f64::from(weight) / f64::from(max_weight) * 10.0, 0).clamp(0, 10) as u32
+        };
+        let fill = heat_color(level);
+        let (stroke, stroke_w) = if hot == Some(node.as_str()) {
+            (LF_HOT_STROKE, 2)
+        } else {
+            (LAYER_NODE_STROKE, 1)
+        };
+        let label = escape_xml(&truncate_label(node));
+        let text_x = x + 6 + 2;
+        let text_y = y + LF_NODE_H / 2 + 4;
+        let ink = match heat_ink(level) {
+            Some(ink) => format!(" fill=\"{ink}\""),
+            None => String::new(),
+        };
+        svg.push_str(&format!(
+            "<rect x=\"{x}\" y=\"{y}\" width=\"{LF_NODE_W}\" height=\"{LF_NODE_H}\" fill=\"{fill}\" stroke=\"{stroke}\" stroke-width=\"{stroke_w}\"/>\n"
+        ));
+        svg.push_str(&format!(
+            "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
+        ));
+        if let Some(dot) = index.for_file(node) {
+            push_finding_dot(&mut svg, x + LF_NODE_W - 5, y + 5, dot, LF_NODE_W >= 56);
+        }
+    }
+    svg.push_str("</g>\n");
+
+    let legend_y = legend_top(height, captions.len());
+    push_finding_legend(&mut svg, LF_MARGIN, legend_y - FINDING_LEGEND_ROW + 10);
+    push_heat_legend(&mut svg, LF_MARGIN, legend_y);
+    for (k, caption) in captions.iter().enumerate() {
+        let y = height - 12 - k as i64 * 16;
+        let out = escape_xml(caption).replace('…', "&#8230;");
+        svg.push_str(&format!(
+            "<text x=\"{LF_MARGIN}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{out}</text>\n"
+        ));
+    }
+    svg.push_str("</svg>\n");
+    svg.into_bytes()
 }
 
 // ---------------------------------------------------------------------------
@@ -1421,6 +1676,31 @@ fn bands_stub() -> Vec<u8> {
     svg.into_bytes()
 }
 
+/// Stub for a document with zero recorded findings: header + the honest
+/// "nothing to annotate" body (never blank).
+fn findings_stub() -> Vec<u8> {
+    let title = "Findings map — no findings";
+    let body = "no findings recorded — nothing to annotate (heuristic candidates only)";
+    let width = (2 * LF_MARGIN + LF_NODE_W)
+        .max(LF_MARGIN + est_text_w(title, 13.0) + 10)
+        .max(LF_MARGIN + est_text_w(body, 11.0) + 10);
+    let height = LF_MARGIN + LF_HEADER_BAND + LF_CAPTION_BAND;
+    let mut svg = String::with_capacity(1024);
+    svg.push_str(&format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">\n"
+    ));
+    svg.push_str(&format!(
+        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"13\">{title}</text>\n",
+        LF_MARGIN + 16
+    ));
+    svg.push_str(&format!(
+        "<text x=\"{LF_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">{body}</text>\n",
+        height - 12
+    ));
+    svg.push_str("</svg>\n");
+    svg.into_bytes()
+}
+
 #[cfg(test)]
 mod tests {
     //! Contract locks: stub shapes, cap policy, heat normalization, hot-path
@@ -1500,8 +1780,8 @@ mod tests {
 
     #[test]
     fn empty_inputs_yield_deterministic_stubs() {
-        let first = render_layer_workspace(&[], None);
-        let second = render_layer_workspace(&[], None);
+        let first = render_layer_workspace(&[], None, &FindingIndex::default());
+        let second = render_layer_workspace(&[], None, &FindingIndex::default());
         assert_eq!(first, second);
         let text = String::from_utf8(first).expect("SVG UTF-8");
         assert!(
@@ -1510,8 +1790,8 @@ mod tests {
         );
 
         let graphs = graphs(&[], &[]);
-        let first = render_layer_file(&graphs, &[]);
-        let second = render_layer_file(&graphs, &[]);
+        let first = render_layer_file(&graphs, &[], &FindingIndex::default());
+        let second = render_layer_file(&graphs, &[], &FindingIndex::default());
         assert_eq!(first, second);
         let text = String::from_utf8(first).expect("SVG UTF-8");
         assert!(text.contains("no files recorded"), "stub caption:\n{text}");
@@ -1521,8 +1801,8 @@ mod tests {
     fn workspace_couples_components_over_include_edges() {
         let comps = vec![comp("src/a", 1, 8.0), comp("src/b", 2, 4.0)];
         let g = graphs(&["src/a/x.c", "src/b/y.c"], &[("src/a/x.c", "src/b/y.c")]);
-        let first = render_layer_workspace(&comps, Some(&g));
-        let second = render_layer_workspace(&comps, Some(&g));
+        let first = render_layer_workspace(&comps, Some(&g), &FindingIndex::default());
+        let second = render_layer_workspace(&comps, Some(&g), &FindingIndex::default());
         assert_eq!(first, second, "byte-determinism violated");
         let text = String::from_utf8(first).expect("SVG UTF-8");
         // Both components as nodes, one inter-component edge, heat extremes.
@@ -1540,7 +1820,12 @@ mod tests {
         let comps: Vec<ComponentEntry> = (1..=60)
             .map(|r| comp(&format!("dir{r:02}"), r, 0.0))
             .collect();
-        let text = String::from_utf8(render_layer_workspace(&comps, None)).expect("SVG UTF-8");
+        let text = String::from_utf8(render_layer_workspace(
+            &comps,
+            None,
+            &FindingIndex::default(),
+        ))
+        .expect("SVG UTF-8");
         assert_eq!(text.matches("width=\"170\"").count(), COMPONENT_CAP);
         assert!(
             !text.contains("dir51"),
@@ -1552,8 +1837,8 @@ mod tests {
     fn file_layer_outlines_the_highest_cost_file() {
         let g = graphs(&["a.c", "b.c"], &[("a.c", "b.c")]);
         let functions = vec![costly_fn("a.c", 20), costly_fn("b.c", 2)];
-        let first = render_layer_file(&g, &functions);
-        let second = render_layer_file(&g, &functions);
+        let first = render_layer_file(&g, &functions, &FindingIndex::default());
+        let second = render_layer_file(&g, &functions, &FindingIndex::default());
         assert_eq!(first, second, "byte-determinism violated");
         let text = String::from_utf8(first).expect("SVG UTF-8");
         assert!(
@@ -1577,8 +1862,8 @@ mod tests {
         // (cost desc, then path asc), elected among the drawn files.
         let g = graphs(&["a.c", "b.c"], &[("a.c", "b.c")]);
         let functions = vec![costly_fn("a.c", 10), costly_fn("b.c", 10)];
-        let first = render_layer_file(&g, &functions);
-        let second = render_layer_file(&g, &functions);
+        let first = render_layer_file(&g, &functions, &FindingIndex::default());
+        let second = render_layer_file(&g, &functions, &FindingIndex::default());
         assert_eq!(first, second, "byte-determinism violated");
         let text = String::from_utf8(first).expect("SVG UTF-8");
         assert_eq!(
@@ -1596,7 +1881,8 @@ mod tests {
     #[test]
     fn file_layer_without_cost_renders_uniformly() {
         let g = graphs(&["a.c"], &[]);
-        let text = String::from_utf8(render_layer_file(&g, &[])).expect("SVG UTF-8");
+        let text = String::from_utf8(render_layer_file(&g, &[], &FindingIndex::default()))
+            .expect("SVG UTF-8");
         assert!(text.contains("no function cost recorded"));
         assert!(
             !text.contains("stroke=\"#1a1a1a\" stroke-width=\"2\""),
@@ -1607,7 +1893,12 @@ mod tests {
     #[test]
     fn workspace_escapes_hostile_prefixes() {
         let comps = vec![comp("we<ird>&", 1, 1.0)];
-        let text = String::from_utf8(render_layer_workspace(&comps, None)).expect("SVG UTF-8");
+        let text = String::from_utf8(render_layer_workspace(
+            &comps,
+            None,
+            &FindingIndex::default(),
+        ))
+        .expect("SVG UTF-8");
         assert!(
             text.contains("we&lt;ird&gt;&amp;"),
             "hostile prefix not escaped:\n{text}"

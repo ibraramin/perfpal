@@ -228,10 +228,10 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // Derived artifacts (modules.md Principle 5): report.md and charts/ are
     // pure functions of the final document. charts::render applies the
     // emission rule itself — ranked overviews require a present NON-EMPTY
-    // source, while the four layered/map stems STUB whenever their section is
-    // present but empty: `layer-file.svg` + `layer-entry.svg` ride the
-    // include-graph gate, `layer-workspace.svg` + `layer-bands.svg` ride the
-    // components gate. Per-component detail pages need non-empty components —
+    // source, while the five layered/map stems STUB whenever their section is
+    // present but empty: `layer-file.svg` + `layer-entry.svg` + `layer-findings.svg`
+    // ride the include-graph gate, `layer-workspace.svg` + `layer-bands.svg` ride
+    // the components gate. Per-component detail pages need non-empty components —
     // one page per capped component, a stub when file-less. An empty scan
     // yields an empty chart set — the writer still creates charts/
     // (output-contract §3). graphs.dot is

@@ -159,7 +159,7 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
     assert!(run1.contains_key("report.html"));
     assert!(run1.contains_key("findings-detail.md"));
     assert!(run1.contains_key("findings-detail.html"));
-    // Three overview charts + four layered/map overviews + graph.dot + one
+    // Three overview charts + five layered/map overviews + graph.dot + one
     // detail page per capped component (count derived from metrics.json, not
     // hardcoded).
     let metrics_raw = String::from_utf8(run1["metrics.json"].clone()).expect("metrics.json UTF-8");
@@ -168,7 +168,7 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
     let component_count = metrics_doc["components"].as_array().unwrap().len();
     assert_eq!(
         run1.keys().filter(|n| n.starts_with("charts/")).count(),
-        8 + component_count,
-        "fixture should emit all three v1 charts + four layered/map overviews + graph.dot + one page per component"
+        9 + component_count,
+        "fixture should emit all three v1 charts + five layered/map overviews + graph.dot + one page per component"
     );
 }

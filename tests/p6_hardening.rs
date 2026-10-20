@@ -100,7 +100,7 @@ fn fixture_root() -> PathBuf {
 /// plus the Wave B1 resolved-ARCH-003 row neutralizer (see
 /// common::mask_golden_html_semantic). findings-detail.md masks exactly like
 /// report.md (provenance surfaces + absolute root + ARCH-003 block strip).
-const GOLDEN_ARTIFACTS: [&str; 14] = [
+const GOLDEN_ARTIFACTS: [&str; 15] = [
     "metrics.json",
     "metrics.schema.v1.6.json",
     "report.md",
@@ -114,6 +114,7 @@ const GOLDEN_ARTIFACTS: [&str; 14] = [
     "charts/hot-components.svg",
     "charts/layer-workspace.svg",
     "charts/layer-bands.svg",
+    "charts/layer-findings.svg",
     "charts/graph.dot",
 ];
 
@@ -443,6 +444,7 @@ fn regenerate_goldens() {
             "charts/hot-components.svg".to_string(),
             "charts/layer-workspace.svg".to_string(),
             "charts/layer-bands.svg".to_string(),
+            "charts/layer-findings.svg".to_string(),
             "charts/graph.dot".to_string(),
             "metrics.schema.v1.6.json".to_string(),
         ];
@@ -528,7 +530,7 @@ fn regenerate_goldens() {
 }
 
 /// Comparator (default gate, always runs): per tree, fresh pipeline output
-/// into a temp dir, SAME masking, compare each of the eight fixed artifacts
+/// into a temp dir, SAME masking, compare each of the fixed artifacts
 /// PLUS every committed per-component detail page against the committed
 /// goldens. On mismatch the assertion names the tree and lists
 /// every differing artifact plus the regeneration command.

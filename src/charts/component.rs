@@ -19,8 +19,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
-    COMPONENT_CAP, HEAT_LEGEND_W, barycenter_order, cap_nodes, escape_xml, est_text_w,
-    file_heat_costs, heat_color, heat_ink, legend_band, legend_top, parent_dir, push_heat_legend,
+    COMPONENT_CAP, FINDING_LEGEND, FINDING_LEGEND_ROW, FindingIndex, HEAT_LEGEND_W,
+    barycenter_order, cap_nodes, escape_xml, est_text_w, file_heat_costs, heat_color, heat_ink,
+    legend_band, legend_top, parent_dir, push_finding_dot, push_finding_legend, push_heat_legend,
     reachable_files, resolved_pairs, truncate_label,
 };
 use crate::graph::{break_cycles, topo_layers};
@@ -95,6 +96,7 @@ pub fn render_component_pages(
     graphs: Option<&GraphsSection>,
     files: &[FileEntry],
     functions: &[FunctionStats],
+    findings: &FindingIndex,
 ) -> Vec<(String, Vec<u8>)> {
     let mut sorted: Vec<&ComponentEntry> = components.iter().collect();
     sorted.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.path_prefix.cmp(&b.path_prefix)));
@@ -137,7 +139,14 @@ pub fn render_component_pages(
         let bytes = if member_set.is_empty() {
             render_component_stub(comp)
         } else {
-            render_component_page(comp, member_set, &include_pairs, &file_cost, &reachable)
+            render_component_page(
+                comp,
+                member_set,
+                &include_pairs,
+                &file_cost,
+                &reachable,
+                findings,
+            )
         };
         out.push((name, bytes));
     }
@@ -181,6 +190,7 @@ fn render_component_page(
     include_pairs: &[(String, String)],
     file_cost: &BTreeMap<String, f64>,
     reachable: &BTreeSet<String>,
+    findings: &FindingIndex,
 ) -> Vec<u8> {
     // Intra-component scope FIRST: only edges with both endpoints in this
     // component's member set may influence the cap ranking. Ranking by the
@@ -242,17 +252,26 @@ fn render_component_page(
             "{broken_count} cyclic edges broken (see ARCH-001 findings)"
         ));
     }
+    // The node ramp is per-file FUNCTION COST (the subtitle above names the
+    // component finding density, a different metric) — label it explicitly.
+    captions.push(
+        "heat = function cost (v2 where available; v1 fallback) — profile to confirm".to_string(),
+    );
     // Narrow (e.g. single-column) pages widen past the grid when the header,
     // legend, or any caption needs it — text keeps ≥10px from the right edge.
     let mut width = grid_w
         .max(PC_MARGIN + est_text_w(&title, 13.0) + 10)
         .max(PC_MARGIN + est_text_w(&subtitle, 11.0) + 10)
-        .max(PC_MARGIN + HEAT_LEGEND_W + 10);
+        .max(PC_MARGIN + HEAT_LEGEND_W + 10)
+        .max(PC_MARGIN + est_text_w(FINDING_LEGEND, 11.0) + 10);
     for caption in &captions {
         width = width.max(PC_MARGIN + est_text_w(caption, 11.0) + 10);
     }
-    let height =
-        2 * PC_MARGIN + PC_HEADER_BAND + rows as i64 * PC_ROW_H + legend_band(captions.len());
+    let height = 2 * PC_MARGIN
+        + PC_HEADER_BAND
+        + rows as i64 * PC_ROW_H
+        + legend_band(captions.len())
+        + FINDING_LEGEND_ROW;
 
     let mut svg = String::with_capacity(4096);
     svg.push_str(&format!(
@@ -308,12 +327,17 @@ fn render_component_page(
         svg.push_str(&format!(
             "<text x=\"{text_x}\" y=\"{text_y}\"{ink}>{label}</text>\n"
         ));
+        if let Some(dot) = findings.for_file(node) {
+            push_finding_dot(&mut svg, x + PC_NODE_W - 5, y + 5, dot, PC_NODE_W >= 56);
+        }
     }
     svg.push_str("</g>\n");
 
-    // Heat-scale legend (same band as the layer overviews), then captions
-    // bottom row first so the band fits content exactly.
-    push_heat_legend(&mut svg, PC_MARGIN, legend_top(height, captions.len()));
+    // Annotation legend (above the heat ramp), then the heat legend, then
+    // captions bottom row first so the band fits content exactly.
+    let legend_y = legend_top(height, captions.len());
+    push_finding_legend(&mut svg, PC_MARGIN, legend_y - FINDING_LEGEND_ROW + 10);
+    push_heat_legend(&mut svg, PC_MARGIN, legend_y);
     for (k, caption) in captions.iter().enumerate() {
         let y = height - 12 - k as i64 * 16;
         let out = caption.replace('…', "&#8230;");
@@ -387,8 +411,20 @@ mod tests {
 
     #[test]
     fn file_less_component_renders_deterministic_stub() {
-        let first = render_component_pages(&[comp("src/ghost", 1, 0.0)], None, &[], &[]);
-        let second = render_component_pages(&[comp("src/ghost", 1, 0.0)], None, &[], &[]);
+        let first = render_component_pages(
+            &[comp("src/ghost", 1, 0.0)],
+            None,
+            &[],
+            &[],
+            &FindingIndex::default(),
+        );
+        let second = render_component_pages(
+            &[comp("src/ghost", 1, 0.0)],
+            None,
+            &[],
+            &[],
+            &FindingIndex::default(),
+        );
         assert_eq!(first, second);
         assert_eq!(first.len(), 1);
         assert_eq!(first[0].0, "component-01-src-ghost.svg");
@@ -402,7 +438,7 @@ mod tests {
         let comps: Vec<ComponentEntry> = (1..=60)
             .map(|r| comp(&format!("dir{r:02}"), r, 0.0))
             .collect();
-        let pages = render_component_pages(&comps, None, &[], &[]);
+        let pages = render_component_pages(&comps, None, &[], &[], &FindingIndex::default());
         assert_eq!(pages.len(), COMPONENT_CAP);
         assert_eq!(pages[0].0, "component-01-dir01.svg");
     }
@@ -434,7 +470,13 @@ mod tests {
             },
             call_graph: None,
         };
-        let pages = render_component_pages(&[comp("src/a", 1, 1.0)], Some(&graphs), &[], &[]);
+        let pages = render_component_pages(
+            &[comp("src/a", 1, 1.0)],
+            Some(&graphs),
+            &[],
+            &[],
+            &FindingIndex::default(),
+        );
         assert_eq!(pages.len(), 1);
         let text = String::from_utf8(pages[0].1.clone()).expect("SVG UTF-8");
         assert!(text.contains(">src/a/x.c<"), "member node:\n{text}");
@@ -484,7 +526,13 @@ mod tests {
             },
             call_graph: None,
         };
-        let pages = render_component_pages(&[comp("big", 1, 1.0)], Some(&graphs), &[], &[]);
+        let pages = render_component_pages(
+            &[comp("big", 1, 1.0)],
+            Some(&graphs),
+            &[],
+            &[],
+            &FindingIndex::default(),
+        );
         assert_eq!(pages.len(), 1);
         let text = String::from_utf8(pages[0].1.clone()).expect("SVG UTF-8");
         assert_eq!(text.matches("width=\"170\"").count(), 50, "node cap");

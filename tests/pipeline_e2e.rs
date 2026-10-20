@@ -374,6 +374,7 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         "layer-entry.svg".to_string(),
         "layer-file.svg".to_string(),
         "layer-bands.svg".to_string(),
+        "layer-findings.svg".to_string(),
         "layer-workspace.svg".to_string(),
     ];
     let mut ranked: Vec<(u64, String)> = doc1["components"]

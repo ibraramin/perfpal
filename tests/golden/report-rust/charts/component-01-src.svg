@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="690" height="676" viewBox="0 0 690 676">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="708" viewBox="0 0 1100 708">
 <text x="40" y="56" font-family="monospace" font-size="13">Component 1: src</text>
 <text x="40" y="76" font-family="monospace" font-size="11">finding density 197.53 per KLOC · 14 files</text>
 <g stroke="#999999" stroke-width="1">
@@ -10,45 +10,70 @@
 <g font-family="monospace" font-size="11">
 <rect x="40" y="104" width="170" height="30" fill="#b30000" stroke="#4a6fa5"/>
 <text x="49" y="123" fill="#ffffff">src/01_alloc_churn.rs</text>
+<circle cx="198" cy="109" r="4" fill="#c0392b" stroke="#1b1b1b" stroke-width="1.2"><title>6 candidate finding(s): 5 hot / 1 warn / 0 info; confidence 3 high / 3 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="111.5" font-family="monospace" font-size="7" fill="#1b1b1b">6</text>
 <rect x="40" y="148" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5"/>
 <text x="49" y="167" fill="#ffffff">src/02_string_building.rs</text>
+<circle cx="198" cy="153" r="4" fill="#c0392b" stroke="#1b1b1b" stroke-width="2.2"><title>3 candidate finding(s): 1 hot / 2 warn / 0 info; confidence 3 high / 0 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="155.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="192" width="170" height="30" fill="#d98080" stroke="#4a6fa5"/>
 <text x="49" y="211">src/03_deep_nesting.rs</text>
+<circle cx="198" cy="197" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>2 candidate finding(s): 0 hot / 1 warn / 1 info; confidence 1 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="199.5" font-family="monospace" font-size="7" fill="#1b1b1b">2</text>
 <rect x="40" y="236" width="170" height="30" fill="#e19999" stroke="#4a6fa5"/>
 <text x="49" y="255">src/04_stdio_churn.rs</text>
+<circle cx="198" cy="241" r="4" fill="#c0392b" stroke="#1b1b1b" stroke-width="1.2"><title>3 candidate finding(s): 2 hot / 0 warn / 1 info; confidence 0 high / 3 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="243.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="280" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5"/>
 <text x="49" y="299" fill="#ffffff">src/05_recursion_complexity.rs</text>
+<circle cx="198" cy="285" r="4" fill="#c0392b" stroke="#1b1b1b" stroke-width="2.2"><title>3 candidate finding(s): 1 hot / 1 warn / 1 info; confidence 3 high / 0 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="287.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="324" width="170" height="30" fill="#d16666" stroke="#4a6fa5"/>
 <text x="49" y="343">src/06_memory_ops.rs</text>
+<circle cx="198" cy="329" r="4" fill="#c0392b" stroke="#1b1b1b" stroke-width="1.2"><title>2 candidate finding(s): 1 hot / 1 warn / 0 info; confidence 1 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="331.5" font-family="monospace" font-size="7" fill="#1b1b1b">2</text>
 <rect x="40" y="368" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
 <text x="49" y="387">src/07_struct_by_value.rs</text>
+<circle cx="198" cy="373" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="0.6"><title>2 candidate finding(s): 0 hot / 1 warn / 1 info; confidence 0 high / 0 medium / 2 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="375.5" font-family="monospace" font-size="7" fill="#1b1b1b">2</text>
 <rect x="40" y="412" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5"/>
 <text x="49" y="431" fill="#ffffff">src/08_globals_and_chains.rs</text>
+<circle cx="198" cy="417" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="0.6"><title>3 candidate finding(s): 0 hot / 0 warn / 3 info; confidence 0 high / 2 medium / 1 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="419.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="456" width="170" height="30" fill="#d98080" stroke="#4a6fa5"/>
 <text x="49" y="475">src/09_membership_scan.rs</text>
+<circle cx="198" cy="461" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="0.6"><title>2 candidate finding(s): 0 hot / 1 warn / 1 info; confidence 1 high / 0 medium / 1 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="463.5" font-family="monospace" font-size="7" fill="#1b1b1b">2</text>
 <rect x="40" y="500" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5"/>
 <text x="49" y="519">src/10_cross_file_and_arch.rs</text>
+<circle cx="198" cy="505" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="0.6"><title>3 candidate finding(s): 0 hot / 0 warn / 3 info; confidence 0 high / 0 medium / 3 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="507.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="260" y="104" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
 <text x="269" y="123">src/common.rs</text>
 <rect x="260" y="148" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
 <text x="269" y="167">src/cycle_a.rs</text>
+<circle cx="425" cy="153" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="0.6"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 0 medium / 1 low — static candidates, profile to confirm</title></circle>
 <rect x="480" y="104" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
 <text x="489" y="123">src/cycle_b.rs</text>
+<circle cx="638" cy="109" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="0.6"><title>2 candidate finding(s): 0 hot / 1 warn / 1 info; confidence 1 high / 0 medium / 1 low — static candidates, profile to confirm</title></circle>
+<text x="644.5" y="111.5" font-family="monospace" font-size="7" fill="#1b1b1b">2</text>
 <rect x="40" y="544" width="170" height="30" fill="#ffffff" stroke="#4a6fa5"/>
 <text x="49" y="563">src/lib.rs</text>
 </g>
-<text x="40" y="638" font-family="monospace" font-size="11">cool</text>
-<rect x="73" y="628" width="12" height="12" fill="#ffffff"/>
-<rect x="85" y="628" width="12" height="12" fill="#f7e6e6"/>
-<rect x="97" y="628" width="12" height="12" fill="#f0cccc"/>
-<rect x="109" y="628" width="12" height="12" fill="#e8b3b3"/>
-<rect x="121" y="628" width="12" height="12" fill="#e19999"/>
-<rect x="133" y="628" width="12" height="12" fill="#d98080"/>
-<rect x="145" y="628" width="12" height="12" fill="#d16666"/>
-<rect x="157" y="628" width="12" height="12" fill="#ca4d4d"/>
-<rect x="169" y="628" width="12" height="12" fill="#c23333"/>
-<rect x="181" y="628" width="12" height="12" fill="#bb1a1a"/>
-<rect x="193" y="628" width="12" height="12" fill="#b30000"/>
-<text x="211" y="638" font-family="monospace" font-size="11">hot</text>
-<text x="40" y="664" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
+<text x="40" y="638" font-family="monospace" font-size="11">finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm</text>
+<text x="40" y="654" font-family="monospace" font-size="11">cool</text>
+<rect x="73" y="644" width="12" height="12" fill="#ffffff"/>
+<rect x="85" y="644" width="12" height="12" fill="#f7e6e6"/>
+<rect x="97" y="644" width="12" height="12" fill="#f0cccc"/>
+<rect x="109" y="644" width="12" height="12" fill="#e8b3b3"/>
+<rect x="121" y="644" width="12" height="12" fill="#e19999"/>
+<rect x="133" y="644" width="12" height="12" fill="#d98080"/>
+<rect x="145" y="644" width="12" height="12" fill="#d16666"/>
+<rect x="157" y="644" width="12" height="12" fill="#ca4d4d"/>
+<rect x="169" y="644" width="12" height="12" fill="#c23333"/>
+<rect x="181" y="644" width="12" height="12" fill="#bb1a1a"/>
+<rect x="193" y="644" width="12" height="12" fill="#b30000"/>
+<text x="211" y="654" font-family="monospace" font-size="11">hot</text>
+<text x="40" y="696" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
+<text x="40" y="680" font-family="monospace" font-size="11">heat = function cost (v2 where available; v1 fallback) — profile to confirm</text>
 </svg>

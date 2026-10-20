@@ -100,6 +100,7 @@ Distribution — max\_loop\_depth:
 [Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
 [Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)
 [Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.](charts/layer-bands.svg)
+[Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm.](charts/layer-findings.svg)
 
 Component ranking (hottest first — showing top 2 of 2 components):
 

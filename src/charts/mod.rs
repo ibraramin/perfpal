@@ -6,8 +6,8 @@
 //! consumes). Produces: SVG bytes for chart-set v1 ([`render`]:
 //! include-graph.svg, layer-file.svg, layer-entry.svg,
 //! component-coupling.svg, hot-components.svg, layer-workspace.svg,
-//! layer-bands.svg, plus one `component-<rank>-<slug>.svg` detail page per
-//! capped component).
+//! layer-bands.svg, layer-findings.svg, plus one
+//! `component-<rank>-<slug>.svg` detail page per capped component).
 //!
 //! Responsibilities: byte-deterministic rendering by construction (ADR-0002
 //! guardrail 2); XML-escape all label/path text; deterministic node caps with
@@ -55,9 +55,10 @@ pub mod layers;
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::analyzer::{Confidence, Severity};
 use crate::graph::{break_cycles, topo_layers};
 use crate::schema::{
-    ComponentEntry, FunctionStats, GraphsSection, IncludeEdgeDto, MetricsDocument,
+    ComponentEntry, FindingEntry, FunctionStats, GraphsSection, IncludeEdgeDto, MetricsDocument,
     format_fixed_point, round_half_up,
 };
 
@@ -111,6 +112,183 @@ const HC_BAR_FILL: &str = "#b30000";
 const HC_STUB_W: i64 = 2;
 
 // ---------------------------------------------------------------------------
+// Finding annotations (I4 findings-as-annotations)
+// ---------------------------------------------------------------------------
+
+/// Aggregated finding counts for one node (file or component). All counts
+/// are CANDIDATES (static heuristics, never ground truth). Kept per severity
+/// AND per confidence so a dot can encode both channels without re-scanning
+/// `doc.findings`.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct FindingDot {
+    pub total: u32,
+    pub hot: u32,
+    pub warn: u32,
+    pub info: u32,
+    pub high: u32,
+    pub medium: u32,
+    pub low: u32,
+}
+
+impl FindingDot {
+    fn add(&mut self, finding: &FindingEntry) {
+        self.total += 1;
+        match finding.severity {
+            Severity::Hot => self.hot += 1,
+            Severity::Warn => self.warn += 1,
+            Severity::Info => self.info += 1,
+        }
+        match finding.confidence {
+            Confidence::High => self.high += 1,
+            Confidence::Medium => self.medium += 1,
+            Confidence::Low => self.low += 1,
+        }
+    }
+
+    /// Severity-weighted candidate mass (hot 3 / warn 2 / info 1). The fixed
+    /// weights are the map's documented ranking rule.
+    #[must_use]
+    pub fn weighted(&self) -> u32 {
+        self.hot
+            .saturating_mul(3)
+            .saturating_add(self.warn.saturating_mul(2))
+            .saturating_add(self.info)
+    }
+
+    /// Worst severity present: the dot FILL channel.
+    fn fill(&self) -> &'static str {
+        if self.hot > 0 {
+            "#c0392b"
+        } else if self.warn > 0 {
+            "#d68910"
+        } else {
+            "#2e6da4"
+        }
+    }
+
+    /// Lowest confidence present: the ring channel (the weakest link — one
+    /// LOW candidate must not read as thick HIGH). Severity is NEVER drawn
+    /// without a confidence ring — static candidates always carry both.
+    fn ring_width(&self) -> &'static str {
+        if self.low > 0 {
+            "0.6"
+        } else if self.medium > 0 {
+            "1.2"
+        } else {
+            "2.2"
+        }
+    }
+}
+
+/// Per-file and per-component finding roll-up, built ONCE per
+/// [`render`] call from `doc.findings` (`BTreeMap` ⇒ deterministic;
+/// input order is never relied upon). Component keys are EXACT
+/// [`parent_dir`] values: a file counts toward its direct parent component
+/// only, never toward an ancestor prefix.
+#[derive(Debug, Clone, Default)]
+pub struct FindingIndex {
+    by_path: BTreeMap<String, FindingDot>,
+    by_component: BTreeMap<String, FindingDot>,
+}
+
+impl FindingIndex {
+    /// Build the roll-up from the document's findings. Nothing is excluded —
+    /// every recorded candidate is counted.
+    #[must_use]
+    pub fn new(findings: &[FindingEntry]) -> Self {
+        let mut index = Self::default();
+        for finding in findings {
+            index
+                .by_path
+                .entry(finding.path.clone())
+                .or_default()
+                .add(finding);
+            index
+                .by_component
+                .entry(parent_dir(&finding.path).to_string())
+                .or_default()
+                .add(finding);
+        }
+        index
+    }
+
+    /// Dot for one file path, if that file carries any candidate finding.
+    #[must_use]
+    pub fn for_file(&self, path: &str) -> Option<&FindingDot> {
+        self.by_path.get(path)
+    }
+
+    /// Dot for one component prefix (exact `parent_dir` match), if any
+    /// member file carries a candidate finding.
+    #[must_use]
+    pub fn for_component(&self, prefix: &str) -> Option<&FindingDot> {
+        self.by_component.get(prefix)
+    }
+}
+
+/// Legend text pinned for every annotated stem (and the HTML `#map` legend).
+/// The exact string is part of the output contract.
+pub const FINDING_LEGEND: &str = "finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm";
+
+/// Extra legend row height added to annotated charts so the finding legend
+/// sits above the heat-scale legend without overlapping captions.
+pub(crate) const FINDING_LEGEND_ROW: i64 = 16;
+
+/// Emit the finding legend as one text line at `(x, y)` (baseline `y`).
+pub(crate) fn push_finding_legend(out: &mut String, x: i64, y: i64) {
+    out.push_str(&format!(
+        "<text x=\"{x}\" y=\"{y}\" font-family=\"monospace\" font-size=\"11\">{}</text>\n",
+        escape_xml(FINDING_LEGEND)
+    ));
+}
+
+/// Emit one finding dot at `(cx, cy)`: severity fill + confidence ring, with
+/// the count numeral only when `show_count` AND `total >= 2`. `show_count`
+/// is the caller's width-fit decision; the numeral itself is never drawn for
+/// a single finding (the dot is the whole signal). When the numeral IS drawn
+/// the dot shifts LEFT just enough that the numeral stays fully inside the
+/// node rect (whose right edge is `cx + 5`) — the dot's right edge never
+/// exceeds the rect edge.
+pub(crate) fn push_finding_dot(
+    out: &mut String,
+    cx: i64,
+    cy: i64,
+    dot: &FindingDot,
+    show_count: bool,
+) {
+    if dot.total == 0 {
+        return;
+    }
+    let show_numeral = show_count && dot.total >= 2;
+    let numeral = dot.total.to_string();
+    // Numeral starts at cx + 6.5 and is `est_text_w` wide; rect right edge is
+    // the caller's original cx + 5. Shift left so `start + width <= cx + 5`.
+    let shift = if show_numeral {
+        2 + est_text_w(&numeral, 7.0)
+    } else {
+        0
+    };
+    let cx = cx - shift;
+    let title = format!(
+        "{} candidate finding(s): {} hot / {} warn / {} info; confidence {} high / {} medium / {} low — static candidates, profile to confirm",
+        dot.total, dot.hot, dot.warn, dot.info, dot.high, dot.medium, dot.low
+    );
+    out.push_str(&format!(
+        "<circle cx=\"{cx}\" cy=\"{cy}\" r=\"4\" fill=\"{}\" stroke=\"#1b1b1b\" stroke-width=\"{}\"><title>{}</title></circle>\n",
+        dot.fill(),
+        dot.ring_width(),
+        escape_xml(&title),
+    ));
+    if show_numeral {
+        out.push_str(&format!(
+            "<text x=\"{}.5\" y=\"{}.5\" font-family=\"monospace\" font-size=\"7\" fill=\"#1b1b1b\">{numeral}</text>\n",
+            cx + 6,
+            cy + 2,
+        ));
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 
@@ -124,12 +302,14 @@ const HC_STUB_W: i64 = 2;
 /// `components` is present (even when empty) — so every stub is reachable via
 /// `render`, symmetrically. Emission order: include-graph, layer-file,
 /// layer-entry, component-coupling, hot-components, layer-workspace,
-/// layer-bands. Per-component detail pages follow the same gate (components
+/// layer-bands, layer-findings. Per-component detail pages follow the same
+/// gate (components
 /// present AND non-empty) — one page per capped component in
 /// `(rank, path_prefix)` order, appended AFTER the overview charts; a
 /// file-less component yields the deterministic stub page, never an omission.
 #[must_use]
 pub fn render(doc: &MetricsDocument) -> Vec<(String, Vec<u8>)> {
+    let findings = FindingIndex::new(&doc.findings);
     let mut out = Vec::new();
     if let Some(graphs) = &doc.graphs {
         if !graphs.include_graph.nodes.is_empty() {
@@ -141,11 +321,11 @@ pub fn render(doc: &MetricsDocument) -> Vec<(String, Vec<u8>)> {
         // Stubs on empty nodes (symmetric with the component layers below).
         out.push((
             "layer-file.svg".to_string(),
-            layers::render_layer_file(graphs, &doc.stats.functions),
+            layers::render_layer_file(graphs, &doc.stats.functions, &findings),
         ));
         out.push((
             "layer-entry.svg".to_string(),
-            layers::render_layer_entry(graphs, &doc.stats.functions),
+            layers::render_layer_entry(graphs, &doc.stats.functions, &findings),
         ));
     }
     if let Some(components) = &doc.components {
@@ -163,7 +343,7 @@ pub fn render(doc: &MetricsDocument) -> Vec<(String, Vec<u8>)> {
         // Stubs on empty components (symmetric with the file layers above).
         out.push((
             "layer-workspace.svg".to_string(),
-            layers::render_layer_workspace(components, doc.graphs.as_ref()),
+            layers::render_layer_workspace(components, doc.graphs.as_ref(), &findings),
         ));
         out.push((
             "layer-bands.svg".to_string(),
@@ -172,17 +352,31 @@ pub fn render(doc: &MetricsDocument) -> Vec<(String, Vec<u8>)> {
                 doc.graphs.as_ref(),
                 &doc.files,
                 &doc.stats.functions,
+                &findings,
             ),
         ));
-        if !components.is_empty() {
-            let graphs = doc.graphs.as_ref();
-            out.extend(component::render_component_pages(
-                components,
-                graphs,
-                &doc.files,
-                &doc.stats.functions,
-            ));
-        }
+    }
+    // I4: findings map is the last overview stem — after every other layer,
+    // before the per-component detail pages. It rides the graphs gate (the
+    // file/entry layers' source) so a findings-only document without an
+    // include graph never grows an extra stem.
+    if doc.graphs.is_some() {
+        out.push((
+            "layer-findings.svg".to_string(),
+            layers::render_layer_findings(doc.graphs.as_ref(), &doc.findings, &findings),
+        ));
+    }
+    if let Some(components) = &doc.components
+        && !components.is_empty()
+    {
+        let graphs = doc.graphs.as_ref();
+        out.extend(component::render_component_pages(
+            components,
+            graphs,
+            &doc.files,
+            &doc.stats.functions,
+            &findings,
+        ));
     }
     out
 }

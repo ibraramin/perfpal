@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="724" height="956" viewBox="0 0 724 956">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="972" viewBox="0 0 1100 972">
 <text x="40" y="56" font-family="monospace" font-size="13">File hot-path map — 20 files</text>
 <text x="40" y="76" font-family="monospace" font-size="11">heat = function cost (v2 where available; v1 fallback); hot-path outlined (top-50 + reachable reserve)</text>
 <g stroke="#999999" stroke-width="1">
@@ -10,34 +10,55 @@
 <g font-family="monospace" font-size="11">
 <rect x="40" y="104" width="170" height="30" fill="#b30000" stroke="#1a1a1a" stroke-width="2"/>
 <text x="48" y="123" fill="#ffffff">01_alloc_churn.py</text>
+<circle cx="198" cy="109" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>3 candidate finding(s): 0 hot / 1 warn / 2 info; confidence 0 high / 3 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="111.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="148" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="167">02_string_building.py</text>
+<circle cx="205" cy="153" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="192" width="170" height="30" fill="#bb1a1a" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="211" fill="#ffffff">03_deep_nesting.py</text>
+<circle cx="205" cy="197" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="2.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 1 high / 0 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="236" width="170" height="30" fill="#e19999" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="255">04_stdio_churn.py</text>
+<circle cx="205" cy="241" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="280" width="170" height="30" fill="#bb1a1a" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="299" fill="#ffffff">05_recursion_complexity.py</text>
+<circle cx="198" cy="285" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>3 candidate finding(s): 0 hot / 0 warn / 3 info; confidence 2 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="287.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="324" width="170" height="30" fill="#f0cccc" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="343">06_memory_ops.py</text>
+<circle cx="205" cy="329" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="368" width="170" height="30" fill="#c23333" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="387" fill="#ffffff">07_membership_scan.py</text>
+<circle cx="198" cy="373" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>3 candidate finding(s): 0 hot / 3 warn / 0 info; confidence 0 high / 3 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="375.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="412" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="431">08_range_len.py</text>
+<circle cx="205" cy="417" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="2.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 1 high / 0 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="456" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="475">09_try_in_loop.py</text>
+<circle cx="205" cy="461" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="500" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="519">10_comprehension.py</text>
+<circle cx="198" cy="505" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>3 candidate finding(s): 0 hot / 2 warn / 1 info; confidence 0 high / 3 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="507.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="544" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="563">11_executors.py</text>
+<circle cx="205" cy="549" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="588" width="170" height="30" fill="#f0cccc" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="607">12_io_n1.py</text>
+<circle cx="205" cy="593" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="632" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="651">13_pandas.py</text>
+<circle cx="198" cy="637" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>2 candidate finding(s): 0 hot / 0 warn / 2 info; confidence 0 high / 2 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="639.5" font-family="monospace" font-size="7" fill="#1b1b1b">2</text>
 <rect x="40" y="676" width="170" height="30" fill="#e19999" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="695">14_async_blocking.py</text>
+<circle cx="198" cy="681" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>3 candidate finding(s): 0 hot / 3 warn / 0 info; confidence 0 high / 3 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="204.5" y="683.5" font-family="monospace" font-size="7" fill="#1b1b1b">3</text>
 <rect x="40" y="720" width="170" height="30" fill="#f0cccc" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="739">15_cross_file_and_arch.py</text>
+<circle cx="205" cy="725" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="0.6"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 0 medium / 1 low — static candidates, profile to confirm</title></circle>
 <rect x="40" y="764" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
 <text x="48" y="783">__init__.py</text>
 <rect x="40" y="808" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
@@ -46,22 +67,26 @@
 <text x="268" y="123">pkg/arch_helpers.py</text>
 <rect x="260" y="148" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5" stroke-width="1"/>
 <text x="268" y="167">pkg/cycle_a.py</text>
+<circle cx="425" cy="153" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="0.6"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 0 medium / 1 low — static candidates, profile to confirm</title></circle>
 <rect x="480" y="104" width="170" height="30" fill="#f0cccc" stroke="#4a6fa5" stroke-width="1"/>
 <text x="488" y="123">pkg/cycle_b.py</text>
+<circle cx="638" cy="109" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="0.6"><title>2 candidate finding(s): 0 hot / 0 warn / 2 info; confidence 0 high / 1 medium / 1 low — static candidates, profile to confirm</title></circle>
+<text x="644.5" y="111.5" font-family="monospace" font-size="7" fill="#1b1b1b">2</text>
 </g>
-<text x="40" y="902" font-family="monospace" font-size="11">cool</text>
-<rect x="73" y="892" width="12" height="12" fill="#ffffff"/>
-<rect x="85" y="892" width="12" height="12" fill="#f7e6e6"/>
-<rect x="97" y="892" width="12" height="12" fill="#f0cccc"/>
-<rect x="109" y="892" width="12" height="12" fill="#e8b3b3"/>
-<rect x="121" y="892" width="12" height="12" fill="#e19999"/>
-<rect x="133" y="892" width="12" height="12" fill="#d98080"/>
-<rect x="145" y="892" width="12" height="12" fill="#d16666"/>
-<rect x="157" y="892" width="12" height="12" fill="#ca4d4d"/>
-<rect x="169" y="892" width="12" height="12" fill="#c23333"/>
-<rect x="181" y="892" width="12" height="12" fill="#bb1a1a"/>
-<rect x="193" y="892" width="12" height="12" fill="#b30000"/>
-<text x="211" y="902" font-family="monospace" font-size="11">hot</text>
-<text x="40" y="944" font-family="monospace" font-size="11">hot-path: 01_alloc_churn.py at max cost among shown files</text>
-<text x="40" y="928" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
+<text x="40" y="902" font-family="monospace" font-size="11">finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm</text>
+<text x="40" y="918" font-family="monospace" font-size="11">cool</text>
+<rect x="73" y="908" width="12" height="12" fill="#ffffff"/>
+<rect x="85" y="908" width="12" height="12" fill="#f7e6e6"/>
+<rect x="97" y="908" width="12" height="12" fill="#f0cccc"/>
+<rect x="109" y="908" width="12" height="12" fill="#e8b3b3"/>
+<rect x="121" y="908" width="12" height="12" fill="#e19999"/>
+<rect x="133" y="908" width="12" height="12" fill="#d98080"/>
+<rect x="145" y="908" width="12" height="12" fill="#d16666"/>
+<rect x="157" y="908" width="12" height="12" fill="#ca4d4d"/>
+<rect x="169" y="908" width="12" height="12" fill="#c23333"/>
+<rect x="181" y="908" width="12" height="12" fill="#bb1a1a"/>
+<rect x="193" y="908" width="12" height="12" fill="#b30000"/>
+<text x="211" y="918" font-family="monospace" font-size="11">hot</text>
+<text x="40" y="960" font-family="monospace" font-size="11">hot-path: 01_alloc_churn.py at max cost among shown files</text>
+<text x="40" y="944" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
 </svg>

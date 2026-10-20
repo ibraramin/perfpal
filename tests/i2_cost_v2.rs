@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use perfpal::aggregator::{Provenance, assemble};
+use perfpal::charts::FindingIndex;
 use perfpal::charts::layers::render_layer_file;
 use perfpal::cli::run_with;
 use perfpal::ir::{
@@ -380,7 +381,12 @@ fn cap_fixture(
 #[test]
 fn reachable_low_degree_node_survives_the_top_50_cut() {
     let (graphs, functions) = cap_fixture(9, 1);
-    let svg = String::from_utf8(render_layer_file(&graphs, &functions)).expect("SVG UTF-8");
+    let svg = String::from_utf8(render_layer_file(
+        &graphs,
+        &functions,
+        &FindingIndex::default(),
+    ))
+    .expect("SVG UTF-8");
     // 50 base + 9 reserved = 59 drawn of 60 total.
     assert_eq!(svg.matches("width=\"170\"").count(), 59, "shown node count");
     for i in 0..9 {
@@ -402,7 +408,12 @@ fn reachable_low_degree_node_survives_the_top_50_cut() {
 #[test]
 fn reachable_overflow_is_bounded_at_ten() {
     let (graphs, functions) = cap_fixture(15, 10);
-    let svg = String::from_utf8(render_layer_file(&graphs, &functions)).expect("SVG UTF-8");
+    let svg = String::from_utf8(render_layer_file(
+        &graphs,
+        &functions,
+        &FindingIndex::default(),
+    ))
+    .expect("SVG UTF-8");
     // 50 base + at most REACHABLE_OVERFLOW (10) = 60 drawn of 75 total.
     assert_eq!(svg.matches("width=\"170\"").count(), 60, "overflow bound");
     for i in 0..10 {
@@ -505,6 +516,7 @@ fn real_pipeline_double_scan_is_byte_identical() {
         "hot-components.svg",
         "layer-workspace.svg",
         "layer-bands.svg",
+        "layer-findings.svg",
     ] {
         assert!(
             chart_files.contains_key(stem),
