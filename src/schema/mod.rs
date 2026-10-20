@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.5.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.6.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -50,7 +50,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.5.json
+/// Schema version of emitted documents (metrics.schema.v1.6.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
 ///
@@ -80,19 +80,26 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// Python): three OPTIONAL `stats.functions[]` entry/reachability fields
 /// (`entry_kind`, `entry_confidence`, `reachable_from_entry`, populated for
 /// C, Rust and Python); v1.4 documents still validate.
-pub const SCHEMA_VERSION: &str = "1.5";
+///
+/// v1.5 → v1.6 (minor/additive, plan `map-build` I2 cost-v2): two
+/// `stats.functions[]` fields — OPTIONAL `function_cost_v2` (per-iteration
+/// weighted cost; omitted only for pre-I2/parser-free documents) and
+/// `unknown_trip_loops` (always emitted, default 0). Every v1.5 document
+/// still validates (no required list grew).
+pub const SCHEMA_VERSION: &str = "1.6";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.5"` ⇒ `metrics.schema.v1.5.json`, never an elided `.0`. Kept as a
+/// `"1.6"` ⇒ `metrics.schema.v1.6.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.5.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.6.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.5.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.6.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift. The v1.4 + v1.3 + v1.2 + v1.1 + v1.0 docs copies are kept as history.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.5.json");
+/// the two cannot drift. The v1.5 + v1.4 + v1.3 + v1.2 + v1.1 + v1.0 docs
+/// copies are kept as history.
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.6.json");
 
 // ---------------------------------------------------------------------------
 // Document model — nine sections, field-for-field vs the canonical schema
@@ -284,6 +291,29 @@ pub struct FunctionStats {
     /// `Some` for every function.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reachable_from_entry: Option<bool>,
+    /// ADDITIVE v1.6 (plan `map-build` I2): per-iteration weighted cost.
+    /// EXACT formula (aggregator-owned, recomputed from IR with the v1.5
+    /// coefficients so it can never drift from the retained v1 formula):
+    ///
+    /// `cost = cyclomatic + cognitive + 2*max_loop_depth
+    ///         + 3*alloc_site_count + call_fanout + call_fanin
+    ///         + call_depth + (2 if recursive) + (1 if error_path)
+    ///         + (1 if alloc_family is Some)
+    ///         + SUM over loops of trip_weight`, where
+    /// - known trip `t`: `trip_weight = min(t, MAX_TRIP) * (1 + loop.depth)`;
+    /// - unknown trip:   `trip_weight = 1 * (1 + loop.depth)` AND the loop
+    ///   increments [`FunctionStats::unknown_trip_loops`].
+    ///
+    /// All arithmetic is saturating (`u64`). v1 [`crate::charts::function_cost`]
+    /// stays available until cutover; heat consumers prefer this field when
+    /// present and fall back to v1 otherwise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub function_cost_v2: Option<u64>,
+    /// ADDITIVE v1.6: number of loops in the function whose trip count is
+    /// genuinely unknown (`LoopNode.trip_count == None`). `0` for
+    /// loop-free/canonical-counted functions; always emitted.
+    #[serde(default)]
+    pub unknown_trip_loops: u32,
 }
 
 /// One element of `findings[]` — the analyzer's [`Finding`] lifted into its
@@ -609,11 +639,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.5.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.6.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.5.json drifted from \
-             docs/schema/metrics.schema.v1.5.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.6.json drifted from \
+             docs/schema/metrics.schema.v1.6.json — re-copy the canonical artifact"
         );
     }
 
@@ -705,6 +735,8 @@ mod tests {
                     entry_kind: None,
                     entry_confidence: None,
                     reachable_from_entry: None,
+                    function_cost_v2: None,
+                    unknown_trip_loops: 0,
                 }],
                 distributions: None,
             },

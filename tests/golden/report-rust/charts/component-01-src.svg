@@ -12,21 +12,21 @@
 <text x="49" y="123" fill="#ffffff">src/01_alloc_churn.rs</text>
 <rect x="40" y="148" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5"/>
 <text x="49" y="167" fill="#ffffff">src/02_string_building.rs</text>
-<rect x="40" y="192" width="170" height="30" fill="#e19999" stroke="#4a6fa5"/>
+<rect x="40" y="192" width="170" height="30" fill="#d98080" stroke="#4a6fa5"/>
 <text x="49" y="211">src/03_deep_nesting.rs</text>
-<rect x="40" y="236" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5"/>
+<rect x="40" y="236" width="170" height="30" fill="#e19999" stroke="#4a6fa5"/>
 <text x="49" y="255">src/04_stdio_churn.rs</text>
-<rect x="40" y="280" width="170" height="30" fill="#c23333" stroke="#4a6fa5"/>
+<rect x="40" y="280" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5"/>
 <text x="49" y="299" fill="#ffffff">src/05_recursion_complexity.rs</text>
 <rect x="40" y="324" width="170" height="30" fill="#d16666" stroke="#4a6fa5"/>
 <text x="49" y="343">src/06_memory_ops.rs</text>
 <rect x="40" y="368" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
 <text x="49" y="387">src/07_struct_by_value.rs</text>
-<rect x="40" y="412" width="170" height="30" fill="#d16666" stroke="#4a6fa5"/>
-<text x="49" y="431">src/08_globals_and_chains.rs</text>
+<rect x="40" y="412" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5"/>
+<text x="49" y="431" fill="#ffffff">src/08_globals_and_chains.rs</text>
 <rect x="40" y="456" width="170" height="30" fill="#d98080" stroke="#4a6fa5"/>
 <text x="49" y="475">src/09_membership_scan.rs</text>
-<rect x="40" y="500" width="170" height="30" fill="#e19999" stroke="#4a6fa5"/>
+<rect x="40" y="500" width="170" height="30" fill="#e8b3b3" stroke="#4a6fa5"/>
 <text x="49" y="519">src/10_cross_file_and_arch.rs</text>
 <rect x="260" y="104" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
 <text x="269" y="123">src/common.rs</text>

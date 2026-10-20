@@ -10,7 +10,7 @@
 <text x="49" y="123" fill="#ffffff">src/lib.rs</text>
 <rect x="40" y="148" width="170" height="30" fill="#ca4d4d" stroke="#4a6fa5"/>
 <text x="49" y="167" fill="#ffffff">src/main.c</text>
-<rect x="40" y="192" width="170" height="30" fill="#f0cccc" stroke="#4a6fa5"/>
+<rect x="40" y="192" width="170" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
 <text x="49" y="211">src/util.c</text>
 <rect x="260" y="104" width="170" height="30" fill="#ffffff" stroke="#4a6fa5"/>
 <text x="269" y="123">src/util.h</text>

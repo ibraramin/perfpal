@@ -403,7 +403,7 @@ fn c_entry_pipeline_emits_and_double_scan_is_byte_identical() {
 
     // End-to-end entry assertions on the real pipeline (no resolver facts in
     // a default build, so reachability is entries-only here).
-    assert_eq!(doc1["schema_version"], "1.5");
+    assert_eq!(doc1["schema_version"], "1.6");
     let by_name = |name: &str| {
         doc1["stats"]["functions"]
             .as_array()

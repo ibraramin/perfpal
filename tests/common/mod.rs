@@ -704,6 +704,8 @@ fn loop_node(kind: LoopKind, depth: u32, span: Span) -> LoopNode {
         span,
         resolver_tier: ResolverTier::Syntactic,
         macro_origin: false,
+        // I2 scope: C only; parser-free fixtures stay honest-unknown.
+        trip_count: None,
         condition_is_zero: false,
     }
 }

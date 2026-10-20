@@ -977,8 +977,9 @@ fn function_unit(
         error_path: None,
         alloc_family: None,
         cfg_gated: None,
-        // v1.5 I1a (plan `map-build`): C-only this burst — linkage, entry
-        // and reachability stay `None` for Rust (I1b owns them).
+        // v1.5 (plan `map-build`): linkage is a C-only backend fact (Rust
+        // leaves `is_static` `None`); entry/reachability are aggregator-owned
+        // and stay `None` on the backend record.
         is_static: None,
         // v1.5 I1c (plan `map-build`): the `__name__` guard fact is
         // Python-only — Rust records never carry it.
@@ -1155,6 +1156,9 @@ impl FuncScan<'_> {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
+            // I2 scope: C only (D-pf-217 one-language-per-burst); Rust
+            // `range()`/literal inference is a follow-up, so honest unknown.
+            trip_count: None,
             // No do-while shape in Rust: the `(0)`-wrapper gate never fires.
             condition_is_zero: false,
         });

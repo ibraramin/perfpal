@@ -1480,12 +1480,13 @@ fn html_files(out: &mut String, doc: &MetricsDocument) {
         out.push_str("<p>No files scanned.</p>\n</section>\n");
         return;
     }
-    // Per-file cost lookup (BTreeMap ⇒ deterministic) from the same cost
-    // function the coupling overlay consumes.
+    // Per-file cost lookup (BTreeMap ⇒ deterministic) from the shared heat
+    // selector: v2 when present, v1 fallback (I2, same selector as charts).
     let mut file_cost_sum: std::collections::BTreeMap<&str, f64> =
         std::collections::BTreeMap::new();
     for f in &doc.stats.functions {
-        *file_cost_sum.entry(f.path.as_str()).or_insert(0.0) += crate::charts::function_cost(f);
+        *file_cost_sum.entry(f.path.as_str()).or_insert(0.0) +=
+            crate::charts::function_heat_cost(f);
     }
     let mut ranked: Vec<(&str, usize, f64)> = doc
         .files

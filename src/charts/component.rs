@@ -20,8 +20,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
     COMPONENT_CAP, HEAT_LEGEND_W, barycenter_order, cap_nodes, escape_xml, est_text_w,
-    function_cost, heat_color, heat_ink, legend_band, legend_top, parent_dir, push_heat_legend,
-    resolved_pairs, truncate_label,
+    file_heat_costs, heat_color, heat_ink, legend_band, legend_top, parent_dir, push_heat_legend,
+    reachable_files, resolved_pairs, truncate_label,
 };
 use crate::graph::{break_cycles, topo_layers};
 use crate::schema::{
@@ -120,12 +120,10 @@ pub fn render_component_pages(
         }
     }
 
-    // Per-file cost: Σ function_cost over that file's functions (BTreeMap ⇒
+    // Per-file heat uses the shared v2-preferred selector (BTreeMap ⇒
     // deterministic); the page-local maximum normalizes the heat ramp.
-    let mut file_cost: BTreeMap<String, f64> = BTreeMap::new();
-    for f in functions {
-        *file_cost.entry(f.path.clone()).or_insert(0.0) += function_cost(f);
-    }
+    let file_cost = file_heat_costs(functions);
+    let reachable = reachable_files(functions);
 
     let include_pairs: Vec<(String, String)> = graphs
         .map(|g| resolved_pairs(&g.include_graph.edges))
@@ -139,7 +137,7 @@ pub fn render_component_pages(
         let bytes = if member_set.is_empty() {
             render_component_stub(comp)
         } else {
-            render_component_page(comp, member_set, &include_pairs, &file_cost)
+            render_component_page(comp, member_set, &include_pairs, &file_cost, &reachable)
         };
         out.push((name, bytes));
     }
@@ -182,6 +180,7 @@ fn render_component_page(
     member_set: &BTreeSet<String>,
     include_pairs: &[(String, String)],
     file_cost: &BTreeMap<String, f64>,
+    reachable: &BTreeSet<String>,
 ) -> Vec<u8> {
     // Intra-component scope FIRST: only edges with both endpoints in this
     // component's member set may influence the cap ranking. Ranking by the
@@ -194,7 +193,7 @@ fn render_component_page(
         .cloned()
         .collect();
     let members: Vec<String> = member_set.iter().cloned().collect();
-    let (nodes, dropped) = cap_nodes(&members, &intra_pairs);
+    let (nodes, total) = cap_nodes(&members, &intra_pairs, file_cost, reachable);
     // `nodes ⊆ member_set` by construction (`cap_nodes` returns a subset of
     // its input), so the capped node set alone admits the intra-component
     // subgraph — no second membership check needed.
@@ -235,8 +234,8 @@ fn render_component_page(
     let (title, subtitle) = header_lines(comp, nodes.len());
     // Caption rows bottom-first: cap marker, then the cycle note.
     let mut captions: Vec<String> = Vec::new();
-    if dropped > 0 {
-        captions.push(format!("… {dropped} more files omitted"));
+    if total > nodes.len() {
+        captions.push(format!("showing top {} of {} files", nodes.len(), total));
     }
     if broken_count > 0 {
         captions.push(format!(
@@ -494,8 +493,8 @@ mod tests {
             "high-intra victim must survive the cap:\n{text}"
         );
         assert!(
-            text.contains("&#8230; 10 more files omitted"),
-            "truncation marker missing:\n{text}"
+            text.contains("showing top 50 of 60 files"),
+            "honest truncation caption missing:\n{text}"
         );
     }
 }

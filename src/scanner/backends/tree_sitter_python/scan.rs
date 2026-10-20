@@ -272,6 +272,9 @@ impl FuncScan<'_> {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
+            // I2 scope: C only (D-pf-217 one-language-per-burst); Python
+            // `range()`/range-literal inference is a follow-up => honest unknown.
+            trip_count: None,
             // No do-while shape in Python: the `(0)`-wrapper gate never fires.
             condition_is_zero: false,
         });
@@ -339,6 +342,8 @@ impl FuncScan<'_> {
                         span: ir_span(*clause, self.source),
                         resolver_tier: ResolverTier::Syntactic,
                         macro_origin: false,
+                        // I2 scope: C only; comprehension trip counts unknown.
+                        trip_count: None,
                         // Comprehension clause: never a `(0)`-wrapper.
                         condition_is_zero: false,
                     });

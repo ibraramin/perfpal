@@ -383,6 +383,8 @@ pub(crate) mod test_support {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
+            // I2 scope: C only (D-pf-217); Python range() inference is a follow-up.
+            trip_count: None,
             condition_is_zero: false,
         }
     }

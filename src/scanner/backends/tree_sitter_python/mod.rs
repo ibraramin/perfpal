@@ -623,9 +623,13 @@ fn inside_class_body(node: Node<'_>) -> bool {
 /// identifier on one side, the `"__main__"` string literal (single- or
 /// double-quoted source text) on the other. Conservative by construction:
 /// `!=`/`is`/`is not`/`in`, a `__name__` compared against anything else,
-/// and non-identifier/non-literal operands never match. Nested `def`/`class`
-/// bodies never reach this check — the module scan does not descend into
-/// them — so the flag is strictly a top-level fact.
+/// and non-identifier/non-literal operands never match.
+///
+/// Coverage is the WHOLE module body, not just top-level expression
+/// statements: comparisons nested in module-level control flow (`if`/`try`/
+/// `with`/`for` bodies) are seen, because the synthetic `<module>` scan walks
+/// them. Nested `def`/`class` bodies are scope boundaries and never reach
+/// this check, so the fact is a module-body (not nested-scope) fact.
 fn is_main_guard_comparison(comparison: &ComparisonEvent) -> bool {
     if comparison.operator != "==" {
         return false;
@@ -687,9 +691,10 @@ fn module_unit(
         error_path: None,
         alloc_family: None,
         cfg_gated: None,
-        // v1.5 I1a (plan `map-build`): C-only this burst — linkage, entry
-        // and reachability stay `None` on the synthetic record; v1.5 I1c
-        // adds the scan-local `__name__` guard fact above.
+        // v1.5 (plan `map-build`): linkage is a C-only backend fact (Python
+        // leaves `is_static` `None`); entry/reachability are aggregator-owned
+        // and stay `None` on the synthetic record. The scan-local
+        // `__name__` guard fact above is Python-backend-owned.
         is_static: None,
         has_main_guard: Some(has_main_guard),
         entry_kind: None,
@@ -763,9 +768,10 @@ fn function_unit(
         error_path: None,
         alloc_family: None,
         cfg_gated: None,
-        // v1.5 I1a (plan `map-build`): C-only this burst — linkage, entry
-        // and reachability stay `None` for real `def`s; v1.5 I1c keeps the
-        // `__name__` guard fact on the synthetic `<module>` record only.
+        // v1.5 (plan `map-build`): linkage is a C-only backend fact (Python
+        // leaves `is_static` `None`); entry/reachability are aggregator-owned
+        // and stay `None` for real `def`s. The `__name__` guard fact lives
+        // on the synthetic `<module>` record only.
         is_static: None,
         has_main_guard: None,
         entry_kind: None,

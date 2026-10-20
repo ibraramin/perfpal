@@ -208,6 +208,8 @@ fn costly_fn(path: &str, name: &str, cyclomatic: u32) -> FunctionStats {
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
+        function_cost_v2: None,
+        unknown_trip_loops: 0,
     }
 }
 
@@ -322,7 +324,7 @@ fn oversized_graph_is_capped_at_50_with_visible_marker() {
         "node cap applied pre-layout"
     );
     assert!(
-        svg.contains("&#8230; 10 more files omitted"),
+        svg.contains("showing top 50 of 60 files"),
         "truncation marker missing:\n{svg}"
     );
 }
@@ -420,7 +422,7 @@ fn phantom_edge_endpoints_neither_render_nor_displace_real_nodes() {
         "phantom non-node endpoint rendered as a node:\n{svg}"
     );
     assert!(
-        svg.contains("&#8230; 5 more files omitted"),
+        svg.contains("showing top 50 of 55 files"),
         "truncation count wrong (phantom degrees skewed ranking):\n{svg}"
     );
     assert!(svg.contains(">p01.c<"), "degree-2 head must be kept");
@@ -701,7 +703,7 @@ fn oversized_component_is_capped_at_50_with_visible_marker() {
     // width-170 count pins the cap without tripping over the legend.
     assert_eq!(svg.matches("width=\"170\"").count(), 50, "node cap");
     assert!(
-        svg.contains("&#8230; 10 more files omitted"),
+        svg.contains("showing top 50 of 60 files"),
         "truncation marker missing:\n{svg}"
     );
 }
@@ -800,7 +802,7 @@ fn layered_overviews_are_byte_identical_and_capped() {
     let file = svg_of(&first, "layer-file.svg");
     assert_eq!(file.matches("width=\"170\"").count(), 50, "node cap");
     assert!(
-        file.contains("&#8230; 10 more files omitted"),
+        file.contains("showing top 50 of 60 files"),
         "truncation marker missing:\n{file}"
     );
 }

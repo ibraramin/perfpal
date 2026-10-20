@@ -907,6 +907,12 @@ pub enum LoopKind {
     Loop,
 }
 
+/// Upper bound on a statically inferred loop trip count (plan `map-build`
+/// I2). The C backend clamps here so cost arithmetic can never overflow even
+/// on absurd literal bounds (`for (i = 0; i < 18446744073709551615u; i++)`);
+/// the aggregator clamps again when consuming synthetic IR.
+pub const MAX_TRIP: u64 = 1_000_000;
+
 /// Loop record — loops anchor nesting chains (ir-v1.md §3.3).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LoopNode {
@@ -918,6 +924,24 @@ pub struct LoopNode {
     pub span: Span,
     pub resolver_tier: ResolverTier,
     pub macro_origin: bool,
+    /// ADDITIVE v1.6 (plan `map-build` I2, C only): statically known trip
+    /// count for a CANONICAL counted `for` loop — init `i = 0` (integer
+    /// literal 0), condition `i < N` / `i <= N` (integer-literal N, adjusted
+    /// `<=` ⇒ N+1), update `i++` / `i += 1` on the same single induction
+    /// variable. Every non-canonical shape (while/do-while, macro or
+    /// non-literal bound, descending `i--`, multiple induction vars,
+    /// parenthesized bound) reports `None` — honest unknown, never a guess.
+    /// Clamped to [`MAX_TRIP`]. Rust and Python deliberately leave this
+    /// `None` this increment (I2 scope: C only, D-pf-217 one-language-per-
+    /// burst; range()/range-literal inference is a follow-up).
+    ///
+    /// `FunctionUnit.loops` carries the stream, so the value reaches the
+    /// aggregator without any extra FileUnit/FunctionUnit field; the schema
+    /// DTO does not mirror it (the wire surface is the derived cost v2).
+    /// `#[serde(default, skip_serializing_if)]` keeps older documents
+    /// deserializing unchanged (omit-don't-null).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trip_count: Option<u64>,
     /// ADDITIVE precision-gate flag (precision FP-class fix 1): true only
     /// for a C `do_statement` whose condition text is the literal `(0)` —
     /// the `do { ... } while(0)` macro-wrapper idiom, whose body executes

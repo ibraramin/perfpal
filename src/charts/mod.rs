@@ -52,7 +52,7 @@ pub mod component;
 pub mod dot;
 pub mod layers;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::graph::{break_cycles, topo_layers};
 use crate::schema::{
@@ -66,7 +66,12 @@ use crate::schema::{
 
 /// Node cap for include-graph.svg (founder-approved): applied PRE-layout,
 /// top-N by degree desc, tie path asc.
-const NODE_CAP: usize = 50;
+pub(crate) const NODE_CAP: usize = 50;
+/// I2 reachability-aware cap overflow (plan `map-build`): after the base
+/// top-[`NODE_CAP`] election, entry-reachable nodes that would be cut get
+/// reserved into at most this many EXTRA slots. The reserve never displaces
+/// a base node; the caption reports the actually-shown count (`top S of M`).
+pub(crate) const REACHABLE_OVERFLOW: usize = 10;
 /// Component cap for both component charts AND per-component detail pages:
 /// entries with rank > 50 dropped, then list truncated to this many after
 /// `(rank, path_prefix)` sort.
@@ -128,7 +133,7 @@ pub fn render(doc: &MetricsDocument) -> Vec<(String, Vec<u8>)> {
         if !graphs.include_graph.nodes.is_empty() {
             out.push((
                 "include-graph.svg".to_string(),
-                render_include_graph(graphs),
+                render_include_graph(graphs, &doc.stats.functions),
             ));
         }
         // Stub on empty nodes (symmetric with layer-workspace below).
@@ -318,9 +323,19 @@ pub(crate) fn resolved_pairs(edges: &[IncludeEdgeDto]) -> Vec<(String, String)> 
         .collect()
 }
 
-/// Apply the node cap PRE-layout: top-[`NODE_CAP`] nodes by degree desc
-/// (degree = incident resolved edges), tie path asc; returns the kept node
-/// paths sorted ascending plus the number of dropped files.
+/// Apply the node cap PRE-layout (I2 reachability-aware election).
+///
+/// Base ranking is unchanged — top-[`NODE_CAP`] nodes by degree desc (degree
+/// = incident resolved edges), tie path asc. After that base cut, nodes that
+/// are (a) entry-reachable and (b) would have been dropped are RESERVED into
+/// up to [`REACHABLE_OVERFLOW`] extra slots. Candidate election among the
+/// reachable tail uses cost desc then path asc (so the extra slots go to the
+/// costliest reachable tail); the final kept set is re-sorted path-ascending
+/// for deterministic layout. Base nodes are never displaced.
+///
+/// Returns `(kept paths sorted ascending, TOTAL input node count)` so callers
+/// can render the honest `showing top S of M` caption with `S = kept.len()`
+/// (the reserve makes `S` exceed [`NODE_CAP`] by design) and `M = total`.
 ///
 /// Edge pairs are FIRST filtered to endpoints present in the node set: an
 /// include can resolve to a real file that is not a scanned chart node
@@ -328,9 +343,15 @@ pub(crate) fn resolved_pairs(edges: &[IncludeEdgeDto]) -> Vec<(String, String)> 
 /// phantom endpoints would let them displace real files in the degree
 /// ranking, render as nodes, and skew the truncation count. Shared with the
 /// per-component pages (same top-50-pre-layout cap at component scope).
-pub(crate) fn cap_nodes(nodes: &[String], pairs: &[(String, String)]) -> (Vec<String>, usize) {
-    if nodes.len() <= NODE_CAP {
-        return (nodes.to_vec(), 0);
+pub(crate) fn cap_nodes(
+    nodes: &[String],
+    pairs: &[(String, String)],
+    costs: &BTreeMap<String, f64>,
+    reachable: &BTreeSet<String>,
+) -> (Vec<String>, usize) {
+    let total = nodes.len();
+    if total <= NODE_CAP {
+        return (nodes.to_vec(), total);
     }
     let node_set: std::collections::BTreeSet<&str> = nodes.iter().map(String::as_str).collect();
     let mut degree: BTreeMap<&str, usize> = BTreeMap::new();
@@ -346,12 +367,32 @@ pub(crate) fn cap_nodes(nodes: &[String], pairs: &[(String, String)]) -> (Vec<St
     }
     let mut ranked: Vec<(&str, usize)> = degree.iter().map(|(p, d)| (*p, *d)).collect();
     ranked.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
-    ranked.truncate(NODE_CAP);
-    let kept: Vec<String> = ranked.into_iter().map(|(p, _)| p.to_string()).collect();
-    // Re-sort ascending: downstream layout expects path order.
-    let mut kept_sorted = kept;
+    let mut kept: Vec<&str> = ranked.iter().take(NODE_CAP).map(|(p, _)| *p).collect();
+
+    // Reachability reserve: only nodes the BASE ranking cut, cost desc then
+    // path asc for a principled, input-order-independent election.
+    let mut reserve: Vec<&str> = ranked
+        .iter()
+        .skip(NODE_CAP)
+        .map(|(p, _)| *p)
+        .filter(|path| reachable.contains(*path))
+        .collect();
+    reserve.sort_by(|a, b| {
+        costs
+            .get(*b)
+            .copied()
+            .unwrap_or(0.0)
+            .partial_cmp(&costs.get(*a).copied().unwrap_or(0.0))
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then(a.cmp(b))
+    });
+    kept.extend(reserve.into_iter().take(REACHABLE_OVERFLOW));
+
+    let mut kept_sorted: Vec<String> = kept.into_iter().map(str::to_string).collect();
+    // Re-sort ascending: downstream layout expects path order and the
+    // overflow slots must not perturb byte-determinism.
     kept_sorted.sort();
-    (kept_sorted, nodes.len() - NODE_CAP)
+    (kept_sorted, total)
 }
 
 /// Within-layer barycenter ordering (ADR-0002 layout policy), EXACTLY 3
@@ -403,10 +444,14 @@ pub(crate) fn barycenter_order(layers: &mut [Vec<String>], dag: &[(String, Strin
 }
 
 /// Render include-graph.svg from the graphs section (caller guarantees ≥1
-/// node). Pipeline: resolve filter → cap → dedupe+break cycles → topo
-/// layers → 3-pass barycenter → integer grid positions.
+/// node). Pipeline: resolve filter → reachability-aware cap → dedupe+break
+/// cycles → topo layers → 3-pass barycenter → integer grid positions.
+///
+/// I2: the `functions` handle supplies per-file heat costs + entry
+/// reachability to the cap election (the include graph has no function data
+/// of its own); rendering itself is unchanged.
 #[must_use]
-fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
+fn render_include_graph(graphs: &GraphsSection, functions: &[FunctionStats]) -> Vec<u8> {
     let mut nodes: Vec<String> = graphs
         .include_graph
         .nodes
@@ -417,7 +462,9 @@ fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
     nodes.dedup();
 
     let all_pairs = resolved_pairs(&graphs.include_graph.edges);
-    let (nodes, dropped) = cap_nodes(&nodes, &all_pairs);
+    let costs = file_heat_costs(functions);
+    let reachable = reachable_files(functions);
+    let (nodes, total) = cap_nodes(&nodes, &all_pairs, &costs, &reachable);
     let node_set: std::collections::BTreeSet<&str> = nodes.iter().map(String::as_str).collect();
     let pairs: Vec<(String, String)> = all_pairs
         .into_iter()
@@ -447,8 +494,8 @@ fn render_include_graph(graphs: &GraphsSection) -> Vec<u8> {
     let width = 2 * IG_MARGIN + (layers.len().saturating_sub(1)) as i64 * IG_LAYER_W + IG_NODE_W;
     // Caption rows bottom-first: truncation marker, then the cycle note.
     let mut captions: Vec<String> = Vec::new();
-    if dropped > 0 {
-        captions.push(format!("&#8230; {dropped} more files omitted"));
+    if total > nodes.len() {
+        captions.push(format!("showing top {} of {} files", nodes.len(), total));
     }
     if broken_count > 0 {
         captions.push(format!(
@@ -580,6 +627,38 @@ pub(crate) fn function_cost(f: &FunctionStats) -> f64 {
             0.0
         }
         + if f.alloc_family.is_some() { 1.0 } else { 0.0 }
+}
+
+/// THE heat-cost selector (I2 plan `map-build`, documented once here and
+/// reused by every heat consumer): prefer the aggregator's
+/// [`FunctionStats::function_cost_v2`] when present (per-iteration weighted),
+/// else fall back to the retained v1 [`function_cost`] (pre-I2/parser-free
+/// documents). Coupling overlays deliberately stay on v1 until cutover.
+pub(crate) fn function_heat_cost(function: &FunctionStats) -> f64 {
+    function
+        .function_cost_v2
+        .map_or_else(|| function_cost(function), |cost| cost as f64)
+}
+
+/// Per-file heat = Σ [`function_heat_cost`] over that file's functions
+/// (`BTreeMap` ⇒ deterministic). Shared by the file heat map, component
+/// pages, and the reachability-aware cap election.
+pub(crate) fn file_heat_costs(functions: &[FunctionStats]) -> BTreeMap<String, f64> {
+    let mut costs: BTreeMap<String, f64> = BTreeMap::new();
+    for function in functions {
+        *costs.entry(function.path.clone()).or_insert(0.0) += function_heat_cost(function);
+    }
+    costs
+}
+
+/// Files containing at least one entry-reachable function (I2 cap election
+/// input; `BTreeSet` ⇒ deterministic). Unknown reachability never reserves.
+pub(crate) fn reachable_files(functions: &[FunctionStats]) -> BTreeSet<String> {
+    functions
+        .iter()
+        .filter(|function| function.reachable_from_entry == Some(true))
+        .map(|function| function.path.clone())
+        .collect()
 }
 
 impl Coupling {
@@ -951,9 +1030,16 @@ mod tests {
             entry_kind: None,
             entry_confidence: None,
             reachable_from_entry: None,
+            function_cost_v2: None,
+            unknown_trip_loops: 0,
         };
         // 3 + 2 + 2*1 + 3*2 + 4 + 1 + 2 + 2 + 1 + 1 = 24.
         assert_eq!(function_cost(&costly), 24.0);
+        // Heat selector: v2 preferred when present, v1 fallback otherwise.
+        assert_eq!(function_heat_cost(&costly), 24.0);
+        let mut with_v2 = costly.clone();
+        with_v2.function_cost_v2 = Some(99);
+        assert_eq!(function_heat_cost(&with_v2), 99.0);
         let bare = FunctionStats {
             id: "a.c#g#2:1".to_string(),
             name: "g".to_string(),
@@ -978,6 +1064,8 @@ mod tests {
             entry_kind: None,
             entry_confidence: None,
             reachable_from_entry: None,
+            function_cost_v2: None,
+            unknown_trip_loops: 0,
         };
         assert_eq!(function_cost(&bare), 1.0);
     }

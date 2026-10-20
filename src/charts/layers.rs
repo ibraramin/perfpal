@@ -38,8 +38,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
     COMPONENT_CAP, HEAT_LEGEND_W, barycenter_order, cap_nodes, escape_xml, est_text_w,
-    function_cost, heat_color, heat_ink, legend_band, legend_top, parent_dir, push_heat_legend,
-    resolved_pairs, truncate_label,
+    file_heat_costs, heat_color, heat_ink, legend_band, legend_top, parent_dir, push_heat_legend,
+    reachable_files, resolved_pairs, truncate_label,
 };
 use crate::graph::{break_cycles, topo_layers};
 use crate::schema::{
@@ -286,9 +286,10 @@ pub fn render_layer_workspace(
 }
 
 /// Render `charts/layer-file.svg`: top files by degree over the include DAG
-/// (resolve filter → the shared top-50 cap → dedupe+break cycles → topo
-/// layers → 3-pass barycenter → integer grid), heat by per-file function cost
-/// (Σ `function_cost`, normalized against the layer maximum), with the
+/// (resolve filter → the shared reachability-aware top-50 cap → dedupe+break
+/// cycles → topo layers → 3-pass barycenter → integer grid), heat by per-file
+/// function cost (Σ `function_heat_cost` — v2 preferred, v1 fallback —
+/// normalized against the layer maximum), with the
 /// highest-cost SHOWN file given the distinct hot-path outline: a SINGLE
 /// winner (cost desc, then path asc) elected over the POST-cap node set —
 /// the caption states this scope, so the highlight always discriminates.
@@ -309,7 +310,9 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
     }
 
     let all_pairs = resolved_pairs(&graphs.include_graph.edges);
-    let (nodes, dropped) = cap_nodes(&nodes, &all_pairs);
+    let file_cost = file_heat_costs(functions);
+    let reachable = reachable_files(functions);
+    let (nodes, total) = cap_nodes(&nodes, &all_pairs, &file_cost, &reachable);
     let node_set: BTreeSet<&str> = nodes.iter().map(String::as_str).collect();
     let pairs: Vec<(String, String)> = all_pairs
         .into_iter()
@@ -334,18 +337,15 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
         }
     }
 
-    // Per-file cost: Σ function_cost over that file's functions; the
-    // layer-global maximum normalizes the heat ramp. The hot-path outline
-    // elects a SINGLE winner over the POST-cap (drawn) node set — cost
-    // desc, then path asc, so ties always discriminate to one file — and
-    // the caption below states this scope truthfully.
-    let mut file_cost: BTreeMap<&str, f64> = BTreeMap::new();
-    for f in functions {
-        *file_cost.entry(f.path.as_str()).or_insert(0.0) += function_cost(f);
-    }
+    // Per-file heat is the shared v2-preferred selector (see
+    // `charts::function_heat_cost`); the layer-global maximum normalizes the
+    // heat ramp. The hot-path outline elects a SINGLE winner over the
+    // POST-cap (drawn) node set — cost desc, then path asc, so ties always
+    // discriminate to one file — and the caption below states this scope
+    // truthfully.
     let max_cost = nodes
         .iter()
-        .map(|n| file_cost.get(n.as_str()).copied().unwrap_or(0.0))
+        .map(|n| file_cost.get(n).copied().unwrap_or(0.0))
         .fold(0.0_f64, f64::max);
     let hot: Option<&str> = if max_cost <= 0.0 {
         None
@@ -364,11 +364,11 @@ pub fn render_layer_file(graphs: &GraphsSection, functions: &[FunctionStats]) ->
         nodes.len(),
         if nodes.len() == 1 { "file" } else { "files" },
     );
-    let subtitle = "heat = function cost; hot-path outlined (top-50 scope)";
+    let subtitle = "heat = function cost (v2); hot-path outlined (top-50 + reachable reserve)";
     // Caption rows bottom-first: cap marker, cost/hot-path note, cycle note.
     let mut captions: Vec<String> = Vec::new();
-    if dropped > 0 {
-        captions.push(format!("… {dropped} more files omitted"));
+    if total > nodes.len() {
+        captions.push(format!("showing top {} of {} files", nodes.len(), total));
     }
     if max_cost <= 0.0 {
         captions.push("no function cost recorded".to_string());
@@ -596,6 +596,8 @@ mod tests {
             entry_kind: None,
             entry_confidence: None,
             reachable_from_entry: None,
+            function_cost_v2: None,
+            unknown_trip_loops: 0,
         }
     }
 

@@ -102,7 +102,7 @@ fn fixture_root() -> PathBuf {
 /// report.md (provenance surfaces + absolute root + ARCH-003 block strip).
 const GOLDEN_ARTIFACTS: [&str; 12] = [
     "metrics.json",
-    "metrics.schema.v1.5.json",
+    "metrics.schema.v1.6.json",
     "report.md",
     "report.html",
     "findings-detail.md",
@@ -440,7 +440,7 @@ fn regenerate_goldens() {
             "charts/hot-components.svg".to_string(),
             "charts/layer-workspace.svg".to_string(),
             "charts/graph.dot".to_string(),
-            "metrics.schema.v1.5.json".to_string(),
+            "metrics.schema.v1.6.json".to_string(),
         ];
         let mut component_pages: Vec<String> = fs::read_dir(golden.join("charts"))
             .expect("charts dir")

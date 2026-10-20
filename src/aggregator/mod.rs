@@ -44,7 +44,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::analyzer::{CrossFileCallEdge, Finding, cross_file_call_edges};
 use crate::graph::{break_cycles, topo_layers};
 use crate::ir::{CalleeKind, FunctionRecord, IncludeForm};
-use crate::scanner::{FileUnit, SUPPORTED_LANGUAGES};
+use crate::scanner::{FileUnit, FunctionUnit, SUPPORTED_LANGUAGES};
 use crate::schema::{
     self, CallEdge, CallGraphSection, ComponentEntry, ComponentMetrics, DistributionEntry,
     FileEntry, FindingEntry, GraphNode, GraphsSection, IncludeEdgeDto, IncludeGraph,
@@ -227,23 +227,27 @@ fn function_stats(
     entries: &BTreeMap<String, (String, String)>,
     reachable: &BTreeSet<String>,
 ) -> Vec<schema::FunctionStats> {
-    let mut records: Vec<(bool, &FunctionRecord)> = units
+    let mut records: Vec<(bool, &FunctionUnit)> = units
         .iter()
         .flat_map(|u| {
             let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python");
-            u.functions.iter().map(move |f| (entry_scoped, &f.record))
+            u.functions.iter().map(move |f| (entry_scoped, f))
         })
         .collect();
     records.sort_by(|a, b| {
-        a.1.path
-            .cmp(&b.1.path)
-            .then(a.1.span.start_line.cmp(&b.1.span.start_line))
-            .then(a.1.span.start_col.cmp(&b.1.span.start_col))
+        a.1.record
+            .path
+            .cmp(&b.1.record.path)
+            .then(a.1.record.span.start_line.cmp(&b.1.record.span.start_line))
+            .then(a.1.record.span.start_col.cmp(&b.1.record.span.start_col))
     });
     records
         .into_iter()
-        .map(|(entry_scoped, r)| {
+        .map(|(entry_scoped, function_unit)| {
+            let r = &function_unit.record;
             let call = shape.get(&r.id).copied().unwrap_or_default();
+            let (function_cost_v2, unknown_trip_loops) =
+                function_cost_v2(r, call, &function_unit.loops);
             let (entry_kind, entry_confidence) = if entry_scoped {
                 entries
                     .get(&r.id)
@@ -284,9 +288,59 @@ fn function_stats(
                 } else {
                     None
                 },
+                // v1.6 I2: per-iteration weighted cost + honest unknown-trip
+                // count (formula documented on the schema field).
+                function_cost_v2: Some(function_cost_v2),
+                unknown_trip_loops,
             }
         })
         .collect()
+}
+
+/// Cost model v2 (plan `map-build` I2) — computed HERE because event-level
+/// loop detail (`FunctionUnit.loops` + `LoopNode.trip_count`) is collapsed by
+/// the time charts see [`schema::FunctionStats`]. The v1 base terms are
+/// recomputed from the IR records/call-shape with the SAME coefficients as
+/// [`crate::charts::function_cost`] (kept verbatim until cutover), then each
+/// loop contributes a per-iteration weight:
+///
+/// - known trip `t`: `min(t, MAX_TRIP) * (1 + depth)`;
+/// - unknown trip:   `1 * (1 + depth)` and one `unknown_trip_loops` count.
+///
+/// Saturating `u64` throughout; the backend already clamps, and synthetic IR
+/// is clamped again here so no document can overflow cost math.
+fn function_cost_v2(
+    record: &FunctionRecord,
+    call: CallShape,
+    loops: &[crate::ir::LoopNode],
+) -> (u64, u32) {
+    let mut cost = u64::from(record.cyclomatic_complexity)
+        .saturating_add(u64::from(record.cognitive_complexity))
+        .saturating_add(u64::from(record.max_loop_depth).saturating_mul(2))
+        .saturating_add(u64::from(record.alloc_site_count).saturating_mul(3))
+        .saturating_add(u64::from(call.fanout))
+        .saturating_add(u64::from(call.fanin))
+        .saturating_add(u64::from(call.depth))
+        .saturating_add(if call.recursive { 2 } else { 0 })
+        .saturating_add(if record.error_path.unwrap_or(false) {
+            1
+        } else {
+            0
+        })
+        .saturating_add(if record.alloc_family.is_some() { 1 } else { 0 });
+    let mut unknown_trip_loops = 0u32;
+    for loop_node in loops {
+        let depth_weight = u64::from(loop_node.depth).saturating_add(1);
+        let trip_weight = match loop_node.trip_count {
+            Some(trips) => trips.min(crate::ir::MAX_TRIP).saturating_mul(depth_weight),
+            None => {
+                unknown_trip_loops = unknown_trip_loops.saturating_add(1);
+                depth_weight
+            }
+        };
+        cost = cost.saturating_add(trip_weight);
+    }
+    (cost, unknown_trip_loops)
 }
 
 /// Per-function call-shape instrument (IR v1.4 STEP 2, plan
@@ -478,9 +532,9 @@ fn reaches_self(adj: &BTreeMap<&str, BTreeSet<&str>>, start: &str) -> bool {
     false
 }
 
-/// Entry-kind tokens (plan `map-build` I1a, C only) — the closed
-/// `stats.functions[].entry_kind` value set, mirrored in
-/// `docs/schema/metrics.schema.v1.5.json`.
+/// Entry-kind tokens (plan `map-build` I1a C + I1b Rust + I1c Python) — the
+/// closed `stats.functions[].entry_kind` value set, mirrored in
+/// `docs/schema/metrics.schema.v1.6.json`.
 const ENTRY_MAIN: &str = "main";
 /// Python-only entry kind (plan `map-build` I1c): a guarded `<module>`
 /// record (`has_main_guard == Some(true)`), confidence HIGH like `main`.
@@ -1416,6 +1470,55 @@ mod tests {
         }
     }
 
+    /// EXACT v2 formula pin (plan `map-build` I2): the base terms mirror the
+    /// v1 `charts::function_cost` pin (24.0), then known/unknown per-iteration
+    /// weights are added. If any coefficient drifts, this test names the
+    /// expected total and fails loudly.
+    #[test]
+    fn function_cost_v2_is_pinned_exactly() {
+        let record = FunctionRecord {
+            cyclomatic_complexity: 3,
+            cognitive_complexity: 2,
+            max_loop_depth: 2,
+            alloc_site_count: 2,
+            error_path: Some(true),
+            alloc_family: Some("real_alloc".to_string()),
+            ..FunctionRecord::default()
+        };
+        let call = CallShape {
+            fanout: 4,
+            fanin: 1,
+            depth: 2,
+            recursive: true,
+        };
+        let loop_node = |depth: u32, trip_count: Option<u64>| crate::ir::LoopNode {
+            kind: crate::ir::LoopKind::For,
+            depth,
+            induction_vars: vec!["i".to_string()],
+            span: Span::point(1, 1),
+            resolver_tier: crate::ir::ResolverTier::Syntactic,
+            macro_origin: false,
+            trip_count,
+            condition_is_zero: false,
+        };
+        let loops = vec![
+            loop_node(1, Some(10)), // 10 * (1+1) = 20
+            loop_node(2, Some(5)),  //  5 * (1+2) = 15
+            loop_node(3, None),     //  1 * (1+3) =  4 + unknown count
+        ];
+        // Base: 3 + 2 + 2*2 + 3*2 + 4 + 1 + 2 + 2 + 1 + 1 = 26.
+        // v2:   26 + 20 + 15 + 4 = 65.
+        assert_eq!(function_cost_v2(&record, call, &loops), (65, 1));
+        // Clamp also applies to synthetic IR carrying an over-MAX trip.
+        let clamped = function_cost_v2(
+            &FunctionRecord::default(),
+            CallShape::default(),
+            &[loop_node(1, Some(u64::MAX))],
+        );
+        assert_eq!(clamped.0, 2 * crate::ir::MAX_TRIP);
+        assert_eq!(clamped.1, 0);
+    }
+
     fn quoted_edge(from: &str, to: Option<&str>, resolved: bool) -> IncludeEdge {
         IncludeEdge {
             from_path: from.to_string(),
@@ -2121,6 +2224,8 @@ mod tests {
             entry_kind: None,
             entry_confidence: None,
             reachable_from_entry: None,
+            function_cost_v2: None,
+            unknown_trip_loops: 0,
         };
         let functions = vec![
             stat(2, 0),   // 01-04, 0

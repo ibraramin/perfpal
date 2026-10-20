@@ -1,10 +1,10 @@
-//! metrics.json schema 1.5 end-to-end lock (plan `map-build` I1a + I1b Rust +
-//! I1c Python): three OPTIONAL `stats.functions[]` entry/reachability
-//! fields (`entry_kind`, `entry_confidence`, `reachable_from_entry`,
-//! populated for C, Rust and Python) — additive-only over 1.4, so every `required` list is byte-equal to the
-//! v1.4 artifact's. Retains the 1.4 locks below as history: the seven v1.4
-//! instrument fields + populated distributions (tests (6)–(7)), the language
-//! enum + structural finding-id locks (tests (1)–(5)).
+//! metrics.json schema 1.6 end-to-end lock (plan `map-build` I1a C + I1b
+//! Rust + I1c Python + I2 cost-v2): the v1.5 entry/reachability fields plus
+//! the ADDITIVE v1.6 `function_cost_v2` / `unknown_trip_loops` fields —
+//! additive-only over 1.5/1.4, so every `required` list stays byte-equal to
+//! the retained artifacts'. Retains the 1.4 locks below as history: the seven
+//! v1.4 instrument fields + populated distributions (tests (6)–(7)), the
+//! language enum + structural finding-id locks (tests (1)–(5)).
 //!
 //! History: the `"python"` language token arrived with the 1.2 → 1.3 bump
 //! (plan `python-backend`); its locks below are RETAINED unchanged.
@@ -98,13 +98,13 @@ fn empty_dir_scan_falls_back_to_supported_set() {
     assert_eq!(doc["scan"]["file_count"], 0);
 }
 
-/// (4) Schema lock: the embedded canonical v1.5 schema admits exactly
+/// (4) Schema lock: the embedded canonical v1.6 schema admits exactly
 /// `["c","rust","python"]` at both language sites; the retained v1.4, v1.3,
 /// v1.2 and v1.1 artifacts still pin their own version markers and language
 /// values (proving the history copies are kept intact, not silently
 /// overwritten).
 #[test]
-fn schema_1_5_admits_c_rust_and_python_language_values() {
+fn schema_1_6_admits_c_rust_and_python_language_values() {
     let schema: serde_json::Value =
         serde_json::from_str(perfpal::schema::EMBEDDED_SCHEMA).expect("embedded schema parses");
 
@@ -162,8 +162,8 @@ fn schema_1_5_admits_c_rust_and_python_language_values() {
 }
 
 // ---------------------------------------------------------------------------
-// (5) v1.5 bump lock (plan `map-build` I1a): three additive OPTIONAL
-// function entry/reachability fields. No runtime JSON-Schema validator is
+// (5) v1.6 bump lock (plan `map-build` I2): two additive cost-v2 fields on
+// top of the v1.5 entry/reachability trio. No runtime JSON-Schema validator is
 // available in-repo — Cargo.toml is dependency-frozen and carries no
 // `jsonschema`/`valico`-style crate — so the v1.4 `rule_id`/`finding_id`
 // patterns and the `files[].language` enum are asserted STRUCTURALLY here
@@ -241,37 +241,40 @@ fn matches_finding_id(s: &str) -> bool {
 }
 
 #[test]
-fn v1_5_bump_and_findings_validate_structurally() {
-    // v1.5 is an additive minor bump: the version marker and bundled artifact
-    // name advance together, and v1.4 remains on disk as retained history.
-    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.5");
+fn v1_6_bump_and_findings_validate_structurally() {
+    // v1.6 is an additive minor bump: the version marker and bundled artifact
+    // name advance together, and v1.5/v1.4 remain on disk as retained history.
+    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.6");
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
-        "metrics.schema.v1.5.json"
+        "metrics.schema.v1.6.json"
     );
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
         format!("metrics.schema.v{}.json", perfpal::schema::SCHEMA_VERSION),
         "artifact name must stay derived from SCHEMA_VERSION"
     );
-    // The canonical v1.5 docs artifact is present and active.
+    // The canonical v1.6 docs artifact is present and active.
     let canonical: serde_json::Value =
-        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.5.json"))
-            .expect("canonical v1.5 schema parses");
-    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.5");
-    // v1.4 is retained as history — the bump did not overwrite it.
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.6.json"))
+            .expect("canonical v1.6 schema parses");
+    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.6");
+    // v1.5/v1.4 are retained as history — the bump did not overwrite them.
+    for retained in ["metrics.schema.v1.5.json", "metrics.schema.v1.4.json"] {
+        assert!(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("docs/schema")
+                .join(retained)
+                .exists(),
+            "{retained} must remain as retained history"
+        );
+    }
+    // The active v1.6 artifact file IS emitted.
     assert!(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("docs/schema/metrics.schema.v1.4.json")
+            .join("docs/schema/metrics.schema.v1.6.json")
             .exists(),
-        "v1.4 artifact must remain as retained history"
-    );
-    // The active v1.5 artifact file IS emitted.
-    assert!(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("docs/schema/metrics.schema.v1.5.json")
-            .exists(),
-        "the v1.5 artifact must be emitted by this bump"
+        "the v1.6 artifact must be emitted by this bump"
     );
 
     // A REAL mixed-language document: Rust findings present so the structural
@@ -281,7 +284,7 @@ fn v1_5_bump_and_findings_validate_structurally() {
     fs::write(root.join("rs_src.rs"), LOCK_RS_SRC).expect("write rs_src.rs");
     let doc = run_pipeline_and_parse("schema-lock", &root);
 
-    assert_eq!(doc["schema_version"], "1.5", "v1.5 bump in effect");
+    assert_eq!(doc["schema_version"], "1.6", "v1.6 bump in effect");
 
     // files[].language within the v1.4 enum.
     let files = doc["files"].as_array().expect("files[] present");
@@ -337,34 +340,44 @@ fn v1_5_bump_and_findings_validate_structurally() {
     fs::remove_dir_all(&root).ok();
 }
 
-/// (6) v1.5 additive-only lock: every `required` list in the v1.5 artifact is
-/// byte-equal to the corresponding v1.4 AND v1.3 lists — the three entry
-/// fields arrive as OPTIONAL-only additions, so v1.4/v1.3 metrics.json
-/// documents still parse unchanged.
+/// (6) v1.6 additive-only lock: every `required` list in the v1.6 artifact is
+/// byte-equal to the corresponding v1.5, v1.4 AND v1.3 lists — the two cost-v2
+/// fields arrive as additions with a serde default, so v1.5/v1.4/v1.3
+/// metrics.json documents still parse unchanged.
 #[test]
-fn v1_5_required_lists_match_v1_4_and_v1_3_exactly() {
-    let v1_5: serde_json::Value =
+fn v1_6_required_lists_match_v1_5_v1_4_and_v1_3_exactly() {
+    let v1_6: serde_json::Value =
         serde_json::from_str(perfpal::schema::EMBEDDED_SCHEMA).expect("embedded schema parses");
+    let v1_5: serde_json::Value =
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.5.json"))
+            .expect("v1.5 schema parses");
     let v1_4: serde_json::Value =
         serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.4.json"))
             .expect("v1.4 schema parses");
     let v1_3: serde_json::Value =
         serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.3.json"))
             .expect("v1.3 schema parses");
-    assert_required_equal(&v1_4, &v1_5, "$");
-    assert_required_equal(&v1_3, &v1_5, "$");
+    assert_required_equal(&v1_5, &v1_6, "$");
+    assert_required_equal(&v1_4, &v1_6, "$");
+    assert_required_equal(&v1_3, &v1_6, "$");
 
-    // The three entry fields ARE declared — as optional properties of
-    // stats.functions items.
-    let props = &v1_5["properties"]["stats"]["properties"]["functions"]["items"]["properties"];
-    for field in ["entry_kind", "entry_confidence", "reachable_from_entry"] {
+    // The v1.5 entry trio AND the two v1.6 cost-v2 fields ARE declared — as
+    // optional properties of stats.functions items.
+    let props = &v1_6["properties"]["stats"]["properties"]["functions"]["items"]["properties"];
+    for field in [
+        "entry_kind",
+        "entry_confidence",
+        "reachable_from_entry",
+        "function_cost_v2",
+        "unknown_trip_loops",
+    ] {
         assert!(
             props.get(field).is_some(),
-            "v1.5 must declare optional stats.functions[] field {field}"
+            "v1.6 must declare optional stats.functions[] field {field}"
         );
     }
     // Closed value sets on the wire (`script` joined in I1c for Python
-    // guarded modules — still the v1.5 artifact, no version bump).
+    // guarded modules — retained in the v1.6 artifact).
     assert_eq!(
         props["entry_kind"]["enum"],
         serde_json::json!(["main", "script", "handler", "lib-root", "unknown-entry"])

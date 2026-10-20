@@ -876,6 +876,14 @@ impl<'a> FuncScan<'a> {
         } else {
             Vec::new()
         };
+        // I2 (plan `map-build`): trip count ONLY for canonical counted
+        // for-loops; every other loop kind/shape stays `None` (honest
+        // unknown). See `canonical_trip_count` for the exact gate.
+        let trip_count = if kind == LoopKind::For {
+            canonical_trip_count(node, self.source)
+        } else {
+            None
+        };
         let macro_origin = self.macro_origin_of(&span, "");
         // Precision FP-class fix 1 producer: a `do_statement` whose
         // condition text is the literal `(0)` is the `do { ... } while(0)`
@@ -897,6 +905,7 @@ impl<'a> FuncScan<'a> {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
+            trip_count,
             condition_is_zero,
         });
         self.loop_depth = depth;
@@ -1330,6 +1339,167 @@ fn induction_vars(for_node: Node<'_>, source: &[u8]) -> Vec<String> {
     vars
 }
 
+/// Canonical counted-for-loop trip count (plan `map-build` I2, C only).
+///
+/// The ONLY shape admitted (all three clauses must agree on one induction
+/// variable `v`):
+/// - initializer: `v = 0` or `int v = 0` — an integer literal ZERO;
+/// - condition: `v < N` or `v <= N` with a bare integer-literal `N`
+///   (`<=` yields N + 1);
+/// - update: `v++`/`++v` or `v += 1`.
+///
+/// Everything else returns `None`: `while`/`do-while`, macro or
+/// non-literal/parenthesized bounds, descending `v--`, multiple induction
+/// variables, compound updates (`v += 2`), or a variable mismatched between
+/// clauses. The result is clamped to [`crate::ir::MAX_TRIP`] so cost math
+/// stays in range.
+fn canonical_trip_count(for_node: Node<'_>, source: &[u8]) -> Option<u64> {
+    let initializer = for_node.child_by_field_name("initializer")?;
+    let variable = zero_initialized_var(initializer, source)?;
+    let condition = for_node.child_by_field_name("condition")?;
+    let trips = condition_trip_bound(condition, &variable, source)?;
+    let update = for_node.child_by_field_name("update")?;
+    if !is_unit_increment(update, &variable, source) {
+        return None;
+    }
+    Some(trips.min(crate::ir::MAX_TRIP))
+}
+
+/// `v = 0` / `int v = 0` — exactly one initialized declarator and no other
+/// declarator (multiple induction vars are deliberately rejected).
+fn zero_initialized_var(initializer: Node<'_>, source: &[u8]) -> Option<String> {
+    match initializer.kind() {
+        "assignment_expression" => {
+            let operator = initializer
+                .child_by_field_name("operator")
+                .map(|op| text(op, source))?;
+            let left = initializer.child_by_field_name("left")?;
+            let right = initializer.child_by_field_name("right")?;
+            if operator != "="
+                || left.kind() != "identifier"
+                || int_literal_value(right, source)? != 0
+            {
+                return None;
+            }
+            Some(text(left, source).to_string())
+        }
+        "declaration" => {
+            let mut declarators: Vec<Node<'_>> = Vec::new();
+            let mut cursor = initializer.walk();
+            if cursor.goto_first_child() {
+                loop {
+                    let child = cursor.node();
+                    if child.is_named()
+                        && matches!(
+                            child.kind(),
+                            "init_declarator"
+                                | "identifier"
+                                | "pointer_declarator"
+                                | "array_declarator"
+                                | "function_declarator"
+                        )
+                    {
+                        declarators.push(child);
+                    }
+                    if !cursor.goto_next_sibling() {
+                        break;
+                    }
+                }
+            }
+            let [declarator] = declarators.as_slice() else {
+                return None; // zero or multiple induction variables
+            };
+            if declarator.kind() != "init_declarator" {
+                return None; // declared but not initialized
+            }
+            let name = declarator.child_by_field_name("declarator")?;
+            if name.kind() != "identifier" {
+                return None; // pointer/array declarator is not a counted var
+            }
+            let value = declarator.child_by_field_name("value")?;
+            if int_literal_value(value, source)? != 0 {
+                return None;
+            }
+            Some(text(name, source).to_string())
+        }
+        _ => None,
+    }
+}
+
+/// `v < N` / `v <= N`, bare integer-literal bound only. `<=` means N + 1
+/// iterations (saturating; the caller clamps to [`crate::ir::MAX_TRIP`]).
+fn condition_trip_bound(condition: Node<'_>, variable: &str, source: &[u8]) -> Option<u64> {
+    if condition.kind() != "binary_expression" {
+        return None;
+    }
+    let operator = condition
+        .child_by_field_name("operator")
+        .map(|op| text(op, source))?;
+    let left = condition.child_by_field_name("left")?;
+    let right = condition.child_by_field_name("right")?;
+    if left.kind() != "identifier" || text(left, source) != variable {
+        return None;
+    }
+    let bound = int_literal_value(right, source)?;
+    match operator {
+        "<" => Some(bound),
+        "<=" => Some(bound.saturating_add(1)),
+        _ => None, // descending / != / variable bound
+    }
+}
+
+/// `v++` / `++v` (but NEVER `v--`) or `v += 1`. A `+= 2` step is not a
+/// canonical unit counted loop and stays unknown.
+fn is_unit_increment(update: Node<'_>, variable: &str, source: &[u8]) -> bool {
+    match update.kind() {
+        "update_expression" => {
+            let Some(argument) = update.child_by_field_name("argument") else {
+                return false;
+            };
+            if argument.kind() != "identifier" || text(argument, source) != variable {
+                return false;
+            }
+            let collapsed: String = text(update, source)
+                .chars()
+                .filter(|ch| !ch.is_whitespace())
+                .collect();
+            collapsed.contains("++") && !collapsed.contains("--")
+        }
+        "assignment_expression" => {
+            let operator = update
+                .child_by_field_name("operator")
+                .map(|op| text(op, source));
+            let left = update.child_by_field_name("left");
+            let right = update.child_by_field_name("right");
+            let (Some("+="), Some(left), Some(right)) = (operator, left, right) else {
+                return false;
+            };
+            left.kind() == "identifier"
+                && text(left, source) == variable
+                && int_literal_value(right, source) == Some(1)
+        }
+        _ => false,
+    }
+}
+
+/// Parse a C integer literal (decimal or `0x` hex, optional `u`/`l` suffix).
+/// Anything that is not a bare `number_literal` node returns `None` — macro
+/// names, parenthesized bounds, identifiers and expressions are unknown.
+fn int_literal_value(node: Node<'_>, source: &[u8]) -> Option<u64> {
+    if node.kind() != "number_literal" {
+        return None;
+    }
+    let raw = text(node, source).trim().replace('_', "");
+    let (radix, digits) =
+        if let Some(hex) = raw.strip_prefix("0x").or_else(|| raw.strip_prefix("0X")) {
+            (16, hex)
+        } else {
+            (10, raw.as_str())
+        };
+    let digits = digits.trim_end_matches(['u', 'U', 'l', 'L']);
+    u64::from_str_radix(digits, radix).ok()
+}
+
 fn last_named_before_close(for_node: Node<'_>) -> Option<Node<'_>> {
     let mut last = None;
     let mut cursor = for_node.walk();
@@ -1449,6 +1619,46 @@ int process(int n, char *buf) {
         assert_eq!(loops[0].kind, LoopKind::For);
         assert_eq!(loops[0].depth, 1);
         assert_eq!(loops[0].induction_vars, vec!["i".to_string()]);
+    }
+
+    #[test]
+    fn canonical_for_loop_trip_counts_are_gated_honestly() {
+        fn trip(body: &str) -> Option<u64> {
+            let src = format!("void f(void) {{ {body} }}");
+            let ex = extract("t.c", src.as_bytes());
+            ex.functions[0].loops[0].trip_count
+        }
+        // Canonical ascending literal loops.
+        assert_eq!(trip("for (int i = 0; i < 10; i++) {}"), Some(10));
+        assert_eq!(trip("for (i = 0; i < 10; i++) {}"), Some(10));
+        assert_eq!(trip("for (i = 0; i <= 10; i++) {}"), Some(11));
+        assert_eq!(trip("for (int i = 0; i < 10; ++i) {}"), Some(10));
+        assert_eq!(trip("for (int i = 0; i < 10; i += 1) {}"), Some(10));
+        assert_eq!(trip("for (int i = 0; i < 0; i++) {}"), Some(0));
+        // CLAMP: absurd literal bound cannot overflow cost math.
+        assert_eq!(
+            trip("for (int i = 0; i < 18446744073709551615u; i++) {}"),
+            Some(crate::ir::MAX_TRIP)
+        );
+        assert_eq!(
+            trip("for (int i = 0; i <= 18446744073709551615u; i++) {}"),
+            Some(crate::ir::MAX_TRIP)
+        );
+        // Non-canonical: honest unknown, never a guessed bound.
+        assert_eq!(trip("while (1) {}"), None);
+        assert_eq!(trip("do {} while (0);"), None);
+        assert_eq!(trip("for (int i = 0; i < LIMIT; i++) {}"), None);
+        assert_eq!(trip("for (int i = 0; i < n; i++) {}"), None);
+        assert_eq!(trip("for (int i = 0; i < (10); i++) {}"), None);
+        assert_eq!(trip("for (int i = 10; i > 0; i--) {}"), None);
+        assert_eq!(trip("for (int i = 0; i < 10; i--) {}"), None);
+        assert_eq!(trip("for (int i = 0; i < 10; i += 2) {}"), None);
+        assert_eq!(trip("for (int i = 1; i < 10; i++) {}"), None);
+        assert_eq!(trip("for (i -= 0; i < 10; i++) {}"), None);
+        assert_eq!(trip("for (int i = 0, j = 0; i < 10; i++) {}"), None);
+        assert_eq!(trip("for (int i = 0; i < 10; j++) {}"), None);
+        assert_eq!(trip("for (int i = 0; i != 10; i++) {}"), None);
+        assert_eq!(trip("for (;;) {}"), None);
     }
 
     #[test]

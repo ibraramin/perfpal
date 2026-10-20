@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.5.json",
-  "title": "Perfpal metrics.json schema v1.5",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.6.json",
+  "title": "Perfpal metrics.json schema v1.6",
   "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, Rust, Python). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.5",
+      "const": "1.6",
       "description": "Schema version of this document. MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
@@ -144,7 +144,9 @@
               "cfg_gated": { "type": "boolean", "description": "ADDITIVE precision-gate flag (precision FP-class fix 2): true only when the function is defined inside a provably-dead configuration region (C #if 0 — the code never compiles). Omitted when uncomputed or live." },
               "entry_kind": { "type": "string", "enum": ["main", "script", "handler", "lib-root", "unknown-entry"], "description": "ADDITIVE v1.5 (map-build I1a C + I1b Rust + I1c Python): entry kind of the function — main (C/Rust program entry, HIGH confidence), script (Python guarded <module> record with __name__ == __main__, HIGH), handler (*handler*/*callback*/*dispatch* name heuristic, MEDIUM), lib-root (exported function in a main-less, non-bin (C/Rust) or guard-less (Python, non-underscore def) file, MEDIUM), unknown-entry (honest stub when the per-language corpus yields zero entries, LOW). Omitted when the function is not an entry." },
               "entry_confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"], "description": "ADDITIVE v1.5: entry confidence matching entry_kind — HIGH for main/script, MEDIUM for handler/lib-root, LOW for the unknown-entry stub. Omitted exactly when entry_kind is omitted." },
-              "reachable_from_entry": { "type": "boolean", "description": "ADDITIVE v1.5: true when the function is reachable from an entry of its own language over RESOLVED call edges only (semantic-fact-backed, MEDIUM or better — LOW-confidence name-based edges are excluded). Populated for every C/Rust/Python function." }
+              "reachable_from_entry": { "type": "boolean", "description": "ADDITIVE v1.5: true when the function is reachable from an entry of its own language over RESOLVED call edges only (semantic-fact-backed, MEDIUM or better — LOW-confidence name-based edges are excluded). Populated for every C/Rust/Python function." },
+              "function_cost_v2": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6 (map-build I2 cost-v2): per-iteration weighted cost computed by the aggregator from IR. Formula = v1 base (cyclomatic_complexity + cognitive_complexity + 2*max_loop_depth + 3*alloc_site_count + call_fanout + call_fanin + call_depth + 2 if is_recursive + 1 if error_path + 1 if alloc_family) plus, for every loop, min(trip_count, 1000000) * (1 + loop_depth) when the trip count is statically known (C canonical counted for-loops only) or 1 * (1 + loop_depth) when unknown. Saturating u64 arithmetic. Omitted only for pre-I2/parser-free documents; heat consumers prefer it over the retained v1 function_cost." },
+              "unknown_trip_loops": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6: number of loops in the function whose trip count is genuinely unknown (LoopNode.trip_count absent). Always emitted (0 for loop-free or fully counted functions). Rust/Python loops are honestly unknown in this increment (I2 scope: C only); C while/do-while and non-canonical for-loops are also unknown." }
             }
           }
         },
