@@ -1,94 +1,108 @@
 # Handoff — Latest
 
 ## Objective
-I3 (map-build) DONE: the entry-point-stratified cost map as the third layer stem
-(`layer-entry.svg`) plus the deferred middle-bands layout (`layer-bands.svg`,
-A-pf-077). Both are deterministic, capped, stubbed, and honest about LOW-confidence
-call edges and default-scan reachability limits.
+I4 (map-build) DONE: findings now ride as annotations on the map — severity×confidence
+dots on five stems, a new `layer-findings.svg` severity map (8th overview stem), and a
+bounded `report.html` drill path; `findings-detail.html/.md` stay byte-identical.
 
 ## Phase
-POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1 ✅ (entries, 3 langs),
-I2 ✅ (cost-v2, 3 langs), I3 ✅ (map layer + bands); I4 annotations next.
-Paper + JS/TS parked behind the map; M5 parked behind B-pf-001/002.
+POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1 ✅ I2 ✅ I3 ✅ I4 ✅ (`f56d072`);
+I5 proof + demo next. Paper + JS/TS parked behind the map; M5 parked behind B-pf-001/002.
 
 ## Alignment (L6)
 - **Goal restated:** Perfpal is a CLI (Rust) emitting heuristics + the maintainer
-  birdseye map (core feature) + LLM-consumable metrics, findings as map annotations
-  (`docs/NORTH-STAR.md`).
-- **Phase restated:** dev; map-build I3 shipped the third layer and the middle bands.
-- **How this session serves the north-star:** I2's cost-v2 + reachability is now
-  rendered as an entry-stratified map, and the bands layer makes cross-component
-  file edges visible at file resolution (the A-pf-077 honesty gap).
+  birdseye map (core feature) + LLM-consumable metrics, with findings as map
+  annotations (`docs/NORTH-STAR.md`).
+- **Phase restated:** dev; I4 closes the "findings as a list to cross-reference by hand"
+  gap in the map.
+- **How this session serves the north-star:** "where do I look first" gains a
+  severity-weighted findings map plus severity×confidence dots on every map node, and the
+  report header drills header → map → component/file → detail anchors.
 - **Drift flag: NONE.** Build sequence per ADR-0008.
 
-## This session — I3 burst result
-- **`layer-entry.svg`** (`src/charts/layers.rs::render_layer_entry`): files capped
-  entry-first (REAL entry files only — `unknown-entry` stubs are excluded, captioned,
-  and cannot seed BFS or earn the reserve), laid out in BFS-depth columns from
-  non-LOW resolved call pairs (`entry`, `depth 1`…), depth capped at 8 with deeper
-  files folded into `depth ≥ 9` + caption; unreached files sub-layered by
-  `topo_layers`; no-real-entry scans fall back to a plain topo call DAG; heat =
-  per-file function cost (v2 where available, v1 fallback, normalized over shown
-  files); single hottest shown entry-reachable file outlined; LOW edges excluded
-  and counted; stub on empty files.
-- **`layer-bands.svg`** (`render_layer_bands`, A-pf-077): capped components
-  (`rank ≤ 50`, `(rank, prefix)` order) as bands; per-band file rows cost-ordered
-  cap 10 + `…+N more`; intra-band include/non-LOW-call edges deduped + cycle-broken;
-  cross-band file edges aggregated into one counted ribbon per ordered band pair;
-  outside-scope + LOW counts captioned; file-less bands stubbed.
-- **Carried nits fixed:** stale “top files by degree” caption + false “(v2)” heat
-  claim (reporter, SVG subtitle, output-contract, tests).
-- **Review cycle:** rev-1 blocked on B1 (false “entries only” caption when a path
-  crosses a capped-out intermediate), B2 (`unknown-entry` stubs treated as entries),
-  B3 (unbounded depth axis) and F1 (bands subtitle claimed a hot-path that is not
-  drawn); all fixed and re-reviewed. req-1 APPROVED; rev-1 final APPROVED.
-- **Data reality (R-pf-096):** default scans have zero non-LOW call edges, so the
-  entry layer honestly degrades to entry/not-reached bands with
-  `0 resolved call edges; reachability = entries only (semantic tier off)`. The
-  bands layer carries today's structural value; true depth strata need the semantic
-  tier at I5.
+## This session — I4 burst result
+- **Shared annotation model** (`src/charts/mod.rs`): `FindingIndex`/`FindingDot`
+  (per-file + exact-`parent_dir` per-component roll-up) built ONCE in `charts::render`
+  from `doc.findings`; `BTreeMap` only (deterministic). Dot = worst-severity fill
+  (hot/warn/info) + **lowest-confidence ring** (LOW 0.6 / MEDIUM 1.2 / HIGH 2.2 — the
+  weakest link, so one LOW candidate never reads as thick HIGH), count numeral when
+  total ≥ 2, full counts in `<title>`, one pinned legend line per chart. No dot is ever
+  a bare severity colour.
+- **Dots wired into** `layer-workspace` (component roll-up), `layer-file`, `layer-entry`,
+  `layer-bands`, and per-component pages (file paths). `include-graph.svg` stays
+  legacy/undotted and byte-identical.
+- **New 8th overview stem `layer-findings.svg`** (`render_layer_findings`): include-graph
+  nodes ∪ finding paths, same file-DAG pipeline (cycle-break → topo layers → barycenter),
+  top-50 by `(3*hot + 2*warn + 1*info desc, path asc)`, weighted heat + dots + single
+  hottest outline, honest `showing top S of M` / `…+N more`, zero-findings stub. Emitted
+  after `layer-bands`, before component pages.
+- **report.html drill path:** breadcrumb `Map → Components → Files → Findings detail`;
+  new `#map` section after nav / before `#architecture` with the workspace figure, the
+  annotation legend, and a top-10 component drill table (component-page link,
+  severity/confidence summary, ≤3 anchors into `findings-detail.html` using the SAME
+  `finding_anchor_assignments` map); `#files` rows gain an emitted component-page link;
+  `report.html` still carries ZERO per-finding rows.
+- **Honesty fix from review (B1):** rev-1 caught that the first implementation selected
+  the HIGHEST confidence present for the ring, overstating certainty; fixed to the
+  approved plan's lowest-confidence-present rule and re-pinned in code, legend, test
+  (three precedence cases), docs, and goldens.
+- **Registry/docs:** `KNOWN_OVERVIEW_STEMS` + golden artifact list (14→15) + caption
+  registry + `docs/report/output-contract.md` + `docs/architecture/modules.md` + CHANGELOG;
+  component pages now label their cost ramp. `findings-detail` untouched.
 
 ## Verification
 | Claim | Command | Result |
 |---|---|---|
 | fmt | `cargo fmt --all -- --check` | exit 0 |
 | clippy | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| tests | `cargo test --locked` | 679 passed / 0 failed |
-| licenses | `cargo deny check licenses` | ok (exit 0) |
-| ratchets | `cargo test --locked --test benchmark --test precision_kpi` | pass; baseline 1.0/1.0 untouched; only `tests/benchmark/mod.rs` chart-count (6→8) + comment changed |
-| determinism A3 | `cargo test --locked --test p4_determinism --test p6_hardening --test v14_step2` + `tests/i3_map_layer.rs` | all pass; graph.dot + all SVG stems byte-equal UNMASKED |
-| goldens | `PERFPAL_REGEN_GOLDEN=1 cargo test --locked --test p6_hardening regenerate_goldens` + comparator | 2 stems added per tree; `layer-file.svg` subtitle + report links changed only; `metrics.json`/`graph.dot` untouched |
-| review | `@reviewer` + `@requirements-reviewer` | both APPROVED (B1–B3/F1 fixed) |
-| commit | `git log --oneline -1` | `d78bb85` (independent I3 commit) |
+| tests | `cargo test --locked` | **50 suites / 687 passed / 0 failed** |
+| licenses | `cargo deny check licenses` | `licenses ok` (exit 0) |
+| determinism / locks | `cargo test --locked --test p4_determinism --test pipeline_e2e --test i4_annotations --test p6_hardening --test charts_render --test i3_map_layer --test i2_cost_v2` | 7 suites / 64 passed |
+| detail byte-identity | `git status --porcelain -- 'tests/golden/*/findings-detail.*' 'tests/golden/*/charts/include-graph.svg' 'tests/golden/*/metrics.json' 'tests/golden/*/charts/graph.dot'` | **empty** |
+| new stem goldens | `git status --porcelain -- 'tests/golden/*/charts/layer-findings.svg' \| wc -l` | 4 (one per golden tree) |
+| B1 evidence | code + goldens | 0.6 for any LOW, 1.2 MEDIUM-only, 2.2 HIGH-only |
+| review (code) | `@reviewer` round 2 | **APPROVED** (B1 fixed) |
+| review (requirements) | `@requirements-reviewer` round 2 | **APPROVED** (F1 stale CHANGELOG fixed) |
+| working tree | `git status --porcelain` | 53 paths at closeout: 49 committed in `f56d072` (code/tests/goldens/docs) + 4 state files in this closeout; no secrets |
 
 ## Risks / Open
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`**
   (high; EULA/PRIVACY contact), **`R-pf-082`** (medium; synthetic corpora),
   **`R-pf-007`** (medium; differentiation), **`R-pf-094`** (low), **`R-pf-095`**
-  (low; Windows residuals), **`R-pf-096`** (low; default-scan zero non-LOW call
-  edges → entry layer degrades honestly; semantic tier needed).
+  (low; Windows residuals), **`R-pf-096`** (low; default scans have zero non-LOW call
+  edges), **`R-pf-097`** (low; I4 residuals).
+- **R-pf-097 detail:** no django corpus exists in-repo, so the plan's "django humans
+  bounded" is **structural only** (`HUMAN_CAP=10`, ≤3 links/row, zero per-finding rows in
+  report.md/html) — no measured size was produced and none is claimed. Pre-I4 chart-set
+  prose drift in `README.md:94`, `docs/website/scope-and-content.md:69`,
+  `docs/adr/ADR-0002-visualization.md:32`; four layer heat captions + `hot-components`
+  still lack the word "candidate"; workspace figure is emitted twice in `report.html`
+  (`#map` + `#architecture`).
 - **Blockers (unchanged):** **`B-pf-001`** (contact); **`B-pf-002`** (secrets).
-- **Follow-ups:** C octal bound `i < 010` still parses decimal (reject or radix-8 +
-  test); IR/schema prose still stops at v1.3 (`docs/architecture/ir-v1.md`,
-  `docs/schema/metrics-json-v1.md`); old `layer-file` reserve cost-desc branch is
-  partly untested (the new entry-layer reserve is covered); static-SVG
-  label/uncertainty thresholds still need the I5 eyeball; pixel glance re-owed.
+- **Follow-ups:** C octal bound `i < 010` parses decimal; IR/schema prose still stops at
+  v1.3; old `layer-file` reserve branch partly untested; static-SVG label thresholds need
+  the I5 eyeball.
 
 ## Next Actions
-1. **NEXT: I4 annotations** — finding dots on nodes (severity+confidence glued),
-   `report.html` drill path header → workspace/file/component → `findings-detail`,
-   output-contract registry +1 stem; django humans bounded, detail byte-identical.
-2. Then I5 proof + demo (incl. A-pf-095 true GENUINE manual triage) and the
-   semantic-tier check that makes `layer-entry` depth strata non-trivial.
+1. **NEXT: I5 proof + demo** (A-pf-097) — full gate, double-scan byte-identical goldens,
+   9-repo demo eyeball with the 3-action maintainer test, A-pf-095 true GENUINE manual
+   triage, semantic-tier check that makes `layer-entry` depth strata non-trivial.
+2. Close R-pf-097 residuals opportunistically (doc drift + heat-caption wording).
 3. M5 publish needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080).
 
 ## Change set (this session)
-- **Code (`d78bb85`):** two new chart renderers + wiring, reporter stems/captions,
-  cli/modules/output-contract docs, 11 `tests/i3_map_layer.rs` locks, frozen
-  chart-set tests, 8 golden stems added, `layer-file.svg` subtitle truth fix.
-- **State (this commit):** `state/session-state.json` (D-pf-221, R-pf-096,
-  A-pf-096; I3/A-pf-077/A-pf-084/089/093/094 closed to ledger), this handoff,
-  `docs/activeContext.md`.
+- **Code:** `src/charts/{mod,layers,component}.rs` (annotation model, dots, new stem,
+  component ramp label), `src/reporter/mod.rs` (breadcrumb, `#map` drill section, `#files`
+  component links, registry), `src/cli/mod.rs` (comment: five layered stems).
+- **Tests:** new `tests/i4_annotations.rs` (8 locks: dots/ring precedence/legend/roll-up/
+  new stem caps+stub/order/drill anchors/detail untouched); frozen-set updates in
+  `charts_render`, `i2_cost_v2`, `i3_map_layer`, `p4_determinism`, `pipeline_e2e`,
+  `p6_hardening`, `benchmark`.
+- **Goldens:** 4 new `layer-findings.svg`; annotated SVGs + `report.html`/`report.md`
+  refreshed; `findings-detail.*`, `include-graph.svg`, `metrics.json`, `graph.dot` untouched.
+- **Docs/state:** `docs/report/output-contract.md`, `docs/architecture/modules.md`,
+  `CHANGELOG.md`, `state/session-state.json` (D-pf-222, R-pf-097, A-pf-097; A-pf-096 →
+  ledger), this handoff, `docs/activeContext.md`.
 
 ## L2 state split / L6 north-star (history)
 Hot/cold split 2026-09-29; north-star pinned 2026-10-01, realigned to

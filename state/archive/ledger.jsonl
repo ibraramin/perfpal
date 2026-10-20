@@ -580,3 +580,4 @@
 {"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-094","status":"done","action":"I3 map layer DONE (d78bb85)"}}
 {"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-077","status":"done","action":"Middle-bands layout landed in I3 as layer-bands.svg (cross-component file edges aggregated/captioned)"}}
 {"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-084","status":"retired","action":"Stale: semantic-deepening items covered by I1/I2; no remaining scope"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-096","status":"done","action":"I4 annotations landed (uncommitted): dots on 5 map stems (worst-severity fill + lowest-confidence ring), layer-findings.svg 8th overview stem, report.html #map drill path; findings-detail byte-identical"}}
