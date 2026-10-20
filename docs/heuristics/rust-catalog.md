@@ -87,7 +87,7 @@ All entries `(syntactic)`. Signal/Cost inherited from the C counterpart's rankin
 
 **PERF-RS-LOOP-001 — Deeply nested loops (≥3)** `(syntactic)`
 - Detects: every `LoopNode` whose `depth` is **exactly** `LOOP_001_MIN_DEPTH` (3) — one finding per maximal nest entry (a depth-5 chain yields one finding at its depth-3 ancestor). Warn/HIGH; threshold `("min_nesting_depth", 3)`. Evidence `nest_depth`, `max_depth` (max depth among inclusive descendants).
-- Accepted FP classes / limitations: a deep nest over tiny fixed bounds is legitimate — the syntactic tier cannot bound trip counts; macro-generated loops are invisible (`token_tree` blind spot).
+- Accepted FP classes / limitations: a deep nest over tiny fixed bounds is legitimate — the syntactic tier cannot bound trip counts in general (only canonical literal ranges `a..b` / `a..=b` are inferred, I2b); macro-generated loops are invisible (`token_tree` blind spot).
 
 **PERF-RS-LOOP-002 — Expensive setup / I/O call inside loop** `(syntactic)`
 - Detects: a Rust call at `in_loop_depth ≥ 1` in one of three curated groups — **macro** `println!`/`print!`/`eprintln!`/`eprint!`/`write!`/`writeln!`/`dbg!` (matched only when `is_macro`); **method** `read_to_string`/`write_all`/`read_to_end`/`flush`/`sync_all`/`recv`/`send`/`recv_from`/`send_to`/`read_line`; **qualified** `File::open`/`File::create`/`fs::read`/`fs::write`/`fs::read_to_string`/`Command::new`/`TcpStream::connect`/`UdpSocket::bind`/`env::var`/`env::args` (matched as `path == entry` or a `::entry` suffix).

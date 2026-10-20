@@ -260,10 +260,12 @@ fn v1_is_unchanged_and_v2_math_is_pinned() {
 fn unknown_trip_loops_are_honest_for_rust_and_python() {
     // Real backends, not fabricated IR: Rust/Python must leave every loop
     // trip count `None` in this increment.
+    // I2b: Rust literal ranges are now KNOWN, so this honesty fixture uses a
+    // non-literal bound (`parts.len()`) to stay honestly unknown.
     let rust_root = temp_dir("honest-rust");
     fs::write(
         rust_root.join("lib.rs"),
-        "pub fn run(parts: &[i32]) { for i in 0..10 { let _ = parts[i]; } }\n",
+        "pub fn run(parts: &[i32]) { for i in 0..parts.len() { let _ = parts[i]; } }\n",
     )
     .expect("write Rust fixture");
     let python_root = temp_dir("honest-python");

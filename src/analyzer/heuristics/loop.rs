@@ -709,7 +709,7 @@ mod tests {
                     span: loop_span,
                     resolver_tier: ResolverTier::Syntactic,
                     macro_origin: false,
-                    // I2 scope: C only; analyzer fixtures stay honest-unknown.
+                    // Synthetic analyzer fixtures: trip counts stay honest-unknown.
                     trip_count: None,
                     condition_is_zero: zero_guard,
                 }],

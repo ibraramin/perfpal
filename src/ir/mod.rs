@@ -908,9 +908,10 @@ pub enum LoopKind {
 }
 
 /// Upper bound on a statically inferred loop trip count (plan `map-build`
-/// I2). The C backend clamps here so cost arithmetic can never overflow even
-/// on absurd literal bounds (`for (i = 0; i < 18446744073709551615u; i++)`);
-/// the aggregator clamps again when consuming synthetic IR.
+/// I2). The C and Rust backends clamp here so cost arithmetic can never
+/// overflow even on absurd literal bounds (`for (i = 0; i <
+/// 18446744073709551615u; i++)`); the aggregator clamps again when consuming
+/// synthetic IR.
 pub const MAX_TRIP: u64 = 1_000_000;
 
 /// Loop record — loops anchor nesting chains (ir-v1.md §3.3).
@@ -924,16 +925,21 @@ pub struct LoopNode {
     pub span: Span,
     pub resolver_tier: ResolverTier,
     pub macro_origin: bool,
-    /// ADDITIVE v1.6 (plan `map-build` I2, C only): statically known trip
-    /// count for a CANONICAL counted `for` loop — init `i = 0` (integer
-    /// literal 0), condition `i < N` / `i <= N` (integer-literal N, adjusted
-    /// `<=` ⇒ N+1), update `i++` / `i += 1` on the same single induction
-    /// variable. Every non-canonical shape (while/do-while, macro or
-    /// non-literal bound, descending `i--`, multiple induction vars,
-    /// parenthesized bound) reports `None` — honest unknown, never a guess.
-    /// Clamped to [`MAX_TRIP`]. Rust and Python deliberately leave this
-    /// `None` this increment (I2 scope: C only, D-pf-217 one-language-per-
-    /// burst; range()/range-literal inference is a follow-up).
+    /// ADDITIVE v1.6 (plan `map-build` I2/I2b): statically known trip count
+    /// for a CANONICAL counted loop.
+    ///
+    /// - C: init `i = 0` (integer literal 0), condition `i < N` / `i <= N`
+    ///   (integer-literal N, adjusted `<=` ⇒ N+1), update `i++` / `i += 1` on
+    ///   the same single induction variable.
+    /// - Rust: `for` whose iterable is a range with BOTH bounds as
+    ///   non-negative integer literals, ascending — `0..10` ⇒ 10,
+    ///   `5..15` ⇒ 10, `0..=10` ⇒ 11.
+    ///
+    /// Every non-canonical shape (while/do-while/loop, macro or non-literal
+    /// bound, descending range, `step_by(...)`, `.rev()`, multiple induction
+    /// vars, parenthesized bound) reports `None` — honest unknown, never a
+    /// guess. Clamped to [`MAX_TRIP`]. Python deliberately leaves this
+    /// `None` (no range-literal inference yet).
     ///
     /// `FunctionUnit.loops` carries the stream, so the value reaches the
     /// aggregator without any extra FileUnit/FunctionUnit field; the schema

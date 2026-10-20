@@ -1012,6 +1012,120 @@ fn loop_kind(kind: &str) -> Option<LoopKind> {
     }
 }
 
+/// Canonical Rust `for` trip count (plan `map-build` I2b, founder-approved
+/// extension of I2 to Rust).
+///
+/// The ONLY shape admitted is a `for` whose iterable (`value` field) is a
+/// **range expression with BOTH bounds as non-negative integer literals**,
+/// ascending (`start <= end`):
+/// - `for i in 0..10` and `for i in 5..15` ⇒ `Some(10)`;
+/// - an inclusive `..=` ⇒ `end - start + 1` (`0..=10` ⇒ `Some(11)`).
+///
+/// Everything else is honestly `None`: variable/expression bounds,
+/// descending ranges (`10..0`), half-open ranges (`..10` / `0..`),
+/// `step_by(...)` / `.rev()` / any method chain (the iterable is then a
+/// call, not a range), float/negative literals, and `while`/`loop` (which
+/// never reach this helper). The result is clamped to
+/// [`crate::ir::MAX_TRIP`] so cost math stays in range.
+fn canonical_trip_count(for_node: Node<'_>, source: &[u8]) -> Option<u64> {
+    let iterable = for_node.child_by_field_name("value")?;
+    if iterable.kind() != "range_expression" {
+        return None;
+    }
+    let mut bounds: Vec<Node<'_>> = Vec::new();
+    let mut operators: Vec<&str> = Vec::new();
+    let mut cursor = iterable.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            if child.is_named() {
+                bounds.push(child);
+            } else {
+                operators.push(text(child, source));
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    // Only the two canonical operators are admitted; the deprecated `...`
+    // (inclusive in old editions) stays honestly unknown rather than being
+    // mis-scored as half-open.
+    let [operator] = operators.as_slice() else {
+        return None;
+    };
+    let inclusive = match *operator {
+        ".." => false,
+        "..=" => true,
+        _ => return None,
+    };
+    // Both bounds must be present and be integer literals (this also rejects
+    // negative bounds, which parse as `unary_expression`).
+    let [start, end] = bounds.as_slice() else {
+        return None;
+    };
+    let start = rust_int_literal_value(*start, source)?;
+    let end = rust_int_literal_value(*end, source)?;
+    if start > end {
+        return None; // descending / empty-by-construction range
+    }
+    let trips = if inclusive {
+        end.saturating_sub(start).saturating_add(1)
+    } else {
+        end - start
+    };
+    Some(trips.min(crate::ir::MAX_TRIP))
+}
+
+/// Parse a Rust `integer_literal` node into `u64`.
+///
+/// Accepts decimal and `0x`/`0o`/`0b` radixes with `_` separators and an
+/// optional integer type suffix (`10u32`, `1_000`, `0x10`, `0o10`, `0b1010`,
+/// `0xff_u8`). Float literals, unary negation, and non-numeric nodes return
+/// `None`. Digits are split from the suffix by scanning the longest valid
+/// digit run, so hex digits (`f`) are never mistaken for a suffix.
+fn rust_int_literal_value(node: Node<'_>, source: &[u8]) -> Option<u64> {
+    if node.kind() != "integer_literal" {
+        return None;
+    }
+    let raw = text(node, source).replace('_', "");
+    let (radix, body) = if let Some(hex) = raw.strip_prefix("0x").or_else(|| raw.strip_prefix("0X"))
+    {
+        (16u32, hex)
+    } else if let Some(oct) = raw.strip_prefix("0o").or_else(|| raw.strip_prefix("0O")) {
+        (8, oct)
+    } else if let Some(bin) = raw.strip_prefix("0b").or_else(|| raw.strip_prefix("0B")) {
+        (2, bin)
+    } else {
+        (10, raw.as_str())
+    };
+    let digits_end = body
+        .find(|c: char| !c.is_digit(radix))
+        .unwrap_or(body.len());
+    let (digits, suffix) = body.split_at(digits_end);
+    if digits.is_empty() {
+        return None;
+    }
+    if !matches!(
+        suffix,
+        "" | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "u128"
+            | "usize"
+            | "i8"
+            | "i16"
+            | "i32"
+            | "i64"
+            | "i128"
+            | "isize"
+    ) {
+        return None;
+    }
+    u64::from_str_radix(digits, radix).ok()
+}
+
 /// Single-pass body walker producing events + branch/nesting metrics.
 ///
 /// Metric conventions (catalog §2 approximations, documented here since the
@@ -1149,6 +1263,14 @@ impl FuncScan<'_> {
         } else {
             Vec::new()
         };
+        // I2b: canonical literal-range trip count (Rust `for` only); every
+        // other shape — variables, method chains, descending ranges — stays
+        // honest unknown. See `canonical_trip_count`.
+        let trip_count = if kind == LoopKind::For {
+            canonical_trip_count(node, self.source)
+        } else {
+            None
+        };
         self.loops.push(LoopNode {
             kind,
             depth,
@@ -1156,9 +1278,7 @@ impl FuncScan<'_> {
             span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
-            // I2 scope: C only (D-pf-217 one-language-per-burst); Rust
-            // `range()`/literal inference is a follow-up, so honest unknown.
-            trip_count: None,
+            trip_count,
             // No do-while shape in Rust: the `(0)`-wrapper gate never fires.
             condition_is_zero: false,
         });
