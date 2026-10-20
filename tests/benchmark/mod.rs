@@ -724,7 +724,7 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
 
     // The comparison must not be vacuous: the canonical v1 artifact set is
     // always present (metrics.json + bundled schema + report.md + 3 overview
-    // charts + 2 layered overviews + graph.dot since v1.4 step 2 + one
+    // charts + 4 layered/map overviews + graph.dot since v1.4 step 2 + one
     // per-component detail page per capped component).
     // m6: the schema artifact name comes from the product, so an additive
     // schema bump does not break the benchmark.
@@ -751,8 +751,8 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
         .count();
     assert_eq!(
         a.keys().filter(|n| n.starts_with("charts/")).count(),
-        6 + component_pages,
-        "determinism proof: expected all three v1 charts + both layered overviews + graph.dot + one page per component"
+        8 + component_pages,
+        "determinism proof: expected all three v1 charts + four layered/map overviews + graph.dot + one page per component"
     );
     assert!(
         component_pages >= 1,

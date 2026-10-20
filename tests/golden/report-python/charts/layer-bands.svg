@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1874" height="428" viewBox="0 0 1874 428">
+<text x="40" y="56" font-family="monospace" font-size="13">Component bands — 2 components</text>
+<text x="40" y="76" font-family="monospace" font-size="11">heat = file function cost (v2 where available; v1 fallback), normalized over shown files; files grouped by capped component; cross-component edges aggregated</text>
+<rect x="40" y="104" width="1794" height="78" fill="#f3f6fb" stroke="#d0d9e8"/>
+<text x="52" y="122" font-family="monospace" font-size="11" fill="#2b3a55">1. . — 16 files</text>
+<rect x="40" y="198" width="1794" height="78" fill="#f3f6fb" stroke="#d0d9e8"/>
+<text x="52" y="216" font-family="monospace" font-size="11" fill="#2b3a55">2. pkg — 4 files</text>
+<g stroke="#999999" stroke-width="1">
+<line x1="742" y1="249" x2="412" y2="249"/>
+<line x1="742" y1="249" x2="232" y2="249"/>
+<line x1="562" y1="249" x2="232" y2="249"/>
+</g>
+<g font-family="monospace" font-size="11">
+<rect x="52" y="140" width="150" height="30" fill="#b30000" stroke="#4a6fa5"/>
+<text x="60" y="159" fill="#ffffff">01_alloc_churn.py</text>
+<rect x="232" y="140" width="150" height="30" fill="#bb1a1a" stroke="#4a6fa5"/>
+<text x="240" y="159" fill="#ffffff">05_recursion_complexity.py</text>
+<rect x="412" y="140" width="150" height="30" fill="#bb1a1a" stroke="#4a6fa5"/>
+<text x="420" y="159" fill="#ffffff">03_deep_nesting.py</text>
+<rect x="592" y="140" width="150" height="30" fill="#c23333" stroke="#4a6fa5"/>
+<text x="600" y="159" fill="#ffffff">07_membership_scan.py</text>
+<rect x="772" y="140" width="150" height="30" fill="#d98080" stroke="#4a6fa5"/>
+<text x="780" y="159">08_range_len.py</text>
+<rect x="952" y="140" width="150" height="30" fill="#d98080" stroke="#4a6fa5"/>
+<text x="960" y="159">10_comprehension.py</text>
+<rect x="1132" y="140" width="150" height="30" fill="#e19999" stroke="#4a6fa5"/>
+<text x="1140" y="159">04_stdio_churn.py</text>
+<rect x="1312" y="140" width="150" height="30" fill="#e19999" stroke="#4a6fa5"/>
+<text x="1320" y="159">14_async_blocking.py</text>
+<rect x="1492" y="140" width="150" height="30" fill="#e8b3b3" stroke="#4a6fa5"/>
+<text x="1500" y="159">09_try_in_loop.py</text>
+<rect x="1672" y="140" width="150" height="30" fill="#e8b3b3" stroke="#4a6fa5"/>
+<text x="1680" y="159">13_pandas.py</text>
+<rect x="52" y="234" width="150" height="30" fill="#f0cccc" stroke="#4a6fa5"/>
+<text x="60" y="253">pkg/arch_helpers.py</text>
+<rect x="232" y="234" width="150" height="30" fill="#f0cccc" stroke="#4a6fa5"/>
+<text x="240" y="253">pkg/cycle_b.py</text>
+<rect x="412" y="234" width="150" height="30" fill="#f7e6e6" stroke="#4a6fa5"/>
+<text x="420" y="253">pkg/cycle_a.py</text>
+<rect x="592" y="234" width="150" height="30" fill="#ffffff" stroke="#4a6fa5"/>
+<text x="600" y="253">pkg/__init__.py</text>
+</g>
+<text x="40" y="342" font-family="monospace" font-size="11">cool</text>
+<rect x="73" y="332" width="12" height="12" fill="#ffffff"/>
+<rect x="85" y="332" width="12" height="12" fill="#f7e6e6"/>
+<rect x="97" y="332" width="12" height="12" fill="#f0cccc"/>
+<rect x="109" y="332" width="12" height="12" fill="#e8b3b3"/>
+<rect x="121" y="332" width="12" height="12" fill="#e19999"/>
+<rect x="133" y="332" width="12" height="12" fill="#d98080"/>
+<rect x="145" y="332" width="12" height="12" fill="#d16666"/>
+<rect x="157" y="332" width="12" height="12" fill="#ca4d4d"/>
+<rect x="169" y="332" width="12" height="12" fill="#c23333"/>
+<rect x="181" y="332" width="12" height="12" fill="#bb1a1a"/>
+<rect x="193" y="332" width="12" height="12" fill="#b30000"/>
+<text x="211" y="342" font-family="monospace" font-size="11">hot</text>
+<text x="40" y="416" font-family="monospace" font-size="11">&#8230;+6 more files in shown bands</text>
+<text x="40" y="400" font-family="monospace" font-size="11">&#8230;+1 more cross-component edges outside shown scope</text>
+<text x="40" y="384" font-family="monospace" font-size="11">3 LOW-confidence call edges excluded (name-based; ADR-0001)</text>
+<text x="40" y="368" font-family="monospace" font-size="11">1 cyclic intra-band edge broken</text>
+</svg>

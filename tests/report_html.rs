@@ -256,6 +256,8 @@ fn fixed_script_and_linked_chart_references() {
         "hot-components.svg".to_string(),
         "layer-workspace.svg".to_string(),
         "layer-file.svg".to_string(),
+        "layer-entry.svg".to_string(),
+        "layer-bands.svg".to_string(),
         "component-01-src.svg".to_string(),
     ];
     let html = render_html(&doc, &charts);
@@ -282,6 +284,8 @@ fn fixed_script_and_linked_chart_references() {
     // script at runtime, so no-JS output stays fully usable static).
     assert!(html.contains("<figure class=\"pz\" data-chart=\"layer-workspace\">"));
     assert!(html.contains("<figure class=\"pz\" data-chart=\"layer-file\">"));
+    assert!(html.contains("<figure class=\"pz\" data-chart=\"layer-entry\">"));
+    assert!(html.contains("<figure class=\"pz\" data-chart=\"layer-bands\">"));
     // Component detail page linked by pinned filename.
     assert!(html.contains("charts/component-01-src.svg"));
     // Still offline/self-contained: no external references.
@@ -1128,6 +1132,8 @@ fn enhancement_script_contains_no_banned_apis() {
     let charts = vec![
         "layer-workspace.svg".to_string(),
         "layer-file.svg".to_string(),
+        "layer-entry.svg".to_string(),
+        "layer-bands.svg".to_string(),
     ];
     let html = render_html(&doc, &charts);
     let script = script_body(&html);

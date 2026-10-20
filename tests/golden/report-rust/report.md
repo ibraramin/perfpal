@@ -97,10 +97,12 @@ Distribution — max\_loop\_depth:
 
 ## 5. Architecture
 [Dependency graph — internal mod/use dependencies between scanned files.](charts/include-graph.svg)
-[File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
+[File hot-path map — top files by degree with reachable reserve, heat by function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
+[Entry-stratified cost map — files stratified by resolved entry reachability, heat by function cost; LOW-confidence call edges excluded.](charts/layer-entry.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
 [Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
 [Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)
+[Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.](charts/layer-bands.svg)
 
 Component ranking (hottest first — showing top 1 of 1 components):
 

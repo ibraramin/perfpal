@@ -494,6 +494,24 @@ fn real_pipeline_double_scan_is_byte_identical() {
         list_chart_files(&second),
         "every chart stem must be byte-identical"
     );
+    // Frozen chart-stem set for this fixture (I3 adds the entry layer after
+    // layer-file and the bands layer after layer-workspace).
+    let chart_files = list_chart_files(&first);
+    for stem in [
+        "include-graph.svg",
+        "layer-file.svg",
+        "layer-entry.svg",
+        "component-coupling.svg",
+        "hot-components.svg",
+        "layer-workspace.svg",
+        "layer-bands.svg",
+    ] {
+        assert!(
+            chart_files.contains_key(stem),
+            "expected chart stem {stem} missing from {:?}",
+            chart_files.keys().collect::<Vec<_>>()
+        );
+    }
     let masked_first = common::mask_golden_metrics(
         &fs::read_to_string(first.join("metrics.json")).expect("metrics 1"),
     );

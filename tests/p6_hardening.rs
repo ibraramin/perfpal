@@ -100,7 +100,7 @@ fn fixture_root() -> PathBuf {
 /// plus the Wave B1 resolved-ARCH-003 row neutralizer (see
 /// common::mask_golden_html_semantic). findings-detail.md masks exactly like
 /// report.md (provenance surfaces + absolute root + ARCH-003 block strip).
-const GOLDEN_ARTIFACTS: [&str; 12] = [
+const GOLDEN_ARTIFACTS: [&str; 14] = [
     "metrics.json",
     "metrics.schema.v1.6.json",
     "report.md",
@@ -109,9 +109,11 @@ const GOLDEN_ARTIFACTS: [&str; 12] = [
     "findings-detail.html",
     "charts/include-graph.svg",
     "charts/layer-file.svg",
+    "charts/layer-entry.svg",
     "charts/component-coupling.svg",
     "charts/hot-components.svg",
     "charts/layer-workspace.svg",
+    "charts/layer-bands.svg",
     "charts/graph.dot",
 ];
 
@@ -436,9 +438,11 @@ fn regenerate_goldens() {
         let mut provenance_free = vec![
             "charts/include-graph.svg".to_string(),
             "charts/layer-file.svg".to_string(),
+            "charts/layer-entry.svg".to_string(),
             "charts/component-coupling.svg".to_string(),
             "charts/hot-components.svg".to_string(),
             "charts/layer-workspace.svg".to_string(),
+            "charts/layer-bands.svg".to_string(),
             "charts/graph.dot".to_string(),
             "metrics.schema.v1.6.json".to_string(),
         ];

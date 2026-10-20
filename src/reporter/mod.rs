@@ -1305,6 +1305,8 @@ const KNOWN_OVERVIEW_STEMS: &[&str] = &[
     "hot-components",
     "layer-workspace",
     "layer-file",
+    "layer-entry",
+    "layer-bands",
 ];
 
 /// Split `emitted_charts` into overview stems (emission order, linked as
@@ -2145,7 +2147,13 @@ fn chart_caption(stem: &str, languages: &[String]) -> String {
             "Workspace map — components as nodes over inter-component call/include edges, heat by finding density.".to_string()
         }
         "layer-file" => {
-            "File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).".to_string()
+            "File hot-path map — top files by degree with reachable reserve, heat by function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).".to_string()
+        }
+        "layer-entry" => {
+            "Entry-stratified cost map — files stratified by resolved entry reachability, heat by function cost; LOW-confidence call edges excluded.".to_string()
+        }
+        "layer-bands" => {
+            "Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.".to_string()
         }
         // Detail pages never reach this caption: routing is by the exact
         // `detail_stems` registry in `render_architecture`, and orphan

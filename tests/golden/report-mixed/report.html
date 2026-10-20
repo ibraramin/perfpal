@@ -49,8 +49,12 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <figcaption>Dependency graph — internal #include, mod/use dependencies between scanned files.</figcaption>
 </figure>
 <figure class="pz" data-chart="layer-file">
-<a href="charts/layer-file.svg"><img src="charts/layer-file.svg" alt="File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first)."></a>
-<figcaption>File hot-path map — top files by degree, heat by function cost; highest-cost shown file outlined (ties → path-asc first).</figcaption>
+<a href="charts/layer-file.svg"><img src="charts/layer-file.svg" alt="File hot-path map — top files by degree with reachable reserve, heat by function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first)."></a>
+<figcaption>File hot-path map — top files by degree with reachable reserve, heat by function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).</figcaption>
+</figure>
+<figure class="pz" data-chart="layer-entry">
+<a href="charts/layer-entry.svg"><img src="charts/layer-entry.svg" alt="Entry-stratified cost map — files stratified by resolved entry reachability, heat by function cost; LOW-confidence call edges excluded."></a>
+<figcaption>Entry-stratified cost map — files stratified by resolved entry reachability, heat by function cost; LOW-confidence call edges excluded.</figcaption>
 </figure>
 <figure class="pz" data-chart="component-coupling">
 <a href="charts/component-coupling.svg"><img src="charts/component-coupling.svg" alt="Component coupling — cross-file call edges between components."></a>
@@ -63,6 +67,10 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <figure class="pz" data-chart="layer-workspace">
 <a href="charts/layer-workspace.svg"><img src="charts/layer-workspace.svg" alt="Workspace map — components as nodes over inter-component call/include edges, heat by finding density."></a>
 <figcaption>Workspace map — components as nodes over inter-component call/include edges, heat by finding density.</figcaption>
+</figure>
+<figure class="pz" data-chart="layer-bands">
+<a href="charts/layer-bands.svg"><img src="charts/layer-bands.svg" alt="Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands."></a>
+<figcaption>Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.</figcaption>
 </figure>
 <p>Component detail pages (one per component below):</p>
 <ul>

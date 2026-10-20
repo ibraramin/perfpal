@@ -227,13 +227,14 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
 
     // Derived artifacts (modules.md Principle 5): report.md and charts/ are
     // pure functions of the final document. charts::render applies the
-    // emission rule itself (an overview chart appears iff its source section
-    // is present and non-empty — the layered overviews `layer-file.svg` and
-    // `layer-workspace.svg` ride the include-graph and components gates
-    // respectively; per-component detail pages follow the same
-    // gate — one page per capped component, a stub when file-less), so an
-    // empty scan yields an empty chart set — the writer still creates
-    // charts/ (output-contract §3). graphs.dot is
+    // emission rule itself — ranked overviews require a present NON-EMPTY
+    // source, while the four layered/map stems STUB whenever their section is
+    // present but empty: `layer-file.svg` + `layer-entry.svg` ride the
+    // include-graph gate, `layer-workspace.svg` + `layer-bands.svg` ride the
+    // components gate. Per-component detail pages need non-empty components —
+    // one page per capped component, a stub when file-less. An empty scan
+    // yields an empty chart set — the writer still creates charts/
+    // (output-contract §3). graphs.dot is
     // the deterministic DOT export of the same graphs (v1.4 step 2, plan
     // `divergence-revamp`): ALWAYS emitted, even on an empty scan (an empty
     // digraph), so consumers can rely on its presence.
