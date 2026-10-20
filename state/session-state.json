@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "I1b DONE (Rust entries, honest-empty reach, e62184e); I1c Python queued; M5 gated B-pf-001/002.",
+  "current_phase": "I1 DONE all langs (a:e758681 b:e62184e c:27b2967); I2 cost-v2 queued; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -207,17 +207,22 @@
     {
       "id": "A-pf-090",
       "status": "done",
-      "action": "I1a C entry+reachability lib-roots DONE (schema 1.5, e758681)"
+      "action": "I1a DONE (e758681)"
     },
     {
       "id": "A-pf-091",
       "status": "done",
-      "action": "I1b Rust entry+reachability DONE (opt-1 honest-empty, e62184e)"
+      "action": "I1b DONE (e62184e)"
     },
     {
       "id": "A-pf-092",
+      "status": "done",
+      "action": "I1c DONE (27b2967)"
+    },
+    {
+      "id": "A-pf-093",
       "status": "active",
-      "action": "NEXT (/new): I1c Python entry+reachability"
+      "action": "NEXT: I2 cost-v2"
     }
   ],
   "last_updated": "2026-10-17"

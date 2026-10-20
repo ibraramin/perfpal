@@ -1,17 +1,17 @@
 # Handoff — Latest
 
 ## Objective
-I1b DONE: Rust entry-point detection + honest-empty reachability (founder-approved
-option 1) — `main` HIGH + handler MEDIUM + lib-root MEDIUM (`main.rs`
-bin-exclusion) + honest `unknown-entry` LOW stub; `resolved_rust_edges`
-semantic-fact-only incl. intra-file, honestly EMPTY (Rust syntactic-only,
-no LOW fallback — rejected option 3); no new IR/schema fields (v1.5 reused);
-7 new `i1b_entry_rust` locks; C goldens untouched. Commit `e62184e` (code)
-+ state closeout.
+I1c DONE: Python entry-point detection + reachability (option 1: backend
+`has_main_guard` flag + aggregator mirror) — guard-script HIGH + handler
+MEDIUM + lib-root MEDIUM (`_`-prefixed excluded) + honest `unknown-entry`
+LOW stub; resolved-only edges honestly empty (all-LOW tier); enum +`script`
+under unreleased v1.5 (rev AGREE, else schema-invalid); 8 new `i1c_entry_python`
+locks + 2 backend unit tests; C/Rust goldens untouched. Commit `27b2967`
+(code) + state closeout. **I1 per-language sequence COMPLETE.**
 
 ## Phase
-POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1a ✅ (C) + I1b ✅
-(Rust), I1c (Python) queued next. Paper + JS+TS parked behind map;
+POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1 ✅ (C+Rust+Python),
+I2 cost-v2 queued next. Paper + JS+TS parked behind map;
 M5 parked behind B-pf-001/002.
 
 ## Alignment (L6)
@@ -47,12 +47,12 @@ M5 parked behind B-pf-001/002.
 |---|---|---|
 | fmt | `cargo fmt --all -- --check` | exit 0 |
 | clippy | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| tests | `cargo test --locked` | 641 passed / 0 failed (634 + 7 new) |
+| tests | `cargo test --locked` | 651 passed / 0 failed (641 + 8 new + 2 backend unit) |
 | licenses | `cargo deny check licenses` | ok (exit 0) |
 | ratchets | `cargo test --locked --test benchmark --test precision_kpi` + `git diff --name-only` | 1+1 pass, NO_RATCHET_FILES_TOUCHED |
 | rev-1 | read-only review | APPROVED, no blocking findings |
 | rev-2 | requirements check (7 clauses) | code 7/7 PASS; procedural gaps closed by gate evidence above |
-| commit | `git log --oneline -1` | `e62184e` I1b code, independent |
+| commit | `git log --oneline -1` | `27b2967` I1c code, independent |
 
 ## Risks / Open
 - **Open risks (hot, key):** **`R-pf-063`** (high; MINISIGN secrets), **`R-pf-067`**
@@ -60,23 +60,24 @@ M5 parked behind B-pf-001/002.
   **`R-pf-007`** (medium; differentiation), **`R-pf-094`** (low), **`R-pf-095`**
   (low; Windows residuals).
 - **Blockers (unchanged):** **`B-pf-001`** (contact); **`B-pf-002`** (secrets).
-- **Follow-ups:** rev-1 2 nits to I1; D3/Gephi idioms uncovered; static-SVG
+- **Follow-ups:** rev-5 2 nits to I2 (stale C-only comment `aggregator/mod.rs:690-692`; document whole-module guard scan if top-level-only intended); D3/Gephi idioms uncovered; static-SVG
   label/uncertainty thresholds remain synthesis to validate in I3; third-layer
   rejection amends birdseye F3 via new ADR, never silent.
 
 ## Next Actions
-1. **NEXT SESSION (`/new`): I1c Python entry-points + reachability** — same
-   contract (`if __name__` + entry scripts), additive only, `cargo test`
-   green, independent commit.
-2. Then I2 cost-v2 → I3 map layer → I4 annotations → I5 proof+demo.
+1. **NEXT: I2 cost-v2** — trip-count gating + per-iteration weights +
+   reachability-aware cap election preserving entry-reachable tails;
+   GENUINE share measured up, ratchets unlowered.
+2. Then I3 map layer → I4 annotations → I5 proof+demo.
    M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080).
 
 ## Change set (this session)
-- **Code:** Rust detector trio + widened C+Rust gate, `tests/i1b_entry_rust.rs`
-  (7 locks), C goldens untouched, findings byte-identical — commit `e62184e`.
-- **State/docs:** `state/session-state.json` (A-pf-091 done, A-pf-092 queues
-  I1c; D-pf-218 covers I1a, I1b decision in handoff+commit msg), this handoff,
-  `docs/activeContext.md`, `CHANGELOG.md` (state commit follows code commit).
+- **Code:** Python guard flag + detector trio + widened gate,
+  `tests/i1c_entry_python.rs` (8 locks) + 2 backend unit tests, C/Rust
+  goldens untouched, findings byte-identical — commit `27b2967`. I1 COMPLETE.
+- **State/docs:** `state/session-state.json` (A-pf-092 done, A-pf-093 queues
+  I2), this handoff, `docs/activeContext.md`, `CHANGELOG.md`
+  (state commit follows code commit).
 
 ## L2 state split / L6 north-star (history)
 Hot/cold split 2026-09-29; north-star pinned 2026-10-01, realigned to

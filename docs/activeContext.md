@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current Task
-I1b DONE — Rust entry-points + honest-empty reachability (option 1, no new
-schema fields, commit `e62184e`); 7 `i1b_entry_rust` locks green, 641 tests
-pass, rev APPROVED ×2 (code + 8/8 requirements). I1c (Python) queued.
+I1 COMPLETE — I1c Python (guard-flag + mirror, enum +`script`, `27b2967`);
+8 i1c locks + 2 backend unit tests green, 651 tests pass, rev APPROVED ×2
+(enum AGREE). I2 cost-v2 queued.
 
 ## Recent Decisions
 - **D-pf-216 (live):** R4 idioms — L0 DSM, L1 Sugiyama-native, L2 treemap+HEB
@@ -17,13 +17,13 @@ pass, rev APPROVED ×2 (code + 8/8 requirements). I1c (Python) queued.
 - *(Cold `state/archive/ledger.jsonl`: D-pf-195–207 batches, A-pf-062/075/076/079/082, D-pf-200–205, done A-pf-015/047/065/081/083 — append-only.)*
 
 ## In Progress
-- Committing I1b state closeout now. Nothing else open.
+- Committing I1 state closeout now. Nothing else open.
 
 ## Next
-- **NEXT SESSION (`/new`): I1c Python entry-points + reachability** — same
-  contract (`if __name__` + entry scripts), additive only, green tests,
-  independent commit. Signpost: plan `map-build`, spec `birdseye-map` F1,
-  I1b commit `e62184e` + handoff.
+- **NEXT: I2 cost-v2** — trip-count gating + per-iteration weights +
+  reachability-aware cap election; GENUINE share up, ratchets unlowered.
+  Signpost: plan `map-build`, spec `birdseye-map` F2, I1 commits
+  `e758681`/`e62184e`/`27b2967` + handoff.
 - Then I2–I5. FEATURE-spec question for both plans: skipped by
   founder decision (repo-scope sufficient; revisit if paper needs its own map corpus spec).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080). Bands layer (A-pf-077) folds into I3.
