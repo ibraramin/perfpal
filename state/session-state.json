@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "I2 DONE all 3 langs (C daffa62 / Rust e8faa33 / Python a7eb78d); I3 map layer queued; true GENUINE manual at I5; M5 gated B-pf-001/002.",
+  "current_phase": "I3 DONE (d78bb85) — entry-stratified cost map + component bands; I4 annotations next; true GENUINE manual at I5; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -76,6 +76,11 @@
       "id": "D-pf-220",
       "status": "live",
       "title": "I2 COMPLETE all 3 langs: C/Rust/Python canonical trip counts, schema 1.6 unchanged; true GENUINE manual at I5"
+    },
+    {
+      "id": "D-pf-221",
+      "status": "live",
+      "title": "I3 DONE (d78bb85): layer-entry (entry-stratified, unknown-entry stubs excluded, depth cap 8) + layer-bands (cross-component edges aggregated/captioned); LOW call edges excluded, goldens byte-stable, dual APPROVED"
     }
   ],
   "open_risks": [
@@ -114,6 +119,12 @@
       "status": "open",
       "severity": "low",
       "title": "Windows residuals after Wine 11.19 verification: the syntactic path is fully Wine-verified (identical findings + byte-identical metrics.json vs Linux; exit codes 1; output-dir swap OK). Still unproven: the semantic-clang tier on Windows (needs a Windows libclang.dll; the M2 resolver fix is code-reviewed only), true-Windows kernel behaviours (AV/indexer rename locks, junction creation), the MSVC-ABI build (only windows-gnu was cross-built), M5 legacy-console non-ASCII, and M6 scan.root_path OS separators (display-only)."
+    },
+    {
+      "id": "R-pf-096",
+      "status": "open",
+      "severity": "low",
+      "title": "Default scans produce zero non-LOW call edges (name-based only), so layer-entry honestly degrades to entry/not-reached bands (caption says semantic tier off). Depth strata become real only with the semantic-clang tier; bands layer carries today's cross-component structure."
     }
   ],
   "blocked_by": [
@@ -145,11 +156,6 @@
       "action": "M4 precision follow-ups (not gate-blocking): Rust name-matching FPs (CALL-001/TYPE-001/TYPE-002/STR-002/STR-003) + ARCH-003 receiver-type awareness; must be precision-measured (M1 KPI + M2 benchmark) before landing."
     },
     {
-      "id": "A-pf-077",
-      "status": "active",
-      "action": "Bands third layer (cross-component file edges) — explicit follow-up from slice-2 honest scoping"
-    },
-    {
       "id": "A-pf-078",
       "status": "active",
       "action": "26-task ablation campaign PARKED behind digestibility research; harness makes zero model calls (labor cost, not API spend)"
@@ -160,29 +166,14 @@
       "action": "M5 un-park needs B-pf-001 (contact) + B-pf-002 (secrets) — founder action"
     },
     {
-      "id": "A-pf-084",
-      "status": "active",
-      "action": "NEXT SESSION (/new): semantic-deepening burst — trip-count/cost gating + invariance + Rust receiver-type + reachability + runtime spot-checks; maintainer birdseye (entry-point-stratified cost map); then corpus scans + prereg + N=26 campaign"
-    },
-    {
-      "id": "A-pf-089",
-      "status": "done",
-      "action": "I1 entry+reachability per map-build (ADR-0008 gate)"
-    },
-    {
-      "id": "A-pf-093",
-      "status": "done",
-      "action": "NEXT: I2 cost-v2"
-    },
-    {
-      "id": "A-pf-094",
-      "status": "active",
-      "action": "NEXT: I3 map layer (entry-stratified cost map + middle-bands; goldens byte-stable)"
-    },
-    {
       "id": "A-pf-095",
       "status": "active",
       "action": "I5: measure true GENUINE share via manual triage (I2 landed proxy uplift only)"
+    },
+    {
+      "id": "A-pf-096",
+      "status": "active",
+      "action": "NEXT: I4 annotations (finding dots on nodes + report.html drill path + output-contract stem; django humans bounded, detail byte-identical)"
     }
   ],
   "last_updated": "2026-10-21"

@@ -575,3 +575,8 @@
 {"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-090","status":"done","action":"I1a DONE (e758681)"}}
 {"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-091","status":"done","action":"I1b DONE (e62184e)"}}
 {"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-092","status":"done","action":"I1c DONE (27b2967)"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-089","status":"done","action":"I1 entry+reachability per map-build (ADR-0008 gate)"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-093","status":"done","action":"I2 cost-v2"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-094","status":"done","action":"I3 map layer DONE (d78bb85)"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-077","status":"done","action":"Middle-bands layout landed in I3 as layer-bands.svg (cross-component file edges aggregated/captioned)"}}
+{"demoted_from_hot":"2026-10-21","record":{"id":"A-pf-084","status":"retired","action":"Stale: semantic-deepening items covered by I1/I2; no remaining scope"}}
