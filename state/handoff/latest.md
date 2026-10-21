@@ -1,118 +1,119 @@
 # Handoff — Latest
 
 ## Objective
-**Map-intelligibility V0+V1 are DONE and dual-APPROVED.** The founder's I5 A5 failure
-("I can't understand anything") is now diagnosed with evidence instead of opinion: **H2
-(visualisation/ranking) dominates Q1 and Q3**; **Q2 is H2 for includes and H1 for calls in
-the default tier**. The next node is **V2 (methodology + spec lock)**, then V3 A/B → V4 →
-V5 vision loop → V6 founder timed holdout test. `map-build` remains **not done** and has no
-I6. M5 still waits on `B-pf-001`/`B-pf-002`.
+**Map-intelligibility V2 is DONE and dual-APPROVED (docs-only methodology + spec lock).**
+Three answer-first view slots are now locked — **KV1 Start here** (Q1, severity/rank),
+**KV2 Blast radius** (Q2, coupling; include-based only in the default tier), **KV3 Profile
+queue** (Q3, cost) — each with one primary encoding, mandatory units + scan anchors, an
+explicit `Explorer` tier for the 8 legacy stems, and a decided field set for V4. The next node
+is **V3 (idiom A/B)**, then V4 → V5 → V6 → V7 → V8. `map-build` remains **not done** and has
+no I6. M5 still waits on `B-pf-001`/`B-pf-002`.
 
 ## Phase
 POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1–I5 ✅ but A5 ❌; successor
-`map-intelligibility`: **V0 ✅ V1 ✅** (this burst); V2–V8 queued. JS/TS backends + paper
-queue behind the map.
+`map-intelligibility`: **V0 ✅ V1 ✅ V2 ✅**; V3–V8 queued. JS/TS backends + paper queue behind
+the map.
 
 ## Alignment (L6)
 - **Goal restated:** Perfpal is a CLI emitting heuristics + the maintainer birdseye map
   (core feature) + LLM-consumable metrics (`docs/NORTH-STAR.md`).
-- **Phase restated:** dev; the map exists and is deterministic but unintelligible; the
-  core-feature claim is blocked until a maintainer can act on it.
-- **How this session serves the north-star:** it converts the founder's FAIL into a
-  repeatable measurement (pre-registered answers → blind vision reads → known-answer recall)
-  and identifies the exact failure surface (selection keys, caps, labels, missing answer
-  view) instead of adding charts. **Drift: NONE.**
+- **Phase restated:** dev; the map exists, is deterministic, and the V0/V1 evidence isolated
+  H2 (ranking/labels/selection) as the dominant failure. V2 converts that diagnosis into a
+  locked acceptance view set before any code is written.
+- **How this session serves the north-star:** it prevents another round of polished-but-unreadable
+  charts by fixing the *contract* first (question, action, encoding, unit, anchor, field), so
+  V3/V4 can only choose idioms inside a slot. **Drift: NONE.**
 
-## This session — V0 + V1
-### V0 — pre-registration → rendered views → blind reads
-- **Pre-registration committed first (`3982b03`)** before any chart was opened: 3 expected
-  actions per repo (tmux/hyperfine/cJSON = where / not-touch / profile), source + I5 triage
-  only; `i5-map-proof.md` §7.2/§7.3 deliberately excluded.
-- **30 PNGs** (`docs/evidence/map-vision/v0/`): report first screen + `report.html#map` at
-  **1440×900 / 100% zoom**, and all 8 overview stems at 100% (6 stems wider than 1440 px were
-  captured at natural width so no chart was cropped — disclosed in `manifest.json`).
-  Render scripts committed under `v0/render/`; recall script under `v0/recall/`.
-- **28 blind `@vision` reads** (`v0/reads.json`): 27 views + a second independent read of
-  tmux#map. Blind = image only, no source, no sibling views, describe-then-judge.
-- **Diagnosis:** `docs/evidence/map-vision-diagnosis.md` (`3a32b01`). Score: **4 answers /
-  22 partial / 1 none**. Q1's first screen points at test/fuzzer noise (tmux `fuzz` 171.17;
-  cJSON `tests` 151.43 / `example_2/test` 214.29); Q2 is answered only by `include-graph`
-  (hubs `tmux.h`, `cJSON.h`) and never labelled as blast radius; Q3 is cost heat whose top
-  node is an FP/test/startup path (`format.c`, `src/command.rs`, `testunity.c`) with no units
-  or anchors. Labels truncate; 8/28 reads flag the 8 px dot encoding; the report clips wide
-  charts (37% of 3110 px hyperfine stems visible at 1440).
+## This session — V2 lock
+### Locked acceptance view set
+| Slot | Question | Primary encoding | Unit + anchor | Action it enables |
+|---|---|---|---|---|
+| **KV1 — Start here** | Where do I look first? | severity (ranked list position) | rank #k; cost `static cost units (v2)`, `× median function`, `top 1%` | open/profile `path:line` first |
+| **KV2 — Blast radius** | What breaks if I touch it? | coupling (bar = dependent-file count) | `N dependents`, `% of scanned files`, `× median dependent count`, `top 1%` | do not edit directly; expect N dependents to rebuild/re-import |
+| **KV3 — Profile queue** | Where might time plausibly go? | cost (bar = `function_cost_v2`) | `static cost units (v2)` / `(v1)` fallback, `× median function`, `top 1%`, trip flags | profile the named function first (candidate, confirm) |
 
-### V1 — data coverage + known-answer recall
-- **Data recall** (`docs/evidence/map-data-coverage.md`, `map-recall-v1.json`, `5ba3740`):
-  - **9/9 pre-registered files are drawn somewhere, but 0/9 actions are stated at
-    function/line granularity**; 2/9 "do not touch" hubs are visible only as include hubs;
-    1/9 (`src/command.rs`) is framed as the *hot path*, the opposite decision; 2/9 get a raw
-    finding link on `#map` (hyperfine `benchmark/mod.rs:333`, same `run` function as the
-    pre-registered loop).
-  - **9 GENUINE findings: 0/9 IDs appear in any chart, 0/9 reach `#map`; 7/9 are reduced to a
-    file label; 2/9 (curl `lib/file.c:387/582`) are invisible in every overview stem** —
-    degree #51/923, weight #80/923, component `lib` rank 9 whose top-3 #map links are other
-    findings. The cleanest H2 proof.
-  - **H1/H2:** Q1 = H2; Q3 = H2 (+ H1 only for measured runtime, by design); Q2 includes = H2,
-    calls = **H1 in the default tier** (all six default scans export 0 non-LOW call edges;
-    semantic tier has cJSON 115 / curl 1,548 resolved edges, opt-in). Missing fields are
-    additive only: `files[].path_class`, trip provenance, `stats.cost_summary`,
-    `components[].metrics.coupling_in/out`, `graph_root`, density guard, uniform edge tier.
-- **Reviews:** `@reviewer` CHANGES_REQUESTED (B1 vision-score arithmetic, B2 dot-count/pixel
-  size) → fixed `bb5b2f9`; round-2 B3/B4 (missing 6th wide stem; repro script would clobber
-  the curated manifest) → fixed `54a4586` → **APPROVED**; residual wording closed `2be3523`.
-  `@requirements-reviewer` **APPROVED** (7/7 requirements).
+### Binding rules (full text in `docs/specs/map-intelligibility.md`)
+- **First screen = KV1** in plain language; the workspace node-link is not on it.
+- **All emitted stems under `Explorer`:** `#architecture` is **renamed** (heading + nav label,
+  `#explorer`), not duplicated. Per-component pages stay explorer-tier and get a label when
+  reached from a key-view link. `layer-findings` may not claim "density" without a denominator.
+- **Units + anchors mandatory** for every measured number (`× median`, `top 1%`,
+  `% of scanned files`); ordinal ranks exempt; the 32-char chart-label cap does not apply to
+  key-view text rows.
+- **No silent caps:** KV1 = 3–5 inline + complete `findings-detail` list; KV3 = complete
+  `profile-queue` list ranked by cost within the non-demoted set.
+- **Default-tier honesty:** KV2 claims include blast radius only (`0` non-LOW call edges) and
+  prints `resolved N of M include edges`.
+- **Production-first, never silent:** `path_class` demotion + counted files; KV3 also demotes
+  `main/script` and no-loop functions (never excludes them; prints both counts), labels
+  unknown-trip estimates, and flags known literal trips (`known trip ×N — verify it actually runs`).
+- **One encoding:** KV1 severity, KV2 coupling, KV3 cost; no stacked colour/size channel.
+- **No orphan views:** each slot names its question + action; everything else is Explorer.
+
+### Field decisions (`docs/evidence/map-data-coverage.md` §8)
+- **V4 additive (schema 1.6→1.7):** `files[].path_class` + `stats.functions[].trip_count_source`
+  / `known_trip_value` (optional on the wire; absence = not computed).
+- **Chart-side or deferred (with triggers):** `stats.cost_summary` (median/p95 computed once),
+  `components[].metrics.coupling_in/out` (reverse include in-degree per file),
+  `graph_root` (unusable at 0 resolved call edges + R-pf-098), density guard (Explorer-only),
+  uniform call-edge tier (deferred).
+- **Why trip provenance became REQUIRED:** `i5-map-triage.json` documents two cost FPs the
+  original simple lock could not catch — django `cache.py` (literal-10000 retry → 10,000×
+  artifact) and tmux `format.c` (branch-count dispatcher). Founder approved the flip; the guard
+  is no-loop demotion + known-literal flag + unknown-trip badge, with the V5 falsifier recorded.
+
+### Reviews
+- **Code round 1:** CHANGES_REQUESTED — MAJOR 1 (KV3 known FPs unguarded), MAJOR 2 (KV3 had no
+  A1b completeness mechanism) + 8 minors. All fixed; trip-provenance flip founder-approved.
+- **Code round 2:** **APPROVED**; minors closed (counts, v1-fallback unit, trip field shape,
+  A8 gating, CHANGELOG drift, KV2 target assignment, component-page label, tmux wording).
+- **Requirements:** **APPROVED**, 8/8 original bullets.
 
 ## Verification
 | Claim | Command / evidence | Result |
 |---|---|---|
-| Pre-reg before charts | `git merge-base --is-ancestor 3982b03 3a32b01` | exit 0 (prereg → V0 evidence) |
-| 30 PNGs | `find docs/evidence/map-vision/v0 -name '*.png' \| wc -l` | **30** |
-| Reads / views / verdicts | JSON assert on `reads.json` | **28 reads / 27 views / 4 answers, 22 partial, 1 none** |
-| 9 GENUINE IDs present | JSON assert on `map-recall-v1.json` | **9/9 present** |
-| Evidence JSON parses | `json.load` on reads/manifest/recall | ok |
-| No code/golden change | `git diff --quiet 6f31a4f..HEAD -- src tests/golden` | exit 0 |
-| `map-build` not done | `docs/plans/map-build.md` status | `active` |
-| Task gate | `~/.config/opencode/scripts/gates/task-gate.sh` (8 commands above + coverage checks) | **ALL PASS 8/8** |
-| Review (code) | reviewer rounds 1–3 | **APPROVED** (round 3) |
-| Review (requirements) | requirements-reviewer | **APPROVED** (7/7) |
+| Docs-only (no code/golden) | `git diff --quiet HEAD -- src tests/golden` | exit 0 |
+| 3 slots in both specs | `grep -c 'KV[123] —' docs/specs/map-intelligibility.md` / `maintainer-map.md` | **3 / 3** |
+| Trip fields locked | `grep -q 'trip_count_source'` in spec + evidence | pass |
+| Explorer rename, no duplicate | `grep -q 'renamed' docs/specs/map-intelligibility.md` | pass |
+| No stale `% of TUs` unit | `! grep -q 'TUs' docs/specs/map-intelligibility.md docs/specs/maintainer-map.md` | pass |
+| Task gate | `task-gate.sh` (9 commands: diff, slot counts, fields, rename, profile-queue, no-TUs) | **9/9 PASS** |
+| Review (code) | reviewer round 2 | **APPROVED** |
+| Review (requirements) | requirements-reviewer round 2 | **APPROVED** (8/8) |
+| `map-build` not done | `docs/plans/map-build.md:4` | `active` |
+| No implementation | `git status --porcelain` | 4 docs files only (before EOL state edits) |
 
 ## Risks / Open
-- **R-pf-104 (high):** cause isolated (H2 Q1/Q3; Q2 includes-H2/calls-H1); founder timed test
-  (A2) remains the gate — V6, with a django/postgres holdout.
-- **R-pf-098 (high):** entry detection over-marks lib-roots (1,462/628/2,672 functions) —
-  V7 founder decision (true roots vs cap reserve vs honest label).
+- **R-pf-104 (high):** V2 lock applied; founder timed A2 remains the gate (V6). **V5 is the
+  falsifier for the KV3 guard** — if the django literal-10000 / tmux dispatcher FPs are still
+  named, switch to per-iteration cost or the two-list variant.
+- **R-pf-098 (high):** entry detection over-marks lib-roots; key views do **not** use entry
+  strata. V7 founder decision.
 - **R-pf-099/R-pf-100 (medium):** production-path ranking + tiny-scope density — V7.
 - **R-pf-103 (low):** no semantic-tier committed-golden lock.
 - **Blockers unchanged:** B-pf-001 (contact), B-pf-002 (secrets) for M5.
 
 ## Next Actions — NEW SESSION SIGNPOST
-1. **New session** with: **plan `map-intelligibility` (V2), specs `map-intelligibility` +
-   `maintainer-map`, commits `54a4586` / `5ba3740` / `3a32b01`, handoff
-   `state/handoff/latest.md`, evidence `docs/evidence/map-vision-diagnosis.md` +
-   `docs/evidence/map-data-coverage.md`.**
-2. **V2 first:** lock the methodology — ≤3 answer-first views (one question each, one primary
-   encoding), the first screen answers Q1 in plain language, the 8 stems move under an explicit
-   `Explorer` divider, every number gets a unit + anchor, no orphan views, the text-first
-   ranked brief is a candidate. Add the two-tier + vision-gate rules to the spec (already in
-   `maintainer-map` + `AGENTS.md`; make the acceptance view set explicit).
-3. **V3:** 2–3 idioms per question + the text-first brief; blind `@vision` A/B; choose and
-   record "what would change it". Design on tmux/hyperfine/cJSON; keep django/postgres unseen
+1. **New session** with: **plan `map-intelligibility` (V3), specs `map-intelligibility` +
+   `maintainer-map`, handoff `state/handoff/latest.md`, evidence
+   `docs/evidence/map-data-coverage.md` §8 + `docs/evidence/map-vision-diagnosis.md`.**
+   V2 docs lock: `45fa514`.
+2. **V3 first:** prototype 2–3 idioms per locked slot (KV1 text-first brief vs ranked cards;
+   KV2 blast-radius bars vs matrix; KV3 cost bars vs treemap); run the blind `@vision` A/B on
+   tmux/hyperfine/cJSON; choose and record "what would change it". Keep django/postgres unseen
    for V6.
-4. **V4 → V5 → V6:** implement, two blind reads per key view, then the founder timed holdout
-   test (3 actions <10 min). **Stop criterion:** two distinct idioms failing the founder test
-   → ADR-0008 amendment, no endless polishing.
-5. **Do not mark `map-build` done.** M5 needs B-pf-001 + B-pf-002 (founder-owned).
+3. **V4 → V5 → V6 → V7 → V8:** implement the two additive fields + views; two blind reads per
+   key view; founder timed holdout; re-triage R-pf-098/099/100; closeout.
+4. **Do not mark `map-build` done.** M5 needs B-pf-001 + B-pf-002 (founder-owned).
 
 ## Change set (this session)
-- **New evidence:** `docs/evidence/map-vision-prereg.md`; `docs/evidence/map-vision-diagnosis.md`;
-  `docs/evidence/map-data-coverage.md`; `docs/evidence/map-recall-v1.json`;
-  `docs/evidence/map-vision/v0/{reads.json,manifest.json,<repo>/*.png,render/,recall/}`.
-- **Commits:** `3982b03` prereg → `3a32b01` V0 → `5ba3740` V1 → `bb5b2f9`/`54a4586`/`2be3523`
-  review fixes.
-- **State:** `state/session-state.json` (D-pf-228; R-pf-104/A-pf-104 updated),
-  `docs/activeContext.md`, this handoff, `CHANGELOG.md`.
-- **No code/golden change** in this burst; `map-build` stays active.
+- **Modified docs:** `docs/specs/map-intelligibility.md` (locked view set + A7/A8),
+  `docs/specs/maintainer-map.md` (mirror + reading path), `docs/evidence/map-data-coverage.md`
+  (§8 field decisions + triggers), `CHANGELOG.md`.
+- **State:** `state/session-state.json` (D-pf-229, phase, A-pf-104), `docs/activeContext.md`,
+  this handoff.
+- **No code/golden change**; `map-build` stays active.
+- **Commits:** docs lock `45fa514`; this EOL commit.
 
 ## L2 state split / L6 north-star (history)
 Hot/cold split 2026-09-29; north-star pinned 2026-10-01, realigned to divergence-instrument
