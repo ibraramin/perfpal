@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "I5 PROOF+DEMO DONE (pending founder A5 quote + dual review) — gate 687 tests, double-scan byte-identical 9/9 repos, semantic tier verified (c-json/curl), true GENUINE 9/172=5.2%, top-node calibration 1/27 GENUINE; entry strata degenerate (R-pf-098); M5 gated B-pf-001/002.",
+  "current_phase": "I5 PROOF+DEMO DONE + review round 1 (code APPROVED, req CHANGES_REQUESTED → G4-G9 fixed; round 2 pending) — gate 688/feature 691, 9/9 double-scan identical, semantic tier verified, true GENUINE 9/172, top-node 1/27; founder A5 quote pending; map-quality R-pf-098/099/100 queued; M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -58,23 +58,17 @@
       "title": "CLI surface v1 + exit codes 0/1/2/3"
     },
     {
-      "id": "D-pf-217",
-      "status": "live",
-      "title": "I1 sequenced per-language (founder): C then Rust then Python, one burst each; map-build I1a/b/c + birdseye F1 amended"
-    },
-    {
       "id": "D-pf-223",
       "status": "live",
       "title": "I5 evidence: docs/evidence/i5-map-proof.md — gate 687, 9-repo double-scan identical, semantic tier verified (libclang 23.1), A-pf-095 true 9/172 + top-node 1/27; A4 captions fixed; feature-build golden comparator default-only; map-quality findings R-pf-098/099/100"
+    },
+    {
+      "id": "D-pf-224",
+      "status": "live",
+      "title": "I5 review round 1: code APPROVED; requirements CHANGES_REQUESTED → fixed G4 (semantic report boilerplate now tier-aware + locked test), G5/G6/G7 (dossier citations/wording, activeContext), G8/G9 (persisted determinism/gate evidence docs/evidence/i5-determinism.txt, parse-partial disclosure), G2 (A5 timing disclosed unmeasured); final gate 688 default / 691 feature; R-pf-103 semantic-golden coverage queued; founder A5 still pending"
     }
   ],
   "open_risks": [
-    {
-      "id": "R-pf-007",
-      "status": "open",
-      "severity": "medium",
-      "title": "Differentiation claims rest on one survey pass"
-    },
     {
       "id": "R-pf-063",
       "status": "open",
@@ -122,6 +116,12 @@
       "status": "open",
       "severity": "low",
       "title": "ADR-0002 remains historical 3-chart record (intentionally not edited); README/website now list the 8-stem overview set. Workspace figure still duplicated in report.html (#map + #architecture); deferred."
+    },
+    {
+      "id": "R-pf-103",
+      "status": "open",
+      "severity": "low",
+      "title": "Feature-build golden comparator is default-build-only, so the semantic tier has no committed-golden lock (covered by resolver_health + double-run determinism). Add a semantic-specific golden set (A-pf-103)."
     }
   ],
   "blocked_by": [
@@ -181,6 +181,11 @@
       "id": "A-pf-097",
       "status": "active",
       "action": "I5 closeout: founder A5 quote + dual review (reviewer + requirements-reviewer), then mark map-build done and commit."
+    },
+    {
+      "id": "A-pf-103",
+      "status": "active",
+      "action": "Semantic-tier golden coverage (R-pf-103): add a small semantic-specific golden set or equivalent regression lock for chart/report topology under --features semantic-clang."
     }
   ],
   "last_updated": "2026-10-21"

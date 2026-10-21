@@ -44,10 +44,10 @@ D-pf-205); this dossier is the committed evidence.
 |---|---|---|
 | fmt | `cargo fmt --all -- --check` | exit 0 |
 | clippy (default) | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| tests (default) | `cargo test --locked` | **50 suites / 687 passed / 0 failed** |
+| tests (default) | `cargo test --locked` | **50 suites / 688 passed / 0 failed** |
 | licenses | `cargo deny check licenses` | `licenses ok` |
 | clippy (feature) | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | exit 0 |
-| tests (feature) | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | all suites pass |
+| tests (feature) | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | **50 suites / 691 passed / 0 failed** |
 | ratchets | `cargo test --locked --test benchmark --test precision_kpi` | pass; no ratchet file touched |
 
 **Feature-build golden gap found and fixed.** `report_matches_committed_goldens` compared
@@ -55,7 +55,17 @@ default-build goldens against a `semantic-clang` build whose resolved-edge tier 
 chart topology and ARCH-003 confidence — unmaskable in SVG. The comparator + regen path are
 now `#[cfg(not(feature = "semantic-clang"))]` with the rationale in-code; the semantic tier
 is covered by `tests/resolver_health.rs` (10 tests, including real libclang parses) and the
-double-run determinism suites. This was a pre-existing red CI job for the feature build.
+double-run determinism suites. The feature-build job is green again; with libclang present
+the comparator could not pass once call-graph-dependent stems existed (the semantic tier
+changes chart topology, not just masked rows).
+
+**Semantic-report boilerplate fixed (review G4).** A semantic build's `report.md`/`report.html`
+still printed the default-build "purely syntactic tier" caveat and described all cross-file
+edges as LOW, contradicting the same report's `resolver_tier: semantic` rows. The reporter now
+derives the tier from the data (`semantic_tier_active`): semantic runs disclose the active tier
+and describe resolved edges as MEDIUM; the default build keeps the syntactic text. Locked by
+`tests/reporter_render.rs::semantic_tier_boilerplate_follows_the_data` (the +1 default test
+that takes 687→688).
 
 **A2 intact.** No `metrics.json`, `graph.dot`, or `findings-detail.*` golden changed
 (`git status --porcelain` for those paths is empty). The 33 golden files that changed are
@@ -81,7 +91,10 @@ files compared per repo). `DOUBLE_SCAN_IDENTICAL`.
 
 A4 honesty markers hold in every repo: `showing top S of M`/`…+N more` where capped, no blank
 scopes, LOW-confidence call edges captioned, and every heat legend now reads
-`candidate … — profile to confirm` (§6).
+`candidate … — profile to confirm` (§6). Persisted transcript + per-repo set hashes:
+`docs/evidence/i5-determinism.txt` (golden tree SHA-256
+`749162395aac267386ff3196022dbdea8db281282ad5571a6d12f6640c26eaec`, identical on both regen
+passes; 9/9 repo set hashes identical).
 
 ---
 
@@ -96,7 +109,11 @@ Built with `--features semantic-clang`; libclang 23.1 found via runtime dlopen;
 | curl | 10,985 → **11,807** | 5,064 | 518 → **5,579** | 6,432 → 2,190 | 1,548 |
 
 The tier works as specified: resolved C edges upgrade ARCH-003 from LOW (name-based) to
-MEDIUM (semantic), and the extra findings are the documented confidence lift.
+MEDIUM (semantic), and the extra findings are the documented confidence lift. Both semantic
+scans remain parse-partial-heavy in the same way as their default counterparts (cJSON 63 ok /
+38 partial; curl 687 ok / 236 partial) — the tool reports this per file and never fabricates
+the missing regions. The human-report boilerplate that contradicted the tier is fixed and
+locked (§2, G4).
 
 ### 4.1 Negative result — `layer-entry` strata are degenerate even on the semantic tier
 
@@ -141,7 +158,11 @@ hot set is a strict subset: 9 previously-triaged ids (ripgrep 5, curl 4) no long
 the current rules. Verdicts are the hand-read `docs/evidence/showcase/<repo>/triage.json`
 entries; no new hand triage was needed for this half.
 
-### 5.2 Map top-node calibration (new measurement)
+### 5.2 Map top-node calibration (new measurement; supplementary — not an A-pf-095 deliverable)
+
+Machine-readable verdicts: `docs/evidence/i5-map-triage.json` (27 nodes, `file:line`
+evidence per verdict). A-pf-095 itself is the hot-tier share in §5.1; this calibration is an
+extra map-quality probe added by I5 and is not counted toward that action.
 
 Top-3 files by summed `function_cost_v2` in each demo repo (27 nodes), each read at its
 cited span and classified. Rubric: GENUINE / REAL_BUT_MINOR / FP / TEST_NOISE (test, example,
@@ -170,7 +191,7 @@ the output path). Representative failures, all `file:line`-verified:
   inflation, not iteration; `reachable_from_entry=false` is also wrong (callers at
   `format.c:6839,6909`).
 - `rich` rank 1 `tools/profile_divide.py:12` — 10,000-iteration local benchmark loop.
-- `hypersfine`/`click` entries are startup/help/teardown paths — real but one-shot.
+- `hyperfine`/`click` entries are startup/help/teardown paths — real but one-shot.
 
 **Reading:** the *file cost* tier is not decision-grade on real repos as currently ranked
 (`R-pf-099`). Two compounding causes: (a) test/example/generated files are scanned and
@@ -190,11 +211,14 @@ actions from the layered/finding views, not from the raw cost rank.
 
 Five heat captions lacked the mandatory "candidate" framing: `src/charts/layers.rs:209,415,
 840,1194`, `src/charts/component.rs:258` (component-page ramp), plus the
-`hot-components.svg` subtitle (`src/charts/mod.rs:1102`) and three `report.md` link captions
-(`src/reporter/mod.rs:2313-2319`). All now read `candidate … — profile to confirm`.
-`docs/report/output-contract.md` was updated to match. This is the only code change in I5;
-goldens were regenerated (`33` files: 4× `layer-{workspace,file,entry,bands}`,
-`hot-components`, `report.md`, `report.html`, and the component pages that carry the ramp).
+`hot-components.svg` subtitle (`src/charts/mod.rs:1110`) and three `report.md` link captions
+(`src/reporter/mod.rs:2313-2319`). The six in-chart legends now read
+`candidate … — profile to confirm`; the report-level link captions read `candidate …`
+(link prose, no suffix). `docs/report/output-contract.md` was updated to match. This is the
+only **A4** code change; I5 also fixes the feature-build golden gate and the semantic-report
+boilerplate (§2). Goldens were regenerated (`33` files: 4×
+`layer-{workspace,file,entry,bands}`, `hot-components`, `report.md`, `report.html`, and the
+component pages that carry the ramp).
 `README.md` + `docs/website/scope-and-content.md` were updated from the stale 3-chart prose
 to the current 8-stem overview set + component pages + `graph.dot` (R-pf-097, partially
 closed; ADR-0002 stays untouched as a historical record).
@@ -214,6 +238,8 @@ missing artifact or a blank scope.
 
 ### 7.2 Blind test (independent, map-only)
 
+Verbatim machine-readable results: `docs/evidence/i5-blind-a5.json`.
+
 Two independent subagents with no prior repo context read only `report.md`, `report.html`,
 and the 8 SVGs. Both returned `ambiguous=false` and named three actions:
 
@@ -230,8 +256,10 @@ and the 8 SVGs. Both returned `ambiguous=false` and named three actions:
 Both noted the same caveats this dossier records: the entry layer is degenerate (0 resolved
 edges in the default build; strata = entries only), and `fuzz`/`examples`/`tests`
 components can rank #1 on tiny denominators. **A5 verdict: PASS with documented caveats** —
-the map is usable, but the ranking needs the `R-pf-098/099/100` fixes before "rank 1" is
-trustworthy.
+the map is usable, but the ranking needs the `R-pf-098/099/100` fixes before "rank #1" is
+trustworthy. **Timing:** not measured for these asynchronous agent runs; the spec's
+"under 10 minutes" bound is therefore unverified for the blind tests and must be timed on the
+founder run (§7.3).
 
 ### 7.3 Founder test (verbatim)
 
@@ -249,6 +277,7 @@ trustworthy.
 | `R-pf-100` | medium (map) | Finding-density rank explodes on tiny scopes (postgres `src/include/pch` 1000.0 from 3 findings; rich `.` 333.33 from 1). Needs a minimum-findings/denominator guard. |
 | `R-pf-101` | low | ADR-0002 remains the historical 3-chart record (intentionally not edited); README/website now point at the current 8-stem set. |
 | `R-pf-102` | low | Workspace figure still emitted twice in `report.html` (`#map` + `#architecture`) — cosmetic, deferred. |
+| `R-pf-103` | low | The feature golden comparator is default-build-only, so the semantic build now has no committed-golden lock (it is covered by `resolver_health` + double-run determinism). A semantic-specific golden set would restore regression coverage. |
 
 ---
 
@@ -275,3 +304,4 @@ target/release/perfpal ../perfpal-test/<repo> -o ../perfpal-test/out-i5b-<repo>
 
 **Determinism hashes (final tree).** Golden double-pass SHA-256 set identical; 9/9 demo
 double-scans identical; `metrics.json`/`graph.dot`/`findings-detail.*` goldens untouched.
+Persisted transcript + hashes: `docs/evidence/i5-determinism.txt`.

@@ -1,0 +1,257 @@
+{
+  "_comment": "I5 map top-node calibration (plan map-build I5; dossier docs/evidence/i5-map-proof.md §5.2). Top-3 files by summed function_cost_v2 in each of the 9 demo repos = 27 nodes. Each node was read at its cited span and classified by an independent read-only agent. Verdicts: GENUINE / REAL_BUT_MINOR / FP / TEST_NOISE (test, example, bench, fixture, tools, or generated path — valid code that must not drive a maintainer's first look). Reproduce: target/release/perfpal ../perfpal-test/<repo> -o out; sum function_cost_v2 per path; take top 3.",
+  "generated": "2026-10-21",
+  "tool": "perfpal 0.2.0-beta.1 (schema 1.6)",
+  "totals": {
+    "nodes": 27,
+    "GENUINE": 1,
+    "REAL_BUT_MINOR": 11,
+    "TEST_NOISE": 11,
+    "FP": 4
+  },
+  "nodes": [
+    {
+      "repo": "alacritty",
+      "path": "alacritty_terminal/src/term/mod.rs",
+      "top_function": "window_title",
+      "verdict": "TEST_NOISE",
+      "evidence": "alacritty_terminal/src/term/mod.rs:3246-3247 (#[test] fn window_title inside #[cfg(test)] mod tests at :2507-2508) with the cost-driving literal loop `for _ in 0..4097` at :3270",
+      "reason": "The 8203 cost is almost entirely a 4097-iteration test loop exercising title-stack capacity; cost-v2 known-trip weighting makes this test dominate the file's 10762 total.",
+      "maintainer_action": "no — exclude #[cfg(test)] functions from the hot map / demote test-only loop counts"
+    },
+    {
+      "repo": "alacritty",
+      "path": "alacritty/src/input/mod.rs",
+      "top_function": "execute",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "alacritty/src/input/mod.rs:170-445 — single match over Action at :171, no for/while/loop in the body",
+      "reason": "Cost comes from branch/fanout breadth across ~100 match arms, not iteration; one dispatch per user action.",
+      "maintainer_action": "no — nothing to optimize in a one-pass input dispatch"
+    },
+    {
+      "repo": "alacritty",
+      "path": "alacritty/src/event.rs",
+      "top_function": "handle_event",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "alacritty/src/event.rs:1841-2069 — single match over the winit event at :1842, no loops",
+      "reason": "Breadth of the event match, not repeated work; each event is dispatched once.",
+      "maintainer_action": "no — leave the dispatcher alone"
+    },
+    {
+      "repo": "bat",
+      "path": "tests/benchmarks/highlighting-speed-src/numpy_test_multiarray.py",
+      "top_function": "test_argsort",
+      "verdict": "TEST_NOISE",
+      "evidence": "tests/benchmarks/highlighting-speed-src/numpy_test_multiarray.py:2003-2013 (dtype loop nested with sort_kinds; 101-element arrays at :2011)",
+      "reason": "Vendored NumPy test/benchmark fixture under tests/; test workload, not shipped code.",
+      "maintainer_action": "no — exclude tests/benchmarks fixtures from the cost ranking"
+    },
+    {
+      "repo": "bat",
+      "path": "tests/integration_tests.rs",
+      "top_function": "wrapping_test",
+      "verdict": "TEST_NOISE",
+      "evidence": "tests/integration_tests.rs:3473-3492 — test helper invokes bat() and asserts stdout/stderr; no loops in the span",
+      "reason": "Test-only scaffolding; cost is subprocess/test overhead.",
+      "maintainer_action": "no — exclude integration-test harnesses"
+    },
+    {
+      "repo": "bat",
+      "path": "src/printer.rs",
+      "top_function": "print_line",
+      "verdict": "GENUINE",
+      "evidence": "src/printer.rs:648,765-844 (per-line regions→ANSI-chunk→`for c in text.chars()`; per-chunk format!/escape at :777 and :897)",
+      "reason": "Production output path invoked once per rendered line; per-character width/wrap and per-chunk formatting are real per-iteration work (buffer reuse, avoid repeated conversions).",
+      "maintainer_action": "yes — profile large-file rendering, then reduce per-line/per-chunk allocations in print_line"
+    },
+    {
+      "repo": "cJSON",
+      "path": "tests/unity/test/tests/testunity.c",
+      "top_function": "testFloatPrintingRandomSamples",
+      "verdict": "TEST_NOISE",
+      "evidence": "tests/unity/test/tests/testunity.c:4571 literal loop bound `num_tested < 1000000`; body macro-gated to TEST_IGNORE in normal builds (:4559-4560)",
+      "reason": "1,000,000-iteration sweep inside the vendored Unity harness; test code must not drive a maintainer's first look.",
+      "maintainer_action": "no — gated exhaustive float-printing self-test"
+    },
+    {
+      "repo": "cJSON",
+      "path": "tests/parse_hex4.c",
+      "top_function": "parse_hex4_should_parse_all_combinations",
+      "verdict": "TEST_NOISE",
+      "evidence": "tests/parse_hex4.c:37 literal loop bound `number <= 0xFFFF` (65,536 iterations), standalone test binary main at :66-68",
+      "reason": "Exhaustive all-16-bit-values test loop, not cJSON library code.",
+      "maintainer_action": "no — test-only exhaustive verification"
+    },
+    {
+      "repo": "cJSON",
+      "path": "cJSON.c",
+      "top_function": "cJSON_Delete",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "cJSON.c:256-275 — item->next while-loop, recursive child delete at :261, per-node frees at :265/:270/:273; fn_cost 137",
+      "reason": "Genuine production teardown, but each node is touched once with three conditional frees; inherent free() cost.",
+      "maintainer_action": "no — one-shot teardown of caller-owned trees"
+    },
+    {
+      "repo": "click",
+      "path": "src/click/core.py",
+      "top_function": "get_help_extra",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "src/click/core.py:3595 sole call site (Option.get_help_record); no loop in 3614-3696 beyond the envvar genexpr at :3632",
+      "reason": "Help rendering executes once per option during --help, not in a per-iteration production loop.",
+      "maintainer_action": "no — one-shot diagnostic path"
+    },
+    {
+      "repo": "click",
+      "path": "src/click/_termui_impl.py",
+      "top_function": "open_url",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "src/click/_termui_impl.py:856 single subprocess.Popen(['xdg-open', url]); platform branches at :819/:832/:846 execute at most once",
+      "reason": "One-shot external process launch plus blocking wait; OS spawn latency, not Python loop work.",
+      "maintainer_action": "no — launch semantics are inherently one-shot"
+    },
+    {
+      "repo": "click",
+      "path": "src/click/types.py",
+      "top_function": "convert",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "src/click/types.py:1177 os.stat; :1206/:1215/:1224 os.access; return at :1233; per value via src/click/core.py:2753-2759",
+      "reason": "One-shot per path parameter value; the syscalls implement documented Path checks.",
+      "maintainer_action": "no — stat/access are required semantics"
+    },
+    {
+      "repo": "django",
+      "path": "django/contrib/sessions/backends/cache.py",
+      "top_function": "create",
+      "verdict": "FP",
+      "evidence": "django/contrib/sessions/backends/cache.py:54 `for i in range(10000): save(must_create=True)`; returns on success at :59",
+      "reason": "Literal 10000 bound is a retry-on-CreateError guard; the normal path returns after one save. The summed cost is a 10,000x model artifact.",
+      "maintainer_action": "no — the loop exits on iteration 1 unless the cache is failing"
+    },
+    {
+      "repo": "django",
+      "path": "tests/bulk_create/tests.py",
+      "top_function": "test_large_batch_mixed",
+      "verdict": "TEST_NOISE",
+      "evidence": "tests/bulk_create/tests.py:234 list comprehension over range(100000, 101000) building 1000 objects",
+      "reason": "Test fixture generating 1000 objects to exercise mixed-PK bulk_create.",
+      "maintainer_action": "no — test data setup"
+    },
+    {
+      "repo": "django",
+      "path": "tests/delete/tests.py",
+      "top_function": "test_fast_delete_large_batch",
+      "verdict": "TEST_NOISE",
+      "evidence": "tests/delete/tests.py:816 and :821 — two bulk_create generator expressions over range(0, 2000)",
+      "reason": "Literal 2000-iteration test-data generation in a delete test.",
+      "maintainer_action": "no — test fixture setup"
+    },
+    {
+      "repo": "hyperfine",
+      "path": "src/command.rs",
+      "top_function": "build_from_cli_arguments",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "src/command.rs:293-322 parameter-list Cartesian expansion, bounded by param_space_size; single startup call at src/main.rs:41",
+      "reason": "Real loop but init-only; runs once during CLI startup, not per benchmark iteration.",
+      "maintainer_action": "no — startup-only CLI parsing"
+    },
+    {
+      "repo": "hyperfine",
+      "path": "src/metric.rs",
+      "top_function": "format",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "src/metric.rs:273-280 single format! allocation; called from src/benchmark/mod.rs:291,340 per printed result line",
+      "reason": "Output/diagnostic formatting once per benchmark row, not in the measurement loop.",
+      "maintainer_action": "no — output formatting is not a performance path"
+    },
+    {
+      "repo": "hyperfine",
+      "path": "tests/execution_order_tests.rs",
+      "top_function": "arg",
+      "verdict": "TEST_NOISE",
+      "evidence": "tests/execution_order_tests.rs:31-34 four-line helper forwarding to cmd.arg(arg.as_ref())",
+      "reason": "Integration-test harness; fn_cost 81 on a 4-line helper is a model artifact.",
+      "maintainer_action": "no — exclude tests/ from ranking"
+    },
+    {
+      "repo": "postgres",
+      "path": "src/common/unicode/case_test.c",
+      "top_function": "test_icu",
+      "verdict": "TEST_NOISE",
+      "evidence": "src/common/unicode/case_test.c:178 `for (char32_t code = 0; code <= 0x10ffff; code++)` (1,114,112 iterations); function inside #ifdef USE_ICU at :78-205; standalone test binary at src/common/unicode/Makefile:73",
+      "reason": "Exhaustive Unicode codepoint loop in a USE_ICU conformance test, not shipped code.",
+      "maintainer_action": "no — exhaustive ICU conformance test"
+    },
+    {
+      "repo": "postgres",
+      "path": "src/common/unicode/category_test.c",
+      "top_function": "icu_test",
+      "verdict": "TEST_NOISE",
+      "evidence": "src/common/unicode/category_test.c:63 `for (char32_t code = 0; code <= 0x10ffff; code++)`; #ifdef USE_ICU at :50; test binary at src/common/unicode/Makefile:75",
+      "reason": "Full-Unicode-range comparison test against ICU; config-gated test work.",
+      "maintainer_action": "no — exhaustive table-validation test"
+    },
+    {
+      "repo": "postgres",
+      "path": "src/bin/psql/tab-complete.in.c",
+      "top_function": "match_previous_words",
+      "verdict": "FP",
+      "evidence": "src/bin/psql/tab-complete.in.c:2171-5749 — 838 else-if branches and no for/while/switch; gen_tabcomplete.pl:93 defines SWITCH_CONVERSION_APPLIED and rewrites it at build time (Makefile:64, meson.build:27-28)",
+      "reason": "No loop in the cited function; the cost is source-size/template artifact and the function only runs on interactive TAB presses.",
+      "maintainer_action": "no — ignore for performance work"
+    },
+    {
+      "repo": "rich",
+      "path": "tools/profile_divide.py",
+      "top_function": "<module>",
+      "verdict": "TEST_NOISE",
+      "evidence": "tools/profile_divide.py:12-13 `for _ in range(10000): list(Segment.divide(...))`",
+      "reason": "Entire 20013 cost is a 10000-iteration local benchmark loop in a tools/ script.",
+      "maintainer_action": "no — local benchmark harness"
+    },
+    {
+      "repo": "rich",
+      "path": "rich/console.py",
+      "top_function": "_write_buffer",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "rich/console.py:2102-2117 batching loop only when len(text) > MAX_WRITE, inside the WINDOWS branch; Unix path single write at :2122-2124",
+      "reason": "Per-flush size-guard on an I/O path, gated to >32KB payloads and Windows only; fn_cost 100.",
+      "maintainer_action": "no — only revisit if a Windows profile shows write batching dominating"
+    },
+    {
+      "repo": "rich",
+      "path": "rich/text.py",
+      "top_function": "wrap",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "rich/text.py:1230-1249 per-line split/divide/justify/truncate loop; real work delegated to divide_line/line.divide",
+      "reason": "Short per-line coordination loop; fn_cost 82, no specific per-iteration inefficiency.",
+      "maintainer_action": "no — profile divide_line/Line.divide only if runtime wrapping is hot"
+    },
+    {
+      "repo": "tmux",
+      "path": "format.c",
+      "top_function": "format_replace",
+      "verdict": "FP",
+      "evidence": "format.c:6086-6328 single switch over parsed modifiers, one case per call; callers at format.c:6839,6909 (so the map's reachable=false is wrong); buffer growth at :6714-6717 is logarithmic",
+      "reason": "fn_cost 1331 is statement/branch-count inflation of a dispatcher; no large loop.",
+      "maintainer_action": "no — nothing actionable at this site"
+    },
+    {
+      "repo": "tmux",
+      "path": "window-copy.c",
+      "top_function": "window_copy_search_marks",
+      "verdict": "REAL_BUT_MINOR",
+      "evidence": "window-copy.c:5271 full-scrollback loop bound; :5288 per-line scan; :5272/:5314-5321/:5328-5332 200ms stop + 10s timeout, retry visible-only",
+      "reason": "Large history scan is real but an explicit one-shot user search already time-boxed and degraded to visible lines.",
+      "maintainer_action": "no — O(history) is inherent and guarded"
+    },
+    {
+      "repo": "tmux",
+      "path": "window.c",
+      "top_function": "window_get_active_at",
+      "verdict": "FP",
+      "evidence": "window.c:882-940 three TAILQ_FOREACH scans of w->z_index; called from window_pane_at_position at :982 (mouse handlers)",
+      "reason": "Trip counts are the pane count (a handful); fn_cost 94 reflects branch-heavy hit-testing, not a loop cost driver.",
+      "maintainer_action": "no — tiny list scan on mouse events"
+    }
+  ]
+}

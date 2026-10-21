@@ -1035,3 +1035,48 @@ fn section<'a>(report: &'a str, start: &str, end: &str) -> &'a str {
         None => rest,
     }
 }
+
+/// I5 G4: the human report's tier boilerplate must follow the data — a
+/// semantic-tier run must not print the default-build "purely syntactic"
+/// caveat, and the standing caveat must describe resolved edges as MEDIUM.
+#[test]
+fn semantic_tier_boilerplate_follows_the_data() {
+    let mut doc = base_doc();
+    let charts: Vec<String> = Vec::new();
+    let md = render_report(&doc, &charts);
+    assert!(
+        md.contains("purely syntactic tier (`resolver_tier: syntactic`)"),
+        "default build keeps the syntactic caveat:\n{md}"
+    );
+    assert!(
+        md.contains(
+            "cross-file call edges are LOW confidence until a semantic resolver tier exists"
+        ),
+        "default build keeps the LOW standing caveat:\n{md}"
+    );
+
+    doc.findings[0].resolver_tier = ResolverTier::Semantic;
+    let md = render_report(&doc, &charts);
+    assert!(
+        md.contains("semantic resolver tier active for C"),
+        "semantic build must disclose the active tier:\n{md}"
+    );
+    assert!(
+        md.contains("resolved cross-file call edges are MEDIUM confidence"),
+        "semantic standing caveat must say MEDIUM:\n{md}"
+    );
+    assert!(
+        !md.contains("purely syntactic tier"),
+        "semantic build must not print the syntactic-tier claim:\n{md}"
+    );
+
+    let html = perfpal::reporter::render_html(&doc, &charts);
+    assert!(
+        html.contains("resolved cross-file call edges are MEDIUM confidence"),
+        "semantic HTML standing caveat must say MEDIUM:\n{html}"
+    );
+    assert!(
+        !html.contains("LOW confidence until a semantic resolver tier exists"),
+        "semantic HTML must not print the default standing caveat:\n{html}"
+    );
+}

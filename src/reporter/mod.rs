@@ -519,7 +519,7 @@ pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String
     render_findings(&mut out, doc);
     render_architecture(&mut out, doc, emitted_charts);
     render_appendix_a(&mut out, doc);
-    render_appendix_b(&mut out);
+    render_appendix_b(&mut out, semantic_tier_active(doc));
     render_appendix_c(&mut out, doc);
     // Exactly one trailing newline (output-contract §2 encoding rule).
     while out.ends_with('\n') {
@@ -1044,10 +1044,18 @@ fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: 
          DOT export of the include/call/component graphs (same source data as \
          the SVGs above).\n",
     );
-    out.push_str(
-        "Standing caveat: cross-file call edges are LOW confidence until a \
-         semantic resolver tier exists (ADR-0001).\n\n",
-    );
+    if semantic_tier_active(doc) {
+        out.push_str(
+            "Standing caveat: resolved cross-file call edges are MEDIUM \
+             confidence; name-based edges the semantic tier could not resolve \
+             remain LOW (ADR-0001).\n\n",
+        );
+    } else {
+        out.push_str(
+            "Standing caveat: cross-file call edges are LOW confidence until a \
+             semantic resolver tier exists (ADR-0001).\n\n",
+        );
+    }
 }
 
 fn render_appendix_a(out: &mut String, doc: &MetricsDocument) {
@@ -1075,7 +1083,7 @@ fn render_appendix_a(out: &mut String, doc: &MetricsDocument) {
     out.push('\n');
 }
 
-fn render_appendix_b(out: &mut String) {
+fn render_appendix_b(out: &mut String, semantic: bool) {
     out.push_str("## Appendix B. How to read this report\n");
     out.push_str(
         "**Severity** bands (`hot`, `warn`, `info`) rank expected runtime or \
@@ -1091,12 +1099,23 @@ fn render_appendix_b(out: &mut String) {
          whose evidence quality is reduced; their confidence is capped at \
          MEDIUM.\n",
     );
-    out.push_str(
-        "Every finding is an **optimization candidate, never a certainty**: a \
-         candidate for human review, not a defect claim. Perfpal v1 runs on a \
-         purely syntactic tier (`resolver_tier: syntactic`) — no macro \
-         expansion, no type resolution.\n",
-    );
+    if semantic {
+        out.push_str(
+            "Every finding is an **optimization candidate, never a certainty**: a \
+             candidate for human review, not a defect claim. Perfpal ran with the \
+             semantic resolver tier active for C — `resolver_tier: semantic` marks \
+             findings upgraded by a libclang fact (resolved cross-file edges are \
+             MEDIUM confidence); findings without a resolved fact stay syntactic. \
+             Macro expansion and full type resolution remain out of scope.\n",
+        );
+    } else {
+        out.push_str(
+            "Every finding is an **optimization candidate, never a certainty**: a \
+             candidate for human review, not a defect claim. Perfpal v1 runs on a \
+             purely syntactic tier (`resolver_tier: syntactic`) — no macro \
+             expansion, no type resolution.\n",
+        );
+    }
     out.push_str(&format!(
         "For programmatic consumption, read `metrics.json` — the source of \
          truth — and validate it against the bundled schema \
@@ -1415,10 +1434,18 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
          DOT export of the include/call/component graphs (same source data as \
          the figures above).</p>\n",
     );
-    out.push_str(
-        "<p>Standing caveat: cross-file call edges are LOW confidence until a \
-         semantic resolver tier exists (ADR-0001).</p>\n",
-    );
+    if semantic_tier_active(doc) {
+        out.push_str(
+            "<p>Standing caveat: resolved cross-file call edges are MEDIUM \
+             confidence; name-based edges the semantic tier could not resolve \
+             remain LOW (ADR-0001).</p>\n",
+        );
+    } else {
+        out.push_str(
+            "<p>Standing caveat: cross-file call edges are LOW confidence until a \
+             semantic resolver tier exists (ADR-0001).</p>\n",
+        );
+    }
     out.push_str("</section>\n");
 }
 
@@ -2479,6 +2506,16 @@ fn confidence_token(confidence: Confidence) -> &'static str {
         Confidence::Medium => "MEDIUM",
         Confidence::Low => "LOW",
     }
+}
+
+/// True when at least one emitted finding carries a semantic-resolver tier
+/// (a libclang fact upgraded it). Report boilerplate follows the data instead
+/// of assuming the default build — a semantic build must not print the
+/// "purely syntactic tier" caveat.
+fn semantic_tier_active(doc: &MetricsDocument) -> bool {
+    doc.findings
+        .iter()
+        .any(|f| matches!(f.resolver_tier, ResolverTier::Semantic))
 }
 
 fn resolver_tier_token(tier: ResolverTier) -> &'static str {

@@ -1,36 +1,36 @@
 # Active Context
 
 ## Current Task
-I5 (map-build) proof + demo **executed** — `docs/evidence/i5-map-proof.md`.
-- Gate: 50 suites / 687 tests, fmt+clippy+deny green; feature build green (clippy + tests).
-- Determinism: committed-golden double regeneration identical; 9/9 demo repos double-scan
-  byte-identical modulo provenance (`metrics.json`, `report.md`).
-- Semantic tier: libclang 23.1 verified; cJSON 837→1,162 findings, curl 10,985→11,807;
-  ARCH-003 LOW→MEDIUM upgrades; 115/1,548 resolved C edges.
-- A-pf-095: true GENUINE 9/172 = 5.2% (100% of current hot ids already hand-triaged);
-  new top-3 map-node calibration = 1 GENUINE / 11 minor / 11 test-noise / 4 FP of 27.
-- Demo: all 9 repos emit all 9 stems + 4–50 component pages; two independent map-only
-  maintainers named 3 actions each (tmux, hyperfine) → A5 PASS with caveats.
-- A4 captions fixed (`candidate … — profile to confirm`); feature-build golden comparator
-  gated to default builds. 33 goldens regenerated.
+I5 (map-build) proof + demo **executed and reviewed round 1** — `docs/evidence/i5-map-proof.md`.
+- Gate: 50 suites / **688** tests (feature: 691), fmt+clippy+deny green.
+- Determinism: committed-golden double regeneration identical (`749162…`); 9/9 demo repos
+  double-scan byte-identical modulo provenance; transcript `docs/evidence/i5-determinism.txt`.
+- Semantic tier: libclang 23.1 verified; cJSON 837→1,162, curl 10,985→11,807; ARCH-003
+  LOW→MEDIUM; 115/1,548 resolved C edges. Report boilerplate now tier-aware (G4 fix + test).
+- A-pf-095: true GENUINE 9/172 = 5.2%; supplementary top-3 calibration 1/27 GENUINE.
+- Demo: 9/9 repos all stems + 4–50 pages; two blind map-only maintainers named 3 actions
+  each → A5 PASS with caveats; **founder quote still pending**.
+- A4 captions fixed; feature-golden comparator default-only; 33 goldens regenerated.
 
 ## Recent Decisions
-- **D-pf-223 (live):** I5 evidence — gate 687, 9-repo double-scan identical, semantic tier
-  verified, true GENUINE 9/172 + top-node 1/27; A4 captions fixed; feature-golden gate fixed;
-  map-quality findings R-pf-098/099/100.
-- *(Cold `state/archive/ledger.jsonl`: D-pf-218–222 (I1a–I4), R-pf-094–096, done
+- **D-pf-224 (live):** I5 review round 1 — code APPROVED; requirements CHANGES_REQUESTED →
+  G4 tier-aware report boilerplate (+locked test), G5/G6/G7 doc fixes, G8/G9 persisted
+  evidence + parse-partial disclosure, G2 timing disclosed unmeasured; R-pf-103 queued.
+- **D-pf-223 (live):** I5 evidence — gate 687 at that commit, 9-repo double-scan, semantic
+  tier, true GENUINE 9/172 + top-node 1/27; map-quality R-pf-098/099/100.
+- *(Cold `state/archive/ledger.jsonl`: D-pf-217/218–222, R-pf-007/094–096, done
   A-pf-095/097 — append-only.)*
 
 ## In Progress
-- I5 closeout: **founder A5 quote** (3 actions from the tmux map) + dual review pending.
-  Evidence + state are written; code/goldens/docs are uncommitted.
+- I5 closeout: code+goldens+evidence committed (`dbb9bbe` + follow-up); **round-2 review**
+  (both reviewers on the final tree) and the **founder A5 quote** remain.
 
 ## Next
-- **I5 closeout:** founder A5 verbatim → append to dossier §7.3; `@reviewer` +
-  `@requirements-reviewer`; fix blockers; commit; mark `map-build` done.
+- **I5 closeout:** founder A5 verbatim → dossier §7.3; round-2 dual review APPROVED;
+  `markPlanDone map-build`.
 - **Then map-quality burst (new session):** A-pf-098 entry-detection strata (R-pf-098,
   high), A-pf-099 production-path ranking + known-trip guard (R-pf-099), A-pf-100
-  density denominator guard (R-pf-100).
+  density denominator guard (R-pf-100), A-pf-103 semantic goldens (R-pf-103, low).
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080).
 
 ## Blockers

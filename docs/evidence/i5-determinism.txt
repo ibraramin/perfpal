@@ -1,0 +1,46 @@
+I5 determinism + gate evidence (plan map-build I5; dossier docs/evidence/i5-map-proof.md)
+Generated 2026-10-21 · perfpal 0.2.0-beta.1 · schema 1.6 · libclang 23.1 for the semantic gate
+
+DEFAULT BUILD
+  cargo fmt --all -- --check                                  exit 0
+  cargo clippy --locked --all-targets -- -D warnings          exit 0
+  cargo test --locked                                         50 suites / 688 passed / 0 failed
+  cargo deny check licenses                                   licenses ok (exit 0)
+
+FEATURE BUILD (semantic-clang)
+  cargo clippy --locked --all-targets --features semantic-clang -- -D warnings   exit 0
+  PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang          50 suites / 691 passed / 0 failed
+  tests/resolver_health.rs: 10/10, including real libclang parses
+
+COMMITTED GOLDENS — DOUBLE REGENERATION
+  PERFPAL_REGEN_GOLDEN=1 cargo test --test p6_hardening regenerate_goldens   (run twice)
+  golden tree sha256 (sorted path + file hash, after each pass): 749162395aac267386ff3196022dbdea8db281282ad5571a6d12f6640c26eaec
+  pass 1 == pass 2; `git status --porcelain tests/golden` empty after the second pass.
+
+9-REPO DOUBLE SCAN (pass A/B, separate output dirs)
+  Compare: charts/* exact; findings-detail.* exact; report.html exact; schema exact;
+           metrics.json masked (scan.started_at, scan.duration_ms);
+           report.md masked (started … · duration … ms).
+  Hash = sha256 over sorted "relative_path file_sha256" lines (masked values).
+
+alacritty  files= 35 passA=7ad0476b1ecfc492fe80161a50a49e7eb5efc643e6cf7802ca6e011509437a3d passB=7ad0476b1ecfc492fe80161a50a49e7eb5efc643e6cf7802ca6e011509437a3d IDENTICAL
+bat        files= 37 passA=2868f6b60fd192f09ab0bf1382e7cd97770acd6c32c547f65a0be1c94cb81d92 passB=2868f6b60fd192f09ab0bf1382e7cd97770acd6c32c547f65a0be1c94cb81d92 IDENTICAL
+cJSON      files= 36 passA=fa623f71ba15106367262c0066605714009e0c50405269fee854b6869c2acc8b passB=fa623f71ba15106367262c0066605714009e0c50405269fee854b6869c2acc8b IDENTICAL
+click      files= 33 passA=5492350499ad14224e5e6040c416a561374aa6a8b4d937e3d6e495c083b93140 passB=5492350499ad14224e5e6040c416a561374aa6a8b4d937e3d6e495c083b93140 IDENTICAL
+django     files= 65 passA=80e561d4a8de7820e752c5c2fe530911026271eb7d2776431d7aaefbfe4c1689 passB=80e561d4a8de7820e752c5c2fe530911026271eb7d2776431d7aaefbfe4c1689 IDENTICAL
+hyperfine  files= 27 passA=35d1572ce7a61c9d639f4e3d3cd0ce209ec990d96dd62a1a796a8f794c3474f0 passB=35d1572ce7a61c9d639f4e3d3cd0ce209ec990d96dd62a1a796a8f794c3474f0 IDENTICAL
+postgres   files= 65 passA=eb6b886cceea37e8e5f8dae7250e68f63c2368012d60aaa293ba75518d10e5e6 passB=eb6b886cceea37e8e5f8dae7250e68f63c2368012d60aaa293ba75518d10e5e6 IDENTICAL
+rich       files= 23 passA=bd03c6c40dbe680d4fc166e0ade7ac223c955fe2c1eff301ddfec82f672322f3 passB=bd03c6c40dbe680d4fc166e0ade7ac223c955fe2c1eff301ddfec82f672322f3 IDENTICAL
+tmux       files= 19 passA=6724b66f08f674a37e7b6b5c83367e13b2a0b65baedaf6410a23eb1268dac4e5 passB=6724b66f08f674a37e7b6b5c83367e13b2a0b65baedaf6410a23eb1268dac4e5 IDENTICAL
+
+  Result: 9/9 IDENTICAL. Raw file counts match the dossier §3.2.
+
+SEMANTIC-TIER CHECK
+  cJSON: 837 -> 1162 findings (778 semantic-tier); ARCH-003 MEDIUM 6 -> 784, LOW 581 -> 128; 115 resolved call edges.
+  curl:  10985 -> 11807 findings (5064 semantic); ARCH-003 MEDIUM 518 -> 5579, LOW 6432 -> 2190; 1548 resolved call edges.
+  layer-entry strata: still a single `entry` column in all 9 demo repos and both semantic scans (R-pf-098, queued).
+  Report boilerplate is now tier-aware (I5 G4 fix): the semantic build prints "semantic resolver tier active for C"
+  and the resolved-edge caveat as MEDIUM; the default build keeps the syntactic caveat. Locked by
+  `tests/reporter_render.rs::semantic_tier_boilerplate_follows_the_data`.
+
+NOTE: the 9 demo outputs are intentionally uncommitted (D-pf-205); this file + the dossier are the committed evidence.
