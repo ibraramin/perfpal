@@ -132,14 +132,55 @@ fn assert_required_equal(old: &serde_json::Value, new: &serde_json::Value, at: &
                     assert_required_equal(value, other, &format!("{at}.{key}"));
                 }
             }
+            // New v1.7-only objects must not smuggle in a `required` list.
+            for (key, value) in b {
+                if !a.contains_key(key) {
+                    assert_no_required(value, &format!("{at}.{key}"));
+                }
+            }
         }
         (serde_json::Value::Array(a), serde_json::Value::Array(b)) => {
-            for (i, (x, y)) in a.iter().zip(b.iter()).enumerate() {
-                assert_required_equal(x, y, &format!("{at}[{i}]"));
+            let len = a.len().max(b.len());
+            for i in 0..len {
+                match (a.get(i), b.get(i)) {
+                    (Some(x), Some(y)) => {
+                        assert_required_equal(x, y, &format!("{at}[{i}]"));
+                    }
+                    (None, Some(y)) => assert_no_required(y, &format!("{at}[{i}]")),
+                    _ => {}
+                }
             }
         }
         _ => {}
     }
+}
+
+/// Recursively reject any `required` list inside a v1.7-only subtree.
+fn assert_no_required(value: &serde_json::Value, at: &str) {
+    match value {
+        serde_json::Value::Object(map) => {
+            if map.contains_key("required") {
+                panic!("new v1.7-only object at {at} introduces a required list");
+            }
+            for (key, child) in map {
+                assert_no_required(child, &format!("{at}.{key}"));
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for (i, child) in items.iter().enumerate() {
+                assert_no_required(child, &format!("{at}[{i}]"));
+            }
+        }
+        _ => {}
+    }
+}
+
+#[test]
+#[should_panic(expected = "introduces a required list")]
+fn required_checker_flags_new_v17_only_required() {
+    let old = serde_json::json!({"$defs": {"a": {}}});
+    let new = serde_json::json!({"$defs": {"a": {}, "b": {"required": ["x"]}}});
+    assert_required_equal(&old, &new, "$");
 }
 
 #[test]

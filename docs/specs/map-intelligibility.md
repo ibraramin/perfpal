@@ -246,3 +246,12 @@ is not a shippable core feature. M5 remains gated by `B-pf-001`/`B-pf-002`.
 - **A1b is not claimed closed on severity.** KV1 recall ranks 210/197/35 remain the V7 rank-key
   problem; KV3's no-loop guard (which pushes the Q3 targets down) remains the V5 falsifier. The
   complete lists satisfy traceability, not "look here first".
+- **Shipped-key recall (V4 artefact, 2026-10-22):** tmux Q1 **209/7543**, Q3 **820/3189**;
+  hyperfine Q1 **172/346**, Q3 **58/353**; cJSON Q1 **37/835**, Q3 **60/1055**. KV2 is inline in
+  every repo: tmux **1/216**, hyperfine **6/53**, cJSON **4/101**. These ranks differ from the V3
+  prototype ranks (210/197/35 for Q1, 811/66/58 for Q3) because V4 uses the shipped key and
+  excludes `ARCH-002` from the action list. Evidence:
+  `docs/evidence/map-vision/v4/recall_ranks_v4.json` (added separately).
+- **`PERF-RS-ARCH-002` (I5 GENUINE #6)** is a component aggregate and is explicitly out of KV1's
+  action scope: it remains reachable through `findings-detail` and the Explorer
+  `hot-components` stem, not the ranked action brief.

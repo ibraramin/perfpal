@@ -343,6 +343,15 @@ fn key_views_carry_units_anchors_and_full_rationale() {
     assert!(map.contains(
         "Bars scale within each block: blue = ranked functions, grey = demoted functions."
     ));
+    assert_eq!(
+        map.matches("do not edit directly.").count(),
+        1,
+        "KV2 action line must appear exactly once"
+    );
+    assert!(
+        map.contains("showing top 2 of 2 files with resolved dependents"),
+        "KV2 inline cap disclosure missing"
+    );
     let md = perfpal::reporter::render_report(&doc, &[]);
     assert!(md.contains(
         "Ranked: production code first, then severity, then confidence, then static cost."
@@ -350,6 +359,14 @@ fn key_views_carry_units_anchors_and_full_rationale() {
     assert!(md.contains(
         "Bars scale within each block: blue = ranked functions, grey = demoted functions."
     ));
+    assert!(md.contains("showing top 5 of 4 actions") || md.contains("showing top 4 of 4 actions"));
+    assert!(
+        md.contains("showing top 5 of 5 functions") || md.contains("showing top 4 of 5 functions")
+    );
+    assert!(md.contains("unknown-trip ×1 — estimate incomplete"));
+    assert!(md.contains("known trip ×8 — verify it actually runs"));
+    assert!(md.contains("no-loop — demoted"));
+    assert!(md.contains("non-production file demoted"));
     assert!(
         map.contains("This is the complete rationale for PERF-C-CALL-001"),
         "KV1 must show the full message"
@@ -393,6 +410,23 @@ fn drill_artifacts_are_complete_and_deterministic() {
     }
     assert!(!ranked.contains("PERF-C-ARCH-002"));
     assert!(detail_md.contains("<a id=\"ranked-actions\"></a>"));
+    let ranks: Vec<usize> = ranked
+        .split("<tr><td>")
+        .skip(1)
+        .map(|cell| {
+            cell.split("</td>")
+                .next()
+                .expect("rank cell")
+                .parse()
+                .expect("numeric rank")
+        })
+        .collect();
+    assert_eq!(ranks, (1..=actions.len()).collect::<Vec<_>>());
+    assert_eq!(
+        ranks.len(),
+        actions.len(),
+        "ranked section must not carry extra action rows"
+    );
 
     let queue = render_profile_queue_html(&doc);
     let queue_md = render_profile_queue(&doc);

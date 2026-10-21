@@ -98,17 +98,17 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </div></li>
 <li class="kv-row"><span class="kv-rank">#3</span>                 <div class="kv-body">
 <div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-73-15">src/main.c:73</a> <span class="kv-fn">grow</span> <span class="kv-title">Heap allocation inside loop</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">13 static cost units (v2) · 1.9× median · top 25%</div>
+<div class="kv-anchor">13 static cost units (v2) · 1.9× median · top 33%</div>
 <div class="kv-why">per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</div>
 </div></li>
 <li class="kv-row"><span class="kv-rank">#4</span>                 <div class="kv-body">
 <div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-52-9">src/main.c:52</a> <span class="kv-fn">join</span> <span class="kv-title">String accumulation in loop</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">7 static cost units (v2) · 1.0× median · top 25%</div>
+<div class="kv-anchor">7 static cost units (v2) · 1.0× median · top 67%</div>
 <div class="kv-why">&#39;strcat&#39; accumulates into &#39;out&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</div>
 </div></li>
 <li class="kv-row"><span class="kv-rank">#5</span>                 <div class="kv-body">
 <div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-C-ALLOC-003-src-main-c-73-15">src/main.c:73</a> <span class="kv-fn">grow</span> <span class="kv-title">Realloc linear growth in loop</span> <span class="kv-note">same location as #3</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">MEDIUM</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">13 static cost units (v2) · 1.9× median · top 25%</div>
+<div class="kv-anchor">13 static cost units (v2) · 1.9× median · top 33%</div>
 <div class="kv-why">&#39;realloc&#39; grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization</div>
 </div></li>
 </ol>
@@ -119,8 +119,9 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <h3>What breaks if I touch it?</h3>
          <p class="kv-action">Changing a file here forces re-import of its          dependents — do not edit directly.</p>
 <div class="kv-bars">
-<div class="kv-brow"><span class="kv-blabel">src/util.h </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 67% of scanned files · top 25%</span></div>
+<div class="kv-brow"><span class="kv-blabel">src/util.h </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 67% of scanned files · top 33%</span></div>
 </div>
+<p class="kv-counts">showing top 1 of 1 files with resolved dependents</p>
 <p class="kv-counts">resolved 2 of 2 include edges</p>
 </div>
 <div class="kv kv3">
@@ -128,15 +129,15 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
          <p class="kv-action">Profile the named function first — static          candidate, confirm with a profiler.</p>
          <p class="kv-caption">Bars scale within each block: blue = ranked functions, grey = demoted functions.</p>
 <div class="kv-bars">
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:84</span>                 <span class="kv-fn">dispatch</span></span><div class="kv-track"><div class="kv-fill" style="width:100%"></div></div><span class="kv-value">57 static cost units (v2) · 8.1× median · top 10%<span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:57</span>                 <span class="kv-fn">deep_sum</span></span><div class="kv-track"><div class="kv-fill" style="width:47%"></div></div><span class="kv-value">27 static cost units (v2) · 3.9× median · top 25%<span class="kv-badge trip">unknown-trip ×3 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:84</span>                 <span class="kv-fn">dispatch</span></span><div class="kv-track"><div class="kv-fill" style="width:100%"></div></div><span class="kv-value">57 static cost units (v2) · 8.1× median · top 8%<span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:57</span>                 <span class="kv-fn">deep_sum</span></span><div class="kv-track"><div class="kv-fill" style="width:47%"></div></div><span class="kv-value">27 static cost units (v2) · 3.9× median · top 17%<span class="kv-badge trip">unknown-trip ×3 — estimate incomplete</span></span></div>
 <div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:31</span>                 <span class="kv-fn">process</span></span><div class="kv-track"><div class="kv-fill" style="width:25%"></div></div><span class="kv-value">14 static cost units (v2) · 2.0× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:69</span>                 <span class="kv-fn">grow</span></span><div class="kv-track"><div class="kv-fill" style="width:23%"></div></div><span class="kv-value">13 static cost units (v2) · 1.9× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:78</span>                 <span class="kv-fn">report</span></span><div class="kv-track"><div class="kv-fill" style="width:16%"></div></div><span class="kv-value">9 static cost units (v2) · 1.3× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:42</span>                 <span class="kv-fn">drain</span></span><div class="kv-track"><div class="kv-fill" style="width:12%"></div></div><span class="kv-value">7 static cost units (v2) · 1.0× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:48</span>                 <span class="kv-fn">join</span></span><div class="kv-track"><div class="kv-fill" style="width:12%"></div></div><span class="kv-value">7 static cost units (v2) · 1.0× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/main.c:121</span>                 <span class="kv-fn">main</span><span class="kv-dem">startup + no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:100%"></div></div><span class="kv-value">11 static cost units (v2) · 1.6× median · top 25%</span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/main.c:117</span>                 <span class="kv-fn">clone_row</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:45%"></div></div><span class="kv-value">5 static cost units (v2) · 0.7× median · top 25%</span></div>
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:69</span>                 <span class="kv-fn">grow</span></span><div class="kv-track"><div class="kv-fill" style="width:23%"></div></div><span class="kv-value">13 static cost units (v2) · 1.9× median · top 33%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:78</span>                 <span class="kv-fn">report</span></span><div class="kv-track"><div class="kv-fill" style="width:16%"></div></div><span class="kv-value">9 static cost units (v2) · 1.3× median · top 50%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:42</span>                 <span class="kv-fn">drain</span></span><div class="kv-track"><div class="kv-fill" style="width:12%"></div></div><span class="kv-value">7 static cost units (v2) · 1.0× median · top 58%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:48</span>                 <span class="kv-fn">join</span></span><div class="kv-track"><div class="kv-fill" style="width:12%"></div></div><span class="kv-value">7 static cost units (v2) · 1.0× median · top 67%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/main.c:121</span>                 <span class="kv-fn">main</span><span class="kv-dem">startup + no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:100%"></div></div><span class="kv-value">11 static cost units (v2) · 1.6× median · top 42%</span></div>
+<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/main.c:117</span>                 <span class="kv-fn">clone_row</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:45%"></div></div><span class="kv-value">5 static cost units (v2) · 0.7× median · top 75%</span></div>
 </div>
 <p class="kv-more"><a href="profile-queue.html">             Complete cost-ranked list (12 functions)</a></p>
 <p class="kv-counts">1 startup function demoted · 5 no-loop functions demoted · 0 non-production files demoted</p>

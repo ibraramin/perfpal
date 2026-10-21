@@ -98,6 +98,8 @@ pub struct Kv2View {
     pub total_edges: usize,
     /// Nearest-rank median over every scanned file, zeros included.
     pub median_in_degree: u64,
+    /// Files with at least one resolved dependent (the inline cap's N).
+    pub total_with_dependents: usize,
     pub nonprod_file_count: usize,
 }
 
@@ -220,22 +222,16 @@ pub fn plural_word(count: usize, singular: &'static str, many: &'static str) -> 
     if count == 1 { singular } else { many }
 }
 
-/// 1-based rank `k` of `n` → `top 1%` / `top 5%` / `top 10%` / `top 25%`.
+/// 1-based rank `k` of `n` → exact scan-relative `top {pct}%`
+/// (`pct = max(1, round(100·k/n))`, capped at 100). No bucket floor: rank
+/// `n` of `n` is honestly `top 100%`, not a misleading `top 25%`.
 #[must_use]
 pub fn top_label(k: usize, n: usize) -> String {
     if n == 0 {
         return "top 1%".to_string();
     }
-    let pct = ((100 * k + n / 2) / n).max(1);
-    if pct <= 1 {
-        "top 1%".to_string()
-    } else if pct <= 5 {
-        "top 5%".to_string()
-    } else if pct <= 10 {
-        "top 10%".to_string()
-    } else {
-        "top 25%".to_string()
-    }
+    let pct = ((100 * k + n / 2) / n).clamp(1, 100);
+    format!("top {pct}%")
 }
 
 /// Top-percentile anchor for a position inside a full cost ordering.
@@ -564,11 +560,12 @@ pub fn kv2(doc: &MetricsDocument) -> Kv2View {
 
     // Files with zero dependents are not a blast radius; omit them from the
     // inline bars (the median still counts them honestly).
-    let mut shown: Vec<(&str, usize)> = ordering
+    let with_dependents: Vec<(&str, usize)> = ordering
         .into_iter()
         .filter(|(_, degree)| *degree > 0)
-        .take(8)
         .collect();
+    let total_with_dependents = with_dependents.len();
+    let mut shown: Vec<(&str, usize)> = with_dependents.into_iter().take(8).collect();
     let max_degree = shown.iter().map(|(_, degree)| *degree).max().unwrap_or(0);
     let mut rows = Vec::with_capacity(shown.len());
     for (path, degree) in shown.drain(..) {
@@ -605,6 +602,7 @@ pub fn kv2(doc: &MetricsDocument) -> Kv2View {
         resolved_edges,
         total_edges,
         median_in_degree,
+        total_with_dependents,
         nonprod_file_count: context.nonprod_file_count(),
     }
 }
@@ -925,9 +923,13 @@ mod tests {
         assert_eq!(ratio_label(2.125), "2.1×");
         assert_eq!(ratio_label(12.4), "12×");
         assert_eq!(top_label(1, 200), "top 1%");
-        assert_eq!(top_label(9, 100), "top 10%");
-        assert_eq!(top_label(50, 100), "top 25%");
+        assert_eq!(top_label(1, 100), "top 1%");
+        assert_eq!(top_label(9, 100), "top 9%");
+        assert_eq!(top_label(50, 100), "top 50%");
+        assert_eq!(top_label(12, 12), "top 100%");
         assert_eq!(cost_rank_label(1, 10), "top 10%");
+        // Exact rank over the KV2 fixture: 1 of 3 ranks (incl. zero rows).
+        assert_eq!(top_label(3, 3), "top 100%");
         assert_eq!(plural(0, "dependent"), "0 dependents");
         assert_eq!(plural(1, "dependent"), "1 dependent");
         assert_eq!(plural(2, "file"), "2 files");

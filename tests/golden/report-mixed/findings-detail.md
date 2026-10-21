@@ -8,15 +8,15 @@
 
 | rank | finding | title | location | function | severity | confidence | path class | cost anchor |
 |---:|---|---|---|---|---|---|---|---|
-| 1 | [`PERF\-C\-ALLOC\-001:src/main\.c:27:21`](#finding-PERF-C-ALLOC-001-src-main-c-27-21) | Heap allocation inside loop | `src/main\.c:27` | `c\_loop` | hot | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 25% |
-| 2 | [`PERF\-C\-ALLOC\-002:src/main\.c:29:9`](#finding-PERF-C-ALLOC-002-src-main-c-29-9) | Deallocation inside loop | `src/main\.c:29` | `c\_loop` | hot | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 25% |
-| 3 | [`PERF\-C\-STR\-001:src/main\.c:28:9`](#finding-PERF-C-STR-001-src-main-c-28-9) | String accumulation in loop | `src/main\.c:28` | `c\_loop` | hot | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 25% |
+| 1 | [`PERF\-C\-ALLOC\-001:src/main\.c:27:21`](#finding-PERF-C-ALLOC-001-src-main-c-27-21) | Heap allocation inside loop | `src/main\.c:27` | `c\_loop` | hot | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 50% |
+| 2 | [`PERF\-C\-ALLOC\-002:src/main\.c:29:9`](#finding-PERF-C-ALLOC-002-src-main-c-29-9) | Deallocation inside loop | `src/main\.c:29` | `c\_loop` | hot | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 50% |
+| 3 | [`PERF\-C\-STR\-001:src/main\.c:28:9`](#finding-PERF-C-STR-001-src-main-c-28-9) | String accumulation in loop | `src/main\.c:28` | `c\_loop` | hot | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 50% |
 | 4 | [`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`](#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9) | Growable\-buffer additive growth in loop \(Rust\) | `src/lib\.rs:20` | `build` | hot | MEDIUM | production | 20 static cost units \(v2\) · 6\.7× median · top 25% |
 | 5 | [`PERF\-RS\-STR\-002:src/lib\.rs:22:17`](#finding-PERF-RS-STR-002-src-lib-rs-22-17) | Length query recomputed in loop \(Rust\) | `src/lib\.rs:22` | `build` | warn | HIGH | production | 20 static cost units \(v2\) · 6\.7× median · top 25% |
 | 6 | [`PERF\-RS\-STR\-002:src/lib\.rs:23:17`](#finding-PERF-RS-STR-002-src-lib-rs-23-17) | Length query recomputed in loop \(Rust\) | `src/lib\.rs:23` | `build` | warn | HIGH | production | 20 static cost units \(v2\) · 6\.7× median · top 25% |
-| 7 | [`PERF\-C\-STR\-003:src/main\.c:28:9`](#finding-PERF-C-STR-003-src-main-c-28-9) | Unbounded string operation | `src/main\.c:28` | `c\_loop` | warn | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 25% |
+| 7 | [`PERF\-C\-STR\-003:src/main\.c:28:9`](#finding-PERF-C-STR-003-src-main-c-28-9) | Unbounded string operation | `src/main\.c:28` | `c\_loop` | warn | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 50% |
 | 8 | [`PERF\-RS\-MEM\-001:src/lib\.rs:25:22`](#finding-PERF-RS-MEM-001-src-lib-rs-25-22) | size\_of passed as an element count \(Rust\) | `src/lib\.rs:25` | `build` | warn | MEDIUM | production | 20 static cost units \(v2\) · 6\.7× median · top 25% |
-| 9 | [`PERF\-C\-ARCH\-003:src/main\.c:32:12`](#finding-PERF-C-ARCH-003-src-main-c-32-12) | Cross\-file call coupling | `src/main\.c:32` | `c\_loop` | info | LOW | production | 15 static cost units \(v2\) · 5\.0× median · top 25% |
+| 9 | [`PERF\-C\-ARCH\-003:src/main\.c:32:12`](#finding-PERF-C-ARCH-003-src-main-c-32-12) | Cross\-file call coupling | `src/main\.c:32` | `c\_loop` | info | LOW | production | 15 static cost units \(v2\) · 5\.0× median · top 50% |
 
 <a id="finding-PERF-C-ALLOC-001-src-main-c-27-21"></a>
 #### Heap allocation inside loop  (`PERF\-C\-ALLOC\-001:src/main\.c:27:21`)

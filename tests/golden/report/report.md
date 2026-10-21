@@ -16,14 +16,16 @@ Ranked: production code first, then severity, then confidence, then static cost.
    - Cost: `14 static cost units (v2) · 2.0× median · top 25%`
    - Why: deallocation via 'free' at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization
 3. **Heap allocation inside loop** ([`PERF\-C\-ALLOC\-001:src/main\.c:73:15`](findings-detail.md#finding-PERF-C-ALLOC-001-src-main-c-73-15)) — `src/main\.c:73` · function `grow` · hot · HIGH · production
-   - Cost: `13 static cost units (v2) · 1.9× median · top 25%`
+   - Cost: `13 static cost units (v2) · 1.9× median · top 33%`
    - Why: per\-iteration heap allocation via 'realloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization
 4. **String accumulation in loop** ([`PERF\-C\-STR\-001:src/main\.c:52:9`](findings-detail.md#finding-PERF-C-STR-001-src-main-c-52-9)) — `src/main\.c:52` · function `join` · hot · HIGH · production
-   - Cost: `7 static cost units (v2) · 1.0× median · top 25%`
+   - Cost: `7 static cost units (v2) · 1.0× median · top 67%`
    - Why: 'strcat' accumulates into 'out' at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization
 5. **Realloc linear growth in loop** (same location as #3) ([`PERF\-C\-ALLOC\-003:src/main\.c:73:15`](findings-detail.md#finding-PERF-C-ALLOC-003-src-main-c-73-15)) — `src/main\.c:73` · function `grow` · hot · MEDIUM · production
-   - Cost: `13 static cost units (v2) · 1.9× median · top 25%`
+   - Cost: `13 static cost units (v2) · 1.9× median · top 33%`
    - Why: 'realloc' grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization
+
+showing top 5 of 14 actions
 
 [Complete ranked list](findings-detail.md#ranked-actions) — all 14 findings (production-first).
 
@@ -31,7 +33,9 @@ Ranked: production code first, then severity, then confidence, then static cost.
 
 ### What breaks if I touch it?
 
-- `src/util\.h` — 2 dependents · 67% of scanned files · top 25%
+- `src/util\.h` — 2 dependents · 67% of scanned files · top 33%
+
+showing top 1 of 1 files with resolved dependents
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 2 of 2 include edges.
 
@@ -39,15 +43,17 @@ Blast-radius bars: [report.html#map](report.html#map). resolved 2 of 2 include e
 
 Bars scale within each block: blue = ranked functions, grey = demoted functions.
 
-- `src/main\.c:84` `dispatch` — 57 static cost units (v2) · 8.1× median · top 10%
-- `src/main\.c:57` `deep\_sum` — 27 static cost units (v2) · 3.9× median · top 25%
-- `src/main\.c:31` `process` — 14 static cost units (v2) · 2.0× median · top 25%
-- `src/main\.c:69` `grow` — 13 static cost units (v2) · 1.9× median · top 25%
-- `src/main\.c:78` `report` — 9 static cost units (v2) · 1.3× median · top 25%
+- `src/main\.c:84` `dispatch` — 57 static cost units (v2) · 8.1× median · top 8% · unknown-trip ×2 — estimate incomplete
+- `src/main\.c:57` `deep\_sum` — 27 static cost units (v2) · 3.9× median · top 17% · unknown-trip ×3 — estimate incomplete
+- `src/main\.c:31` `process` — 14 static cost units (v2) · 2.0× median · top 25% · unknown-trip ×1 — estimate incomplete
+- `src/main\.c:69` `grow` — 13 static cost units (v2) · 1.9× median · top 33% · unknown-trip ×1 — estimate incomplete
+- `src/main\.c:78` `report` — 9 static cost units (v2) · 1.3× median · top 50% · unknown-trip ×1 — estimate incomplete
+
+showing top 5 of 12 functions
 
 [Complete cost-ranked list (12 functions)](profile-queue.md).
 
-1 startup function demoted · 5 no-loop functions demoted.
+1 startup function demoted · 5 no-loop functions demoted · 0 non-production files demoted.
 
 ## 2. Scan provenance & parse health
 - Tool: perfpal 0\.2\.0\-beta\.1

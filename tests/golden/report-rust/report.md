@@ -10,20 +10,22 @@
 Ranked: production code first, then severity, then confidence, then static cost.
 
 1. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:34:5`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5)) — `src/01\_alloc\_churn\.rs:34` · function `build\_row\_labels` · hot · HIGH · production
-   - Cost: `22 static cost units (v2) · 3.1× median · top 10%`
+   - Cost: `22 static cost units (v2) · 3.1× median · top 8%`
    - Why: loop performs 3 per\-iteration allocation\(s\) \(format, to\_string, vec\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 2. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/06\_memory\_ops\.rs:27:9`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-06-memory-ops-rs-27-9)) — `src/06\_memory\_ops\.rs:27` · function `duplicate\_rows` · hot · HIGH · production
    - Cost: `22 static cost units (v2) · 3.1× median · top 10%`
    - Why: loop performs 1 per\-iteration allocation\(s\) \(to\_vec\) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 3. **Deallocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-002:src/01\_alloc\_churn\.rs:39:9`](findings-detail.md#finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9)) — `src/01\_alloc\_churn\.rs:39` · function `build\_row\_labels` · hot · HIGH · production
-   - Cost: `22 static cost units (v2) · 3.1× median · top 10%`
+   - Cost: `22 static cost units (v2) · 3.1× median · top 8%`
    - Why: deallocation via 'drop' at loop depth 1 — repeated drop\-per\-iteration teardown; hoisting the drop or restructuring value ownership is a candidate optimization
 4. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:58:9`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9)) — `src/01\_alloc\_churn\.rs:58` · function `grid\_reset` · hot · HIGH · production
-   - Cost: `19 static cost units (v2) · 2.7× median · top 25%`
+   - Cost: `19 static cost units (v2) · 2.7× median · top 13%`
    - Why: loop performs 1 per\-iteration allocation\(s\) \(vec\) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 5. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/02\_string\_building\.rs:41:5`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5)) — `src/02\_string\_building\.rs:41` · function `len\_with\_reassignment` · hot · HIGH · production
-   - Cost: `14 static cost units (v2) · 2.0× median · top 25%`
+   - Cost: `14 static cost units (v2) · 2.0× median · top 18%`
    - Why: loop performs 1 per\-iteration allocation\(s\) \(format\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
+
+showing top 5 of 31 actions
 
 [Complete ranked list](findings-detail.md#ranked-actions) — all 31 findings (production-first).
 
@@ -31,9 +33,11 @@ Ranked: production code first, then severity, then confidence, then static cost.
 
 ### What breaks if I touch it?
 
-- `src/cycle\_a\.rs` — 2 dependents · 14% of scanned files · top 10%
-- `src/cycle\_b\.rs` — 2 dependents · 14% of scanned files · top 25%
-- `src/common\.rs` — 1 dependent · 7% of scanned files · top 25%
+- `src/cycle\_a\.rs` — 2 dependents · 14% of scanned files · top 7%
+- `src/cycle\_b\.rs` — 2 dependents · 14% of scanned files · top 14%
+- `src/common\.rs` — 1 dependent · 7% of scanned files · top 21%
+
+showing top 3 of 3 files with resolved dependents
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 5 include edges.
 
@@ -41,15 +45,17 @@ Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 5 include e
 
 Bars scale within each block: blue = ranked functions, grey = demoted functions.
 
-- `src/03\_deep\_nesting\.rs:15` `grid\_checksum` — 25 static cost units (v2) · 3.6× median · top 5%
-- `src/01\_alloc\_churn\.rs:32` `build\_row\_labels` — 22 static cost units (v2) · 3.1× median · top 10%
-- `src/06\_memory\_ops\.rs:24` `duplicate\_rows` — 22 static cost units (v2) · 3.1× median · top 10%
-- `src/01\_alloc\_churn\.rs:56` `grid\_reset` — 19 static cost units (v2) · 2.7× median · top 25%
-- `src/09\_membership\_scan\.rs:13` `contains\_nested` — 19 static cost units (v2) · 2.7× median · top 25%
+- `src/03\_deep\_nesting\.rs:15` `grid\_checksum` — 25 static cost units (v2) · 3.6× median · top 5% · unknown-trip ×3 — estimate incomplete
+- `src/01\_alloc\_churn\.rs:32` `build\_row\_labels` — 22 static cost units (v2) · 3.1× median · top 8% · unknown-trip ×1 — estimate incomplete
+- `src/06\_memory\_ops\.rs:24` `duplicate\_rows` — 22 static cost units (v2) · 3.1× median · top 10% · unknown-trip ×2 — estimate incomplete
+- `src/01\_alloc\_churn\.rs:56` `grid\_reset` — 19 static cost units (v2) · 2.7× median · top 13% · unknown-trip ×2 — estimate incomplete
+- `src/09\_membership\_scan\.rs:13` `contains\_nested` — 19 static cost units (v2) · 2.7× median · top 15% · unknown-trip ×2 — estimate incomplete
+
+showing top 5 of 40 functions
 
 [Complete cost-ranked list (40 functions)](profile-queue.md).
 
-0 startup functions demoted · 20 no-loop functions demoted.
+0 startup functions demoted · 20 no-loop functions demoted · 0 non-production files demoted.
 
 ## 2. Scan provenance & parse health
 - Tool: perfpal 0\.2\.0\-beta\.1

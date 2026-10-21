@@ -13,17 +13,19 @@ Ranked: production code first, then severity, then confidence, then static cost.
    - Cost: `11 static cost units (v2) · 2.8× median · top 10%`
    - Why: 'open' acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization
 2. **Linear index scan of a list inside loop** ([`PERF\-PY\-LOOP\-007:07\_membership\_scan\.py:19:18`](findings-detail.md#finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18)) — `07\_membership\_scan\.py:19` · function `index\_scan` · warn · MEDIUM · production
-   - Cost: `11 static cost units (v2) · 2.8× median · top 25%`
+   - Cost: `11 static cost units (v2) · 2.8× median · top 12%`
    - Why: list 'data' is indexed by loop variable 'i' at depth 1 — CPython's list subscript is O\(1\) per access, but a scan over the whole list re\-walks it per outer iteration \(O\(n²\)\); iterating directly, using \`enumerate\`, or building a set/dict lookup is a candidate optimization
 3. **Linear list scan inside loop** ([`PERF\-PY\-LOOP\-007:07\_membership\_scan\.py:9:12`](findings-detail.md#finding-PERF-PY-LOOP-007-07-membership-scan-py-9-12)) — `07\_membership\_scan\.py:9` · function `contains\_any` · warn · MEDIUM · production
-   - Cost: `10 static cost units (v2) · 2.5× median · top 25%`
+   - Cost: `10 static cost units (v2) · 2.5× median · top 15%`
    - Why: list 'table' is tested with 'in' inside a loop at depth 1 — CPython's list membership is an O\(n\) linear scan, so re\-testing per outer iteration is O\(n²\); building a set/dict lookup or iterating directly is a candidate optimization
 4. **Superlinear list accumulation in loop** ([`PERF\-PY\-ALLOC\-003:10\_comprehension\.py:12:9`](findings-detail.md#finding-PERF-PY-ALLOC-003-10-comprehension-py-12-9)) — `10\_comprehension\.py:12` · function `transform\_all` · warn · MEDIUM · production
-   - Cost: `8 static cost units (v2) · 2.0× median · top 25%`
+   - Cost: `8 static cost units (v2) · 2.0× median · top 19%`
    - Why: list 'out' is grown with 'append' inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list\_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization
 5. **Superlinear list accumulation in loop** ([`PERF\-PY\-ALLOC\-003:10\_comprehension\.py:21:9`](findings-detail.md#finding-PERF-PY-ALLOC-003-10-comprehension-py-21-9)) — `10\_comprehension\.py:21` · function `accumulate\_multi` · warn · MEDIUM · production
-   - Cost: `8 static cost units (v2) · 2.0× median · top 25%`
+   - Cost: `8 static cost units (v2) · 2.0× median · top 18%`
    - Why: list 'out' is grown with 'append' inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list\_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization
+
+showing top 5 of 28 actions
 
 [Complete ranked list](findings-detail.md#ranked-actions) — all 28 findings (production-first).
 
@@ -33,7 +35,9 @@ Ranked: production code first, then severity, then confidence, then static cost.
 
 - `pkg/cycle\_a\.py` — 2 dependents · 10% of scanned files · top 5%
 - `pkg/cycle\_b\.py` — 2 dependents · 10% of scanned files · top 10%
-- `pkg/arch\_helpers\.py` — 1 dependent · 5% of scanned files · top 25%
+- `pkg/arch\_helpers\.py` — 1 dependent · 5% of scanned files · top 15%
+
+showing top 3 of 3 files with resolved dependents
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 10 include edges.
 
@@ -41,15 +45,17 @@ Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 10 include 
 
 Bars scale within each block: blue = ranked functions, grey = demoted functions.
 
-- `03\_deep\_nesting\.py:4` `triple\_nested` — 25 static cost units (v2) · 6.3× median · top 5%
-- `03\_deep\_nesting\.py:14` `double\_nested` — 15 static cost units (v2) · 3.8× median · top 5%
-- `08\_range\_len\.py:4` `positional\_sum` — 15 static cost units (v2) · 3.8× median · top 10%
-- `01\_alloc\_churn\.py:38` `eager\_materialise` — 11 static cost units (v2) · 2.8× median · top 10%
-- `01\_alloc\_churn\.py:5` `loop\_invariant\_construction` — 11 static cost units (v2) · 2.8× median · top 10%
+- `03\_deep\_nesting\.py:4` `triple\_nested` — 25 static cost units (v2) · 6.3× median · top 3% · unknown-trip ×3 — estimate incomplete
+- `03\_deep\_nesting\.py:14` `double\_nested` — 15 static cost units (v2) · 3.8× median · top 4% · unknown-trip ×2 — estimate incomplete
+- `08\_range\_len\.py:4` `positional\_sum` — 15 static cost units (v2) · 3.8× median · top 6% · unknown-trip ×2 — estimate incomplete
+- `01\_alloc\_churn\.py:38` `eager\_materialise` — 11 static cost units (v2) · 2.8× median · top 7% · unknown-trip ×1 — estimate incomplete
+- `01\_alloc\_churn\.py:5` `loop\_invariant\_construction` — 11 static cost units (v2) · 2.8× median · top 9% · unknown-trip ×1 — estimate incomplete
+
+showing top 5 of 68 functions
 
 [Complete cost-ranked list (68 functions)](profile-queue.md).
 
-0 startup functions demoted · 42 no-loop functions demoted.
+0 startup functions demoted · 42 no-loop functions demoted · 0 non-production files demoted.
 
 ## 2. Scan provenance & parse health
 - Tool: perfpal 0\.2\.0\-beta\.1

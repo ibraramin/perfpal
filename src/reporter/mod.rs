@@ -925,7 +925,9 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
             out.push_str(&format!("   - Why: {}\n", escape_md(&finding.message)));
         }
         out.push_str(&format!(
-            "\n[Complete ranked list](findings-detail.md#ranked-actions) — all {} findings (production-first).\n\n",
+            "\nshowing top {} of {} actions\n\n[Complete ranked list](findings-detail.md#ranked-actions) — all {} findings (production-first).\n\n",
+            kv1.rows.len(),
+            kv1.total_actions,
             kv1.total_actions,
         ));
         out.push_str(&format!(
@@ -953,8 +955,11 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
             ));
         }
         out.push_str(&format!(
-            "\nBlast-radius bars: [report.html#map](report.html#map). resolved {} of {} include edges.\n\n",
-            kv2.resolved_edges, kv2.total_edges,
+            "\nshowing top {} of {} files with resolved dependents\n\nBlast-radius bars: [report.html#map](report.html#map). resolved {} of {} include edges.\n\n",
+            kv2.rows.len().min(5),
+            kv2.total_with_dependents,
+            kv2.resolved_edges,
+            kv2.total_edges,
         ));
     }
 
@@ -966,24 +971,43 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
     if kv3.rows.is_empty() {
         out.push_str("No functions to rank.\n\n");
     } else {
+        let shown = kv3.rows.len().min(5);
         for row in kv3.rows.iter().take(5) {
             let line = doc.stats.functions[row.function_index].span.start_line;
+            let mut extras: Vec<String> = Vec::new();
+            if let Some(label) = row.demotion_label() {
+                extras.push(label);
+            }
+            if let Some(badge) = row.unknown_trip_badge() {
+                extras.push(badge);
+            }
+            if let Some(badge) = row.known_trip_badge() {
+                extras.push(badge);
+            }
+            let suffix = if extras.is_empty() {
+                String::new()
+            } else {
+                format!(" · {}", extras.join(" · "))
+            };
             out.push_str(&format!(
-                "- `{}:{}` `{}` — {}\n",
+                "- `{}:{}` `{}` — {}{}\n",
                 escape_md(&row.path),
                 line,
                 escape_md(&row.function),
                 row.cost_anchor,
+                suffix,
             ));
         }
         out.push_str(&format!(
-            "\n[Complete cost-ranked list ({})](profile-queue.md).\n\n",
+            "\nshowing top {shown} of {} functions\n\n[Complete cost-ranked list ({})](profile-queue.md).\n\n",
+            kv3.total_functions,
             views::plural(kv3.total_functions, "function"),
         ));
         out.push_str(&format!(
-            "{} demoted · {} demoted.\n\n",
+            "{} demoted · {} demoted · {} demoted.\n\n",
             views::plural(kv3.startup_count, "startup function"),
             views::plural(kv3.no_loop_count, "no-loop function"),
+            views::plural(kv3.nonprod_file_count, "non-production file"),
         ));
     }
 }
@@ -1953,6 +1977,11 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
             ));
         }
         out.push_str("</div>\n");
+        out.push_str(&format!(
+            "<p class=\"kv-counts\">showing top {} of {} files with resolved dependents</p>\n",
+            kv2.rows.len(),
+            kv2.total_with_dependents,
+        ));
     }
     out.push_str(&format!(
         "<p class=\"kv-counts\">resolved {} of {} include edges</p>\n",

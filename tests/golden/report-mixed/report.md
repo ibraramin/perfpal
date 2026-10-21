@@ -10,13 +10,13 @@
 Ranked: production code first, then severity, then confidence, then static cost.
 
 1. **Heap allocation inside loop** ([`PERF\-C\-ALLOC\-001:src/main\.c:27:21`](findings-detail.md#finding-PERF-C-ALLOC-001-src-main-c-27-21)) — `src/main\.c:27` · function `c\_loop` · hot · HIGH · production
-   - Cost: `15 static cost units (v2) · 5.0× median · top 25%`
+   - Cost: `15 static cost units (v2) · 5.0× median · top 50%`
    - Why: per\-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization
 2. **Deallocation inside loop** ([`PERF\-C\-ALLOC\-002:src/main\.c:29:9`](findings-detail.md#finding-PERF-C-ALLOC-002-src-main-c-29-9)) — `src/main\.c:29` · function `c\_loop` · hot · HIGH · production
-   - Cost: `15 static cost units (v2) · 5.0× median · top 25%`
+   - Cost: `15 static cost units (v2) · 5.0× median · top 50%`
    - Why: deallocation via 'free' at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization
 3. **String accumulation in loop** ([`PERF\-C\-STR\-001:src/main\.c:28:9`](findings-detail.md#finding-PERF-C-STR-001-src-main-c-28-9)) — `src/main\.c:28` · function `c\_loop` · hot · HIGH · production
-   - Cost: `15 static cost units (v2) · 5.0× median · top 25%`
+   - Cost: `15 static cost units (v2) · 5.0× median · top 50%`
    - Why: 'strcat' accumulates into 'acc' at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization
 4. **Growable\-buffer additive growth in loop \(Rust\)** ([`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`](findings-detail.md#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9)) — `src/lib\.rs:20` · function `build` · hot · MEDIUM · production
    - Cost: `20 static cost units (v2) · 6.7× median · top 25%`
@@ -24,6 +24,8 @@ Ranked: production code first, then severity, then confidence, then static cost.
 5. **Length query recomputed in loop \(Rust\)** ([`PERF\-RS\-STR\-002:src/lib\.rs:22:17`](findings-detail.md#finding-PERF-RS-STR-002-src-lib-rs-22-17)) — `src/lib\.rs:22` · function `build` · warn · HIGH · production
    - Cost: `20 static cost units (v2) · 6.7× median · top 25%`
    - Why: 's\.len' recomputes the length of 's' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
+
+showing top 5 of 9 actions
 
 [Complete ranked list](findings-detail.md#ranked-actions) — all 9 findings (production-first).
 
@@ -33,20 +35,24 @@ Ranked: production code first, then severity, then confidence, then static cost.
 
 - `src/util\.h` — 2 dependents · 50% of scanned files · top 25%
 
+showing top 1 of 1 files with resolved dependents
+
 Blast-radius bars: [report.html#map](report.html#map). resolved 2 of 2 include edges.
 
 ### Where might time plausibly go?
 
 Bars scale within each block: blue = ranked functions, grey = demoted functions.
 
-- `src/lib\.rs:15` `build` — 20 static cost units (v2) · 6.7× median · top 25%
-- `src/main\.c:23` `c\_loop` — 15 static cost units (v2) · 5.0× median · top 25%
-- `src/util\.c:6` `util\_init` — 3 static cost units (v2) · 1.0× median · top 25%
-- `src/lib\.rs:33` `rust\_surface` — 1 static cost units (v2) · 0.3× median · top 25%
+- `src/lib\.rs:15` `build` — 20 static cost units (v2) · 6.7× median · top 25% · unknown-trip ×1 — estimate incomplete
+- `src/main\.c:23` `c\_loop` — 15 static cost units (v2) · 5.0× median · top 50% · unknown-trip ×1 — estimate incomplete
+- `src/util\.c:6` `util\_init` — 3 static cost units (v2) · 1.0× median · top 75% · no-loop — demoted
+- `src/lib\.rs:33` `rust\_surface` — 1 static cost units (v2) · 0.3× median · top 100% · no-loop — demoted
+
+showing top 4 of 4 functions
 
 [Complete cost-ranked list (4 functions)](profile-queue.md).
 
-0 startup functions demoted · 2 no-loop functions demoted.
+0 startup functions demoted · 2 no-loop functions demoted · 0 non-production files demoted.
 
 ## 2. Scan provenance & parse health
 - Tool: perfpal 0\.2\.0\-beta\.1
