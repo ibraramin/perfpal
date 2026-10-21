@@ -1,7 +1,7 @@
 {
  "generated": "2026-10-21",
  "viewport": "1440x900 @ 100% zoom (device_scale_factor=1)",
- "note": "standalone stem PNGs use natural width when the SVG exceeds 1440px so the whole chart is visible; report img sizes are the actual rendered CSS size inside report.html",
+ "note": "standalone stems use natural width when the SVG exceeds 1440px so the whole chart is visible; report img sizes are the actual rendered CSS size inside report.html; 3 first-screen PNGs were captured but not vision-read",
  "report_rendered": [
   {
    "stem": "include-graph",
@@ -533,5 +533,134 @@
    ],
    "file": "cJSON/layer-findings.png"
   }
- ]
+ ],
+ "report_pngs": [
+  {
+   "repo": "tmux",
+   "file": "tmux/report-first-screen.png",
+   "png": [
+    1440,
+    900
+   ],
+   "read_by_vision": false
+  },
+  {
+   "repo": "tmux",
+   "file": "tmux/report-map.png",
+   "png": [
+    1440,
+    900
+   ],
+   "read_by_vision": true
+  },
+  {
+   "repo": "hyperfine",
+   "file": "hyperfine/report-first-screen.png",
+   "png": [
+    1440,
+    900
+   ],
+   "read_by_vision": false
+  },
+  {
+   "repo": "hyperfine",
+   "file": "hyperfine/report-map.png",
+   "png": [
+    1440,
+    900
+   ],
+   "read_by_vision": true
+  },
+  {
+   "repo": "cJSON",
+   "file": "cJSON/report-first-screen.png",
+   "png": [
+    1440,
+    900
+   ],
+   "read_by_vision": false
+  },
+  {
+   "repo": "cJSON",
+   "file": "cJSON/report-map.png",
+   "png": [
+    1440,
+    900
+   ],
+   "read_by_vision": true
+  }
+ ],
+ "off_viewport_reads": [
+  {
+   "view": "hyperfine/include-graph",
+   "svg": [
+    3110,
+    856
+   ],
+   "png": [
+    3130,
+    900
+   ],
+   "note": "read describes a 3130px canvas, not the 1440 viewport"
+  },
+  {
+   "view": "hyperfine/layer-file",
+   "svg": [
+    3110,
+    972
+   ],
+   "png": [
+    3130,
+    992
+   ],
+   "note": "not read; listed for completeness"
+  },
+  {
+   "view": "hyperfine/layer-findings",
+   "svg": [
+    3110,
+    972
+   ],
+   "png": [
+    3130,
+    992
+   ],
+   "note": "not read; listed for completeness"
+  },
+  {
+   "view": "tmux/layer-bands",
+   "svg": [
+    1874,
+    616
+   ],
+   "png": [
+    1894,
+    636
+   ],
+   "note": "read at natural width"
+  },
+  {
+   "view": "cJSON/layer-bands",
+   "svg": [
+    1994,
+    2230
+   ],
+   "png": [
+    2014,
+    2250
+   ],
+   "note": "read at natural width"
+  }
+ ],
+ "read_coverage": {
+  "pngs": 30,
+  "vision_reads": 28,
+  "views_read": 27,
+  "unread_pngs": [
+   "tmux/report-first-screen.png",
+   "hyperfine/report-first-screen.png",
+   "cJSON/report-first-screen.png"
+  ],
+  "duplicate_read": "tmux/report-map p1+p2"
+ }
 }

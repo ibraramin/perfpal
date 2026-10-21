@@ -18,7 +18,12 @@
    text): `NODE_CAP=50` + `REACHABLE_OVERFLOW=10` (`src/charts/mod.rs:71-76,555-604`),
    `BAND_FILE_CAP=10`, `COMPONENT_CAP=50`; `layer-findings` top-50 by
    `3*hot+2*warn+1*info` **raw count** with no KLOC denominator or minimum-findings guard
-   (`src/charts/layers.rs:1414-1431`; weight at `src/charts/mod.rs:148-156`).
+   (`src/charts/layers.rs:1414-1431`; weight at `src/charts/mod.rs:148-156`). One model is
+   approximate: `layer-entry` membership is modelled as entry-cost top-50 + reachable reserve,
+   while the shipped code elects real entries by cost, then non-entries by **non-LOW call
+   degree**, then reserves call-distance-reachable files (`src/charts/layers.rs:663-720`); in
+   the default tier every call edge is LOW, so the difference is limited to the reserve order.
+   Membership for every row below was re-verified against the rendered SVG text.
 3. **Recall scoring** per target: file label shown in ≥1 stem; rank in that stem's ranking;
    whether the function/line or the decision is named; whether the finding ID reaches
    `report.html#map` (top-10 components × top-3 findings by severity then ID,
@@ -53,7 +58,7 @@ top-3 link in `report.html#map`; `action?` = the view states the pre-registered 
 | 1 | tmux | Q1 | profile `input.c:970 input_parse` | ✅ layer-file (reserve), layer-entry, layer-findings, layer-bands | cost #9/216, weight #5; degree #146 (reserve only) | ❌ "." top-3 = format.c/screen.c/tty.c | ❌ no function/line | **file-only** |
 | 2 | tmux | Q2 | do not touch `tmux.h` (160/203 TUs) | ✅ include-graph, layer-file | include degree **#1/216** | ❌ (only component ".") | ❌ hub drawn as a node, no "blast radius" label | **hub visible, decision unlabeled** |
 | 3 | tmux | Q3 | profile `screen-write.c:2776 collect_add` | ✅ layer-file, layer-entry, layer-findings, layer-bands | cost #4/216, weight #6 | ❌ | ❌ | **file-only** |
-| 4 | hyperfine | Q1 | instrument `src/benchmark/mod.rs:346` | ✅ all 5 file stems | cost #6/53, weight #2, degree #2 | ⚠️ `ALLOC-001:src/benchmark/mod.rs:333:9` (near the loop, raw ID) | ❌ no loop/function | **file + adjacent finding** |
+| 4 | hyperfine | Q1 | instrument `src/benchmark/mod.rs:346` | ✅ all 5 file stems | cost #6/53, weight #2, degree #2 | ⚠️ `ALLOC-001:src/benchmark/mod.rs:333:9` (same function `run`, loop head, raw ID) | ❌ no loop/function | **file + same-function finding** |
 | 5 | hyperfine | Q2 | do not touch `src/command.rs` (5 importers) | ✅ all 5 file stems | **cost #1/53** (max-cost outline) | ⚠️ `ALLOC-001:src/command.rs:148:9` | ❌ framed as *hot-path/profile*, the opposite decision | **mislabeled** |
 | 6 | hyperfine | Q3 | profile `src/timer/mod.rs:82 execute_and_measure` | ✅ all 5 file stems | cost #28/53, weight #20 | ❌ `src/timer` top-3 = linux_counters/macos_counters | ❌ | **file-only** |
 | 7 | cJSON | Q1 | profile `cJSON.c:357 parse_number` | ✅ layer-file, layer-entry, layer-findings, layer-bands | cost #3/101, weight #4 | ❌ component "." is rank **13**, outside top-10 | ❌ | **file-only, not on first screen** |
@@ -62,7 +67,8 @@ top-3 link in `report.html#map`; `action?` = the view states the pre-registered 
 
 **Score: 0/9 actions stated at function/line granularity; 2/9 "do not touch" hubs visible but
 unlabeled; 1/9 (#5) framed as the opposite decision; 9/9 files drawn somewhere; 2/9 paths
-receive a raw finding link on `#map` (both hyperfine).**
+receive a raw finding link on `#map` (both hyperfine — and #4's link is the same function
+`run` at the loop head, the strongest single positive in the set).**
 
 The two "hub" rows are the only place the map *could* answer Q2, and both are read by the
 blind vision pass as **Q1 "inspect first"** — `tmux.h` and `cJSON.h` were named as the place to
@@ -83,11 +89,12 @@ view surfaces them.
 | 5 | chunkhound | `pipeline.rs:1493:9` | ✅ | same; band omitted (component >50) | ❌ | file-only |
 | 6 | chunkhound | `compaction.rs:32:5` | ✅ | layer-findings (weight #48), layer-bands | ❌ component rank 12 | file-only |
 | 7 | ripgrep | `globset/src/lib.rs:424:9` | ✅ | all 5 file stems; weight #18/98 | ❌ component rank **19** | file-only |
-| 8 | curl | `lib/file.c:387:14` | ❌ | **no stem** (degree #51, not entry, weight #80, band cut) | ❌ `lib` is rank 9 but its top-3 are three ALLOC-001 findings elsewhere | **invisible everywhere** |
-| 9 | curl | `lib/file.c:582:15` | ❌ | same | ❌ | **invisible everywhere** |
+| 8 | curl | `lib/file.c:387:14` | ❌ | **no overview stem** (degree #51, not entry, weight #80, band cut); file appears only on the linked per-component page `component-09-lib.svg` | ❌ `lib` is rank 9 but its top-3 are three ALLOC-001 findings elsewhere | **invisible in every overview stem** |
+| 9 | curl | `lib/file.c:582:15` | ❌ | same | ❌ | **invisible in every overview stem** |
 
-**Score: 0/9 finding IDs appear in any chart; 0/9 reach the `#map` table; 7/9 findings are
-reduced to a file label; 2/9 (both curl LOOP-002 GENUINE) are invisible in every stem.**
+**Score: 0/9 finding IDs appear in any overview chart; 0/9 reach the `#map` table; 0/9 are
+surfaced at finding granularity (7/9 surface only as a file label); 2/9 (both curl LOOP-002
+GENUINE) are invisible in every overview stem.**
 
 Why the curl pair disappears is structural, not accidental: `lib/file.c` is degree #51 of
 923 (just outside the 50-node file cap, and not reachable-reserve), not an entry file, and its

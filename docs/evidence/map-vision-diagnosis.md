@@ -18,6 +18,13 @@
 | Blind rule | image path only; no source, no sibling views, no expected answer; describe-then-judge |
 | Model | `@vision` (image-only) |
 
+Two protocol notes: the 3 `report-first-screen.png` captures are artifacts but were **not**
+vision-read (the "first screen" in the tables is the top of `#map`, `report-map.png`); and 5
+standalone stems exceed 1440 px (hyperfine `include-graph`/`layer-file`/`layer-findings`,
+tmux/cJSON `layer-bands`) and were captured at natural width so no chart is cropped — the
+`hyperfine/include-graph` read therefore describes a 3130 px canvas, not the 1440 viewport.
+Render scripts are committed at `docs/evidence/map-vision/v0/render/`.
+
 ### 1.1 The reading surface itself (measured, not inferred)
 
 The report body is `max-width:72rem` (1152 px); charts sit in `figure.pz` with
@@ -85,10 +92,11 @@ concrete action was named; `conf` = reader confidence. Full descriptions in `rea
 | layer-bands | Q3 | inspect red-hot file in `tests/unity/test/tests` | cost units, edge paths, full filenames | partial | 0.60 |
 | layer-findings | Q1 | triage `cJSON_Utils.c` (61), tests nodes | root cause, time, ~20 clipped labels | **answers** | 0.80 |
 
-**Score:** of 27 views, 5 were judged to answer one question (`answers`: 3× layer-findings,
-hyperfine workspace + report#map), 21 `partial`, 1 `none` (hyperfine include-graph). Every
-read that named an action named a **file or component**, never a function or line — except the
-report table's top-finding links, which are plain text the reader has to decode.
+**Score:** of 27 views, **4** were judged to answer one question (`answers`: 2× layer-findings
+— tmux and cJSON — plus hyperfine workspace and hyperfine report#map), **22** `partial`, **1**
+`none` (hyperfine include-graph). Every read that named an action named a **file or
+component**, never a function or line — except the report table's top-finding links, which are
+plain text the reader has to decode.
 
 ## 3. Cross-cutting failures (evidence, not opinion)
 
@@ -105,21 +113,24 @@ report table's top-finding links, which are plain text the reader has to decode.
    pre-registered "do not touch" hubs (`tmux.h`, `cJSON.h`) as convergence nodes; the
    `#map`/`workspace` view and the coupling matrix did not. tmux's coupling matrix has exactly
    one lit cell (`.`×`.`), no legend and no scale; cJSON's is "ambiguous"; hyperfine's has no
-   numeric scale. `layer-bands` computes cross-component edges but "never draws them", only
-   counted footnotes.
+   numeric scale. `layer-bands` draws cross-component edges only as unlabeled ribbons in a
+   right-hand gutter (no source/target labels; `src/charts/layers.rs:1310-1328`).
 4. **Labels are the weakest link.** Reads flagged truncated/overlapping/garble in 18 of 28
    reads: left-clipped cJSON paths (~20 labels), tmux band 2 `2. …`, hyperfine node `4 .`,
    workspace label overflow, `..ts/unity/...`. Filename truncation makes the ranking
    unactionable even when the heat is right.
-5. **The dot encoding does not survive at 100%.** All 10 tmux reads and 7 more flagged the
-   severity fill / confidence ring / count badges as too small to decode (6 px dots,
-   overlapping counts). The legend explains an encoding the reader cannot resolve.
+5. **The dot encoding does not survive at 100%.** 8 of 28 reads flagged the severity fill /
+   confidence ring / count badges as too small to decode (6 tmux + 2 non-tmux); the dot is an
+   **8 px circle** (`r=4`, `src/charts/mod.rs:277`) with a **7 px numeral** (`:284`). Two cJSON
+   reads found the badges readable but the labels clipped. The legend explains an encoding
+   many readers cannot resolve.
 6. **No view decodes rule IDs.** `PERF-C-ARCH-003`, `PERF-C-LOOP-002`, `PERF-PY-ALLOC-003`
    appear as opaque codes in the only table that carries file:line; the appendix is a separate
    page. A maintainer cannot tell "loop" from "alloc" without leaving the view.
 7. **Legends are duplicated; canvas is wasted.** The same finding-dots legend is printed inside
-   and below the workspace panel (tmux); hot-components occupies the top ~20–40% of a 900 px
-   frame; the coupling matrix sits in the top-left corner of a mostly blank canvas.
+   and below the workspace panel (tmux); hot-components occupies only the top ~20–40% of a
+   900 px frame for tmux/hyperfine (cJSON: 72%); the coupling matrix sits in the top-left corner
+   of a mostly blank canvas.
 8. **The report clips wide charts instead of scaling them.** 37% visible for three hyperfine
    stems, 58–62% for layer-bands (measured §1.1). The founder's first encounter with a
    3110 px chart is its left third.
@@ -151,6 +162,6 @@ missing-field list is therefore short and additive; V1 enumerates it with schema
 - `docs/evidence/map-vision-prereg.md` — answer key (commit `3982b03`)
 - `docs/evidence/map-vision/v0/reads.json` — 28 blind reads (compact, machine-readable)
 - `docs/evidence/map-vision/v0/manifest.json` — natural vs rendered sizes, PNG dimensions
-- `docs/evidence/map-vision/v0/<repo>/*.png` — 30 rendered views at 1440 width / 100% zoom
-- Repro: `python3 /var/tmp/opencode/render_v0.py` + `render_v0_stems.py` (session-local; the
-  committed PNGs + manifest are the artifact)
+- `docs/evidence/map-vision/v0/<repo>/*.png` — 30 PNGs: 6 report captures at 1440×900 and 24
+  stems at 100% zoom (natural width where the SVG exceeds 1440)
+- Repro: `docs/evidence/map-vision/v0/render/render_v0.py` + `render_v0_stems.py`
