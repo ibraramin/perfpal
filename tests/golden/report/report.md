@@ -37,6 +37,8 @@ Blast-radius bars: [report.html#map](report.html#map). resolved 2 of 2 include e
 
 ### Where might time plausibly go?
 
+Bars scale within each block: blue = ranked functions, grey = demoted functions.
+
 - `src/main\.c:84` `dispatch` — 57 static cost units (v2) · 8.1× median · top 10%
 - `src/main\.c:57` `deep\_sum` — 27 static cost units (v2) · 3.9× median · top 25%
 - `src/main\.c:31` `process` — 14 static cost units (v2) · 2.0× median · top 25%

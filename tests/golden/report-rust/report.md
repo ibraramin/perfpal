@@ -39,6 +39,8 @@ Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 5 include e
 
 ### Where might time plausibly go?
 
+Bars scale within each block: blue = ranked functions, grey = demoted functions.
+
 - `src/03\_deep\_nesting\.rs:15` `grid\_checksum` — 25 static cost units (v2) · 3.6× median · top 5%
 - `src/01\_alloc\_churn\.rs:32` `build\_row\_labels` — 22 static cost units (v2) · 3.1× median · top 10%
 - `src/06\_memory\_ops\.rs:24` `duplicate\_rows` — 22 static cost units (v2) · 3.1× median · top 10%

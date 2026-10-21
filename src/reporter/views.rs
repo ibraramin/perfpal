@@ -116,8 +116,8 @@ pub struct Kv3Row {
     pub cost_scale: CostScale,
     /// Rendered unit + ratio + top-percentile anchor.
     pub cost_anchor: String,
-    /// Integer percentage of the largest cost in the complete function set
-    /// (demoted rows included; clamped to 100).
+    /// Integer percentage of the largest cost in the row's own block
+    /// (non-demoted vs demoted; clamped to 100).
     pub width_pct: u32,
     pub startup: bool,
     pub no_loop: bool,
@@ -639,13 +639,25 @@ fn build_kv3_rows(doc: &MetricsDocument) -> (Vec<Kv3Row>, usize, usize, usize) {
             .then_with(|| fa.id.cmp(&fb.id))
     });
 
-    // Bars are normalized to the complete function set, demoted rows
-    // included: a demoted row may still be the most expensive function on the
-    // scan, and its bar must not contradict its printed cost.
-    let max_cost = indices
-        .iter()
-        .map(|&index| function_value(&doc.stats.functions[index]))
-        .fold(0.0_f64, f64::max);
+    // Dual bar scale: ranked and demoted rows are normalized within their
+    // own block. A demoted outlier (test/startup/no-loop) must not flatten
+    // every ranked bar to zero, and a demoted bar must not contradict its
+    // printed cost.
+    let mut max_non_demoted = 0.0_f64;
+    let mut max_demoted = 0.0_f64;
+    for &index in &indices {
+        let function = &doc.stats.functions[index];
+        let (_, production) = context.path_class(&function.path);
+        let demoted = !production
+            || function.max_loop_depth == 0
+            || matches!(function.entry_kind.as_deref(), Some("main" | "script"));
+        let cost = function_value(function);
+        if demoted {
+            max_demoted = max_demoted.max(cost);
+        } else {
+            max_non_demoted = max_non_demoted.max(cost);
+        }
+    }
 
     let mut rows = Vec::with_capacity(indices.len());
     for (position, index) in indices.into_iter().enumerate() {
@@ -665,6 +677,11 @@ fn build_kv3_rows(doc: &MetricsDocument) -> (Vec<Kv3Row>, usize, usize, usize) {
         }
         let scale = scale_of(function);
         let cost = function_value(function);
+        let scale_max = if demotions.is_empty() {
+            max_non_demoted
+        } else {
+            max_demoted
+        };
         rows.push(Kv3Row {
             rank: position + 1,
             function_index: index,
@@ -675,7 +692,7 @@ fn build_kv3_rows(doc: &MetricsDocument) -> (Vec<Kv3Row>, usize, usize, usize) {
             cost,
             cost_scale: scale,
             cost_anchor: context.ordering_for(scale).anchor(function, scale),
-            width_pct: scale_width(cost, max_cost),
+            width_pct: scale_width(cost, scale_max),
             startup,
             no_loop,
             demotions,
@@ -1006,6 +1023,69 @@ mod tests {
                 .unwrap()
                 .contains("static cost units (v2)")
         );
+    }
+
+    #[test]
+    fn kv3_dual_scale_keeps_ranked_bars_visible_with_demoted_outlier() {
+        let files = vec![file("src/a.c", "production")];
+        let functions = vec![
+            function("src/a.c", "ranked_top", 1, 10, Some(100), 1, None, 0, None),
+            function(
+                "src/a.c",
+                "ranked_second",
+                20,
+                30,
+                Some(50),
+                1,
+                None,
+                0,
+                None,
+            ),
+            function(
+                "src/a.c",
+                "leaf_outlier",
+                40,
+                50,
+                Some(1_000_000),
+                0,
+                None,
+                0,
+                None,
+            ),
+            function(
+                "src/a.c",
+                "main_outlier",
+                60,
+                70,
+                Some(500_000),
+                1,
+                Some("main"),
+                0,
+                None,
+            ),
+        ];
+        let view = kv3(&doc(files, functions, Vec::new(), Vec::new()));
+        let width = |name: &str| {
+            view.rows
+                .iter()
+                .find(|row| row.function == name)
+                .unwrap_or_else(|| panic!("missing {name}"))
+                .width_pct
+        };
+        // Ranked block: 100/50 against max 100.
+        assert_eq!(width("ranked_top"), 100);
+        assert_eq!(width("ranked_second"), 50);
+        // Demoted block: 1,000,000 / 500,000 against max 1,000,000.
+        assert_eq!(width("leaf_outlier"), 100);
+        assert_eq!(width("main_outlier"), 50);
+        // Demoted rows still cost-desc ordered.
+        let demoted: Vec<&str> = view
+            .rows
+            .iter()
+            .filter(|row| row.is_demoted())
+            .map(|row| row.function.as_str())
+            .collect();
+        assert_eq!(demoted, vec!["leaf_outlier", "main_outlier"]);
     }
 
     #[test]

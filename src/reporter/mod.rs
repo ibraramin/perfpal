@@ -960,6 +960,9 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
 
     let kv3 = views::kv3(doc);
     out.push_str("### Where might time plausibly go?\n\n");
+    out.push_str(
+        "Bars scale within each block: blue = ranked functions, grey = demoted functions.\n\n",
+    );
     if kv3.rows.is_empty() {
         out.push_str("No functions to rank.\n\n");
     } else {
@@ -1518,6 +1521,7 @@ const KEY_VIEW_CSS: &str = "\
          .kv-title{font-weight:600}\n\
          .kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}\n\
          .kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}\n\
+         .kv-caption{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}\n\
          .kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}\n\
          .kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}\n\
          .sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}\n\
@@ -1958,7 +1962,7 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
 
     // --- KV3: static cost ------------------------------------------------
     out.push_str(
-        "<div class=\"kv kv3\">\n<h3>Where might time plausibly go?</h3>\n         <p class=\"kv-action\">Profile the named function first — static          candidate, confirm with a profiler.</p>\n",
+        "<div class=\"kv kv3\">\n<h3>Where might time plausibly go?</h3>\n         <p class=\"kv-action\">Profile the named function first — static          candidate, confirm with a profiler.</p>\n         <p class=\"kv-caption\">Bars scale within each block: blue = ranked functions, grey = demoted functions.</p>\n",
     );
     if kv3.rows.is_empty() {
         out.push_str("<p>No functions to rank.</p>\n");

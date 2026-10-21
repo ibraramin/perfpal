@@ -340,9 +340,15 @@ fn key_views_carry_units_anchors_and_full_rationale() {
     assert!(map.contains(
         "Ranked: production code first, then severity, then confidence, then static cost."
     ));
+    assert!(map.contains(
+        "Bars scale within each block: blue = ranked functions, grey = demoted functions."
+    ));
     let md = perfpal::reporter::render_report(&doc, &[]);
     assert!(md.contains(
         "Ranked: production code first, then severity, then confidence, then static cost."
+    ));
+    assert!(md.contains(
+        "Bars scale within each block: blue = ranked functions, grey = demoted functions."
     ));
     assert!(
         map.contains("This is the complete rationale for PERF-C-CALL-001"),

@@ -39,6 +39,8 @@ Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 10 include 
 
 ### Where might time plausibly go?
 
+Bars scale within each block: blue = ranked functions, grey = demoted functions.
+
 - `03\_deep\_nesting\.py:4` `triple\_nested` — 25 static cost units (v2) · 6.3× median · top 5%
 - `03\_deep\_nesting\.py:14` `double\_nested` — 15 static cost units (v2) · 3.8× median · top 5%
 - `08\_range\_len\.py:4` `positional\_sum` — 15 static cost units (v2) · 3.8× median · top 10%
