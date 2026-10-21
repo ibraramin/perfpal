@@ -7,6 +7,8 @@
 
 ### Where do I look first?
 
+Ranked: production code first, then severity, then confidence, then static cost.
+
 1. **Heap allocation inside loop** ([`PERF\-C\-ALLOC\-001:src/main\.c:34:21`](findings-detail.md#finding-PERF-C-ALLOC-001-src-main-c-34-21)) — `src/main\.c:34` · function `process` · hot · HIGH · production
    - Cost: `14 static cost units (v2) · 2.0× median · top 25%`
    - Why: per\-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization
@@ -19,7 +21,7 @@
 4. **String accumulation in loop** ([`PERF\-C\-STR\-001:src/main\.c:52:9`](findings-detail.md#finding-PERF-C-STR-001-src-main-c-52-9)) — `src/main\.c:52` · function `join` · hot · HIGH · production
    - Cost: `7 static cost units (v2) · 1.0× median · top 25%`
    - Why: 'strcat' accumulates into 'out' at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization
-5. **Realloc linear growth in loop** ([`PERF\-C\-ALLOC\-003:src/main\.c:73:15`](findings-detail.md#finding-PERF-C-ALLOC-003-src-main-c-73-15)) — `src/main\.c:73` · function `grow` · hot · MEDIUM · production
+5. **Realloc linear growth in loop** (same location as #3) ([`PERF\-C\-ALLOC\-003:src/main\.c:73:15`](findings-detail.md#finding-PERF-C-ALLOC-003-src-main-c-73-15)) — `src/main\.c:73` · function `grow` · hot · MEDIUM · production
    - Cost: `13 static cost units (v2) · 1.9× median · top 25%`
    - Why: 'realloc' grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization
 

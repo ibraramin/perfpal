@@ -885,20 +885,31 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
     let kv1 = views::kv1(doc);
     let anchors = finding_anchor_assignments(doc).1;
     out.push_str("### Where do I look first?\n\n");
+    out.push_str(
+        "Ranked: production code first, then severity, then confidence, then static cost.\n\n",
+    );
     if kv1.rows.is_empty() {
         out.push_str("No function-granularity actions to rank.\n\n");
     } else {
+        let mut seen_locations: BTreeMap<(String, u32), usize> = BTreeMap::new();
         for row in &kv1.rows {
             let finding = &doc.findings[row.finding_index];
             let location = format!("{}:{}", finding.path, finding.span.start_line);
+            let same_as = seen_locations
+                .get(&(finding.path.clone(), finding.span.start_line))
+                .copied();
             out.push_str(&format!(
-                "{}. **{}** ([`{}`](findings-detail.md#{})) — `{}`",
+                "{}. **{}**{} ([`{}`](findings-detail.md#{})) — `{}`",
                 row.rank,
                 escape_md(&finding.title),
+                same_as.map_or_else(String::new, |prior| format!(" (same location as #{prior})")),
                 escape_md(&finding.finding_id),
                 &anchors[row.finding_index],
                 escape_md(&location),
             ));
+            seen_locations
+                .entry((finding.path.clone(), finding.span.start_line))
+                .or_insert(row.rank);
             if let Some(function) = &row.function {
                 out.push_str(&format!(" · function `{}`", escape_md(function)));
             }
@@ -1505,6 +1516,8 @@ const KEY_VIEW_CSS: &str = "\
          .kv-loc{font-weight:700;color:#111;text-decoration:none}\n\
          .kv-loc:hover{text-decoration:underline}\n\
          .kv-title{font-weight:600}\n\
+         .kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}\n\
+         .kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}\n\
          .kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}\n\
          .kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}\n\
          .sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}\n\
@@ -1521,7 +1534,7 @@ const KEY_VIEW_CSS: &str = "\
          .kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}\n\
          .kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}\n\
          .kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}\n\
-         .kv-fill.demoted{background:#a0aec0;width:0}\n\
+         .kv-fill.demoted{background:#a0aec0}\n\
          .kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}\n\
          .kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}\n\
          .kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}\n\
@@ -1625,6 +1638,7 @@ fn html_breadcrumb(out: &mut String) {
 fn html_nav(out: &mut String) {
     out.push_str(
         "<nav>\n<ul>\n\
+         <li><a href=\"#map\">Key views</a></li>\n\
          <li><a href=\"#explorer\">Explorer</a></li>\n\
          <li><a href=\"#components\">Components</a></li>\n\
          <li><a href=\"#files\">Files</a></li>\n\
@@ -1848,15 +1862,19 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
 
     // --- KV1: ranked maintainer brief -----------------------------------
     out.push_str(
-        "<div class=\"kv kv1\">\n<h3>Where do I look first?</h3>\n         <p class=\"kv-action\">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>\n",
+        "<div class=\"kv kv1\">\n<h3>Where do I look first?</h3>\n         <p class=\"kv-action\">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>\n         <p class=\"kv-key\">Ranked: production code first, then severity, then confidence, then static cost.</p>\n",
     );
     if kv1.rows.is_empty() {
         out.push_str("<p>No function-granularity actions to rank.</p>\n");
     } else {
         out.push_str("<ol class=\"kv-rows\">\n");
+        let mut seen_locations: BTreeMap<(String, u32), usize> = BTreeMap::new();
         for row in &kv1.rows {
             let finding = &doc.findings[row.finding_index];
             let location = format!("{}:{}", finding.path, finding.span.start_line);
+            let same_as = seen_locations
+                .get(&(finding.path.clone(), finding.span.start_line))
+                .copied();
             out.push_str(&format!(
                 "<li class=\"kv-row\"><span class=\"kv-rank\">#{rank}</span>                 <div class=\"kv-body\">\n<div class=\"kv-line1\">                 <a class=\"kv-loc\" href=\"findings-detail.html#{anchor}\">{location}</a>",
                 rank = row.rank,
@@ -1870,14 +1888,20 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
                 ));
             }
             out.push_str(&format!(
-                " <span class=\"kv-title\">{}</span>                 <span class=\"kv-badge sev-{}\">{}</span>                 <span class=\"kv-badge\">{}</span>                 <span class=\"kv-class{}\">{}</span></div>\n",
+                " <span class=\"kv-title\">{}</span>{}                 <span class=\"kv-badge sev-{}\">{}</span>                 <span class=\"kv-badge\">{}</span>                 <span class=\"kv-class{}\">{}</span></div>\n",
                 escape_html(&finding.title),
+                same_as.map_or_else(String::new, |prior| format!(
+                    " <span class=\"kv-note\">same location as #{prior}</span>"
+                )),
                 severity_token(finding.severity),
                 severity_token(finding.severity),
                 confidence_token(finding.confidence),
                 if row.production { "" } else { " nonprod" },
                 escape_html(&row.path_class),
             ));
+            seen_locations
+                .entry((finding.path.clone(), finding.span.start_line))
+                .or_insert(row.rank);
             if let Some(anchor) = &row.cost_anchor {
                 out.push_str(&format!(
                     "<div class=\"kv-anchor\">{}</div>\n",

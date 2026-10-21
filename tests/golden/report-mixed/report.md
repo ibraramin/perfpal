@@ -7,6 +7,8 @@
 
 ### Where do I look first?
 
+Ranked: production code first, then severity, then confidence, then static cost.
+
 1. **Heap allocation inside loop** ([`PERF\-C\-ALLOC\-001:src/main\.c:27:21`](findings-detail.md#finding-PERF-C-ALLOC-001-src-main-c-27-21)) — `src/main\.c:27` · function `c\_loop` · hot · HIGH · production
    - Cost: `15 static cost units (v2) · 5.0× median · top 25%`
    - Why: per\-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization

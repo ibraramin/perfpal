@@ -7,6 +7,8 @@
 
 ### Where do I look first?
 
+Ranked: production code first, then severity, then confidence, then static cost.
+
 1. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:34:5`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5)) — `src/01\_alloc\_churn\.rs:34` · function `build\_row\_labels` · hot · HIGH · production
    - Cost: `22 static cost units (v2) · 3.1× median · top 10%`
    - Why: loop performs 3 per\-iteration allocation\(s\) \(format, to\_string, vec\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization

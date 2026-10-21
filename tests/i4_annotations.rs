@@ -590,7 +590,17 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         !crumb_line.contains("#architecture") && !crumb_line.contains("Workspace"),
         "breadcrumb must not claim #architecture is the workspace section: {crumb_line}"
     );
-    // The Explorer tier replaces #architecture: same stems, new label.
+    // Key views have their own nav entry (first), then the Explorer tier.
+    let nav_key_views = html
+        .find("<li><a href=\"#map\">Key views</a></li>")
+        .expect("Key views nav item");
+    let nav_explorer = html
+        .find("<li><a href=\"#explorer\">Explorer</a></li>")
+        .expect("Explorer nav item");
+    assert!(
+        nav_key_views < nav_explorer,
+        "Key views must precede Explorer"
+    );
     assert!(html.contains("<li><a href=\"#explorer\">Explorer</a></li>"));
     assert!(!html.contains("<li><a href=\"#architecture\">Architecture</a></li>"));
     assert!(html.contains("<a href=\"findings-detail.html\">Findings detail</a>"));

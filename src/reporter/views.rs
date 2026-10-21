@@ -116,7 +116,8 @@ pub struct Kv3Row {
     pub cost_scale: CostScale,
     /// Rendered unit + ratio + top-percentile anchor.
     pub cost_anchor: String,
-    /// Integer percentage of the largest non-demoted row (0 for demoted).
+    /// Integer percentage of the largest cost in the complete function set
+    /// (demoted rows included; clamped to 100).
     pub width_pct: u32,
     pub startup: bool,
     pub no_loop: bool,
@@ -638,18 +639,10 @@ fn build_kv3_rows(doc: &MetricsDocument) -> (Vec<Kv3Row>, usize, usize, usize) {
             .then_with(|| fa.id.cmp(&fb.id))
     });
 
-    let non_demoted: Vec<usize> = indices
-        .iter()
-        .copied()
-        .filter(|&index| {
-            let function = &doc.stats.functions[index];
-            let (_, production) = context.path_class(&function.path);
-            production
-                && function.max_loop_depth > 0
-                && !matches!(function.entry_kind.as_deref(), Some("main" | "script"))
-        })
-        .collect();
-    let max_cost = non_demoted
+    // Bars are normalized to the complete function set, demoted rows
+    // included: a demoted row may still be the most expensive function on the
+    // scan, and its bar must not contradict its printed cost.
+    let max_cost = indices
         .iter()
         .map(|&index| function_value(&doc.stats.functions[index]))
         .fold(0.0_f64, f64::max);
@@ -682,11 +675,7 @@ fn build_kv3_rows(doc: &MetricsDocument) -> (Vec<Kv3Row>, usize, usize, usize) {
             cost,
             cost_scale: scale,
             cost_anchor: context.ordering_for(scale).anchor(function, scale),
-            width_pct: if demotions.is_empty() {
-                scale_width(cost, max_cost)
-            } else {
-                0
-            },
+            width_pct: scale_width(cost, max_cost),
             startup,
             no_loop,
             demotions,
@@ -726,12 +715,18 @@ pub fn kv3(doc: &MetricsDocument) -> Kv3View {
         .take(8)
         .cloned()
         .collect();
-    let demoted: Vec<Kv3Row> = all
-        .iter()
-        .filter(|row| row.is_demoted())
-        .take(2)
-        .cloned()
-        .collect();
+    // The two greyed rows are the most expensive demoted functions (cost
+    // desc), not simply the first two in the demotion tier.
+    let mut demoted: Vec<Kv3Row> = all.iter().filter(|row| row.is_demoted()).cloned().collect();
+    demoted.sort_by(|a, b| {
+        b.cost
+            .partial_cmp(&a.cost)
+            .unwrap_or(Ordering::Equal)
+            .then_with(|| a.path.cmp(&b.path))
+            .then_with(|| a.function.cmp(&b.function))
+            .then_with(|| a.rank.cmp(&b.rank))
+    });
+    demoted.truncate(2);
     rows.extend(demoted);
     Kv3View {
         rows,
@@ -1134,7 +1129,21 @@ mod tests {
             .filter(|row| row.is_demoted())
             .map(|row| row.function.as_str())
             .collect();
-        assert_eq!(demoted, vec!["main", "leaf"]);
+        // The two most expensive demoted rows, cost desc: leaf 900 > helper 700.
+        assert_eq!(demoted, vec!["leaf", "helper"]);
+        let leaf = view
+            .rows
+            .iter()
+            .find(|row| row.function == "leaf")
+            .expect("leaf row");
+        let helper = view
+            .rows
+            .iter()
+            .find(|row| row.function == "helper")
+            .expect("helper row");
+        assert_eq!(leaf.width_pct, 100);
+        assert_eq!(helper.width_pct, 78);
+        assert!(leaf.is_demoted() && helper.is_demoted());
         let complete = complete_profile_queue(&doc(
             vec![file("src/a.c", "production"), file("tests/t.c", "test")],
             vec![

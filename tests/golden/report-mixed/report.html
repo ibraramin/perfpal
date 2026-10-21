@@ -36,6 +36,8 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 .kv-loc{font-weight:700;color:#111;text-decoration:none}
 .kv-loc:hover{text-decoration:underline}
 .kv-title{font-weight:600}
+.kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}
 .kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
 .kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
 .sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
@@ -52,7 +54,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 .kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
 .kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
 .kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
-.kv-fill.demoted{background:#a0aec0;width:0}
+.kv-fill.demoted{background:#a0aec0}
 .kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
 .kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
 .kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
@@ -67,6 +69,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </header>
 <nav>
 <ul>
+<li><a href="#map">Key views</a></li>
 <li><a href="#explorer">Explorer</a></li>
 <li><a href="#components">Components</a></li>
 <li><a href="#files">Files</a></li>
@@ -80,6 +83,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv kv1">
 <h3>Where do I look first?</h3>
          <p class="kv-action">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>
+         <p class="kv-key">Ranked: production code first, then severity, then confidence, then static cost.</p>
 <ol class="kv-rows">
 <li class="kv-row"><span class="kv-rank">#1</span>                 <div class="kv-body">
 <div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-27-21">src/main.c:27</a> <span class="kv-fn">c_loop</span> <span class="kv-title">Heap allocation inside loop</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
@@ -124,8 +128,8 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv-bars">
 <div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/lib.rs:15</span>                 <span class="kv-fn">build</span></span><div class="kv-track"><div class="kv-fill" style="width:100%"></div></div><span class="kv-value">20 static cost units (v2) · 6.7× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
 <div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:23</span>                 <span class="kv-fn">c_loop</span></span><div class="kv-track"><div class="kv-fill" style="width:75%"></div></div><span class="kv-value">15 static cost units (v2) · 5.0× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/util.c:6</span>                 <span class="kv-fn">util_init</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:0%"></div></div><span class="kv-value">3 static cost units (v2) · 1.0× median · top 25%</span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/lib.rs:33</span>                 <span class="kv-fn">rust_surface</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:0%"></div></div><span class="kv-value">1 static cost units (v2) · 0.3× median · top 25%</span></div>
+<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/util.c:6</span>                 <span class="kv-fn">util_init</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:15%"></div></div><span class="kv-value">3 static cost units (v2) · 1.0× median · top 25%</span></div>
+<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/lib.rs:33</span>                 <span class="kv-fn">rust_surface</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:5%"></div></div><span class="kv-value">1 static cost units (v2) · 0.3× median · top 25%</span></div>
 </div>
 <p class="kv-more"><a href="profile-queue.html">             Complete cost-ranked list (4 functions)</a></p>
 <p class="kv-counts">0 startup functions demoted · 2 no-loop functions demoted · 0 non-production files demoted</p>

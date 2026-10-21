@@ -337,6 +337,13 @@ fn key_views_carry_units_anchors_and_full_rationale() {
     assert!(map.contains("top "));
     assert!(map.contains("× median"));
     assert!(map.contains("dependents"));
+    assert!(map.contains(
+        "Ranked: production code first, then severity, then confidence, then static cost."
+    ));
+    let md = perfpal::reporter::render_report(&doc, &[]);
+    assert!(md.contains(
+        "Ranked: production code first, then severity, then confidence, then static cost."
+    ));
     assert!(
         map.contains("This is the complete rationale for PERF-C-CALL-001"),
         "KV1 must show the full message"
@@ -452,4 +459,36 @@ fn kv2_labels_use_full_repo_relative_paths_and_pluralize() {
 
     let md = perfpal::reporter::render_report(&d, &[]);
     assert!(md.contains("compat/imsg") && md.contains("1 dependent"));
+}
+
+#[test]
+fn kv1_marks_repeated_inline_locations_without_changing_ranks() {
+    let mut d = doc();
+    d.findings = vec![
+        finding(
+            "PERF-C-ALLOC-001",
+            "src/a.c",
+            5,
+            Severity::Hot,
+            Confidence::High,
+        ),
+        finding(
+            "PERF-C-STR-001",
+            "src/a.c",
+            5,
+            Severity::Hot,
+            Confidence::High,
+        ),
+    ];
+    let html = render_html(&d, &[]);
+    let map = map_section(&html);
+    assert!(
+        map.contains("same location as #1"),
+        "second same-location KV1 row must be annotated"
+    );
+    assert_eq!(map.matches("same location as #1").count(), 1);
+    let md = perfpal::reporter::render_report(&d, &[]);
+    assert!(md.contains("(same location as #1)"));
+    // Ranks/list are unchanged: two rows, ranks 1 and 2.
+    assert_eq!(views::complete_actions(&d).len(), 2);
 }

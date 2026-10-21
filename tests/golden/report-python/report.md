@@ -7,6 +7,8 @@
 
 ### Where do I look first?
 
+Ranked: production code first, then severity, then confidence, then static cost.
+
 1. **Expensive I/O call inside loop** ([`PERF\-PY\-LOOP\-002:04\_stdio\_churn\.py:8:14`](findings-detail.md#finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14)) — `04\_stdio\_churn\.py:8` · function `read\_each` · warn · MEDIUM · production
    - Cost: `11 static cost units (v2) · 2.8× median · top 10%`
    - Why: 'open' acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization
