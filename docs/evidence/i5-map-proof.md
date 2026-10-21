@@ -68,7 +68,9 @@ upgrade — the single-file C case) selects the tier-active text; HTML gets an e
 "Semantic resolver tier active for C" sentence. The default build keeps the syntactic text and
 stays byte-identical. Locked by
 `tests/reporter_render.rs::semantic_tier_boilerplate_follows_the_data` (including the
-zero-semantic-finding / resolver-Ok case; the +1 default test takes 687→688).
+zero-semantic-finding / resolver-Ok case; the +1 default test takes 687→688). The
+resolver-Ok signal is language-gated to C (`f.language == "c"`), because the semantic tier is
+C-only; the test's final case locks that non-C resolver-Ok never claims the C semantic tier.
 
 **A2 intact.** No `metrics.json`, `graph.dot`, or `findings-detail.*` golden changed
 (`git status --porcelain` for those paths is empty). The 33 golden files that changed are
@@ -220,9 +222,9 @@ actions from the layered/finding views, not from the raw cost rank.
 Five heat captions lacked the mandatory "candidate" framing: `src/charts/layers.rs:209,415,
 840,1194`, `src/charts/component.rs:258` (component-page ramp), plus the
 `hot-components.svg` subtitle (`src/charts/mod.rs:1110`) and three `report.md` link captions
-(`src/reporter/mod.rs:2340,2343,2346`); the `hot-components` link caption now reads
-`ranking by candidate finding density` instead of the verbatim "bottleneck" claim. The six
-in-chart legends now read
+(`src/reporter/mod.rs:2340,2343,2346`); the `hot-components` link caption
+(`src/reporter/mod.rs:2337`) now reads `ranking by candidate finding density` instead of the
+verbatim "bottleneck" claim. The six in-chart legends now read
 `candidate … — profile to confirm`; the report-level link captions read `candidate …`
 (link prose, no suffix). `docs/report/output-contract.md` was updated to match. This is the
 only **A4** code change; I5 also fixes the feature-build golden gate and the semantic-report

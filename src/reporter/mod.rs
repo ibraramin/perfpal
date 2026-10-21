@@ -2519,10 +2519,12 @@ fn semantic_tier_active(doc: &MetricsDocument) -> bool {
     doc.findings
         .iter()
         .any(|f| matches!(f.resolver_tier, ResolverTier::Semantic))
-        || doc
-            .files
-            .iter()
-            .any(|f| matches!(f.parse_health.resolver, Some(crate::ir::ResolverHealth::Ok)))
+        || doc.files.iter().any(|f| {
+            // The semantic tier is C-only (ADR-0001); a non-C unit that
+            // happens to parse is never evidence of a C semantic run.
+            f.language == "c"
+                && matches!(f.parse_health.resolver, Some(crate::ir::ResolverHealth::Ok))
+        })
 }
 
 fn resolver_tier_token(tier: ResolverTier) -> &'static str {

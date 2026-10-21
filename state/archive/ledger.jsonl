@@ -597,3 +597,5 @@
 {"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-041", "status": "live", "title": "Lessons-learned log: append LL-NNN on costly mistakes"}}
 {"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-042", "status": "live", "title": "Output-contract v1: report layout, atomic swap, chart naming"}}
 {"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-043", "status": "live", "title": "report.md template: deterministic sections + total order"}}
+{"demoted_from_hot": "2026-10-21", "record": {"id": "R-pf-101", "status": "open", "severity": "low", "title": "ADR-0002 remains historical 3-chart record (intentionally not edited); README/website now list the 8-stem overview set. Workspace figure still duplicated in report.html (#map + #architecture); deferred."}}
+{"demoted_from_hot": "2026-10-21", "record": {"id": "R-pf-102", "status": "open", "severity": "low", "title": "Workspace figure still emitted twice in report.html (#map + #architecture) — cosmetic duplication, deferred."}}

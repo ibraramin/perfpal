@@ -13,6 +13,8 @@ I5 (map-build) proof + demo **executed; review rounds 1–2 fixed** — `docs/ev
 - Demo: 9/9 repos all stems + 4–50 pages; two blind map-only maintainers named 3 actions
   each → A5 PASS on action-naming, **timing + founder quote still pending**.
 - A4 captions fixed; feature-golden comparator default-only; goldens regenerated.
+- **Dual review (proof deliverable): APPROVED** — code + requirements round 3 on `f6fa74b`;
+  post-approval precision note (resolver-Ok tier signal C-only) applied + gate re-run.
 
 ## Recent Decisions
 - **D-pf-225 (live):** I5 review round 2 — both seats CHANGES_REQUESTED → tier predicate also
@@ -27,12 +29,11 @@ I5 (map-build) proof + demo **executed; review rounds 1–2 fixed** — `docs/ev
   A-pf-095/097 — append-only.)*
 
 ## In Progress
-- I5 closeout: code+goldens+evidence committed (`dbb9bbe`, `2b90954` + this round-2 fix);
-  **round-3 review** and the **founder A5 quote** remain.
+- I5 closeout: proof deliverable **dual APPROVED**; post-approval C-language guard committed
+  next. **Only the founder timed A5 quote remains** before `markPlanDone map-build`.
 
 ## Next
-- **I5 closeout:** founder A5 verbatim (timed) → dossier §7.3; round-3 dual review APPROVED;
-  `markPlanDone map-build`.
+- **I5 closeout:** founder A5 verbatim (timed) → dossier §7.3; `markPlanDone map-build`.
 - **Then map-quality burst (new session):** A-pf-098 entry-detection strata (R-pf-098,
   high), A-pf-099 production-path ranking + known-trip guard (R-pf-099), A-pf-100
   density denominator guard (R-pf-100), A-pf-103 semantic goldens (R-pf-103, low).

@@ -7,11 +7,16 @@ double-scan byte-identical modulo provenance, semantic tier verified on real lib
 A-pf-095 true GENUINE measured (9/172 = 5.2%) plus a supplementary 27-node map calibration,
 and the 9-repo demo artifact audit. Evidence: `docs/evidence/i5-map-proof.md`,
 `i5-determinism.txt`, `i5-map-triage.json`, `i5-blind-a5.json`.
-**Closeout pending: founder A5 quote + round-2 dual review.** Round 1: code APPROVED;
-requirements CHANGES_REQUESTED → G4 tier-aware report boilerplate (+ locked test),
-G5/G6/G7 doc fixes, G8/G9 persisted evidence + parse-partial disclosure, G2 timing disclosed
-unmeasured. The proof surfaced three map-quality defects (entry strata, cost ranking, density
-ranking) recorded honestly and queued, not silently fixed.
+**Closeout pending: founder A5 quote (timed) + `markPlanDone map-build`.** The I5 proof
+deliverable is **dual APPROVED** (code + requirements, round 3 on `f6fa74b`); a post-approval
+reviewer precision note (language-gate the resolver-Ok tier signal to C) was applied with a
+non-C negative test and the gate re-run green. Round 1: code APPROVED; requirements
+CHANGES_REQUESTED → G4 tier-aware report boilerplate (+ locked test), G5/G6/G7 doc fixes,
+G8/G9 persisted evidence + parse-partial disclosure, G2 timing disclosed unmeasured.
+Round 2: both seats CHANGES_REQUESTED → predicate edge case, HTML explicit tier sentence,
+candidate hot-components link caption, output-contract caveat, B1/B2 citations, prodhot JSON.
+The proof surfaced three map-quality defects (entry strata, cost ranking, density ranking)
+recorded honestly and queued, not silently fixed.
 
 ## Phase
 POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1 ✅ I2 ✅ I3 ✅ I4 ✅ (`f56d072`);
@@ -80,8 +85,9 @@ behind the map; M5 parked behind B-pf-001/002.
 | A-pf-095 | hand verdicts (+ supplementary top-node calibration) | 9/172 = 5.2%; calibration 1/27 GENUINE |
 | A5 blind tests | independent map-only agents (tmux, hyperfine) | 3 actions each, `ambiguous=false`; timing not measured |
 | founder A5 | tmux map `../perfpal-test/out-i5-tmux/report.html#map` | **PENDING — founder quote** |
-| review (code) | `@reviewer` round 1 / round 2 | round 1 **APPROVED**; round 2 **CHANGES_REQUESTED** (tier predicate false-negative on zero-semantic-finding runs) → predicate + test fixed; round 3 pending |
-| review (requirements) | `@requirements-reviewer` round 1 / round 2 | round 1 **CHANGES_REQUESTED** (G2/G4–G9) → fixed; round 2 **CHANGES_REQUESTED** (B1 stale citation, B2 tmux 838→191) → fixed; round 3 pending |
+| review (code) | `@reviewer` rounds 1–3 | round 1 **APPROVED**; round 2 **CHANGES_REQUESTED** (tier predicate) → fixed; round 3 **APPROVED** |
+| review (requirements) | `@requirements-reviewer` rounds 1–3 | round 1 **CHANGES_REQUESTED** (G2/G4–G9) → fixed; round 2 **CHANGES_REQUESTED** (B1/B2) → fixed; round 3 **APPROVED** (proof deliverable) |
+| post-approval guard | reviewer precision note | resolver-Ok tier signal language-gated to C + non-C negative test; gate re-run **688/691** |
 
 ## Risks / Open
 - **R-pf-098 (high):** entry-detection over-marking → degenerate strata; needs an ADR/spec

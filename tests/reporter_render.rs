@@ -1104,4 +1104,13 @@ fn semantic_tier_boilerplate_follows_the_data() {
         html.contains("Semantic resolver tier active for C"),
         "resolver-Ok with zero findings must disclose the tier in HTML:\n{html}"
     );
+
+    // The semantic tier is C-only: a non-C unit with resolver Ok must not
+    // make the report claim a C semantic run.
+    doc.files[0].language = "python".to_string();
+    let md = render_report(&doc, &charts);
+    assert!(
+        md.contains("purely syntactic tier"),
+        "non-C resolver-Ok must not claim the C semantic tier:\n{md}"
+    );
 }
