@@ -1,0 +1,401 @@
+{
+  "_comment": "V4 key-view vision gate. Blind reads: one PNG per task, no source, no sibling views, no expected answer; description then strict JSON {question_answered, action, blockers, confidence}. The blind image names are mapped below to the rendered view. Round 1 read all 9 key views; round 2 re-read the 6 views touched by the three legibility fixes; round 3 re-read the 3 KV3 views after the dual-scale fix. Transcripts are summarized faithfully from the @vision outputs; no image data was invented. Rounds 1-2 were rendered before the final text-only anchor/cap changes; the final_gate section is the authoritative read of the committed PNGs.",
+  "generated": "2026-10-22",
+  "protocol": {
+    "viewport": "1440x900 @ 100% zoom (device_scale_factor=1)",
+    "renderer": "Playwright chromium-1243; element screenshots at 1152 CSS px content width",
+    "vision_model": "@vision (image-only)",
+    "blind": "one image per task; no source, no sibling views, no expected answer",
+    "blind_mapping_seed": 20261022,
+    "holdout": "django/postgres deliberately absent from every render and read"
+  },
+  "blind_mapping": {
+    "01.png": "hyperfine-kv1",
+    "02.png": "cJSON-kv3",
+    "03.png": "tmux-kv2",
+    "04.png": "tmux-kv3",
+    "05.png": "cJSON-kv1",
+    "06.png": "cJSON-kv2",
+    "07.png": "tmux-kv1",
+    "08.png": "hyperfine-kv2",
+    "09.png": "hyperfine-kv3"
+  },
+  "singles": [
+    {
+      "image": "01.png",
+      "view": "hyperfine-kv1",
+      "slot": "KV1",
+      "desc": "Ranked five-row brief under 'Where do I look first?'; #1 src/output/report.rs:144 print (213 static cost units (v2) \u00b7 30x median \u00b7 top 1%), #2 report.rs:49 print (213 \u00b7 30x), #3 src/options.rs:304 from_cli_arguments (165 \u00b7 24x), #4 src/export/csv.rs:29 serialize (61 \u00b7 8.7x), #5 csv.rs:47 serialize (61 \u00b7 8.7x); HOT/HIGH/PRODUCTION badges, full rationale, footer link 'all 346 findings'.",
+      "question_answered": "Where do I look first? - which single finding should I open and profile first",
+      "action": "Open src/output/report.rs:144 (function print) and confirm it with a profiler",
+      "blockers": [],
+      "confidence": 0.92,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "02.png",
+      "view": "cJSON-kv3",
+      "slot": "KV3",
+      "desc": "Cost bars under 'Where might time plausibly go?'; eight ranked rows cJSON.c:253 cJSON_Delete 137 units down to cJSON.c:307 parse_number 74, each with an unknown-trip badge; two grey demoted rows (fuzzing/afl.c:85 main 59; cJSON_Utils.c:807 apply_patch 131) with empty bars; footer 'Complete cost-ranked list (1055 functions)'.",
+      "question_answered": "Where might time plausibly go? - which functions carry the most static cost",
+      "action": "Profile cJSON.c:253 (cJSON_Delete) first, then confirm with a real profiler",
+      "blockers": [],
+      "confidence": 0.9,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "03.png",
+      "view": "tmux-kv2",
+      "slot": "KV2",
+      "desc": "Dependents bars under 'What breaks if I touch it?'; tmux.h 160 dependents / 74% of scanned files / top 1%, compat.h 43/20%, compat/imsg.h 3/1%, then four 1-dependent headers; footer 'resolved 214 of 234 include edges'.",
+      "question_answered": "What breaks if I touch it? - which files have the largest re-import blast radius",
+      "action": "Do not edit tmux.h directly (160 dependents, 74% of scanned files) - it forces re-import across most of the tree",
+      "blockers": [],
+      "confidence": 0.88,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "04.png",
+      "view": "tmux-kv3",
+      "slot": "KV3",
+      "desc": "Cost bars; format.c:6052 format_replace 1331 units / 67x / top 1% down to format-draw.c:689 format_draw 331; two known-trip x256 badges; demoted tail tmux.c:434 main 178 and server-client.c:747 server_client_check_mouse 418 with empty bars; footer '3189 functions'.",
+      "question_answered": "Where might time plausibly go? - the highest static-cost functions in this codebase",
+      "action": "Profile format.c:6052 (format_replace) first, then confirm with a real profiler",
+      "blockers": [],
+      "confidence": 0.9,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "05.png",
+      "view": "cJSON-kv1",
+      "slot": "KV1",
+      "desc": "Five-row brief; #1 cJSON_Utils.c:1188 create_patches (94 units / 47x / top 1%, HOT/MEDIUM), #2 cJSON_Utils.c:1203 create_patches (same numbers), #3 cJSON_Utils.c:807 apply_patch (131 / 66x, WARN/HIGH), #4 cJSON_Utils.c:1141 create_patches (94), #5 cJSON_Utils.c:1188 create_patches (unbounded string operation, same location as #1); footer 'all 835 findings'.",
+      "question_answered": "Where do I look first? - the top-ranked production finding to open",
+      "action": "Open cJSON_Utils.c:1188 (create_patches) and profile it",
+      "blockers": [],
+      "confidence": 0.87,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "06.png",
+      "view": "cJSON-kv2",
+      "slot": "KV2",
+      "desc": "Dependents bars; tests/unity/examples/unity_config.h 22, tests/unity/src/unity.h 22, tests/common.h 21, cJSON.h 5, cJSON_Utils.h 4, then three more test headers; TEST badges on the unity rows; footer 'resolved 96 of 229 include edges'.",
+      "question_answered": "What breaks if I touch it? - which headers force the most re-imports when changed",
+      "action": "Do not edit tests/unity/examples/unity_config.h directly (22 dependents, 22% of scanned files)",
+      "blockers": [],
+      "confidence": 0.88,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "07.png",
+      "view": "tmux-kv1",
+      "slot": "KV1",
+      "desc": "Five-row brief; #1 compat/getline.c:85 getdelim (51 units / 2.6x / top 25%, HOT/HIGH), #2 screen.c:823 screen_print (92 / 4.6x / top 5%, HOT/MEDIUM), #3 compat/forkpty-aix.c:61 forkpty (59), #4 tty.c:601 tty_raw (36), #5 compat/closefrom.c:84 closefrom_fallback (14); footer 'all 7543 findings'.",
+      "question_answered": "Where do I look first? - the single highest-priority finding to open in this codebase",
+      "action": "Open compat/getline.c:85 (getdelim) and profile it",
+      "blockers": [],
+      "confidence": 0.85,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "08.png",
+      "view": "hyperfine-kv2",
+      "slot": "KV2",
+      "desc": "Dependents bars; src/quantity/mod.rs 12 / 23% / top 5% / 6.0x median, src/metric.rs 10, src/benchmark/measurement.rs 9 (BENCH), src/benchmark/benchmark_result.rs 8 (BENCH), src/export/mod.rs 6, src/command.rs 5, src/options.rs 5, src/benchmark/mod.rs 4 (BENCH); footer 'resolved 205 of 238 include edges'.",
+      "question_answered": "What breaks if I touch it? - which modules force the widest re-import when edited",
+      "action": "Do not edit src/quantity/mod.rs directly (12 dependents, 23% of scanned files, 6.0x median)",
+      "blockers": [],
+      "confidence": 0.9,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    },
+    {
+      "image": "09.png",
+      "view": "hyperfine-kv3",
+      "slot": "KV3",
+      "desc": "Cost bars; src/output/report.rs:19 print 213 units / 30x / top 1% down to src/command.rs:362 build_parameter_scan_commands 43 / 6.1x; unknown-trip badges on every ranked row; demoted tail build.rs:7 main 12 (STARTUP) and src/metric.rs:273 format 56 (NO-LOOP); footer '353 functions'.",
+      "question_answered": "Where might time plausibly go? - which functions carry the most static cost",
+      "action": "Profile src/output/report.rs:19 (print) first, then confirm with a real profiler",
+      "blockers": [],
+      "confidence": 0.9,
+      "checks": {
+        "question_stated": true,
+        "action_named": true,
+        "units_and_anchors": true,
+        "no_truncation": true,
+        "no_duplicate_caption": true,
+        "bars_legible": true,
+        "one_screen": true
+      }
+    }
+  ],
+  "first_screen": [
+    {
+      "image": "tmux-first-screen.png",
+      "first_block": "Where do I look first? + 5 rows (#1 compat/getline.c:85 getdelim)",
+      "first_screen_kv1": true,
+      "nav_has_key_views": true
+    },
+    {
+      "image": "hyperfine-first-screen.png",
+      "first_block": "Where do I look first? + 5 rows (#1 src/output/report.rs:144 print)",
+      "first_screen_kv1": true,
+      "nav_has_key_views": true
+    },
+    {
+      "image": "cJSON-first-screen.png",
+      "first_block": "Where do I look first? + 5 rows (#1 cJSON_Utils.c:1188 create_patches)",
+      "first_screen_kv1": true,
+      "nav_has_key_views": true
+    }
+  ],
+  "round1_defects": [
+    {
+      "id": "D1",
+      "severity": "highest",
+      "images": [
+        "05.png",
+        "07.png"
+      ],
+      "finding": "The KV1 rank key was never stated: the #1 row could show a lower static cost than #2, so severity-first ranking looked contradictory.",
+      "resolution": "Added the plain-language line 'Ranked: production code first, then severity, then confidence, then static cost.' under the KV1 action line; re-read PASS (round 2, images 10/11/13)."
+    },
+    {
+      "id": "D2",
+      "severity": "medium-high",
+      "images": [
+        "05.png"
+      ],
+      "finding": "Two KV1 rows at the same file:line (different rules) looked like a duplicate.",
+      "resolution": "Added a 'same location as #k' note on the later inline row; re-read PASS (round 2, image 13)."
+    },
+    {
+      "id": "D3",
+      "severity": "medium",
+      "images": [
+        "02.png",
+        "04.png",
+        "09.png"
+      ],
+      "finding": "Demoted rows printed non-trivial costs but drew zero-length bars; the two demoted rows were not cost-ordered.",
+      "resolution": "Demoted rows now draw grey cost-proportional bars, cost-desc ordered. Round 2 PASS, but the global scale flattened cJSON production bars (N1)."
+    },
+    {
+      "id": "D4",
+      "severity": "minor",
+      "images": [
+        "06.png"
+      ],
+      "finding": "One long filename wrapped mid-word (unity_outpu / t_Spy.h).",
+      "resolution": "Accepted cosmetic: the full path remains reconstructable and no text is elided."
+    }
+  ],
+  "round2_reread": {
+    "mapping": {
+      "10.png": "tmux-kv1",
+      "11.png": "hyperfine-kv1",
+      "12.png": "cJSON-kv3",
+      "13.png": "cJSON-kv1",
+      "14.png": "hyperfine-kv3",
+      "15.png": "tmux-kv3",
+      "16.png": "tmux-first-screen"
+    },
+    "results": [
+      {
+        "image": "10.png",
+        "fix1_rank_key": true,
+        "note": "Key line visible; #1 51 units/HIGH above #2 92 units/MEDIUM is explained."
+      },
+      {
+        "image": "11.png",
+        "fix1_rank_key": true,
+        "note": "Key line visible; costs already non-increasing."
+      },
+      {
+        "image": "12.png",
+        "fix3_demoted_bars": true,
+        "new_defect": "N1: production bars invisible (demoted 2,000,008-unit test rows flattened the global scale; 137 units ~0.007% width)."
+      },
+      {
+        "image": "13.png",
+        "fix1_rank_key": true,
+        "fix2_same_location": true,
+        "note": "'same location as #1' on the repeated cJSON_Utils.c:1188 row."
+      },
+      {
+        "image": "14.png",
+        "fix3_demoted_bars": true,
+        "note": "Grey bars cost-proportional and cost-desc ordered; blue bars unaffected."
+      },
+      {
+        "image": "15.png",
+        "fix3_demoted_bars": true,
+        "note": "418/1331 ~31%, 388 ~29%; ordered."
+      },
+      {
+        "image": "16.png",
+        "first_screen_kv1": true,
+        "nav_has_key_views": true
+      }
+    ],
+    "new_defect": {
+      "id": "N1",
+      "severity": "medium",
+      "image": "12.png",
+      "finding": "The global (ranked + demoted) bar scale was dominated by demoted outliers, making every production bar visually empty.",
+      "resolution": "Dual bar scale: blue bars normalize within the ranked set, grey bars within the demoted set; caption 'Bars scale within each block: blue = ranked functions, grey = demoted functions.'"
+    }
+  },
+  "final_reread": {
+    "mapping": {
+      "20.png": "cJSON-kv3",
+      "21.png": "tmux-kv3",
+      "22.png": "hyperfine-kv3",
+      "23.png": "cJSON-first-screen"
+    },
+    "results": [
+      {
+        "image": "20.png",
+        "slot": "KV3",
+        "verdict": "PASS",
+        "note": "Blue bars 137->74 visible and proportional; grey 2000008->131078 on their own scale; caption explains both."
+      },
+      {
+        "image": "21.png",
+        "slot": "KV3",
+        "verdict": "PASS",
+        "note": "Blue 1331->331; grey 418->388 on their own scale; no flattening."
+      },
+      {
+        "image": "22.png",
+        "slot": "KV3",
+        "verdict": "PASS",
+        "note": "Blue 213->43; grey 178->81 on their own scale."
+      },
+      {
+        "image": "23.png",
+        "slot": "first-screen",
+        "verdict": "PASS",
+        "note": "First substantive block is still KV1; 'Key views' is the first nav link."
+      }
+    ]
+  },
+  "verdict": "APPROVED - final gate: tmux, cJSON and hyperfine all APPROVED (9 key views + 3 first screens). See final_gate for the authoritative read of the committed PNGs.",
+  "final_gate": {
+    "rendered_after": "882ddce (exact top P% anchors + KV2 cap disclosure)",
+    "mapping": {
+      "tmux": {
+        "kv1": "04.png",
+        "kv2": "01.png",
+        "kv3": "09.png"
+      },
+      "cJSON": {
+        "kv1": "03.png",
+        "kv2": "02.png",
+        "kv3": "07.png"
+      },
+      "hyperfine": {
+        "kv1": "08.png",
+        "kv2": "05.png",
+        "kv3": "06.png"
+      }
+    },
+    "repos": [
+      {
+        "repo": "tmux",
+        "kv1": "PASS 9/9 - ranking key verbatim; #1 compat/getline.c:85 51 units / 2.6x / top 14%, #2 92 units / 4.6x / top 4%; exact anchors confirmed.",
+        "kv2": "PASS 9/10 - full paths; 'showing top 8 of 10 files with resolved dependents'; class-label check vacuous (all 8 shown files are production).",
+        "kv3": "PASS 11/11 - dual-scale caption; blue 1331->331 proportional; grey 418->388 proportional and cost-descending; both trip badges.",
+        "first_screen": "PASS - first substantive block is 'Where do I look first?'; nav starts with 'Key views'.",
+        "verdict": "APPROVED"
+      },
+      {
+        "repo": "cJSON",
+        "kv1": "PASS 9/9 - ranking key verbatim; 'same location as #1' on the repeated cJSON_Utils.c:1188 row.",
+        "kv2": "PASS 10/10 - full paths; TEST labels on 6 unity rows; 'showing top 8 of 23 files with resolved dependents'.",
+        "kv3": "PASS 11/11 - the flattened-bar defect is gone: blue 137->74 visible/proportional; grey 2000008->131078 on its own scale; KNOWN TRIP x1000000/x65536 + NON-PRODUCTION-DEMOTED badges.",
+        "first_screen": "PASS - first substantive block is 'Where do I look first?'; nav starts with 'Key views'.",
+        "verdict": "APPROVED"
+      },
+      {
+        "repo": "hyperfine",
+        "kv1": "PASS 9/9 - ranking key verbatim; rows 213/213/165/61/61 with exact top 1%-2% anchors.",
+        "kv2": "PASS 10/10 - full paths; 'showing top 8 of 41 files with resolved dependents'; exact top 1%-15% anchors.",
+        "kv3": "PASS 11/11 - dual-scale caption; blue 213->43 proportional; grey 178->81 proportional and cost-descending.",
+        "first_screen": "PASS - first substantive block is 'Where do I look first?'; nav starts with 'Key views'.",
+        "verdict": "APPROVED"
+      }
+    ],
+    "non_blocking": [
+      "cJSON KV1 #1/#2 share identical heuristic + numbers at distinct lines (data, not rendering).",
+      "One long cJSON KV2 path wraps mid-token (full path is present, nothing elided).",
+      "Footer inventory counts (files/findings) carry units but no comparison anchor; they are inventory, not performance measurements.",
+      "The report meta line prints 'perfpal perfpal 0.2.0-beta.1' (pre-existing cosmetic duplication, unrelated to V4)."
+    ],
+    "verdict": "APPROVED - all 9 key views and all 3 first screens pass every V4 vision check after the D1/D2/D3/N1 fixes."
+  }
+}

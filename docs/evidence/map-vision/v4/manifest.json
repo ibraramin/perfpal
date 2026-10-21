@@ -1,0 +1,87 @@
+{
+  "_comment": "V4 key-view render manifest. 12 PNGs: one full 1440x900 first screen and one element screenshot (1152 CSS px content width) per key view for the three design repos. The V6 holdout is deliberately absent.",
+  "generated": "2026-10-22",
+  "holdout": "django/postgres deliberately absent (V6)",
+  "images": [
+    {
+      "file": "cJSON-first-screen.png",
+      "height": 900,
+      "sha256": "236249e8446931b40ba8b2f2ed848d314be17a9bfae187106c09883430e4774c",
+      "width": 1440
+    },
+    {
+      "file": "cJSON-kv1.png",
+      "height": 652,
+      "sha256": "e926b1f97be6f1ba47d1d1269f736b892a515f1a2888463a8a84ac74ce486748",
+      "width": 1152
+    },
+    {
+      "file": "cJSON-kv2.png",
+      "height": 413,
+      "sha256": "448953b32f4ca7e2e77f84c21dbac76413033df6d7e4f8ae60fb813156d3a34c",
+      "width": 1152
+    },
+    {
+      "file": "cJSON-kv3.png",
+      "height": 707,
+      "sha256": "e52bca7630c8f667f33316e11cb015281b81e495ea6f62cf90ca03bb75bb4c5e",
+      "width": 1152
+    },
+    {
+      "file": "hyperfine-first-screen.png",
+      "height": 900,
+      "sha256": "9e8186de764cc227ca2b72391c101a9b135282db1f775472497205659412977e",
+      "width": 1440
+    },
+    {
+      "file": "hyperfine-kv1.png",
+      "height": 674,
+      "sha256": "856efb3c3828939c7a32c1a1ac945c4e02f82cbffb313d69e81cc0a091fa7708",
+      "width": 1152
+    },
+    {
+      "file": "hyperfine-kv2.png",
+      "height": 491,
+      "sha256": "a614a697c39dc50aec67fc096e8aa49b56b46cc9ff379c7ef011ed996ee8c806",
+      "width": 1152
+    },
+    {
+      "file": "hyperfine-kv3.png",
+      "height": 669,
+      "sha256": "e4e46b051b0bea8be963140047299be360ebd8d916a394ef210e8daa64d68380",
+      "width": 1152
+    },
+    {
+      "file": "tmux-first-screen.png",
+      "height": 900,
+      "sha256": "e375534734a8a167dfaeb95fa136f3039ddcc4eac323c39560726451c3591f83",
+      "width": 1440
+    },
+    {
+      "file": "tmux-kv1.png",
+      "height": 674,
+      "sha256": "48490ea3e71e71368044435de0d016d8a9786020063179013df45c0030d7e497",
+      "width": 1152
+    },
+    {
+      "file": "tmux-kv2.png",
+      "height": 391,
+      "sha256": "c1d411e83a551bba2ee431db68f9c3b88470cc2de364638f27f491f74b7e46cd",
+      "width": 1152
+    },
+    {
+      "file": "tmux-kv3.png",
+      "height": 641,
+      "sha256": "2f8bf0291ba4843a32b62aca6699f5786c1599f75779934e06a28b2000957c26",
+      "width": 1152
+    }
+  ],
+  "renderer": "Playwright chromium-1243",
+  "repo": "/home/shafin/Opencode/Perfpal",
+  "scan_inputs": {
+    "cJSON": "perfpal-test/out-v4-cJSON (schema 1.7)",
+    "hyperfine": "perfpal-test/out-v4-hyperfine (schema 1.7)",
+    "tmux": "perfpal-test/out-v4-tmux (schema 1.7)"
+  },
+  "viewport": "1440x900 @ device_scale_factor=1"
+}

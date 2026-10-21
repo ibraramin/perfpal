@@ -121,6 +121,14 @@ V5 must test the no-loop demotion against this evidence.** Reproducer:
 `docs/evidence/map-vision/v3/render/recall_ranks.py` writes
 `docs/evidence/map-vision/v3/recall_ranks.json` and fails on any rank drift.
 
+**V4 shipped-key re-measure (2026-10-22).** The table above is the V3 prototype ordering. The
+shipped V4 key (production → severity → confidence → containing-function cost → finding_id,
+with `ARCH-002` excluded; KV3 adds loop-bearing and startup demotion) was re-measured on the
+schema-1.7 scans: tmux Q1 **209/7,543**, Q3 **820/3,189**; hyperfine Q1 **172/346**, Q3
+**58/353**; cJSON Q1 **37/835**, Q3 **60/1,055** — still not inline, so the recall finding
+stands; KV2 stays inline (tmux 1/216, hyperfine 6/53, cJSON 4/101). Reproducer:
+`docs/evidence/map-vision/v4/recall_ranks_v4.py` → `docs/evidence/map-vision/v4/recall_ranks_v4.json`.
+
 ## 5. Decisions
 
 ### KV1 — **text-first ranked brief** (pair vote 2/3)
