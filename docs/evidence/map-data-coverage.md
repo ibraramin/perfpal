@@ -4,6 +4,8 @@
 > Inputs: the V0 pre-registration (`3982b03`), the V0 diagnosis (`3a32b01`), the current
 > `metrics.json` (schema 1.6) for all six repos, the rendered SVGs, and the chart/report
 > source. Machine-readable: `docs/evidence/map-recall-v1.json`.
+> **§8 (added 2026-10-21) records the V2 lock**: the accepted view set and the field
+> decisions this audit feeds.
 >
 > **Question:** for every pre-registered action and every I5 GENUINE finding, does a key view
 > surface it — at what rank, under what label? Data present but never surfaced = **H2**;
@@ -121,7 +123,7 @@ the V2/V3 redesign surface, not a data-extraction project.
 | Gap | Needed for | Exists today? | Additive note |
 |---|---|---|---|
 | `files[].path_class` (`production/test/example/bench/fixture/generated/vendor/unknown`) | Q1/Q3 production-path ranking (R-pf-099) | ❌ no | Optional enum; deterministic path classifier; never removes data, only labels it. |
-| `stats.functions[].trip_count_source` + `known_trip_value` | Q3 known-trip guard (literal `1e6` inflation) | ⚠️ only `unknown_trip_loops` (count) | Optional per-function provenance; additive, no change to `function_cost_v2`. |
+| `stats.functions[].trip_count_source` + `known_trip_value` | Q3 known-trip guard (literal `1e6` inflation) | ⚠️ only `unknown_trip_loops` (count) | Optional on the wire; **V2 raised this to REQUIRED** (see §8) — additive, no change to `function_cost_v2`. |
 | `stats.cost_summary {unit, median, p95, max}` | Q3 units/anchors (`× median`, `top 1%`) | ❌ no | Additive object; chart-side anchors can also be computed per scan. |
 | `components[].metrics.coupling_in/out` (or a documented reverse-include count) | Q2 blast-radius key view | ❌ no (edges exist) | Compute chart-side from `graphs.include_graph.edges`; add only if a stable, contract-level number is needed. |
 | `stats.functions[].graph_root` (or corrected `entry_kind`) | Q2/Q3 strata (R-pf-098) | ⚠️ `entry_kind` over-marks `lib-root` | Additive boolean `graph_root` (no incoming resolved call edge) or fix detection; founder decision A-pf-098. |
@@ -163,3 +165,41 @@ the V2/V3 redesign surface, not a data-extraction project.
   unaffected.
 - Recall is a data/view test, not a human test; V0's 28 blind vision reads supply the
   legibility half. A2 (founder timed test) remains open and is V6.
+
+## 8. V2 lock — accepted view set + field decisions (2026-10-21)
+
+The locked slots are in `docs/specs/map-intelligibility.md` → "Locked acceptance view set"
+(mirrored in `maintainer-map.md`): **KV1 Start here (Q1, severity)**, **KV2 Blast radius (Q2,
+coupling)**, **KV3 Profile queue (Q3, cost)**, with the 8 legacy stems under a labelled
+`Explorer` divider. This section records only what those slots need from the data, so V4 edits
+exactly these fields; every row carries its **what would change it** trigger.
+**No implementation in V2.**
+
+| Slot / need | Field | Decision | What would change it |
+|---|---|---|---|
+| KV1 production-first ranking; KV3 filter | `files[].path_class` | **REQUIRED (additive, V4; schema 1.6→1.7)** — optional enum `production/test/example/bench/fixture/generated/vendor/unknown`; deterministic path classifier; absent ⇒ `unknown`; demoted files are counted, never dropped | classifier precision <95% on the 6-repo sample, or founder prefers label-only over demotion ⇒ keep chart-side label, no schema field |
+| KV1/KV3 recall (A1b) | none — `findings[].finding_id/title/severity/confidence/span` exist | display fix only: KV1 shows rule **title** + `path:line` + function with a complete deterministic ranked drill list (3–5 inline); KV3 links the complete deterministic function list ranked by cost within the non-demoted set | V3/V5 shows the 3–5 inline actions are not the ones a reader acts on ⇒ change the ranking key, not the schema |
+| KV2 blast radius | none — reverse include in-degree from `graphs.include_graph.edges` | compute chart-side per **file**; print `resolved N of M include edges`; no call claim in the default tier | Q2 moves to component units, or an LLM consumer needs a contract number ⇒ `components[].metrics.coupling_in/out` |
+| KV3 unit + anchor | none — median/p95 from `stats.functions[].function_cost_v2` (v1 fallback) | one deterministic chart-side helper shared by `report.md` + charts; unit text `static cost units (v2)` (v1-fallback rows read `(v1)` and anchor within the v1 set); `format_fixed_point` remains the only non-integer path | report/chart anchors diverge, or JSON consumers need the anchor without re-deriving ⇒ `stats.cost_summary {unit, median, p95, max}` |
+| KV3 estimate honesty | `stats.functions[].trip_count_source` + `known_trip_value` | **REQUIRED (additive, V4; optional on the wire)** — `trip_count_source` is `literal` (every loop has a canonical literal trip), `partial` (some), or `unknown` (loops but none literal); the field is omitted when the function has no loops. `known_trip_value` is the largest **clamped** literal trip multiplier used by `function_cost_v2` (`min(t, MAX_TRIP)`), omitted when no literal trip. KV3 prints `known trip ×N — verify it actually runs` on known-literal trips, demotes no-loop functions (`max_loop_depth == 0`) below loop-bearing ones, and keeps `unknown_trip_loops > 0` as the "estimate incomplete" badge. Three-branch guard for the documented FPs: django `contrib/sessions/backends/cache.py` (literal-10000 retry guard → 10,000× model artifact) and tmux `format.c` (statement/branch-count dispatcher inflation; demoted if `max_loop_depth == 0`, otherwise labelled) — both production, non-`main`, `unknown_trip_loops = 0`. | the guard does not stop those FPs from being named in V5 ⇒ rank by per-iteration cost or adopt the two-list variant (known-trip vs unknown-trip) |
+| KV3 entry/startup demotion | `entry_kind`, `reachable_from_entry` exist | **do not use entry strata** in key views: `R-pf-098` over-marks lib-roots and the default tier resolves 0 call edges; demote `main/script` by `entry_kind` only | V7 fixes entry detection and the founder wants a reachable-only Q3 ⇒ `graph_root`/corrected `entry_kind` becomes needed |
+| density guard (R-pf-100) | `components[].metrics.finding_density` exists | **chart-side, Explorer only** — minimum (≥5 findings or ≥200 LOC) + `N small scopes hidden (components/files)` on component/file density views; `layer-findings` stays Explorer and may not claim "density" until it has a denominator. No key view is scope-density ranked. | the guard must be contractual for JSON consumers ⇒ `finding_density_guarded` |
+| uniform call-edge tier | `confidence` exists; semantic tier separate | **deferred** — KV2 makes no call-based claim, so no uniform `resolved`/`tier` field is needed for the accepted set | a key view starts making call-based blast-radius claims |
+
+**Not a schema gap:** rule titles/symbols/lines already exist (`findings[].title`,
+`stats.functions[].name`, `span`); `#map` printing bare IDs is a display defect
+(`src/reporter/mod.rs:1556`).
+
+**V3 degrees of freedom:** idiom only. The slot, question, encoding, unit/anchor rule,
+production-first rule, default-tier claim limit and A1b recall guarantee are locked; changing
+any of those reopens V2.
+
+**V4 scope:** two additive changes only — `files[].path_class` and
+`stats.functions[].trip_count_source` + `known_trip_value` (both optional on the wire; absence
+means not computed; schema 1.6→1.7). The V4 batch must
+ship `docs/schema/metrics.schema.v1.7.json` + `src/schema/metrics.schema.v1.7.json` (byte-copy),
+bump `SCHEMA_VERSION` / `SCHEMA_ARTIFACT_NAME` (`src/schema/mod.rs:89-95`), satisfy the
+embedded-schema drift test (`src/schema/mod.rs:640-646`), and note the additive fields in
+`docs/schema/metrics-json-v1.md` + the `SCHEMA_VERSION` doc comment. Every other number is
+computed chart-side from existing fields; `format_fixed_point` remains the only non-integer
+output path.

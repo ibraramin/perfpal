@@ -17,6 +17,9 @@ findings ride as annotations on the map, never as a list to cross-reference by h
 - Level 1 file: top files by degree, heat = per-file function cost, single outlined hottest file.
 - Level 2 component pages: intra-component files + edges (existing pages).
 - Drill path: report header → workspace → file/component → findings-detail rows (finding_id + path:line:col).
+- **V2 reading path (locked):** `report.html#map` = **KV1 Start here → KV2 Blast radius →
+  KV3 Profile queue**; the Level-0/1/2 stems (all 8 current stems) are explorer evidence under
+  a labelled `#explorer` section. The first content block answers Q1 in plain language.
 
 ## Honesty contract
 - Caps pre-layout (top-50, ties path-asc), top-10 report rows, labels tail-kept 32 chars.
@@ -46,6 +49,46 @@ The I5 human A5 test **failed** ("I can't understand anything"). The successor s
   ("what breaks if I change this", "where is time likely going", "what is safe to ignore").
 - The honesty contract above is unchanged: candidates, caps, stubs and LOW labels survive
   any redesign.
+
+### Locked acceptance view set (V2, 2026-10-21)
+
+Three answer-first slots — one question, one primary encoding each. V3 may choose the idiom
+inside a slot; it may not add a fourth slot or stack a second encoding. The feature spec
+`map-intelligibility` is authoritative for this table; keep this mirror in sync.
+
+| Slot | Question | Primary encoding | Unit + anchor | Action |
+|---|---|---|---|---|
+| **KV1 — Start here** | Where do I look first? | severity (ranked list position; the text-first brief is the candidate) | rank #k; cost `static cost units (v2)`, `× median function`, `top 1%` | open/profile `path:line` first |
+| **KV2 — Blast radius** | What breaks if I touch it? | coupling (bar = dependent-file count) | `N dependents`, `% of scanned files`, `× median dependent count`, `top 1%` | do not edit directly; expect N dependents to rebuild/re-import |
+| **KV3 — Profile queue** | Where might time plausibly go? | cost (bar = `function_cost_v2`) | `static cost units (v2)` / `(v1)` on fallback rows, `× median function`, `top 1%`, unknown-trip badge + known-literal-trip flag | profile the named function first (static candidate, confirm) |
+
+Binding rules:
+
+- **First screen = KV1.** No workspace node-link on the first screen; a plain-language Q1
+  answer is the first content block.
+- **All emitted stems under `Explorer`.** The existing `#architecture` section is renamed (heading +
+  nav label `Explorer`, `#explorer`), not duplicated. Stems stay available, gated as today
+  (fewer than 8 on small scans), and make no answer claim. `layer-findings` is not "density"
+  until it has a denominator.
+- **Units + anchors mandatory.** No bare measured number (ordinal ranks exempt); every measured
+  number states its unit and a scan-relative anchor, with KV3 labelling v1-fallback rows and
+  anchoring within the same scale. The 32-char chart-label cap does not apply to key-view text
+  rows, which show full `path:line` + function.
+- **One encoding per key view.** Severity/confidence are text labels, not visual channels.
+- **No silent caps.** KV1 shows 3–5 actions inline and links a complete deterministic ranked
+  list; every `hot` function-granularity finding stays reachable. KV3 links the complete
+  deterministic function list ranked by cost within the non-demoted set, so the pre-registered
+  cost targets stay traceable (A1b).
+- **Default-tier honesty.** KV2 claims include blast radius only (0 non-LOW call edges in the
+  default tier) and prints `resolved N of M include edges`.
+- **Production-first, never silent.** KV1/KV3 demote test/example/bench/fixture/generated/vendor
+  files (`files[].path_class`), print the demoted count; KV3 also demotes `entry_kind =
+  main/script` and no-loop functions below loop-bearing ones (never excluding either; prints both
+  counts), labels unknown-trip estimates, and flags known literal trips
+  (`known trip ×N — verify it actually runs`).
+- **Field decisions:** `files[].path_class` + trip provenance (`trip_count_source`/
+  `known_trip_value`) are required; see `docs/evidence/map-data-coverage.md` §8 for the rest and
+  their change triggers.
 
 ## Non-goals
 Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runtime truth claims.

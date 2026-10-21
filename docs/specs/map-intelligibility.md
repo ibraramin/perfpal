@@ -82,13 +82,81 @@ surfaces it, that is H2, not H1.
 - **Honesty unchanged.** Candidates, not certainties; caps, stubs and LOW-confidence labels
   survive any redesign.
 
+## Locked acceptance view set (V2, 2026-10-21)
+
+V2 locks **three answer-first view slots**, one per maintainer question. The slot is the
+contract; V3 chooses the concrete idiom inside a slot by blind A/B and may not add a fourth
+slot or stack a second encoding. Nothing below is implemented in V2.
+
+| Slot | Question (plain language) | Primary encoding | Unit + anchor | Action it must enable |
+|---|---|---|---|---|
+| **KV1 — Start here** | Where do I look first? | **severity** (ranked list position; no colour/size channel) | rank #k; where cost is shown: `static cost units (v2)`, `× median function`, `top 1%` | open/profile the named `path:line` first |
+| **KV2 — Blast radius** | What breaks if I touch it? | **coupling** (bar = dependent-file count, one hue) | `N dependents`, `% of scanned files`, `× median dependent count`, `top 1%` | do not edit directly; expect N dependents to rebuild/re-import |
+| **KV3 — Profile queue** | Where might time plausibly go? | **cost** (bar = `function_cost_v2`, one hue) | `static cost units (v2)`, `× median function`, `top 1%`, unknown-trip badge + known-literal-trip flag | profile the named function first (static candidate, confirm) |
+
+Rules that bind the slots:
+
+- **First screen = KV1.** `report.html#map` opens with a plain-language answer to Q1, not a
+  chart index. The workspace node-link is not on the first screen.
+- **Explorer divider.** The 8 current stems (`include-graph`, `layer-file`, `layer-entry`,
+  `component-coupling`, `hot-components`, `layer-workspace`, `layer-bands`, `layer-findings`)
+  leave `#map` and are emitted under one explicitly labelled **Explorer** section. The existing
+  `#architecture` section is **renamed** to `Explorer` (heading + nav label; `#explorer`), not
+  duplicated. They remain available, gated as today (fewer than 8 on small scans), and make no
+  answer claim. Per-component detail pages remain explorer-tier evidence, not key views, and
+  carry an Explorer-tier label when reached from a key-view link.
+- **Text-first candidate.** KV1's primary candidate is the ranked maintainer brief: 3–5
+  actions inline with `path:line`, function, rule **title** (never a bare rule ID), why,
+  severity + confidence, production class, cost anchor, and a supporting-chart link. The link
+  must resolve to content that shows the action (KV3 row, per-component page, or drill row),
+  never a dead affordance. Ranked cards are the V3 alternative. Either way the slot's primary
+  encoding is severity, expressed as rank.
+- **No silent caps (A1b mechanism).** KV1 shows 3–5 inline and links a complete deterministic
+  ranked action list (hosted in the existing `findings-detail` artifact); every `hot` finding at
+  function granularity stays reachable at a stable rank. KV3 likewise links the complete
+  deterministic function list ranked by cost within the non-demoted set (hosted in a
+  `profile-queue` drill artifact; output-contract update in V4), so the six pre-registered
+  function-level cost targets stay traceable at their rank. No key view may hide a known answer
+  behind an undisclosed cap.
+- **Default-tier honesty.** KV2 claims include blast radius only. Every default-tier scan
+  exports only LOW-confidence call edges, so a call-based claim must carry the LOW/semantic-tier
+  label or be absent. KV2 prints include coverage (`resolved N of M include edges`).
+- **Production-first, never silent.** KV1/KV3 rank production code first
+  (`files[].path_class`), demote test/example/bench/fixture/generated/vendor files, and print
+  `N non-production files demoted`. KV3 also demotes `entry_kind = main/script` (startup) and
+  no-loop functions (`max_loop_depth == 0`) below loop-bearing ones — never excluding either —
+  and prints `N startup functions demoted` + `N no-loop functions demoted`; it labels
+  `unknown_trip_loops > 0` as "estimate incomplete" and prints `known trip ×N — verify it
+  actually runs` for any known-literal trip. This three-branch guard set covers the two
+  documented cost FPs (django `cache.py` literal-10000 retry; tmux `format.c` branch-count
+  dispatcher inflation — demoted if `max_loop_depth == 0`, otherwise labelled).
+- **Units + anchors are mandatory.** Every measured numeric value in a key view carries a unit
+  and a scan-relative comparison anchor (`× median`, `top 1%`, `% of scanned files`). A bare
+  cost or density number is a spec violation. Ordinal ranks are exempt (they are positions, not
+  measurements). KV3's unit reads `static cost units (v2)`, or `static cost units (v1)` on
+  v1-fallback rows, and anchors are computed within the same scale. The 32-char tail-keep cap
+  applies to chart node labels only; key-view text rows show the full `path:line` and function
+  name.
+- **One encoding.** KV1 = severity (ranked position), KV2 = coupling, KV3 = cost. No key view
+  stacks colour + size + position to encode a second metric; severity/confidence are text
+  labels, not channels.
+- **No orphan views.** Each slot names its question and action (table above). A view that
+  answers nothing is demoted to Explorer or removed. `layer-findings` may not be described as
+  "density" while it ranks raw severity-weighted counts without a denominator.
+- **Field decision.** The fields the locked slots need — and the fields they deliberately do
+  not — are recorded in `docs/evidence/map-data-coverage.md` §8 with a "what would change it"
+  trigger. `files[].path_class` and trip provenance (`stats.functions[].trip_count_source` +
+  `known_trip_value`) are required; the rest are computed chart-side or deferred.
+
 ## Acceptance (all must hold)
 
 - **A1 — vision-read pass:** for each answer-first view, a fresh `@vision` read (no source,
   no other view) states the question it answers and one concrete action; recorded verbatim.
 - **A1b — known-answer recall:** the 9 I5 GENUINE findings and the pre-registered actions are
   traceable to a key view (surfaced, or explicitly out-of-scope with a reason). No known
-  answer may be invisible while the data exists.
+  answer may be invisible while the data exists. KV1 covers the finding targets; KV3's complete
+  ranked cost list covers the six function-level cost targets; KV2 covers the three file-level
+  "do not touch" targets.
 - **A2 — founder timed test:** a maintainer unfamiliar with the repo names 3 actions from the
   key views alone in **under 10 minutes**, and says the map is understandable. This is the
   same A5 bar that failed; no agent-only substitute closes it.
@@ -103,6 +171,13 @@ surfaces it, that is H2, not H1.
   polishing loop and escalate to an ADR-0008 amendment (text-first brief or a different
   primary view).
 - **A6 — dual review:** `@reviewer` + `@requirements-reviewer` APPROVED on the final tree.
+- **A7 — units/anchors:** a key-view read finds no bare measured number (ordinal ranks are
+  exempt); every measured number carries a unit and a scan-relative anchor. Evidence: V5
+  transcripts + a check of the rendered key views.
+- **A8 — first screen + explorer/no-orphan:** `report.html#map`'s first content block is KV1 in
+  plain language; every emitted legacy stem renders under the labelled `Explorer` divider; every
+  key view states its question and action in this spec and on the view. Evidence: committed PNG +
+  DOM assertion.
 
 ## Explicit non-goals
 
