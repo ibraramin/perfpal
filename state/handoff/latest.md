@@ -85,12 +85,17 @@ JS/TS backends + paper queue behind the map; M5 parked behind B-pf-001/002.
    **plan `map-intelligibility` (V0), spec `map-intelligibility`, spec `maintainer-map`,
    commits `6f31a4f` (final I5 tree) / `dbb9bbe` (I5 evidence), handoff
    `state/handoff/latest.md`.**
-2. **V0 first:** run `@vision` over the 8 overview stems for tmux/hyperfine/cJSON (fresh
-   read, no source), record what each communicates and cannot answer, and which maintainer
-   question it serves → `docs/evidence/map-vision-diagnosis.md`.
-3. **V1:** data-coverage audit → decide H1 vs H2 per question; list missing fields.
-4. Then V2 methodology/spec lock → V3 idiom A/B (vision) → V4 implement → V5 vision loop →
-   V6 founder timed test → V7 re-triage R-pf-098/099/100 → V8 closeout.
+2. **V0 first:** **pre-register the answer key** (expected 3 actions per repo from source +
+   I5 triage, before looking at any chart); render **1440×900 PNGs** of `report.html#map` and
+   each stem (Playwright, 100% zoom) and run a **blind `@vision` read** on the PNGs, not raw
+   SVG; record what each communicates/cannot answer → `docs/evidence/map-vision-diagnosis.md`.
+3. **V1:** data-coverage audit **+ known-answer recall** (9 I5 GENUINE + pre-registered
+   actions must be traceable to a view) → decide H1 vs H2 per question; list missing fields.
+4. Then V2 methodology lock (≤3 key views, one encoding, units/anchors, Explorer divider) →
+   V3 idiom A/B **including a text-first brief** + **holdout repo** (django/postgres) →
+   V4 implement → V5 two blind vision reads per key view → V6 founder timed test (holdout) →
+   V7 re-triage R-pf-098/099/100 → V8 closeout. **Stop criterion:** two distinct idioms
+   failing the founder test → ADR-0008 amendment, no endless polishing.
 5. Do **not** mark `map-build` done. M5 needs B-pf-001 + B-pf-002 (founder-owned).
 
 ## Change set (this session)

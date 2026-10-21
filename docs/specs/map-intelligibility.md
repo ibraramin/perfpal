@@ -34,7 +34,24 @@ expresses do not.
   answer.
 
 The first deliverable is a **vision-model diagnostic** that decides, per view and per
-question, which hypothesis dominates. Neither hypothesis may be assumed.
+question, which hypothesis dominates. Neither hypothesis may be assumed. The diagnostic must
+also pass a **known-answer recall test**: the 9 I5 GENUINE findings and the pre-registered
+actions for the sample repos must be traceable to a view; if the data exists but no view
+surfaces it, that is H2, not H1.
+
+## Viewing conditions (fixed, or the test is meaningless)
+
+- Canonical path: `report.html` → `#map` at **1440×900, 100% zoom**, then drill down.
+- `@vision` receives **rendered PNG screenshots** (Playwright), never raw SVG text.
+- The report's first screen must answer Q1 in plain language; the current 8 stems move
+  under an explicit `Explorer` divider and stay available for power users.
+
+## Vision protocol (auditable, blind)
+
+- No source access, no sibling-view access; describe what is seen **before** judging.
+- Strict output: `{question_answered, action, blockers, confidence}`; two independent reads
+  per key view, both recorded as evidence.
+- A view that only makes sense after reading another view is not answer-first.
 
 ## Visual methodology (durable rule)
 
@@ -52,6 +69,13 @@ question, which hypothesis dominates. Neither hypothesis may be assumed.
 - **No orphan views.** Every key view names the maintainer question it answers and the
   action it is supposed to enable. A view that answers nothing is removed or demoted to an
   explorer stem.
+- **One primary view, one encoding.** At most 3 answer-first views, one question each. A key
+  view uses ONE primary encoding (severity OR cost OR coupling), never all three stacked.
+  Every number carries a unit and a comparison anchor (`× median`, `top 1%`), not a bare
+  cost. Progressive disclosure: summary first, detail on drill.
+- **Text-first is a legitimate answer.** A ranked maintainer brief (3 actions with
+  `path:line`, why, confidence, supporting chart) may be the primary view; charts are then
+  evidence. The A/B in the plan includes it.
 - **Plain language first.** Jargon (`DAG`, `barycenter`, `stratum`, `resolved pair`) stays in
   the explorer tier; key views use maintainer words ("what breaks if I change this", "where
   is time likely going", "what is safe to ignore").
@@ -62,15 +86,23 @@ question, which hypothesis dominates. Neither hypothesis may be assumed.
 
 - **A1 — vision-read pass:** for each answer-first view, a fresh `@vision` read (no source,
   no other view) states the question it answers and one concrete action; recorded verbatim.
+- **A1b — known-answer recall:** the 9 I5 GENUINE findings and the pre-registered actions are
+  traceable to a key view (surfaced, or explicitly out-of-scope with a reason). No known
+  answer may be invisible while the data exists.
 - **A2 — founder timed test:** a maintainer unfamiliar with the repo names 3 actions from the
   key views alone in **under 10 minutes**, and says the map is understandable. This is the
   same A5 bar that failed; no agent-only substitute closes it.
+- **A2b — holdout:** the founder test includes one repo never used during design/tuning
+  (django or postgres).
 - **A3 — data decision:** for every maintainer question, the plan records either "existing
   field X answers it" (with `file:line`/schema proof) or "missing field Y is added
   additively" (schema note + tests). No question is left implicitly unsupported.
 - **A4 — determinism/contract:** double-scan byte-identical; goldens regenerated; output
-  contract updated; no new dependency; no copyleft.
-- **A5 — dual review:** `@reviewer` + `@requirements-reviewer` APPROVED on the final tree.
+  contract updated; no new dependency; no copyleft; explorer stems do not regress.
+- **A5 — stop criterion:** two distinct design idioms failing the founder test stop the
+  polishing loop and escalate to an ADR-0008 amendment (text-first brief or a different
+  primary view).
+- **A6 — dual review:** `@reviewer` + `@requirements-reviewer` APPROVED on the final tree.
 
 ## Explicit non-goals
 
