@@ -84,14 +84,14 @@ A completed scan leaves exactly this layout (default `perfpal-report/`):
 
 ```
 perfpal-report/
-├── metrics.json              # raw machine-readable data (schema v1.3)
-├── metrics.schema.v1.2.json  # byte-copy of the exact schema for this schema_version
+├── metrics.json              # raw machine-readable data (schema v1.6)
+├── metrics.schema.v1.6.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report
 └── charts/                   # static visualizations (set defined by ADR-0002)
     └── <chart-name>.svg      # e.g. include-graph.svg
 ```
 
-The chart set is `include-graph.svg`, `component-coupling.svg`, and `hot-components.svg`; each chart is emitted only when its source section is present and non-empty, so `charts/` may be empty. Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy); humans can start at `report.md`. Never parse data out of the SVGs — they are advisory.
+The overview chart set is `include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, and `layer-findings.svg`, plus per-component detail pages (`component-<rank>-<slug>.svg`) and the `graph.dot` export; each chart is emitted only when its source section is present and non-empty (with deterministic stubs where the source exists but is empty), so `charts/` may be empty. Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy); humans can start at `report.md`. Never parse data out of the SVGs — they are advisory.
 
 ## CLI reference
 

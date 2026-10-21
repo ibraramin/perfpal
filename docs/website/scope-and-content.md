@@ -66,7 +66,8 @@ Nav: logo → Home; `Product` dropdown (How it works, Heuristics, Visualization,
 - A short "why these matter for AI-generated C/Rust" intro; the differentiation claim must stay hedged ("not found in surveyed tools", not "unique").
 
 ### 4.4 Visual output `/visualization`
-- The three real charts: `include-graph.svg`, `component-coupling.svg`, `hot-components.svg`.
+- The overview chart set: `include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, `layer-findings.svg`, plus per-component detail pages and `graph.dot`.
+- The map is the core view: workspace → file → entry-stratified → component bands → findings annotations, with honest caps (`showing top S of M`) and finding dots (severity fill + confidence ring).
 - Explain the deterministic hand-rolled SVG emitter (ADR-0002) and the node/component caps.
 - Interactive gallery optional (static images are sufficient for v1).
 

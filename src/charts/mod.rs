@@ -1107,7 +1107,7 @@ fn render_hot_components(components: &[ComponentEntry]) -> Vec<u8> {
         },
     ));
     svg.push_str(&format!(
-        "<text x=\"{HC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">bar = finding density per KLOC; max {}</text>\n",
+        "<text x=\"{HC_MARGIN}\" y=\"{}\" font-family=\"monospace\" font-size=\"11\">bar = candidate finding density per KLOC; max {} — profile to confirm</text>\n",
         HC_MARGIN + 36,
         format_fixed_point(max_density, 2),
     ));

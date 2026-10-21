@@ -206,7 +206,7 @@ pub fn render_layer_workspace(
             "components"
         },
     );
-    let subtitle = "heat = finding density per KLOC";
+    let subtitle = "heat = candidate finding density per KLOC — profile to confirm";
     // Caption rows bottom-first: cap marker, all-zero note, cycle note.
     let mut captions: Vec<String> = Vec::new();
     if overflow {
@@ -412,7 +412,7 @@ pub fn render_layer_file(
         nodes.len(),
         if nodes.len() == 1 { "file" } else { "files" },
     );
-    let subtitle = "heat = function cost (v2 where available; v1 fallback); hot-path outlined (top-50 + reachable reserve)";
+    let subtitle = "heat = candidate function cost (v2 where available; v1 fallback); hot-path outlined (top-50 + reachable reserve) — profile to confirm";
     // Caption rows bottom-first: cap marker, cost/hot-path note, cycle note.
     let mut captions: Vec<String> = Vec::new();
     if total > nodes.len() {
@@ -837,7 +837,7 @@ pub fn render_layer_entry(
         nodes.len(),
         if nodes.len() == 1 { "file" } else { "files" },
     );
-    let subtitle = "heat = file function cost (v2 where available; v1 fallback), normalized over shown files; strata = resolved entry reachability";
+    let subtitle = "heat = candidate file function cost (v2 where available; v1 fallback), normalized over shown files; strata = resolved entry reachability — profile to confirm";
 
     let mut captions: Vec<String> = Vec::new();
     if nodes.len() < total {
@@ -1191,7 +1191,7 @@ pub fn render_layer_bands(
             "components"
         },
     );
-    let subtitle = "heat = file function cost (v2 where available; v1 fallback), normalized over shown files; files grouped by capped component; cross-component edges aggregated";
+    let subtitle = "heat = candidate file function cost (v2 where available; v1 fallback), normalized over shown files; files grouped by capped component; cross-component edges aggregated — profile to confirm";
 
     let mut captions: Vec<String> = Vec::new();
     if shown_components < total_components {

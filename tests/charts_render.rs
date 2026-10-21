@@ -819,7 +819,7 @@ fn layered_overviews_ride_their_source_gates_in_emission_order() {
     );
     assert_eq!(workspace.matches("<line ").count(), 1);
     assert!(
-        workspace.contains("heat = finding density per KLOC"),
+        workspace.contains("heat = candidate finding density per KLOC — profile to confirm"),
         "heat caption:\n{workspace}"
     );
 

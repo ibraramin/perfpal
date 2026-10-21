@@ -35,6 +35,7 @@ mod common;
 /// One (fixture → committed golden) pair under lock. R5 Wave 2 generalized
 /// the original single C tree to a descriptor array so the SAME regen +
 /// comparator flow covers every language backend.
+#[cfg_attr(feature = "semantic-clang", allow(dead_code))]
 struct GoldenTree {
     /// Stable tag for temp-dir names + failure messages.
     tag: &'static str,
@@ -100,6 +101,13 @@ fn fixture_root() -> PathBuf {
 /// plus the Wave B1 resolved-ARCH-003 row neutralizer (see
 /// common::mask_golden_html_semantic). findings-detail.md masks exactly like
 /// report.md (provenance surfaces + absolute root + ARCH-003 block strip).
+///
+/// Default-build only: committed goldens are produced by the syntactic
+/// (default) build; under `semantic-clang` the resolved-edge tier changes
+/// chart topology and ARCH-003 confidence, which cannot be masked. The
+/// semantic tier is covered by `tests/resolver_health.rs` and the
+/// double-run determinism suites instead.
+#[cfg(not(feature = "semantic-clang"))]
 const GOLDEN_ARTIFACTS: [&str; 15] = [
     "metrics.json",
     "metrics.schema.v1.6.json",
@@ -124,6 +132,7 @@ const GOLDEN_ARTIFACTS: [&str; 15] = [
 /// reporter registry exactly: `component-<one-or-more-ASCII-digits>-*`
 /// (a colliding `component-<word>` or extension-less name is an overview,
 /// never a detail page).
+#[cfg(not(feature = "semantic-clang"))]
 fn is_component_page_name(n: &str) -> bool {
     let Some(rest) = n.strip_prefix("component-") else {
         return false;
@@ -132,6 +141,7 @@ fn is_component_page_name(n: &str) -> bool {
     digits > 0 && rest.as_bytes().get(digits) == Some(&b'-') && n.ends_with(".svg")
 }
 
+#[cfg(not(feature = "semantic-clang"))]
 fn component_page_names(root: &Path) -> Vec<String> {
     let mut names: Vec<String> = fs::read_dir(root.join("charts"))
         .expect("charts dir present")
@@ -149,6 +159,7 @@ fn component_page_names(root: &Path) -> Vec<String> {
 /// gate — even a regeneration must update this table explicitly, never
 /// auto-adopt a changed set. `component-coupling.svg` is an overview chart
 /// and is NOT listed here.
+#[cfg(not(feature = "semantic-clang"))]
 const EXPECTED_COMPONENT_PAGES: &[(&str, &[&str])] = &[
     ("c", &["charts/component-01-src.svg"]),
     ("mixed", &["charts/component-01-src.svg"]),
@@ -164,6 +175,7 @@ const EXPECTED_COMPONENT_PAGES: &[(&str, &[&str])] = &[
 
 /// Assert a tree's page set is EXACTLY the pinned expectation (no
 /// auto-adopt: extras and missing pages both fail with the regen command).
+#[cfg(not(feature = "semantic-clang"))]
 fn assert_pinned_page_set(tag: &str, pages: &[String]) {
     let expected: Vec<String> = EXPECTED_COMPONENT_PAGES
         .iter()
@@ -339,6 +351,7 @@ fn kitchen_sink_finding_ids_are_globally_unique() {
 /// Returns the scan root plus, for snapshotted trees, the RAII temp parent:
 /// dropping the guard removes the snapshot — even on panic — so no manual
 /// `remove_dir_all` (which a panic would skip) is needed at the call sites.
+#[cfg(not(feature = "semantic-clang"))]
 fn materialize_fixture(tree: &GoldenTree) -> (PathBuf, Option<common::TempDir>) {
     if let Some(excluded) = tree.snapshot_exclude {
         let parent = common::TempDir::new(&format!("corpus-{}", tree.tag));
@@ -355,6 +368,7 @@ fn materialize_fixture(tree: &GoldenTree) -> (PathBuf, Option<common::TempDir>) 
 /// tree, then mask the two text artifacts IN PLACE. SVGs and the bundled
 /// schema are committed byte-exact — they contain no provenance (asserted
 /// below at generation time for EVERY tree).
+#[cfg(not(feature = "semantic-clang"))]
 #[test]
 fn regenerate_goldens() {
     if std::env::var("PERFPAL_REGEN_GOLDEN").ok().as_deref() != Some("1") {
@@ -534,6 +548,7 @@ fn regenerate_goldens() {
 /// PLUS every committed per-component detail page against the committed
 /// goldens. On mismatch the assertion names the tree and lists
 /// every differing artifact plus the regeneration command.
+#[cfg(not(feature = "semantic-clang"))]
 #[test]
 fn report_matches_committed_goldens() {
     for tree in &GOLDEN_TREES {

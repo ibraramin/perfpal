@@ -912,9 +912,9 @@ fn architecture_links_layered_overviews_in_emission_order() {
     );
     let arch = section(&report, "## 5. Architecture", "## Appendix A.");
 
-    let workspace = "[Workspace map — components as nodes over inter-component call/include edges, heat by finding density.](charts/layer-workspace.svg)";
-    let file = "[File hot-path map — top files by degree with reachable reserve, heat by function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)";
-    let entry = "[Entry-stratified cost map — files stratified by resolved entry reachability, heat by function cost; LOW-confidence call edges excluded.](charts/layer-entry.svg)";
+    let workspace = "[Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density.](charts/layer-workspace.svg)";
+    let file = "[File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)";
+    let entry = "[Entry-stratified cost map — files stratified by resolved entry reachability, heat by candidate function cost; LOW-confidence call edges excluded.](charts/layer-entry.svg)";
     let bands = "[Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.](charts/layer-bands.svg)";
     for expected in [
         "[Dependency graph — internal #include dependencies between scanned files.](charts/include-graph.svg)",

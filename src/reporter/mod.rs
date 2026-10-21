@@ -2310,13 +2310,13 @@ fn chart_caption(stem: &str, languages: &[String]) -> String {
             "Hot components — ranking by aggregated bottleneck metrics.".to_string()
         }
         "layer-workspace" => {
-            "Workspace map — components as nodes over inter-component call/include edges, heat by finding density.".to_string()
+            "Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density.".to_string()
         }
         "layer-file" => {
-            "File hot-path map — top files by degree with reachable reserve, heat by function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).".to_string()
+            "File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).".to_string()
         }
         "layer-entry" => {
-            "Entry-stratified cost map — files stratified by resolved entry reachability, heat by function cost; LOW-confidence call edges excluded.".to_string()
+            "Entry-stratified cost map — files stratified by resolved entry reachability, heat by candidate function cost; LOW-confidence call edges excluded.".to_string()
         }
         "layer-bands" => {
             "Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.".to_string()

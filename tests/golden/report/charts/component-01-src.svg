@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1100" height="296" viewBox="0 0 1100 296">
 <text x="40" y="56" font-family="monospace" font-size="13">Component 1: src</text>
-<text x="40" y="76" font-family="monospace" font-size="11">finding density 147.06 per KLOC · 3 files</text>
+<text x="40" y="76" font-family="monospace" font-size="11">candidate finding density 147.06 per KLOC · 3 files — profile to confirm</text>
 <g stroke="#999999" stroke-width="1">
 <line x1="210" y1="119" x2="260" y2="119"/>
 <line x1="210" y1="163" x2="260" y2="119"/>
@@ -29,5 +29,5 @@
 <rect x="181" y="248" width="12" height="12" fill="#bb1a1a"/>
 <rect x="193" y="248" width="12" height="12" fill="#b30000"/>
 <text x="211" y="258" font-family="monospace" font-size="11">hot</text>
-<text x="40" y="284" font-family="monospace" font-size="11">heat = function cost (v2 where available; v1 fallback) — profile to confirm</text>
+<text x="40" y="284" font-family="monospace" font-size="11">heat = candidate function cost (v2 where available; v1 fallback) — profile to confirm</text>
 </svg>

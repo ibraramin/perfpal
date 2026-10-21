@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "I4 DONE (f56d072) — finding dots on 5 map stems + layer-findings stem + report.html drill path; I5 proof/demo next; true GENUINE manual at I5; M5 gated B-pf-001/002.",
+  "current_phase": "I5 PROOF+DEMO DONE (pending founder A5 quote + dual review) — gate 687 tests, double-scan byte-identical 9/9 repos, semantic tier verified (c-json/curl), true GENUINE 9/172=5.2%, top-node calibration 1/27 GENUINE; entry strata degenerate (R-pf-098); M5 gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -63,29 +63,9 @@
       "title": "I1 sequenced per-language (founder): C then Rust then Python, one burst each; map-build I1a/b/c + birdseye F1 amended"
     },
     {
-      "id": "D-pf-218",
+      "id": "D-pf-223",
       "status": "live",
-      "title": "I1a DONE C entry+reachability lib-roots, schema 1.5, e758681"
-    },
-    {
-      "id": "D-pf-219",
-      "status": "live",
-      "title": "I2 DONE cost-v2 (trip gating C-only, reachable caps, schema 1.6, daffa62); GENUINE proxy uplift measured, true share manual at I5"
-    },
-    {
-      "id": "D-pf-220",
-      "status": "live",
-      "title": "I2 COMPLETE all 3 langs: C/Rust/Python canonical trip counts, schema 1.6 unchanged; true GENUINE manual at I5"
-    },
-    {
-      "id": "D-pf-221",
-      "status": "live",
-      "title": "I3 DONE (d78bb85): layer-entry (entry-stratified, unknown-entry stubs excluded, depth cap 8) + layer-bands (cross-component edges aggregated/captioned); LOW call edges excluded, goldens byte-stable, dual APPROVED"
-    },
-    {
-      "id": "D-pf-222",
-      "status": "live",
-      "title": "I4 DONE: findings-as-annotations — dots on 5 map stems (worst-severity fill + lowest-confidence ring), 8th overview stem layer-findings.svg, report.html #map drill path; findings-detail byte-identical; 687 tests; rev-1 B1 (ring honesty) fixed"
+      "title": "I5 evidence: docs/evidence/i5-map-proof.md — gate 687, 9-repo double-scan identical, semantic tier verified (libclang 23.1), A-pf-095 true 9/172 + top-node 1/27; A4 captions fixed; feature-build golden comparator default-only; map-quality findings R-pf-098/099/100"
     }
   ],
   "open_risks": [
@@ -114,28 +94,34 @@
       "title": "M2 corpora synthetic; real-repo credibility is M4"
     },
     {
-      "id": "R-pf-094",
-      "status": "open",
-      "severity": "low",
-      "title": "Root-package relative imports (a .py under the scan root doing `from .sibling import ...`) do not resolve: resolve_python_edges builds candidate `{package}.{rest}` (empty package -> leading-dot). Corpus places the cycle in pkg/. Also R-pf-093 residual: LOOP-007 index branch fires at in_loop_depth>=1 (accepted). Disc.: docs/evidence/dogfood-python-backend.md 6."
-    },
-    {
-      "id": "R-pf-095",
-      "status": "open",
-      "severity": "low",
-      "title": "Windows residuals after Wine 11.19 verification: the syntactic path is fully Wine-verified (identical findings + byte-identical metrics.json vs Linux; exit codes 1; output-dir swap OK). Still unproven: the semantic-clang tier on Windows (needs a Windows libclang.dll; the M2 resolver fix is code-reviewed only), true-Windows kernel behaviours (AV/indexer rename locks, junction creation), the MSVC-ABI build (only windows-gnu was cross-built), M5 legacy-console non-ASCII, and M6 scan.root_path OS separators (display-only)."
-    },
-    {
-      "id": "R-pf-096",
-      "status": "open",
-      "severity": "low",
-      "title": "Default scans produce zero non-LOW call edges (name-based only), so layer-entry honestly degrades to entry/not-reached bands (caption says semantic tier off). Depth strata become real only with the semantic-clang tier; bands layer carries today's cross-component structure."
-    },
-    {
       "id": "R-pf-097",
       "status": "open",
       "severity": "low",
       "title": "I4 residuals: no django corpus in repo, so 'django humans bounded' is structural only (HUMAN_CAP=10, <=3 links/row); pre-I4 chart-set prose drift (README:94, website scope:69, ADR-0002:32); 4 layer heat captions + hot-components lack the word 'candidate'; workspace figure duplicated in report.html (#map + #architecture)."
+    },
+    {
+      "id": "R-pf-098",
+      "status": "open",
+      "severity": "high",
+      "title": "Entry detection over-marks C lib-roots (curl 612/923 files, postgres 1592/2566) so layer-entry strata collapse to one entry column even on the semantic tier. Founder decision needed: true graph roots vs cap reserve vs honest label (A-pf-098)."
+    },
+    {
+      "id": "R-pf-099",
+      "status": "open",
+      "severity": "medium",
+      "title": "File cost rank dominated by tests/examples/generated files + literal trip-bound inflation; I5 top-3 calibration 1 GENUINE / 11 minor / 11 test-noise / 4 FP of 27. Needs production-path policy + known-trip guard (A-pf-099)."
+    },
+    {
+      "id": "R-pf-100",
+      "status": "open",
+      "severity": "medium",
+      "title": "Finding-density rank explodes on tiny scopes (postgres src/include/pch 1000.0 from 3 findings; rich . 333.33 from 1). Needs minimum-findings/denominator guard (A-pf-100)."
+    },
+    {
+      "id": "R-pf-101",
+      "status": "open",
+      "severity": "low",
+      "title": "ADR-0002 remains historical 3-chart record (intentionally not edited); README/website now list the 8-stem overview set. Workspace figure still duplicated in report.html (#map + #architecture); deferred."
     }
   ],
   "blocked_by": [
@@ -177,14 +163,24 @@
       "action": "M5 un-park needs B-pf-001 (contact) + B-pf-002 (secrets) — founder action"
     },
     {
-      "id": "A-pf-095",
+      "id": "A-pf-098",
       "status": "active",
-      "action": "I5: measure true GENUINE share via manual triage (I2 landed proxy uplift only)"
+      "action": "Map-quality fix 1 (R-pf-098): decide + implement entry-detection semantics so layer-entry depth strata are non-trivial on real C corpora; new ADR/spec amendment, then re-golden."
+    },
+    {
+      "id": "A-pf-099",
+      "status": "active",
+      "action": "Map-quality fix 2 (R-pf-099): production-path ranking policy + known-trip sanity guard so test/example/fixture heat cannot outrank production code."
+    },
+    {
+      "id": "A-pf-100",
+      "status": "active",
+      "action": "Map-quality fix 3 (R-pf-100): minimum-findings/denominator guard for component finding-density ranks."
     },
     {
       "id": "A-pf-097",
       "status": "active",
-      "action": "NEXT: I5 proof+demo — full gate, double-scan byte-identical goldens, 9-repo demo eyeball (3-action maintainer test), A-pf-095 true GENUINE triage, semantic-tier check for non-trivial entry depth"
+      "action": "I5 closeout: founder A5 quote + dual review (reviewer + requirements-reviewer), then mark map-build done and commit."
     }
   ],
   "last_updated": "2026-10-21"

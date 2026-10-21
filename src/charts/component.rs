@@ -255,7 +255,8 @@ fn render_component_page(
     // The node ramp is per-file FUNCTION COST (the subtitle above names the
     // component finding density, a different metric) — label it explicitly.
     captions.push(
-        "heat = function cost (v2 where available; v1 fallback) — profile to confirm".to_string(),
+        "heat = candidate function cost (v2 where available; v1 fallback) — profile to confirm"
+            .to_string(),
     );
     // Narrow (e.g. single-column) pages widen past the grid when the header,
     // legend, or any caption needs it — text keeps ≥10px from the right edge.
@@ -356,7 +357,7 @@ fn header_lines(comp: &ComponentEntry, file_count: usize) -> (String, String) {
     let title = truncate_label(&format!("Component {}: {}", comp.rank, comp.path_prefix));
     let files_word = if file_count == 1 { "file" } else { "files" };
     let subtitle = format!(
-        "finding density {} per KLOC · {file_count} {files_word}",
+        "candidate finding density {} per KLOC · {file_count} {files_word} — profile to confirm",
         format_fixed_point(comp.metrics.finding_density, 2),
     );
     (title, subtitle)

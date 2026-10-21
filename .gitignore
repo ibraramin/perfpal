@@ -13,3 +13,6 @@
 /dist/
 /THIRD-PARTY-NOTICES.md
 /perfpal-*.spdx.json
+
+# Local semantic-tier build dir (CARGO_TARGET_DIR=target-semantic)
+/target-semantic
