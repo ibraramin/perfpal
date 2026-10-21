@@ -1,0 +1,902 @@
+{
+ "filter": {
+  "path_segments": "tests?/testing/testdata/benches?/examples?/fixtures?",
+  "filenames": "test_* / *_test / testutil.* / */util.rs",
+  "source": "docs/evidence/findings-deep-dive.md \u00a71.2"
+ },
+ "scans": {
+  "perfpal": "0.2.0-beta.1",
+  "schema": "1.6",
+  "checkouts": "/var/tmp/opencode/m4-showcase/{aider,chunkhound,ripgrep,curl}"
+ },
+ "repos": {
+  "aider": {
+   "prod_hot": 0,
+   "missing_triage": 0,
+   "genuine": 0,
+   "retired_triage_ids": 0
+  },
+  "chunkhound": {
+   "prod_hot": 26,
+   "missing_triage": 0,
+   "genuine": 6,
+   "retired_triage_ids": 0
+  },
+  "ripgrep": {
+   "prod_hot": 29,
+   "missing_triage": 0,
+   "genuine": 1,
+   "retired_triage_ids": 5
+  },
+  "curl": {
+   "prod_hot": 117,
+   "missing_triage": 0,
+   "genuine": 2,
+   "retired_triage_ids": 4
+  }
+ },
+ "total": 172,
+ "genuine": 9,
+ "findings": [
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:47:17",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:99:9",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:151:9",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:261:13",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/compaction.rs:289:13",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/hnsw.rs:90:5",
+   "repo": "chunkhound",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/hnsw.rs:100:5",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/hnsw.rs:152:9",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:133:13",
+   "repo": "chunkhound",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:239:17",
+   "repo": "chunkhound",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:297:17",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:326:9",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:445:17",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/db/duckdb_backend/write.rs:478:17",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/differ.rs:118:5",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:566:25",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:705:25",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:922:29",
+   "repo": "chunkhound",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1124:9",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1209:9",
+   "repo": "chunkhound",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1431:25",
+   "repo": "chunkhound",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:src/pipeline/pipeline.rs:1493:9",
+   "repo": "chunkhound",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-RS-ARCH-002:src/db/duckdb_backend/compaction.rs:32:5",
+   "repo": "chunkhound",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:src/pipeline/pipeline.rs:707:40",
+   "repo": "chunkhound",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:src/pipeline/pipeline.rs:902:32",
+   "repo": "chunkhound",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:src/pipeline/pipeline.rs:1001:32",
+   "repo": "chunkhound",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/complete/bash.rs:83:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/complete/fish.rs:14:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/complete/powershell.rs:46:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:39:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:123:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:218:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/man.rs:38:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/parse.rs:227:9",
+   "repo": "ripgrep",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/dir.rs:201:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/types.rs:337:13",
+   "repo": "ripgrep",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/types.rs:383:13",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/types.rs:397:13",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/pcre2/src/matcher.rs:51:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/pcre2/src/matcher.rs:73:13",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/regex/src/config.rs:183:13",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ARCH-002:crates/core/flags/hiargs.rs:112:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/core/flags/doc/help.rs:192:5",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/globset/src/lib.rs:424:9",
+   "repo": "ripgrep",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-RS-ALLOC-001:crates/ignore/src/lib.rs:529:13",
+   "repo": "ripgrep",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/cli/src/decompress.rs:182:27",
+   "repo": "ripgrep",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:102:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:103:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:104:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:105:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/flags/doc/help.rs:206:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:334:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:335:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:342:13",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-RS-LOOP-002:crates/core/main.rs:345:9",
+   "repo": "ripgrep",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/asyn-ares.c:693:10",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/c-hyper.c:456:28",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/cookie.c:850:20",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/cookie.c:866:20",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/cookie.c:877:18",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/cookie.c:880:19",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/cookie.c:899:18",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/cookie.c:911:19",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/curl_addrinfo.c:148:10",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/curl_addrinfo.c:287:10",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/doh.c:932:10",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/formdata.c:341:33",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/formdata.c:363:29",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/formdata.c:387:35",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/formdata.c:452:28",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/formdata.c:476:41",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/formdata.c:510:40",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/formdata.c:585:29",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/getenv.c:48:11",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/http.c:887:32",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/http.c:1304:28",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/http_aws_sigv4.c:241:15",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/netrc.c:252:21",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/netrc.c:263:22",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/socks_gssapi.c:276:28",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/socks_sspi.c:298:32",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vauth/digest.c:531:25",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vauth/digest.c:543:25",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vauth/digest.c:549:26",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vauth/digest.c:557:15",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vauth/digest.c:580:25",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vauth/digest.c:586:25",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vauth/digest.c:593:29",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vssh/libssh2.c:2060:25",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/bearssl.c:189:23",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/bearssl.c:224:23",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/schannel.c:1245:47",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/schannel.c:2069:32",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:packages/OS400/ccsidcurl.c:803:16",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:packages/OS400/os400sys.c:630:21",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_findfile.c:81:22",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_getparam.c:449:23",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_getparam.c:2618:35",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_getparam.c:2892:28",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_operate.c:1869:25",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_operate.c:2016:27",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_operate.c:2106:20",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_operate.c:2118:24",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_operate.c:2415:16",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_parsecfg.c:150:17",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_parsecfg.c:205:29",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_urlglob.c:133:26",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_urlglob.c:142:37",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_urlglob.c:148:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/formdata.c:369:19",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/formdata.c:458:19",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/formdata.c:683:5",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/getenv.c:50:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/getenv.c:61:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/http.c:886:13",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/http.c:1374:13",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/http_aws_sigv4.c:247:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/netrc.c:251:13",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/netrc.c:262:11",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:195:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:214:9",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:229:9",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:269:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:279:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:288:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:301:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/socks_sspi.c:311:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vauth/digest.c:530:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vauth/digest.c:542:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vauth/digest.c:548:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vauth/digest.c:575:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vauth/digest.c:579:11",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vauth/digest.c:585:11",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vauth/digest.c:592:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vssh/libssh2.c:2342:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:lib/vtls/bearssl.c:264:7",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:packages/OS400/os400sys.c:649:7",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:src/tool_operate.c:2166:11",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-002:src/tool_operate.c:2448:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/gtls.c:1255:13",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/openssl.c:3066:23",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/openssl.c:4409:20",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:lib/vtls/sectransp.c:1777:18",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_formparse.c:817:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_formparse.c:818:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ALLOC-001:src/tool_formparse.c:819:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-ARCH-002:lib/setopt.c:258:1",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/cookie.c:1618:7",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/easy.c:572:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/file.c:387:14",
+   "repo": "curl",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/file.c:582:15",
+   "repo": "curl",
+   "verdict": "GENUINE"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/hostip6.c:79:5",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/hostip6.c:82:5",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/vauth/ntlm.c:138:5",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:lib/vtls/sectransp.c:1458:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:scripts/schemetable.c:175:9",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_cb_dbg.c:255:5",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_cb_dbg.c:275:7",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_cb_wrt.c:72:12",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_cb_wrt.c:99:16",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_easysrc.c:193:7",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_easysrc.c:198:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_easysrc.c:206:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_easysrc.c:223:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_easysrc.c:227:7",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_help.c:134:5",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_help.c:384:9",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_help.c:406:7",
+   "repo": "curl",
+   "verdict": "REAL_BUT_MINOR"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_operate.c:2659:5",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_operate.c:2664:5",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_parsecfg.c:139:7",
+   "repo": "curl",
+   "verdict": "FP"
+  },
+  {
+   "finding_id": "PERF-C-LOOP-002:src/tool_parsecfg.c:193:7",
+   "repo": "curl",
+   "verdict": "FP"
+  }
+ ]
+}

@@ -1436,9 +1436,9 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
     );
     if semantic_tier_active(doc) {
         out.push_str(
-            "<p>Standing caveat: resolved cross-file call edges are MEDIUM \
-             confidence; name-based edges the semantic tier could not resolve \
-             remain LOW (ADR-0001).</p>\n",
+            "<p>Semantic resolver tier active for C — resolved cross-file call \
+             edges are MEDIUM confidence; name-based edges the semantic tier \
+             could not resolve remain LOW (ADR-0001).</p>\n",
         );
     } else {
         out.push_str(
@@ -2334,7 +2334,7 @@ fn chart_caption(stem: &str, languages: &[String]) -> String {
             "Component coupling — cross-file call edges between components.".to_string()
         }
         "hot-components" => {
-            "Hot components — ranking by aggregated bottleneck metrics.".to_string()
+            "Hot components — ranking by candidate finding density.".to_string()
         }
         "layer-workspace" => {
             "Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density.".to_string()
@@ -2508,14 +2508,21 @@ fn confidence_token(confidence: Confidence) -> &'static str {
     }
 }
 
-/// True when at least one emitted finding carries a semantic-resolver tier
-/// (a libclang fact upgraded it). Report boilerplate follows the data instead
-/// of assuming the default build — a semantic build must not print the
-/// "purely syntactic tier" caveat.
+/// True when the run used the semantic resolver tier. Two independent
+/// signals, because neither alone is sufficient: a semantic-tier finding
+/// proves the tier produced a fact, while a file with
+/// `parse_health.resolver == Ok` proves libclang actually parsed a TU even
+/// when no emitted finding needed a semantic upgrade (e.g. a single-file C
+/// project with no cross-file edge). The default build records `Absent`
+/// (or omits the field), so the default report stays on the syntactic text.
 fn semantic_tier_active(doc: &MetricsDocument) -> bool {
     doc.findings
         .iter()
         .any(|f| matches!(f.resolver_tier, ResolverTier::Semantic))
+        || doc
+            .files
+            .iter()
+            .any(|f| matches!(f.parse_health.resolver, Some(crate::ir::ResolverHealth::Ok)))
 }
 
 fn resolver_tier_token(tier: ResolverTier) -> &'static str {

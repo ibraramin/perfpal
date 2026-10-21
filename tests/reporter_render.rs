@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 
 use perfpal::analyzer::{Confidence, Severity};
-use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
+use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 use perfpal::reporter::{render_findings_detail, render_report};
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, MetricsDocument, ParseHealthEntry,
@@ -921,7 +921,7 @@ fn architecture_links_layered_overviews_in_emission_order() {
         file,
         entry,
         "[Component coupling — cross-file call edges between components.](charts/component-coupling.svg)",
-        "[Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)",
+        "[Hot components — ranking by candidate finding density.](charts/hot-components.svg)",
         workspace,
         bands,
     ] {
@@ -1076,7 +1076,32 @@ fn semantic_tier_boilerplate_follows_the_data() {
         "semantic HTML standing caveat must say MEDIUM:\n{html}"
     );
     assert!(
+        html.contains("Semantic resolver tier active for C"),
+        "semantic HTML must disclose the active tier:\n{html}"
+    );
+    assert!(
         !html.contains("LOW confidence until a semantic resolver tier exists"),
         "semantic HTML must not print the default standing caveat:\n{html}"
+    );
+
+    // Edge case (review round 2): libclang parsed a TU but no emitted finding
+    // needed a semantic upgrade (e.g. a single-file C project with no
+    // cross-file edge). The tier still ran; the report must not claim a
+    // purely syntactic run.
+    doc.findings.clear();
+    doc.files[0].parse_health.resolver = Some(ResolverHealth::Ok);
+    let md = render_report(&doc, &charts);
+    assert!(
+        md.contains("semantic resolver tier active for C"),
+        "resolver-Ok with zero semantic findings must disclose the tier:\n{md}"
+    );
+    assert!(
+        !md.contains("purely syntactic tier"),
+        "resolver-Ok with zero semantic findings must not claim syntactic:\n{md}"
+    );
+    let html = perfpal::reporter::render_html(&doc, &charts);
+    assert!(
+        html.contains("Semantic resolver tier active for C"),
+        "resolver-Ok with zero findings must disclose the tier in HTML:\n{html}"
     );
 }

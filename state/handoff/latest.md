@@ -80,8 +80,8 @@ behind the map; M5 parked behind B-pf-001/002.
 | A-pf-095 | hand verdicts (+ supplementary top-node calibration) | 9/172 = 5.2%; calibration 1/27 GENUINE |
 | A5 blind tests | independent map-only agents (tmux, hyperfine) | 3 actions each, `ambiguous=false`; timing not measured |
 | founder A5 | tmux map `../perfpal-test/out-i5-tmux/report.html#map` | **PENDING — founder quote** |
-| review (code) | `@reviewer` round 1 | **APPROVED** (non-blocking notes; caption overstatement + evidence retention addressed) |
-| review (requirements) | `@requirements-reviewer` round 1 | **CHANGES_REQUESTED** → G4/G5/G6/G7/G8/G9 fixed, G2 disclosed; round 2 pending |
+| review (code) | `@reviewer` round 1 / round 2 | round 1 **APPROVED**; round 2 **CHANGES_REQUESTED** (tier predicate false-negative on zero-semantic-finding runs) → predicate + test fixed; round 3 pending |
+| review (requirements) | `@requirements-reviewer` round 1 / round 2 | round 1 **CHANGES_REQUESTED** (G2/G4–G9) → fixed; round 2 **CHANGES_REQUESTED** (B1 stale citation, B2 tmux 838→191) → fixed; round 3 pending |
 
 ## Risks / Open
 - **R-pf-098 (high):** entry-detection over-marking → degenerate strata; needs an ADR/spec
@@ -90,6 +90,8 @@ behind the map; M5 parked behind B-pf-001/002.
 - **R-pf-100 (medium):** density denominator guard — A-pf-100.
 - **R-pf-103 (low):** semantic build has no committed-golden lock after the feature gate
   (covered by resolver_health + double-run determinism) — A-pf-103.
+- **R-pf-102 (low):** workspace figure duplicated in `report.html` (`#map` + `#architecture`)
+  — cosmetic, deferred.
 - **R-pf-101 (low):** ADR-0002 stays historical; README/website updated; workspace figure
   duplicated in `report.html` (`#map` + `#architecture`) — deferred.
 - **R-pf-097:** partially closed (README/website/captions); django "humans bounded" remains
@@ -99,7 +101,7 @@ behind the map; M5 parked behind B-pf-001/002.
   was not tripped (A5 passed) but the ranking caveats are recorded in the dossier.
 
 ## Next Actions
-1. **Close I5:** founder names 3 actions from the tmux map (timed) → append §7.3; round-2
+1. **Close I5:** founder names 3 actions from the tmux map (timed) → append §7.3; round-3
    dual review on the final tree; `markPlanDone map-build`; commit.
 2. **New session — map-quality burst:** A-pf-098/099/100 (entry semantics, production
    ranking, density guard) + A-pf-103 (semantic goldens); each needs its own spec/ADR
@@ -107,16 +109,17 @@ behind the map; M5 parked behind B-pf-001/002.
 3. M5 publish needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080).
 
 ## Change set (this session)
-- **Code:** `src/charts/{layers,component,mod}.rs`, `src/reporter/mod.rs` (caption wording +
-  tier-aware report boilerplate), `tests/p6_hardening.rs` (default-build-only golden flow +
-  cfg'd helpers/const), `tests/charts_render.rs`, `tests/reporter_render.rs` (pinned wording
-  + G4 semantic-boilerplate lock).
-- **Goldens:** 33 files (layer-{workspace,file,entry,bands}, hot-components, report.md/html,
-  component pages with the ramp) — caption-only.
+- **Code:** `src/charts/{layers,component,mod}.rs`, `src/reporter/mod.rs` (caption wording,
+  tier-aware boilerplate + resolver-Ok edge case, candidate hot-components link caption),
+  `tests/p6_hardening.rs` (default-build-only golden flow + cfg'd helpers/const),
+  `tests/charts_render.rs`, `tests/reporter_render.rs` (pinned wording + G4/zero-finding lock).
+- **Goldens:** 33 files at `dbb9bbe` (layer-{workspace,file,entry,bands}, hot-components,
+  report.md/html, component pages); the round-2 hot-components link-caption fix rewrote the
+  same 4× report.md/report.html (content only).
 - **Docs:** new `docs/evidence/i5-map-proof.md`, `i5-determinism.txt`, `i5-map-triage.json`,
-  `i5-blind-a5.json`; `docs/report/output-contract.md`, `README.md`,
+  `i5-blind-a5.json`, `i5-prodhot.json`; `docs/report/output-contract.md`, `README.md`,
   `docs/website/scope-and-content.md`, `CHANGELOG.md`.
-- **State:** `state/session-state.json` (D-pf-223/224; R-pf-098/099/100/101/103;
+- **State:** `state/session-state.json` (D-pf-223/224/225; R-pf-098/099/100/101/102/103;
   A-pf-098/099/100/103; older decisions/risks/actions demoted to ledger),
   `docs/activeContext.md`, this handoff, ledger append.
 - **Untracked build dir:** `/target-semantic` ignored (`.gitignore`).

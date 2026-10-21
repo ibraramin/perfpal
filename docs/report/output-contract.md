@@ -146,7 +146,9 @@ page was emitted (`[Component <prefix> — per-file hot-path
 map.](charts/component-<rank>-<slug>.svg)`), in rank order directly under
 the table. Include-graph and
 call-graph notes, with the standing caveat that cross-file call edges
-are LOW confidence until a semantic resolver tier exists (ADR-0001).
+are LOW confidence (name-based) unless the run used the semantic resolver
+tier, in which case resolved edges are MEDIUM and only the unresolved
+name-based edges stay LOW (ADR-0001).
 
 ## Appendix A. Heuristic reference
 Table: rule_id → title → one-line description, covering every rule_id

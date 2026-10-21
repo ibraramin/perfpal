@@ -593,3 +593,7 @@
 {"demoted_from_hot": "2026-10-21", "record": {"id": "A-pf-097", "status": "done", "action": "NEXT: I5 proof+demo — full gate, double-scan byte-identical goldens, 9-repo demo eyeball (3-action maintainer test), A-pf-095 true GENUINE triage, semantic-tier check for non-trivial entry depth"}}
 {"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-217", "status": "live", "title": "I1 sequenced per-language (founder): C then Rust then Python, one burst each; map-build I1a/b/c + birdseye F1 amended"}}
 {"demoted_from_hot": "2026-10-21", "record": {"id": "R-pf-007", "status": "open", "severity": "medium", "title": "Differentiation claims rest on one survey pass"}}
+{"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-038", "status": "live", "title": "Schema versioning policy: minor additive, major breaking"}}
+{"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-041", "status": "live", "title": "Lessons-learned log: append LL-NNN on costly mistakes"}}
+{"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-042", "status": "live", "title": "Output-contract v1: report layout, atomic swap, chart naming"}}
+{"demoted_from_hot": "2026-10-21", "record": {"id": "D-pf-043", "status": "live", "title": "report.md template: deterministic sections + total order"}}

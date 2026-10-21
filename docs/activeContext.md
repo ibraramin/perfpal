@@ -1,32 +1,37 @@
 # Active Context
 
 ## Current Task
-I5 (map-build) proof + demo **executed and reviewed round 1** — `docs/evidence/i5-map-proof.md`.
+I5 (map-build) proof + demo **executed; review rounds 1–2 fixed** — `docs/evidence/i5-map-proof.md`.
 - Gate: 50 suites / **688** tests (feature: 691), fmt+clippy+deny green.
 - Determinism: committed-golden double regeneration identical (`749162…`); 9/9 demo repos
   double-scan byte-identical modulo provenance; transcript `docs/evidence/i5-determinism.txt`.
 - Semantic tier: libclang 23.1 verified; cJSON 837→1,162, curl 10,985→11,807; ARCH-003
-  LOW→MEDIUM; 115/1,548 resolved C edges. Report boilerplate now tier-aware (G4 fix + test).
-- A-pf-095: true GENUINE 9/172 = 5.2%; supplementary top-3 calibration 1/27 GENUINE.
+  LOW→MEDIUM; 115/1,548 resolved C edges. Report boilerplate tier-aware, including the
+  resolver-Ok / zero-semantic-finding edge case.
+- A-pf-095: true GENUINE 9/172 = 5.2% (`i5-prodhot.json`); supplementary top-3 calibration
+  1/27 GENUINE.
 - Demo: 9/9 repos all stems + 4–50 pages; two blind map-only maintainers named 3 actions
-  each → A5 PASS with caveats; **founder quote still pending**.
-- A4 captions fixed; feature-golden comparator default-only; 33 goldens regenerated.
+  each → A5 PASS on action-naming, **timing + founder quote still pending**.
+- A4 captions fixed; feature-golden comparator default-only; goldens regenerated.
 
 ## Recent Decisions
+- **D-pf-225 (live):** I5 review round 2 — both seats CHANGES_REQUESTED → tier predicate also
+  honors `parse_health.resolver == Ok` (+zero-finding test), HTML explicit tier sentence,
+  `hot-components` link caption candidate, output-contract caveat, timing JSON fields,
+  `i5-prodhot.json`, dossier B1/B2 citations. Round 3 pending.
 - **D-pf-224 (live):** I5 review round 1 — code APPROVED; requirements CHANGES_REQUESTED →
-  G4 tier-aware report boilerplate (+locked test), G5/G6/G7 doc fixes, G8/G9 persisted
-  evidence + parse-partial disclosure, G2 timing disclosed unmeasured; R-pf-103 queued.
+  G4 tier-aware boilerplate, G5/G6/G7 docs, G8/G9 evidence persistence, G2 timing disclosure.
 - **D-pf-223 (live):** I5 evidence — gate 687 at that commit, 9-repo double-scan, semantic
   tier, true GENUINE 9/172 + top-node 1/27; map-quality R-pf-098/099/100.
 - *(Cold `state/archive/ledger.jsonl`: D-pf-217/218–222, R-pf-007/094–096, done
   A-pf-095/097 — append-only.)*
 
 ## In Progress
-- I5 closeout: code+goldens+evidence committed (`dbb9bbe` + follow-up); **round-2 review**
-  (both reviewers on the final tree) and the **founder A5 quote** remain.
+- I5 closeout: code+goldens+evidence committed (`dbb9bbe`, `2b90954` + this round-2 fix);
+  **round-3 review** and the **founder A5 quote** remain.
 
 ## Next
-- **I5 closeout:** founder A5 verbatim → dossier §7.3; round-2 dual review APPROVED;
+- **I5 closeout:** founder A5 verbatim (timed) → dossier §7.3; round-3 dual review APPROVED;
   `markPlanDone map-build`.
 - **Then map-quality burst (new session):** A-pf-098 entry-detection strata (R-pf-098,
   high), A-pf-099 production-path ranking + known-trip guard (R-pf-099), A-pf-100

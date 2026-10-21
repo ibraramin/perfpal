@@ -62,14 +62,19 @@ changes chart topology, not just masked rows).
 **Semantic-report boilerplate fixed (review G4).** A semantic build's `report.md`/`report.html`
 still printed the default-build "purely syntactic tier" caveat and described all cross-file
 edges as LOW, contradicting the same report's `resolver_tier: semantic` rows. The reporter now
-derives the tier from the data (`semantic_tier_active`): semantic runs disclose the active tier
-and describe resolved edges as MEDIUM; the default build keeps the syntactic text. Locked by
-`tests/reporter_render.rs::semantic_tier_boilerplate_follows_the_data` (the +1 default test
-that takes 687→688).
+derives the tier from the data (`semantic_tier_active`): a semantic-tier finding **or** a file
+whose `parse_health.resolver == Ok` (libclang parsed the TU even when no finding needed an
+upgrade — the single-file C case) selects the tier-active text; HTML gets an explicit
+"Semantic resolver tier active for C" sentence. The default build keeps the syntactic text and
+stays byte-identical. Locked by
+`tests/reporter_render.rs::semantic_tier_boilerplate_follows_the_data` (including the
+zero-semantic-finding / resolver-Ok case; the +1 default test takes 687→688).
 
 **A2 intact.** No `metrics.json`, `graph.dot`, or `findings-detail.*` golden changed
 (`git status --porcelain` for those paths is empty). The 33 golden files that changed are
-the caption-only SVGs/`report.md`/`report.html` from the A4 wording fix (§6).
+the caption-only SVGs/`report.md`/`report.html` from the A4 wording fix (§6); the follow-up
+`hot-components` link-caption fix rewrote the same 4× `report.md`/`report.html` (content only,
+no new files).
 
 ---
 
@@ -113,7 +118,8 @@ MEDIUM (semantic), and the extra findings are the documented confidence lift. Bo
 scans remain parse-partial-heavy in the same way as their default counterparts (cJSON 63 ok /
 38 partial; curl 687 ok / 236 partial) — the tool reports this per file and never fabricates
 the missing regions. The human-report boilerplate that contradicted the tier is fixed and
-locked (§2, G4).
+locked (§2, G4); the post-fix semantic artifacts are `i5-semantic/cJSON2` and
+`i5-semantic/curl2` (the earlier `cJSON`/`curl` dirs are pre-G4 captures).
 
 ### 4.1 Negative result — `layer-entry` strata are degenerate even on the semantic tier
 
@@ -162,7 +168,9 @@ entries; no new hand triage was needed for this half.
 
 Machine-readable verdicts: `docs/evidence/i5-map-triage.json` (27 nodes, `file:line`
 evidence per verdict). A-pf-095 itself is the hot-tier share in §5.1; this calibration is an
-extra map-quality probe added by I5 and is not counted toward that action.
+extra map-quality probe added by I5 and is not counted toward that action. The hot-tier
+candidate set (172 ids + per-id verdict + retired-id counts) is persisted as
+`docs/evidence/i5-prodhot.json`.
 
 Top-3 files by summed `function_cost_v2` in each demo repo (27 nodes), each read at its
 cited span and classified. Rubric: GENUINE / REAL_BUT_MINOR / FP / TEST_NOISE (test, example,
@@ -187,9 +195,9 @@ the output path). Representative failures, all `file:line`-verified:
 - `django` `django/contrib/sessions/backends/cache.py:54` — `for i in range(10000)` retry
   guard that returns on iteration 1; cost-v2 charges 10,000×.
 - `alacritty` rank 1 `window_title` — `#[cfg(test)]` loop `for _ in 0..4097`.
-- `tmux` `format.c:6086-6328` — 838-branch dispatcher; fn_cost 1,331 is statement-count
-  inflation, not iteration; `reachable_from_entry=false` is also wrong (callers at
-  `format.c:6839,6909`).
+- `tmux` `format.c:6086-6328` — one switch over parsed modifiers (~30 cases;
+  `cyclomatic_complexity` 191), not a large loop; fn_cost 1,331 is statement-count
+  inflation; `reachable_from_entry=false` is also wrong (callers at `format.c:6839,6909`).
 - `rich` rank 1 `tools/profile_divide.py:12` — 10,000-iteration local benchmark loop.
 - `hyperfine`/`click` entries are startup/help/teardown paths — real but one-shot.
 
@@ -212,7 +220,9 @@ actions from the layered/finding views, not from the raw cost rank.
 Five heat captions lacked the mandatory "candidate" framing: `src/charts/layers.rs:209,415,
 840,1194`, `src/charts/component.rs:258` (component-page ramp), plus the
 `hot-components.svg` subtitle (`src/charts/mod.rs:1110`) and three `report.md` link captions
-(`src/reporter/mod.rs:2313-2319`). The six in-chart legends now read
+(`src/reporter/mod.rs:2340,2343,2346`); the `hot-components` link caption now reads
+`ranking by candidate finding density` instead of the verbatim "bottleneck" claim. The six
+in-chart legends now read
 `candidate … — profile to confirm`; the report-level link captions read `candidate …`
 (link prose, no suffix). `docs/report/output-contract.md` was updated to match. This is the
 only **A4** code change; I5 also fixes the feature-build golden gate and the semantic-report

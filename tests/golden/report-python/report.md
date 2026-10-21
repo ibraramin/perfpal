@@ -97,7 +97,7 @@ Distribution — max\_loop\_depth:
 [File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
 [Entry-stratified cost map — files stratified by resolved entry reachability, heat by candidate function cost; LOW-confidence call edges excluded.](charts/layer-entry.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
-[Hot components — ranking by aggregated bottleneck metrics.](charts/hot-components.svg)
+[Hot components — ranking by candidate finding density.](charts/hot-components.svg)
 [Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density.](charts/layer-workspace.svg)
 [Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.](charts/layer-bands.svg)
 [Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm.](charts/layer-findings.svg)

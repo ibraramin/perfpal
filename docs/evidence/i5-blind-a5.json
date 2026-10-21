@@ -1,63 +1,67 @@
 {
-  "_comment": "I5 A5 blind three-action tests (spec birdseye-map A5; dossier docs/evidence/i5-map-proof.md §7.2). Two independent agents with no prior repo context read ONLY report.md, report.html, and the 8 overview SVGs (no source). Both named 3 actions with ambiguous=false. Founder's own test is recorded separately in §7.3 of the dossier once supplied.",
-  "generated": "2026-10-21",
-  "artifacts": "../perfpal-test/out-i5-<repo>/",
-  "tests": [
+ "_comment": "I5 A5 blind three-action tests (spec birdseye-map A5; dossier docs/evidence/i5-map-proof.md \u00a77.2). Two independent agents with no prior repo context read ONLY report.md, report.html, and the 8 overview SVGs (no source). Both named 3 actions with ambiguous=false. Founder's own test is recorded separately in \u00a77.3 of the dossier once supplied.",
+ "generated": "2026-10-21",
+ "artifacts": "../perfpal-test/out-i5-<repo>/",
+ "tests": [
+  {
+   "repo": "tmux",
+   "language": "c",
+   "commit": "c251547e",
+   "ambiguous": false,
+   "actions": [
     {
-      "repo": "tmux",
-      "language": "c",
-      "commit": "c251547e",
-      "ambiguous": false,
-      "actions": [
-        {
-          "kind": "look_first",
-          "target": "format.c",
-          "evidence": "charts/layer-file.svg — hot-path outline, max cost among shown files; report.md §5 hot component PERF-C-ARCH-002:format.c:6052:1",
-          "confidence": "high"
-        },
-        {
-          "kind": "do_not_touch",
-          "target": "tmux.h",
-          "evidence": "charts/layer-file.svg — graph convergence node (~44 incoming edges); report.md §2 lists tmux.h partial with 192 error nodes",
-          "confidence": "medium"
-        },
-        {
-          "kind": "profile",
-          "target": "tty.c",
-          "evidence": "charts/layer-entry.svg — entry stratum with elevated heat; dot label 144 candidates (1 hot / 7 warn); hot-tinted in layer-bands.svg",
-          "confidence": "medium"
-        }
-      ],
-      "notes": "The map was usable and converged: format.c is the top-cost/hottest production file across three charts. Caveats: 6,731 LOW-confidence call edges excluded and the entry map resolved 0 call edges (strata = entries only). fuzz's density rank (171.17) is a small-denominator all-info harness artifact."
+     "kind": "look_first",
+     "target": "format.c",
+     "evidence": "charts/layer-file.svg \u2014 hot-path outline, max cost among shown files; report.md \u00a75 hot component PERF-C-ARCH-002:format.c:6052:1",
+     "confidence": "high"
     },
     {
-      "repo": "hyperfine",
-      "language": "rust",
-      "commit": "c516152",
-      "ambiguous": false,
-      "actions": [
-        {
-          "kind": "look_first",
-          "target": "src/benchmark/executor.rs",
-          "evidence": "report.md §4 PERF-RS-ALLOC-001 (16/16 hot; exemplar :276:9); layer-file.svg tile 23 candidates / 2 hot / 3 HIGH",
-          "confidence": "high"
-        },
-        {
-          "kind": "do_not_touch",
-          "target": "src/command.rs",
-          "evidence": "layer-file.svg max-cost outline + 3 hot / 2 warn / 24 info; highest-degree node and largest src file (575 LOC)",
-          "confidence": "medium"
-        },
-        {
-          "kind": "profile",
-          "target": "src/output/report.rs",
-          "evidence": "hot-components.svg rank 1 src/output 84.81; layer-findings.svg tile 21 candidates / 2 hot / 10 HIGH",
-          "confidence": "medium"
-        }
-      ],
-      "notes": "Map usable without source. Weakest layer is entry-stratified (0 resolved call edges; 297 LOW excluded), so reachability/blast-radius rest on graph degree. Heat is candidate cost, not runtime."
+     "kind": "do_not_touch",
+     "target": "tmux.h",
+     "evidence": "charts/layer-file.svg \u2014 graph convergence node (~44 incoming edges); report.md \u00a72 lists tmux.h partial with 192 error nodes",
+     "confidence": "medium"
+    },
+    {
+     "kind": "profile",
+     "target": "tty.c",
+     "evidence": "charts/layer-entry.svg \u2014 entry stratum with elevated heat; dot label 144 candidates (1 hot / 7 warn); hot-tinted in layer-bands.svg",
+     "confidence": "medium"
     }
-  ],
-  "verdict": "PASS with caveats (both tests named 3 actions; entry strata degenerate; tiny-denominator components can rank #1)",
-  "founder_test": "PENDING"
+   ],
+   "notes": "The map was usable and converged: format.c is the top-cost/hottest production file across three charts. Caveats: 6,731 LOW-confidence call edges excluded and the entry map resolved 0 call edges (strata = entries only). fuzz's density rank (171.17) is a small-denominator all-info harness artifact.",
+   "duration_seconds": null,
+   "duration_note": "not measured (asynchronous agent runs); founder run to be timed"
+  },
+  {
+   "repo": "hyperfine",
+   "language": "rust",
+   "commit": "c516152",
+   "ambiguous": false,
+   "actions": [
+    {
+     "kind": "look_first",
+     "target": "src/benchmark/executor.rs",
+     "evidence": "report.md \u00a74 PERF-RS-ALLOC-001 (16/16 hot; exemplar :276:9); layer-file.svg tile 23 candidates / 2 hot / 3 HIGH",
+     "confidence": "high"
+    },
+    {
+     "kind": "do_not_touch",
+     "target": "src/command.rs",
+     "evidence": "layer-file.svg max-cost outline + 3 hot / 2 warn / 24 info; highest-degree node and largest src file (575 LOC)",
+     "confidence": "medium"
+    },
+    {
+     "kind": "profile",
+     "target": "src/output/report.rs",
+     "evidence": "hot-components.svg rank 1 src/output 84.81; layer-findings.svg tile 21 candidates / 2 hot / 10 HIGH",
+     "confidence": "medium"
+    }
+   ],
+   "notes": "Map usable without source. Weakest layer is entry-stratified (0 resolved call edges; 297 LOW excluded), so reachability/blast-radius rest on graph degree. Heat is candidate cost, not runtime.",
+   "duration_seconds": null,
+   "duration_note": "not measured (asynchronous agent runs); founder run to be timed"
+  }
+ ],
+ "verdict": "PASS with caveats (both tests named 3 actions; entry strata degenerate; tiny-denominator components can rank #1)",
+ "founder_test": "PENDING \u2014 timed run required by A5 (\"under 10 minutes\")"
 }
