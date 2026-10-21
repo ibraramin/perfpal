@@ -101,7 +101,8 @@ Why the curl pair disappears is structural, not accidental: `lib/file.c` is degr
 raw severity weight (37) ranks #80 of 923, outside the 50-node findings cap. Its component
 `lib` is rank 9 and does reach `#map`, but the table shows only the top-3 findings by
 severity-then-ID and all three are `ALLOC-001` findings in other files. The data exists; every
-view's cap/ranking hides it. **This is the cleanest H2 proof in the corpus.**
+overview view's cap/ranking hides the finding (the file label survives only on the linked
+per-component page, with no finding ID). **This is the cleanest H2 proof in the corpus.**
 
 ## 4. H1 vs H2 — decision per question
 
