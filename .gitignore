@@ -16,3 +16,7 @@
 
 # Local semantic-tier build dir (CARGO_TARGET_DIR=target-semantic)
 /target-semantic
+
+# Python bytecode from committed evidence/repro scripts (docs/evidence/**/render)
+__pycache__/
+*.pyc

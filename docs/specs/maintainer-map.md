@@ -90,5 +90,17 @@ Binding rules:
   `known_trip_value`) are required; see `docs/evidence/map-data-coverage.md` §8 for the rest and
   their change triggers.
 
+### V3 idiom decision (2026-10-21)
+
+Blind A/B on tmux/hyperfine/cJSON (`docs/evidence/map-idiom-ab.md`): **KV1 = text-first ranked
+brief** (2/3), **KV2 = horizontal dependents bars** (3/3), **KV3 = horizontal cost bars** (3/3).
+Matrices lose on basename ambiguity; treemaps lose on missing `path:line` and near-equal areas.
+The V3 recall check found the locked KV1 severity ranking does not put the pre-registered Q1
+answer inline (ranks 210/197/35) and the KV3 no-loop demotion pushes all three Q3 targets down;
+V7 re-triages the KV1 rank key and V5 tests the no-loop guard. **KV2 production-first is a
+proposed V2 amendment pending founder ratification** (cJSON's `cJSON.h` is otherwise buried by
+unity test headers); until then V2's production-first scope (KV1/KV3) stands. When the median
+dependent count is 0, KV2 anchors with `% of scanned files` + `top P%`, not `× median`.
+
 ## Non-goals
 Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runtime truth claims.

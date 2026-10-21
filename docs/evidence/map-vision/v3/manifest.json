@@ -1,0 +1,251 @@
+{
+  "data": {
+    "cJSON": {
+      "files": 101,
+      "findings": 837,
+      "functions": 1055,
+      "path": "/home/shafin/Opencode/perfpal-test/out-i5b-cJSON/metrics.json",
+      "schema_version": "1.6",
+      "sha256": "99736e9f3cbd2ea6b9338cf5d6a9f107d2d8789124bdad961df2fbe6c130cec3"
+    },
+    "hyperfine": {
+      "files": 53,
+      "findings": 348,
+      "functions": 353,
+      "path": "/home/shafin/Opencode/perfpal-test/out-i5b-hyperfine/metrics.json",
+      "schema_version": "1.6",
+      "sha256": "5735135b4aab6545c2a878c33dfc63b262a4feba4fab849afe5b88848f870847"
+    },
+    "tmux": {
+      "files": 216,
+      "findings": 7545,
+      "functions": 3189,
+      "path": "/home/shafin/Opencode/perfpal-test/out-i5b-tmux/metrics.json",
+      "schema_version": "1.6",
+      "sha256": "62fd2e231cbdea085211e28beeaf67b69c20619d12aad19882975ae7e4169a8a"
+    }
+  },
+  "generated": "2026-10-21T18:04:24Z",
+  "holdout": {
+    "django": "not-rendered",
+    "postgres": "not-rendered"
+  },
+  "renders": [
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/tmux/kv1-brief.html",
+      "idiom": "brief",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/tmux/kv1-brief.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "tmux",
+      "slot": "kv1"
+    },
+    {
+      "fits_900": false,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/tmux/kv1-cards.html",
+      "idiom": "cards",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/tmux/kv1-cards.png",
+      "png_dims": [
+        1440,
+        1635
+      ],
+      "repo": "tmux",
+      "slot": "kv1"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/tmux/kv2-bars.html",
+      "idiom": "bars",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/tmux/kv2-bars.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "tmux",
+      "slot": "kv2"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/tmux/kv2-matrix.html",
+      "idiom": "matrix",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/tmux/kv2-matrix.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "tmux",
+      "slot": "kv2"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/tmux/kv3-bars.html",
+      "idiom": "bars",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/tmux/kv3-bars.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "tmux",
+      "slot": "kv3"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/tmux/kv3-treemap.html",
+      "idiom": "treemap",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/tmux/kv3-treemap.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "tmux",
+      "slot": "kv3"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/hyperfine/kv1-brief.html",
+      "idiom": "brief",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/hyperfine/kv1-brief.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "hyperfine",
+      "slot": "kv1"
+    },
+    {
+      "fits_900": false,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/hyperfine/kv1-cards.html",
+      "idiom": "cards",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/hyperfine/kv1-cards.png",
+      "png_dims": [
+        1440,
+        1635
+      ],
+      "repo": "hyperfine",
+      "slot": "kv1"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/hyperfine/kv2-bars.html",
+      "idiom": "bars",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/hyperfine/kv2-bars.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "hyperfine",
+      "slot": "kv2"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/hyperfine/kv2-matrix.html",
+      "idiom": "matrix",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/hyperfine/kv2-matrix.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "hyperfine",
+      "slot": "kv2"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/hyperfine/kv3-bars.html",
+      "idiom": "bars",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/hyperfine/kv3-bars.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "hyperfine",
+      "slot": "kv3"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/hyperfine/kv3-treemap.html",
+      "idiom": "treemap",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/hyperfine/kv3-treemap.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "hyperfine",
+      "slot": "kv3"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/cJSON/kv1-brief.html",
+      "idiom": "brief",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/cJSON/kv1-brief.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "cJSON",
+      "slot": "kv1"
+    },
+    {
+      "fits_900": false,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/cJSON/kv1-cards.html",
+      "idiom": "cards",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/cJSON/kv1-cards.png",
+      "png_dims": [
+        1440,
+        1635
+      ],
+      "repo": "cJSON",
+      "slot": "kv1"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/cJSON/kv2-bars.html",
+      "idiom": "bars",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/cJSON/kv2-bars.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "cJSON",
+      "slot": "kv2"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/cJSON/kv2-matrix.html",
+      "idiom": "matrix",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/cJSON/kv2-matrix.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "cJSON",
+      "slot": "kv2"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/cJSON/kv3-bars.html",
+      "idiom": "bars",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/cJSON/kv3-bars.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "cJSON",
+      "slot": "kv3"
+    },
+    {
+      "fits_900": true,
+      "html": "/home/shafin/Opencode/perfpal-test/v3-prototypes/cJSON/kv3-treemap.html",
+      "idiom": "treemap",
+      "png": "/home/shafin/Opencode/Perfpal/docs/evidence/map-vision/v3/cJSON/kv3-treemap.png",
+      "png_dims": [
+        1440,
+        920
+      ],
+      "repo": "cJSON",
+      "slot": "kv3"
+    }
+  ]
+}

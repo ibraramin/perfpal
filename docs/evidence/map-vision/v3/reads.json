@@ -1,0 +1,256 @@
+{
+  "_comment": "V3 idiom A/B blind reads. Singles: one image per task, no source, no sibling views; description + strict JSON {question_answered, action, blockers, confidence}. Pairs: both candidate images of one slot+repo in one task, pre-registered A/B order (prereg.md section 4). Structured extraction follows the V0 reads.json convention.",
+  "generated": "2026-10-21",
+  "protocol": {
+    "viewport": "1440x900 @ 100% zoom (device_scale_factor=1)",
+    "vision_model": "@vision (image-only)",
+    "blind": "singles: no source, no sibling views, no expected answer; pairs: both candidates of one slot+repo only",
+    "manifest_sha256": "63f6e0dac04c0c186a8f75fb7485428ea8d43e8b8155fdcd0088b46bb896d41a",
+    "matrix_re_render": "kv2-matrix rows corrected post-first-read to production-first includers (see map-idiom-ab.md protocol note); the three matrix singles above are the corrected renders at manifest 63f6e0da",
+    "pair_render_provenance": "All 9 pairs (including the 3 KV2 pairs) were dispatched after the matrix row correction and compare the corrected matrix renders bound by manifest_sha256; the 3 pre-correction matrix singles were replaced, not retained.",
+    "kv1_tiebreakers": "finding_id is unique in all three scans; the implemented path/span tiebreakers after finding_id are unreachable, so the ordering matches the documented key."
+  },
+  "post_prereg_corrections": [
+    "KV3 ranking key gained startup demotion (entry_kind main/script) to match the locked spec; demote_score = startup + no_loop, ascending. KV3 scale domain = non-demoted max; demoted rows shown off-scale with full values.",
+    "kv2-matrix row selection changed from raw top-12 out-degree to production-first includers (top 8 production out-degree + production dependents of the top 3 columns, non-production fill only to reach 12) after the first cJSON render hid every production dependent of cJSON.h. All three matrices were re-rendered and re-read; no other candidate changed."
+  ],
+  "singles": [
+    {
+      "id": "tmux-kv1-brief",
+      "repo": "tmux", "slot": "KV1", "idiom": "brief",
+      "desc": "KEY VIEW · KV1 · TMUX, 'Where do I look first?'. Ranked top-5 list; each row has path:line, function, finding title, HOT/HIGH/MEDIUM + production chips, a static-cost line, and a one-sentence why. #1 format.c:6052 format_replace (1331 units, 67x median, top 1%), #2 compat/getline.c:85 getdelim (51, 2.5x), #3 screen.c:823 screen_print (92, 4.6x), #4 compat/forkpty-aix.c:61 forkpty (59, 3.0x), #5 tty.c:601 tty_raw (36, 1.8x). Footer: complete ranked list - all 7545 findings (production-first); 7 non-production files demoted.",
+      "question_answered": "Which single line of tmux source should I open and profile first for the biggest static-flagged performance candidate",
+      "action": "Open format.c line 6052 (format_replace) and profile it, ranked #1 with 1331 static cost units (67x median, top 1%)",
+      "blockers": ["why texts truncated with ellipses on #1/#2/#4/#5", "#1 rationale is a directory aggregate ('.' 19369 across 2958 functions), not the row's function", "static cost units undefined on the page"],
+      "confidence": 0.78, "question_match": true
+    },
+    {
+      "id": "tmux-kv1-cards",
+      "repo": "tmux", "slot": "KV1", "idiom": "cards",
+      "desc": "Five ranked cards #1-#5, same fields as the brief plus a yellow-highlighted code callout per card. #1 highlighted line 6052 shows only 'static int' (signature split across lines). Card #2 shows a realloc in a loop. Same footer as the brief. Page height 1635px (does not fit one 900px screen).",
+      "question_answered": "Which five specific path:line locations in tmux should I open and profile first",
+      "action": "Open format.c:6052 (format_replace) first, then cross-check compat/getline.c:85 (getdelim), where the per-loop realloc is the clearest concrete fix target",
+      "blockers": ["card #1 rationale describes a directory aggregate, not its function", "#1 callout shows only a signature fragment", "why texts truncated on #1/#2/#4/#5", "rank order not monotonic with displayed cost (51 above 92) and basis unexplained", "chips and cost units unexplained", "does not fit one screen (1635px)"],
+      "confidence": 0.62, "question_match": true
+    },
+    {
+      "id": "tmux-kv2-bars",
+      "repo": "tmux", "slot": "KV2", "idiom": "bars",
+      "desc": "KEY VIEW · KV2 · TMUX, 'What breaks if I touch it?'. Eight header files ranked by dependent count, horizontal one-hue bars: tmux.h 160 dependents (74% of scanned files, top 1%), compat.h 43 (20%), then compat/imsg.h 3, xmalloc.h 2, and four 1-dependent headers rendered as near-invisible slivers labelled '0%'. Footer: 7 non-production files demoted; resolved 214 of 234 include edges.",
+      "question_answered": "Which headers, if edited, force the largest share of the codebase to re-import/rebuild (include fan-in)",
+      "action": "Avoid or carefully wrap any edit to tmux.h - 160 dependents, 74% of scanned files; isolate changes behind a new sub-header instead of touching compat.h (43 dependents) siblings",
+      "blockers": ["no list of actual dependent files (who breaks)", "no axis/scale; small bars invisible", "answers rebuild fan-in, not functional breakage", "action caption duplicated above and below the table", "large empty canvas below", "'0%' rounding loses precision", "top 1%/5% labels unexplained"],
+      "confidence": null, "question_match": true
+    },
+    {
+      "id": "tmux-kv2-matrix",
+      "repo": "tmux", "slot": "KV2", "idiom": "matrix",
+      "desc": "KEY VIEW · KV2 · TMUX dot-matrix (corrected rows): 12 production row files (compat.h, tmux.h, compat/asprintf.c, compat/imsg-buffer.c, compat/imsg.c, utf8.c, alerts.c, arguments.c, attributes.c, cfg.c, client.c, cmd-attach-session.c) x 10 header columns (tmux.h, compat.h, imsg.h, xmalloc.h, bitstring.h, queue.h, tree.h, vis.h, tmux-image.h, tmux-protocol.h); dot = row includes column; footer dependent totals tmux.h 160, compat.h 43, imsg.h 3, xmalloc.h 2, six columns at 1. Legend explains rows are production-first; 7 non-production files demoted; resolved 214 of 234 edges.",
+      "question_answered": "Which files, if edited, force the largest number of other files to be re-included (widest include blast radius)",
+      "action": "Do not hand-edit tmux.h directly - 160 dependent files, near-full recompile; push changes into leaf implementation files or stage the header change knowingly and rebuild all 160 dependents",
+      "blockers": ["only raw #include edges, not semantic dependencies or runtime breakage", "only ~13 rows displayed, so the blast-radius picture is truncated", "no file:line or function detail beyond file names", "fan-in conflates trivial header touches with risky core edits (no severity weighting)", "dot legend and footnote text small/low-contrast", "subtitle duplicated verbatim"],
+      "confidence": 0.55, "question_match": true
+    },
+    {
+      "id": "tmux-kv3-bars",
+      "repo": "tmux", "slot": "KV3", "idiom": "bars",
+      "desc": "KEY VIEW · KV3 · TMUX, 'Where might time plausibly go?'. Ten rows ranked by static cost units (v2), bars scaled to the non-demoted maximum. Top: format_replace format.c:6052 1331 (67x median, top 1%), style_parse style.c:68 1274 (64x). Six rows carry 'unknown-trip xN - estimate incomplete'; bottom two rows (server_client_check_mouse 418, xstrdup 388) greyed 'NO-LOOP - DEMOTED' with off-scale bars. Demotion counts + complete-list link present.",
+      "question_answered": "Which functions the static analyzer scores highest as plausible time sinks (ranked shortlist for a profiler)",
+      "action": "Profile format_replace at format.c:6052 first (1331 units, 67x median, top 1%), then style_parse at style.c:68",
+      "blockers": ["static cost units and x median undefined", "six of eight top rows carry estimate-incomplete badges", "off-scale demoted rows visually understated vs a full-width bar for a lower value (418/388 vs 331)", "no call-site or call-count context"],
+      "confidence": 0.55, "question_match": true
+    },
+    {
+      "id": "tmux-kv3-treemap",
+      "repo": "tmux", "slot": "KV3", "idiom": "treemap",
+      "desc": "KEY VIEW · KV3 · TMUX treemap: eight same-blue tiles labelled with function name + cost, no path:line (format_replace 1331, style_parse 1274, colour_palette_from_option 1059, colour_palette_set 555, cmd_join_pane_place 498, input_csi_dispatch 454, mode_tree_key 332, format_draw 331). Below: two demoted rows as a grey strip (418, 388), demotion counts (1 startup, 2511 no-loop, 7 non-production), complete-list link (3189 functions), V4-field footnote.",
+      "question_answered": "Which functions carry the most static cost and should be profiled first as plausible time sinks",
+      "action": "Profile format_replace first (top tile, 1331 static cost units), locating it via the complete cost-ranked list link, then confirm with a profiler",
+      "blockers": ["no file path or line number on any tile", "static cost units undefined; no share-of-total legend", "all tiles same flat blue (no file/module grouping)", "2511 of 3189 functions demoted without the rule shown", "off-scale demoted rows conflict with treemap ordering"],
+      "confidence": 0.60, "question_match": true
+    },
+    {
+      "id": "hyperfine-kv1-brief",
+      "repo": "hyperfine", "slot": "KV1", "idiom": "brief",
+      "desc": "KEY VIEW · KV1 · HYPERFINE, 'Where do I look first?'. Ranked top-5 list: #1 src/output/report.rs:144 print (Heap allocation inside loop, 213 units, 30x median, top 1%), #2 src/output/report.rs:49 print, #3 src/options.rs:304 from_cli_arguments, #4 src/options.rs:254 from_cli_arguments (Hot component), #5 src/export/csv.rs:29 serialize. Footer: complete ranked list - all 348 findings; 8 non-production files demoted.",
+      "question_answered": "Which specific file locations does static analysis rank as the hottest performance candidates to inspect first",
+      "action": "Open src/output/report.rs:144 in function print and hoist the per-iteration allocations (format/to_string) out of the loop, then profile",
+      "blockers": ["rationale text truncated mid-sentence on most rows", "static cost units and x median are undefined jargon", "#1 and #2 show identical metrics (213 units, 30x) so the order is ambiguous", "mixes line-level findings with a directory-level Hot component finding under one ranking"],
+      "confidence": 0.75, "question_match": true
+    },
+    {
+      "id": "hyperfine-kv1-cards",
+      "repo": "hyperfine", "slot": "KV1", "idiom": "cards",
+      "desc": "Five ranked cards #1-#5 with the same fields plus syntax-highlighted code callouts (flagged line in yellow). #1 src/output/report.rs:144 print (213 units, 30x median), #2 report.rs:49 print, #3 src/options.rs:304, #4 src/options.rs:254 (Hot component), #5 src/export/csv.rs:29 serialize. Same footer as the brief. Page height 1635px.",
+      "question_answered": "Which single location in the codebase should a maintainer open first to investigate a likely performance hotspot",
+      "action": "Open src/output/report.rs around line 144 in print and inspect the nested loop allocating Strings per iteration (lines 142-146) to hoist allocations out of the loop",
+      "blockers": ["explanations truncated mid-sentence", "static cost units unexplained", "#1/#2 near-duplicates in the same function", "Hot component row uses a different metric type than the allocation findings so the ranking basis is ambiguous", "does not fit one screen (1635px)"],
+      "confidence": 0.72, "question_match": true
+    },
+    {
+      "id": "hyperfine-kv2-bars",
+      "repo": "hyperfine", "slot": "KV2", "idiom": "bars",
+      "desc": "KEY VIEW · KV2 · HYPERFINE. Eight rows: src/quantity/mod.rs 12 dependents (23% of scanned files, top 5%, 6.0x median), src/metric.rs 10 (19%, 5.0x), src/export/mod.rs 6 (11%, 3.0x), src/command.rs and src/options.rs 5 (9%, 2.5x), src/error.rs, src/export/markup.rs, src/output/mod.rs 4 (8%, 2.0x). Footer: 8 non-production files demoted; resolved 205 of 238 include edges; subtitle duplicated below the chart.",
+      "question_answered": "Which files in hyperfine have the widest re-import blast radius, i.e. which files to avoid touching directly",
+      "action": "Before editing src/quantity/mod.rs (12 dependents, 6.0x median), inspect its dependents or put the change behind a stable interface",
+      "blockers": ["nothing states what actually breaks (tests/behaviors/symbols), only re-import counts", "33 of 238 include edges unresolved", "no axis or scale labels", "no line/function granularity", "subtitle duplicated above and below the chart"],
+      "confidence": 0.55, "question_match": true
+    },
+    {
+      "id": "hyperfine-kv2-matrix",
+      "repo": "hyperfine", "slot": "KV2", "idiom": "matrix",
+      "desc": "KEY VIEW · KV2 · HYPERFINE dot-matrix (corrected rows): rows = 12 production files (src/main.rs 14 out-edges, src/export/mod.rs 10, src/export/tests.rs 8, src/timer/mod.rs 6, src/command.rs 4, src/export/json.rs 4, src/options.rs 4, src/output/report.rs 4, src/export/csv.rs 3, src/export/markup.rs 3, src/metric.rs 3, src/output/warnings.rs 3); columns = basenames (mod.rs x4 with totals 12, 10, 6, 5, 5, 4, 4, 4, 4, 3); dot = row includes column; 8 non-production files demoted; resolved 205 of 238 edges; subtitle duplicated.",
+      "question_answered": "Which files in hyperfine have the most dependents, so touching them forces the most re-imports (largest blast radius)",
+      "action": "Before editing, check why src/main.rs depends on the highest-count module (first mod.rs column, 12 dependents) and whether the change can be isolated from it",
+      "blockers": ["repeated column label mod.rs four times with no distinguishing path - the 12-dependent column was again attributed to a mod.rs without naming src/quantity/mod.rs", "ambiguous directionality: dot means row includes column but the headline warns about editing 'here'", "no explanation of which files were demoted", "include edges only, no function/line blast radius"],
+      "confidence": 0.55, "question_match": true, "action_error": "the 12-dependent column is src/quantity/mod.rs but the matrix shows only the basename 'mod.rs', so the named target is ambiguous"
+    },
+    {
+      "id": "hyperfine-kv3-bars",
+      "repo": "hyperfine", "slot": "KV3", "idiom": "bars",
+      "desc": "KEY VIEW · KV3 · HYPERFINE. Ten rows ranked by static cost units (v2), bars scaled to the non-demoted maximum: src/output/report.rs:19 print 213 (30x median, top 1%), src/options.rs:254 from_cli_arguments 165 (24x), src/command.rs:226 build_from_cli_arguments 109 (16x), src/export/csv.rs:13 serialize 61 (8.7x), scripts/plot_whisker.py:25 main 59 (8.4x), src/shell_syntax.rs:71 next 57 (8.1x), scripts/plot_parametrized.py:21 main 48 (6.9x), scripts/plot_histogram.py:21 main 47 (6.7x); two greyed NO-LOOP - DEMOTED rows (src/metric.rs:273 format 56, src/metric.rs:350 format_factor_from 41). Footer: 9 startup demoted, 297 no-loop demoted, 8 non-production files demoted; complete list (353 functions).",
+      "question_answered": "Which functions does the static analysis rank as the top plausible cost hotspots to profile first (estimate-incomplete static ranking, not runtime time)",
+      "action": "Profile src/output/report.rs:19 print first, then src/options.rs:254 from_cli_arguments and src/command.rs:226 build_from_cli_arguments",
+      "blockers": ["every non-demoted row badged unknown-trip xN - estimate incomplete (unbounded lower bounds)", "dev Python scripts (scripts/plot_*.py main) mixed into the ranking", "reader misread 8.7x/8.4x/8.1x as 0.7x/sub-1x and reported column-order inconsistency (deterministic check: all displayed multipliers >=5.9x)", "units and top% tiers unexplained"],
+      "confidence": 0.60, "question_match": true
+    },
+    {
+      "id": "hyperfine-kv3-treemap",
+      "repo": "hyperfine", "slot": "KV3", "idiom": "treemap",
+      "desc": "KEY VIEW · KV3 · HYPERFINE treemap: eight same-blue tiles labelled by function name + cost only (print 213, from_cli_arguments 165, build_from_cli_arguments 109, serialize 61, main 59, next 57, main 48, main 47). Below: two demoted rows with path:line (src/metric.rs:273 format 56, src/metric.rs:350 format_factor_from 41, NO-LOOP - DEMOTED), counts (9 startup, 297 no-loop, 8 non-production), complete-list link (353 functions), V4-field footnote.",
+      "question_answered": "Which individual functions carry the highest static cost score, i.e. a ranked shortlist of what to profile first",
+      "action": "Profile the largest tile first - print (213 static cost units) - then open its definition in src/ to confirm; separately check src/metric.rs:273 format which the view names with a line number",
+      "blockers": ["top tiles have no file path or line number", "three tiles labelled main are indistinguishable", "units opaque; no percentage/share or call-path context", "demoted-row rule confusing (56/41 off-scale while a 47 tile is in-scale)"],
+      "confidence": 0.55, "question_match": true
+    },
+    {
+      "id": "cJSON-kv1-brief",
+      "repo": "cJSON", "slot": "KV1", "idiom": "brief",
+      "desc": "KEY VIEW · KV1 · CJSON, 'Where do I look first?'. Five ranked rows, all in cJSON_Utils.c: #1 cJSON_Utils.c:807 apply_patch Hot component 131 units (66x median, top 1%); #2 cJSON_Utils.c:1188 create_patches and #3 :1203 create_patches (sprintf inside loop, 94 units, 47x, near-identical); #4 cJSON_Utils.c:807 apply_patch High cyclomatic complexity (37 branches); #5 cJSON_Utils.c:1141 create_patches (24 branches). Footer: complete ranked list - all 837 findings; 96 non-production files demoted.",
+      "question_answered": "Which specific spots in cJSON should I triage first as static optimization candidates",
+      "action": "Open cJSON_Utils.c around line 807 (apply_patch) and profile it - top-ranked hot component at 66x median with 37-branch cyclomatic complexity",
+      "blockers": ["#1 and #4 point at the same line; #2/#3 are near-duplicates - the top 5 collapse to ~3 distinct places", "#1 path:line is a file line but its explanation describes directory '.' aggregating 904 complexity across 157 functions", "rationale text truncated mid-sentence", "static cost units and x median unexplained", "all top findings live in one file; no code excerpt"],
+      "confidence": 0.62, "question_match": true
+    },
+    {
+      "id": "cJSON-kv1-cards",
+      "repo": "cJSON", "slot": "KV1", "idiom": "cards",
+      "desc": "Five ranked cards #1-#5 with highlighted code snippets. #1 cJSON_Utils.c:807 apply_patch Hot component (131 units, 66x, top 1%); #2 :1188 create_patches, #3 :1203 create_patches (sprintf in loop), #4 :807 apply_patch (37 branches), #5 :1141 create_patches (24 branches). Footer 837 findings; 96 non-production files demoted. Page height 1635px.",
+      "question_answered": "Which single file, function and line in cJSON should I open first to investigate performance/complexity hotspots",
+      "action": "Open cJSON_Utils.c:807 (static int apply_patch) and profile it - ranked #1 hottest component with 131 static cost units and 37-branch cyclomatic complexity",
+      "blockers": ["rationale text truncated", "metric units/scale undefined on the view", "duplicate entries for the same function (#1 and #4 both :807; #2/#3/#5 all create_patches) blur whether these are distinct actions", "identical 94 units shown for three different create_patches lines suggests a function-level value repeated per line", "no indication of what to do after profiling or how 837 findings became 5", "does not fit one screen (1635px)"],
+      "confidence": 0.72, "question_match": true
+    },
+    {
+      "id": "cJSON-kv2-bars",
+      "repo": "cJSON", "slot": "KV2", "idiom": "bars",
+      "desc": "KEY VIEW · KV2 · CJSON. Five rows (only production files): cJSON.h 5 dependents (5% of scanned files, top 1%), cJSON_Utils.h 4 (top 5%), cJSON.c 1 (top 5%), cJSON_Utils.c 0, test.c 0. Footer: 96 non-production files demoted; resolved 96 of 229 include edges; subtitle duplicated; large empty whitespace below.",
+      "question_answered": "Which files in cJSON have the most dependents, so touching them forces the most re-imports (cJSON.h and cJSON_Utils.h are riskiest)",
+      "action": "Avoid direct edits to cJSON.h - 5 dependents (highest blast radius); coordinate recompilation of the 5 dependent files or gate the change behind the public interface",
+      "blockers": ["top 1%/top 5% labels ambiguous", "file-level only - no functions, symbols or lines", "no axis/scale/value labels on bars", "no list of actual dependent files", "large empty whitespace makes the view look incomplete"],
+      "confidence": null, "question_match": true
+    },
+    {
+      "id": "cJSON-kv2-matrix",
+      "repo": "cJSON", "slot": "KV2", "idiom": "matrix",
+      "desc": "KEY VIEW · KV2 · CJSON dot-matrix (corrected rows): rows production-first (cJSON.c, cJSON_Utils.c, cJSON_Utils.h, test.c, cJSON.h) then test-chipped rows (tests/json_patch_tests.c, tests/cjson_add.c, tests/compare_tests.c, tests/minify_tests.c ...); columns cJSON.h, cJSON_Utils.h, cJSON.c, cJSON_Utils.c, test.c, unity_config.h, unity.h, common.h, Defs.h, unity_output_Copy.h; footer dependent totals 5, 4, 1, 0, 0, 22, 22, 21, 3, 2; 96 non-production files demoted; resolved 96 of 229 edges.",
+      "question_answered": "If I edit a given file, which other files include it (include/rebuild blast radius per file)",
+      "action": "Before touching cJSON_Utils.h, verify its other 3 dependents beyond cJSON_Utils.c (the view hides 2 of cJSON.h's 5 and some cJSON_Utils.h dependents, so re-run the include scan to list all 4); treat unity_config.h/unity.h/common.h (22/22/21 dependents) as effectively do-not-touch",
+      "blockers": ["column totals exceed visible dots (cJSON.h 5 dependents but only 3 dots), so part of the blast radius is invisible", "file-level only - no functions, symbols or lines", "no risk ranking - production and demoted-test dots look identical", "96 non-production files demoted and 133 of 229 include edges unresolved", "'do not edit directly' asserted but unexplained"],
+      "confidence": 0.50, "question_match": true
+    },
+    {
+      "id": "cJSON-kv3-bars",
+      "repo": "cJSON", "slot": "KV3", "idiom": "bars",
+      "desc": "KEY VIEW · KV3 · CJSON. Eight non-demoted rows + two greyed NO-LOOP - DEMOTED rows, bars scaled to non-demoted max. Top: cJSON_Delete cJSON.c:253 137 (68x median, top 1%), cJSON_Compare cJSON.c:3072 101, create_patches cJSON_Utils.c:1141 94, print_object 84, parse_string 76, print_string_ptr 76, compare_json 76, parse_number 74; demoted apply_patch cJSON_Utils.c:807 131, print_value cJSON.c:1423 56. Every row badged unknown-trip xN - estimate incomplete. Footer: 31 startup, 970 no-loop, 96 non-production demoted; complete list (1055 functions).",
+      "question_answered": "Which functions in cJSON should a maintainer profile first as static hot-spot candidates",
+      "action": "Profile cJSON_Delete (cJSON.c:253) first - tops the static ranking at 137 cost units, 68x median, top 1%",
+      "blockers": ["every row badged estimate incomplete, so cost numbers are explicitly untrusted", "static cost units undefined - no legend explains cost", "demoted apply_patch (131 units) is higher than most shown rows yet hidden off-scale, muddying the ranking"],
+      "confidence": 0.55, "question_match": true
+    },
+    {
+      "id": "cJSON-kv3-treemap",
+      "repo": "cJSON", "slot": "KV3", "idiom": "treemap",
+      "desc": "KEY VIEW · KV3 · CJSON treemap: eight nearly-equal flat-blue tiles labelled with function name + score only (cJSON_Delete 137, cJSON_Compare 101, create_patches 94, print_object 84, parse_string 76, print_string_ptr 76, compare_json 76, parse_number 74). Below: two demoted rows with path:line (cJSON_Utils.c:807 apply_patch 131, cJSON.c:1423 print_value 56, NO-LOOP - DEMOTED); counts 31 startup / 970 no-loop / 96 non-production; complete list (1055 functions); V4-field footnote.",
+      "question_answered": "Which functions look most expensive by static analysis so I know what to profile first",
+      "action": "Profile cJSON_Delete first (largest tile, 137 static cost units), then cJSON_Compare (101); the view gives no file/line for them, only demoted rows carry paths",
+      "blockers": ["top tiles show no file path or line number", "uniform blue and near-identical tile sizes give no visual hierarchy", "units undefined - no scale/baseline", "demoted apply_patch (131) nearly matches the top tile (137) yet is off-scale, muddying what to profile first", "heavy demotion counts (970 no-loop, 96 non-production) with no per-function rationale"],
+      "confidence": 0.55, "question_match": true
+    }
+  ],
+  "pairs": [
+    {
+      "id": "tmux-kv1",
+      "repo": "tmux", "slot": "KV1",
+      "order": {"A": "brief", "B": "cards"},
+      "winner": "cards",
+      "why": "Both pose the same question and rank format.c:6052 first, but the cards' per-card code snippets (highlighted lines matching each path:line) verify the target and fill in the brief's truncated rationales and unexplained directory-aggregation blurb, cutting ambiguity without slowing the top-line answer.",
+      "confidence": 0.70
+    },
+    {
+      "id": "tmux-kv2",
+      "repo": "tmux", "slot": "KV2",
+      "order": {"A": "bars", "B": "matrix"},
+      "winner": "bars",
+      "why": "Bars state the ranked answer in text with the widest blast radius (tmux.h, 160 dependents, 74% of scanned files) so the do-not-touch action is immediate; the matrix buries the same totals in a dense dot grid's bottom row.",
+      "confidence": 0.85
+    },
+    {
+      "id": "tmux-kv3",
+      "repo": "tmux", "slot": "KV3",
+      "order": {"A": "bars", "B": "treemap"},
+      "winner": "bars",
+      "why": "Bars name format_replace at format.c:6052 with 67x median / top 1% and confidence badges so the action is stated immediately; near-equal treemap tiles make the top pick ambiguous and omit file:line and uncertainty flags.",
+      "confidence": 0.85
+    },
+    {
+      "id": "hyperfine-kv1",
+      "repo": "hyperfine", "slot": "KV1",
+      "order": {"A": "cards", "B": "brief"},
+      "winner": "brief",
+      "why": "The brief delivers the identical ranked path:line answer with less visual noise; code snippets in the cards are redundant context for an action-framed question and add scanning ambiguity.",
+      "confidence": 0.72
+    },
+    {
+      "id": "hyperfine-kv2",
+      "repo": "hyperfine", "slot": "KV2",
+      "order": {"A": "matrix", "B": "bars"},
+      "winner": "bars",
+      "why": "Bars name the top-risk file with full path and quantified context (src/quantity/mod.rs, 12 dependents, 6.0x median); the matrix's identical top total of 12 sits under a column labelled only 'mod.rs' with three ambiguous same-named columns, forcing guesswork.",
+      "confidence": 0.93
+    },
+    {
+      "id": "hyperfine-kv3",
+      "repo": "hyperfine", "slot": "KV3",
+      "order": {"A": "treemap", "B": "bars"},
+      "winner": "bars",
+      "why": "Bars name the answer with file:line, disambiguate the three identical 'main' labels via paths, and show 30x median as evidence; the treemap gives bare names and numbers with no location and three indistinguishable 'main' tiles.",
+      "confidence": 0.82
+    },
+    {
+      "id": "cJSON-kv1",
+      "repo": "cJSON", "slot": "KV1",
+      "order": {"A": "brief", "B": "cards"},
+      "winner": "brief",
+      "why": "Both answer with the same top pick (cJSON_Utils.c:807 apply_patch), but the brief is a compact scannable list where the path:line action is visible at a glance, while cards pad each item with code excerpts that slow reading without changing the next step.",
+      "confidence": 0.70
+    },
+    {
+      "id": "cJSON-kv2",
+      "repo": "cJSON", "slot": "KV2",
+      "order": {"A": "matrix", "B": "bars"},
+      "winner": "bars",
+      "why": "Bars name the top-risk file (cJSON.h, 5 dependents) and the no-edit action at a glance; the matrix forces legend decoding and surfaces larger totals (unity_config.h 22) that are vendored test scaffolding, inviting a wrong action.",
+      "confidence": 0.78
+    },
+    {
+      "id": "cJSON-kv3",
+      "repo": "cJSON", "slot": "KV3",
+      "order": {"A": "bars", "B": "treemap"},
+      "winner": "bars",
+      "why": "Bars give an unambiguous ranked list with file:line anchors and cost metrics so 'profile cJSON_Delete at cJSON.c:253 first' is read directly; near-equal treemap tiles make ranking harder and omit location anchors.",
+      "confidence": 0.85
+    }
+  ],
+  "decision_rule": "Pair winner = 1, tie = 0.5; a candidate wins a slot at >= 2.0 of 3; split => single-read question-match, action specificity, then mean confidence; locked-parenthetical conflict => default to the V2 lock pending founder ratification."
+}

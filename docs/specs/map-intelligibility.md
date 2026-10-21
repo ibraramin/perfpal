@@ -148,6 +148,38 @@ Rules that bind the slots:
   trigger. `files[].path_class` and trip provenance (`stats.functions[].trip_count_source` +
   `known_trip_value`) are required; the rest are computed chart-side or deferred.
 
+## V3 idiom decision (2026-10-21)
+
+V3 tested two idioms per slot on tmux, hyperfine and cJSON with 18 blind single reads and 9
+pre-registered pairwise reads (evidence: `docs/evidence/map-idiom-ab.md`,
+`docs/evidence/map-vision/v3/reads.json`). Decisions:
+
+- **KV1 = text-first ranked brief** (2/3 pairs). Cards won tmux only because the brief's #1
+  rationale was a directory aggregate; cards also never fit 1440×900 (1635 px) and add
+  scanning cost. The brief remains the primary view.
+- **KV2 = horizontal dependents bars** (3/3). The matrix loses on basename-only column labels
+  (four `mod.rs` columns; one reader named the wrong file) and on totals buried in a dense
+  grid. A matrix may survive only as an Explorer stem with full-path labels.
+- **KV3 = horizontal cost bars** (3/3). The treemap loses because tiles carry no `path:line`
+  and near-equal areas cannot be rank-ordered; bars keep units, anchors and badges.
+
+What would change a decision is recorded in `map-idiom-ab.md` §5. The V3 recall check also
+found that the locked KV1 severity ranking does **not** surface the pre-registered Q1 target
+inline in any of the three repos (ranks 210/197/35) and that the KV3 no-loop demotion pushes
+all three Q3 targets down (811/66/58). The idiom choice stands, but **V4 must not claim A1b
+closed on severity alone — V7 owns the KV1 rank-key re-triage and V5 must test the no-loop
+guard against the per-byte-leaf evidence**.
+
+**KV2 production-first (proposed V2 amendment, pending founder ratification).** V3 applied
+production-first demotion to KV2 because cJSON's public ABI header (`cJSON.h`, 5 production
+dependents) is otherwise buried by unity test headers with 22 dependents. V2 names
+production-first only for KV1/KV3; until ratified, the V2 text stands and V4 may not silently
+demote KV2 rows.
+
+**KV2 anchor.** When the median dependent count is 0 (tmux, cJSON), `× median dependent count`
+is undefined; the key view uses `% of scanned files` + `top P%` and keeps `× median` only when
+the median is > 0 (hyperfine 6.0×).
+
 ## Acceptance (all must hold)
 
 - **A1 — vision-read pass:** for each answer-first view, a fresh `@vision` read (no source,
