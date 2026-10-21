@@ -1,0 +1,537 @@
+{
+ "generated": "2026-10-21",
+ "viewport": "1440x900 @ 100% zoom (device_scale_factor=1)",
+ "note": "standalone stem PNGs use natural width when the SVG exceeds 1440px so the whole chart is visible; report img sizes are the actual rendered CSS size inside report.html",
+ "report_rendered": [
+  {
+   "stem": "include-graph",
+   "css_w": 910,
+   "css_h": 2572,
+   "natural_w": 910,
+   "natural_h": 2572,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "layer-file",
+   "css_w": 1100,
+   "css_h": 2688,
+   "natural_w": 1100,
+   "natural_h": 2688,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "layer-entry",
+   "css_w": 1100,
+   "css_h": 2456,
+   "natural_w": 1100,
+   "natural_h": 2456,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "component-coupling",
+   "css_w": 367,
+   "css_h": 274,
+   "natural_w": 367,
+   "natural_h": 274,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "hot-components",
+   "css_w": 760,
+   "css_h": 208,
+   "natural_w": 760,
+   "natural_h": 208,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "layer-workspace",
+   "css_w": 1100,
+   "css_h": 296,
+   "natural_w": 1100,
+   "natural_h": 296,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "layer-bands",
+   "css_w": 1874,
+   "css_h": 616,
+   "natural_w": 1874,
+   "natural_h": 616,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "layer-findings",
+   "css_w": 1100,
+   "css_h": 2408,
+   "natural_w": 1100,
+   "natural_h": 2408,
+   "scale": 1,
+   "repo": "tmux"
+  },
+  {
+   "stem": "include-graph",
+   "css_w": 3110,
+   "css_h": 856,
+   "natural_w": 3110,
+   "natural_h": 856,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "layer-file",
+   "css_w": 3110,
+   "css_h": 972,
+   "natural_w": 3110,
+   "natural_h": 972,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "layer-entry",
+   "css_w": 1100,
+   "css_h": 2456,
+   "natural_w": 1100,
+   "natural_h": 2456,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "component-coupling",
+   "css_w": 518,
+   "css_h": 466,
+   "natural_w": 518,
+   "natural_h": 466,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "hot-components",
+   "css_w": 760,
+   "css_h": 416,
+   "natural_w": 760,
+   "natural_h": 416,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "layer-workspace",
+   "css_w": 1350,
+   "css_h": 384,
+   "natural_w": 1350,
+   "natural_h": 384,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "layer-bands",
+   "css_w": 1634,
+   "css_h": 1368,
+   "natural_w": 1634,
+   "natural_h": 1368,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "layer-findings",
+   "css_w": 3110,
+   "css_h": 972,
+   "natural_w": 3110,
+   "natural_h": 972,
+   "scale": 1,
+   "repo": "hyperfine"
+  },
+  {
+   "stem": "include-graph",
+   "css_w": 910,
+   "css_h": 2000,
+   "natural_w": 910,
+   "natural_h": 2000,
+   "scale": 1,
+   "repo": "cJSON"
+  },
+  {
+   "stem": "layer-file",
+   "css_w": 1100,
+   "css_h": 2116,
+   "natural_w": 1100,
+   "natural_h": 2116,
+   "scale": 1,
+   "repo": "cJSON"
+  },
+  {
+   "stem": "layer-entry",
+   "css_w": 1100,
+   "css_h": 2456,
+   "natural_w": 1100,
+   "natural_h": 2456,
+   "scale": 1,
+   "repo": "cJSON"
+  },
+  {
+   "stem": "component-coupling",
+   "css_w": 734,
+   "css_h": 682,
+   "natural_w": 734,
+   "natural_h": 682,
+   "scale": 1,
+   "repo": "cJSON"
+  },
+  {
+   "stem": "hot-components",
+   "css_w": 760,
+   "css_h": 650,
+   "natural_w": 760,
+   "natural_h": 650,
+   "scale": 1,
+   "repo": "cJSON"
+  },
+  {
+   "stem": "layer-workspace",
+   "css_w": 1100,
+   "css_h": 868,
+   "natural_w": 1100,
+   "natural_h": 868,
+   "scale": 1,
+   "repo": "cJSON"
+  },
+  {
+   "stem": "layer-bands",
+   "css_w": 1994,
+   "css_h": 2230,
+   "natural_w": 1994,
+   "natural_h": 2230,
+   "scale": 1,
+   "repo": "cJSON"
+  },
+  {
+   "stem": "layer-findings",
+   "css_w": 1100,
+   "css_h": 2320,
+   "natural_w": 1100,
+   "natural_h": 2320,
+   "scale": 1,
+   "repo": "cJSON"
+  }
+ ],
+ "stems": [
+  {
+   "repo": "tmux",
+   "stem": "include-graph",
+   "svg": [
+    910,
+    2572
+   ],
+   "png": [
+    1440,
+    2592
+   ],
+   "file": "tmux/include-graph.png"
+  },
+  {
+   "repo": "tmux",
+   "stem": "layer-file",
+   "svg": [
+    1100,
+    2688
+   ],
+   "png": [
+    1440,
+    2708
+   ],
+   "file": "tmux/layer-file.png"
+  },
+  {
+   "repo": "tmux",
+   "stem": "layer-entry",
+   "svg": [
+    1100,
+    2456
+   ],
+   "png": [
+    1440,
+    2476
+   ],
+   "file": "tmux/layer-entry.png"
+  },
+  {
+   "repo": "tmux",
+   "stem": "component-coupling",
+   "svg": [
+    367,
+    274
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "tmux/component-coupling.png"
+  },
+  {
+   "repo": "tmux",
+   "stem": "hot-components",
+   "svg": [
+    760,
+    208
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "tmux/hot-components.png"
+  },
+  {
+   "repo": "tmux",
+   "stem": "layer-workspace",
+   "svg": [
+    1100,
+    296
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "tmux/layer-workspace.png"
+  },
+  {
+   "repo": "tmux",
+   "stem": "layer-bands",
+   "svg": [
+    1874,
+    616
+   ],
+   "png": [
+    1894,
+    900
+   ],
+   "file": "tmux/layer-bands.png"
+  },
+  {
+   "repo": "tmux",
+   "stem": "layer-findings",
+   "svg": [
+    1100,
+    2408
+   ],
+   "png": [
+    1440,
+    2428
+   ],
+   "file": "tmux/layer-findings.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "include-graph",
+   "svg": [
+    3110,
+    856
+   ],
+   "png": [
+    3130,
+    900
+   ],
+   "file": "hyperfine/include-graph.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "layer-file",
+   "svg": [
+    3110,
+    972
+   ],
+   "png": [
+    3130,
+    992
+   ],
+   "file": "hyperfine/layer-file.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "layer-entry",
+   "svg": [
+    1100,
+    2456
+   ],
+   "png": [
+    1440,
+    2476
+   ],
+   "file": "hyperfine/layer-entry.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "component-coupling",
+   "svg": [
+    518,
+    466
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "hyperfine/component-coupling.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "hot-components",
+   "svg": [
+    760,
+    416
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "hyperfine/hot-components.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "layer-workspace",
+   "svg": [
+    1350,
+    384
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "hyperfine/layer-workspace.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "layer-bands",
+   "svg": [
+    1634,
+    1368
+   ],
+   "png": [
+    1654,
+    1388
+   ],
+   "file": "hyperfine/layer-bands.png"
+  },
+  {
+   "repo": "hyperfine",
+   "stem": "layer-findings",
+   "svg": [
+    3110,
+    972
+   ],
+   "png": [
+    3130,
+    992
+   ],
+   "file": "hyperfine/layer-findings.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "include-graph",
+   "svg": [
+    910,
+    2000
+   ],
+   "png": [
+    1440,
+    2020
+   ],
+   "file": "cJSON/include-graph.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "layer-file",
+   "svg": [
+    1100,
+    2116
+   ],
+   "png": [
+    1440,
+    2136
+   ],
+   "file": "cJSON/layer-file.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "layer-entry",
+   "svg": [
+    1100,
+    2456
+   ],
+   "png": [
+    1440,
+    2476
+   ],
+   "file": "cJSON/layer-entry.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "component-coupling",
+   "svg": [
+    734,
+    682
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "cJSON/component-coupling.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "hot-components",
+   "svg": [
+    760,
+    650
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "cJSON/hot-components.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "layer-workspace",
+   "svg": [
+    1100,
+    868
+   ],
+   "png": [
+    1440,
+    900
+   ],
+   "file": "cJSON/layer-workspace.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "layer-bands",
+   "svg": [
+    1994,
+    2230
+   ],
+   "png": [
+    2014,
+    2250
+   ],
+   "file": "cJSON/layer-bands.png"
+  },
+  {
+   "repo": "cJSON",
+   "stem": "layer-findings",
+   "svg": [
+    1100,
+    2320
+   ],
+   "png": [
+    1440,
+    2340
+   ],
+   "file": "cJSON/layer-findings.png"
+  }
+ ]
+}

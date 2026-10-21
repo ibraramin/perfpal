@@ -1,0 +1,438 @@
+{
+ "_comment": "V0 blind @vision reads of the 1440x900 report#map screen and the 8 standalone overview stems (docs/evidence/map-vision/v0/<repo>/*.png). One read per view; tmux/report-map has two independent reads (p1,p2). Blind: image only, no source, no sibling views. Compact JSON transcribed from the vision transcripts; full prose transcripts remain in the session log.",
+ "generated": "2026-10-21",
+ "protocol": {
+  "viewport": "1440x900 @ 100% zoom",
+  "repos": {
+   "tmux": "c251547e",
+   "hyperfine": "c516152",
+   "cJSON": "6d9f244"
+  },
+  "vision_model": "@vision (image-only)",
+  "blind": "no source, no sibling views"
+ },
+ "reads": [
+  {
+   "view": "tmux/report-map",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "1440x900 first screen of report.html#map: 'Workspace \u2014 4 components' node-link with heat 1 fuzz 171.17, 2 . 87.66, 3 regress 86.12, 4 compat 25.33; table below lists findings and file:line links.",
+   "action": "Open fuzz/cmd-parse-fuzzer.c at lines 50/67/68 and inspect the three PERF-C-ARCH-003 findings.",
+   "cant": [
+    "rule codes undecoded",
+    "component '.' identity",
+    "runtime time distribution",
+    "edge direction/weight",
+    "whether findings are true positives"
+   ],
+   "leg": "Headings, labels and table links readable; confidence rings and dot counts too small; bottom row clipped.",
+   "conf": 0.78,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/report-map",
+   "pass": 2,
+   "q": "Q1_where_to_look",
+   "desc": "Same first screen described independently: heat ranks fuzz 171.17 first; '.' has 7326 findings and 442 high-confidence vs fuzz 57.",
+   "action": "Open fuzz/cmd-parse-fuzzer.c:50 and read PERF-C-ARCH-003 there.",
+   "cant": [
+    "no timings anywhere (profile to confirm)",
+    "where time goes inside '.' (7326 findings, no functions named)",
+    "edge weights/directions",
+    "full compat row clipped"
+   ],
+   "leg": "Text crisp; bottom row clipped; legend duplicated; node 2 label is just '.'.",
+   "conf": 0.7,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/include-graph",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "No title; ~60 file boxes converge on a single hub 'tmux.h', fanning to compat.h, smalloc.h, compat/imsg.h; caption 'showing top 60 of 216 files'.",
+   "action": "Inspect tmux.h first \u2014 every visible file funnels through it.",
+   "cant": [
+    "no edge labels/counts",
+    "no legend/colour meaning",
+    "156 of 216 files hidden"
+   ],
+   "leg": "Box labels readable; gray edges untraceable where bundled; no legend.",
+   "conf": 0.65,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/layer-file",
+   "pass": 1,
+   "q": "Q3_where_time_goes",
+   "desc": "'File hot-path map \u2014 60 files'; heat = candidate function cost; format.c darkest (30k cost among shown); single tall column + hairline edges to tmux.h/compat.h.",
+   "action": "Profile format.c first to confirm the static heat.",
+   "cant": [
+    "no absolute time units or edge counts",
+    "no module grouping",
+    "no drill-down to functions"
+   ],
+   "leg": "Filenames/title/legend readable; per-node dots tiny; edge hairlines hard to trace.",
+   "conf": 0.78,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/layer-entry",
+   "pass": 1,
+   "q": "Q3_where_time_goes",
+   "desc": "'Entry-stratified cost map \u2014 50 files'; single flat column (no strata); notes '0 resolved call edges; reachability = entries only'.",
+   "action": "Open format.c (darkest) and profile its entry functions.",
+   "cant": [
+    "no call-graph edges (0 resolved)",
+    "no per-function breakdown or units",
+    "no strata segmentation"
+   ],
+   "leg": "Title/labels/footnotes crisp; dot counts/rings barely legible.",
+   "conf": 0.55,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/component-coupling",
+   "pass": 1,
+   "q": "Q2_what_breaks",
+   "desc": "4x4 component matrix, only the '.'x'.' cell filled dark red; no title, no legend, no scale; caption 'call edges are LOW-confidence hypotheses'.",
+   "action": "Identify the component named '.' \u2014 the only highlighted coupling cell.",
+   "cant": [
+    "no colour scale/values",
+    "labels truncated ('.'), no axis titles",
+    "no cell annotations"
+   ],
+   "leg": "Labels/caption crisp; cell magnitude and '.' identity unreadable.",
+   "conf": 0.45,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/hot-components",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Hot components \u2014 4 components'; bar = candidate finding density/KLOC; 1 fuzz 171.17, 2 '.' 87.66, 3 regress 86.12, 4 compat 25.33.",
+   "action": "Profile fuzz first (2x next density).",
+   "cant": [
+    "row-2 name broken ('.')",
+    "no file paths/finding types",
+    "density not runtime"
+   ],
+   "leg": "Title/legend/ranks crisp; lower 80% of canvas empty.",
+   "conf": 0.9,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/layer-workspace",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Workspace \u2014 4 components'; heat ranks fuzz first; finding dots legend; '1 cyclic edges broken'.",
+   "action": "Profile fuzz to confirm the candidate findings first.",
+   "cant": [
+    "no file:line for findings",
+    "component 2 label blank and dot count overlaps",
+    "ring thickness indistinguishable"
+   ],
+   "leg": "Title/legend/numbers crisp; dots and ramp swatches too small.",
+   "conf": 0.75,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/layer-bands",
+   "pass": 1,
+   "q": "Q3_where_time_goes",
+   "desc": "'Component bands \u2014 4 components' with file chips; format.c the only dark-red chip; footnotes '+53 more cross-component edges', '+187 more files'.",
+   "action": "Profile format.c first.",
+   "cant": [
+    "edges/flows only counted, never drawn",
+    "which function drives heat",
+    "the 187 omitted files"
+   ],
+   "leg": "Title/bands/legend readable; band 2 truncates to '\u2026'; tiny dot numbers.",
+   "conf": 0.72,
+   "verdict": "partial"
+  },
+  {
+   "view": "tmux/layer-findings",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Findings map \u2014 50 files'; severity-weighted density; darkest format.c, window-copy.c, window-customize.c, input.c, screen-write.c, server-client.c.",
+   "action": "Profile format.c and window-copy.c first.",
+   "cant": [
+    "which heuristic/line produced each finding",
+    "runtime shares",
+    "why a file is hot beyond the badge"
+   ],
+   "leg": "Filenames/heat readable; numeric badges and confidence dots nearly illegible.",
+   "conf": 0.72,
+   "verdict": "answers"
+  },
+  {
+   "view": "hyperfine/report-map",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Map' with 12-component workspace graph; heat = candidate finding density; table lists components and findings.",
+   "action": "Profile src/output (84.81) and src/benchmark (82.74) to confirm their candidate findings.",
+   "cant": [
+    "edge direction/call paths and 12 broken cycles",
+    "runtime timings"
+   ],
+   "leg": "Legends/table links readable; tiny dot rings; node '4 .' unlabelled.",
+   "conf": 0.82,
+   "verdict": "answers"
+  },
+  {
+   "view": "hyperfine/include-graph",
+   "pass": 1,
+   "q": "none",
+   "desc": "Very wide left-to-right dependency graph, no title, only '25 cyclic edges broken'; faint hairline edges.",
+   "action": "Open ARCH-001 findings to see the 25 cut cycles.",
+   "cant": [
+    "which pairs form the cycles",
+    "edge direction/weight/fan-in",
+    "any performance attribution"
+   ],
+   "leg": "Unreadable at 100%: extremely wide, untraceable edges, half-empty canvas.",
+   "conf": 0.45,
+   "verdict": "none"
+  },
+  {
+   "view": "hyperfine/layer-file",
+   "pass": 1,
+   "q": "Q3_where_time_goes",
+   "desc": "'File hot-path map \u00b7 53 files'; src/command.rs darkest, 'max cost among shown files'; dense caller tangle.",
+   "action": "Profile src/command.rs first and trace callers.",
+   "cant": [
+    "per-file numeric cost",
+    "which functions drive cost",
+    "broken-cycle semantics"
+   ],
+   "leg": "Node labels readable; central edge tangle unreadable.",
+   "conf": 0.75,
+   "verdict": "partial"
+  },
+  {
+   "view": "hyperfine/layer-entry",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Entry-stratified cost map \u2014 50 files'; single left column; src/command.rs hottest, then metric.rs, options.rs, benchmark/mod.rs, tests/integration_tests.rs; '0 resolved call edges'.",
+   "action": "Profile src/command.rs first, then metric.rs/options.rs.",
+   "cant": [
+    "why hot (no function detail)",
+    "entry structure (0 resolved edges)",
+    "absolute costs"
+   ],
+   "leg": "Filenames/footer readable; ~70% of canvas blank; normalised-only heat.",
+   "conf": 0.85,
+   "verdict": "partial"
+  },
+  {
+   "view": "hyperfine/component-coupling",
+   "pass": 1,
+   "q": "Q2_what_breaks",
+   "desc": "Coupling matrix over 12 modules; darkest cells src\u2194src/benchmark and tests\u2192tests; no title, no numeric scale.",
+   "action": "Inspect the darkest cells (src \u2194 src/benchmark).",
+   "cant": [
+    "no numeric legend/scale",
+    "no edge counts/confidence",
+    "chart tiny in empty canvas"
+   ],
+   "leg": "Labels/grid readable; intensity unexplained.",
+   "conf": 0.72,
+   "verdict": "partial"
+  },
+  {
+   "view": "hyperfine/hot-components",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Hot components \u2014 12 components'; bar = finding density/KLOC; src/output 84.81, src/benchmark 82.74 at top; src/parameter 4.37 and src/export/json 0.00 at bottom.",
+   "action": "Profile src/output and src/benchmark to confirm.",
+   "cant": [
+    "no runtime/time share",
+    "no drill-down to findings",
+    "ambiguous labels '4 .' / '7 src'"
+   ],
+   "leg": "Readable at 100%; canvas mostly empty.",
+   "conf": 0.8,
+   "verdict": "partial"
+  },
+  {
+   "view": "hyperfine/layer-workspace",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Workspace \u2014 12 components'; heat ranks src/output 84.81, src/benchmark 82.74; 12 broken cycles noted; graph squeezed into top 40%.",
+   "action": "Profile the two hottest components first.",
+   "cant": [
+    "node '4 .' unlabelled",
+    "12 broken cycles not drawn",
+    "edge direction/finding rings"
+   ],
+   "leg": "Crisp labels/legend; mostly blank canvas.",
+   "conf": 0.82,
+   "verdict": "answers"
+  },
+  {
+   "view": "hyperfine/layer-bands",
+   "pass": 1,
+   "q": "Q3_where_time_goes",
+   "desc": "'Component bands \u2014 12 components'; deepest red src/command.rs, dark red benchmark/mod.rs/executor.rs and tests; right-edge ribbons unlabelled.",
+   "action": "Profile src/command.rs first, alongside benchmark/mod.rs and executor.rs.",
+   "cant": [
+    "absolute cost magnitude",
+    "ribbon endpoints unlabelled",
+    "dot-number meaning undefined"
+   ],
+   "leg": "Bands/title/legend readable; many file labels clipped; ribbons unlabelled noise.",
+   "conf": 0.72,
+   "verdict": "partial"
+  },
+  {
+   "view": "hyperfine/layer-findings",
+   "pass": 1,
+   "q": "Q2_what_breaks",
+   "desc": "'Findings map \u2014 50 files' node-link; hottest tests/integration_tests.rs, benchmark/measure.rs; ~25 unlabelled crossing edges.",
+   "action": "Profile the hottest boxes first.",
+   "cant": [
+    "per-finding counts/magnitudes",
+    "edge labels (crossing lines unattributable)",
+    "file:line for findings"
+   ],
+   "leg": "Box labels/legend readable; middle is a hairball.",
+   "conf": 0.7,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/report-map",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Workspace \u2014 21 components'; heat ranks '3 tests 151.43' and a test-runners component 214.29; several labels clipped/overlapping.",
+   "action": "Profile the darkest-red high-density nodes (tests / example_2/test) first.",
+   "cant": [
+    "per-finding detail/drill-down",
+    "time/cost breakdown",
+    "overlapping/truncated labels"
+   ],
+   "leg": "Most node labels/legend readable; top-right labels overlap into garbled text.",
+   "conf": 0.72,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/include-graph",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "Directed include graph, no title; files fan into a dense bundle converging on cJSON.h; 'showing top 60 of 101 files'.",
+   "action": "Treat cJSON.h as highest-blast-radius header; scrutinise any edit.",
+   "cant": [
+    "no timing/cost",
+    "labels left-clipped/truncated",
+    "no legend/edge labels; 41 hidden files"
+   ],
+   "leg": "Column labels readable; edges collapse into an unlabelled hairball; clipped text.",
+   "conf": 0.62,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/layer-file",
+   "pass": 1,
+   "q": "Q3_where_time_goes",
+   "desc": "'File hot-path map \u2014 60 files'; max cost is tests/unity/test/tests/testunity.c; test/unity files crowd the graph; mid-path labels truncated.",
+   "action": "Regenerate with unity/example/test-harness files excluded, then profile.",
+   "cant": [
+    "truncated filenames",
+    "hairball edges",
+    "test files crowd out library heat"
+   ],
+   "leg": "Title/legends readable; node labels truncated; edges unreadable.",
+   "conf": 0.6,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/layer-entry",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Entry-stratified cost map \u2014 50 files'; footer says max cost is a test file; '0 resolved call edges; reachability = entries only'.",
+   "action": "Profile the bright-red test file and tests/parse_hex4.c first.",
+   "cant": [
+    "which function carries cost",
+    "call path (0 resolved edges)",
+    "runtime validity"
+   ],
+   "leg": "Labels/footnotes readable; dense stem, tiny dots.",
+   "conf": 0.72,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/component-coupling",
+   "pass": 1,
+   "q": "ambiguous",
+   "desc": "Sparse file-path coupling heatmap; 2 dark-red plus ~4 pale cells; no title, no scale, clipped axis labels.",
+   "action": "Manually inspect the two dark-red call edges.",
+   "cant": [
+    "no colour/intensity legend",
+    "axis labels clipped/truncated",
+    "no title/axis caption"
+   ],
+   "leg": "Grid/footnote readable; label truncation makes cell identity unreliable.",
+   "conf": 0.45,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/hot-components",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Hot components \u2014 21 components'; max 214.29 is an example_2/test/test_runners component; labels left-truncated.",
+   "action": "Profile the top-ranked test-runners component first.",
+   "cant": [
+    "full paths (left-truncated)",
+    "KLOC/absolute counts",
+    "which heuristics drive density"
+   ],
+   "leg": "Values/title crisp; truncated paths make row identity unreliable.",
+   "conf": 0.72,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/layer-workspace",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Workspace \u2014 21 components'; darkest node is an example_2/test component; several labels overflow or are garbled.",
+   "action": "Triage the darkest-red example/test node first.",
+   "cant": [
+    "no time/profiling data",
+    "clipped/garbled labels",
+    "per-finding detail"
+   ],
+   "leg": "Half-readable: numbers/colours/legend clean; labels overflow/garbled.",
+   "conf": 0.72,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/layer-bands",
+   "pass": 1,
+   "q": "Q3_where_time_goes",
+   "desc": "'Component bands - 21 components'; red-hot file in band 18 (tests/unity/test/tests); paths truncated at both ends.",
+   "action": "Inspect the red-hot test file and its ~14-count dot.",
+   "cant": [
+    "per-file cost numbers/units",
+    "cross-component edge paths",
+    "full filenames"
+   ],
+   "leg": "Band headers/legend legible; paths heavily truncated; dots readable but identity often not.",
+   "conf": 0.6,
+   "verdict": "partial"
+  },
+  {
+   "view": "cJSON/layer-findings",
+   "pass": 1,
+   "q": "Q1_where_to_look",
+   "desc": "'Findings map \u2014 50 files'; darkest cJSON_Utils.c (61), tests/misc_tests.c, tests/cjson_add.c (39); ~20 labels left-clipped.",
+   "action": "Triage the dark-red nodes first (cJSON_Utils.c 61).",
+   "cant": [
+    "root cause of any finding",
+    "time/cost attribution",
+    "~20 clipped labels"
+   ],
+   "leg": "Title/legend/colours/badges readable; a third of labels cut off at the left edge.",
+   "conf": 0.8,
+   "verdict": "answers"
+  }
+ ]
+}
