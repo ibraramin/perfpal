@@ -242,25 +242,29 @@ fn matches_finding_id(s: &str) -> bool {
 
 #[test]
 fn v1_6_bump_and_findings_validate_structurally() {
-    // v1.6 is an additive minor bump: the version marker and bundled artifact
-    // name advance together, and v1.5/v1.4 remain on disk as retained history.
-    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.6");
+    // v1.7 is an additive minor bump: the version marker and bundled artifact
+    // name advance together, and v1.6/v1.5/v1.4 remain on disk as retained history.
+    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.7");
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
-        "metrics.schema.v1.6.json"
+        "metrics.schema.v1.7.json"
     );
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
         format!("metrics.schema.v{}.json", perfpal::schema::SCHEMA_VERSION),
         "artifact name must stay derived from SCHEMA_VERSION"
     );
-    // The canonical v1.6 docs artifact is present and active.
+    // The canonical v1.7 docs artifact is present and active.
     let canonical: serde_json::Value =
-        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.6.json"))
-            .expect("canonical v1.6 schema parses");
-    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.6");
-    // v1.5/v1.4 are retained as history — the bump did not overwrite them.
-    for retained in ["metrics.schema.v1.5.json", "metrics.schema.v1.4.json"] {
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.7.json"))
+            .expect("canonical v1.7 schema parses");
+    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.7");
+    // v1.6/v1.5/v1.4 are retained as history — the bump did not overwrite them.
+    for retained in [
+        "metrics.schema.v1.6.json",
+        "metrics.schema.v1.5.json",
+        "metrics.schema.v1.4.json",
+    ] {
         assert!(
             std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("docs/schema")
@@ -269,12 +273,12 @@ fn v1_6_bump_and_findings_validate_structurally() {
             "{retained} must remain as retained history"
         );
     }
-    // The active v1.6 artifact file IS emitted.
+    // The active v1.7 artifact file IS emitted.
     assert!(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("docs/schema/metrics.schema.v1.6.json")
+            .join("docs/schema/metrics.schema.v1.7.json")
             .exists(),
-        "the v1.6 artifact must be emitted by this bump"
+        "the v1.7 artifact must be emitted by this bump"
     );
 
     // A REAL mixed-language document: Rust findings present so the structural
@@ -284,7 +288,7 @@ fn v1_6_bump_and_findings_validate_structurally() {
     fs::write(root.join("rs_src.rs"), LOCK_RS_SRC).expect("write rs_src.rs");
     let doc = run_pipeline_and_parse("schema-lock", &root);
 
-    assert_eq!(doc["schema_version"], "1.6", "v1.6 bump in effect");
+    assert_eq!(doc["schema_version"], "1.7", "v1.7 bump in effect");
 
     // files[].language within the v1.4 enum.
     let files = doc["files"].as_array().expect("files[] present");

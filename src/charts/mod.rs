@@ -1241,6 +1241,8 @@ mod tests {
             reachable_from_entry: None,
             function_cost_v2: None,
             unknown_trip_loops: 0,
+            trip_count_source: None,
+            known_trip_value: None,
         };
         // 3 + 2 + 2*1 + 3*2 + 4 + 1 + 2 + 2 + 1 + 1 = 24.
         assert_eq!(function_cost(&costly), 24.0);
@@ -1275,6 +1277,8 @@ mod tests {
             reachable_from_entry: None,
             function_cost_v2: None,
             unknown_trip_loops: 0,
+            trip_count_source: None,
+            known_trip_value: None,
         };
         assert_eq!(function_cost(&bare), 1.0);
     }

@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.6.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.7.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -50,7 +50,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.6.json
+/// Schema version of emitted documents (metrics.schema.v1.7.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
 ///
@@ -86,20 +86,27 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// weighted cost; omitted only for pre-I2/parser-free documents) and
 /// `unknown_trip_loops` (always emitted, default 0). Every v1.5 document
 /// still validates (no required list grew).
-pub const SCHEMA_VERSION: &str = "1.6";
+///
+/// v1.6 → v1.7 (minor/additive, plan `map-intelligibility` V4): three
+/// OPTIONAL fields — `files[].path_class` (deterministic production-first
+/// classification; absence means `unknown`) and `stats.functions[].
+/// {trip_count_source, known_trip_value}` (trip-count provenance + largest
+/// clamped literal trip; both omitted for loop-free functions). Every v1.6
+/// document still validates (no required list grew).
+pub const SCHEMA_VERSION: &str = "1.7";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.6"` ⇒ `metrics.schema.v1.6.json`, never an elided `.0`. Kept as a
+/// `"1.7"` ⇒ `metrics.schema.v1.7.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.6.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.7.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.6.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.7.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift. The v1.5 + v1.4 + v1.3 + v1.2 + v1.1 + v1.0 docs
+/// the two cannot drift. The v1.6 + v1.5 + v1.4 + v1.3 + v1.2 + v1.1 + v1.0 docs
 /// copies are kept as history.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.6.json");
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.7.json");
 
 // ---------------------------------------------------------------------------
 // Document model — nine sections, field-for-field vs the canonical schema
@@ -182,6 +189,14 @@ pub struct FileEntry {
     pub global_var_count: u32,
     pub include_counts: IncludeCounts,
     pub parse_health: ParseHealthEntry,
+    /// ADDITIVE v1.7 (plan `map-intelligibility` V4): deterministic path
+    /// classification for production-first ranking — closed set `production`
+    /// | `test` | `example` | `bench` | `fixture` | `generated` | `vendor`
+    /// | `unknown`. Computed by the aggregator for every scanned file
+    /// (`Some(...)`); absent in hand-written/older documents means `unknown`
+    /// (demoted files are counted, never dropped).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path_class: Option<String>,
 }
 
 /// Per-file `parse_health` object. `error_regions` is schema-optional ⇒
@@ -314,6 +329,19 @@ pub struct FunctionStats {
     /// loop-free/canonical-counted functions; always emitted.
     #[serde(default)]
     pub unknown_trip_loops: u32,
+    /// ADDITIVE v1.7 (plan `map-intelligibility` V4): provenance of the
+    /// trip-count evidence used by [`FunctionStats::function_cost_v2`] —
+    /// closed set `literal` (every loop has a canonical literal trip),
+    /// `partial` (some do), `unknown` (loops but none literal). Omitted when
+    /// the function has no loops (absence means not applicable, never a
+    /// guessed `unknown`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trip_count_source: Option<String>,
+    /// ADDITIVE v1.7: largest clamped literal trip multiplier used by the
+    /// cost model — `max(min(t, MAX_TRIP))` over the function's loops —
+    /// omitted when no loop has a literal trip count.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub known_trip_value: Option<u64>,
 }
 
 /// One element of `findings[]` — the analyzer's [`Finding`] lifted into its
@@ -639,11 +667,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.6.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.7.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.6.json drifted from \
-             docs/schema/metrics.schema.v1.6.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.7.json drifted from \
+             docs/schema/metrics.schema.v1.7.json — re-copy the canonical artifact"
         );
     }
 
@@ -707,6 +735,7 @@ mod tests {
                     error_node_count: 0,
                     resolver: None,
                 },
+                path_class: None,
             }],
             stats: StatsSection {
                 functions: vec![FunctionStats {
@@ -737,6 +766,8 @@ mod tests {
                     reachable_from_entry: None,
                     function_cost_v2: None,
                     unknown_trip_loops: 0,
+                    trip_count_source: None,
+                    known_trip_value: None,
                 }],
                 distributions: None,
             },

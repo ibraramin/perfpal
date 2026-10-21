@@ -214,7 +214,7 @@ fn e2e_metrics_show_schema_1_6_and_absent_resolver() {
     assert_eq!(code, 0, "pipeline over the e2e fixture must succeed");
     let raw = fs::read_to_string(out.join("metrics.json")).expect("metrics.json present");
     let doc: serde_json::Value = serde_json::from_str(&raw).expect("metrics.json parses");
-    assert_eq!(doc["schema_version"], "1.6");
+    assert_eq!(doc["schema_version"], "1.7");
     let files = doc["files"].as_array().expect("files[] present");
     assert!(!files.is_empty());
     for file in files {

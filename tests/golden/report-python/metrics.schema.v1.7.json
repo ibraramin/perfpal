@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.6.json",
-  "title": "Perfpal metrics.json schema v1.6",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.7.json",
+  "title": "Perfpal metrics.json schema v1.7",
   "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, Rust, Python). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.6",
+      "const": "1.7",
       "description": "Schema version of this document. MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
@@ -107,6 +107,11 @@
                 "description": "Semantic-resolver outcome for this file (ADDITIVE v1.1; optional — omitted by producers without resolver support, so v1.0-style documents validate unchanged). absent = resolver disabled/unavailable; ok = libclang parsed the translation unit; failed = libclang reported a TU-level failure. Never deletes or degrades syntactic results."
               }
             }
+          },
+          "path_class": {
+            "type": "string",
+            "enum": ["production", "test", "example", "bench", "fixture", "generated", "vendor", "unknown"],
+            "description": "ADDITIVE v1.7 (map-intelligibility V4): deterministic production-first class of this file. The aggregator computes it for every scanned file; absent in hand-written/older documents means unknown (demoted files are counted, never dropped). Tooling rule: bench also covers scripts/, tools/, ci/ and .github/ (repo harness, not production source)."
           }
         }
       }
@@ -146,7 +151,9 @@
               "entry_confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"], "description": "ADDITIVE v1.5: entry confidence matching entry_kind — HIGH for main/script, MEDIUM for handler/lib-root, LOW for the unknown-entry stub. Omitted exactly when entry_kind is omitted." },
               "reachable_from_entry": { "type": "boolean", "description": "ADDITIVE v1.5: true when the function is reachable from an entry of its own language over RESOLVED call edges only (semantic-fact-backed, MEDIUM or better — LOW-confidence name-based edges are excluded). Populated for every C/Rust/Python function." },
               "function_cost_v2": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6 (map-build I2 cost-v2): per-iteration weighted cost computed by the aggregator from IR. Formula = v1 base (cyclomatic_complexity + cognitive_complexity + 2*max_loop_depth + 3*alloc_site_count + call_fanout + call_fanin + call_depth + 2 if is_recursive + 1 if error_path + 1 if alloc_family) plus, for every loop, min(trip_count, 1000000) * (1 + loop_depth) when the trip count is statically known (C canonical counted for-loops; Rust canonical literal ranges since I2b; Python canonical literal `range()` loops since I2c) or 1 * (1 + loop_depth) when unknown. Saturating u64 arithmetic. Omitted only for pre-I2/parser-free documents; heat consumers prefer it over the retained v1 function_cost." },
-              "unknown_trip_loops": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6: number of loops in the function whose trip count is genuinely unknown (LoopNode.trip_count absent). Always emitted (0 for loop-free or fully counted functions). Python loops are known for canonical literal `range()` calls since I2c and honestly unknown otherwise (non-literal bounds, step != 1); C while/do-while and non-canonical for-loops, and Rust non-canonical ranges, are also unknown." }
+              "unknown_trip_loops": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6: number of loops in the function whose trip count is genuinely unknown (LoopNode.trip_count absent). Always emitted (0 for loop-free or fully counted functions). Python loops are known for canonical literal `range()` calls since I2c and honestly unknown otherwise (non-literal bounds, step != 1); C while/do-while and non-canonical for-loops, and Rust non-canonical ranges, are also unknown." },
+              "trip_count_source": { "type": "string", "enum": ["literal", "partial", "unknown"], "description": "ADDITIVE v1.7 (map-intelligibility V4): provenance of the trip counts used by function_cost_v2 — literal (every loop has a canonical literal trip), partial (some do), unknown (loops but none literal). Omitted when the function has no loops." },
+              "known_trip_value": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.7: largest clamped literal trip multiplier used by function_cost_v2 — max of min(trip_count, 1000000) over the function's loops. Omitted when no loop has a literal trip." }
             }
           }
         },

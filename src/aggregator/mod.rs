@@ -39,6 +39,8 @@
 //!
 //! Non-goals: rendering; interpretation; chart capping decisions.
 
+mod path_class;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::analyzer::{CrossFileCallEdge, Finding, cross_file_call_edges};
@@ -89,6 +91,9 @@ pub fn assemble(
             global_var_count: u.file.global_var_count,
             include_counts: u.file.include_counts,
             parse_health: parse_health_entry(&u.parse_health),
+            // v1.7 (plan `map-intelligibility` V4): deterministic production-
+            // first classification; never `unknown` for a computed file.
+            path_class: Some(path_class::classify(&u.file.path).to_string()),
         })
         .collect();
 
@@ -248,6 +253,7 @@ fn function_stats(
             let call = shape.get(&r.id).copied().unwrap_or_default();
             let (function_cost_v2, unknown_trip_loops) =
                 function_cost_v2(r, call, &function_unit.loops);
+            let (trip_count_source, known_trip_value) = trip_provenance(&function_unit.loops);
             let (entry_kind, entry_confidence) = if entry_scoped {
                 entries
                     .get(&r.id)
@@ -292,6 +298,10 @@ fn function_stats(
                 // count (formula documented on the schema field).
                 function_cost_v2: Some(function_cost_v2),
                 unknown_trip_loops,
+                // v1.7 (plan `map-intelligibility` V4): literal/partial/
+                // unknown provenance + largest clamped literal trip.
+                trip_count_source: trip_count_source.map(str::to_string),
+                known_trip_value,
             }
         })
         .collect()
@@ -341,6 +351,38 @@ fn function_cost_v2(
         cost = cost.saturating_add(trip_weight);
     }
     (cost, unknown_trip_loops)
+}
+
+/// Trip-count provenance (plan `map-intelligibility` V4, schema 1.7): the
+/// honest label for the evidence behind [`function_cost_v2`]'s literal
+/// multipliers, plus the largest clamped literal trip used by that model.
+///
+/// - no loops → `(None, None)` (both fields are omitted on the wire);
+/// - every loop has a literal trip → `"literal"`;
+/// - some loops have a literal trip → `"partial"`;
+/// - loops but none literal → `"unknown"`.
+///
+/// `known_trip_value` is `max(min(t, MAX_TRIP))` over the literal trips and
+/// `None` when no loop has one (the Rust backends already clamp; synthetic
+/// IR is clamped again here).
+fn trip_provenance(loops: &[crate::ir::LoopNode]) -> (Option<&'static str>, Option<u64>) {
+    if loops.is_empty() {
+        return (None, None);
+    }
+    let lit = loops.iter().filter(|l| l.trip_count.is_some()).count();
+    let source = if lit == loops.len() {
+        TRIP_LITERAL
+    } else if lit > 0 {
+        TRIP_PARTIAL
+    } else {
+        TRIP_UNKNOWN
+    };
+    let known_trip_value = loops
+        .iter()
+        .filter_map(|l| l.trip_count)
+        .map(|t| t.min(crate::ir::MAX_TRIP))
+        .max();
+    (Some(source), known_trip_value)
 }
 
 /// Per-function call-shape instrument (IR v1.4 STEP 2, plan
@@ -534,7 +576,7 @@ fn reaches_self(adj: &BTreeMap<&str, BTreeSet<&str>>, start: &str) -> bool {
 
 /// Entry-kind tokens (plan `map-build` I1a C + I1b Rust + I1c Python) — the
 /// closed `stats.functions[].entry_kind` value set, mirrored in
-/// `docs/schema/metrics.schema.v1.6.json`.
+/// `docs/schema/metrics.schema.v1.7.json`.
 const ENTRY_MAIN: &str = "main";
 /// Python-only entry kind (plan `map-build` I1c): a guarded `<module>`
 /// record (`has_main_guard == Some(true)`), confidence HIGH like `main`.
@@ -547,6 +589,13 @@ const ENTRY_UNKNOWN: &str = "unknown-entry";
 const ENTRY_HIGH: &str = "HIGH";
 const ENTRY_MEDIUM: &str = "MEDIUM";
 const ENTRY_LOW: &str = "LOW";
+
+/// Trip-provenance tokens (plan `map-intelligibility` V4) — the closed
+/// `stats.functions[].trip_count_source` value set, mirrored in
+/// `docs/schema/metrics.schema.v1.7.json`.
+const TRIP_LITERAL: &str = "literal";
+const TRIP_PARTIAL: &str = "partial";
+const TRIP_UNKNOWN: &str = "unknown";
 
 /// Handler-heuristic name fragments (plan `map-build` I1a): matched
 /// case-insensitively against the function name (birdseye-map.md F1 —
@@ -1519,6 +1568,50 @@ mod tests {
         assert_eq!(clamped.1, 0);
     }
 
+    /// v1.7 (plan `map-intelligibility` V4): trip provenance labels and the
+    /// clamped largest literal multiplier.
+    #[test]
+    fn trip_provenance_classifies_loops_and_clamps() {
+        let loop_node = |trip_count: Option<u64>| crate::ir::LoopNode {
+            kind: crate::ir::LoopKind::For,
+            depth: 1,
+            induction_vars: Vec::new(),
+            span: Span::point(1, 1),
+            resolver_tier: crate::ir::ResolverTier::Syntactic,
+            macro_origin: false,
+            trip_count,
+            condition_is_zero: false,
+        };
+
+        // No loops: both fields omitted.
+        assert_eq!(trip_provenance(&[]), (None, None));
+
+        // All literal: label + max clamped trip.
+        assert_eq!(
+            trip_provenance(&[loop_node(Some(10)), loop_node(Some(3))]),
+            (Some(TRIP_LITERAL), Some(10))
+        );
+
+        // Mixed: partial, max over the literal subset.
+        assert_eq!(
+            trip_provenance(&[loop_node(Some(7)), loop_node(None)]),
+            (Some(TRIP_PARTIAL), Some(7))
+        );
+
+        // Loops but none literal: unknown, no known value.
+        assert_eq!(
+            trip_provenance(&[loop_node(None), loop_node(None)]),
+            (Some(TRIP_UNKNOWN), None)
+        );
+
+        // Over-MAX literal clamps.
+        assert_eq!(
+            trip_provenance(&[loop_node(Some(u64::MAX))]),
+            (Some(TRIP_LITERAL), Some(crate::ir::MAX_TRIP))
+        );
+        assert_eq!(crate::ir::MAX_TRIP, 1_000_000);
+    }
+
     fn quoted_edge(from: &str, to: Option<&str>, resolved: bool) -> IncludeEdge {
         IncludeEdge {
             from_path: from.to_string(),
@@ -2226,6 +2319,8 @@ mod tests {
             reachable_from_entry: None,
             function_cost_v2: None,
             unknown_trip_loops: 0,
+            trip_count_source: None,
+            known_trip_value: None,
         };
         let functions = vec![
             stat(2, 0),   // 01-04, 0

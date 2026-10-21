@@ -59,6 +59,7 @@ fn file_entry(path: &str, code: u32) -> FileEntry {
             angle: 0,
         },
         parse_health: ok_health(),
+        path_class: None,
     }
 }
 
@@ -620,6 +621,8 @@ fn costly_fn(path: &str) -> FunctionStats {
         reachable_from_entry: None,
         function_cost_v2: None,
         unknown_trip_loops: 0,
+        trip_count_source: None,
+        known_trip_value: None,
     }
 }
 

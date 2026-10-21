@@ -88,6 +88,7 @@ fn rust_file_entry(path: &str, code: u32) -> FileEntry {
             angle: 0,
         },
         parse_health: ok_health(),
+        path_class: None,
     }
 }
 

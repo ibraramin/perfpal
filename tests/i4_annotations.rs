@@ -86,6 +86,7 @@ fn file_entry(path: &str) -> FileEntry {
             error_node_count: 0,
             resolver: None,
         },
+        path_class: None,
     }
 }
 

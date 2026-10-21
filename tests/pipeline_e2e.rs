@@ -74,7 +74,7 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     // Bundled schema is a byte-copy of the canonical artifact.
     let bundled = fs::read(out.join(schema::SCHEMA_ARTIFACT_NAME)).expect("bundled schema");
     let canonical = fs::read(
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("docs/schema/metrics.schema.v1.6.json"),
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("docs/schema/metrics.schema.v1.7.json"),
     )
     .expect("canonical schema");
     assert_eq!(bundled, canonical, "bundled schema drifted from docs copy");
@@ -82,7 +82,7 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     // Document shape.
     let raw1 = fs::read_to_string(&metrics_path).unwrap();
     let doc1: serde_json::Value = serde_json::from_str(&raw1).expect("metrics.json parses");
-    assert_eq!(doc1["schema_version"], "1.6");
+    assert_eq!(doc1["schema_version"], "1.7");
     assert_eq!(doc1["tool"]["name"], "perfpal");
     assert_eq!(doc1["scan"]["languages"], serde_json::json!(["c"]));
 

@@ -1,6 +1,6 @@
 # Perfpal — metrics.json v1: Design & Stability Contract
 
-- **Status:** v1 draft — plan `mvp-architecture`, step 3. Formal schema: [`metrics.schema.v1.2.json`](./metrics.schema.v1.2.json) (JSON Schema Draft 2020-12). Internal representation: [`docs/architecture/ir-v1.md`](../architecture/ir-v1.md). Heuristic IDs: [`docs/heuristics/catalog-v1.md`](../heuristics/catalog-v1.md).
+- **Status:** v1.7 — plan `map-intelligibility` V4 (additive `files[].path_class` + trip provenance). Formal schema: [`metrics.schema.v1.7.json`](./metrics.schema.v1.7.json) (JSON Schema Draft 2020-12). Internal representation: [`docs/architecture/ir-v1.md`](../architecture/ir-v1.md). Heuristic IDs: [`docs/heuristics/catalog-v1.md`](../heuristics/catalog-v1.md).
 - **Audience:** consumers of Perfpal output — humans, tooling, and any LLM. The schema is deliberately **LLM-agnostic**: no vendor fields, no prompt-specific tuning (spec CONFIRMED-4).
 
 ---
@@ -18,8 +18,8 @@
 |---|---|---|
 | `schema_version`, `tool`, `scan` | Provenance: which schema/binary scanned what, when | Everything |
 | `parse_health_summary` *(optional)* + per-file `parse_health` | Parse quality; ERROR regions reported, never analyzed as fiction | Confidence downgrades |
-| `files[]` | Per-file baseline stats (LOC, counts) | Pillar 1a |
-| `stats.functions[]`, `stats.distributions[]` | Per-function measurements (complexity, loop depth, alloc sites, length) | Pillar 1a, ARCH-002 |
+| `files[]` | Per-file baseline stats (LOC, counts) + optional `path_class` (production-first classification: `production`/`test`/`example`/`bench`/`fixture`/`generated`/`vendor`; absent ⇒ `unknown`) | Pillar 1a; KV1/KV3 production-first ranking |
+| `stats.functions[]`, `stats.distributions[]` | Per-function measurements (complexity, loop depth, alloc sites, length) + optional trip provenance (`trip_count_source`: `literal`/`partial`/`unknown`, `known_trip_value`: largest clamped literal trip) | Pillar 1a, ARCH-002; KV3 estimate honesty |
 | `findings[]` | Heuristic detections with confidence/severity/evidence | Human report, LLM raw data |
 | `graphs.include_graph`, `graphs.call_graph` *(optional)* | Architecture-level structure (quoted vs angle includes; cross-file name-based call edges) | Pillar 1b visualization, ARCH-001/003 |
 | `components[]` *(optional)* | Hot-component ranking (ARCH-002 aggregation) | Bottleneck maps |
@@ -34,6 +34,8 @@ Only `schema_version`, `tool`, `scan`, `files`, `stats`, `findings` are schema-r
   - Cross-file name-based edges (`call_graph`, ARCH-003) are LOW until a semantic resolver exists.
 - **`severity`: hot / warn / info** — prioritization hint only: hot = review first; warn = schedule; info = context/aggregation feed. Never a certainty claim.
 - **`resolver_tier`: syntactic / semantic / dynamic** — which resolver tier served the record (ADR-0001). MVP emits `syntactic` exclusively; the field exists so tier upgrades never change the schema.
+- **`path_class` (v1.7, optional): production / test / example / bench / fixture / generated / vendor / unknown** — deterministic, case-insensitive classification of the repo-relative POSIX path, first match wins in that order (test basenames/segments → example → bench → fixture → generated → vendor → production). `bench` also covers repo tooling/harness paths (`scripts/`, `tools/`, `ci/`, `.github/`), and `compat/` stays `production`. The aggregator emits a concrete class for every scanned file; absence means `unknown` (hand-written/older documents). Demoted files are counted, never dropped.
+- **`trip_count_source` (v1.7, optional): literal / partial / unknown** — provenance of the trip counts behind `function_cost_v2`: `literal` = every loop has a canonical literal trip, `partial` = some do, `unknown` = loops but none literal. Omitted when the function has no loops.
 
 ## 4. Finding identity
 
@@ -74,6 +76,14 @@ The schema artifact was re-emitted as `metrics.schema.v1.2.json` (the v1.1 and v
 2. **`files[].language`** — widened from `enum ["c","rust"]` to `enum ["c","python","rust"]`, admitting Python (`.py`/`.pyi`) scanned files.
 
 The schema artifact was re-emitted as `metrics.schema.v1.3.json` (the v1.2, v1.1 and v1.0 copies are kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.3 name.
+
+**Minor bump v1.6 → v1.7 (2026-10-22, plan `map-intelligibility` V4).** Three additive OPTIONAL fields; every v1.6 document still validates unchanged (no `required` list grew, `additionalProperties: false` stays):
+
+1. **`files[].path_class`** — closed enum `production | test | example | bench | fixture | generated | vendor | unknown`. Computed deterministically by the aggregator from the repo-relative POSIX path (case-insensitive; first match wins: test → example → bench → fixture → generated → vendor → production). `bench` also covers repo tooling/harness roots (`scripts/`, `tools/`, `ci/`, `.github/`); `compat/` is `production`. Absent ⇒ `unknown`; the classifier itself never emits `unknown`.
+2. **`stats.functions[].trip_count_source`** — closed enum `literal | partial | unknown`, recording whether the loops feeding `function_cost_v2` carry canonical literal trip counts. Omitted when the function has no loops.
+3. **`stats.functions[].known_trip_value`** — the largest clamped literal trip multiplier used by `function_cost_v2` (`max(min(t, MAX_TRIP))`); omitted when no loop has a literal trip.
+
+The schema artifact was re-emitted as `metrics.schema.v1.7.json` (the v1.6 copy is kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.7 name.
 
 ## 6. Worked example
 

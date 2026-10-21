@@ -82,6 +82,8 @@ fn function(path: &str, entry_kind: Option<&str>, cost_v2: Option<u64>) -> Funct
         reachable_from_entry: entry_kind.map(|_| true),
         function_cost_v2: cost_v2,
         unknown_trip_loops: 0,
+        trip_count_source: None,
+        known_trip_value: None,
     }
 }
 
@@ -99,6 +101,7 @@ fn file(path: &str) -> FileEntry {
             error_node_count: 0,
             resolver: None,
         },
+        path_class: None,
     }
 }
 

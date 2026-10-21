@@ -1775,6 +1775,8 @@ mod tests {
             reachable_from_entry: None,
             function_cost_v2: None,
             unknown_trip_loops: 0,
+            trip_count_source: None,
+            known_trip_value: None,
         }
     }
 
