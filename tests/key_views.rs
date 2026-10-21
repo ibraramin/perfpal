@@ -344,12 +344,12 @@ fn key_views_carry_units_anchors_and_full_rationale() {
     assert!(!map.contains('…'), "key views must not truncate text");
     // KV1 suppresses component aggregates but reports them.
     assert!(!map.contains("Title for PERF-C-ARCH-002"));
-    assert!(map.contains("1 component-level findings in Explorer"));
+    assert!(map.contains("1 component-level finding in Explorer"));
     // Honest demotion/coverage lines.
-    assert!(map.contains("1 non-production files demoted"));
+    assert!(map.contains("1 non-production file demoted"));
     assert!(map.contains("resolved 3 of 3 include edges"));
-    assert!(map.contains("1 startup functions demoted"));
-    assert!(map.contains("1 no-loop functions demoted"));
+    assert!(map.contains("1 startup function demoted"));
+    assert!(map.contains("1 no-loop function demoted"));
 }
 
 #[test]
@@ -415,4 +415,41 @@ fn drill_artifacts_are_complete_and_deterministic() {
         assert!(!artifact.contains("SECRET-START"));
         assert!(!artifact.contains("999999"));
     }
+}
+
+#[test]
+fn kv2_labels_use_full_repo_relative_paths_and_pluralize() {
+    let mut d = doc();
+    d.files = vec![
+        file("tmux.h", "production"),
+        file("compat/imsg.h", "production"),
+        file("src/user.c", "production"),
+    ];
+    d.stats.functions = Vec::new();
+    d.findings = Vec::new();
+    d.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: Vec::new(),
+            edges: vec![
+                edge("src/user.c", "tmux.h"),
+                edge("src/user.c", "compat/imsg.h"),
+            ],
+        },
+        call_graph: None,
+    });
+
+    let html = render_html(&d, &[]);
+    let map = map_section(&html);
+    assert!(
+        map.contains("compat/imsg.h"),
+        "nested KV2 label must keep its directory prefix"
+    );
+    assert!(!map.contains(">imsg.h<"), "basename-only KV2 label leaked");
+    assert!(
+        map.contains("1 dependent ·"),
+        "singular counts must read `1 dependent`"
+    );
+
+    let md = perfpal::reporter::render_report(&d, &[]);
+    assert!(md.contains("compat/imsg") && md.contains("1 dependent"));
 }

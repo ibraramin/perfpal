@@ -32,6 +32,10 @@
 | 22 | [`PERF\-PY\-MEM\-002:06\_memory\_ops\.py:10:16`](#finding-PERF-PY-MEM-002-06-memory-ops-py-10-16) | Container copy inside loop | `06\_memory\_ops\.py:10` | `copy\_each` | info | MEDIUM | production | 7 static cost units \(v2\) · 1\.8× median · top 25% |
 | 23 | [`PERF\-PY\-PANDAS\-001:13\_pandas\.py:9:19`](#finding-PERF-PY-PANDAS-001-13-pandas-py-9-19) | Row\-wise pandas iteration | `13\_pandas\.py:9` | `row\_wise` | info | MEDIUM | production | 7 static cost units \(v2\) · 1\.8× median · top 25% |
 | 24 | [`PERF\-PY\-PANDAS\-002:13\_pandas\.py:18:15`](#finding-PERF-PY-PANDAS-002-13-pandas-py-18-15) | \`concat\`/\`append\` in loop | `13\_pandas\.py:18` | `append\_frames` | info | MEDIUM | production | 7 static cost units \(v2\) · 1\.8× median · top 25% |
+| 25 | [`PERF\-PY\-ARCH\-001:pkg/cycle\_b\.py:3:1`](#finding-PERF-PY-ARCH-001-pkg-cycle-b-py-3-1) | Import cycle | `pkg/cycle\_b\.py:3` | `\<module\>` | info | MEDIUM | production | 1 static cost units \(v2\) · 0\.3× median · top 25% |
+| 26 | [`PERF\-PY\-ARCH\-003:pkg/cycle\_b\.py:9:16`](#finding-PERF-PY-ARCH-003-pkg-cycle-b-py-9-16) | Cross\-file call coupling | `pkg/cycle\_b\.py:9` | `ping\_b` | info | LOW | production | 8 static cost units \(v2\) · 2\.0× median · top 25% |
+| 27 | [`PERF\-PY\-ARCH\-003:pkg/cycle\_a\.py:8:12`](#finding-PERF-PY-ARCH-003-pkg-cycle-a-py-8-12) | Cross\-file call coupling | `pkg/cycle\_a\.py:8` | `walk\_cycle` | info | LOW | production | 5 static cost units \(v2\) · 1\.3× median · top 25% |
+| 28 | [`PERF\-PY\-ARCH\-003:15\_cross\_file\_and\_arch\.py:8:12`](#finding-PERF-PY-ARCH-003-15-cross-file-and-arch-py-8-12) | Cross\-file call coupling | `15\_cross\_file\_and\_arch\.py:8` | `use\_cross\_file` | info | LOW | production | 2 static cost units \(v2\) · 0\.5× median · top 25% |
 
 <a id="finding-PERF-PY-ALLOC-003-01-alloc-churn-py-23-15"></a>
 #### Superlinear list accumulation in loop  (`PERF\-PY\-ALLOC\-003:01\_alloc\_churn\.py:23:15`)

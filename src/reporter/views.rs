@@ -69,7 +69,7 @@ pub struct Kv1View {
     pub rows: Vec<Kv1Row>,
     /// Function-granularity findings only (component aggregates excluded).
     pub total_actions: usize,
-    /// `-ARCH-001/002/003` findings suppressed from the action ranking.
+    /// `-ARCH-002` hot-component aggregates suppressed from the ranking.
     pub component_findings: usize,
     /// Scanned files whose `path_class != production`.
     pub nonprod_file_count: usize,
@@ -85,7 +85,7 @@ pub struct Kv2Row {
     pub dependents: usize,
     /// Integer percentage of the largest shown row.
     pub width_pct: u32,
-    /// Rendered `N dependents · % of scanned files · top P% [· × median]`.
+    /// Rendered `N dependent(s) · % of scanned files · top P% [· × median]`.
     pub value_label: String,
 }
 
@@ -202,6 +202,23 @@ pub fn ratio_label(r: f64) -> String {
     }
 }
 
+/// `1 dependent` / `n dependents` (regular `+s` nouns only — every count
+/// noun in the key views is regular).
+#[must_use]
+pub fn plural(count: usize, singular: &str) -> String {
+    if count == 1 {
+        format!("{count} {singular}")
+    } else {
+        format!("{count} {singular}s")
+    }
+}
+
+/// Noun-only plural form for headers that already render the number.
+#[must_use]
+pub fn plural_word(count: usize, singular: &'static str, many: &'static str) -> &'static str {
+    if count == 1 { singular } else { many }
+}
+
 /// 1-based rank `k` of `n` → `top 1%` / `top 5%` / `top 10%` / `top 25%`.
 #[must_use]
 pub fn top_label(k: usize, n: usize) -> String {
@@ -226,10 +243,11 @@ pub fn cost_rank_label(rank: usize, total: usize) -> String {
     top_label(rank, total)
 }
 
-fn is_component_rule(rule_id: &str) -> bool {
-    ["-ARCH-001", "-ARCH-002", "-ARCH-003"]
-        .iter()
-        .any(|suffix| rule_id.ends_with(suffix))
+/// Only `-ARCH-002` ("Hot-component aggregation") is a directory/component
+/// aggregate. `-ARCH-001` (include fan-out/cycles) and `-ARCH-003`
+/// (cross-file call coupling) are FILE-level actions and stay in KV1.
+fn is_hot_component_rule(rule_id: &str) -> bool {
+    rule_id.ends_with("-ARCH-002")
 }
 
 fn severity_rank(severity: Severity) -> u8 {
@@ -408,7 +426,7 @@ fn build_kv1_rows(doc: &MetricsDocument) -> (Vec<Kv1Row>, usize, usize) {
     let mut action_indices: Vec<usize> = Vec::new();
     let mut component_findings = 0;
     for (index, finding) in doc.findings.iter().enumerate() {
-        if is_component_rule(&finding.rule_id) {
+        if is_hot_component_rule(&finding.rule_id) {
             component_findings += 1;
         } else {
             action_indices.push(index);
@@ -560,7 +578,7 @@ pub fn kv2(doc: &MetricsDocument) -> Kv2View {
             (100 * degree + scanned_files / 2) / scanned_files
         };
         let mut parts = vec![
-            format!("{degree} dependents"),
+            plural(degree, "dependent"),
             format!("{percent}% of scanned files"),
             top_label(*ranks.get(path).unwrap_or(&1), scanned_files),
         ];
@@ -898,6 +916,11 @@ mod tests {
         assert_eq!(top_label(9, 100), "top 10%");
         assert_eq!(top_label(50, 100), "top 25%");
         assert_eq!(cost_rank_label(1, 10), "top 10%");
+        assert_eq!(plural(0, "dependent"), "0 dependents");
+        assert_eq!(plural(1, "dependent"), "1 dependent");
+        assert_eq!(plural(2, "file"), "2 files");
+        assert_eq!(plural_word(1, "finding", "findings"), "finding");
+        assert_eq!(plural_word(2, "finding", "findings"), "findings");
     }
 
     #[test]
@@ -936,23 +959,48 @@ mod tests {
                 Severity::Hot,
                 Confidence::High,
             ),
+            // File-level ARCH rules stay in KV1 — only ARCH-002 is the
+            // directory/component aggregate.
+            finding(
+                "PERF-C-ARCH-001",
+                "src/a.c",
+                5,
+                Severity::Info,
+                Confidence::High,
+            ),
+            finding(
+                "PERF-C-ARCH-003",
+                "src/a.c",
+                5,
+                Severity::Warn,
+                Confidence::High,
+            ),
         ];
-        let view = kv1(&doc(files, functions, findings, Vec::new()));
+        let doc = doc(files, functions, findings, Vec::new());
+        let view = kv1(&doc);
         assert_eq!(view.component_findings, 1);
-        assert_eq!(view.total_actions, 3);
-        assert_eq!(view.rows.len(), 3);
-        // Production first, then hot before warn; ARCH-002 suppressed.
+        assert_eq!(view.total_actions, 5);
+        assert_eq!(view.rows.len(), 5);
+        // Production first, then hot → warn → info; only ARCH-002 suppressed.
         assert_eq!(
             view.rows
                 .iter()
                 .map(|r| r.finding_index)
                 .collect::<Vec<_>>(),
-            vec![2, 1, 0]
+            vec![2, 5, 1, 4, 0]
         );
         assert_eq!(
             view.rows.iter().map(|r| r.rank).collect::<Vec<_>>(),
-            vec![1, 2, 3]
+            vec![1, 2, 3, 4, 5]
         );
+        let action_ids: Vec<&str> = view
+            .rows
+            .iter()
+            .map(|r| doc.findings[r.finding_index].rule_id.as_str())
+            .collect();
+        assert!(action_ids.contains(&"PERF-C-ARCH-001"));
+        assert!(action_ids.contains(&"PERF-C-ARCH-003"));
+        assert!(!action_ids.contains(&"PERF-C-ARCH-002"));
         assert_eq!(view.nonprod_file_count, 1);
         assert_eq!(view.rows[0].function.as_deref(), Some("hot_fn"));
         assert_eq!(view.rows[0].cost, Some(100));

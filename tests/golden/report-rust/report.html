@@ -107,8 +107,8 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv-why">loop performs 1 per-iteration allocation(s) (format) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</div>
 </div></li>
 </ol>
-<p class="kv-more"><a href="findings-detail.html#ranked-actions">             Complete ranked list — all 25 findings (production-first)</a></p>
-             <p class="kv-counts">0 non-production files demoted ·              7 component-level findings in Explorer</p>
+<p class="kv-more"><a href="findings-detail.html#ranked-actions">             Complete ranked list — all 31 findings (production-first)</a></p>
+             <p class="kv-counts">0 non-production files demoted · 1 component-level finding in Explorer</p>
 </div>
 <div class="kv kv2">
 <h3>What breaks if I touch it?</h3>
@@ -116,7 +116,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv-bars">
 <div class="kv-brow"><span class="kv-blabel">src/cycle_a.rs </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 14% of scanned files · top 10%</span></div>
 <div class="kv-brow"><span class="kv-blabel">src/cycle_b.rs </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 14% of scanned files · top 25%</span></div>
-<div class="kv-brow"><span class="kv-blabel">src/common.rs </span>                 <div class="kv-track"><div class="kv-fill" style="width:50%"></div></div>                 <span class="kv-value">1 dependents · 7% of scanned files · top 25%</span></div>
+<div class="kv-brow"><span class="kv-blabel">src/common.rs </span>                 <div class="kv-track"><div class="kv-fill" style="width:50%"></div></div>                 <span class="kv-value">1 dependent · 7% of scanned files · top 25%</span></div>
 </div>
 <p class="kv-counts">resolved 5 of 5 include edges</p>
 </div>
@@ -136,7 +136,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/05_recursion_complexity.rs:10</span>                 <span class="kv-fn">fib</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:0%"></div></div><span class="kv-value">7 static cost units (v2) · 1.0× median · top 25%</span></div>
 </div>
 <p class="kv-more"><a href="profile-queue.html">             Complete cost-ranked list (40 functions)</a></p>
-<p class="kv-counts">0 startup functions demoted ·              20 no-loop functions demoted · 0 non-production files demoted</p>
+<p class="kv-counts">0 startup functions demoted · 20 no-loop functions demoted · 0 non-production files demoted</p>
 </div>
 </section>
 <section id="explorer">

@@ -228,10 +228,12 @@ is not a shippable core feature. M5 remains gated by `B-pf-001`/`B-pf-002`.
   `findings-detail#ranked-actions`); KV2 = horizontal dependents bars (≤8, integer CSS widths,
   one action line); KV3 = horizontal cost bars (≤8 non-demoted + up to 2 labelled demoted rows,
   complete list in `profile-queue.*`). No cards and no treemap ship.
-- **Component rows suppressed from KV1.** `-ARCH-001/002/003` aggregates are excluded from the
-  action ranking (they remain in `findings-detail`'s rule groups) and counted as
-  "`N` component-level findings in Explorer". The ARCH-002 message defect is therefore fixed by
-  suppression, not by changing analyzer wording.
+- **Component rows suppressed from KV1.** Only `-ARCH-002` ("Hot-component aggregation" — the
+  directory/component aggregate) is excluded from the action ranking (it remains in
+  `findings-detail`'s rule groups) and counted as "`N` component-level finding(s) in Explorer".
+  `ARCH-001` (include fan-out/cycles) and `ARCH-003` (cross-file call coupling) are file-level
+  actions and stay in KV1. The ARCH-002 message defect is therefore fixed by suppression, not by
+  changing analyzer wording.
 - **Rationale truncation:** key views render the full `finding.message`; the 32-char tail-keep cap
   remains chart-label-only. Duplicate KV2 captions are gone (one action line).
 - **KV2 production-first is NOT applied** — the V2 lock stands and the rows label their

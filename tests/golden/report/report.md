@@ -23,9 +23,9 @@
    - Cost: `13 static cost units (v2) · 1.9× median · top 25%`
    - Why: 'realloc' grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 13 findings (production-first).
+[Complete ranked list](findings-detail.md#ranked-actions) — all 14 findings (production-first).
 
-0 non-production files demoted · 2 component-level findings in Explorer.
+0 non-production files demoted · 1 component-level finding in Explorer.
 
 ### What breaks if I touch it?
 
@@ -43,7 +43,7 @@ Blast-radius bars: [report.html#map](report.html#map). resolved 2 of 2 include e
 
 [Complete cost-ranked list (12 functions)](profile-queue.md).
 
-1 startup functions demoted · 5 no-loop functions demoted.
+1 startup function demoted · 5 no-loop functions demoted.
 
 ## 2. Scan provenance & parse health
 - Tool: perfpal 0\.2\.0\-beta\.1

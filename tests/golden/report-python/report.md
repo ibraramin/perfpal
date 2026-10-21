@@ -23,15 +23,15 @@
    - Cost: `8 static cost units (v2) · 2.0× median · top 25%`
    - Why: list 'out' is grown with 'append' inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list\_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 24 findings (production-first).
+[Complete ranked list](findings-detail.md#ranked-actions) — all 28 findings (production-first).
 
-0 non-production files demoted · 5 component-level findings in Explorer.
+0 non-production files demoted · 1 component-level finding in Explorer.
 
 ### What breaks if I touch it?
 
 - `pkg/cycle\_a\.py` — 2 dependents · 10% of scanned files · top 5%
 - `pkg/cycle\_b\.py` — 2 dependents · 10% of scanned files · top 10%
-- `pkg/arch\_helpers\.py` — 1 dependents · 5% of scanned files · top 25%
+- `pkg/arch\_helpers\.py` — 1 dependent · 5% of scanned files · top 25%
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 10 include edges.
 

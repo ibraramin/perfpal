@@ -16,6 +16,7 @@
 | 6 | [`PERF\-RS\-STR\-002:src/lib\.rs:23:17`](#finding-PERF-RS-STR-002-src-lib-rs-23-17) | Length query recomputed in loop \(Rust\) | `src/lib\.rs:23` | `build` | warn | HIGH | production | 20 static cost units \(v2\) · 6\.7× median · top 25% |
 | 7 | [`PERF\-C\-STR\-003:src/main\.c:28:9`](#finding-PERF-C-STR-003-src-main-c-28-9) | Unbounded string operation | `src/main\.c:28` | `c\_loop` | warn | HIGH | production | 15 static cost units \(v2\) · 5\.0× median · top 25% |
 | 8 | [`PERF\-RS\-MEM\-001:src/lib\.rs:25:22`](#finding-PERF-RS-MEM-001-src-lib-rs-25-22) | size\_of passed as an element count \(Rust\) | `src/lib\.rs:25` | `build` | warn | MEDIUM | production | 20 static cost units \(v2\) · 6\.7× median · top 25% |
+| 9 | [`PERF\-C\-ARCH\-003:src/main\.c:32:12`](#finding-PERF-C-ARCH-003-src-main-c-32-12) | Cross\-file call coupling | `src/main\.c:32` | `c\_loop` | info | LOW | production | 15 static cost units \(v2\) · 5\.0× median · top 25% |
 
 <a id="finding-PERF-C-ALLOC-001-src-main-c-27-21"></a>
 #### Heap allocation inside loop  (`PERF\-C\-ALLOC\-001:src/main\.c:27:21`)

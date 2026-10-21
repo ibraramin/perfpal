@@ -107,8 +107,8 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv-why">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</div>
 </div></li>
 </ol>
-<p class="kv-more"><a href="findings-detail.html#ranked-actions">             Complete ranked list — all 24 findings (production-first)</a></p>
-             <p class="kv-counts">0 non-production files demoted ·              5 component-level findings in Explorer</p>
+<p class="kv-more"><a href="findings-detail.html#ranked-actions">             Complete ranked list — all 28 findings (production-first)</a></p>
+             <p class="kv-counts">0 non-production files demoted · 1 component-level finding in Explorer</p>
 </div>
 <div class="kv kv2">
 <h3>What breaks if I touch it?</h3>
@@ -116,7 +116,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv-bars">
 <div class="kv-brow"><span class="kv-blabel">pkg/cycle_a.py </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 10% of scanned files · top 5%</span></div>
 <div class="kv-brow"><span class="kv-blabel">pkg/cycle_b.py </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 10% of scanned files · top 10%</span></div>
-<div class="kv-brow"><span class="kv-blabel">pkg/arch_helpers.py </span>                 <div class="kv-track"><div class="kv-fill" style="width:50%"></div></div>                 <span class="kv-value">1 dependents · 5% of scanned files · top 25%</span></div>
+<div class="kv-brow"><span class="kv-blabel">pkg/arch_helpers.py </span>                 <div class="kv-track"><div class="kv-fill" style="width:50%"></div></div>                 <span class="kv-value">1 dependent · 5% of scanned files · top 25%</span></div>
 </div>
 <p class="kv-counts">resolved 5 of 10 include edges</p>
 </div>
@@ -136,7 +136,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">pkg/arch_helpers.py:9</span>                 <span class="kv-fn">clamp_value</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:0%"></div></div><span class="kv-value">8 static cost units (v2) · 2.0× median · top 25%</span></div>
 </div>
 <p class="kv-more"><a href="profile-queue.html">             Complete cost-ranked list (68 functions)</a></p>
-<p class="kv-counts">0 startup functions demoted ·              42 no-loop functions demoted · 0 non-production files demoted</p>
+<p class="kv-counts">0 startup functions demoted · 42 no-loop functions demoted · 0 non-production files demoted</p>
 </div>
 </section>
 <section id="explorer">

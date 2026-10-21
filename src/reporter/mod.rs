@@ -548,9 +548,10 @@ pub fn render_findings_detail(doc: &MetricsDocument) -> String {
         out.push_str("\nNo findings.\n");
     } else {
         out.push_str(&format!(
-            "\n{} of {} total findings.\n\n",
+            "\n{} of {} total {}.\n\n",
             doc.findings.len(),
             doc.findings.len(),
+            views::plural_word(doc.findings.len(), "finding", "findings"),
         ));
         render_ranked_actions_md(&mut out, doc);
         render_findings_full_detail(&mut out, doc);
@@ -676,8 +677,8 @@ pub fn render_profile_queue(doc: &MetricsDocument) -> String {
     out.push_str("# Perfpal Profile Queue\n\n");
     let rows = views::complete_profile_queue(doc);
     out.push_str(&format!(
-        "{} functions ranked by static cost — candidates, confirm with a profiler.\n\n",
-        rows.len(),
+        "{} ranked by static cost — candidates, confirm with a profiler.\n\n",
+        views::plural(rows.len(), "function"),
     ));
     if rows.is_empty() {
         while out.ends_with('\n') {
@@ -736,8 +737,8 @@ pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
     out.push_str(&format!(
         "<p>{}</p>\n</header>\n",
         escape_html(&format!(
-            "{} functions ranked by static cost — candidates, confirm with a profiler",
-            rows.len()
+            "{} ranked by static cost — candidates, confirm with a profiler",
+            views::plural(rows.len(), "function")
         )),
     ));
     out.push_str(
@@ -917,8 +918,9 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
             kv1.total_actions,
         ));
         out.push_str(&format!(
-            "{} non-production files demoted · {} component-level findings in Explorer.\n\n",
-            kv1.nonprod_file_count, kv1.component_findings,
+            "{} demoted · {} in Explorer.\n\n",
+            views::plural(kv1.nonprod_file_count, "non-production file"),
+            views::plural(kv1.component_findings, "component-level finding"),
         ));
     }
 
@@ -961,12 +963,13 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
             ));
         }
         out.push_str(&format!(
-            "\n[Complete cost-ranked list ({} functions)](profile-queue.md).\n\n",
-            kv3.total_functions,
+            "\n[Complete cost-ranked list ({})](profile-queue.md).\n\n",
+            views::plural(kv3.total_functions, "function"),
         ));
         out.push_str(&format!(
-            "{} startup functions demoted · {} no-loop functions demoted.\n\n",
-            kv3.startup_count, kv3.no_loop_count,
+            "{} demoted · {} demoted.\n\n",
+            views::plural(kv3.startup_count, "startup function"),
+            views::plural(kv3.no_loop_count, "no-loop function"),
         ));
     }
 }
@@ -1888,10 +1891,10 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
         }
         out.push_str("</ol>\n");
         out.push_str(&format!(
-            "<p class=\"kv-more\"><a href=\"findings-detail.html#ranked-actions\">             Complete ranked list — all {total} findings (production-first)</a></p>\n             <p class=\"kv-counts\">{nonprod} non-production files demoted ·              {component} component-level findings in Explorer</p>\n",
-            total = kv1.total_actions,
-            nonprod = kv1.nonprod_file_count,
-            component = kv1.component_findings,
+            "<p class=\"kv-more\"><a href=\"findings-detail.html#ranked-actions\">             Complete ranked list — all {total} (production-first)</a></p>\n             <p class=\"kv-counts\">{nonprod} demoted · {component} in Explorer</p>\n",
+            total = views::plural(kv1.total_actions, "finding"),
+            nonprod = views::plural(kv1.nonprod_file_count, "non-production file"),
+            component = views::plural(kv1.component_findings, "component-level finding"),
         ));
     }
     out.push_str("</div>\n");
@@ -1974,12 +1977,14 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
         }
         out.push_str("</div>\n");
         out.push_str(&format!(
-            "<p class=\"kv-more\"><a href=\"profile-queue.html\">             Complete cost-ranked list ({} functions)</a></p>\n",
-            kv3.total_functions,
+            "<p class=\"kv-more\"><a href=\"profile-queue.html\">             Complete cost-ranked list ({})</a></p>\n",
+            views::plural(kv3.total_functions, "function"),
         ));
         out.push_str(&format!(
-            "<p class=\"kv-counts\">{} startup functions demoted ·              {} no-loop functions demoted · {} non-production files demoted</p>\n",
-            kv3.startup_count, kv3.no_loop_count, kv3.nonprod_file_count,
+            "<p class=\"kv-counts\">{} demoted · {} demoted · {} demoted</p>\n",
+            views::plural(kv3.startup_count, "startup function"),
+            views::plural(kv3.no_loop_count, "no-loop function"),
+            views::plural(kv3.nonprod_file_count, "non-production file"),
         ));
     }
     out.push_str("</div>\n</section>\n");

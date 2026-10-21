@@ -101,8 +101,8 @@ V7 re-triages the KV1 rank key and V5 tests the no-loop guard. **KV2 production-
 proposed V2 amendment pending founder ratification** (cJSON's `cJSON.h` is otherwise buried by
 unity test headers); until then V2's production-first scope (KV1/KV3) stands. When the median
 dependent count is 0, KV2 anchors with `% of scanned files` + `top P%`, not `× median`.
-V4 (2026-10-22) shipped the three key views and the `Explorer` rename; component `ARCH-00x`
-aggregates are suppressed from KV1 (counted, not ranked), KV2 keeps the V2 lock (labels path
+V4 (2026-10-22) shipped the three key views and the `Explorer` rename; `ARCH-002` component
+aggregates are suppressed from KV1 (counted, not ranked; `ARCH-001`/`ARCH-003` stay), KV2 keeps the V2 lock (labels path
 class without demotion), and A1b is not claimed closed on severity (V7 re-triages the rank key).
 
 ## Non-goals

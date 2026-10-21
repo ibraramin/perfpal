@@ -23,15 +23,15 @@
    - Cost: `14 static cost units (v2) · 2.0× median · top 25%`
    - Why: loop performs 1 per\-iteration allocation\(s\) \(format\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 25 findings (production-first).
+[Complete ranked list](findings-detail.md#ranked-actions) — all 31 findings (production-first).
 
-0 non-production files demoted · 7 component-level findings in Explorer.
+0 non-production files demoted · 1 component-level finding in Explorer.
 
 ### What breaks if I touch it?
 
 - `src/cycle\_a\.rs` — 2 dependents · 14% of scanned files · top 10%
 - `src/cycle\_b\.rs` — 2 dependents · 14% of scanned files · top 25%
-- `src/common\.rs` — 1 dependents · 7% of scanned files · top 25%
+- `src/common\.rs` — 1 dependent · 7% of scanned files · top 25%
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 5 include edges.
 

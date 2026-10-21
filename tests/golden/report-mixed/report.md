@@ -23,9 +23,9 @@
    - Cost: `20 static cost units (v2) · 6.7× median · top 25%`
    - Why: 's\.len' recomputes the length of 's' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 8 findings (production-first).
+[Complete ranked list](findings-detail.md#ranked-actions) — all 9 findings (production-first).
 
-0 non-production files demoted · 1 component-level findings in Explorer.
+0 non-production files demoted · 0 component-level findings in Explorer.
 
 ### What breaks if I touch it?
 

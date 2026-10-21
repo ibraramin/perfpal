@@ -21,6 +21,7 @@
 | 11 | [`PERF\-C\-MEM\-001:src/main\.c:118:19`](#finding-PERF-C-MEM-001-src-main-c-118-19) | sizeof misuse in allocation argument | `src/main\.c:118` | `clone\_row` | warn | MEDIUM | production | 5 static cost units \(v2\) · 0\.7× median · top 25% |
 | 12 | [`PERF\-C\-TYPE\-001:src/main\.c:113:1`](#finding-PERF-C-TYPE-001-src-main-c-113-1) | Large struct passed by value | `src/main\.c:113` | `weigh` | warn | LOW | production | 1 static cost units \(v2\) · 0\.1× median · top 25% |
 | 13 | [`PERF\-C\-LOOP\-004:src/main\.c:62:24`](#finding-PERF-C-LOOP-004-src-main-c-62-24) | Variable\-divisor division in innermost loop | `src/main\.c:62` | `deep\_sum` | info | MEDIUM | production | 27 static cost units \(v2\) · 3\.9× median · top 25% |
+| 14 | [`PERF\-C\-ARCH\-003:src/main\.c:127:20`](#finding-PERF-C-ARCH-003-src-main-c-127-20) | Cross\-file call coupling | `src/main\.c:127` | `main` | info | LOW | production | 11 static cost units \(v2\) · 1\.6× median · top 25% |
 
 <a id="finding-PERF-C-ALLOC-001-src-main-c-34-21"></a>
 #### Heap allocation inside loop  (`PERF\-C\-ALLOC\-001:src/main\.c:34:21`)
