@@ -1,122 +1,126 @@
-# Handoff — Latest
+# Handoff — map-intelligibility V4 DONE (dual-APPROVED)
 
 ## Objective
-**Map-intelligibility V3 is DONE and dual-APPROVED (docs + evidence only, no implementation).**
-The three V2 slots now have concrete idioms chosen by a pre-registered blind A/B on
-tmux/hyperfine/cJSON: **KV1 = text-first ranked brief**, **KV2 = horizontal dependents bars**,
-**KV3 = horizontal cost bars**. The sharp result is that the chosen views are legible but the
-**ranking still points at noise** — V4 must implement the idioms *and* not claim recall closed;
-V7 re-triages the KV1 rank key and V5 tests the KV3 no-loop guard. Next node is **V4**
-(implement + schema 1.7 fields), then V5 → V6 → V7 → V8. `map-build` remains **not done**; M5
-still waits on `B-pf-001`/`B-pf-002`.
+**Perfpal's maintainer birdseye map is the core feature** (`docs/NORTH-STAR.md`): one visual
+answering where to look first, what breaks if touched, and where time plausibly goes, with
+findings as annotations. **V4 shipped the V3-chosen key views** and the two additive schema
+fields; **V5 (two blind reads per key view) is the next node**, followed by the V6 founder
+timed test (including the django/postgres holdout).
 
 ## Phase
-POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1–I5 ✅ but A5 ❌; successor
-`map-intelligibility`: **V0 ✅ V1 ✅ V2 ✅ V3 ✅**; V4–V8 queued. JS/TS backends + paper queue
-behind the map.
+POST-MVP map-first. `map-research` R1–R4 ✅; `map-build` I1–I5 ✅ but A5 ❌ (not done);
+successor `map-intelligibility`: **V0 ✅ V1 ✅ V2 ✅ V3 ✅ V4 ✅**; V5–V8 queued.
+JS/TS backends + paper queue behind the map.
 
 ## Alignment (L6)
-- **Goal restated:** Perfpal is a CLI emitting heuristics + the maintainer birdseye map (core
-  feature) + LLM-consumable metrics (`docs/NORTH-STAR.md`).
-- **Phase restated:** dev; the map exists and is deterministic, but the founder's A5 test failed
-  on intelligibility. V0/V1 isolated H2; V2 locked the view contract; V3 chose the idiom inside
-  each slot before code.
-- **How this session serves the north-star:** it prevents V4 from polishing an untested chart
-  idiom, and it records the ranking defect that would otherwise survive into the founder test.
-  **Drift: NONE.**
+- **Goal restated:** a CLI emitting heuristics + the maintainer birdseye map (core) +
+  LLM-consumable metrics (`docs/NORTH-STAR.md`).
+- **Phase restated:** dev; the map existed and was deterministic, but the founder's A5 test
+  failed on intelligibility. V0–V3 diagnosed and chose idioms; **V4 is the first implementation
+  of the locked slots** and the schema support they need.
+- **How this session serves the north-star:** it turns the tested brief/bars/bars idioms into
+  the shipped first screen and adds complete, deterministic drill paths, so the V6 founder test
+  judges the intended views rather than prototypes. **Drift: NONE.**
 - **Holdout:** django/postgres were not rendered, read, or used as data (V6/A2b intact).
 
-## This session — V3 idiom A/B
-### Protocol
-- Pre-registration committed first (`1f042af`, `docs/evidence/map-vision/v3/prereg.md`):
-  6 candidates, prototype-only data transforms, blind singles/pairs, decision rule.
-- **18 data-driven prototypes** (2 idioms × 3 slots × 3 repos) from `out-i5b` schema-1.6
-  scans; Playwright 1440 wide; manifest sha256 `63f6e0da…`.
-- **18 blind single reads + 9 blind pairwise reads** (`reads.json`), one image per single, no
-  source/siblings; pairs compare the two candidates of one slot+repo in pre-registered A/B
-  order.
-- Post-prereg corrections disclosed: KV3 ranking gained startup demotion (locked spec
-  wins over prereg) and scale/row parity; KV2 matrix rows changed to production-first
-  includers after the first cJSON render hid the production dependents of `cJSON.h`
-  (all 3 matrices re-rendered and re-read; all 9 pairs ran after the correction).
+## This session — V4 implementation
+### Commits
+| Commit | Scope |
+|---|---|
+| `bc887ef` | schema 1.7 — `files[].path_class` + `stats.functions[].trip_count_source`/`known_trip_value`, classifier, provenance, both schema copies, docs, field tests, goldens |
+| `de93292` | key views — KV1 brief, KV2/KV3 bars, Explorer tier, `profile-queue` + ranked `findings-detail`, output contract |
+| `0bd6d08` | keep `ARCH-001`/`ARCH-003` in KV1 (only `ARCH-002` suppressed), full KV2 paths, plural counts |
+| `ae50e61` | KV1 rank-key line, same-location notes, demoted bars, `Key views` nav |
+| `f896631` | dual bar scale (ranked vs demoted) so outliers cannot flatten the ranked bars |
+| `882ddce` | review round 2 — `report.md` KV3 parity, exact `top P%` anchors, cap disclosures, docs/tests |
+| `2ec547c` | V4 vision evidence (`reads.json`, `manifest.json`, 12 PNGs) + shipped-key recall reproducer |
+| EOL | state/handoff/CHANGELOG |
 
-### Decisions (pair vote: winner=1, tie=0.5, ≥2/3)
-| Slot | Winner | Vote | Conf (pairs) | What would change it (full text in `map-idiom-ab.md` §5) |
-|---|---|---|---|---|
-| **KV1 Start here** | text-first ranked brief | **2.0 / 1.0** | 0.70, 0.72, 0.70 | V5 blind reads still fail to name an action after the V4 message/truncation fixes → cards; a ≤900 px card layout wins a re-run 2/3; founder prefers inline code evidence. |
-| **KV2 Blast radius** | horizontal dependents bars | **3.0 / 0.0** | 0.85, 0.93, 0.78 | a matrix with full-path column labels + ranked totals row wins a re-run 2/3; Q2 moves to component units; founder wants the dependent list inline. |
-| **KV3 Profile queue** | horizontal cost bars | **3.0 / 0.0** | 0.85, 0.82, 0.85 | V5 shows the no-loop guard hides a genuine hot leaf → per-iteration cost / two-list variant *before* an idiom change; a treemap with `path:line` + rank labels wins a re-run. |
+### What shipped
+- **KV1 Start here** — text-first ranked brief, top 5 inline with rank, `path:line`, function,
+  rule title, severity/confidence, path class, full rationale, cost unit + anchors; complete
+  list at `findings-detail.html#ranked-actions`. Ranking: production → severity →
+  confidence → containing-function cost → `finding_id`; only `-ARCH-002` component aggregates
+  suppressed (counted).
+- **KV2 Blast radius** — horizontal dependents bars, top 8, full paths, `N dependents · % of
+  scanned files · top P%`, `× median` only when median > 0, `resolved N of M`; **no
+  production-first demotion** (V2 lock; rows label their `path_class`).
+- **KV3 Profile queue** — horizontal cost bars, top 8 ranked + 2 labelled demoted, dual bar
+  scale, unknown/known-trip badges, startup/no-loop demotions counted; complete list at
+  `profile-queue.html`.
+- **Tiering/contract** — first screen is KV1; all 8 legacy stems under `<section id="explorer">`
+  (`Explorer` nav + `Key views` nav entry); new `profile-queue.md/.html`; `report.md` §1
+  carries the ≤5-row briefs and §5 is Explorer; output contract + README updated.
+- **Schema 1.7** — additive only (no `required` list grew), optional on the wire; classifier
+  order test → example → bench → fixture → generated → vendor → production; `scripts/`,
+  `tools/`, `ci/`, `.github/` are `bench`; `compat/` is production; trip provenance
+  `literal|partial|unknown` + clamped `known_trip_value`.
+- **V4 fix list** — ARCH-002 suppressed from KV1 (not an analyzer-message edit); full
+  rationale (no `…`); one KV2 action line; `scripts/` decision; 900px card rule recorded.
 
-### The recall finding (deterministic, not a vote)
-Ranks of the 9 pre-registered actions in each candidate's full ordering:
-- **KV1 Q1:** tmux `input_parse` **210/7,545**, hyperfine `Benchmark::run` **197/348**, cJSON
-  `parse_number` **35/837** — none inline; the views name `format_replace` / `print` /
-  `apply_patch` instead. The locked severity key is the problem, not the brief (V7).
-- **KV2 Q2:** tmux.h **1/216**, src/command.rs **4/53**, cJSON.h **1/101** — all inline;
-  bars satisfy recall.
-- **KV3 Q3:** `screen_write_collect_add` **811/3,189**, `execute_and_measure` **66/353**,
-  `cJSON_New_Item` **58/1,055** — all no-loop and demoted; tmux's target is a per-byte leaf
-  whose call frequency is invisible to static cost (H1 for call weights). V5 falsifier.
+### Vision gate
+9 blind key-view reads + re-reads + final per-repo gate: **APPROVED** for tmux, cJSON and
+hyperfine (all key views + first screens). Evidence: `docs/evidence/map-vision/v4/reads.json`,
+`manifest.json`, 12 PNGs. Defects found and fixed: unstated KV1 rank key, duplicate-looking
+rows, zero-length demoted bars, then a flattened cJSON KV3 scale (dual-scale fix).
 
-### Other findings / V4 fix list
-- **ARCH-002 `Hot component` message** describes a directory aggregate while the row anchors a
-  file:line (tmux #1, cJSON #1) — fix message selection or suppress component rows from KV1.
-- **Rationale truncation** (4/5 brief rows end in `…`); key-view text rows are exempt from the
-  32-char cap — show the full why.
-- **Duplicate KV2 action caption** (header + caption) — keep one.
-- **`scripts/` classification:** hyperfine `scripts/plot_*.py` counted production under the
-  prototype proxy — decide the V4 `path_class` rule.
-- **KV1 cards** are 1635 px (not one screen); any future card idiom must fit 900 px or be
-  labelled explorer-tier.
-- **KV2 median-in-degree = 0** (tmux/cJSON) makes `× median dependent count` undefined; use
-  `% of scanned files` + `top P%` (hyperfine keeps 6.0×). **KV2 production-first is a proposed
-  V2 amendment pending founder ratification**; V2's KV1/KV3 scope stands until then.
+### Recall (do not overclaim)
+Shipped-key ranks: tmux Q1 **209/7543**, Q3 **820/3189**; hyperfine Q1 **172/346**, Q3
+**58/353**; cJSON Q1 **37/835**, Q3 **60/1055** — still not inline. KV2 is inline in all three
+(tmux 1/216, hyperfine 6/53, cJSON 4/101). **A1b is not claimed closed on severity**; V7 owns
+the KV1 rank-key re-triage; V5 tests the KV3 no-loop guard. Reproducer:
+`docs/evidence/map-vision/v4/recall_ranks_v4.py`.
 
 ## Verification
 | Claim | Command / evidence | Result |
 |---|---|---|
-| Docs/evidence only, no code/golden | `git diff --quiet HEAD -- src tests/golden` | exit 0 |
-| V3 artifact gate | `python3 docs/evidence/map-vision/v3/render/check_v3.py` | **PASS** (18 renders 1440px, 18 singles + 9 pairs, 3 decisions + triggers, specs mirrored, no holdout leak) |
-| Recall ranks reproducible | `python3 docs/evidence/map-vision/v3/render/recall_ranks.py` | **9/9** match `map-idiom-ab.md` §4 |
-| Task gate (full) | `task-gate.sh` (11 commands: diff, gate, recall, spec/decision greps, D-pf-230, holdout, no-src change) | **11/11 PASS** |
-| Review (code) | reviewer round 2 (after 2 must-fixes + suggestions) | **APPROVED** |
-| Review (requirements) | requirements-reviewer | **APPROVED** (8/8) |
-| Holdout | `check_v3.py` + grep: no django/postgres in renders/reads/manifest data | pass |
-| V2 lock intact | spec table unchanged; KV2 amendment flagged pending | pass |
-| `map-build` not done | `docs/plans/map-build.md:4` | `active` |
+| Schema 1.7 additive + byte-identical | `cargo test --locked --test schema_1_7`; `cmp docs/schema/metrics.schema.v1.7.json src/schema/metrics.schema.v1.7.json` | **4/4 pass**; identical |
+| Key views + drill lists | `cargo test --locked --test key_views`; rendered `out-v4-{tmux,hyperfine,cJSON}` | pass; artifacts present |
+| Vision gate | `docs/evidence/map-vision/v4/reads.json` → `final_gate` | **APPROVED** (3 repos, 9 views + 3 first screens) |
+| Full gate | `cargo fmt --all -- --check`; `cargo clippy --locked --all-targets -- -D warnings`; `cargo test --locked`; `cargo deny check licenses` | **0 / 0 / 52 suites 0 failures / licenses ok** |
+| Feature gate | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings`; `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | exit 0 |
+| Golden double-regen | `PERFPAL_REGEN_GOLDEN=1 cargo test --test p6_hardening regenerate_goldens` twice; `git status` after | byte-identical, no diff |
+| V3 gates | `check_v3.py`; `recall_ranks.py` | PASS; 9/9 |
+| V4 recall | `recall_ranks_v4.py` | 9/9 shipped-key match |
+| Dual review | `@reviewer` + `@requirements-reviewer` round 2 | **both APPROVED** |
+| Holdout / plan state | grep V4 evidence; `docs/plans/map-build.md:4` | no django/postgres data; `map-build` **active** |
 
 ## Risks / Open
-- **R-pf-105 (medium, new):** KV1 severity rank misses Q1 inline (210/197/35); KV3 no-loop
-  guard hides a per-byte leaf (rank 811). **V7** rank-key re-triage; **V5** guard falsifier;
-  KV2 production-first amendment needs the founder.
-- **R-pf-104 (high):** map intelligibility; V3 idioms chosen, founder timed A2 remains the
-  gate (V6).
-- **R-pf-098/099/100:** unchanged; V7.
-- **KV1 order/confirmation caveat:** winners were B/B/A (tmux B, hyperfine B, cJSON A) and the
-  brief was already V2's named candidate; a randomized re-run is the cheapest falsifier before
-  V6.
+- **R-pf-105 (medium):** shipped-key KV1 ranks are still not inline (209/172/37 for Q1; Q3
+  820/58/60) → **V7** re-triage; **V5** tests the KV3 no-loop guard.
+- **R-pf-104 (high):** map intelligibility; founder timed A2 remains the gate (V6).
+- **Founder decisions before V6:** KV2 production-first amendment (cJSON `cJSON.h` is otherwise
+  buried by unity test headers); randomized pair re-run (KV1 was B/B/A and partly confirmatory).
+- **V4 non-blocking follow-ups:** KV2 `top P%` vs `% of scanned files` wording risk (V5
+  observation); mixed v1/v2 rank scale for legacy documents; KV1 comparator recomputes the
+  containing function (O(N log N·k)); `report.md` KV2 grammar “1 of 1 files”; the pre-existing
+  `perfpal perfpal` meta-line duplication.
 - **Blockers unchanged:** B-pf-001 (contact), B-pf-002 (secrets) for M5.
 
 ## Next Actions — NEW SESSION SIGNPOST
-1. **New session** with: **plan `map-intelligibility` (V4), specs `map-intelligibility` +
-   `maintainer-map`, evidence `docs/evidence/map-idiom-ab.md` + `map-data-coverage.md` §8,
-   handoff `state/handoff/latest.md`.** V3 prereg `1f042af`; results commit this session.
-2. **V4 first:** implement KV1 brief + KV2 bars + KV3 bars; add `files[].path_class` and
-   `stats.functions[].trip_count_source`/`known_trip_value` (schema 1.6→1.7, both optional on
-   the wire); wire the output contract + drill lists; fix the V4 list above. Then **V5** (two
-   blind reads per key view) → **V6** founder timed holdout (include django/postgres) → V7 →
-   V8.
-3. **Before V6:** decide the KV2 production-first amendment and consider the randomized pair
-   re-run.
+1. **New session** with: **plan `map-intelligibility` (V5), specs `map-intelligibility` +
+   `maintainer-map`, evidence `docs/evidence/map-idiom-ab.md` + `map-data-coverage.md` §8 +
+   `docs/evidence/map-vision/v4/reads.json`, handoff `state/handoff/latest.md`.**
+2. **V5:** for each key view, two fresh blind `@vision` reads on tmux/hyperfine/cJSON (no source,
+   no sibling views); read-aloud description first, then strict JSON
+   `{question_answered, action, blockers, confidence}`; iterate until both name the question and
+   one concrete action; commit transcripts. The shipped views and the V4 recall ranks are the
+   baseline.
+3. **Before V6:** founder decides the KV2 production-first amendment and whether to run the
+   randomized pair re-run; V6 includes django/postgres (holdout).
 4. **Do not mark `map-build` done.** M5 needs B-pf-001 + B-pf-002 (founder-owned).
+5. **Do not claim A1b closed on severity.** V7 re-triages the KV1 rank key.
 
 ## Change set (this session)
-- **New evidence:** `docs/evidence/map-idiom-ab.md`; `docs/evidence/map-vision/v3/`
-  (`prereg.md`, `manifest.json`, `reads.json`, `recall_ranks.json`, 18 PNGs,
-  `render/{generate,render,check,recall_ranks}.py`).
-- **Modified docs:** `docs/specs/map-intelligibility.md` + `docs/specs/maintainer-map.md`
-  (V3 decision section), `CHANGELOG.md`, `.gitignore` (`__pycache__`/`*.pyc`).
-- **State:** `state/session-state.json` (D-pf-230, R-pf-105, A-pf-105, phase),
-  `docs/activeContext.md`, this handoff.
-- **No code/golden change**; `map-build` stays active.
-- **Commits:** V3 prereg `1f042af`; V3 results + EOL commits this session.
+- **Code:** `src/reporter/views.rs` (new), `src/reporter/mod.rs`, `src/aggregator/path_class.rs`
+  (new), `src/aggregator/mod.rs`, `src/schema/mod.rs` + `metrics.schema.v1.7.json`
+  (docs + embedded copy), `src/cli/mod.rs`, test fixtures, `tests/key_views.rs` (new),
+  `tests/schema_1_7.rs` (new), `tests/i4_annotations.rs`, `tests/p6_hardening.rs`, goldens (4 trees).
+- **Docs:** `docs/specs/map-intelligibility.md` (V4 notes), `docs/specs/maintainer-map.md` (V3/V4
+  mirror), `docs/report/output-contract.md`, `docs/schema/metrics-json-v1.md`, `README.md`,
+  `CHANGELOG.md`, `docs/evidence/map-idiom-ab.md` (V4 re-measure note).
+- **Evidence:** `docs/evidence/map-vision/v4/` (12 PNGs, `reads.json`, `manifest.json`,
+  `recall_ranks_v4.py/.json`, `render_v4.py`).
+- **State:** `state/session-state.json` (D-pf-231, R-pf-105, A-pf-106, phase),
+  `state/archive/ledger.jsonl` (hot-state demotions), `docs/activeContext.md`, this handoff.
+- **No new dependency; no JS; no new SVG chart.**
