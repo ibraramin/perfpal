@@ -7,7 +7,7 @@ STEMS = ["include-graph", "layer-file", "layer-entry", "component-coupling",
          "hot-components", "layer-workspace", "layer-bands", "layer-findings"]
 EXE = "/home/shafin/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome"
 
-manifest = {"generated": "2026-10-21", "viewport": "1440x900 @ 100% zoom (device_scale_factor=1)",
+manifest = {"generated": "2026-10-21", "viewport": "1440x900 @ 100% zoom (device_scale_factor=1)",  # NOTE: writes manifest_stems.json; the curated manifest.json is hand-maintained + not overwritten
             "note": "standalone stem PNGs use natural width when the SVG exceeds 1440px so the whole chart is visible; report img sizes are the actual rendered CSS size inside report.html",
             "report_rendered": [], "stems": []}
 
@@ -44,6 +44,6 @@ with sync_playwright() as p:
                                        "png": [vw, vh], "file": f"{repo}/{stem}.png"})
     browser.close()
 
-with open(f"{OUT}/manifest.json", "w") as f:
+with open(f"{OUT}/manifest_stems.json", "w") as f:
     json.dump(manifest, f, indent=1)
 print(json.dumps(manifest, indent=1))

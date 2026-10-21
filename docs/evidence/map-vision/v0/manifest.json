@@ -601,7 +601,7 @@
     3130,
     900
    ],
-   "note": "read describes a 3130px canvas, not the 1440 viewport"
+   "note": "read at natural width (3130px canvas, not the 1440 viewport)"
   },
   {
    "view": "hyperfine/layer-file",
@@ -613,7 +613,19 @@
     3130,
     992
    ],
-   "note": "not read; listed for completeness"
+   "note": "read at natural width"
+  },
+  {
+   "view": "hyperfine/layer-bands",
+   "svg": [
+    1634,
+    1368
+   ],
+   "png": [
+    1654,
+    1388
+   ],
+   "note": "read at natural width"
   },
   {
    "view": "hyperfine/layer-findings",
@@ -625,7 +637,7 @@
     3130,
     992
    ],
-   "note": "not read; listed for completeness"
+   "note": "read at natural width"
   },
   {
    "view": "tmux/layer-bands",
@@ -662,5 +674,6 @@
    "cJSON/report-first-screen.png"
   ],
   "duplicate_read": "tmux/report-map p1+p2"
- }
+ },
+ "manifest_repro": "docs/evidence/map-vision/v0/render/render_v0_stems.py writes manifest_stems.json (stem dims only); this curated manifest.json additionally carries report_pngs, off_viewport_reads, read_coverage and the canonical note."
 }

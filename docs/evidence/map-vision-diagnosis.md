@@ -19,9 +19,9 @@
 | Model | `@vision` (image-only) |
 
 Two protocol notes: the 3 `report-first-screen.png` captures are artifacts but were **not**
-vision-read (the "first screen" in the tables is the top of `#map`, `report-map.png`); and 5
-standalone stems exceed 1440 px (hyperfine `include-graph`/`layer-file`/`layer-findings`,
-tmux/cJSON `layer-bands`) and were captured at natural width so no chart is cropped — the
+vision-read (the "first screen" in the tables is the top of `#map`, `report-map.png`); and 6
+standalone stems exceed 1440 px (hyperfine `include-graph`/`layer-file`/`layer-findings`/
+`layer-bands`, tmux/cJSON `layer-bands`) and were captured at natural width so no chart is cropped — the
 `hyperfine/include-graph` read therefore describes a 3130 px canvas, not the 1440 viewport.
 Render scripts are committed at `docs/evidence/map-vision/v0/render/`.
 
