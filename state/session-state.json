@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "I5 PROOF DELIVERABLE DUAL APPROVED (code+requirements round 3 on f6fa74b) — post-approval C-language guard on the resolver-Ok tier signal; gate 688/691; founder A5 timed quote pending → plan closeout; map-quality R-pf-098/099/100 queued; M5 gated B-pf-001/002.",
+  "current_phase": "I5 A5 FAILED (founder: map unintelligible, 2026-10-21). Proof deliverable dual APPROVED, but A5 judges the idiom wrong; map-build is NOT done and has no I6. Successor plan/spec `map-intelligibility` is active (vision-loop diagnosis H1 data vs H2 visuals; two visual tiers; vision gate). M5 still gated B-pf-001/002.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 0,
@@ -38,24 +38,14 @@
       "title": "CLI surface v1 + exit codes 0/1/2/3"
     },
     {
-      "id": "D-pf-223",
-      "status": "live",
-      "title": "I5 evidence: docs/evidence/i5-map-proof.md — gate 687, 9-repo double-scan identical, semantic tier verified (libclang 23.1), A-pf-095 true 9/172 + top-node 1/27; A4 captions fixed; feature-build golden comparator default-only; map-quality findings R-pf-098/099/100"
-    },
-    {
-      "id": "D-pf-224",
-      "status": "live",
-      "title": "I5 review round 1: code APPROVED; requirements CHANGES_REQUESTED → fixed G4 (semantic report boilerplate now tier-aware + locked test), G5/G6/G7 (dossier citations/wording, activeContext), G8/G9 (persisted determinism/gate evidence docs/evidence/i5-determinism.txt, parse-partial disclosure), G2 (A5 timing disclosed unmeasured); final gate 688 default / 691 feature; R-pf-103 semantic-golden coverage queued; founder A5 still pending"
-    },
-    {
-      "id": "D-pf-225",
-      "status": "live",
-      "title": "I5 review round 2: both seats CHANGES_REQUESTED → fixed (tier predicate now also honors parse_health.resolver==Ok + zero-finding test; HTML explicit tier sentence; hot-components link caption candidate; output-contract tier-conditional caveat; i5-blind-a5 timing fields; i5-prodhot.json; dossier B1/B2 citations). Gate 688/691; round 3 pending; founder A5 pending."
-    },
-    {
       "id": "D-pf-226",
       "status": "live",
       "title": "I5 proof deliverable DUAL APPROVED (code + requirements, round 3). Post-approval: resolver-Ok tier signal language-gated to C (reviewer precision note) + non-C negative test; gate re-run 688 default / 691 feature. Only the founder timed A5 quote remains before markPlanDone map-build."
+    },
+    {
+      "id": "D-pf-227",
+      "status": "live",
+      "title": "I5 A5 FAILED on intelligibility (founder verbatim in docs/evidence/i5-map-proof.md 7.3: cannot understand anything). Per spec the idiom is judged wrong, not the data. map-build has no I6; successor spec/plan map-intelligibility (vision-loop diagnosis H1 vs H2, answer-first key views vs labelled info-dumps, mandatory @vision gate) is the next node before JS/TS + paper. Visual rule added to AGENTS.md + maintainer-map spec. I5 proof deliverable remains dual APPROVED."
     }
   ],
   "open_risks": [
@@ -106,6 +96,12 @@
       "status": "open",
       "severity": "low",
       "title": "Feature-build golden comparator is default-build-only, so the semantic tier has no committed-golden lock (covered by resolver_health + double-run determinism). Add a semantic-specific golden set (A-pf-103)."
+    },
+    {
+      "id": "R-pf-104",
+      "status": "open",
+      "severity": "high",
+      "title": "The birdseye map is unintelligible to the founder/human maintainer (I5 A5 FAIL). Cause not yet isolated: H1 missing data vs H2 visuals not doing the data justice; vision-loop diagnosis is V0/V1 of plan map-intelligibility."
     }
   ],
   "blocked_by": [
@@ -163,13 +159,18 @@
     },
     {
       "id": "A-pf-097",
-      "status": "active",
-      "action": "I5 closeout: founder A5 quote + dual review (reviewer + requirements-reviewer), then mark map-build done and commit."
+      "status": "blocked",
+      "action": "I5 closeout BLOCKED by A5 FAIL (founder intelligibility). Do not mark map-build done; successor plan map-intelligibility takes the map work."
     },
     {
       "id": "A-pf-103",
       "status": "active",
       "action": "Semantic-tier golden coverage (R-pf-103): add a small semantic-specific golden set or equivalent regression lock for chart/report topology under --features semantic-clang."
+    },
+    {
+      "id": "A-pf-104",
+      "status": "active",
+      "action": "NEXT: plan map-intelligibility V0-V8 - vision-model diagnosis, data-coverage audit, two-tier visual methodology, key-view redesign, vision validation, founder timed test; then re-triage R-pf-098/099/100."
     }
   ],
   "last_updated": "2026-10-21"

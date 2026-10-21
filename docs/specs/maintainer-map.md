@@ -29,5 +29,23 @@ findings ride as annotations on the map, never as a list to cross-reference by h
 Static-only, no-build, musl-static, byte-identical double-scan, offline SVG/HTML, additive schema only.
 JS+TS backends and the paper queue behind the map.
 
+## Visual intelligibility (founder directive, 2026-10-21)
+
+The I5 human A5 test **failed** ("I can't understand anything"). The successor spec
+`map-intelligibility` governs the fix. Durable rules from this point:
+
+- **Two tiers.** *Answer-first key views* must let a maintainer unfamiliar with the repo name
+  a concrete action in plain language; *explorer / info-dump stems* may be dense but must be
+  labelled as such and must never be the only path to an answer.
+- **Vision gate.** Every chart/visual change is reviewed by `@vision` against this
+  methodology before it is claimed done: what it communicates, what cannot be answered, which
+  maintainer question it serves. Transcripts are evidence.
+- **No orphan views.** Every key view names its question and the action it enables; a view
+  that answers nothing is removed or demoted.
+- **Plain language first.** Jargon stays in the explorer tier; key views use maintainer words
+  ("what breaks if I change this", "where is time likely going", "what is safe to ignore").
+- The honesty contract above is unchanged: candidates, caps, stubs and LOW labels survive
+  any redesign.
+
 ## Non-goals
 Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runtime truth claims.

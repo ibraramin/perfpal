@@ -1,57 +1,51 @@
 # Active Context
 
 ## Current Task
-I5 (map-build) proof + demo **executed; review rounds 1–2 fixed** — `docs/evidence/i5-map-proof.md`.
-- Gate: 50 suites / **688** tests (feature: 691), fmt+clippy+deny green.
-- Determinism: committed-golden double regeneration identical (`749162…`); 9/9 demo repos
-  double-scan byte-identical modulo provenance; transcript `docs/evidence/i5-determinism.txt`.
-- Semantic tier: libclang 23.1 verified; cJSON 837→1,162, curl 10,985→11,807; ARCH-003
-  LOW→MEDIUM; 115/1,548 resolved C edges. Report boilerplate tier-aware, including the
-  resolver-Ok / zero-semantic-finding edge case.
-- A-pf-095: true GENUINE 9/172 = 5.2% (`i5-prodhot.json`); supplementary top-3 calibration
-  1/27 GENUINE.
-- Demo: 9/9 repos all stems + 4–50 pages; two blind map-only maintainers named 3 actions
-  each → A5 PASS on action-naming, **timing + founder quote still pending**.
-- A4 captions fixed; feature-golden comparator default-only; goldens regenerated.
-- **Dual review (proof deliverable): APPROVED** — code + requirements round 3 on `f6fa74b`;
-  post-approval precision note (resolver-Ok tier signal C-only) applied + gate re-run.
+**I5 proof DONE, A5 FAILED (founder intelligibility), `map-build` not closed.**
+- Gate: 50 suites / **688** default, **691** feature; fmt+clippy+deny green.
+- Determinism: goldens double-regen identical (`749162…`); 9/9 demo repos double-scan
+  identical; transcript `docs/evidence/i5-determinism.txt`.
+- Semantic tier: libclang 23.1 verified; cJSON 837→1,162, curl 10,985→11,807; report
+  boilerplate tier-aware (incl. resolver-Ok / non-C guard).
+- A-pf-095: true GENUINE **9/172 = 5.2%** (`i5-prodhot.json`); supplementary top-3
+  calibration 1/27 GENUINE.
+- Dual review: code + requirements **APPROVED** (proof deliverable, round 3).
+- **Founder A5: FAILED** — "I can't understand anything, I doubt anyone will"
+  (`docs/evidence/i5-map-proof.md` §7.3). Per spec the idiom is judged wrong, not the data.
+  I5 was the last node; **there is no I6**.
 
 ## Recent Decisions
-- **D-pf-225 (live):** I5 review round 2 — both seats CHANGES_REQUESTED → tier predicate also
-  honors `parse_health.resolver == Ok` (+zero-finding test), HTML explicit tier sentence,
-  `hot-components` link caption candidate, output-contract caveat, timing JSON fields,
-  `i5-prodhot.json`, dossier B1/B2 citations. Round 3 pending.
-- **D-pf-224 (live):** I5 review round 1 — code APPROVED; requirements CHANGES_REQUESTED →
-  G4 tier-aware boilerplate, G5/G6/G7 docs, G8/G9 evidence persistence, G2 timing disclosure.
-- **D-pf-223 (live):** I5 evidence — gate 687 at that commit, 9-repo double-scan, semantic
-  tier, true GENUINE 9/172 + top-node 1/27; map-quality R-pf-098/099/100.
-- *(Cold `state/archive/ledger.jsonl`: D-pf-217/218–222, R-pf-007/094–096, done
-  A-pf-095/097 — append-only.)*
+- **D-pf-227 (live):** A5 FAIL → successor spec/plan **`map-intelligibility`** (vision-loop
+  diagnosis H1 data vs H2 visuals; answer-first key views vs labelled info-dumps; mandatory
+  `@vision` gate; founder timed retest). Visual rule added to `AGENTS.md` +
+  `maintainer-map` spec. `map-build` stays un-done.
+- **D-pf-226 (live):** proof deliverable dual APPROVED; resolver-Ok tier signal C-only.
+- *(Cold `state/archive/ledger.jsonl`: D-pf-217…225 review rounds/I1–I4, R-pf-007/094–096/
+  101/102, done A-pf-095/097 — append-only.)*
 
 ## In Progress
-- I5 closeout: proof deliverable **dual APPROVED**; post-approval C-language guard committed
-  next. **Only the founder timed A5 quote remains** before `markPlanDone map-build`.
+- Session closed. Nothing in flight; working tree committed.
 
 ## Next
-- **I5 closeout:** founder A5 verbatim (timed) → dossier §7.3; `markPlanDone map-build`.
-- **Then map-quality burst (new session):** A-pf-098 entry-detection strata (R-pf-098,
-  high), A-pf-099 production-path ranking + known-trip guard (R-pf-099), A-pf-100
-  density denominator guard (R-pf-100), A-pf-103 semantic goldens (R-pf-103, low).
+- **NEW SESSION:** plan **`map-intelligibility`** V0 — run `@vision` over the 8 overview
+  stems (tmux, hyperfine, cJSON), record what each communicates/cannot answer → 
+  `docs/evidence/map-vision-diagnosis.md`; then V1 data-coverage audit (H1 vs H2), V2
+  methodology lock, V3 idiom A/B, V4 implement, V5 vision loop, V6 founder timed test,
+  V7 re-triage R-pf-098/099/100, V8 closeout.
+- **Signpost:** plan `map-intelligibility`, specs `map-intelligibility` + `maintainer-map`,
+  commits `6f31a4f` / `dbb9bbe`, handoff `state/handoff/latest.md`.
 - M5 needs B-pf-001 + B-pf-002 (founder-owned, A-pf-080).
 
 ## Blockers
-- **M5 publish:** `B-pf-001` + `B-pf-002` — unchanged, founder-owned.
-- **I5 closeout:** founder A5 quote (human input) — not a code blocker.
+- **Map legibility:** R-pf-104 (high) — the core feature is unreadable; new plan chartered.
+- **M5 publish:** B-pf-001 (contact) + B-pf-002 (secrets) — founder-owned.
 - **Paper track:** prered + scans + stats + Zenodo PENDING (PARKED behind the map).
 
 ## History
-- **L2 split (2026-09-29)** · **L6 pinned (2026-10-01)**, realigned 2026-10-17 twice
-  (divergence instrument, then map-first core) · **first audit (2026-10-16)**.
+- **L2 split (2026-09-29)** · **L6 pinned (2026-10-01)**, realigned 2026-10-17 twice · **first audit (2026-10-16)**.
 - **Sessions 47–50:** instrument mega-burst → vision fixes → group-fold → C-full + audit/archive.
 - **Grading burst:** rev-1 APPROVED / req-1 BLOCKED / ora-2 C- → D-pf-214 → EOL (`e4c2993`).
-- **Map research:** des-1/exp-2 map research (lib-2 errored, superseded by R1) → D-pf-215 → planning commit.
-- **I1+I2 burst:** entries C/Rust/Python → cost-v2 → `e0df47a` state closeout.
-- **I3 burst:** entry-stratified map + bands (`d78bb85`), 679 tests, dual APPROVED.
-- **I4 burst:** annotations + `layer-findings.svg` + drill path (`f56d072`), 687 tests.
-- **This burst:** I5 proof + 9-repo demo — negative results recorded (entry strata,
-  cost rank, density rank); A4 captions + feature-golden gate fixed.
+- **Map research:** R1–R4 → D-pf-215 → planning commit.
+- **I1+I2:** entries C/Rust/Python + cost-v2 (`e0df47a`); **I3:** entry map + bands (`d78bb85`);
+  **I4:** annotations + findings stem (`f56d072`); **I5:** proof + demo + **A5 FAIL**
+  (commits `dbb9bbe`→`6f31a4f`), successor plan created.

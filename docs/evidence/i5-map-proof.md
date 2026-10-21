@@ -267,16 +267,36 @@ and the 8 SVGs. Both returned `ambiguous=false` and named three actions:
 
 Both noted the same caveats this dossier records: the entry layer is degenerate (0 resolved
 edges in the default build; strata = entries only), and `fuzz`/`examples`/`tests`
-components can rank #1 on tiny denominators. **A5 verdict: PASS with documented caveats** —
-the map is usable, but the ranking needs the `R-pf-098/099/100` fixes before "rank #1" is
-trustworthy. **Timing:** not measured for these asynchronous agent runs; the spec's
-"under 10 minutes" bound is therefore unverified for the blind tests and must be timed on the
-founder run (§7.3).
+components can rank #1 on tiny denominators. **Blind verdict: PASS with documented caveats**
+— the agents could extract actions. **Founder verdict: FAIL on intelligibility (§7.3)** —
+the human maintainer could not. The ranking needs the `R-pf-098/099/100` fixes, and the
+visual language needs the `map-intelligibility` redesign before "rank #1" is trustworthy.
+**Timing:** not measured for these asynchronous agent runs; the spec's "under 10 minutes"
+bound is therefore unverified for the blind tests and did not license the founder PASS.
 
-### 7.3 Founder test (verbatim)
+### 7.3 Founder test (verbatim) — **FAILED (intelligibility)**
 
-**PENDING** — founder to name 3 actions from the tmux map (`../perfpal-test/out-i5-tmux/`:
-`report.html` → `#map`). Verdict/quote to be appended before the plan is marked done.
+Founder, 2026-10-21, after opening the tmux map (and the other 8):
+
+> "Honestly, the visuals are all posished and nice, but I can't understand anything, I doubt
+> anyone will undersand anything.
+> Now, there can be 2 reasons,
+> 1. We simply don't have enogh useful information extracted via perfpal. or
+> 2. We have enough information to construct an intuituve and easy to understandable
+> birds-eye-view map of the codebase, it's just that the graphs and figures we are
+> constructing aren't doing the data extracted by perfpal justice.
+> Use a methodology of going back and forth with the vision model to see what's the issue,
+> and from now on, while maijng the graph and charts and anything visual, always consult the
+> vision model to make use the visual elemtn adheres to our project methodology (not all
+> graphs has to be completely simple and understandable, there has to be ones that are simply
+> info-dumps but some of the key ones has to be easily understandablem, do you get me >)"
+
+**A5 verdict: FAIL.** The human maintainer could not name 3 actions from the map; per the
+spec, **the idiom is judged wrong, not the data**. The blind-agent PASS stands as a
+narrow result (agents can extract actions from chart text), but it does not satisfy the human
+test. The two hypotheses (data insufficiency vs visualisation insufficiency) and the
+vision-model feedback methodology are the next plan's charter (`map-intelligibility`); the
+plan `map-build` is **not** marked done.
 
 ---
 

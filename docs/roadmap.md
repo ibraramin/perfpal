@@ -162,6 +162,22 @@ Attractive showcase site covering the **full scope** (shipped + planned). **Diff
 `~/Perfpal-Website`, versioned independently. Source of truth: `docs/website/scope-and-content.md`
 (brief + sitemap + page content spec) in THIS repo. Not tracked by a plan here.
 
+## Map-first track (post-I5, founder-directed 2026-10-21)
+
+`map-build` ended at **I5** (I1–I5; there is no I6). The I5 human A5 test **failed** —
+the founder judged the visuals unintelligible — so I5 is not closed and the map work moves to
+the successor plan/spec `map-intelligibility`:
+
+1. **Diagnose** with a mandatory `@vision` loop: is the gap data (H1) or visualisation (H2)?
+2. **Redesign the key views** as answer-first (one question each, plain language); keep dense
+   stems only as labelled explorers.
+3. **Vision-gate and founder-test** every key view (unfamiliar repo, 3 actions, <10 min).
+4. **Re-triage** R-pf-098 (entry strata), R-pf-099 (production/literal-trip ranking),
+   R-pf-100 (tiny-scope density) against the new visual/data decisions.
+
+This track runs **before** the JS/TS backends and the paper queue (a core feature nobody can
+read is not shippable). M5 remains gated by B-pf-001/B-pf-002 and is otherwise unaffected.
+
 ## Sequencing rationale
 - **Precision before exposure** (M1) — a noisy first impression on a famous repo is
   irrecoverable (ADR-0005).

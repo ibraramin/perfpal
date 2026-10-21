@@ -24,6 +24,10 @@ LLM-consumable quantified metrics (structured JSON + a human-readable Markdown r
   libclang is a first-class path, and real-parse tests skip — never fail — without it.
 - **Static analysis is approximate, not ground truth:** heuristics flag "optimization candidates", not
   guaranteed bottlenecks; framing must stay careful (an LLM/human validates with runtime profiling).
+- **Visuals are vision-gated (founder directive 2026-10-21):** every chart/figure change must be reviewed
+  by `@vision` against the maintainer-map methodology before it is claimed done. Key views must be
+  answer-first and plain-language; dense explorer/info-dump stems are allowed only when labelled. See
+  `docs/specs/map-intelligibility.md`.
 
 ## Verify (runnable commands)
 - Format: `cargo fmt --all -- --check`
