@@ -84,14 +84,19 @@ A completed scan leaves exactly this layout (default `perfpal-report/`):
 
 ```
 perfpal-report/
-├── metrics.json              # raw machine-readable data (schema v1.6)
-├── metrics.schema.v1.6.json  # byte-copy of the exact schema for this schema_version
-├── report.md                 # human-readable report
+├── metrics.json              # raw machine-readable data (schema v1.7)
+├── metrics.schema.v1.7.json  # byte-copy of the exact schema for this schema_version
+├── report.md                 # human-readable report (answer-first key views)
+├── report.html               # static HTML sibling (key views + Explorer)
+├── findings-detail.md        # complete ranked action list + full finding detail
+├── findings-detail.html      # same detail as HTML tables
+├── profile-queue.md          # complete cost-ranked function list (KV3 drill)
+├── profile-queue.html        # same list as an HTML table
 └── charts/                   # static visualizations (set defined by ADR-0002)
     └── <chart-name>.svg      # e.g. include-graph.svg
 ```
 
-The overview chart set is `include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, and `layer-findings.svg`, plus per-component detail pages (`component-<rank>-<slug>.svg`) and the `graph.dot` export; each chart is emitted only when its source section is present and non-empty (with deterministic stubs where the source exists but is empty), so `charts/` may be empty. Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy); humans can start at `report.md`. Never parse data out of the SVGs — they are advisory.
+The key views (`report.html#map`) are answer-first: KV1 ranked brief, KV2 dependents bars, KV3 cost bars, backed by the complete `findings-detail.*` action list and `profile-queue.*` function list. The eight Explorer stems (`#explorer`) are `include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, and `layer-findings.svg`, plus per-component detail pages (`component-<rank>-<slug>.svg`) and the `graph.dot` export; each chart is emitted only when its source section is present and non-empty (with deterministic stubs where the source exists but is empty), so `charts/` may be empty. Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy); humans can start at `report.md`. Never parse data out of the SVGs — they are advisory.
 
 ## CLI reference
 

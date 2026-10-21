@@ -221,3 +221,26 @@ runtime truth claims; new languages; any change that makes key views denser than
 I5 was the last node of `map-build` (I1–I5; there is no I6). This spec governs the next
 map node, **before** JS/TS backends and the paper queue: a core-feature that nobody can read
 is not a shippable core feature. M5 remains gated by `B-pf-001`/`B-pf-002`.
+## V4 implementation notes (2026-10-22)
+
+- **Idioms shipped** (V3 decisions, committed `bc887ef` schema + this commit): KV1 = text-first
+  ranked brief (≤5 inline rows, full rationale, complete list in
+  `findings-detail#ranked-actions`); KV2 = horizontal dependents bars (≤8, integer CSS widths,
+  one action line); KV3 = horizontal cost bars (≤8 non-demoted + up to 2 labelled demoted rows,
+  complete list in `profile-queue.*`). No cards and no treemap ship.
+- **Component rows suppressed from KV1.** `-ARCH-001/002/003` aggregates are excluded from the
+  action ranking (they remain in `findings-detail`'s rule groups) and counted as
+  "`N` component-level findings in Explorer". The ARCH-002 message defect is therefore fixed by
+  suppression, not by changing analyzer wording.
+- **Rationale truncation:** key views render the full `finding.message`; the 32-char tail-keep cap
+  remains chart-label-only. Duplicate KV2 captions are gone (one action line).
+- **KV2 production-first is NOT applied** — the V2 lock stands and the rows label their
+  `path_class` (including test/bench) instead of demoting. The amendment remains pending founder
+  ratification.
+- **`scripts/` classification:** repo tooling is `bench` in schema 1.7 (aggregator-owned); the
+  decision is documented rather than re-derived in the reporter.
+- **No card idiom ships.** One line for the record: any future card idiom must fit one 900×900
+  reading surface (≤900 px tall) or it is explorer-tier, never a key view.
+- **A1b is not claimed closed on severity.** KV1 recall ranks 210/197/35 remain the V7 rank-key
+  problem; KV3's no-loop guard (which pushes the Q3 targets down) remains the V5 falsifier. The
+  complete lists satisfy traceability, not "look here first".

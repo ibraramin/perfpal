@@ -231,7 +231,7 @@ fn architecture_prose_is_language_conditional_for_rust_only_scan() {
     )];
     let charts = vec!["include-graph".to_string()];
     let report = render_report(&rust_doc(findings), &charts);
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
 
     // The Rust edge kind is named…
     assert!(

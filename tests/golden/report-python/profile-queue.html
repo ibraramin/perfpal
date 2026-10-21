@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Perfpal Profile Queue — schema 1.7</title>
+<style>
+body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+#profile-queue tbody td{white-space:nowrap}
+#profile-queue td.wrap,#profile-queue th{white-space:normal;overflow-wrap:anywhere}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+.kv{margin:1.25rem 0 1.75rem}
+.kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
+.kv-action{margin:.15rem 0 .75rem;color:#444}
+.kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
+.kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}
+.kv-rank{font-size:1.5rem;font-weight:700;line-height:1}
+.kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}
+.kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.kv-loc{font-weight:700;color:#111;text-decoration:none}
+.kv-loc:hover{text-decoration:underline}
+.kv-title{font-weight:600}
+.kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
+.kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
+.sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
+.sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}
+.sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}
+.kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}
+.kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}
+.kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}
+.kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}
+.kv-more{margin:.5rem 0 .2rem;font-weight:600}
+.kv-bars{max-width:100%}
+.kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}
+.kv-brow:last-child{border-bottom:1px solid #999}
+.kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
+.kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
+.kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
+.kv-fill.demoted{background:#a0aec0;width:0}
+.kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
+.kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
+.kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
+@media print{.kv-row,.kv-brow{break-inside:avoid}}
+         </style>
+</head>
+<body>
+<header>
+<h1>Perfpal Profile Queue</h1>
+<p>68 functions ranked by static cost — candidates, confirm with a profiler</p>
+</header>
+<nav>
+<ul>
+<li><a href="report.html">Report</a></li>
+<li><a href="#profile-queue">Profile queue</a></li>
+</ul>
+</nav>
+<section id="profile-queue">
+<h2>Complete cost-ranked list</h2>
+<div class="table-scroll">
+<table>
+<thead><tr><th>rank</th><th>function</th><th>location</th><th>path class</th><th>cost</th><th>notes</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="wrap">triple_nested</td><td class="wrap">03_deep_nesting.py:4</td><td>production</td><td class="wrap">25 static cost units (v2) · 6.3× median · top 5%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×3 — estimate incomplete</span></td></tr>
+<tr><td>2</td><td class="wrap">double_nested</td><td class="wrap">03_deep_nesting.py:14</td><td>production</td><td class="wrap">15 static cost units (v2) · 3.8× median · top 5%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></td></tr>
+<tr><td>3</td><td class="wrap">positional_sum</td><td class="wrap">08_range_len.py:4</td><td>production</td><td class="wrap">15 static cost units (v2) · 3.8× median · top 10%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></td></tr>
+<tr><td>4</td><td class="wrap">eager_materialise</td><td class="wrap">01_alloc_churn.py:38</td><td>production</td><td class="wrap">11 static cost units (v2) · 2.8× median · top 10%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>5</td><td class="wrap">loop_invariant_construction</td><td class="wrap">01_alloc_churn.py:5</td><td>production</td><td class="wrap">11 static cost units (v2) · 2.8× median · top 10%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>6</td><td class="wrap">read_each</td><td class="wrap">04_stdio_churn.py:4</td><td>production</td><td class="wrap">11 static cost units (v2) · 2.8× median · top 10%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>7</td><td class="wrap">index_scan</td><td class="wrap">07_membership_scan.py:14</td><td>production</td><td class="wrap">11 static cost units (v2) · 2.8× median · top 25%</td><td class="wrap"><span class="kv-badge known">known trip ×3 — verify it actually runs</span></td></tr>
+<tr><td>8</td><td class="wrap">swallow</td><td class="wrap">09_try_in_loop.py:4</td><td>production</td><td class="wrap">11 static cost units (v2) · 2.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>9</td><td class="wrap">contains_any</td><td class="wrap">07_membership_scan.py:4</td><td>production</td><td class="wrap">10 static cost units (v2) · 2.5× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>10</td><td class="wrap">set_membership</td><td class="wrap">07_membership_scan.py:32</td><td>production</td><td class="wrap">10 static cost units (v2) · 2.5× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>11</td><td class="wrap">accumulate_multi</td><td class="wrap">10_comprehension.py:16</td><td>production</td><td class="wrap">8 static cost units (v2) · 2.0× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>12</td><td class="wrap">transform_all</td><td class="wrap">10_comprehension.py:8</td><td>production</td><td class="wrap">8 static cost units (v2) · 2.0× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>13</td><td class="wrap">await_each</td><td class="wrap">14_async_blocking.py:23</td><td>production</td><td class="wrap">8 static cost units (v2) · 2.0× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>14</td><td class="wrap">local_rebuild_is_benign</td><td class="wrap">01_alloc_churn.py:27</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>15</td><td class="wrap">superlinear_concat</td><td class="wrap">01_alloc_churn.py:18</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>16</td><td class="wrap">build_string</td><td class="wrap">02_string_building.py:4</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>17</td><td class="wrap">loop_invariant_prefix</td><td class="wrap">02_string_building.py:12</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>18</td><td class="wrap">log_each</td><td class="wrap">04_stdio_churn.py:14</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>19</td><td class="wrap">copy_each</td><td class="wrap">06_memory_ops.py:6</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>20</td><td class="wrap">position_of</td><td class="wrap">07_membership_scan.py:23</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>21</td><td class="wrap">counter_sum</td><td class="wrap">08_range_len.py:13</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>22</td><td class="wrap">fan_out</td><td class="wrap">11_executors.py:6</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>23</td><td class="wrap">fan_out_once</td><td class="wrap">11_executors.py:13</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>24</td><td class="wrap">fetch_each</td><td class="wrap">12_io_n1.py:4</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>25</td><td class="wrap">append_frames</td><td class="wrap">13_pandas.py:14</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>26</td><td class="wrap">row_wise</td><td class="wrap">13_pandas.py:6</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr><td>27</td><td class="wrap">branchy</td><td class="wrap">05_recursion_complexity.py:16</td><td>production</td><td class="wrap">33 static cost units (v2) · 8.3× median · top 1%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>28</td><td class="wrap">clamp_value</td><td class="wrap">pkg/arch_helpers.py:9</td><td>production</td><td class="wrap">8 static cost units (v2) · 2.0× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>29</td><td class="wrap">ping_b</td><td class="wrap">pkg/cycle_b.py:6</td><td>production</td><td class="wrap">8 static cost units (v2) · 2.0× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>30</td><td class="wrap">walk_down</td><td class="wrap">05_recursion_complexity.py:4</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.8× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>31</td><td class="wrap">hoisted_construction</td><td class="wrap">01_alloc_churn.py:13</td><td>production</td><td class="wrap">5 static cost units (v2) · 1.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>32</td><td class="wrap">materialise_outside_loop</td><td class="wrap">01_alloc_churn.py:46</td><td>production</td><td class="wrap">5 static cost units (v2) · 1.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>33</td><td class="wrap">walk_cycle</td><td class="wrap">pkg/cycle_a.py:6</td><td>production</td><td class="wrap">5 static cost units (v2) · 1.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>34</td><td class="wrap">guarded</td><td class="wrap">09_try_in_loop.py:15</td><td>production</td><td class="wrap">4 static cost units (v2) · 1.0× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>35</td><td class="wrap">transform</td><td class="wrap">10_comprehension.py:4</td><td>production</td><td class="wrap">4 static cost units (v2) · 1.0× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>36</td><td class="wrap">fetch_blocking</td><td class="wrap">14_async_blocking.py:8</td><td>production</td><td class="wrap">4 static cost units (v2) · 1.0× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>37</td><td class="wrap">local_only</td><td class="wrap">15_cross_file_and_arch.py:16</td><td>production</td><td class="wrap">3 static cost units (v2) · 0.8× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>38</td><td class="wrap">await_once</td><td class="wrap">14_async_blocking.py:31</td><td>production</td><td class="wrap">2 static cost units (v2) · 0.5× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>39</td><td class="wrap">local_helper</td><td class="wrap">15_cross_file_and_arch.py:11</td><td>production</td><td class="wrap">2 static cost units (v2) · 0.5× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>40</td><td class="wrap">use_cross_file</td><td class="wrap">15_cross_file_and_arch.py:6</td><td>production</td><td class="wrap">2 static cost units (v2) · 0.5× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>41</td><td class="wrap">normalize</td><td class="wrap">pkg/arch_helpers.py:17</td><td>production</td><td class="wrap">2 static cost units (v2) · 0.5× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>42</td><td class="wrap">&lt;module&gt;</td><td class="wrap">01_alloc_churn.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>43</td><td class="wrap">&lt;module&gt;</td><td class="wrap">02_string_building.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>44</td><td class="wrap">&lt;module&gt;</td><td class="wrap">03_deep_nesting.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>45</td><td class="wrap">&lt;module&gt;</td><td class="wrap">04_stdio_churn.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>46</td><td class="wrap">&lt;module&gt;</td><td class="wrap">05_recursion_complexity.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>47</td><td class="wrap">simple</td><td class="wrap">05_recursion_complexity.py:54</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>48</td><td class="wrap">step_once</td><td class="wrap">05_recursion_complexity.py:11</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>49</td><td class="wrap">&lt;module&gt;</td><td class="wrap">06_memory_ops.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>50</td><td class="wrap">copy_once</td><td class="wrap">06_memory_ops.py:14</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>51</td><td class="wrap">&lt;module&gt;</td><td class="wrap">07_membership_scan.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>52</td><td class="wrap">&lt;module&gt;</td><td class="wrap">08_range_len.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>53</td><td class="wrap">&lt;module&gt;</td><td class="wrap">09_try_in_loop.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>54</td><td class="wrap">&lt;module&gt;</td><td class="wrap">10_comprehension.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>55</td><td class="wrap">&lt;module&gt;</td><td class="wrap">11_executors.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>56</td><td class="wrap">&lt;module&gt;</td><td class="wrap">12_io_n1.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>57</td><td class="wrap">fetch_once</td><td class="wrap">12_io_n1.py:12</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>58</td><td class="wrap">&lt;module&gt;</td><td class="wrap">13_pandas.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>59</td><td class="wrap">vectorised</td><td class="wrap">13_pandas.py:22</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>60</td><td class="wrap">&lt;module&gt;</td><td class="wrap">14_async_blocking.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>61</td><td class="wrap">fetch_sync</td><td class="wrap">14_async_blocking.py:18</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>62</td><td class="wrap">pause</td><td class="wrap">14_async_blocking.py:13</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>63</td><td class="wrap">&lt;module&gt;</td><td class="wrap">15_cross_file_and_arch.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>64</td><td class="wrap">&lt;module&gt;</td><td class="wrap">__init__.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>65</td><td class="wrap">&lt;module&gt;</td><td class="wrap">pkg/__init__.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>66</td><td class="wrap">&lt;module&gt;</td><td class="wrap">pkg/arch_helpers.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>67</td><td class="wrap">&lt;module&gt;</td><td class="wrap">pkg/cycle_a.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr><td>68</td><td class="wrap">&lt;module&gt;</td><td class="wrap">pkg/cycle_b.py:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.3× median · top 25%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<footer>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
+</body>
+</html>

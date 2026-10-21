@@ -25,7 +25,39 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 #findings summary::-webkit-details-marker{display:none}
 #findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
 #findings details[open]>summary::before{transform:rotate(90deg)}
-</style>
+.kv{margin:1.25rem 0 1.75rem}
+.kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
+.kv-action{margin:.15rem 0 .75rem;color:#444}
+.kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
+.kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}
+.kv-rank{font-size:1.5rem;font-weight:700;line-height:1}
+.kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}
+.kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.kv-loc{font-weight:700;color:#111;text-decoration:none}
+.kv-loc:hover{text-decoration:underline}
+.kv-title{font-weight:600}
+.kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
+.kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
+.sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
+.sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}
+.sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}
+.kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}
+.kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}
+.kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}
+.kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}
+.kv-more{margin:.5rem 0 .2rem;font-weight:600}
+.kv-bars{max-width:100%}
+.kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}
+.kv-brow:last-child{border-bottom:1px solid #999}
+.kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
+.kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
+.kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
+.kv-fill.demoted{background:#a0aec0;width:0}
+.kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
+.kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
+.kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
+@media print{.kv-row,.kv-brow{break-inside:avoid}}
+         </style>
 </head>
 <body>
 <header>
@@ -43,6 +75,24 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
 <p>8 rules: 9 of 9 total findings (4 hot, 4 warn, 1 info).</p>
 <p><a href="report.html">Back to report.html</a>.</p>
+<section id="ranked-actions">
+<h2>Complete ranked action list (KV1 order)</h2>
+<div class="table-scroll">
+<table>
+<thead><tr><th>rank</th><th>finding_id</th><th>title</th><th>location</th><th>function</th><th>severity</th><th>confidence</th><th>path class</th><th>cost anchor</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><a href="#finding-PERF-C-ALLOC-001-src-main-c-27-21">PERF-C-ALLOC-001:src/main.c:27:21</a></td><td>Heap allocation inside loop</td><td>src/main.c:27</td><td>c_loop</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">15 static cost units (v2) · 5.0× median · top 25%</td></tr>
+<tr><td>2</td><td><a href="#finding-PERF-C-ALLOC-002-src-main-c-29-9">PERF-C-ALLOC-002:src/main.c:29:9</a></td><td>Deallocation inside loop</td><td>src/main.c:29</td><td>c_loop</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">15 static cost units (v2) · 5.0× median · top 25%</td></tr>
+<tr><td>3</td><td><a href="#finding-PERF-C-STR-001-src-main-c-28-9">PERF-C-STR-001:src/main.c:28:9</a></td><td>String accumulation in loop</td><td>src/main.c:28</td><td>c_loop</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">15 static cost units (v2) · 5.0× median · top 25%</td></tr>
+<tr><td>4</td><td><a href="#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9">PERF-RS-ALLOC-003:src/lib.rs:20:9</a></td><td>Growable-buffer additive growth in loop (Rust)</td><td>src/lib.rs:20</td><td>build</td><td>hot</td><td>MEDIUM</td><td>production</td><td class="wrap">20 static cost units (v2) · 6.7× median · top 25%</td></tr>
+<tr><td>5</td><td><a href="#finding-PERF-RS-STR-002-src-lib-rs-22-17">PERF-RS-STR-002:src/lib.rs:22:17</a></td><td>Length query recomputed in loop (Rust)</td><td>src/lib.rs:22</td><td>build</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">20 static cost units (v2) · 6.7× median · top 25%</td></tr>
+<tr><td>6</td><td><a href="#finding-PERF-RS-STR-002-src-lib-rs-23-17">PERF-RS-STR-002:src/lib.rs:23:17</a></td><td>Length query recomputed in loop (Rust)</td><td>src/lib.rs:23</td><td>build</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">20 static cost units (v2) · 6.7× median · top 25%</td></tr>
+<tr><td>7</td><td><a href="#finding-PERF-C-STR-003-src-main-c-28-9">PERF-C-STR-003:src/main.c:28:9</a></td><td>Unbounded string operation</td><td>src/main.c:28</td><td>c_loop</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">15 static cost units (v2) · 5.0× median · top 25%</td></tr>
+<tr><td>8</td><td><a href="#finding-PERF-RS-MEM-001-src-lib-rs-25-22">PERF-RS-MEM-001:src/lib.rs:25:22</a></td><td>size_of passed as an element count (Rust)</td><td>src/lib.rs:25</td><td>build</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">20 static cost units (v2) · 6.7× median · top 25%</td></tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="rule-PERF-C-ALLOC-001">
 <h3><code>PERF-C-ALLOC-001</code> — 1 findings (1 hot, 0 warn, 0 info)</h3>
 <div class="table-scroll">

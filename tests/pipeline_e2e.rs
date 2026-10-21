@@ -313,7 +313,7 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         "## 2. Scan provenance & parse health\n",
         "## 3. Codebase statistics\n",
         "## 4. Findings\n",
-        "## 5. Architecture\n",
+        "## 5. Explorer\n",
         "## Appendix A. Heuristic reference\n",
         "## Appendix B. How to read this report\n",
     ];
@@ -332,7 +332,7 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         .find(|f| f["rule_id"] == "PERF-C-ARCH-003")
         .map(|f| f["finding_id"].as_str().unwrap().to_string())
         .expect("PERF-C-ARCH-003 finding in metrics.json");
-    let sec4 = section(&report1, "## 4. Findings\n", "## 5. Architecture\n");
+    let sec4 = section(&report1, "## 4. Findings\n", "## 5. Explorer\n");
     // §4 embeds ids through the reporter's Markdown escaper (pinned set
     // includes '-' and '.'), so compare against the DE-ESCAPED section.
     let sec4_plain = sec4.replace('\\', "");

@@ -4,9 +4,45 @@
 
 ## 1. Executive summary
 9 findings: 4 hot, 4 warn, 1 info. Parse health: 4 ok, 0 partial, 0 failed.
-- Heap allocation inside loop (PERF\-C\-ALLOC\-001:src/main\.c:27:21)
-- Deallocation inside loop (PERF\-C\-ALLOC\-002:src/main\.c:29:9)
-- String accumulation in loop (PERF\-C\-STR\-001:src/main\.c:28:9)
+
+### Where do I look first?
+
+1. **Heap allocation inside loop** ([`PERF\-C\-ALLOC\-001:src/main\.c:27:21`](findings-detail.md#finding-PERF-C-ALLOC-001-src-main-c-27-21)) — `src/main\.c:27` · function `c\_loop` · hot · HIGH · production
+   - Cost: `15 static cost units (v2) · 5.0× median · top 25%`
+   - Why: per\-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization
+2. **Deallocation inside loop** ([`PERF\-C\-ALLOC\-002:src/main\.c:29:9`](findings-detail.md#finding-PERF-C-ALLOC-002-src-main-c-29-9)) — `src/main\.c:29` · function `c\_loop` · hot · HIGH · production
+   - Cost: `15 static cost units (v2) · 5.0× median · top 25%`
+   - Why: deallocation via 'free' at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization
+3. **String accumulation in loop** ([`PERF\-C\-STR\-001:src/main\.c:28:9`](findings-detail.md#finding-PERF-C-STR-001-src-main-c-28-9)) — `src/main\.c:28` · function `c\_loop` · hot · HIGH · production
+   - Cost: `15 static cost units (v2) · 5.0× median · top 25%`
+   - Why: 'strcat' accumulates into 'acc' at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization
+4. **Growable\-buffer additive growth in loop \(Rust\)** ([`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`](findings-detail.md#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9)) — `src/lib\.rs:20` · function `build` · hot · MEDIUM · production
+   - Cost: `20 static cost units (v2) · 6.7× median · top 25%`
+   - Why: 'out\.reserve' grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization
+5. **Length query recomputed in loop \(Rust\)** ([`PERF\-RS\-STR\-002:src/lib\.rs:22:17`](findings-detail.md#finding-PERF-RS-STR-002-src-lib-rs-22-17)) — `src/lib\.rs:22` · function `build` · warn · HIGH · production
+   - Cost: `20 static cost units (v2) · 6.7× median · top 25%`
+   - Why: 's\.len' recomputes the length of 's' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
+
+[Complete ranked list](findings-detail.md#ranked-actions) — all 8 findings (production-first).
+
+0 non-production files demoted · 1 component-level findings in Explorer.
+
+### What breaks if I touch it?
+
+- `src/util\.h` — 2 dependents · 50% of scanned files · top 25%
+
+Blast-radius bars: [report.html#map](report.html#map). resolved 2 of 2 include edges.
+
+### Where might time plausibly go?
+
+- `src/lib\.rs:15` `build` — 20 static cost units (v2) · 6.7× median · top 25%
+- `src/main\.c:23` `c\_loop` — 15 static cost units (v2) · 5.0× median · top 25%
+- `src/util\.c:6` `util\_init` — 3 static cost units (v2) · 1.0× median · top 25%
+- `src/lib\.rs:33` `rust\_surface` — 1 static cost units (v2) · 0.3× median · top 25%
+
+[Complete cost-ranked list (4 functions)](profile-queue.md).
+
+0 startup functions demoted · 2 no-loop functions demoted.
 
 ## 2. Scan provenance & parse health
 - Tool: perfpal 0\.2\.0\-beta\.1
@@ -75,7 +111,7 @@ Distribution — max\_loop\_depth:
 | `PERF\-RS\-MEM\-001` | 1 | 0 | 1 | 0 | size\_of passed as an element count \(Rust\) (`PERF\-RS\-MEM\-001:src/lib\.rs:25:22`) — `src/lib\.rs:25:22` |
 | `PERF\-C\-ARCH\-003` | 1 | 0 | 0 | 1 | Cross\-file call coupling (`PERF\-C\-ARCH\-003:src/main\.c:32:12`) — `src/main\.c:32:12` |
 
-## 5. Architecture
+## 5. Explorer
 [Dependency graph — internal #include, mod/use dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
 [Entry-stratified cost map — files stratified by resolved entry reachability, heat by candidate function cost; LOW-confidence call edges excluded.](charts/layer-entry.svg)

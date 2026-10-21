@@ -25,7 +25,39 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 #findings summary::-webkit-details-marker{display:none}
 #findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
 #findings details[open]>summary::before{transform:rotate(90deg)}
-</style>
+.kv{margin:1.25rem 0 1.75rem}
+.kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
+.kv-action{margin:.15rem 0 .75rem;color:#444}
+.kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
+.kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}
+.kv-rank{font-size:1.5rem;font-weight:700;line-height:1}
+.kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}
+.kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.kv-loc{font-weight:700;color:#111;text-decoration:none}
+.kv-loc:hover{text-decoration:underline}
+.kv-title{font-weight:600}
+.kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
+.kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
+.sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
+.sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}
+.sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}
+.kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}
+.kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}
+.kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}
+.kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}
+.kv-more{margin:.5rem 0 .2rem;font-weight:600}
+.kv-bars{max-width:100%}
+.kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}
+.kv-brow:last-child{border-bottom:1px solid #999}
+.kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
+.kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
+.kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
+.kv-fill.demoted{background:#a0aec0;width:0}
+.kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
+.kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
+.kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
+@media print{.kv-row,.kv-brow{break-inside:avoid}}
+         </style>
 </head>
 <body>
 <header>
@@ -35,7 +67,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </header>
 <nav>
 <ul>
-<li><a href="#architecture">Architecture</a></li>
+<li><a href="#explorer">Explorer</a></li>
 <li><a href="#components">Components</a></li>
 <li><a href="#files">Files</a></li>
 <li><a href="#findings">Findings</a></li>
@@ -44,27 +76,63 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </ul>
 </nav>
 <section id="map">
-<h2>Map</h2>
-<figure class="pz" data-chart="layer-workspace">
-<a href="charts/layer-workspace.svg"><img src="charts/layer-workspace.svg" alt="Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density."></a>
-<figcaption>Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density.</figcaption>
-</figure>
-<p class="legend">finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm</p>
-<p>showing top 1 of 1 components</p>
-<div class="table-scroll">
-<table>
-<thead><tr><th>Component</th><th>Findings</th><th>Top findings</th></tr></thead>
-<tbody>
-<tr><td><a href="charts/component-01-src.svg">src</a></td><td>9 (4/4/1) · confidence 6 high / 2 medium / 1 low</td><td><a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-27-21">PERF-C-ALLOC-001:src/main.c:27:21</a><br>
-<a href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-29-9">PERF-C-ALLOC-002:src/main.c:29:9</a><br>
-<a href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-28-9">PERF-C-STR-001:src/main.c:28:9</a><br>
-…+6 more</td></tr>
-</tbody>
-</table>
+<h2>Key views</h2>
+<div class="kv kv1">
+<h3>Where do I look first?</h3>
+         <p class="kv-action">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>
+<ol class="kv-rows">
+<li class="kv-row"><span class="kv-rank">#1</span>                 <div class="kv-body">
+<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-27-21">src/main.c:27</a> <span class="kv-fn">c_loop</span> <span class="kv-title">Heap allocation inside loop</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
+<div class="kv-anchor">15 static cost units (v2) · 5.0× median · top 25%</div>
+<div class="kv-why">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</div>
+</div></li>
+<li class="kv-row"><span class="kv-rank">#2</span>                 <div class="kv-body">
+<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-29-9">src/main.c:29</a> <span class="kv-fn">c_loop</span> <span class="kv-title">Deallocation inside loop</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
+<div class="kv-anchor">15 static cost units (v2) · 5.0× median · top 25%</div>
+<div class="kv-why">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</div>
+</div></li>
+<li class="kv-row"><span class="kv-rank">#3</span>                 <div class="kv-body">
+<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-28-9">src/main.c:28</a> <span class="kv-fn">c_loop</span> <span class="kv-title">String accumulation in loop</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
+<div class="kv-anchor">15 static cost units (v2) · 5.0× median · top 25%</div>
+<div class="kv-why">&#39;strcat&#39; accumulates into &#39;acc&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</div>
+</div></li>
+<li class="kv-row"><span class="kv-rank">#4</span>                 <div class="kv-body">
+<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9">src/lib.rs:20</a> <span class="kv-fn">build</span> <span class="kv-title">Growable-buffer additive growth in loop (Rust)</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">MEDIUM</span>                 <span class="kv-class">production</span></div>
+<div class="kv-anchor">20 static cost units (v2) · 6.7× median · top 25%</div>
+<div class="kv-why">&#39;out.reserve&#39; grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization</div>
+</div></li>
+<li class="kv-row"><span class="kv-rank">#5</span>                 <div class="kv-body">
+<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-RS-STR-002-src-lib-rs-22-17">src/lib.rs:22</a> <span class="kv-fn">build</span> <span class="kv-title">Length query recomputed in loop (Rust)</span>                 <span class="kv-badge sev-warn">warn</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
+<div class="kv-anchor">20 static cost units (v2) · 6.7× median · top 25%</div>
+<div class="kv-why">&#39;s.len&#39; recomputes the length of &#39;s&#39; at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization</div>
+</div></li>
+</ol>
+<p class="kv-more"><a href="findings-detail.html#ranked-actions">             Complete ranked list — all 8 findings (production-first)</a></p>
+             <p class="kv-counts">0 non-production files demoted ·              1 component-level findings in Explorer</p>
+</div>
+<div class="kv kv2">
+<h3>What breaks if I touch it?</h3>
+         <p class="kv-action">Changing a file here forces re-import of its          dependents — do not edit directly.</p>
+<div class="kv-bars">
+<div class="kv-brow"><span class="kv-blabel">src/util.h </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 50% of scanned files · top 25%</span></div>
+</div>
+<p class="kv-counts">resolved 2 of 2 include edges</p>
+</div>
+<div class="kv kv3">
+<h3>Where might time plausibly go?</h3>
+         <p class="kv-action">Profile the named function first — static          candidate, confirm with a profiler.</p>
+<div class="kv-bars">
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/lib.rs:15</span>                 <span class="kv-fn">build</span></span><div class="kv-track"><div class="kv-fill" style="width:100%"></div></div><span class="kv-value">20 static cost units (v2) · 6.7× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/main.c:23</span>                 <span class="kv-fn">c_loop</span></span><div class="kv-track"><div class="kv-fill" style="width:75%"></div></div><span class="kv-value">15 static cost units (v2) · 5.0× median · top 25%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
+<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/util.c:6</span>                 <span class="kv-fn">util_init</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:0%"></div></div><span class="kv-value">3 static cost units (v2) · 1.0× median · top 25%</span></div>
+<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/lib.rs:33</span>                 <span class="kv-fn">rust_surface</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:0%"></div></div><span class="kv-value">1 static cost units (v2) · 0.3× median · top 25%</span></div>
+</div>
+<p class="kv-more"><a href="profile-queue.html">             Complete cost-ranked list (4 functions)</a></p>
+<p class="kv-counts">0 startup functions demoted ·              2 no-loop functions demoted · 0 non-production files demoted</p>
 </div>
 </section>
-<section id="architecture">
-<h2>Architecture</h2>
+<section id="explorer">
+<h2>Explorer</h2>
 <figure class="pz" data-chart="include-graph">
 <a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal #include, mod/use dependencies between scanned files."></a>
 <figcaption>Dependency graph — internal #include, mod/use dependencies between scanned files.</figcaption>

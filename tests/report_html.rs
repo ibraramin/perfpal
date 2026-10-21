@@ -214,10 +214,11 @@ fn hostile_path_and_message_are_fully_escaped() {
         assert!(page.ends_with('\n'), "trailing newline missing in {name}");
         assert!(!page.ends_with("\n\n"), "double trailing newline in {name}");
     }
-    // The message renders (escaped) only in the detail artifact.
+    // V4: the KV1 brief renders the full rationale in report.html too —
+    // escaped in BOTH artifacts (never raw; the raw-leak checks above hold).
     assert!(
-        !html.contains("&lt;script&gt;"),
-        "message leaked into report.html"
+        html.contains("&lt;script&gt;"),
+        "escaped key-view rationale missing from report.html"
     );
     assert!(
         detail.contains("&lt;script&gt;"),

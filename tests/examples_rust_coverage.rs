@@ -313,7 +313,7 @@ fn examples_rust_corpus_fires_exactly_the_22_rust_rules() {
     let report = fs::read_to_string(out.join("report.md")).expect("report.md present");
     // §4 embeds ids through the reporter's Markdown escaper (`-` → `\-`),
     // so compare against the DE-ESCAPED section.
-    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture").replace('\\', "");
+    let sec4 = section(&report, "## 4. Findings", "## 5. Explorer").replace('\\', "");
     for rule in &seen {
         assert!(
             sec4.contains(rule),

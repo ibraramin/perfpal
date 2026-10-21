@@ -175,7 +175,7 @@ fn sections_present_in_fixed_order() {
         "## 2. Scan provenance & parse health",
         "## 3. Codebase statistics",
         "## 4. Findings",
-        "## 5. Architecture",
+        "## 5. Explorer",
         "## Appendix A. Heuristic reference",
         "## Appendix B. How to read this report",
         "## Appendix C. All findings (full detail)",
@@ -270,7 +270,7 @@ fn findings_section4_groups_by_rule_in_pinned_group_order() {
         finding("PERF-C-CALL-001", Severity::Info, Confidence::Low, "x.c"),
     ];
     let report = render_report(&doc, &[]);
-    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+    let sec4 = section(&report, "## 4. Findings", "## 5. Explorer");
 
     // Pinned order: hot groups first (LOOP-002 ×2 before ALLOC-less single),
     // then warn (CALL-002 before STR-002 by rule_id tie-break), then info
@@ -322,7 +322,7 @@ fn group_exemplar_is_first_finding_in_finding_id_order() {
         finding("PERF-C-LOOP-002", Severity::Hot, Confidence::Medium, "a.c"),
     ];
     let report = render_report(&doc, &[]);
-    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+    let sec4 = section(&report, "## 4. Findings", "## 5. Explorer");
     // `a.c` sorts before `b.c`: the exemplar must be the a.c finding even
     // though document order lists b.c first.
     let sec4_plain = sec4.replace('\\', "");
@@ -361,7 +361,7 @@ fn group_exemplar_location_renders_unambiguous_path_line_col() {
         evidence: BTreeMap::new(),
     }];
     let report = render_report(&doc, &[]);
-    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+    let sec4 = section(&report, "## 4. Findings", "## 5. Explorer");
     let sec4_plain = sec4.replace('\\', "");
     assert!(
         sec4_plain.contains("— `src/main.c:34:21`"),
@@ -381,7 +381,7 @@ fn group_counts_sum_to_total_and_match_appendix_c() {
         finding("PERF-C-LOOP-002", Severity::Hot, Confidence::Low, "c.c"),
     ];
     let report = render_report(&doc, &[]);
-    let sec4 = section(&report, "## 4. Findings", "## 5. Architecture");
+    let sec4 = section(&report, "## 4. Findings", "## 5. Explorer");
     let sec4_plain = sec4.replace('\\', "");
 
     // Per-row counts sum to the honest total (5 rules, 6 findings).
@@ -450,8 +450,8 @@ fn grouped_output_is_deterministic_regardless_of_input_order() {
     doc_b.findings = findings_b;
     let report_a = render_report(&doc_a, &[]);
     let report_b = render_report(&doc_b, &[]);
-    let sec4_a = section(&report_a, "## 4. Findings", "## 5. Architecture");
-    let sec4_b = section(&report_b, "## 4. Findings", "## 5. Architecture");
+    let sec4_a = section(&report_a, "## 4. Findings", "## 5. Explorer");
+    let sec4_b = section(&report_b, "## 4. Findings", "## 5. Explorer");
     assert_eq!(
         sec4_a, sec4_b,
         "§4 must be byte-identical regardless of input order"
@@ -483,7 +483,7 @@ fn empty_findings_render_no_findings_in_section4_and_appendix_c() {
     let mut doc = base_doc();
     doc.findings = vec![];
     let report = render_report(&doc, &[]);
-    let findings_section = section(&report, "## 4. Findings", "## 5. Architecture");
+    let findings_section = section(&report, "## 4. Findings", "## 5. Explorer");
     assert_eq!(findings_section.trim(), "## 4. Findings\n\nNo findings.");
     let appendix_c = section(&report, "## Appendix C.", "## Appendix B.");
     assert!(
@@ -546,7 +546,7 @@ fn empty_findings_render_no_findings_line() {
     let mut doc = base_doc();
     doc.findings = vec![];
     let report = render_report(&doc, &[]);
-    let findings_section = section(&report, "## 4. Findings", "## 5. Architecture");
+    let findings_section = section(&report, "## 4. Findings", "## 5. Explorer");
     assert_eq!(findings_section.trim(), "## 4. Findings\n\nNo findings.");
 }
 
@@ -662,7 +662,7 @@ fn component_table_caps_at_top_ten_with_honest_header() {
             .collect(),
     );
     let report = render_report(&doc, &[]);
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
 
     // Honest header: showing top 10 of 12.
     assert!(
@@ -692,7 +692,7 @@ fn component_table_shows_honest_counts_when_under_cap() {
     let mut doc = base_doc();
     doc.components = Some(vec![component_entry(1, "c01"), component_entry(2, "c02")]);
     let report = render_report(&doc, &[]);
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
     assert!(
         arch.contains("showing top 2 of 2 components"),
         "under-cap header must stay honest:\n{arch}"
@@ -795,7 +795,7 @@ fn architecture_renders_links_only_for_emitted_charts() {
         "hot-components.svg".to_string(), // filename form also accepted
     ];
     let report = render_report(&doc, &charts);
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
 
     assert!(arch.contains("[Dependency graph — internal #include dependencies between scanned files.](charts/include-graph.svg)"));
     assert!(arch.contains("](charts/hot-components.svg)"));
@@ -852,7 +852,7 @@ fn architecture_indexes_emitted_component_pages_under_the_table() {
             "component-01-src-a.svg".to_string(),
         ],
     );
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
     let table_pos = arch
         .find("| src/a | src/a | 1 | 8.25 |")
         .expect("table row");
@@ -887,7 +887,7 @@ fn architecture_omits_hook_when_no_component_page_emitted() {
         finding_count: Some(2),
     }]);
     let report = render_report(&doc, &["hot-components.svg".to_string()]);
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
     assert!(!arch.contains("Component detail pages"));
     assert!(!arch.contains("component-"));
 }
@@ -911,7 +911,7 @@ fn architecture_links_layered_overviews_in_emission_order() {
             "layer-bands.svg".to_string(),
         ],
     );
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
 
     let workspace = "[Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density.](charts/layer-workspace.svg)";
     let file = "[File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)";
@@ -956,7 +956,7 @@ fn non_numeric_component_stem_is_an_overview_not_a_detail_page() {
     // swallowed by the detail-page path — it links inline with the overviews
     // under the generic caption.
     let report = render_report(&base_doc(), &["component-notes.svg".to_string()]);
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
     assert!(
         arch.contains("[Chart: component-notes.](charts/component-notes.svg)"),
         "non-numeric component stem must take the overview path:\n{arch}"
@@ -970,7 +970,7 @@ fn non_numeric_component_stem_is_an_overview_not_a_detail_page() {
     // `component-<rank>-<slug>` page but names no component in this
     // document — with an empty registry it must NOT route to detail.
     let report = render_report(&base_doc(), &["component-5-notes.svg".to_string()]);
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
     assert!(
         arch.contains("[Chart: component-5-notes.](charts/component-5-notes.svg)"),
         "numeric colliding stem must take the overview path:\n{arch}"
@@ -1007,7 +1007,7 @@ fn colliding_numeric_stem_is_an_overview_even_with_components_present() {
             "component-01-src-a.svg".to_string(),
         ],
     );
-    let arch = section(&report, "## 5. Architecture", "## Appendix A.");
+    let arch = section(&report, "## 5. Explorer", "## Appendix A.");
     assert!(
         arch.contains("[Chart: component-5-notes.](charts/component-5-notes.svg)"),
         "colliding stem must stay on the overview path:\n{arch}"

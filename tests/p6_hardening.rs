@@ -108,13 +108,15 @@ fn fixture_root() -> PathBuf {
 /// semantic tier is covered by `tests/resolver_health.rs` and the
 /// double-run determinism suites instead.
 #[cfg(not(feature = "semantic-clang"))]
-const GOLDEN_ARTIFACTS: [&str; 15] = [
+const GOLDEN_ARTIFACTS: [&str; 17] = [
     "metrics.json",
     "metrics.schema.v1.7.json",
     "report.md",
     "report.html",
     "findings-detail.md",
     "findings-detail.html",
+    "profile-queue.md",
+    "profile-queue.html",
     "charts/include-graph.svg",
     "charts/layer-file.svg",
     "charts/layer-entry.svg",

@@ -250,6 +250,10 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // chart input, no provenance surfaces), so findings stay byte-identical.
     let detail_md = crate::reporter::render_findings_detail(&document);
     let detail_html = crate::reporter::render_findings_detail_html(&document);
+    // V4 profile queue: the complete cost-ranked function list (drill
+    // companion to KV3), a pure function of `document` with no provenance.
+    let profile_md = crate::reporter::render_profile_queue(&document);
+    let profile_html = crate::reporter::render_profile_queue_html(&document);
     let dot = crate::charts::dot::render_dot(&document);
 
     // writer: atomic directory swap (all writer failures are output errors).
@@ -264,6 +268,8 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         Artifact::text("report.html", html),
         Artifact::text("findings-detail.md", detail_md),
         Artifact::text("findings-detail.html", detail_html),
+        Artifact::text("profile-queue.md", profile_md),
+        Artifact::text("profile-queue.html", profile_html),
         Artifact::text("charts/graph.dot", dot),
     ];
     for (name, bytes) in &charts {

@@ -25,6 +25,8 @@
 //! Non-goals: reading source, IR, or scanner state; inventing aggregations
 //! beyond the output-contract §5 template.
 
+pub mod views;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::analyzer::{Confidence, Severity};
@@ -482,7 +484,7 @@ pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
     // artifact's bytes a hard contract.
     html_header(&mut out, doc, true);
     html_nav(&mut out);
-    html_map(&mut out, doc, emitted_charts);
+    html_map(&mut out, doc);
     html_architecture(&mut out, doc, emitted_charts);
     html_components(&mut out, doc, emitted_charts);
     html_files(&mut out, doc, emitted_charts);
@@ -550,6 +552,7 @@ pub fn render_findings_detail(doc: &MetricsDocument) -> String {
             doc.findings.len(),
             doc.findings.len(),
         ));
+        render_ranked_actions_md(&mut out, doc);
         render_findings_full_detail(&mut out, doc);
     }
     while out.ends_with('\n') {
@@ -584,6 +587,246 @@ pub fn render_findings_detail_html(doc: &MetricsDocument) -> String {
     }
     out.push('\n');
     out
+}
+
+/// New top section of `findings-detail.md`: every function-granularity
+/// finding in KV1 order. The legacy full-detail sections below are kept
+/// verbatim; the explicit `<a id="ranked-actions">` anchor is the stable
+/// cross-artifact target.
+fn render_ranked_actions_md(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("## Complete ranked action list (KV1 order)\n\n");
+    out.push_str("<a id=\"ranked-actions\"></a>\n\n");
+    let actions = views::complete_actions(doc);
+    if actions.is_empty() {
+        out.push_str("No function-granularity actions.\n\n");
+        return;
+    }
+    let anchors = finding_anchor_assignments(doc).1;
+    out.push_str("| rank | finding | title | location | function | severity | confidence | path class | cost anchor |\n");
+    out.push_str("|---:|---|---|---|---|---|---|---|---|\n");
+    for row in actions {
+        let finding = &doc.findings[row.finding_index];
+        let location = format!("{}:{}", finding.path, finding.span.start_line);
+        let function = row
+            .function
+            .as_deref()
+            .map_or_else(|| "—".to_string(), |name| format!("`{}`", escape_md(name)));
+        out.push_str(&format!(
+            "| {} | [`{}`](#{}) | {} | `{}` | {} | {} | {} | {} | {} |\n",
+            row.rank,
+            escape_md(&finding.finding_id),
+            &anchors[row.finding_index],
+            escape_md(&finding.title),
+            escape_md(&location),
+            function,
+            severity_token(finding.severity),
+            confidence_token(finding.confidence),
+            escape_md(&row.path_class),
+            row.cost_anchor
+                .as_deref()
+                .map_or_else(|| "—".to_string(), escape_md),
+        ));
+    }
+    out.push('\n');
+}
+
+/// Ranked-action table emitted at the top of `findings-detail.html`.
+fn html_ranked_actions(out: &mut String, doc: &MetricsDocument, anchors: &[String]) {
+    out.push_str(
+        "<section id=\"ranked-actions\">\n<h2>Complete ranked action list (KV1 order)</h2>\n",
+    );
+    let actions = views::complete_actions(doc);
+    if actions.is_empty() {
+        out.push_str("<p>No function-granularity actions.</p>\n</section>\n");
+        return;
+    }
+    out.push_str(
+        "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>rank</th><th>finding_id</th>\
+         <th>title</th><th>location</th><th>function</th><th>severity</th>\
+         <th>confidence</th><th>path class</th><th>cost anchor</th></tr></thead>\n<tbody>\n",
+    );
+    for row in actions {
+        let finding = &doc.findings[row.finding_index];
+        let location = format!("{}:{}", finding.path, finding.span.start_line);
+        out.push_str(&format!(
+            "<tr><td>{rank}</td><td><a href=\"#{anchor}\">{id}</a></td>\
+             <td>{title}</td><td>{location}</td><td>{function}</td>\
+             <td>{severity}</td><td>{confidence}</td><td>{class}</td>\
+             <td class=\"wrap\">{cost}</td></tr>\n",
+            rank = row.rank,
+            anchor = escape_html(&anchors[row.finding_index]),
+            id = escape_html(&finding.finding_id),
+            title = escape_html(&finding.title),
+            location = escape_html(&location),
+            function = escape_html(row.function.as_deref().unwrap_or("—")),
+            severity = severity_token(finding.severity),
+            confidence = confidence_token(finding.confidence),
+            class = escape_html(&row.path_class),
+            cost = escape_html(row.cost_anchor.as_deref().unwrap_or("—")),
+        ));
+    }
+    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
+}
+
+/// Render the standalone `profile-queue.md` artifact: the complete
+/// cost-ranked function list (demoted rows labelled, v1 rows marked `(v1)`).
+#[must_use]
+pub fn render_profile_queue(doc: &MetricsDocument) -> String {
+    let mut out = String::new();
+    out.push_str("# Perfpal Profile Queue\n\n");
+    let rows = views::complete_profile_queue(doc);
+    out.push_str(&format!(
+        "{} functions ranked by static cost — candidates, confirm with a profiler.\n\n",
+        rows.len(),
+    ));
+    if rows.is_empty() {
+        while out.ends_with('\n') {
+            out.pop();
+        }
+        out.push('\n');
+        return out;
+    }
+    out.push_str("| rank | function | location | path class | cost | notes |\n");
+    out.push_str("|---:|---|---|---|---|---|\n");
+    for row in &rows {
+        let function = &doc.stats.functions[row.function_index];
+        let location = format!("{}:{}", row.path, function.span.start_line);
+        let mut notes: Vec<String> = Vec::new();
+        if let Some(label) = row.demotion_label() {
+            notes.push(label);
+        }
+        if let Some(badge) = row.unknown_trip_badge() {
+            notes.push(badge);
+        }
+        if let Some(badge) = row.known_trip_badge() {
+            notes.push(badge);
+        }
+        let notes = if notes.is_empty() {
+            "—".to_string()
+        } else {
+            notes.join("; ")
+        };
+        out.push_str(&format!(
+            "| {} | `{}` | `{}` | {} | {} | {} |\n",
+            row.rank,
+            escape_md(&row.function),
+            escape_md(&location),
+            escape_md(&row.path_class),
+            row.cost_anchor,
+            escape_md(&notes),
+        ));
+    }
+    out.push('\n');
+    while out.ends_with('\n') {
+        out.pop();
+    }
+    out.push('\n');
+    out
+}
+
+/// Render the standalone `profile-queue.html` artifact (mirrors the
+/// findings-detail page structure: shared head/style, fixed script, one
+/// deterministic table).
+#[must_use]
+pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
+    let mut out = String::new();
+    html_profile_head(&mut out, doc);
+    let rows = views::complete_profile_queue(doc);
+    out.push_str("<header>\n<h1>Perfpal Profile Queue</h1>\n");
+    out.push_str(&format!(
+        "<p>{}</p>\n</header>\n",
+        escape_html(&format!(
+            "{} functions ranked by static cost — candidates, confirm with a profiler",
+            rows.len()
+        )),
+    ));
+    out.push_str(
+        "<nav>\n<ul>\n\
+         <li><a href=\"report.html\">Report</a></li>\n\
+         <li><a href=\"#profile-queue\">Profile queue</a></li>\n\
+         </ul>\n</nav>\n",
+    );
+    out.push_str("<section id=\"profile-queue\">\n<h2>Complete cost-ranked list</h2>\n");
+    if rows.is_empty() {
+        out.push_str("<p>No functions recorded.</p>\n");
+    } else {
+        out.push_str(
+            "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>rank</th><th>function</th>\
+             <th>location</th><th>path class</th><th>cost</th><th>notes</th></tr></thead>\n<tbody>\n",
+        );
+        for row in &rows {
+            let function = &doc.stats.functions[row.function_index];
+            let location = format!("{}:{}", row.path, function.span.start_line);
+            let mut notes: Vec<String> = Vec::new();
+            if let Some(label) = row.demotion_label() {
+                notes.push(format!(
+                    "<span class=\"kv-dem\">{}</span>",
+                    escape_html(&label)
+                ));
+            }
+            if let Some(badge) = row.unknown_trip_badge() {
+                notes.push(format!(
+                    "<span class=\"kv-badge trip\">{}</span>",
+                    escape_html(&badge)
+                ));
+            }
+            if let Some(badge) = row.known_trip_badge() {
+                notes.push(format!(
+                    "<span class=\"kv-badge known\">{}</span>",
+                    escape_html(&badge)
+                ));
+            }
+            let notes = if notes.is_empty() {
+                "—".to_string()
+            } else {
+                notes.join(" ")
+            };
+            out.push_str(&format!(
+                "<tr><td>{rank}</td><td class=\"wrap\">{function}</td>\
+                 <td class=\"wrap\">{location}</td><td>{class}</td>\
+                 <td class=\"wrap\">{cost}</td><td class=\"wrap\">{notes}</td></tr>\n",
+                rank = row.rank,
+                function = escape_html(&row.function),
+                location = escape_html(&location),
+                class = escape_html(&row.path_class),
+                cost = escape_html(&row.cost_anchor),
+                notes = notes,
+            ));
+        }
+        out.push_str("</tbody>\n</table>\n</div>\n");
+    }
+    out.push_str("</section>\n");
+    html_footer(&mut out);
+    while out.ends_with('\n') {
+        out.pop();
+    }
+    out.push('\n');
+    out
+}
+
+/// Profile-queue head: findings-detail markup/title with the key-view CSS.
+fn html_profile_head(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
+    out.push_str("<meta charset=\"utf-8\">\n");
+    out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
+    out.push_str("<link rel=\"icon\" href=\"data:,\">\n");
+    out.push_str(&format!(
+        "<title>Perfpal Profile Queue — schema {}</title>\n",
+        escape_html(&doc.schema_version),
+    ));
+    out.push_str(
+        "<style>\n\
+         body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
+         .table-scroll{overflow-x:auto;max-width:100%}\n\
+         table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
+         th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
+         th{background:#eee}\n\
+         #profile-queue tbody td{white-space:nowrap}\n\
+         #profile-queue td.wrap,#profile-queue th{white-space:normal;overflow-wrap:anywhere}\n\
+         nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n",
+    );
+    out.push_str(KEY_VIEW_CSS);
+    out.push_str("         </style>\n</head>\n<body>\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -631,21 +874,101 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
         None => "Parse health: n/a.".to_string(),
     };
     out.push_str(&format!(
-        "{} findings: {} hot, {} warn, {} info. {health}\n",
+        "{} findings: {} hot, {} warn, {} info. {health}\n\n",
         doc.findings.len(),
         hot.len(),
         warn_count,
         info_count,
     ));
-    // First 3 HOT findings in document order (all if fewer than 3).
-    for f in hot.iter().take(3) {
+
+    let kv1 = views::kv1(doc);
+    let anchors = finding_anchor_assignments(doc).1;
+    out.push_str("### Where do I look first?\n\n");
+    if kv1.rows.is_empty() {
+        out.push_str("No function-granularity actions to rank.\n\n");
+    } else {
+        for row in &kv1.rows {
+            let finding = &doc.findings[row.finding_index];
+            let location = format!("{}:{}", finding.path, finding.span.start_line);
+            out.push_str(&format!(
+                "{}. **{}** ([`{}`](findings-detail.md#{})) — `{}`",
+                row.rank,
+                escape_md(&finding.title),
+                escape_md(&finding.finding_id),
+                &anchors[row.finding_index],
+                escape_md(&location),
+            ));
+            if let Some(function) = &row.function {
+                out.push_str(&format!(" · function `{}`", escape_md(function)));
+            }
+            out.push_str(&format!(
+                " · {} · {} · {}\n",
+                severity_token(finding.severity),
+                confidence_token(finding.confidence),
+                escape_md(&row.path_class),
+            ));
+            if let Some(anchor) = &row.cost_anchor {
+                out.push_str(&format!("   - Cost: `{anchor}`\n"));
+            }
+            out.push_str(&format!("   - Why: {}\n", escape_md(&finding.message)));
+        }
         out.push_str(&format!(
-            "- {} ({})\n",
-            escape_md(&f.title),
-            escape_md(&f.finding_id),
+            "\n[Complete ranked list](findings-detail.md#ranked-actions) — all {} findings (production-first).\n\n",
+            kv1.total_actions,
+        ));
+        out.push_str(&format!(
+            "{} non-production files demoted · {} component-level findings in Explorer.\n\n",
+            kv1.nonprod_file_count, kv1.component_findings,
         ));
     }
-    out.push('\n');
+
+    let kv2 = views::kv2(doc);
+    out.push_str("### What breaks if I touch it?\n\n");
+    if kv2.rows.is_empty() {
+        out.push_str("No resolved include dependents to rank.\n\n");
+    } else {
+        for row in kv2.rows.iter().take(5) {
+            let class = if row.production {
+                String::new()
+            } else {
+                format!(" · {}", escape_md(&row.path_class))
+            };
+            out.push_str(&format!(
+                "- `{}` — {}{class}\n",
+                escape_md(&row.path),
+                row.value_label
+            ));
+        }
+        out.push_str(&format!(
+            "\nBlast-radius bars: [report.html#map](report.html#map). resolved {} of {} include edges.\n\n",
+            kv2.resolved_edges, kv2.total_edges,
+        ));
+    }
+
+    let kv3 = views::kv3(doc);
+    out.push_str("### Where might time plausibly go?\n\n");
+    if kv3.rows.is_empty() {
+        out.push_str("No functions to rank.\n\n");
+    } else {
+        for row in kv3.rows.iter().take(5) {
+            let line = doc.stats.functions[row.function_index].span.start_line;
+            out.push_str(&format!(
+                "- `{}:{}` `{}` — {}\n",
+                escape_md(&row.path),
+                line,
+                escape_md(&row.function),
+                row.cost_anchor,
+            ));
+        }
+        out.push_str(&format!(
+            "\n[Complete cost-ranked list ({} functions)](profile-queue.md).\n\n",
+            kv3.total_functions,
+        ));
+        out.push_str(&format!(
+            "{} startup functions demoted · {} no-loop functions demoted.\n\n",
+            kv3.startup_count, kv3.no_loop_count,
+        ));
+    }
 }
 
 fn render_provenance_section(out: &mut String, doc: &MetricsDocument) {
@@ -834,16 +1157,23 @@ fn render_findings_full_detail(out: &mut String, doc: &MetricsDocument) {
     // Stable severity partition hot→warn→info; WITHIN a group document order
     // is preserved EXACTLY (the analyzer already emits the total order
     // severity→confidence→rule_id→path→start_line→start_col — do NOT re-sort).
-    let ordered = [
-        findings_of_severity(doc, Severity::Hot),
-        findings_of_severity(doc, Severity::Warn),
-        findings_of_severity(doc, Severity::Info),
-    ]
-    .concat();
+    let ordered: Vec<usize> = [Severity::Hot, Severity::Warn, Severity::Info]
+        .into_iter()
+        .flat_map(|severity| {
+            doc.findings
+                .iter()
+                .enumerate()
+                .filter(move |(_, finding)| finding.severity == severity)
+                .map(|(index, _)| index)
+        })
+        .collect();
+    let anchors = finding_anchor_assignments(doc).1;
 
-    for f in ordered {
+    for index in ordered {
+        let f = &doc.findings[index];
         out.push_str(&format!(
-            "#### {}  (`{}`)\n",
+            "<a id=\"{}\"></a>\n#### {}  (`{}`)\n",
+            &anchors[index],
             escape_md(&f.title),
             escape_md(&f.finding_id),
         ));
@@ -890,7 +1220,7 @@ fn render_findings_full_detail(out: &mut String, doc: &MetricsDocument) {
 }
 
 fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
-    out.push_str("## 5. Architecture\n");
+    out.push_str("## 5. Explorer\n");
     // Emitted stems (`.svg`-suffixed or bare — both forms accepted, mirroring
     // the pipe contract in `crate::cli`); per-component detail pages are
     // indexed under the component table below, not in the overview link list.
@@ -1157,6 +1487,43 @@ fn render_appendix_c(out: &mut String, doc: &MetricsDocument) {
 /// Emit the document head: doctype, charset, title, and a minimal inline
 /// `<style>` block (static text — no external resources; the only script is
 /// the fixed [`REPORT_SCRIPT`] block appended in `html_footer`).
+/// Scoped key-view CSS (map-intelligibility V4). Shared by the report page
+/// and the detail/profile pages. No `text-overflow: ellipsis` anywhere on
+/// key-view text: labels wrap instead of truncating.
+const KEY_VIEW_CSS: &str = "\
+         .kv{margin:1.25rem 0 1.75rem}\n\
+         .kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}\n\
+         .kv-action{margin:.15rem 0 .75rem;color:#444}\n\
+         .kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}\n\
+         .kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}\n\
+         .kv-rank{font-size:1.5rem;font-weight:700;line-height:1}\n\
+         .kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}\n\
+         .kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}\n\
+         .kv-loc{font-weight:700;color:#111;text-decoration:none}\n\
+         .kv-loc:hover{text-decoration:underline}\n\
+         .kv-title{font-weight:600}\n\
+         .kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}\n\
+         .kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}\n\
+         .sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}\n\
+         .sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}\n\
+         .sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}\n\
+         .kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}\n\
+         .kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}\n\
+         .kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}\n\
+         .kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}\n\
+         .kv-more{margin:.5rem 0 .2rem;font-weight:600}\n\
+         .kv-bars{max-width:100%}\n\
+         .kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}\n\
+         .kv-brow:last-child{border-bottom:1px solid #999}\n\
+         .kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}\n\
+         .kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}\n\
+         .kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}\n\
+         .kv-fill.demoted{background:#a0aec0;width:0}\n\
+         .kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}\n\
+         .kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}\n\
+         .kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}\n\
+         @media print{.kv-row,.kv-brow{break-inside:avoid}}\n";
+
 fn html_head(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
     out.push_str("<meta charset=\"utf-8\">\n");
@@ -1188,9 +1555,10 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
          #findings summary{cursor:pointer;list-style:none}\n\
          #findings summary::-webkit-details-marker{display:none}\n\
          #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
-         #findings details[open]>summary::before{transform:rotate(90deg)}\n\
-         </style>\n</head>\n<body>\n",
+         #findings details[open]>summary::before{transform:rotate(90deg)}\n",
     );
+    out.push_str(KEY_VIEW_CSS);
+    out.push_str("         </style>\n</head>\n<body>\n");
 }
 
 /// Header: schema version + tool version + file/finding counts ONLY — never
@@ -1254,7 +1622,7 @@ fn html_breadcrumb(out: &mut String) {
 fn html_nav(out: &mut String) {
     out.push_str(
         "<nav>\n<ul>\n\
-         <li><a href=\"#architecture\">Architecture</a></li>\n\
+         <li><a href=\"#explorer\">Explorer</a></li>\n\
          <li><a href=\"#components\">Components</a></li>\n\
          <li><a href=\"#files\">Files</a></li>\n\
          <li><a href=\"#findings\">Findings</a></li>\n\
@@ -1392,11 +1760,11 @@ fn html_chart_split(
     (overviews, details)
 }
 
-/// Architecture section: the §5 chart links mirrored as LINKED figures
+/// Explorer section: the §5 chart links mirrored as LINKED figures
 /// (`<a href>` + `<img src>`, relative, offline) plus the standing caveat
 /// notes (static text) and the DOT export link.
 fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
-    out.push_str("<section id=\"architecture\">\n<h2>Architecture</h2>\n");
+    out.push_str("<section id=\"explorer\">\n<h2>Explorer</h2>\n");
     let (overviews, details) = html_chart_split(doc, emitted_charts);
     if overviews.is_empty() && details.is_empty() {
         out.push_str("<p>No charts were emitted for this scan.</p>\n");
@@ -1449,8 +1817,8 @@ fn html_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[
     out.push_str("</section>\n");
 }
 
-/// Shared linked-chart figure (used by the architecture section AND the
-/// `#map` section): one `figure.pz` hooking the fixed pan/zoom enhancement,
+/// Shared linked-chart figure (used by the Explorer section): one
+/// `figure.pz` hooking the fixed pan/zoom enhancement,
 /// a relative `<a href>`/`<img src>` pair, and an escaped caption.
 fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
     let safe_stem = escape_html(stem);
@@ -1461,115 +1829,160 @@ fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
     ));
 }
 
-/// `#map` — the top of the report drill path (I4): the workspace figure, the
-/// annotation legend, and a bounded component drill table that links into the
-/// per-component chart pages and the `findings-detail.html` anchors.
+/// `#map` — the answer-first key views (map-intelligibility V4).
 ///
-/// The table is capped at [`HUMAN_CAP`] rows in `(rank, path_prefix)` order
-/// with an honest note; every finding link reuses the SAME
-/// [`finding_anchor_assignments`] map as the detail page, so each href
-/// resolves. No per-finding rows are rendered here — links only.
-fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
-    out.push_str("<section id=\"map\">\n<h2>Map</h2>\n");
-    let emitted_stems: BTreeSet<String> = emitted_charts
-        .iter()
-        .map(|name| name.strip_suffix(".svg").unwrap_or(name).to_string())
-        .collect();
-    if emitted_stems.contains("layer-workspace") {
-        let caption = chart_caption("layer-workspace", &doc.scan.languages);
-        push_chart_figure(out, "layer-workspace", &caption);
-    } else {
-        out.push_str("<p>Workspace map not available for this scan.</p>\n");
-    }
-    out.push_str(&format!(
-        "<p class=\"legend\">{}</p>\n",
-        escape_html(crate::charts::FINDING_LEGEND)
-    ));
-
-    let Some(components) = &doc.components else {
-        out.push_str("<p>No components recorded.</p>\n</section>\n");
-        return;
-    };
-    if components.is_empty() {
-        out.push_str("<p>No components recorded.</p>\n</section>\n");
-        return;
-    }
-    let total = components.len();
-    let shown = total.min(HUMAN_CAP);
-    out.push_str(&format!(
-        "<p>showing top {shown} of {total} components</p>\n"
-    ));
-    let mut sorted: Vec<&crate::schema::ComponentEntry> = components.iter().collect();
-    sorted.sort_by(|a, b| a.rank.cmp(&b.rank).then(a.path_prefix.cmp(&b.path_prefix)));
-
-    // Component → finding occurrences (exact `parent_dir` membership), each
-    // in the deterministic severity-rank → finding_id order used elsewhere.
-    let mut by_component: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
-    for (i, finding) in doc.findings.iter().enumerate() {
-        by_component
-            .entry(crate::charts::parent_dir(&finding.path))
-            .or_default()
-            .push(i);
-    }
-    for list in by_component.values_mut() {
-        list.sort_by(|&a, &b| {
-            severity_rank(doc.findings[a].severity)
-                .cmp(&severity_rank(doc.findings[b].severity))
-                .then_with(|| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id))
-        });
-    }
+/// First content block is KV1 (where do I look first?), then KV2 (what
+/// breaks if I touch it?) and KV3 (where might time plausibly go?). Bars are
+/// plain CSS `<div>` rows — no SVG, no JavaScript, integer widths. The old
+/// workspace figure / component table live on as the `layer-workspace` stem
+/// and the `#components` section; the eight stems render under `Explorer`.
+fn html_map(out: &mut String, doc: &MetricsDocument) {
+    out.push_str("<section id=\"map\">\n<h2>Key views</h2>\n");
+    let kv1 = views::kv1(doc);
+    let kv2 = views::kv2(doc);
+    let kv3 = views::kv3(doc);
     let anchors = finding_anchor_assignments(doc).1;
-    let index = crate::charts::FindingIndex::new(&doc.findings);
 
+    // --- KV1: ranked maintainer brief -----------------------------------
     out.push_str(
-        "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>Component</th>\
-         <th>Findings</th><th>Top findings</th></tr></thead>\n<tbody>\n",
+        "<div class=\"kv kv1\">\n<h3>Where do I look first?</h3>\n         <p class=\"kv-action\">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>\n",
     );
-    for c in sorted.into_iter().take(HUMAN_CAP) {
-        let filename = crate::charts::component::component_filename(c.rank, &c.path_prefix);
-        let stem = filename.strip_suffix(".svg").unwrap_or(&filename);
-        let component_cell = if emitted_stems.contains(stem) {
-            format!(
-                "<a href=\"charts/{}\">{}</a>",
-                escape_html(&filename),
-                escape_html(&c.path_prefix)
-            )
-        } else {
-            escape_html(&c.path_prefix)
-        };
-        let findings_cell = match index.for_component(&c.path_prefix) {
-            Some(dot) => format!(
-                "{} ({}/{}/{}) · confidence {} high / {} medium / {} low",
-                dot.total, dot.hot, dot.warn, dot.info, dot.high, dot.medium, dot.low
-            ),
-            None => "0 (0/0/0)".to_string(),
-        };
-        let top = match by_component.get(c.path_prefix.as_str()) {
-            Some(list) if !list.is_empty() => {
-                let mut cell = list
-                    .iter()
-                    .take(3)
-                    .map(|&i| {
-                        format!(
-                            "<a href=\"findings-detail.html#{}\">{}</a>",
-                            escape_html(&anchors[i]),
-                            escape_html(&doc.findings[i].finding_id),
-                        )
-                    })
-                    .collect::<Vec<_>>()
-                    .join("<br>\n");
-                if list.len() > 3 {
-                    cell.push_str(&format!("<br>\n…+{} more", list.len() - 3));
-                }
-                cell
+    if kv1.rows.is_empty() {
+        out.push_str("<p>No function-granularity actions to rank.</p>\n");
+    } else {
+        out.push_str("<ol class=\"kv-rows\">\n");
+        for row in &kv1.rows {
+            let finding = &doc.findings[row.finding_index];
+            let location = format!("{}:{}", finding.path, finding.span.start_line);
+            out.push_str(&format!(
+                "<li class=\"kv-row\"><span class=\"kv-rank\">#{rank}</span>                 <div class=\"kv-body\">\n<div class=\"kv-line1\">                 <a class=\"kv-loc\" href=\"findings-detail.html#{anchor}\">{location}</a>",
+                rank = row.rank,
+                anchor = escape_html(&anchors[row.finding_index]),
+                location = escape_html(&location),
+            ));
+            if let Some(function) = &row.function {
+                out.push_str(&format!(
+                    " <span class=\"kv-fn\">{}</span>",
+                    escape_html(function)
+                ));
             }
-            _ => "none".to_string(),
-        };
+            out.push_str(&format!(
+                " <span class=\"kv-title\">{}</span>                 <span class=\"kv-badge sev-{}\">{}</span>                 <span class=\"kv-badge\">{}</span>                 <span class=\"kv-class{}\">{}</span></div>\n",
+                escape_html(&finding.title),
+                severity_token(finding.severity),
+                severity_token(finding.severity),
+                confidence_token(finding.confidence),
+                if row.production { "" } else { " nonprod" },
+                escape_html(&row.path_class),
+            ));
+            if let Some(anchor) = &row.cost_anchor {
+                out.push_str(&format!(
+                    "<div class=\"kv-anchor\">{}</div>\n",
+                    escape_html(anchor)
+                ));
+            }
+            out.push_str(&format!(
+                "<div class=\"kv-why\">{}</div>\n</div></li>\n",
+                escape_html(&finding.message)
+            ));
+        }
+        out.push_str("</ol>\n");
         out.push_str(&format!(
-            "<tr><td>{component_cell}</td><td>{findings_cell}</td><td>{top}</td></tr>\n"
+            "<p class=\"kv-more\"><a href=\"findings-detail.html#ranked-actions\">             Complete ranked list — all {total} findings (production-first)</a></p>\n             <p class=\"kv-counts\">{nonprod} non-production files demoted ·              {component} component-level findings in Explorer</p>\n",
+            total = kv1.total_actions,
+            nonprod = kv1.nonprod_file_count,
+            component = kv1.component_findings,
         ));
     }
-    out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
+    out.push_str("</div>\n");
+
+    // --- KV2: blast radius ----------------------------------------------
+    out.push_str(
+        "<div class=\"kv kv2\">\n<h3>What breaks if I touch it?</h3>\n         <p class=\"kv-action\">Changing a file here forces re-import of its          dependents — do not edit directly.</p>\n",
+    );
+    if kv2.rows.is_empty() {
+        out.push_str("<p>No resolved include dependents to rank.</p>\n");
+    } else {
+        out.push_str("<div class=\"kv-bars\">\n");
+        for row in &kv2.rows {
+            let class = if row.production {
+                String::new()
+            } else {
+                format!(
+                    "<span class=\"kv-class nonprod\">{}</span>",
+                    escape_html(&row.path_class)
+                )
+            };
+            out.push_str(&format!(
+                "<div class=\"kv-brow\"><span class=\"kv-blabel\">{path} {class}</span>                 <div class=\"kv-track\"><div class=\"kv-fill\" style=\"width:{width}%\"></div></div>                 <span class=\"kv-value\">{value}</span></div>\n",
+                path = escape_html(&row.path),
+                class = class,
+                width = row.width_pct,
+                value = escape_html(&row.value_label),
+            ));
+        }
+        out.push_str("</div>\n");
+    }
+    out.push_str(&format!(
+        "<p class=\"kv-counts\">resolved {} of {} include edges</p>\n",
+        kv2.resolved_edges, kv2.total_edges,
+    ));
+    out.push_str("</div>\n");
+
+    // --- KV3: static cost ------------------------------------------------
+    out.push_str(
+        "<div class=\"kv kv3\">\n<h3>Where might time plausibly go?</h3>\n         <p class=\"kv-action\">Profile the named function first — static          candidate, confirm with a profiler.</p>\n",
+    );
+    if kv3.rows.is_empty() {
+        out.push_str("<p>No functions to rank.</p>\n");
+    } else {
+        out.push_str("<div class=\"kv-bars\">\n");
+        for row in &kv3.rows {
+            let line = doc.stats.functions[row.function_index].span.start_line;
+            let location = format!("{}:{}", row.path, line);
+            let demotion = row.demotion_label().map_or_else(String::new, |label| {
+                format!("<span class=\"kv-dem\">{}</span>", escape_html(&label))
+            });
+            let mut badges = String::new();
+            if let Some(badge) = row.unknown_trip_badge() {
+                badges.push_str(&format!(
+                    "<span class=\"kv-badge trip\">{}</span>",
+                    escape_html(&badge)
+                ));
+            }
+            if let Some(badge) = row.known_trip_badge() {
+                badges.push_str(&format!(
+                    "<span class=\"kv-badge known\">{}</span>",
+                    escape_html(&badge)
+                ));
+            }
+            out.push_str(&format!(
+                "<div class=\"kv-brow kv-vrow{}{}\">\
+                 <span class=\"kv-blabel\"><span class=\"kv-loc\">{location}</span>                 <span class=\"kv-fn\">{function}</span>{demotion}</span>\
+                 <div class=\"kv-track\"><div class=\"kv-fill{}\" style=\"width:{width}%\"></div></div>\
+                 <span class=\"kv-value\">{anchor}{badges}</span></div>\n",
+                if row.is_demoted() { " kv-demoted" } else { "" },
+                if row.cost_scale == views::CostScale::V1 { " kv-v1" } else { "" },
+                if row.is_demoted() { " demoted" } else { "" },
+                location = escape_html(&location),
+                function = escape_html(&row.function),
+                demotion = demotion,
+                width = row.width_pct,
+                anchor = escape_html(&row.cost_anchor),
+                badges = badges,
+            ));
+        }
+        out.push_str("</div>\n");
+        out.push_str(&format!(
+            "<p class=\"kv-more\"><a href=\"profile-queue.html\">             Complete cost-ranked list ({} functions)</a></p>\n",
+            kv3.total_functions,
+        ));
+        out.push_str(&format!(
+            "<p class=\"kv-counts\">{} startup functions demoted ·              {} no-loop functions demoted · {} non-production files demoted</p>\n",
+            kv3.startup_count, kv3.no_loop_count, kv3.nonprod_file_count,
+        ));
+    }
+    out.push_str("</div>\n</section>\n");
 }
 
 /// Component index: rank, prefix, metrics + link to the
@@ -1873,6 +2286,7 @@ fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
     ));
     out.push_str("<p><a href=\"report.html\">Back to report.html</a>.</p>\n");
     let (_, anchors) = finding_anchor_assignments(doc);
+    html_ranked_actions(out, doc, &anchors);
     for group in &groups {
         let group_anchor = format!("rule-{}", group.rule_id);
         out.push_str(&format!(
@@ -1923,9 +2337,10 @@ fn html_detail_head(out: &mut String, doc: &MetricsDocument) {
          #findings summary{cursor:pointer;list-style:none}\n\
          #findings summary::-webkit-details-marker{display:none}\n\
          #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
-         #findings details[open]>summary::before{transform:rotate(90deg)}\n\
-         </style>\n</head>\n<body>\n",
+         #findings details[open]>summary::before{transform:rotate(90deg)}\n",
     );
+    out.push_str(KEY_VIEW_CSS);
+    out.push_str("         </style>\n</head>\n<body>\n");
 }
 
 /// Full findings-table renderer, kept as a SEPARATE function by design

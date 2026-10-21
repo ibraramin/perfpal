@@ -590,33 +590,76 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         !crumb_line.contains("#architecture") && !crumb_line.contains("Workspace"),
         "breadcrumb must not claim #architecture is the workspace section: {crumb_line}"
     );
-    // #architecture remains reachable from the existing nav.
-    assert!(html.contains("<li><a href=\"#architecture\">Architecture</a></li>"));
+    // The Explorer tier replaces #architecture: same stems, new label.
+    assert!(html.contains("<li><a href=\"#explorer\">Explorer</a></li>"));
+    assert!(!html.contains("<li><a href=\"#architecture\">Architecture</a></li>"));
     assert!(html.contains("<a href=\"findings-detail.html\">Findings detail</a>"));
 
-    // #map sits after nav and before #architecture.
+    // Nav → #map → #explorer, exactly one #map.
     let nav = html.find("</nav>").expect("nav close");
     let map = html.find("<section id=\"map\">").expect("#map");
-    let arch = html
-        .find("<section id=\"architecture\">")
-        .expect("#architecture");
-    assert!(nav < map && map < arch, "map section order wrong");
+    let explorer = html.find("<section id=\"explorer\">").expect("#explorer");
     assert!(
-        html.contains("<figure class=\"pz\" data-chart=\"layer-workspace\">"),
-        "workspace figure missing from #map"
-    );
-    assert!(
-        html.contains(FINDING_LEGEND),
-        "annotation legend missing from #map"
-    );
-    assert!(
-        html.contains("showing top 10 of 12 components"),
-        "honest #map cap note missing"
+        nav < map && map < explorer,
+        "map/explorer section order wrong"
     );
     assert_eq!(html.matches("<section id=\"map\">").count(), 1);
 
-    // Every findings-detail anchor emitted by the map resolves in the detail
-    // artifact (same finding_anchor_assignments map).
+    // #map opens with the KV1 question and carries no workspace figure.
+    let map_section = html
+        .split("<section id=\"map\">")
+        .nth(1)
+        .expect("#map body")
+        .split("</section>")
+        .next()
+        .expect("#map close");
+    assert!(map_section.contains("Where do I look first?"));
+    assert!(
+        map_section.find("Where do I look first?").unwrap()
+            < map_section.find("What breaks if I touch it?").unwrap()
+    );
+    assert!(
+        map_section.find("What breaks if I touch it?").unwrap()
+            < map_section.find("Where might time plausibly go?").unwrap()
+    );
+    assert!(!map_section.contains("data-chart=\"layer-workspace\""));
+    assert!(!map_section.contains(FINDING_LEGEND));
+
+    // The eight stems render under Explorer, including the workspace figure
+    // and every emitted component detail page.
+    let explorer_section = html
+        .split("<section id=\"explorer\">")
+        .nth(1)
+        .expect("#explorer body")
+        .split("</section>")
+        .next()
+        .expect("#explorer close");
+    assert!(
+        explorer_section.contains("<figure class=\"pz\" data-chart=\"layer-workspace\">"),
+        "workspace figure missing from #explorer"
+    );
+    let components_section = html
+        .split("<section id=\"components\">")
+        .nth(1)
+        .expect("#components body")
+        .split("</section>")
+        .next()
+        .expect("#components close");
+    assert!(
+        components_section.contains("showing top 10 of 12 components"),
+        "honest component-index cap note missing"
+    );
+    for name in &names {
+        if name.starts_with("component-") && name != "component-coupling.svg" {
+            assert!(
+                explorer_section.contains(&format!("charts/{name}")),
+                "#explorer must link emitted component page {name}"
+            );
+        }
+    }
+
+    // Every findings-detail anchor emitted by the key views resolves in the
+    // detail artifact (same finding_anchor_assignments map).
     let detail_ids = collect_ids(&detail);
     let mut checked = 0;
     let mut rest = html.as_str();
@@ -631,20 +674,8 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         checked += 1;
         rest = &tail[end..];
     }
-    assert!(
-        checked >= 10,
-        "expected the map's component/finding links, got {checked}"
-    );
-
-    // Component links in #map resolve to emitted chart files.
-    for name in &names {
-        if name.starts_with("component-") && name != "component-coupling.svg" {
-            assert!(
-                html.contains(&format!("charts/{name}")),
-                "#map must link emitted component page {name}"
-            );
-        }
-    }
+    assert!(checked >= 1, "expected KV1 finding links, got {checked}");
+    assert!(html.contains("findings-detail.html#ranked-actions"));
 
     // #files rows link the emitted parent-component page.
     let files_section = html
