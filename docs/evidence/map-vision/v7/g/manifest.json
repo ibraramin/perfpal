@@ -1,0 +1,372 @@
+{
+  "_comment": "Map candidate G entry-flow prototype. Design repos only; django/postgres holdout never read.",
+  "caveats": [
+    "Call edges are structural and LOW confidence; no runtime truth is implied.",
+    "Node/edge/card caps are density decisions recorded in NOTES.md.",
+    "Component hulls are production-first approximations (path/filename domains).",
+    "cJSON has no production main and no forward edges from its library root."
+  ],
+  "determinism": "No random, no clock, sorted traversal. HTML/drill bytes are stable across runs; PNG sha256 are run outputs from Playwright.",
+  "holdout": "django/postgres deliberately absent",
+  "images": [
+    {
+      "file": "g-cJSON-final.png",
+      "frame": "final",
+      "height": 900,
+      "reduced_motion": true,
+      "sha256": "61757319a4677128489f047004e16aeb600ebb048f68c2fe5a13fdbb1bf80496",
+      "width": 1440
+    },
+    {
+      "animations_paused": 22,
+      "file": "g-cJSON-mid.png",
+      "frame": "mid",
+      "height": 900,
+      "sha256": "5ae2c67953d1a9753adf69f787f32852c4c0a59655a3264bc154ffdc622acc94",
+      "width": 1440
+    },
+    {
+      "animations_paused": 22,
+      "file": "g-cJSON-start.png",
+      "frame": "start",
+      "height": 900,
+      "sha256": "e73e711dc2429b125ff34a71d07124d2ac6cf90fc2634f13d367a48200d753a0",
+      "width": 1440
+    },
+    {
+      "file": "g-hyperfine-final.png",
+      "frame": "final",
+      "height": 900,
+      "reduced_motion": true,
+      "sha256": "c52c58e901873479da05839070d75e4f7303443b9070c392fa06d2ca3271add3",
+      "width": 1440
+    },
+    {
+      "animations_paused": 104,
+      "file": "g-hyperfine-mid.png",
+      "frame": "mid",
+      "height": 900,
+      "sha256": "6d0b8176b7ba8b550c7071d47da8247e79d8e8d9cf7845c6322b4113c7888212",
+      "width": 1440
+    },
+    {
+      "animations_paused": 104,
+      "file": "g-hyperfine-start.png",
+      "frame": "start",
+      "height": 900,
+      "sha256": "cf91d86a93d4765a61d6b12e8378d5b103ae068a1adcf7725908c839ce985185",
+      "width": 1440
+    },
+    {
+      "file": "g-tmux-final.png",
+      "frame": "final",
+      "height": 900,
+      "reduced_motion": true,
+      "sha256": "f26b0954a211c1043014c6ef4bdc79ebe2048c4e53ee860709d600dae5d6493b",
+      "width": 1440
+    },
+    {
+      "animations_paused": 120,
+      "file": "g-tmux-mid.png",
+      "frame": "mid",
+      "height": 900,
+      "sha256": "8beea9f9dfcca23d5087c992df13dffe05fc2199b5089138a37ab27918da47d1",
+      "width": 1440
+    },
+    {
+      "animations_paused": 120,
+      "file": "g-tmux-start.png",
+      "frame": "start",
+      "height": 900,
+      "sha256": "0cc49ae4c0b1002a25e1620df280e49553d19199f6e67000fdeb8da3fb56c05c",
+      "width": 1440
+    }
+  ],
+  "inputs": {
+    "cJSON": "perfpal-test/out-v6-cJSON/metrics.json",
+    "hyperfine": "perfpal-test/out-v6-hyperfine/metrics.json",
+    "tmux": "perfpal-test/out-v6-tmux/metrics.json"
+  },
+  "legends": {
+    "anchor": "\u00d7 median function = multiple of the repo-wide median function cost",
+    "edge_label": "distinct call count",
+    "header": "N files shown \u00b7 R reachable \u00b7 A reachable aggregated \u00b7 U unreached production"
+  },
+  "renderer": "g/render_g.py (stdlib + Playwright chromium-1243)",
+  "repos": {
+    "cJSON": {
+      "caps": {
+        "card_budget": 20,
+        "edge_draw_cap": 55,
+        "effective_node_cap": 20,
+        "node_ceiling": 50
+      },
+      "caveats": [
+        "Call edges are structural and LOW confidence in the default tier; the map says estimated static flow and never implies runtime truth.",
+        "Unreached = production source files with no forward path from the chosen entry; cJSON's library root is a sink, so its production callers are greyed and point at the Q2 drill.",
+        "Edges drawn are capped at the top caller\u2192callee file pairs by call count; the rest are counted, not drawn.",
+        "Card/hull text truncates long paths; the HTML title attribute carries the full path in the artifact."
+      ],
+      "counts": {
+        "aggregate_nodes": 0,
+        "aggregated_reachable": 0,
+        "back_edges": 5,
+        "call_pairs_selected": 5,
+        "call_pairs_total": 73,
+        "cards": 6,
+        "edges_drawn": 5,
+        "files_total": 101,
+        "hulls": 2,
+        "production_source_files": 6,
+        "reachable_files": 1,
+        "selected_nodes": 6,
+        "source_files": 81,
+        "unreached_production": 5,
+        "unreached_shown": 5
+      },
+      "drill": {
+        "direct_reverse_dependents": 5,
+        "file": "g-cJSON-drill.html",
+        "target": "cJSON.h"
+      },
+      "drill_html_sha256": "30b4509064754630c0ebf31f89e06cfc1ad9600c2e338d127c2926aec4742083",
+      "entry": {
+        "alternatives": [
+          "cJSON.c:2609 cJSON_CreateObject (fan-in 40)",
+          "cJSON.c:1227 cJSON_Parse (fan-in 22)"
+        ],
+        "confidence": "MEDIUM",
+        "cost": 137,
+        "cost_text": "137 static cost units (v2)",
+        "fan_in": 105,
+        "function": "cJSON_Delete",
+        "kind": "lib-root",
+        "line": 253,
+        "path": "cJSON.c",
+        "policy": "library root (no production main)"
+      },
+      "html_sha256": "5db80757c4598cce41555b19c54cd03069602be53b5ef613836bb13bd99e0b7f",
+      "images": [
+        {
+          "animations_paused": 22,
+          "file": "g-cJSON-start.png",
+          "frame": "start",
+          "height": 900,
+          "sha256": "e73e711dc2429b125ff34a71d07124d2ac6cf90fc2634f13d367a48200d753a0",
+          "width": 1440
+        },
+        {
+          "animations_paused": 22,
+          "file": "g-cJSON-mid.png",
+          "frame": "mid",
+          "height": 900,
+          "sha256": "5ae2c67953d1a9753adf69f787f32852c4c0a59655a3264bc154ffdc622acc94",
+          "width": 1440
+        },
+        {
+          "file": "g-cJSON-final.png",
+          "frame": "final",
+          "height": 900,
+          "reduced_motion": true,
+          "sha256": "61757319a4677128489f047004e16aeb600ebb048f68c2fe5a13fdbb1bf80496",
+          "width": 1440
+        }
+      ],
+      "path_trace": [
+        "cJSON.c"
+      ],
+      "repo": "cJSON",
+      "scale": {
+        "function_count": 1055,
+        "median_function_cost": 2,
+        "ratio_anchor": "file/node cost / median function cost (median over all repo functions, zeros included)",
+        "top_pct_anchor": "ceil(100 * rank / N) over all functions ordered by cost desc, fan-in desc, path, name, id; zeros included",
+        "units": "static cost units (v2)"
+      }
+    },
+    "hyperfine": {
+      "caps": {
+        "card_budget": 20,
+        "edge_draw_cap": 55,
+        "effective_node_cap": 20,
+        "node_ceiling": 50
+      },
+      "caveats": [
+        "Call edges are structural and LOW confidence in the default tier; the map says estimated static flow and never implies runtime truth.",
+        "Unreached = production source files with no forward path from the chosen entry; cJSON's library root is a sink, so its production callers are greyed and point at the Q2 drill.",
+        "Edges drawn are capped at the top caller\u2192callee file pairs by call count; the rest are counted, not drawn.",
+        "Card/hull text truncates long paths; the HTML title attribute carries the full path in the artifact."
+      ],
+      "counts": {
+        "aggregate_nodes": 0,
+        "aggregated_reachable": 0,
+        "back_edges": 26,
+        "call_pairs_selected": 49,
+        "call_pairs_total": 92,
+        "cards": 19,
+        "edges_drawn": 49,
+        "files_total": 53,
+        "hulls": 5,
+        "production_source_files": 35,
+        "reachable_files": 19,
+        "selected_nodes": 19,
+        "source_files": 51,
+        "unreached_production": 21,
+        "unreached_shown": 0
+      },
+      "drill": {
+        "direct_reverse_dependents": 12,
+        "file": "g-hyperfine-drill.html",
+        "target": "src/quantity/mod.rs"
+      },
+      "drill_html_sha256": "5d023535b4e897de0c543a2463393268d8c8d3c36376718ed60b97f5e7a832b6",
+      "entry": {
+        "alternatives": [
+          "excluded build-script main build.rs:7"
+        ],
+        "confidence": "HIGH",
+        "cost": 10,
+        "cost_text": "10 static cost units (v2)",
+        "fan_in": 0,
+        "function": "main",
+        "kind": "main",
+        "line": 88,
+        "path": "src/main.rs",
+        "policy": "production main"
+      },
+      "html_sha256": "df35f10d64005a7d7be7617b8b57da53043ae1deae89b8dbf37a72923af3f062",
+      "images": [
+        {
+          "animations_paused": 104,
+          "file": "g-hyperfine-start.png",
+          "frame": "start",
+          "height": 900,
+          "sha256": "cf91d86a93d4765a61d6b12e8378d5b103ae068a1adcf7725908c839ce985185",
+          "width": 1440
+        },
+        {
+          "animations_paused": 104,
+          "file": "g-hyperfine-mid.png",
+          "frame": "mid",
+          "height": 900,
+          "sha256": "6d0b8176b7ba8b550c7071d47da8247e79d8e8d9cf7845c6322b4113c7888212",
+          "width": 1440
+        },
+        {
+          "file": "g-hyperfine-final.png",
+          "frame": "final",
+          "height": 900,
+          "reduced_motion": true,
+          "sha256": "c52c58e901873479da05839070d75e4f7303443b9070c392fa06d2ca3271add3",
+          "width": 1440
+        }
+      ],
+      "path_trace": [
+        "src/main.rs",
+        "src/command.rs",
+        "src/metric.rs"
+      ],
+      "repo": "hyperfine",
+      "scale": {
+        "function_count": 353,
+        "median_function_cost": 7,
+        "ratio_anchor": "file/node cost / median function cost (median over all repo functions, zeros included)",
+        "top_pct_anchor": "ceil(100 * rank / N) over all functions ordered by cost desc, fan-in desc, path, name, id; zeros included",
+        "units": "static cost units (v2)"
+      }
+    },
+    "tmux": {
+      "caps": {
+        "card_budget": 20,
+        "edge_draw_cap": 55,
+        "effective_node_cap": 20,
+        "node_ceiling": 50
+      },
+      "caveats": [
+        "Call edges are structural and LOW confidence in the default tier; the map says estimated static flow and never implies runtime truth.",
+        "Unreached = production source files with no forward path from the chosen entry; cJSON's library root is a sink, so its production callers are greyed and point at the Q2 drill.",
+        "Edges drawn are capped at the top caller\u2192callee file pairs by call count; the rest are counted, not drawn.",
+        "Card/hull text truncates long paths; the HTML title attribute carries the full path in the artifact."
+      ],
+      "counts": {
+        "aggregate_nodes": 5,
+        "aggregated_reachable": 86,
+        "back_edges": 49,
+        "call_pairs_selected": 145,
+        "call_pairs_total": 1455,
+        "cards": 20,
+        "edges_drawn": 57,
+        "files_total": 216,
+        "hulls": 3,
+        "production_source_files": 205,
+        "reachable_files": 106,
+        "selected_nodes": 20,
+        "source_files": 206,
+        "unreached_production": 99,
+        "unreached_shown": 0
+      },
+      "drill": {
+        "direct_reverse_dependents": 160,
+        "file": "g-tmux-drill.html",
+        "target": "tmux.h"
+      },
+      "drill_html_sha256": "5bb049500ef4b9e0454b88052f3017e0827fc6b5af552075e88f26d44e97fa4f",
+      "entry": {
+        "alternatives": [],
+        "confidence": "HIGH",
+        "cost": 178,
+        "cost_text": "178 static cost units (v2)",
+        "fan_in": 0,
+        "function": "main",
+        "kind": "main",
+        "line": 434,
+        "path": "tmux.c",
+        "policy": "production main"
+      },
+      "html_sha256": "c529abd3f6e21d39fc79f94bc4d1ec260345b533085178049583e88f10935722",
+      "images": [
+        {
+          "animations_paused": 120,
+          "file": "g-tmux-start.png",
+          "frame": "start",
+          "height": 900,
+          "sha256": "0cc49ae4c0b1002a25e1620df280e49553d19199f6e67000fdeb8da3fb56c05c",
+          "width": 1440
+        },
+        {
+          "animations_paused": 120,
+          "file": "g-tmux-mid.png",
+          "frame": "mid",
+          "height": 900,
+          "sha256": "8beea9f9dfcca23d5087c992df13dffe05fc2199b5089138a37ab27918da47d1",
+          "width": 1440
+        },
+        {
+          "file": "g-tmux-final.png",
+          "frame": "final",
+          "height": 900,
+          "reduced_motion": true,
+          "sha256": "f26b0954a211c1043014c6ef4bdc79ebe2048c4e53ee860709d600dae5d6493b",
+          "width": 1440
+        }
+      ],
+      "path_trace": [
+        "tmux.c",
+        "options.c",
+        "format.c",
+        "grid.c"
+      ],
+      "repo": "tmux",
+      "scale": {
+        "function_count": 3189,
+        "median_function_cost": 20,
+        "ratio_anchor": "file/node cost / median function cost (median over all repo functions, zeros included)",
+        "top_pct_anchor": "ceil(100 * rank / N) over all functions ordered by cost desc, fan-in desc, path, name, id; zeros included",
+        "units": "static cost units (v2)"
+      }
+    }
+  },
+  "schema_version": "1.7",
+  "view": "G \u00b7 entry-flow map",
+  "viewport": "1440x900 @ device_scale_factor=1"
+}

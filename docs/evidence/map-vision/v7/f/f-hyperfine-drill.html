@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>F · Q2 drill · hyperfine</title>
+<style>
+:root{--ink:#0f172a;--muted:#5b6b7f;--line:#dbe2ea;--blue:#0b3d91}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#eef1f5;color:var(--ink);font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.page{width:1440px;margin:0 auto;background:#fff;padding:24px 40px 40px;min-height:900px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:10px}
+.brand{font-size:20px;font-weight:760;letter-spacing:-.3px} .brand .repo{color:var(--blue)}
+.back{font-size:12px;font-weight:700;color:var(--blue);text-decoration:none}
+.back:hover{text-decoration:underline}
+.q2{margin:14px 0 4px;font-size:20px;font-weight:700;line-height:1.3}
+.q2 b{color:var(--blue)}
+.sub{margin:0 0 14px;font-size:12px;color:var(--muted)}
+.dsm-wrap{border:1px solid var(--line);border-radius:6px;padding:10px 12px 4px;background:#fff;overflow:auto}
+.dsm{display:block}
+.dsm-row:hover .bg{stroke:#475467!important}
+.dsm-row .rowlab{cursor:pointer}
+.legend{display:flex;gap:14px;align-items:center;font-size:10.5px;color:var(--muted);margin:8px 2px 0}
+.sw{display:inline-block;width:12px;height:8px;border-radius:2px;border:1px solid rgba(15,23,42,.12)}
+.focus-panel{margin-top:16px;border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:#fbfcfe}
+.focus-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.focus-head h2{margin:0;font-size:16px}
+.focus-meta{font-size:11px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:18px;margin-top:10px}
+h3{margin:0 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+ul{margin:0;padding:0;list-style:none}
+.focus-members li{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;padding:4px 0;border-bottom:1px dashed #eef1f6}
+.member-anchor{text-align:right;color:#475467;font-size:9.4px;line-height:1.35}
+.mono{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:10.5px}
+.dep{display:grid;grid-template-columns:1fr auto auto;gap:4px 8px;font-size:11px;padding:5px 0;border-bottom:1px solid #eef1f6}
+.dep-name{font-weight:650}
+.dep-count{color:#334155;font-weight:700}
+.dep-ex{grid-column:1/4;color:var(--muted);font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:10px}
+.dep-none{color:var(--muted);font-style:italic}
+.tag{font-size:8.5px;font-weight:800;letter-spacing:.06em;color:#475467;background:#eaecf0;padding:1px 4px;border-radius:3px}
+.tag-production{color:#0b3d91;background:#e8f0fb} .tag-test{color:#7a2e0e;background:#fef0c7} .tag-bench{color:#475467;background:#eaecf0}
+.caveat{margin-top:14px;font-size:10.5px;line-height:1.45;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+.dsm:has(#c0:target) g[data-uses~="c0"] rect.col0{fill:#fde68a!important}
+.dsm:has(#c0:target) g[data-uses~="c0"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c0:target .rowlab{fill:#0b3d91;font-weight:800}
+#c0:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c1:target) g[data-uses~="c1"] rect.col1{fill:#fde68a!important}
+.dsm:has(#c1:target) g[data-uses~="c1"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c1:target .rowlab{fill:#0b3d91;font-weight:800}
+#c1:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c2:target) g[data-uses~="c2"] rect.col2{fill:#fde68a!important}
+.dsm:has(#c2:target) g[data-uses~="c2"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c2:target .rowlab{fill:#0b3d91;font-weight:800}
+#c2:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c3:target) g[data-uses~="c3"] rect.col3{fill:#fde68a!important}
+.dsm:has(#c3:target) g[data-uses~="c3"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c3:target .rowlab{fill:#0b3d91;font-weight:800}
+#c3:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c4:target) g[data-uses~="c4"] rect.col4{fill:#fde68a!important}
+.dsm:has(#c4:target) g[data-uses~="c4"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c4:target .rowlab{fill:#0b3d91;font-weight:800}
+#c4:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c5:target) g[data-uses~="c5"] rect.col5{fill:#fde68a!important}
+.dsm:has(#c5:target) g[data-uses~="c5"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c5:target .rowlab{fill:#0b3d91;font-weight:800}
+#c5:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c6:target) g[data-uses~="c6"] rect.col6{fill:#fde68a!important}
+.dsm:has(#c6:target) g[data-uses~="c6"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c6:target .rowlab{fill:#0b3d91;font-weight:800}
+#c6:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c7:target) g[data-uses~="c7"] rect.col7{fill:#fde68a!important}
+.dsm:has(#c7:target) g[data-uses~="c7"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c7:target .rowlab{fill:#0b3d91;font-weight:800}
+#c7:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c8:target) g[data-uses~="c8"] rect.col8{fill:#fde68a!important}
+.dsm:has(#c8:target) g[data-uses~="c8"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c8:target .rowlab{fill:#0b3d91;font-weight:800}
+#c8:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c9:target) g[data-uses~="c9"] rect.col9{fill:#fde68a!important}
+.dsm:has(#c9:target) g[data-uses~="c9"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c9:target .rowlab{fill:#0b3d91;font-weight:800}
+#c9:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c10:target) g[data-uses~="c10"] rect.col10{fill:#fde68a!important}
+.dsm:has(#c10:target) g[data-uses~="c10"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c10:target .rowlab{fill:#0b3d91;font-weight:800}
+#c10:target .rowlab{fill:#0b3d91;font-weight:800}
+.dsm:has(#c11:target) g[data-uses~="c11"] rect.col11{fill:#fde68a!important}
+.dsm:has(#c11:target) g[data-uses~="c11"] .rowlab{fill:#7a2e0e;font-weight:800}
+#c11:target .rowlab{fill:#0b3d91;font-weight:800}
+#c11:target .rowlab{fill:#0b3d91;font-weight:800}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{body{background:#fff}.page{width:auto}}
+</style></head>
+<body><main class="page">
+<header class="top"><div class="brand">Q2 drill <span class="repo">· hyperfine</span></div><a class="back" href="f-hyperfine.html">← back to the weight map</a></header>
+<p class="q2">If <b>src</b> changes, 4 components are one hop away (src/benchmark, src/export, src/output); its heaviest member is command.rs.</p>
+<p class="sub">Component DSM of resolved file-to-file include edges · rows include → columns · click any row (or a treemap cell) to trace its 1-hop dependents in amber. Ordering is production-first, then static cost. Aliases: u/ = tests/unity/, t/ = tests/.</p>
+<div class="dsm-wrap"><svg class="dsm" viewBox="0 0 666 506" width="666" height="506" role="img" aria-label="Component dependency structure matrix of include edges">
+<rect x="0" y="0" width="666" height="506" fill="#ffffff"/>
+<text x="267.0" y="128" transform="rotate(-55 267.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src</text>
+<text x="301.0" y="128" transform="rotate(-55 301.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/export</text>
+<text x="335.0" y="128" transform="rotate(-55 335.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/output</text>
+<text x="369.0" y="128" transform="rotate(-55 369.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/timer</text>
+<text x="403.0" y="128" transform="rotate(-55 403.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/quantity</text>
+<text x="437.0" y="128" transform="rotate(-55 437.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/parameter</text>
+<text x="471.0" y="128" transform="rotate(-55 471.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/util</text>
+<text x="505.0" y="128" transform="rotate(-55 505.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/export/json</text>
+<text x="539.0" y="128" transform="rotate(-55 539.0 128)" text-anchor="start" font-size="10.5" fill="#475467">core (root)</text>
+<text x="573.0" y="128" transform="rotate(-55 573.0 128)" text-anchor="start" font-size="10.5" fill="#475467">tests</text>
+<text x="607.0" y="128" transform="rotate(-55 607.0 128)" text-anchor="start" font-size="10.5" fill="#475467">src/benchmark</text>
+<text x="641.0" y="128" transform="rotate(-55 641.0 128)" text-anchor="start" font-size="10.5" fill="#475467">scripts</text>
+<g class="dsm-row" id="c0" data-uses="c4 c5 c10 c1 c2 c3 c6">
+<a href="#c0"><text class="rowlab" x="242" y="156" text-anchor="end" font-size="11" fill="#334155">src</text></a>
+<rect class="bg col0" x="250" y="136" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src includes src: 13 edge(s)</title></rect>
+<text x="266.5" y="155" text-anchor="middle" font-size="9" fill="#334155">13</text>
+<rect class="bg col1" x="284" y="136" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src includes src/export: 1 edge(s)</title></rect>
+<text x="300.5" y="155" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col2" x="318" y="136" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src includes src/output: 1 edge(s)</title></rect>
+<text x="334.5" y="155" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col3" x="352" y="136" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src includes src/timer: 1 edge(s)</title></rect>
+<text x="368.5" y="155" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col4" x="386" y="136" width="33" height="29" fill="#295ba6" stroke="#ffffff" stroke-width="1"><title>src includes src/quantity: 14 edge(s)</title></rect>
+<text x="402.5" y="155" text-anchor="middle" font-size="9" fill="#ffffff">14</text>
+<rect class="bg col5" x="420" y="136" width="33" height="29" fill="#85aeda" stroke="#ffffff" stroke-width="1"><title>src includes src/parameter: 6 edge(s)</title></rect>
+<text x="436.5" y="155" text-anchor="middle" font-size="9" fill="#334155">6</text>
+<rect class="bg col6" x="454" y="136" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src includes src/util: 1 edge(s)</title></rect>
+<text x="470.5" y="155" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col7" x="488" y="136" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="136" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="136" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="136" width="33" height="29" fill="#b0cbe9" stroke="#ffffff" stroke-width="1"><title>src includes src/benchmark: 3 edge(s)</title></rect>
+<text x="606.5" y="155" text-anchor="middle" font-size="9" fill="#334155">3</text>
+<rect class="bg col11" x="624" y="136" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c1" data-uses="c0 c10 c4 c7 c2">
+<a href="#c1"><text class="rowlab" x="242" y="186" text-anchor="end" font-size="11" fill="#334155">src/export</text></a>
+<rect class="bg col0" x="250" y="166" width="33" height="29" fill="#5689c5" stroke="#ffffff" stroke-width="1"><title>src/export includes src: 10 edge(s)</title></rect>
+<text x="266.5" y="185" text-anchor="middle" font-size="9" fill="#ffffff">10</text>
+<rect class="bg col1" x="284" y="166" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src/export includes src/export: 25 edge(s)</title></rect>
+<text x="300.5" y="185" text-anchor="middle" font-size="9" fill="#334155">25</text>
+<rect class="bg col2" x="318" y="166" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src/export includes src/output: 1 edge(s)</title></rect>
+<text x="334.5" y="185" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col3" x="352" y="166" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="166" width="33" height="29" fill="#93b8df" stroke="#ffffff" stroke-width="1"><title>src/export includes src/quantity: 5 edge(s)</title></rect>
+<text x="402.5" y="185" text-anchor="middle" font-size="9" fill="#334155">5</text>
+<rect class="bg col5" x="420" y="166" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="166" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="166" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src/export includes src/export/json: 1 edge(s)</title></rect>
+<text x="504.5" y="185" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col8" x="522" y="166" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="166" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="166" width="33" height="29" fill="#78a4d5" stroke="#ffffff" stroke-width="1"><title>src/export includes src/benchmark: 7 edge(s)</title></rect>
+<text x="606.5" y="185" text-anchor="middle" font-size="9" fill="#334155">7</text>
+<rect class="bg col11" x="624" y="166" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c2" data-uses="c0 c10 c4">
+<a href="#c2"><text class="rowlab" x="242" y="216" text-anchor="end" font-size="11" fill="#334155">src/output</text></a>
+<rect class="bg col0" x="250" y="196" width="33" height="29" fill="#a2c2e5" stroke="#ffffff" stroke-width="1"><title>src/output includes src: 4 edge(s)</title></rect>
+<text x="266.5" y="215" text-anchor="middle" font-size="9" fill="#334155">4</text>
+<rect class="bg col1" x="284" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="196" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src/output includes src/output: 4 edge(s)</title></rect>
+<text x="334.5" y="215" text-anchor="middle" font-size="9" fill="#334155">4</text>
+<rect class="bg col3" x="352" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="196" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src/output includes src/quantity: 1 edge(s)</title></rect>
+<text x="402.5" y="215" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col5" x="420" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="196" width="33" height="29" fill="#b0cbe9" stroke="#ffffff" stroke-width="1"><title>src/output includes src/benchmark: 3 edge(s)</title></rect>
+<text x="606.5" y="215" text-anchor="middle" font-size="9" fill="#334155">3</text>
+<rect class="bg col11" x="624" y="196" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/output includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c3" data-uses="c4 c10">
+<a href="#c3"><text class="rowlab" x="242" y="246" text-anchor="end" font-size="11" fill="#334155">src/timer</text></a>
+<rect class="bg col0" x="250" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes src: 0 edge(s)</title></rect>
+<rect class="bg col1" x="284" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="226" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/timer: 5 edge(s)</title></rect>
+<text x="368.5" y="245" text-anchor="middle" font-size="9" fill="#334155">5</text>
+<rect class="bg col4" x="386" y="226" width="33" height="29" fill="#3366ad" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/quantity: 13 edge(s)</title></rect>
+<text x="402.5" y="245" text-anchor="middle" font-size="9" fill="#ffffff">13</text>
+<rect class="bg col5" x="420" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="226" width="33" height="29" fill="#b0cbe9" stroke="#ffffff" stroke-width="1"><title>src/timer includes src/benchmark: 3 edge(s)</title></rect>
+<text x="606.5" y="245" text-anchor="middle" font-size="9" fill="#334155">3</text>
+<rect class="bg col11" x="624" y="226" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/timer includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c4" data-uses="">
+<a href="#c4"><text class="rowlab" x="242" y="276" text-anchor="end" font-size="11" fill="#334155">src/quantity</text></a>
+<rect class="bg col0" x="250" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src: 0 edge(s)</title></rect>
+<rect class="bg col1" x="284" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="256" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/quantity: 6 edge(s)</title></rect>
+<text x="402.5" y="275" text-anchor="middle" font-size="9" fill="#334155">6</text>
+<rect class="bg col5" x="420" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes src/benchmark: 0 edge(s)</title></rect>
+<rect class="bg col11" x="624" y="256" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/quantity includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c5" data-uses="c6 c0">
+<a href="#c5"><text class="rowlab" x="242" y="306" text-anchor="end" font-size="11" fill="#334155">src/parameter</text></a>
+<rect class="bg col0" x="250" y="286" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src: 1 edge(s)</title></rect>
+<text x="266.5" y="305" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col1" x="284" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/quantity: 0 edge(s)</title></rect>
+<rect class="bg col5" x="420" y="286" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/parameter: 3 edge(s)</title></rect>
+<text x="436.5" y="305" text-anchor="middle" font-size="9" fill="#334155">3</text>
+<rect class="bg col6" x="454" y="286" width="33" height="29" fill="#c0d6ef" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/util: 2 edge(s)</title></rect>
+<text x="470.5" y="305" text-anchor="middle" font-size="9" fill="#334155">2</text>
+<rect class="bg col7" x="488" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes src/benchmark: 0 edge(s)</title></rect>
+<rect class="bg col11" x="624" y="286" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/parameter includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c6" data-uses="">
+<a href="#c6"><text class="rowlab" x="242" y="336" text-anchor="end" font-size="11" fill="#334155">src/util</text></a>
+<rect class="bg col0" x="250" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src: 0 edge(s)</title></rect>
+<rect class="bg col1" x="284" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src/quantity: 0 edge(s)</title></rect>
+<rect class="bg col5" x="420" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="316" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src/util includes src/util: 3 edge(s)</title></rect>
+<text x="470.5" y="335" text-anchor="middle" font-size="9" fill="#334155">3</text>
+<rect class="bg col7" x="488" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes src/benchmark: 0 edge(s)</title></rect>
+<rect class="bg col11" x="624" y="316" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/util includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c7" data-uses="">
+<a href="#c7"><text class="rowlab" x="242" y="366" text-anchor="end" font-size="11" fill="#334155">src/export/json</text></a>
+<rect class="bg col0" x="250" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src: 0 edge(s)</title></rect>
+<rect class="bg col1" x="284" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/quantity: 0 edge(s)</title></rect>
+<rect class="bg col5" x="420" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes src/benchmark: 0 edge(s)</title></rect>
+<rect class="bg col11" x="624" y="346" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/export/json includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c8" data-uses="">
+<a href="#c8"><text class="rowlab" x="242" y="396" text-anchor="end" font-size="11" fill="#334155">core (root)</text></a>
+<rect class="bg col0" x="250" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src: 0 edge(s)</title></rect>
+<rect class="bg col1" x="284" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/quantity: 0 edge(s)</title></rect>
+<rect class="bg col5" x="420" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes src/benchmark: 0 edge(s)</title></rect>
+<rect class="bg col11" x="624" y="376" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>core (root) includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c9" data-uses="">
+<a href="#c9"><text class="rowlab" x="242" y="426" text-anchor="end" font-size="11" fill="#334155">tests</text></a>
+<rect class="bg col0" x="250" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src: 0 edge(s)</title></rect>
+<rect class="bg col1" x="284" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/quantity: 0 edge(s)</title></rect>
+<rect class="bg col5" x="420" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="406" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>tests includes tests: 2 edge(s)</title></rect>
+<text x="572.5" y="425" text-anchor="middle" font-size="9" fill="#334155">2</text>
+<rect class="bg col10" x="590" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes src/benchmark: 0 edge(s)</title></rect>
+<rect class="bg col11" x="624" y="406" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>tests includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c10" data-uses="c0 c4 c2 c6 c1 c5 c3">
+<a href="#c10"><text class="rowlab" x="242" y="456" text-anchor="end" font-size="11" fill="#334155">src/benchmark</text></a>
+<rect class="bg col0" x="250" y="436" width="33" height="29" fill="#0b3d91" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src: 17 edge(s)</title></rect>
+<text x="266.5" y="455" text-anchor="middle" font-size="9" fill="#ffffff">17</text>
+<rect class="bg col1" x="284" y="436" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/export: 1 edge(s)</title></rect>
+<text x="300.5" y="455" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col2" x="318" y="436" width="33" height="29" fill="#6193cb" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/output: 9 edge(s)</title></rect>
+<text x="334.5" y="455" text-anchor="middle" font-size="9" fill="#ffffff">9</text>
+<rect class="bg col3" x="352" y="436" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/timer: 1 edge(s)</title></rect>
+<text x="368.5" y="455" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col4" x="386" y="436" width="33" height="29" fill="#154798" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/quantity: 16 edge(s)</title></rect>
+<text x="402.5" y="455" text-anchor="middle" font-size="9" fill="#ffffff">16</text>
+<rect class="bg col5" x="420" y="436" width="33" height="29" fill="#d4e4f5" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/parameter: 1 edge(s)</title></rect>
+<text x="436.5" y="455" text-anchor="middle" font-size="9" fill="#334155">1</text>
+<rect class="bg col6" x="454" y="436" width="33" height="29" fill="#c0d6ef" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/util: 2 edge(s)</title></rect>
+<text x="470.5" y="455" text-anchor="middle" font-size="9" fill="#334155">2</text>
+<rect class="bg col7" x="488" y="436" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="436" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="436" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="436" width="33" height="29" fill="#e9eef5" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes src/benchmark: 19 edge(s)</title></rect>
+<text x="606.5" y="455" text-anchor="middle" font-size="9" fill="#334155">19</text>
+<rect class="bg col11" x="624" y="436" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>src/benchmark includes scripts: 0 edge(s)</title></rect>
+</g>
+<g class="dsm-row" id="c11" data-uses="">
+<a href="#c11"><text class="rowlab" x="242" y="486" text-anchor="end" font-size="11" fill="#334155">scripts</text></a>
+<rect class="bg col0" x="250" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src: 0 edge(s)</title></rect>
+<rect class="bg col1" x="284" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/export: 0 edge(s)</title></rect>
+<rect class="bg col2" x="318" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/output: 0 edge(s)</title></rect>
+<rect class="bg col3" x="352" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/timer: 0 edge(s)</title></rect>
+<rect class="bg col4" x="386" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/quantity: 0 edge(s)</title></rect>
+<rect class="bg col5" x="420" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/parameter: 0 edge(s)</title></rect>
+<rect class="bg col6" x="454" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/util: 0 edge(s)</title></rect>
+<rect class="bg col7" x="488" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/export/json: 0 edge(s)</title></rect>
+<rect class="bg col8" x="522" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes core (root): 0 edge(s)</title></rect>
+<rect class="bg col9" x="556" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes tests: 0 edge(s)</title></rect>
+<rect class="bg col10" x="590" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes src/benchmark: 0 edge(s)</title></rect>
+<rect class="bg col11" x="624" y="466" width="33" height="29" fill="#f8fafc" stroke="#ffffff" stroke-width="1"><title>scripts includes scripts: 0 edge(s)</title></rect>
+</g>
+</svg>
+<div class="legend"><span>row includes → column</span><span><i class="sw" style="background:#f2f7fd"></i> fewer</span><span><i class="sw" style="background:#9fc0e4"></i></span><span><i class="sw" style="background:#0b3d91"></i> more</span><span><i class="sw" style="background:#e9eef5"></i> internal (diagonal)</span><span>205/238 edges aggregated</span></div></div>
+<section class="focus-panel">
+  <div class="focus-head"><h2>Focus · src</h2><span class="focus-meta">production · 8 files · 1.62k static cost units (v2) · 8.0× median component · top 8% of components · 35.66% of repo · 4 one-hop dependents</span></div>
+  <div class="cols">
+    <div><h3>Heaviest member files</h3><ul class="focus-members"><li><span class="mono">src/command.rs</span><span class="member-anchor">611 static cost units (v2) · 87.3× median function · top 2% of files</span></li><li><span class="mono">src/metric.rs</span><span class="member-anchor">431 static cost units (v2) · 61.6× median function · top 4% of files</span></li><li><span class="mono">src/options.rs</span><span class="member-anchor">276 static cost units (v2) · 39.4× median function · top 10% of files</span></li><li><span class="mono">src/shell_syntax.rs</span><span class="member-anchor">210 static cost units (v2) · 30.0× median function · top 16% of files</span></li><li><span class="mono">src/main.rs</span><span class="member-anchor">58 static cost units (v2) · 8.3× median function · top 39% of files</span></li></ul></div>
+    <div><h3>Depended on by (1 hop)</h3><ul><li class="dep"><span class="dep-name">src/benchmark</span><span class="dep-class tag tag-bench">bench</span><span class="dep-count">17 edges</span><span class="dep-ex">src/benchmark/executor.rs → src/command.rs</span></li><li class="dep"><span class="dep-name">src/export</span><span class="dep-class tag tag-production">production</span><span class="dep-count">10 edges</span><span class="dep-ex">src/export/csv.rs → src/metric.rs</span></li><li class="dep"><span class="dep-name">src/output</span><span class="dep-class tag tag-production">production</span><span class="dep-count">4 edges</span><span class="dep-ex">src/output/progress_bar.rs → src/options.rs</span></li><li class="dep"><span class="dep-name">src/parameter</span><span class="dep-class tag tag-production">production</span><span class="dep-count">1 edge</span><span class="dep-ex">src/parameter/range_step.rs → src/error.rs</span></li></ul></div>
+    <div><h3>Uses (1 hop)</h3><ul><li class="dep"><span class="dep-name">src/quantity</span><span class="dep-count">14 edges</span><span class="dep-ex">src/main.rs → src/quantity/mod.rs</span></li><li class="dep"><span class="dep-name">src/parameter</span><span class="dep-count">6 edges</span><span class="dep-ex">src/command.rs → src/parameter/mod.rs</span></li><li class="dep"><span class="dep-name">src/benchmark</span><span class="dep-count">3 edges</span><span class="dep-ex">src/main.rs → src/benchmark/mod.rs</span></li><li class="dep"><span class="dep-name">src/export</span><span class="dep-count">1 edge</span><span class="dep-ex">src/main.rs → src/export/mod.rs</span></li><li class="dep"><span class="dep-name">src/output</span><span class="dep-count">1 edge</span><span class="dep-ex">src/main.rs → src/output/mod.rs</span></li><li class="dep"><span class="dep-name">src/timer</span><span class="dep-count">1 edge</span><span class="dep-ex">src/main.rs → src/timer/mod.rs</span></li><li class="dep"><span class="dep-name">src/util</span><span class="dep-count">1 edge</span><span class="dep-ex">src/main.rs → src/util/mod.rs</span></li></ul></div>
+  </div>
+</section>
+<p class="caveat">Focus is the hottest <b>production</b> component (the overall hottest cell can be test code, which has no production dependents). Edge counts are file-to-file include edges aggregated to component pairs; 4/238 unresolved edges (to = null) and 29 resolved imports naming non-repo modules are excluded, and schema 1.7 carries no per-edge confidence field. Static approximation — validate with a build/runtime profile. Diagram is CSS/SVG only: no script, no network.</p>
+</main></body></html>

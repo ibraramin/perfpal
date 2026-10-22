@@ -1,0 +1,239 @@
+{
+  "anchor_method": "median component = median cost over scan components with cost>0; median function = median over all function_cost_v2 values; top P% = round(100 * cost rank / n), rank 1 = hottest",
+  "candidate": "F",
+  "caps": {
+    "max_actions": 5,
+    "min_label_area_px": 4200,
+    "top_cells": 50,
+    "treemap_px": [
+      1360,
+      404
+    ]
+  },
+  "caveats": [
+    "Component derivation: longest matching components[].path_prefix; '.' is the root fallback; overlapping prefixes resolve to the longest.",
+    "Treemap area is the component's share of summed function_cost_v2; the top-50 cap leaves a residual 'other' cell so area still sums to the repo total.",
+    "A flat repo whose root component holds >55% of cost and >40 files (tmux) expands root files as cells so the map stays legible; the DSM/drill remains component-level.",
+    "cJSON static cost is 93.5% one test component (tests/unity/test/tests) and production is 0.18% of the total; the map shows this honestly, and the brief stays production-first.",
+    "Include edges: only resolved file-to-file edges are aggregated; unresolved edges (to = null) and resolved imports naming non-repo modules (e.g. Python stdlib/numpy) are excluded. Schema 1.7 has no per-edge confidence field, so no LOW-confidence edge tier exists.",
+    "The KV1 brief excludes -ARCH-002; findings are ranked production-first by severity then confidence; LOW-confidence findings rank last and do not appear when higher-confidence production actions exist.",
+    "function_cost_v2 is a static heuristic approximation, not measured runtime; parse health is reported per repo and partial parses bound confidence.",
+    "Animation is a presentation layer: the final frame contains every cell, label, action and the Q2 link; start/mid frames are evidence only."
+  ],
+  "cost_unit": "static cost units (v2)",
+  "generated": "2026-10-22",
+  "holdout": "django/postgres deliberately absent",
+  "images": [
+    {
+      "file": "f-cJSON-final.png",
+      "height": 900,
+      "repo": "cJSON",
+      "role": "final",
+      "sha256": "b28ad0837862b2e794a4d32c91bdd3fb3fcaa4d44072b57cff32e152904eb004",
+      "width": 1440
+    },
+    {
+      "animations": 27,
+      "file": "f-cJSON-mid.png",
+      "height": 900,
+      "repo": "cJSON",
+      "role": "mid",
+      "sha256": "dc1ae83d16bd5d058edf6b1b2f78ee7bbc547fb2c2362aa12947ffda82ffc3ad",
+      "timeline_ms": 5600,
+      "width": 1440
+    },
+    {
+      "animations": 27,
+      "file": "f-cJSON-start.png",
+      "height": 900,
+      "repo": "cJSON",
+      "role": "start",
+      "sha256": "15345da4bd234f85320d6f67243fbb12aec46da72bfbb1bbb2e03fb5d4af90b1",
+      "timeline_ms": 5600,
+      "width": 1440
+    },
+    {
+      "file": "f-hyperfine-final.png",
+      "height": 900,
+      "repo": "hyperfine",
+      "role": "final",
+      "sha256": "0a9f1924d258ac9df6460f985acc329a30a13ab5258e6e6c1cb651bd801d60b9",
+      "width": 1440
+    },
+    {
+      "animations": 22,
+      "file": "f-hyperfine-mid.png",
+      "height": 900,
+      "repo": "hyperfine",
+      "role": "mid",
+      "sha256": "d6e2829b0f220acb114292f4a7b869cfc545858f8396b806f23e804167b6042b",
+      "timeline_ms": 5600,
+      "width": 1440
+    },
+    {
+      "animations": 22,
+      "file": "f-hyperfine-start.png",
+      "height": 900,
+      "repo": "hyperfine",
+      "role": "start",
+      "sha256": "24d51fe0fe22649fbb28b606721e202d0c9fff9c2f833060e31c06fbfad8db5a",
+      "timeline_ms": 5600,
+      "width": 1440
+    },
+    {
+      "file": "f-tmux-final.png",
+      "height": 900,
+      "repo": "tmux",
+      "role": "final",
+      "sha256": "f121f73c45930d9d909955f7ff8e702248b50414f93089503f0362a6ff6db71f",
+      "width": 1440
+    },
+    {
+      "animations": 61,
+      "file": "f-tmux-mid.png",
+      "height": 900,
+      "repo": "tmux",
+      "role": "mid",
+      "sha256": "cf34a68560bf5caf4bc4526845437caa67db53e613d90467b111b8ff167ecc11",
+      "timeline_ms": 5600,
+      "width": 1440
+    },
+    {
+      "animations": 61,
+      "file": "f-tmux-start.png",
+      "height": 900,
+      "repo": "tmux",
+      "role": "start",
+      "sha256": "1bf35c1274c5d41fa37d257ecdc69f2d77cc0ab8eb453c9e0bada2205da3d099",
+      "timeline_ms": 5600,
+      "width": 1440
+    }
+  ],
+  "renderer": "docs/evidence/map-vision/v7/f/render_f.py (Playwright chromium-1243)",
+  "repos": {
+    "cJSON": {
+      "actions": 4,
+      "cells_rendered": 18,
+      "components_rendered": 18,
+      "components_total": 21,
+      "cost_components": 20,
+      "cost_files": 81,
+      "drill": "f-cJSON-drill.html",
+      "edges_aggregated": 96,
+      "edges_nonfile": 9,
+      "edges_resolved": 105,
+      "edges_total": 229,
+      "edges_unresolved": 124,
+      "files": 101,
+      "findings": 837,
+      "functions": 1055,
+      "hottest_cell": {
+        "class": "test",
+        "cost": 2000485,
+        "label": "tests/unity/test/tests",
+        "share": 0.935344
+      },
+      "hottest_production_cell": {
+        "class": "production",
+        "cost": 3724,
+        "label": "core (root)",
+        "share": 0.001741
+      },
+      "html": "f-cJSON.html",
+      "input": "perfpal-test/out-v6-cJSON/metrics.json",
+      "input_sha256": "24631a20abddcb8cc967aa788def2068c98167b74c1de7fba7ac13eca3ad804e",
+      "median_component": 24.0,
+      "median_function": 2,
+      "parse_health_summary": {
+        "failed": 0,
+        "ok": 63,
+        "partial": 38
+      },
+      "production_share_of_cost": 0.001813,
+      "root_expanded_to_files": false
+    },
+    "hyperfine": {
+      "actions": 5,
+      "cells_rendered": 12,
+      "components_rendered": 12,
+      "components_total": 12,
+      "cost_components": 12,
+      "cost_files": 51,
+      "drill": "f-hyperfine-drill.html",
+      "edges_aggregated": 205,
+      "edges_nonfile": 29,
+      "edges_resolved": 234,
+      "edges_total": 238,
+      "edges_unresolved": 4,
+      "files": 53,
+      "findings": 348,
+      "functions": 353,
+      "hottest_cell": {
+        "class": "production",
+        "cost": 1617,
+        "label": "src",
+        "share": 0.35656
+      },
+      "hottest_production_cell": {
+        "class": "production",
+        "cost": 1617,
+        "label": "src",
+        "share": 0.35656
+      },
+      "html": "f-hyperfine.html",
+      "input": "perfpal-test/out-v6-hyperfine/metrics.json",
+      "input_sha256": "18b29ad2e0066a748153bb7514c4b60ec386eaa614d8a4d83229240a48bd43eb",
+      "median_component": 202.0,
+      "median_function": 7,
+      "parse_health_summary": {
+        "failed": 0,
+        "ok": 53,
+        "partial": 0
+      },
+      "production_share_of_cost": 0.618743,
+      "root_expanded_to_files": false
+    },
+    "tmux": {
+      "actions": 5,
+      "cells_rendered": 51,
+      "components_rendered": 50,
+      "components_total": 4,
+      "cost_components": 4,
+      "cost_files": 206,
+      "drill": "f-tmux-drill.html",
+      "edges_aggregated": 214,
+      "edges_nonfile": 20,
+      "edges_resolved": 234,
+      "edges_total": 234,
+      "edges_unresolved": 0,
+      "files": 216,
+      "findings": 7545,
+      "functions": 3189,
+      "hottest_cell": {
+        "class": "production",
+        "cost": 6630,
+        "label": "format.c",
+        "share": 0.068402
+      },
+      "hottest_production_cell": {
+        "class": "production",
+        "cost": 6630,
+        "label": "format.c",
+        "share": 0.068402
+      },
+      "html": "f-tmux.html",
+      "input": "perfpal-test/out-v6-tmux/metrics.json",
+      "input_sha256": "44ad59967ec82950190600bec5a6cafa99a324b80ff5b7235e23ac44796843e6",
+      "median_component": 2528.0,
+      "median_function": 20,
+      "parse_health_summary": {
+        "failed": 0,
+        "ok": 100,
+        "partial": 116
+      },
+      "production_share_of_cost": 0.994542,
+      "root_expanded_to_files": true
+    }
+  },
+  "viewport": "1440x900 @ device_scale_factor=1"
+}

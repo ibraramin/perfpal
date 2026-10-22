@@ -1,0 +1,107 @@
+{
+  "candidate": "F — weight map / treemap (map-f-treemap)",
+  "protocol": "Two fresh blind @vision reads per repo on the 1440x900 final frame; one image per task; no source, no sibling views, no expected answer; describe-first then strict JSON {question_answered, action, blockers, confidence}. The image self-identifies as a Perfpal weight map; the reads are blind to the other candidate and to the source.",
+  "animation": "CSS keyframes only; final frame captured with prefers-reduced-motion; the artifact contains no JavaScript.",
+  "reads": {
+    "cJSON": [
+      {
+        "read": "A",
+        "image": "f-cJSON-final.png",
+        "description": "This is a \"Perfpal weight map\" for the cJSON codebase: a static-cost treemap with a findings brief underneath. The header shows repo stats (101 files · 1055 functions · 837 findings · parse 63 ok / 38 partial / 0 failed) and a Pause button. The headline immediately states the story: \"93.5% of static weight is test code (tests/unity/test/tests); production is only 0.2%. Start in production: PERF-C-LOOP-002 at cJSON_Utils.c:1188 (hot/medium), led by core (root).\" The treemap itself is almost entirely one giant hatched rectangle labelled \"tests/unity/test/tests\" (93.5% · 2.00M static cost units (v2) · ≈53,354× median components), plus a narrow \"tests\" strip (6.2% of map, badge 2) and a few tiny unlabeled cells clumped in the bottom-right corner — area and colour encode static cost units (v2), and the hatch pattern covers test/bench/other code. Because the test cell dwarfs everything, the production cells (0.2% of cost) are effectively invisible as slivers. Below the map, a \"KV1 BRIEF — top 4 actions, production first, ranked by severity then confidence\" shows four cards: (1) HOT/MEDIUM `cJSON_Utils.c:1188` \"Expensive setup or I/O call inside loop\" ('sprintf' runs every iteration at loop depth 1; 1.05k cost units · 524.0× median function), (2) WARN/HIGH `cJSON.c:127` \"Unbounded string operation\" via 'sprintf' (2.60k · 1,302×), (3) WARN/HIGH `cJSON.c:703` \"High cyclomatic complexity\" ('utf16_literal_to_utf8' branches 17 ways, threshold 15; 2.60k · 1,302×), and (4) WARN/HIGH `fuzzing/afl.c:163` \"Deallocation inside loop\" ('free' at loop depth 1; 81 · 40.5×). A footer offers \"Q2 · what depends on the hot component? Open the 1-hop drill →\" and notes \"124/229 unresolved + 9 non-repo imports excluded from drill\". What stands out: the weight distribution is so skewed toward test code that the map's visual answer is essentially \"the tests drown everything,\" and the actionable answer comes from the brief cards, not from reading the rectangles.",
+        "json": {
+          "question_answered": "Where is the static weight concentrated, and which top 4 actions should I take first (production first, ranked by severity then confidence)?",
+          "action": "Fix PERF-C-LOOP-002 at cJSON_Utils.c:1188 — hoist the 'sprintf' call out of the loop (it runs every iteration at loop depth 1) or batch its work, as the headline recommends 'Start in production: PERF-C-LOOP-002 at cJSON_Utils.c:1188 (hot/medium)'",
+          "blockers": "The treemap is unreadable for production code: the tests/unity/test/tests cell occupies 93.5% of the area, so the production cells (0.2% of cost) are tiny unlabeled slivers in the bottom-right corner; the actionable answer comes from the KV1 BRIEF cards rather than from the map geometry. Also 'production static cost units (v2)' legend swatches are unlabelled by value.",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "image": "f-cJSON-final.png",
+        "retried": true,
+        "description": "This is a Perfpal \"weight map\" for the cJSON codebase: a header reports \"101 files · 1055 functions · 837 findings · parse 63 ok / 38 partial / 0 failed\" next to a Pause button, and a bold headline states \"93.5% of static weight is test code (tests/unity/test/tests); production is only 0.2%. Start in production: PERF-C-LOOP-002 at cJSON_Utils.c:1188 (hot/medium), led by core (root).\" Below it, a large treemap where rectangle area and colour = \"static cost units (v2)\" is almost entirely consumed by one hatched cell, `tests/unity/test/tests` (93.5% · 2.00M static cost units, #3,354× median components, top 6%, badge 1), plus a thin `tests` cell (6.2% of map, badge 2) and a few unlabeled slivers huddled in the bottom-right corner — visually confirming that tests dwarf everything else. A \"KV1 BRIEF — top 4 actions, production first, ranked by severity then confidence\" strip shows four finding cards: (1) HOT/MEDIUM `cJSON_Utils.c:1188` \"Expensive setup or I/O call inside loop\" (sprintf every iteration at loop depth 1; 1.05k cost units, 524.0× median, top 6% of files), (2) WARN/HIGH `cJSON.c:127` \"Unbounded string operation\" (2.60k units, 1,302× median), (3) WARN/HIGH `cJSON.c:703` \"High cyclomatic complexity\" ('utf16_literal_to_utf8' branches 17 ways, threshold 15), and (4) WARN/HIGH `fuzzing/afl.c:163` \"Deallocation inside loop\" (free at loop depth 1; 81 units, 40.5× median). What stands out is the extreme imbalance: the map is a single wall of test code, so the actual production guidance lives entirely in the headline and the four brief cards rather than in the picture. A footer offers the next question, \"Q2 · what depends on the hot component? Open the 1-hop drill →\", with a note that evidence is static and \"124/229 unresolved + 9 non-repo imports excluded from drill.\"",
+        "json": {
+          "question_answered": "Where is the static weight, and where should I start? — '93.5% of static weight is test code (tests/unity/test/tests); production is only 0.2%. Start in production: PERF-C-LOOP-002 at cJSON_Utils.c:1188 (hot/medium), led by core (root).'",
+          "action": "Inspect and hoist the sprintf call out of the loop at cJSON_Utils.c:1188 (finding PERF-C-LOOP-002, 'Expensive setup or I/O call inside loop', HOT/MEDIUM, 524.0× median function cost).",
+          "blockers": "The treemap itself is nearly unusable for locating production code: the hot production rectangles are the tiny unlabeled slivers in the bottom-right corner (0.2% of cost), and the legend swatches are unlabelled, so the actionable answer only comes from the headline and the KV1 BRIEF cards; the footer's 'Q2' also presupposes a Q1 view not present here.",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "hyperfine": [
+      {
+        "read": "A",
+        "image": "f-hyperfine-final.png",
+        "description": "This is a Perfpal \"weight map\" (a treemap) for the project hyperfine, summarizing where static-analysis cost concentrates across 53 files / 335 functions / 348 findings (parse 53 ok / 0 partial / 0 failed). The headline answers the question outright: \"src is the heaviest cell (35.7% of static cost); start with PERF-RS-ALLOC-001 at src/command.rs:148 (hot/high).\" Each rectangle's area and shade of blue encode \"static cost units (v2)\" for production code, while diagonally hatched cells (tests, src/benchmark, scripts) are test/bench/other, excluded from the production ranking. The biggest, darkest cell is `src` at 35.7% (1.62k static cost units, 8.0× the median component); other production cells are src/export (10.4%), src/output (5.9%), src/timer (3.0%), src/quantity (2.9%), src/parameter (2.6%), plus tiny unlabeled cells at bottom-right. Below the map, a \"KV1 BRIEF\" ranks the top 5 actions: cards 1–3 all sit in src/command.rs (lines 148, 335, 161 — heap allocation inside a loop, `Command::new` inside a loop, `.len` recomputed in a loop), card 4 flags a module-graph cycle between src/metric.rs and src/benchmark/measurement.rs, and card 5 flags high cyclomatic complexity at src/options.rs:254 (`from_cli_arguments` branches 52 ways vs. threshold 15). Each card shows severity (HOT/WARN), confidence (HIGH/MEDIUM), a cost anchor (e.g. 611 static cost units, 87.3× median function, top 2% of files), and a truncated remediation hint. The footer offers the next step — \"Q2 · what depends on the hot component? Open the 1-hop drill →\" — with caveats: static heuristics, 4/238 unresolved, 29 non-repo imports excluded, ARCH-002 excluded. A Pause button sits top-right beside a small light-to-dark-blue legend for production static cost units.",
+        "json": {
+          "question_answered": "Where is the heaviest static cost and where do I start? The view answers in its own words: \"src is the heaviest cell (35.7% of static cost); start with PERF-RS-ALLOC-001 at src/command.rs:148 (hot/high).\"",
+          "action": "Open src/command.rs at line 148 (finding PERF-RS-ALLOC-001, \"Heap allocation inside loop\", 611 static cost units, 87.3× median function) and hoist the two per-iteration allocations (format, to_string) out of the loop at loop depth 1.",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "image": "f-hyperfine-final.png",
+        "description": "This is a \"Perfpal weight map\" treemap for the `hyperfine` codebase (53 files · 353 functions · 348 findings; parse 53 ok / 0 partial / 0 failed). An answer-first headline states: \"src is the heaviest cell (35.7% of static cost); start with PERF-RS-ALLOC-001 at src/command.rs:148 (hot/high).\" The main area is a treemap of 12 cells where rectangle area and colour = static cost units (v2), dark blue for production code and hatched stripes for test/bench/other code. The biggest cells are `src` (35.7%, 1.62k cost units, 8.0× median component), `tests` (16.3%, hatched), `src/benchmark` (13.0%, hatched), `src/export` (10.4%), `scripts` (8.9%, hatched), then smaller production cells `src/output` (5.9%), `src/timer` (3.0%), `src/quantity` (2.9%), `src/parameter` (2.6%). Below the map is a \"KV1 BRIEF\" panel listing the top 5 actions, production first, ranked by severity then confidence, each card showing severity (HOT/WARN), confidence (HIGH/MEDIUM), file:line, a heuristic title, a truncated explanation, and a cost footer (e.g. 611 static cost units, 87.3× median function, top 2% of files). The #1 card is a HOT/HIGH heap-allocation-inside-loop at `src/command.rs:148`, followed by an expensive `Command::new()` call in a loop at `src/command.rs:335`, a recomputed `.len()` at `src/command.rs:161`, a module-graph cycle between `src/metric.rs` and `src/benchmark/measurement.rs`, and a 52-branch `from_cli_arguments` at `src/options.rs:254`. A footer invites the next question — \"Q2 · what depends on the hot component? Open the 1-hop drill →\" — and notes the evidence is static heuristics with 4/238 unresolved and 29 non-repo imports excluded. A \"Pause\" button sits top-right, suggesting this map is (re)computed live.",
+        "json": {
+          "question_answered": "src is the heaviest cell (35.7% of static cost); start with PERF-RS-ALLOC-001 at src/command.rs:148 (hot/high).",
+          "action": "Open src/command.rs:148 and hoist the 2 per-iteration heap allocations (format, to_string) out of the depth-1 loop — finding PERF-RS-ALLOC-001, HOT/HIGH, 611 static cost units (v2), 87.3× median function.",
+          "blockers": "Card explanations are truncated with ellipses, and findings show only file:line (no enclosing function name), so the exact loop/function to edit must be located by opening the file.",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "tmux": [
+      {
+        "read": "A",
+        "image": "f-tmux-final.png",
+        "description": "This is a Perfpal \"weight map\" for the tmux codebase: a treemap where each rectangle is a source file, sized (and shaded) by its share of \"static cost units (v2)\". The header reports 216 files · 3189 functions · 7545 findings, with parse status \"100 ok / 116 partial / 0 failed\", plus a Pause button. A bold answer-first headline reads \"format.c is the heaviest cell (6.8% of static cost); start with PERF-C-ALLOC-001 at compat/getline.c:85 (hot/high).\" The three biggest labelled cells are format.c (badge 1, 6.83k static cost units, 2.6× median component, top 2% of cells), window-copy.c (badge 2, 5.11k, 2.0× median, top 4%), and window.c (badge 3, 3.84k, 1.5× median, top 6%), followed by compat, screen-write.c, tty.c (3.2% of map), grid.c, colour.c, etc.; a hatched grey \"other (107 cells)\" block swallows 17.2% of the map (16.7% of cost), and many smaller cells have truncated names (\"server-clien…\", \"screen-redraw…\"). Below the map, a \"KV1 BRIEF — top 5 actions, production first, ranked by severity then confidence\" lists five finding cards, each with severity chip (HOT/WARN), file:line, title, explanation, and cost footers: 1 HOT/HIGH `compat/getline.c:85` \"Heap allocation inside loop\" (realloc at loop depth 1, 56 units, 2.8× median function); 2 HOT/MEDIUM `tty.c:601` \"Expensive setup or I/O call inside loop\" (streaming write each iteration, 3.09k units, 154.4× median); 3 WARN/HIGH `format.c:336` \"Deallocation inside loop\" (free at loop depth 1, 6.83k units, 331.6× median); 4 WARN/HIGH `format.c:393` \"High cyclomatic complexity\" (format_job_get branches 17 ways, threshold 15); 5 WARN/HIGH `window-copy.c:2104` \"Deeply nested loops\" (nesting depth 3, 5.11k units, 255.3× median). The footer teases the next question — \"Q2 · what depends on the hot component? Open the 1-hop drill →\" — with notes \"static heuristics · area/colour = static cost units (v2) · median component 2.53k · 0/234 unresolved · 20 non-repo imports excluded from drill\", and a side note that \"ARCH-002 excluded · evidence is static\".",
+        "json": {
+          "question_answered": "Where is the static cost concentrated and what should I look at first — \"format.c is the heaviest cell (6.8% of static cost); start with PERF-C-ALLOC-001 at compat/getline.c:85 (hot/high).\"",
+          "action": "Open compat/getline.c:85 and inspect PERF-C-ALLOC-001 (\"Heap allocation inside loop\" — per-iteration realloc at loop depth 1), the #1 card in the KV1 BRIEF, then verify the 6.83k-unit claim against format.c:336 in format.c",
+          "blockers": "Many treemap cell labels are truncated (\"server-clien…\", \"screen-redraw…\", \"window-custom…\", \"arguments…\"), so exact file names for smaller cells cannot be read; the hatched \"other (107 cells)\" block aggregates 16.7% of cost with no per-file detail; the colour legend swatches are unlabeled values (only a gradient is shown).",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "image": "f-tmux-final.png",
+        "description": "This is a Perfpal \"weight map\" for the `tmux` codebase: a treemap where each rectangle is a source file, sized and shaded by its share of \"static cost units (v2)\" (darker = more cost), plus a ranked action list underneath. The header reports scope — 216 files · 3189 functions · 7545 findings · parse 100 ok / 116 partial / 0 failed — and a bold answer line reads \"format.c is the heaviest cell (6.8% of static cost); start with PERF-C-ALLOC-001 at compat/getline.c:85 (hot/high).\" The biggest, darkest cells are `format.c` (rank 1, 6.63k cost units, 2.6× median component), `window-copy.c` (rank 2, 5.11k), `window.c` (rank 3, 3.84k), then `compat`, `screen-write.c`, `tty.c`, `grid.c`, `colour.c`, `input.c`, `options.c`, while a hatched \"other (107 cells)\" block holds the 16.7% residual so small files don't clutter the map; hatched/light grey cells at the right edge are marked test/bench/other. Beneath it, a \"KV1 BRIEF — top 5 actions, production first, ranked by severity then confidence\" shows five cards: (1) HOT/HIGH `compat/getline.c:85` \"Heap allocation inside loop\" (56 cost units, 2.8× median function), (2) HOT/MEDIUM `tty.c:601` \"Expensive setup or I/O call inside loop\" (3.09k, 154.4×), (3) WARN/HIGH `format.c:336` \"Deallocation inside loop\" (6.63k, 331.6×), (4) WARN/HIGH `format.c:393` \"High cyclomatic complexity\" (`format_job_get` branches 17 ways, threshold 15), and (5) WARN/HIGH `window-copy.c:2104` \"Deeply nested loops\" (5.11k, 255.3×). What stands out is the tension the view resolves itself: the largest cell is `format.c`, but the suggested starting action is the smaller but hotter `compat/getline.c:85` allocation-in-loop finding, and the footer offers a next step, \"Q2 · what depends on the hot component? Open the 1-hop drill →\". Several medium cells have truncated labels (e.g. `server-clien...`, `screen-redraw...`, `format-d...`), so only the top few files are unambiguously named.",
+        "json": {
+          "question_answered": "format.c is the heaviest cell (6.8% of static cost); start with PERF-C-ALLOC-001 at compat/getline.c:85 (hot/high).",
+          "action": "Inspect compat/getline.c:85 — the 'Heap allocation inside loop' finding (PERF-C-ALLOC-001, HOT/HIGH) where realloc is called at loop depth 1 — and hoist or reuse the buffer.",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ]
+  },
+  "verdict": "F: 6/6 valid reads (one empty first attempt retried) state the static-weight question and one concrete path:line action from the brief. Hyperfine and tmux read strongly; cJSON is the failure case — the treemap is 93.5% test code and the production cells (0.2%) are unreadable slivers, so the brief carries the answer.",
+  "observations": [
+    "O1: The KV1 brief is the reliable answer surface in all three repos; every read took its action from the brief or the headline, not from the treemap geometry.",
+    "O2: cJSON is the F failure case: a single test cell consumes 93.5% of the area; production cells are 0.2% and unreadable. This is a data/area-policy issue (test cost in the hero area), not a layout bug.",
+    "O3: Hyperfine and tmux read well: the mass cells + brief give a clear start; tmux users noted truncated small-cell labels, the hatched other block, and unlabeled legend swatches.",
+    "O4: One read misread `83,354×` as `53,354×`/`3,354×`; the artifact/manifest value is 83,354×. The error does not change the action.",
+    "O5: The brief cards' remediation hints are truncated in the visible text; one reader asked for the enclosing function name (the card shows path:line, not function).",
+    "O6: No read found a bare cost number after the unit/anchor fix."
+  ]
+}

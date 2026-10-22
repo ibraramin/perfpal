@@ -1,0 +1,106 @@
+{
+  "candidate": "G — entry-flow map (map-g-flow)",
+  "protocol": "Two fresh blind @vision reads per repo on the 1440x900 final frame; one image per task; no source, no sibling views, no expected answer; describe-first then strict JSON {question_answered, action, blockers, confidence}. The image self-identifies as MAP CANDIDATE G; the reads are blind to the other candidate and to the source.",
+  "animation": "CSS/SMIL declarative only; final frame captured with prefers-reduced-motion; the artifact contains no JavaScript.",
+  "reads": {
+    "cJSON": [
+      {
+        "read": "A",
+        "image": "g-cJSON-final.png",
+        "description": "This is a Perfpal \"MAP CANDIDATE G · ENTRY-FLOW\" view titled \"cJSON — estimated static flow\", answering which symbol is the entry when a library has no production `main` (header: \"ENTRY · library root (no production main)\", chosen entry \"cJSON.c:253 · cJSON_Delete\", confidence MEDIUM, with 2 alternatives listed at cJSON.c:2609 and cJSON.c:1227). The main canvas is a depth-0 flow diagram: one orange-highlighted ENTRY node (\"cJSON.c — 2,905 static cost units (v2) — 3.30× median function\") fans out via amber edges to five grey, dashed-outline nodes — cJSON_Utils.c, fuzzing/afl.c, test.c, fuzzing/cjson_read_fuzzer.c, fuzzing/fuzz_main.c — each labelled with static cost units, a \"× median function\" multiple, and \"unreached\", with an edge label of 56 distinct calls and looping dashed amber back-edges on their right sides. The right rail shows six \"FILE CARDS\" repeating those per-file stats plus top functions (e.g. cJSON.c: cJSON_Delete top 1%, print_object top 1%) and codes such as \"PERF-C-STR-003 · 11× · warn\" and \"PERF-C-ARCH-003 · 5× · info\". The status line reads \"6 files shown · 1 reachable (entry) · 0 reachable aggregated · 5 unreached production (grey)\" and the canvas right corner says \"UNREACHED — no forward path\", so nothing beyond depth 0 is traversable. What stands out: the entry file is huge and warned (2,905 cost units, 3.30× median → 118 ms) while every neighbour is stranded, and the one card with a 52.0× median multiple (cJSON_Utils.c) is itself unreachable.",
+        "json": {
+          "question_answered": "ENTRY · library root (no production main): which symbol is the entry (highest fan-in production lib-root, no production main), and what does it flow to at depth 0?",
+          "action": "Open cJSON.c and inspect cJSON_Delete at line 253 (the chosen entry) and compare it against the two listed alternatives cJSON.c:2609 and cJSON.c:1227 to confirm the entry pick.",
+          "blockers": "All 5 outgoing neighbours are grey 'unreached — no forward path', so the flow stops at depth 0 and no downstream path can be traced; edge label numbers on the canvas (e.g. 56) are small and edges are declared 'structural and LOW confidence'.",
+          "confidence": "medium"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "image": "g-cJSON-final.png",
+        "description": "This is a PerfPal map view labelled \"MAP CANDIDATE G · ENTRY-FLOW\" for the `cJSON` project, showing a chosen call-graph entry point and what flows from it. The header names the entry in red as \"ENTRY · library root (no production main)\" — specifically `cJSON.c:253 · cJSON_Delete`, described as the \"highest fan-in production lib-root,\" with confidence MEDIUM and two alternatives (`cJSON.c:2609`, `cJSON.c:1227`). The main canvas has one dark, orange-outlined node at \"DEPTH 0 · ENTRY\" (`cJSON.c`, 2,805 static cost units (v2), 3.503× median function) and five grey \"unreachable\" file nodes to its right (cJSON_Utils.c, fuzzing/afl.c, test.c, fuzzing/cjson_read_fuzzer.c, fuzzing/fuzz_main.c), each showing static cost units and a multiple of the repo-wide median function cost (e.g. fuzzing/afl.c at 40.5×). Curved dashed-amber back-edges fan out from the entry to those five nodes with an edge label of \"56\" (distinct call count), and the top-right region is marked \"UNREACHED · no forward path,\" meaning nothing is reachable forward past depth 0 — the summary line confirms \"6 files shown · 1 reachable (entry) · 0 reachable aggregated · 5 unreached production (grey).\" A right-hand panel of six FILE CARDS repeats each file's cost, median multiple, runtime estimate, top functions, and a finding tag (e.g. `PERF-C-CHK-003 · +11 · warn` on cJSON.c, `PERF-C-ARCH-003` info on the others). What stands out: the chosen entry reaches no production callees at all — the entire forward graph is empty, all five other files are unreachable, and every drawn edge is a low-confidence structural back-edge.",
+        "json": {
+          "question_answered": "ENTRY · library root (no production main) — which function is the entry (policy: highest fan-in production lib-root), and what does it reach: \"6 files shown · 1 reachable (entry) · 0 reachable aggregated · 5 unreached production (grey)\" / \"UNREACHED · no forward path\"",
+          "action": "Inspect cJSON.c:253 (cJSON_Delete), the selected ENTRY, and check why its forward path is empty (all 5 other files unreachable) — or evaluate the stated alternatives cJSON.c:2609 and cJSON.c:1227 as entry candidates",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "hyperfine": [
+      {
+        "read": "A",
+        "image": "g-hyperfine-final.png",
+        "description": "This is a single-screen dashboard titled \"PERFPAL · MAP CANDIDATE G · ENTRY-FLOW\" showing the \"hyperfine\" project's \"estimated static flow,\" anchored at \"ENTRY · production main — src/main.rs:88 · main\" with \"confidence HIGH.\" The main canvas is a left-to-right layered graph (DEPTH 0 · ENTRY through DEPTH 4) where each rounded box is a source file labeled with its name, \"static cost units (v2),\" and a \"median function\" millisecond figure; `src/main.rs` is the dark ENTRY node, and `src/command.rs` is flagged \"HOTTEST\" with an amber border (611 static cost units, 87.4 ms median). Curved orange/red lines are the \"path trace\" out of the entry, amber dashed lines are \"back-edges,\" and a header line reports \"19 of 19 reachable files shown... all 49 shown file pairs drawn (26 back-edges)\" plus a note that \"call edges are structural and LOW confidence.\" A footer box notes \"~21 unreachable production files · no forward path.\" The right rail, \"FILE CARDS · 19 shown · top functions by function_cost_v2,\" lists each file's category (production/test/bench), cost units, median time, its top functions with percentage shares (e.g. `src/command.rs`: \"build - top 4%\", \"build_from_cli_arguments - top 2%\"), and finding tags such as \"PERF-RS-ARCH-003 ×22 · info\" or \"PERF-RS-ARCH-001 ×5 · warn.\" Top-right controls read \"Q2 reverse drill · src/quantity/mod.rs →\" and \"Pause animation (CSS).\" What stands out is that cost and time concentrate in `src/command.rs`, `src/metric.rs`, and `src/options.rs` on the entry path, while several small files show \"no findings.\"",
+        "json": {
+          "question_answered": "ENTRY-FLOW: what is the estimated static flow out of the production main entry (src/main.rs:88 · main), and which files carry the most static cost along that path?",
+          "action": "Profile src/command.rs::build — the HOTTEST node on the entry path (611 static cost units (v2), 87.4 ms median function, 'build - top 4%' in its file card, PERF-RS-ARCH-003 ×22).",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "image": "g-hyperfine-final.png",
+        "description": "This is a static-analysis map titled \"PERFPAL · MAP CANDIDATE G · ENTRY-FLOW\" showing \"hyperfine estimated static flow\": how cost flows outward from the program's entry point, `src/main.rs:88 · main` (labelled \"ENTRY · production main\", confidence HIGH). The main canvas is a left-to-right layered graph across columns DEPTH 0 (ENTRY) → DEPTH 1…4, where each rounded card is a source file showing its name, \"static cost units (v2),\" and \"µs median function\" — e.g. `src/main.rs` (58 units, 8.3µs) feeds depth-1 files `src/command.rs` (611 units, 82.4µs, flagged HOTTEST), `src/options.rs`, `src/shell_syntax.rs`, `src/benchmark/scheduler.rs`, and `src/cli.rs`, which in turn feed depth-2 files like `src/metric.rs` (431 units) and `tests/execution_order_tests.rs` (373 units). Gray arrows are forward caller→callee edges, dashed amber/red edges are back-edges (26 of the 49 drawn pairs), and an orange traced path highlights the entry → `src/command.rs` → `src/metric.rs` spine; a note says \"+21 unreachable production files · no forward path\". The header strip summarizes coverage: \"19 of 19 reachable files shown\", edges are \"structural and LOW confidence\", and the entry policy excludes build scripts, tests, and fuzzing. The right panel lists 19 \"FILE CARDS · top functions by function_cost_v2\", each card giving the file's kind, cost, slowest functions with their share (e.g. `src/command.rs`: `spawn` – top 40%), and related findings such as \"PERF-RS-ARCH-003 x22 · info\" or \"PERF-RS-ARCH-001 x5 · warn\" (`src/export/mod.rs`), with some files marked \"no findings\". Controls at top-right offer a \"Q2 reverse drill · src/quantity/mod.rs →\" and \"Pause animation (CSS)\".",
+        "json": {
+          "question_answered": "ENTRY-FLOW: from the production main entry (src/main.rs:88 · main), what is hyperfine's estimated static flow — which reachable files inherit cost, how deep they sit, and which are hottest?",
+          "action": "Profile the hottest spine: src/command.rs function `spawn` (top 40% of its 611 static cost units, 82.4µs median — the HOTTEST node on the entry path), starting from src/main.rs:88",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "tmux": [
+      {
+        "read": "A",
+        "image": "g-tmux-final.png",
+        "description": "This is a single-screen dashboard titled \"PERFPAL · MAP CANDIDATE G · ENTRY-FLOW\" showing \"tmux — estimated static flow,\" anchored at an ENTRY badge reading \"ENTRY · production main / tmux.c:434 · main\" with \"confidence HIGH · alternatives: 0,\" plus buttons \"Q2 reverse drill · tmux.h →\" and \"Pause animation (CSS).\" The main canvas is a left-to-right call-flow graph banded into columns DEPTH 0 · ENTRY through DEPTH 5, where each rectangular node is a source file card showing its filename, \"static cost units (v2),\" and \"median function\" cost (e.g., depth-0 dark node tmux.c: 758 static cost units, 92.9µs median function). Curved amber edges connect callers to callees (footer: \"forward callers → callees only · grey = unreached · dashed amber = back-edge\"), and one depth-2 node, format.c (6,030 static cost units, 332µs median), is flagged \"HOTTEST.\" A stats strip reads \"20 of 106 reachable files shown: 86 unreachable files aggregated · 99 unreached production (counted, not drawn) · edges: 57 of 145 shown file pairs drawn (top by call count, 49 back-edges) · call edges are structural and LOW confidence.\" Deeper levels collapse into placeholders like \"+39 more / depth 3 · 330 calls in,\" and the bottom-left notes \"...+99 unreached production files · no forward path.\" The right rail, \"FILE CARDS · 20 shown · top functions by function_cost_v2 · top finding rule,\" lists each file with its top functions (e.g., format.c → format_replace - top 1%, format_expand1 - top 1%) and a rule tag such as \"PERF-C-ARCH-003 <399 · info.\" What stands out: flow from main fans out heavily at depth 2 into format.c/window.c/tty.c, and the biggest cost concentration sits in format.c and window-copy.c (5,100 units).",
+        "json": {
+          "question_answered": "ENTRY-FLOW — from the production entry tmux.c:434 · main, how does estimated static flow (function_cost_v2) distribute across the codebase?",
+          "action": "Drill into tmux.c:434 (main) and profile format.c's format_replace (top 1% of format.c's 6,030 static cost units, marked HOTTEST at depth 2), the heaviest node on the entry path.",
+          "blockers": "Call edges are explicitly labelled structural and LOW confidence; depths 4-5 are collapsed into '+7 more' / '+1 more' placeholders so deeper flow is not inspectable.",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "image": "g-tmux-final.png",
+        "description": "This is a single dashboard view titled \"PERFPAL · MAP CANDIDATE G · ENTRY-FLOW\" showing \"tmux — estimated static flow\": a left-to-right call-flow graph of C source files starting from a dark ENTRY node labeled \"tmux.c / 758 static cost units (v2) / 97.9+ median function\", with the header naming the entry as \"tmux.c:434 · main\" at HIGH confidence. Columns are labeled DEPTH 0 · ENTRY through DEPTH 5, and each white card is a file showing its name, \"static cost units (v2)\", and \"median function\" value — orange curved arrows run forward (left→right) and grey arrows run backward, with dashed amber \"back edge\" markers. One node, format.c, is ringed in red and tagged \"HOTTEST\" (6,030 static cost units, 332.4+ median function), making it the standout; dense branching from depth 2 into depth 3 (window-copy.c, screen-write.c, grid.c, prompt.c, cmd-find.c, image-grid.c) shows where the flow fans out. Overflow groups collapse as dashed boxes (\"…+11 more, depth 1 · 251 calls in\", \"…+28 more, depth 2 · 350 calls in\", \"…+39 more, depth 3 · 330 calls in\", \"+7 more depth 4\", \"+1 more depth 5\"), and a footer notes \"+99 unreached production files · no forward path\". The status line says \"20 of 106 reachable files shown: 86 reachable production (not drawn) · 99 unreached production (counted, not drawn) · edges: 57 of 145 shown file pairs drawn (top by call count, 49 back-edges) · call edges are structural and LOW confidence\". A right-hand panel titled \"FILE CARDS · 20 shown · top functions by function_cost_v2 · top finding rule\" lists the same 20 files with their top contributing functions (e.g. format.c: format_expand1 top 1%) and a repeated finding tag \"PERFP-C-ARCH-003 · N+ · Info\". Top-right controls read \"Q2 reverse drill - tmux.h →\" and \"Pause animation (CSS)\".",
+        "json": {
+          "question_answered": "MAP CANDIDATE G · ENTRY-FLOW — how does tmux's estimated static flow spread from the production main entry (tmux.c:434 · main) across reachable files, and which file is HOTTEST by function_cost_v2?",
+          "action": "Drill into the HOTTEST node format.c (6,030 static cost units, 332.+ median function) starting with its top function format_expand1 (top 1%), and run the \"Q2 reverse drill - tmux.h →\" button to trace callers back toward tmux.c:434 main",
+          "blockers": "Edges are labelled \"call edges are structural and LOW confidence\"; only 20 of 106 reachable files are drawn (86 reachable production not drawn, 99 unreached counted but not drawn), so most of the graph is collapsed into \"…more\" boxes",
+          "confidence": "medium"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ]
+  },
+  "verdict": "G: 6/6 valid reads state the entry question and one concrete file/function action. Hyperfine and tmux read strongly (entry + HOTTEST + action); cJSON is an honest structural dead-end (library, no production main, one reachable node) and both reads report the missing forward path. Units/anchors are present after the fix; function names are full; edge labels are explained.",
+  "observations": [
+    "O1: cJSON is the library case — G answers 'what is the entry' but not 'how does the program flow'; the forward graph is empty and the 5 production callers are greyed. This is a data-shape limitation, not a layout bug.",
+    "O2: hyperfine and tmux produce the intended story: entry -> hottest file (src/command.rs; format.c) -> action. The path trace and depth rings are read correctly.",
+    "O3: hyperfine's two reads chose different top functions inside src/command.rs (build vs spawn) — the card lists both; the file-level action is consistent.",
+    "O4: tmux shows only 20 of 106 reachable files with explicit +N aggregation; both reads understand the cap and one names it as a blocker for deeper flow.",
+    "O5: the edge labels are now explained ('distinct call count'); the median anchor legend removes the earlier 'ms' misread. The remaining LOW-confidence warning is honest and read aloud.",
+    "O6: no read found a bare cost number after the unit/anchor fix."
+  ]
+}

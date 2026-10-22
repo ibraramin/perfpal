@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>F · Weight map · tmux</title>
+<style>
+:root{--ink:#0f172a;--muted:#5b6b7f;--line:#dbe2ea;--blue:#0b3d91;--hot:#b42318}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#eef1f5;color:var(--ink);font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.pause-toggle{position:fixed;top:12px;right:26px;width:1px;height:1px;opacity:0;z-index:30}
+.pause-control{position:fixed;top:10px;right:26px;z-index:31;display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #cbd5e1;border-radius:999px;background:#ffffff;color:#334155;font-size:11px;font-weight:650;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.pause-control:hover{border-color:#94a3b8}
+.pause-off{display:none}
+.pause-toggle:checked~.pause-control .pause-on{display:none}
+.pause-toggle:checked~.pause-control .pause-off{display:inline}
+.pause-toggle:focus-visible~.pause-control{outline:2px solid var(--blue);outline-offset:2px}
+.screen{position:relative;width:1440px;height:900px;margin:0 auto;background:#fff;padding:20px 40px 0;overflow:hidden}
+.top{height:38px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px}
+.brand{font-size:20px;font-weight:760;letter-spacing:-.3px}
+.brand .repo{color:var(--blue)}
+.topmeta{margin-right:118px;font-size:11.5px;color:var(--muted);text-align:right}
+.answer{margin:10px 0 6px;font-size:19px;line-height:1.28;font-weight:650;letter-spacing:-.1px;max-width:1360px;animation:fade .45s ease-out 100ms both}
+.answer b{color:var(--blue)}
+.map-head{height:20px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);animation:fade .45s ease-out 160ms both}
+.legend{display:flex;align-items:center;gap:7px}
+.sw{display:inline-block;width:13px;height:8px;border-radius:2px;border:1px solid rgba(15,23,42,.12)}
+.legend .lbl{margin-right:5px}
+.legend .hatchbox{display:inline-block;width:13px;height:8px;border-radius:2px;background:#dfe6ee;border:1px solid #b6c2d1;background-image:repeating-linear-gradient(45deg,transparent 0 2px,#64748b 2px 3px)}
+.treemap{display:block;width:1360px;height:404px;margin-top:2px;border-radius:4px;background:#f8fafc}
+.cell{animation:cellIn .32s ease-out both;animation-delay:calc(160ms + var(--i)*40ms)}
+.cell-link{text-decoration:none}
+.cell-link:focus-visible .cell{outline:none}
+.cell-link:hover .cell{filter:brightness(1.06)}
+.hot-ring{stroke-opacity:.92}
+.hot-rank1 .hot-ring{animation:ringPulse 1.5s ease-in-out 2600ms 2 both}
+.hot-rank2 .hot-ring{stroke-opacity:.8}
+.hot-rank3 .hot-ring{stroke-opacity:.72}
+.brief-head{height:18px;margin-top:12px;display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--muted);animation:fade .45s ease-out 2400ms both}
+.brief-head b{font-size:12px;color:var(--ink);letter-spacing:.02em}
+.brief-cards{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:10px;height:238px;margin-top:4px}
+.brief-card{border:1px solid var(--line);border-radius:5px;padding:9px 10px 8px;background:#fbfcfe;overflow:hidden;display:flex;flex-direction:column;gap:4px;animation:cardIn .45s ease-out both;animation-delay:calc(2500ms + var(--j)*90ms)}
+.card-top{display:flex;align-items:center;gap:6px;height:16px}
+.rank{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#0f172a;color:#fff;font-size:9.5px;font-weight:800}
+.sev{font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:1px 5px;border-radius:3px}
+.sev-hot{color:#7a271a;background:#fee4e2}
+.sev-warn{color:#7a2e0e;background:#fef0c7}
+.sev-info{color:#344054;background:#eaecf0}
+.conf{font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.tag{margin-left:auto;font-size:8.5px;font-weight:800;letter-spacing:.08em;color:#475467;background:#eaecf0;padding:1px 4px;border-radius:3px}
+.card-path{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:10.5px;font-weight:650;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-title{font-size:12px;font-weight:700;line-height:1.18;max-height:28px;overflow:hidden}
+.card-why{font-size:10.5px;line-height:1.3;color:#475467;max-height:55px;overflow:hidden}
+.card-anchor{margin-top:auto;display:flex;flex-direction:column;gap:1px;font-size:9.4px;line-height:1.25;font-weight:650;color:#334155;border-top:1px solid #edf1f6;padding-top:4px}
+footer{position:absolute;left:40px;right:40px;bottom:10px;height:38px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);animation:fade .45s ease-out 3100ms both}
+.drill-link{font-size:12px;font-weight:700;color:var(--blue);text-decoration:none}
+.drill-link:hover{text-decoration:underline}
+.foot-note{max-width:900px;text-align:right}
+@keyframes cellIn{from{opacity:0}to{opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes ringPulse{0%,100%{stroke-opacity:.45}50%{stroke-opacity:1}}
+.pause-toggle:checked~.screen *{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){
+  .screen,.screen *{animation:none!important;transition:none!important}
+  .cell,.brief-card,.answer,.map-head,.brief-head,footer{opacity:1!important;transform:none!important}
+}
+@media print{
+  body{background:#fff}
+  .pause-control,.pause-toggle{display:none!important}
+  .screen,.screen *{animation:none!important;transition:none!important}
+  .cell,.brief-card,.answer,.map-head,.brief-head,footer{opacity:1!important;transform:none!important}
+}
+</style></head>
+<body>
+<input class="pause-toggle" id="pause" type="checkbox" aria-label="Pause animation">
+<label class="pause-control" for="pause"><span class="pause-on">❚❚ Pause</span><span class="pause-off">▶ Resume</span></label>
+<main class="screen">
+  <header class="top"><div class="brand">Perfpal weight map <span class="repo">· tmux</span></div><div class="topmeta">216 files · 3189 functions · 7545 findings · parse 100 ok / 116 partial / 0 failed</div></header>
+  <p class="answer">format.c is the heaviest cell (6.8% of static cost); start with PERF-C-ALLOC-001 at compat/getline.c:85 (hot/high).</p>
+  <div class="map-head"><span>50 cells · top-50 cap · production 99.5% of cost — area = static cost units (v2); colour = the same scale · anchor = × median component (2.53k static cost units (v2)) / top P%</span><span class="legend"><span class="lbl">production static cost units (v2)</span><i class="sw" style="background:#f2f7fd"></i><i class="sw" style="background:#d3e3f5"></i><i class="sw" style="background:#9fc0e4"></i><i class="sw" style="background:#5b8fc9"></i><i class="sw" style="background:#0b3d91"></i><span class="hatchbox"></span><span>test/bench/other</span></span></div>
+  <svg class="treemap" viewBox="0 0 1360 404" width="1360" height="404" role="img" aria-label="Component treemap: area = static cost units (v2); colour = the same cost scale">
+<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#64748b" stroke-width="2" opacity=".55"/></pattern></defs>
+<rect x="0" y="0" width="1360" height="404" fill="#f8fafc"/>
+<g class="cell class-other" style="--i:0"><title>other (107 cells) — residual — 16.7k static cost units (v2) · top 2% of cells · 17.20% of map; omitted by the top-50 cap</title>
+<rect x="0" y="0" width="234" height="404" fill="#dfe6ee" stroke="#ffffff" stroke-width="2"/>
+<rect x="0" y="0" width="234" height="404" fill="url(#hatch)" pointer-events="none"/>
+<text x="8" y="18" fill="#0f172a" font-size="12.5" font-weight="700">other (107 cells)</text>
+<text x="8" y="48" fill="#0f172a" font-size="8.8" opacity=".94">17.2% · 16.7k static cost units (v2)</text>
+<text x="8" y="63" fill="#0f172a" font-size="8.8" opacity=".94">residual · top 2% of cells</text>
+</g>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="format.c — production — 6.63k static cost units (v2) · 2.6× median component · top 2% of cells · 6.84% of map; 1 file(s)"><g class="cell class-production hot-rank1" style="--i:1"><title>format.c — production — 6.63k static cost units (v2) · 2.6× median component · top 2% of cells · 6.84% of map; 1 file(s)</title>
+<rect x="234" y="0" width="165" height="228" fill="#7ba6d6" stroke="#ffffff" stroke-width="2"/>
+<rect class="hot-ring" x="235.5" y="1.5" width="162.0" height="225.0" fill="none" stroke="#0f172a" stroke-width="3.0"/>
+<text x="242" y="18" fill="#0f172a" font-size="12.5" font-weight="700">format.c</text>
+<text x="242" y="48" fill="#0f172a" font-size="8.8" opacity=".94">6.63k static cost units (v2)</text>
+<text x="242" y="63" fill="#0f172a" font-size="8.8" opacity=".94">2.6× median component</text>
+<text x="242" y="78" fill="#0f172a" font-size="8.8" opacity=".94">top 2% of cells</text>
+<circle cx="385" cy="14" r="9" fill="#0f172a"/>
+<text x="385" y="18" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="800">1</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="window-copy.c — production — 5.11k static cost units (v2) · 2.0× median component · top 4% of cells · 5.27% of map; 1 file(s)"><g class="cell class-production hot-rank2" style="--i:2"><title>window-copy.c — production — 5.11k static cost units (v2) · 2.0× median component · top 4% of cells · 5.27% of map; 1 file(s)</title>
+<rect x="234" y="228" width="165" height="176" fill="#90b6de" stroke="#ffffff" stroke-width="2"/>
+<rect class="hot-ring" x="235.0" y="229.0" width="163.0" height="174.0" fill="none" stroke="#0f172a" stroke-width="2.0"/>
+<text x="242" y="246" fill="#0f172a" font-size="12.5" font-weight="700">window-copy.c</text>
+<text x="242" y="276" fill="#0f172a" font-size="8.8" opacity=".94">5.11k static cost units (v2)</text>
+<text x="242" y="291" fill="#0f172a" font-size="8.8" opacity=".94">2.0× median component</text>
+<text x="242" y="306" fill="#0f172a" font-size="8.8" opacity=".94">top 4% of cells</text>
+<circle cx="385" cy="242" r="9" fill="#0f172a"/>
+<text x="385" y="246" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="800">2</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="window.c — production — 3.84k static cost units (v2) · 1.5× median component · top 6% of cells · 3.96% of map; 1 file(s)"><g class="cell class-production hot-rank3" style="--i:3"><title>window.c — production — 3.84k static cost units (v2) · 1.5× median component · top 6% of cells · 3.96% of map; 1 file(s)</title>
+<rect x="399" y="0" width="157" height="139" fill="#a3c3e5" stroke="#ffffff" stroke-width="2"/>
+<rect class="hot-ring" x="399.75" y="0.75" width="155.5" height="137.5" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+<text x="407" y="18" fill="#0f172a" font-size="12.5" font-weight="700">window.c</text>
+<text x="407" y="48" fill="#0f172a" font-size="8.8" opacity=".94">3.84k static cost units (v2)</text>
+<text x="407" y="63" fill="#0f172a" font-size="8.8" opacity=".94">1.5× median component</text>
+<text x="407" y="78" fill="#0f172a" font-size="8.8" opacity=".94">top 6% of cells</text>
+<circle cx="542" cy="14" r="9" fill="#0f172a"/>
+<text x="542" y="18" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="800">3</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c1" aria-label="compat — production — 3.70k static cost units (v2) · 1.5× median component · top 8% of cells · 3.82% of map; 47 file(s)"><g class="cell class-production" style="--i:4"><title>compat — production — 3.70k static cost units (v2) · 1.5× median component · top 8% of cells · 3.82% of map; 47 file(s)</title>
+<rect x="399" y="139" width="157" height="133" fill="#a5c4e6" stroke="#ffffff" stroke-width="2"/>
+<text x="407" y="157" fill="#0f172a" font-size="12.5" font-weight="700">compat</text>
+<text x="407" y="187" fill="#0f172a" font-size="8.8" opacity=".94">3.70k static cost units (v2)</text>
+<text x="407" y="202" fill="#0f172a" font-size="8.8" opacity=".94">1.5× median component</text>
+<text x="407" y="217" fill="#0f172a" font-size="8.8" opacity=".94">top 8% of cells</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="screen-write.c — production — 3.65k static cost units (v2) · 1.4× median component · top 10% of cells · 3.76% of map; 1 file(s)"><g class="cell class-production" style="--i:5"><title>screen-write.c — production — 3.65k static cost units (v2) · 1.4× median component · top 10% of cells · 3.76% of map; 1 file(s)</title>
+<rect x="399" y="272" width="157" height="132" fill="#a6c5e6" stroke="#ffffff" stroke-width="2"/>
+<text x="407" y="290" fill="#0f172a" font-size="12.5" font-weight="700">screen-write.c</text>
+<text x="407" y="320" fill="#0f172a" font-size="8.8" opacity=".94">3.65k static cost units (v2)</text>
+<text x="407" y="335" fill="#0f172a" font-size="8.8" opacity=".94">1.4× median component</text>
+<text x="407" y="350" fill="#0f172a" font-size="8.8" opacity=".94">top 10% of cells</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="tty.c — production — 3.09k static cost units (v2) · 1.2× median component · top 12% of cells · 3.19% of map; 1 file(s)"><g class="cell class-production" style="--i:6"><title>tty.c — production — 3.09k static cost units (v2) · 1.2× median component · top 12% of cells · 3.19% of map; 1 file(s)</title>
+<rect x="556" y="0" width="120" height="145" fill="#adcae9" stroke="#ffffff" stroke-width="2"/>
+<text x="564" y="18" fill="#0f172a" font-size="12.5" font-weight="700">tty.c</text>
+<text x="564" y="48" fill="#0f172a" font-size="8.8" opacity=".94">3.2% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="grid.c — production — 2.85k static cost units (v2) · 1.1× median component · top 14% of cells · 2.94% of map; 1 file(s)"><g class="cell class-production" style="--i:7"><title>grid.c — production — 2.85k static cost units (v2) · 1.1× median component · top 14% of cells · 2.94% of map; 1 file(s)</title>
+<rect x="556" y="145" width="120" height="134" fill="#b1ccea" stroke="#ffffff" stroke-width="2"/>
+<text x="564" y="163" fill="#0f172a" font-size="12.5" font-weight="700">grid.c</text>
+<text x="564" y="193" fill="#0f172a" font-size="8.8" opacity=".94">2.9% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="colour.c — production — 2.66k static cost units (v2) · 1.1× median component · top 16% of cells · 2.74% of map; 1 file(s)"><g class="cell class-production" style="--i:8"><title>colour.c — production — 2.66k static cost units (v2) · 1.1× median component · top 16% of cells · 2.74% of map; 1 file(s)</title>
+<rect x="556" y="279" width="120" height="125" fill="#b4ceeb" stroke="#ffffff" stroke-width="2"/>
+<text x="564" y="297" fill="#0f172a" font-size="12.5" font-weight="700">colour.c</text>
+<text x="564" y="327" fill="#0f172a" font-size="8.8" opacity=".94">2.7% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="server-client.c — production — 2.62k static cost units (v2) · 1.0× median component · top 18% of cells · 2.70% of map; 1 file(s)"><g class="cell class-production" style="--i:9"><title>server-client.c — production — 2.62k static cost units (v2) · 1.0× median component · top 18% of cells · 2.70% of map; 1 file(s)</title>
+<rect x="676" y="0" width="104" height="144" fill="#b5cfeb" stroke="#ffffff" stroke-width="2"/>
+<text x="684" y="18" fill="#0f172a" font-size="12.5" font-weight="700">server-clien…</text>
+<text x="684" y="48" fill="#0f172a" font-size="8.8" opacity=".94">2.7% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="input.c — production — 2.50k static cost units (v2) · 1.0× median component · top 20% of cells · 2.57% of map; 1 file(s)"><g class="cell class-production" style="--i:10"><title>input.c — production — 2.50k static cost units (v2) · 1.0× median component · top 20% of cells · 2.57% of map; 1 file(s)</title>
+<rect x="676" y="144" width="104" height="136" fill="#b7d0ec" stroke="#ffffff" stroke-width="2"/>
+<text x="684" y="162" fill="#0f172a" font-size="12.5" font-weight="700">input.c</text>
+<text x="684" y="192" fill="#0f172a" font-size="8.8" opacity=".94">2.6% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="options.c — production — 2.25k static cost units (v2) · 0.9× median component · top 22% of cells · 2.33% of map; 1 file(s)"><g class="cell class-production" style="--i:11"><title>options.c — production — 2.25k static cost units (v2) · 0.9× median component · top 22% of cells · 2.33% of map; 1 file(s)</title>
+<rect x="676" y="280" width="104" height="124" fill="#bbd3ed" stroke="#ffffff" stroke-width="2"/>
+<text x="684" y="298" fill="#0f172a" font-size="12.5" font-weight="700">options.c</text>
+<text x="684" y="328" fill="#0f172a" font-size="8.8" opacity=".94">2.3% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="screen-redraw.c — production — 2.13k static cost units (v2) · 0.8× median component · top 24% of cells · 2.19% of map; 1 file(s)"><g class="cell class-production" style="--i:12"><title>screen-redraw.c — production — 2.13k static cost units (v2) · 0.8× median component · top 24% of cells · 2.19% of map; 1 file(s)</title>
+<rect x="780" y="0" width="112" height="108" fill="#bdd4ee" stroke="#ffffff" stroke-width="2"/>
+<text x="788" y="18" fill="#0f172a" font-size="12.5" font-weight="700">screen-redraw…</text>
+<text x="788" y="48" fill="#0f172a" font-size="8.8" opacity=".94">2.2% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="layout.c — production — 2.09k static cost units (v2) · 0.8× median component · top 26% of cells · 2.16% of map; 1 file(s)"><g class="cell class-production" style="--i:13"><title>layout.c — production — 2.09k static cost units (v2) · 0.8× median component · top 26% of cells · 2.16% of map; 1 file(s)</title>
+<rect x="780" y="108" width="112" height="105" fill="#bdd4ee" stroke="#ffffff" stroke-width="2"/>
+<text x="788" y="126" fill="#0f172a" font-size="12.5" font-weight="700">layout.c</text>
+<text x="788" y="156" fill="#0f172a" font-size="8.8" opacity=".94">2.2% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="window-customize.c — production — 2.00k static cost units (v2) · 0.8× median component · top 28% of cells · 2.06% of map; 1 file(s)"><g class="cell class-production" style="--i:14"><title>window-customize.c — production — 2.00k static cost units (v2) · 0.8× median component · top 28% of cells · 2.06% of map; 1 file(s)</title>
+<rect x="780" y="213" width="112" height="101" fill="#bfd6ee" stroke="#ffffff" stroke-width="2"/>
+<text x="788" y="231" fill="#0f172a" font-size="12.5" font-weight="700">window-custom…</text>
+<text x="788" y="261" fill="#0f172a" font-size="8.8" opacity=".94">2.1% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="style.c — production — 1.77k static cost units (v2) · 0.7× median component · top 30% of cells · 1.83% of map; 1 file(s)"><g class="cell class-production" style="--i:15"><title>style.c — production — 1.77k static cost units (v2) · 0.7× median component · top 30% of cells · 1.83% of map; 1 file(s)</title>
+<rect x="780" y="314" width="112" height="90" fill="#c3d8f0" stroke="#ffffff" stroke-width="2"/>
+<text x="788" y="332" fill="#0f172a" font-size="12.5" font-weight="700">style.c</text>
+<text x="788" y="362" fill="#0f172a" font-size="8.8" opacity=".94">1.8% of map</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="prompt.c — production — 1.56k static cost units (v2) · 0.6× median component · top 32% of cells · 1.61% of map; 1 file(s)"><g class="cell class-production" style="--i:16"><title>prompt.c — production — 1.56k static cost units (v2) · 0.6× median component · top 32% of cells · 1.61% of map; 1 file(s)</title>
+<rect x="892" y="0" width="83" height="105" fill="#c7dbf1" stroke="#ffffff" stroke-width="2"/>
+<text x="900" y="18" fill="#0f172a" font-size="12.5" font-weight="700">prompt.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="mode-tree.c — production — 1.49k static cost units (v2) · 0.6× median component · top 34% of cells · 1.53% of map; 1 file(s)"><g class="cell class-production" style="--i:17"><title>mode-tree.c — production — 1.49k static cost units (v2) · 0.6× median component · top 34% of cells · 1.53% of map; 1 file(s)</title>
+<rect x="892" y="105" width="83" height="101" fill="#c9dcf2" stroke="#ffffff" stroke-width="2"/>
+<text x="900" y="123" fill="#0f172a" font-size="12.5" font-weight="700">mode-tree…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="xmalloc.c — production — 1.46k static cost units (v2) · 0.6× median component · top 36% of cells · 1.51% of map; 1 file(s)"><g class="cell class-production" style="--i:18"><title>xmalloc.c — production — 1.46k static cost units (v2) · 0.6× median component · top 36% of cells · 1.51% of map; 1 file(s)</title>
+<rect x="892" y="206" width="83" height="99" fill="#c9ddf2" stroke="#ffffff" stroke-width="2"/>
+<text x="900" y="224" fill="#0f172a" font-size="12.5" font-weight="700">xmalloc.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="cmd-find.c — production — 1.46k static cost units (v2) · 0.6× median component · top 38% of cells · 1.51% of map; 1 file(s)"><g class="cell class-production" style="--i:19"><title>cmd-find.c — production — 1.46k static cost units (v2) · 0.6× median component · top 38% of cells · 1.51% of map; 1 file(s)</title>
+<rect x="892" y="305" width="83" height="99" fill="#c9ddf2" stroke="#ffffff" stroke-width="2"/>
+<text x="900" y="323" fill="#0f172a" font-size="12.5" font-weight="700">cmd-find.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="utf8.c — production — 1.43k static cost units (v2) · 0.6× median component · top 40% of cells · 1.47% of map; 1 file(s)"><g class="cell class-production" style="--i:20"><title>utf8.c — production — 1.43k static cost units (v2) · 0.6× median component · top 40% of cells · 1.47% of map; 1 file(s)</title>
+<rect x="975" y="0" width="104" height="78" fill="#caddf2" stroke="#ffffff" stroke-width="2"/>
+<text x="983" y="18" fill="#0f172a" font-size="12.5" font-weight="700">utf8.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c2" aria-label="regress — production — 1.36k static cost units (v2) · 0.5× median component · top 42% of cells · 1.40% of map; 3 file(s)"><g class="cell class-production" style="--i:21"><title>regress — production — 1.36k static cost units (v2) · 0.5× median component · top 42% of cells · 1.40% of map; 3 file(s)</title>
+<rect x="1079" y="0" width="98" height="78" fill="#ccdef3" stroke="#ffffff" stroke-width="2"/>
+<text x="1087" y="18" fill="#0f172a" font-size="12.5" font-weight="700">regress</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="image-grid.c — production — 1.34k static cost units (v2) · 0.5× median component · top 44% of cells · 1.39% of map; 1 file(s)"><g class="cell class-production" style="--i:22"><title>image-grid.c — production — 1.34k static cost units (v2) · 0.5× median component · top 44% of cells · 1.39% of map; 1 file(s)</title>
+<rect x="1177" y="0" width="98" height="78" fill="#ccdef3" stroke="#ffffff" stroke-width="2"/>
+<text x="1185" y="18" fill="#0f172a" font-size="12.5" font-weight="700">image-grid.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="tty-keys.c — production — 1.18k static cost units (v2) · 0.5× median component · top 46% of cells · 1.22% of map; 1 file(s)"><g class="cell class-production" style="--i:23"><title>tty-keys.c — production — 1.18k static cost units (v2) · 0.5× median component · top 46% of cells · 1.22% of map; 1 file(s)</title>
+<rect x="1275" y="0" width="85" height="78" fill="#d0e1f4" stroke="#ffffff" stroke-width="2"/>
+<text x="1283" y="18" fill="#0f172a" font-size="12.5" font-weight="700">tty-keys.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="image-sixel.c — production — 1.15k static cost units (v2) · 0.5× median component · top 48% of cells · 1.19% of map; 1 file(s)"><g class="cell class-production" style="--i:24"><title>image-sixel.c — production — 1.15k static cost units (v2) · 0.5× median component · top 48% of cells · 1.19% of map; 1 file(s)</title>
+<rect x="975" y="78" width="80" height="83" fill="#d0e1f4" stroke="#ffffff" stroke-width="2"/>
+<text x="983" y="96" fill="#0f172a" font-size="12.5" font-weight="700">image-si…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="format-draw.c — production — 1.13k static cost units (v2) · 0.4× median component · top 50% of cells · 1.17% of map; 1 file(s)"><g class="cell class-production" style="--i:25"><title>format-draw.c — production — 1.13k static cost units (v2) · 0.4× median component · top 50% of cells · 1.17% of map; 1 file(s)</title>
+<rect x="975" y="161" width="80" height="81" fill="#d1e2f4" stroke="#ffffff" stroke-width="2"/>
+<text x="983" y="179" fill="#0f172a" font-size="12.5" font-weight="700">format-d…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="cmd-queue.c — production — 1.13k static cost units (v2) · 0.4× median component · top 52% of cells · 1.17% of map; 1 file(s)"><g class="cell class-production" style="--i:26"><title>cmd-queue.c — production — 1.13k static cost units (v2) · 0.4× median component · top 52% of cells · 1.17% of map; 1 file(s)</title>
+<rect x="975" y="242" width="80" height="81" fill="#d1e2f4" stroke="#ffffff" stroke-width="2"/>
+<text x="983" y="260" fill="#0f172a" font-size="12.5" font-weight="700">cmd-queu…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="fuzzy.c — production — 1.13k static cost units (v2) · 0.4× median component · top 54% of cells · 1.16% of map; 1 file(s)"><g class="cell class-production" style="--i:27"><title>fuzzy.c — production — 1.13k static cost units (v2) · 0.4× median component · top 54% of cells · 1.16% of map; 1 file(s)</title>
+<rect x="975" y="323" width="80" height="81" fill="#d1e2f4" stroke="#ffffff" stroke-width="2"/>
+<text x="983" y="341" fill="#0f172a" font-size="12.5" font-weight="700">fuzzy.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="arguments.c — production — 1.09k static cost units (v2) · 0.4× median component · top 56% of cells · 1.13% of map; 1 file(s)"><g class="cell class-production" style="--i:28"><title>arguments.c — production — 1.09k static cost units (v2) · 0.4× median component · top 56% of cells · 1.13% of map; 1 file(s)</title>
+<rect x="1055" y="78" width="83" height="74" fill="#d2e2f5" stroke="#ffffff" stroke-width="2"/>
+<text x="1063" y="96" fill="#0f172a" font-size="12.5" font-weight="700">arguments…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="screen.c — production — 1.03k static cost units (v2) · 0.4× median component · top 58% of cells · 1.06% of map; 1 file(s)"><g class="cell class-production" style="--i:29"><title>screen.c — production — 1.03k static cost units (v2) · 0.4× median component · top 58% of cells · 1.06% of map; 1 file(s)</title>
+<rect x="1138" y="78" width="79" height="74" fill="#d3e3f5" stroke="#ffffff" stroke-width="2"/>
+<text x="1146" y="96" fill="#0f172a" font-size="12.5" font-weight="700">screen.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="cmd.c — production — 943 static cost units (v2) · 0.4× median component · top 60% of cells · 0.97% of map; 1 file(s)"><g class="cell class-production" style="--i:30"><title>cmd.c — production — 943 static cost units (v2) · 0.4× median component · top 60% of cells · 0.97% of map; 1 file(s)</title>
+<rect x="1217" y="78" width="72" height="74" fill="#d5e4f5" stroke="#ffffff" stroke-width="2"/>
+<text x="1225" y="96" fill="#0f172a" font-size="12.5" font-weight="700">cmd.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="session.c — production — 928 static cost units (v2) · 0.4× median component · top 62% of cells · 0.96% of map; 1 file(s)"><g class="cell class-production" style="--i:31"><title>session.c — production — 928 static cost units (v2) · 0.4× median component · top 62% of cells · 0.96% of map; 1 file(s)</title>
+<rect x="1289" y="78" width="71" height="74" fill="#d5e4f5" stroke="#ffffff" stroke-width="2"/>
+<text x="1297" y="96" fill="#0f172a" font-size="12.5" font-weight="700">session…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="layout-custom.c — production — 889 static cost units (v2) · 0.4× median component · top 64% of cells · 0.92% of map; 1 file(s)"><g class="cell class-production" style="--i:32"><title>layout-custom.c — production — 889 static cost units (v2) · 0.4× median component · top 64% of cells · 0.92% of map; 1 file(s)</title>
+<rect x="1055" y="152" width="78" height="64" fill="#d5e5f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1063" y="170" fill="#0f172a" font-size="12.5" font-weight="700">layout-c…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="window-panes.c — production — 880 static cost units (v2) · 0.3× median component · top 66% of cells · 0.91% of map; 1 file(s)"><g class="cell class-production" style="--i:33"><title>window-panes.c — production — 880 static cost units (v2) · 0.3× median component · top 66% of cells · 0.91% of map; 1 file(s)</title>
+<rect x="1055" y="216" width="78" height="64" fill="#d6e5f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1063" y="234" fill="#0f172a" font-size="12.5" font-weight="700">window-p…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="events-payload.c — production — 861 static cost units (v2) · 0.3× median component · top 68% of cells · 0.89% of map; 1 file(s)"><g class="cell class-production" style="--i:34"><title>events-payload.c — production — 861 static cost units (v2) · 0.3× median component · top 68% of cells · 0.89% of map; 1 file(s)</title>
+<rect x="1055" y="280" width="78" height="62" fill="#d6e5f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1063" y="298" fill="#0f172a" font-size="12.5" font-weight="700">events-p…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="window-tree.c — production — 857 static cost units (v2) · 0.3× median component · top 70% of cells · 0.88% of map; 1 file(s)"><g class="cell class-production" style="--i:35"><title>window-tree.c — production — 857 static cost units (v2) · 0.3× median component · top 70% of cells · 0.88% of map; 1 file(s)</title>
+<rect x="1055" y="342" width="78" height="62" fill="#d6e5f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1063" y="360" fill="#0f172a" font-size="12.5" font-weight="700">window-t…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="grid-reader.c — production — 846 static cost units (v2) · 0.3× median component · top 72% of cells · 0.87% of map; 1 file(s)"><g class="cell class-production" style="--i:36"><title>grid-reader.c — production — 846 static cost units (v2) · 0.3× median component · top 72% of cells · 0.87% of map; 1 file(s)</title>
+<rect x="1133" y="152" width="78" height="62" fill="#d6e5f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1141" y="170" fill="#0f172a" font-size="12.5" font-weight="700">grid-rea…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="tty-term.c — production — 822 static cost units (v2) · 0.3× median component · top 74% of cells · 0.85% of map; 1 file(s)"><g class="cell class-production" style="--i:37"><title>tty-term.c — production — 822 static cost units (v2) · 0.3× median component · top 74% of cells · 0.85% of map; 1 file(s)</title>
+<rect x="1211" y="152" width="75" height="62" fill="#d6e5f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1219" y="170" fill="#0f172a" font-size="12.5" font-weight="700">tty-ter…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="menu.c — production — 800 static cost units (v2) · 0.3× median component · top 76% of cells · 0.83% of map; 1 file(s)"><g class="cell class-production" style="--i:38"><title>menu.c — production — 800 static cost units (v2) · 0.3× median component · top 76% of cells · 0.83% of map; 1 file(s)</title>
+<rect x="1286" y="152" width="74" height="62" fill="#d7e5f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1294" y="170" fill="#0f172a" font-size="12.5" font-weight="700">menu.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="tmux.c — production — 758 static cost units (v2) · 0.3× median component · top 78% of cells · 0.78% of map; 1 file(s)"><g class="cell class-production" style="--i:39"><title>tmux.c — production — 758 static cost units (v2) · 0.3× median component · top 78% of cells · 0.78% of map; 1 file(s)</title>
+<rect x="1133" y="214" width="67" height="64" fill="#d8e6f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1141" y="232" fill="#0f172a" font-size="12.5" font-weight="700">tmux.c</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="cmd-join-pane.c — production — 745 static cost units (v2) · 0.3× median component · top 80% of cells · 0.77% of map; 1 file(s)"><g class="cell class-production" style="--i:40"><title>cmd-join-pane.c — production — 745 static cost units (v2) · 0.3× median component · top 80% of cells · 0.77% of map; 1 file(s)</title>
+<rect x="1133" y="278" width="67" height="63" fill="#d8e6f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1141" y="296" fill="#0f172a" font-size="12.5" font-weight="700">cmd-jo…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="server-fn.c — production — 743 static cost units (v2) · 0.3× median component · top 82% of cells · 0.77% of map; 1 file(s)"><g class="cell class-production" style="--i:41"><title>server-fn.c — production — 743 static cost units (v2) · 0.3× median component · top 82% of cells · 0.77% of map; 1 file(s)</title>
+<rect x="1133" y="341" width="67" height="63" fill="#d8e6f6" stroke="#ffffff" stroke-width="2"/>
+<text x="1141" y="359" fill="#0f172a" font-size="12.5" font-weight="700">server…</text>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="json.c — production — 715 static cost units (v2) · 0.3× median component · top 84% of cells · 0.74% of map; 1 file(s)"><g class="cell class-production" style="--i:42"><title>json.c — production — 715 static cost units (v2) · 0.3× median component · top 84% of cells · 0.74% of map; 1 file(s)</title>
+<rect x="1200" y="214" width="54" height="75" fill="#d8e6f6" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="control.c — production — 711 static cost units (v2) · 0.3× median component · top 86% of cells · 0.73% of map; 1 file(s)"><g class="cell class-production" style="--i:43"><title>control.c — production — 711 static cost units (v2) · 0.3× median component · top 86% of cells · 0.73% of map; 1 file(s)</title>
+<rect x="1254" y="214" width="54" height="75" fill="#d8e6f6" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="log.c — production — 688 static cost units (v2) · 0.3× median component · top 88% of cells · 0.71% of map; 1 file(s)"><g class="cell class-production" style="--i:44"><title>log.c — production — 688 static cost units (v2) · 0.3× median component · top 88% of cells · 0.71% of map; 1 file(s)</title>
+<rect x="1308" y="214" width="52" height="75" fill="#d9e7f6" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="status.c — production — 623 static cost units (v2) · 0.2× median component · top 90% of cells · 0.64% of map; 1 file(s)"><g class="cell class-production" style="--i:45"><title>status.c — production — 623 static cost units (v2) · 0.2× median component · top 90% of cells · 0.64% of map; 1 file(s)</title>
+<rect x="1200" y="289" width="61" height="58" fill="#dae8f7" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="file.c — production — 605 static cost units (v2) · 0.2× median component · top 92% of cells · 0.62% of map; 1 file(s)"><g class="cell class-production" style="--i:46"><title>file.c — production — 605 static cost units (v2) · 0.2× median component · top 92% of cells · 0.62% of map; 1 file(s)</title>
+<rect x="1200" y="347" width="61" height="57" fill="#dae8f7" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="utf8-combined.c — production — 531 static cost units (v2) · 0.2× median component · top 94% of cells · 0.55% of map; 1 file(s)"><g class="cell class-production" style="--i:47"><title>utf8-combined.c — production — 531 static cost units (v2) · 0.2× median component · top 94% of cells · 0.55% of map; 1 file(s)</title>
+<rect x="1261" y="289" width="51" height="59" fill="#dce9f7" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="client.c — production — 502 static cost units (v2) · 0.2× median component · top 96% of cells · 0.52% of map; 1 file(s)"><g class="cell class-production" style="--i:48"><title>client.c — production — 502 static cost units (v2) · 0.2× median component · top 96% of cells · 0.52% of map; 1 file(s)</title>
+<rect x="1312" y="289" width="48" height="59" fill="#dce9f7" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="sort.c — production — 494 static cost units (v2) · 0.2× median component · top 98% of cells · 0.51% of map; 1 file(s)"><g class="cell class-production" style="--i:49"><title>sort.c — production — 494 static cost units (v2) · 0.2× median component · top 98% of cells · 0.51% of map; 1 file(s)</title>
+<rect x="1261" y="348" width="49" height="56" fill="#dde9f7" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+<a class="cell-link" href="f-tmux-drill.html#c0" aria-label="spawn.c — production — 493 static cost units (v2) · 0.2× median component · top 100% of cells · 0.51% of map; 1 file(s)"><g class="cell class-production" style="--i:50"><title>spawn.c — production — 493 static cost units (v2) · 0.2× median component · top 100% of cells · 0.51% of map; 1 file(s)</title>
+<rect x="1310" y="348" width="50" height="56" fill="#dde9f7" stroke="#ffffff" stroke-width="2"/>
+</g></a>
+</svg>
+  <div class="brief-head"><span><b>KV1 BRIEF</b> — top 5 actions, production first, ranked by severity then confidence</span><span>ARCH-002 excluded · cost anchor = × median function (20 static cost units (v2)) / top P% of files · evidence is static</span></div>
+  <section class="brief-cards" style="--n:5">
+<article class="brief-card" style="--j:0">
+  <div class="card-top"><span class="rank">1</span><span class="sev sev-hot">HOT</span><span class="conf">HIGH</span></div>
+  <div class="card-path">compat/getline.c:85</div>
+  <div class="card-title">Heap allocation inside loop</div>
+  <div class="card-why">per-iteration heap allocation via &#x27;realloc&#x27; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse…</div>
+  <div class="card-anchor"><span>56 static cost units (v2)</span><span>2.8× median function · top 70% of files</span></div>
+</article>
+<article class="brief-card" style="--j:1">
+  <div class="card-top"><span class="rank">2</span><span class="sev sev-hot">HOT</span><span class="conf">MEDIUM</span></div>
+  <div class="card-path">tty.c:601</div>
+  <div class="card-title">Expensive setup or I/O call inside loop</div>
+  <div class="card-why">&#x27;write&#x27; performs streaming I/O every iteration at loop depth 1 — the call transfers element-wise and cannot be hoisted; b…</div>
+  <div class="card-anchor"><span>3.09k static cost units (v2)</span><span>154.4× median function · top 2% of files</span></div>
+</article>
+<article class="brief-card" style="--j:2">
+  <div class="card-top"><span class="rank">3</span><span class="sev sev-warn">WARN</span><span class="conf">HIGH</span></div>
+  <div class="card-path">format.c:336</div>
+  <div class="card-title">Deallocation inside loop</div>
+  <div class="card-why">deallocation via &#x27;free&#x27; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownersh…</div>
+  <div class="card-anchor"><span>6.63k static cost units (v2)</span><span>331.5× median function · top 1% of files</span></div>
+</article>
+<article class="brief-card" style="--j:3">
+  <div class="card-top"><span class="rank">4</span><span class="sev sev-warn">WARN</span><span class="conf">HIGH</span></div>
+  <div class="card-path">format.c:393</div>
+  <div class="card-title">High cyclomatic complexity</div>
+  <div class="card-why">&#x27;format_job_get&#x27; branches 17 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting h…</div>
+  <div class="card-anchor"><span>6.63k static cost units (v2)</span><span>331.5× median function · top 1% of files</span></div>
+</article>
+<article class="brief-card" style="--j:4">
+  <div class="card-top"><span class="rank">5</span><span class="sev sev-warn">WARN</span><span class="conf">HIGH</span></div>
+  <div class="card-path">window-copy.c:2104</div>
+  <div class="card-title">Deeply nested loops</div>
+  <div class="card-why">loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or adding early exits is a candidate optimization</div>
+  <div class="card-anchor"><span>5.11k static cost units (v2)</span><span>255.3× median function · top 1% of files</span></div>
+</article>
+  </section>
+  <footer><a class="drill-link" href="f-tmux-drill.html">Q2 · what depends on the hot component? Open the 1-hop drill →</a><span class="foot-note">static heuristics · area/colour = static cost units (v2) · median component 2.53k static cost units (v2) · 0/234 unresolved + 20 non-repo imports excluded from drill</span></footer>
+</main>
+</body></html>

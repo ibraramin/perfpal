@@ -1,42 +1,38 @@
 # Active Context
 
 ## Current Task
-**map-intelligibility V6a complete (KV2 production-first, 6/6 blind reads); V6 founder timed
-test pending on the released holdout.**
-- **V6a implemented + vision-gated.** KV2 orders production first, then dependents desc, then
-  path; `top P%` follows that key; median stays over all files; inline = up to 8 production + up
-  to 2 greyed demoted rows; HTML/Markdown print `N non-production files demoted`. `cJSON.h` now
-  ranks #1 and both fresh blind readers name it; the 22-dependent unity `TEST` headers and
-  hyperfine `BENCH` rows are correctly read as demoted-but-never-excluded. Evidence:
-  `docs/evidence/map-vision/v6/kv2-amendment/` (3 renders, `reads.json`, `manifest.json`).
-- Tests: 3 unit + 1 integration KV2 locks; four golden trees regenerated (KV2 caption-only diff)
-  and stable on a second regeneration. No schema change.
-- **Holdout released only for V6.** Fresh HEAD scans: django (2932 files, 39 s, 0 partial) and
-  postgres (2566 files, 299 s, **1165 partial**). Structural preflight PASS: one `.kv1/.kv2/.kv3`
-  each, rows present, KV2 demotion disclosed, no page errors (`docs/evidence/map-vision/v6/
-  preflight.py` + `.json`). No agent reads of holdout content.
-- The V5 "byte-identical to V4" claim is historical: KV2 changed by design; KV1/KV3 unchanged.
+**V7 prototype burst complete (F/G, 12/12 blind reads). Founder corrected the model: G is the CORE
+graph; F is NOT a fallback and not discarded — F-derived components are supporting elements,
+included only if developer-needs research justifies them. Next = research/planning only
+(`map-shipped`).**
+- **Founder constraints:** graph page = 100% graph; metrics/brief below or elsewhere; standardize
+  metrics; G core; F components as needed; paper parked until after agent report + map + JS/TS.
+- **Evidence:** `docs/evidence/map-vision/v7/` — F/G renderers, 18 PNGs (9 each), 12 blind reads
+  (`f/reads.json`, `g/reads.json`), `COMPARISON.md`, `README.md`; plans `map-f-treemap`,
+  `map-g-flow`; animation spec `map-animation`.
+- **What the reads found:** G strong on hyperfine/tmux (entry + HOTTEST + action); cJSON is a
+  dead-end (library, no production main). F's brief is reliable everywhere; its cJSON treemap is
+  hijacked by test cost (93.5%), production cells 0.2%.
+- **No code; holdout vaulted; `map-build` NOT done; A1b NOT closed.**
 
 ## Recent Decisions
-- **D-pf-234 (live):** V6a KV2 production-first amendment implemented + 6/6 blind reads PASS;
-  no schema change; holdout scanned for V6 only; `map-build` NOT done; A1b NOT closed.
-- **D-pf-233 (live):** founder pre-V6 decisions — KV2 amendment APPROVED; randomized KV1 pair
-  re-run SKIPPED; holdout scan both, timed test on postgres, django untimed smoke.
-- **D-pf-232 (live):** V5 evidence complete (18/18 reads; no-loop falsifier partial).
+- **D-pf-238 (live):** founder correction — G core, F components supporting (not fallback);
+  full-page graph; metrics below; research/planning next.
+- **D-pf-237 (live):** entry-flow direction + prototypes + animation mandatory.
+- **D-pf-236 (live):** consolidation; one core + three consumers.
 
 ## In Progress
-- **V6 timed test.** Protocol: `docs/evidence/map-vision/v6/protocol.md`; result template:
-  `result.template.json`. Founder opens `out-v6-postgres/report.html#map` at 1440×900/100%,
-  names 3 actions in <10 min + understandable verdict, verbatim. No agent substitute.
+- **Research/planning (`map-shipped`)** — start a fresh session. First: developer-needs research
+  (what to see alongside the main graph), then metrics standardization, data-gap audit, full-page
+  combined layout, component-inclusion rule, naming, spec/ADR, final build plan. No implementation.
 
 ## Next
-- **Founder:** run the timed postgres test (then optional django smoke). Record result verbatim.
-- **If PASS:** close A2/A2b evidence, close R-pf-104, keep R-pf-105/106 + A1b open, EOL commit.
-- **If FAIL:** re-open V3 with a **distinct** idiom; two distinct idiom failures → ADR-0008
-  amendment. Record the defect, fix, re-test.
-- **V7:** KV1 rank-key re-triage + call-weighted/per-iteration Q3 ranking; fix or explicitly
-  accept R-pf-098/099/100. A1b stays open.
-- **Do not mark `map-build` done.** M5 needs B-pf-001 + B-pf-002.
+- **Fresh session signposts:** plan `map-shipped`; specs `map-animation`/`map-intelligibility`/
+  `maintainer-map`; evidence `docs/evidence/map-vision/v7/`; decision D-pf-238.
+- **Feature name:** **Perfpal Atlas** (founder, 2026-10-22). G core = flow map; F components =
+  weight-map support.
+- **Agent report track** remains queued (A-pf-111); map research first per founder.
+- **Do not mark `map-build` done.** A1b stays open. M5 needs B-pf-001 + B-pf-002.
 
 ## Blockers
 - **Map legibility:** R-pf-104/R-pf-105/R-pf-106 — views validated (A1), but ranking recall

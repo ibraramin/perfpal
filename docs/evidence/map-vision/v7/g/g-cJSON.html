@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=1440, initial-scale=1">
+<title>G · cJSON entry-flow map</title>
+<style>
+:root{--ink:#202b35;--muted:#6f6a61;--paper:#f4f1ea;--panel:#fbf9f4;--line:#d6d0c4;
+--prod:#3f6d6a;--test:#5c7391;--bench:#7a4f7d;--unreached:#b3aca1;--hot:#c2410c;--entry:#1f2d3a}
+*{box-sizing:border-box}
+html,body{margin:0;width:1440px;height:900px;overflow:hidden}
+body{background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.page{padding:8px 12px;height:900px;display:flex;flex-direction:column}
+.pausebox{position:absolute;opacity:0;width:1px;height:1px}
+header{height:58px;display:flex;align-items:center;gap:14px;flex:0 0 58px}
+.hleft{width:244px;flex:0 0 244px}
+.kicker{font-size:8px;letter-spacing:.16em;font-weight:800;color:#8a837a}
+.title{font-size:21px;font-weight:800;letter-spacing:-.015em;line-height:1.05;margin-top:2px}
+.title small{font-size:9px;font-weight:600;color:#6f6a61;letter-spacing:.02em;margin-left:6px}
+.entry-block{flex:1;border-left:2px solid var(--entry);padding-left:10px;min-width:0}
+.entry-label{font-size:8px;font-weight:800;letter-spacing:.13em;color:var(--hot)}
+.entry-name{font-size:12.5px;font-weight:750;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-policy{font-size:8.2px;color:var(--muted);margin-top:1px}
+.hright{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+.drill-link{display:inline-block;background:#1f2d3a;color:#fff;text-decoration:none;padding:7px 10px;border-radius:4px;font-size:8.5px;font-weight:750;letter-spacing:.02em}
+.pause-btn{display:inline-block;border:1px solid #9d9588;background:#fffdf8;color:#3c4650;padding:7px 10px;border-radius:4px;font-size:8.5px;font-weight:700;cursor:pointer;user-select:none}
+.pausebox:checked~.page .pause-btn{background:#ece8df}
+.pausebox:focus-visible~.page .pause-btn{outline:2px solid var(--hot);outline-offset:2px}
+.subhead{height:30px;flex:0 0 30px;display:flex;flex-direction:column;justify-content:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:8px;color:#5f5a51;line-height:1.35}
+.subhead b{color:#2d3944}
+.legend{display:inline-flex;align-items:center;gap:5px;margin-right:10px}
+.sw{display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:-1px}
+.sw.prod{background:#fdfbf6;border:1px solid #8b8173}.sw.test{background:#eef2f7;border:1px solid #7f93aa}
+.sw.unreached{background:#e8e5df;border:1px solid #b8b2a7}.sw.path{background:#c2410c}
+.sw.back{background:transparent;border-top:2px dashed #b45309;height:4px;border-radius:0}
+.stage{flex:1;display:flex;gap:10px;min-height:0}
+.map{width:868px;height:796px;flex:0 0 868px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.rail{flex:1;min-width:0;height:796px;display:flex;flex-direction:column}
+.rail-title{height:18px;flex:0 0 18px;font-size:7.6px;font-weight:800;letter-spacing:.11em;color:#8a837a;display:flex;align-items:center;justify-content:space-between}
+.rail-title span{font-weight:600;letter-spacing:0;color:#6f6a61}
+.cards{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:70px;gap:6px;align-content:start}
+.card{background:#fffdf8;border:1px solid #d8d2c6;border-left:3px solid #8b8173;border-radius:4px;padding:3px 7px;overflow:hidden;opacity:0;animation:fadeUp .45s ease-out both}
+.card.entry{border-left-color:var(--entry);background:#f3f1eb}
+.card.hot{border-left-color:var(--hot)}
+.card.test{border-left-color:var(--test);background:#f4f6f9}
+.card.bench{border-left-color:var(--bench);background:#f8f3f8}
+.card.unreached{border-left-color:var(--unreached);background:#efede8;color:#756f66}
+.card-path{font-size:9.4px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:10px}
+.card-meta{font-size:7.4px;color:#726c63;line-height:8.5px;white-space:nowrap;overflow:hidden}
+.card-anchor{font-size:7.4px;color:#8a5a2b;line-height:8.5px;white-space:nowrap;overflow:hidden;font-weight:650}
+.card-funcs{font-size:7.6px;line-height:8.6px;color:#3f4952;height:26px;overflow:hidden}
+.cf{display:block;white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
+.cf .pct{color:#8a837a;font-weight:600}
+.card-find{font-size:7.6px;line-height:8px;color:#8a5a2b;white-space:nowrap;overflow:hidden;font-weight:650}
+.card.unreached .card-find{color:#8a837a}
+.hello{font-size:8px}
+.node{opacity:0;animation:fadeUp .5s ease-out both}
+.node-box{fill:#fdfbf6;stroke:#8b8173;stroke-width:1.1}
+.node-path{font-size:8.8px;font-weight:700;fill:#23303a}
+.node-meta{font-size:7px;fill:#6b7280}
+.node-anchor{font-size:6.8px;fill:#8a837a}
+.node.test .node-box{fill:#eef2f7;stroke:#7f93aa;stroke-dasharray:3 2}
+.node.bench .node-box{fill:#f7f0f7;stroke:#8a6f9e;stroke-dasharray:3 2}
+.node.unreached .node-box{fill:#e8e5df;stroke:#b8b2a7}
+.node.unreached .node-path{fill:#8a837a}.node.unreached .node-meta,.node.unreached .node-anchor{fill:#9c958a}
+.node.entry{opacity:1;animation:none}
+.node.entry .node-box{fill:#1f2d3a;stroke:#1f2d3a;stroke-width:2}
+.node.entry .node-path{fill:#fff}.node.entry .node-meta{fill:#cbd5e1}.node.entry .node-anchor{fill:#cbd5e1}
+.node.hot .node-box{stroke:#c2410c;stroke-width:2.4;animation:hotPulse 2.4s ease-in-out 6200ms infinite}
+.node.entry .node-box{animation:entryPulse 2.4s ease-in-out 0ms infinite}
+.node-tag{font-size:6.6px;font-weight:800;letter-spacing:.1em;fill:#c2410c}
+.entry-tag{fill:#1f2d3a}
+.col-label{font-size:7.6px;letter-spacing:.11em;fill:#8a837a;font-weight:800;opacity:0;animation:fadeUp .4s ease-out both}
+.map-note{font-size:6.8px;fill:#9a9388;letter-spacing:.01em}
+.edge{fill:none;stroke:#8d8577;stroke-opacity:.34;stroke-dasharray:1;stroke-dashoffset:1;animation:draw .55s ease-out both}
+.edge.back{stroke:#b45309;stroke-opacity:.52;stroke-dasharray:4 3;stroke-dashoffset:0;animation:fade .4s ease-out both}
+.edge-count{font-size:6.2px;fill:#7c7468;paint-order:stroke;stroke:#fbf9f4;stroke-width:2}
+.trace-edge{fill:none;stroke:#c2410c;stroke-width:2.3;stroke-opacity:.95;stroke-dasharray:1;stroke-dashoffset:1;animation:draw .5s ease-out both}
+.hull{opacity:0;animation:fade .6s ease-out 150ms both}
+.hull path{fill-opacity:.06;stroke-opacity:.5;stroke-width:1;stroke-dasharray:5 3}
+.hull text{font-size:7.2px;fill:#7b7266;font-weight:750;letter-spacing:.03em;paint-order:stroke;stroke:#fbf9f4;stroke-width:2}
+.agg{opacity:0;animation:fadeUp .45s ease-out both}
+.agg rect{fill:#f0ede6;stroke:#b8b2a7;stroke-dasharray:3 2}
+.agg text{font-size:7.1px;fill:#7b7266;font-weight:650}.agg .agg-meta{font-size:6.3px;font-weight:500}
+.unreached-chip{opacity:0;animation:fadeUp .45s ease-out 2500ms both}
+.unreached-chip rect{fill:#e8e5df;stroke:#b8b2a7;stroke-dasharray:3 2}
+.unreached-chip text{font-size:7.2px;fill:#8a837a;font-weight:650}
+.trace-step{opacity:0;animation:pop .35s ease-out both}
+.trace-step circle{fill:#c2410c;stroke:#fff;stroke-width:1.2}
+.trace-step text{font-size:6.8px;fill:#fff;font-weight:800;text-anchor:middle}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+@keyframes entryPulse{0%,100%{stroke-width:2}50%{stroke-width:4.4}}
+@keyframes hotPulse{0%,100%{stroke-width:2.4}50%{stroke-width:5}}
+.pausebox:checked~.page .stage *{animation-play-state:paused!important}
+@media (prefers-reduced-motion: reduce){
+.stage *,.stage *::before,.stage *::after{animation:none!important;opacity:1!important;transform:none!important;stroke-dashoffset:0!important}
+}
+@media print{
+body{background:#fff}.drill-link,.pause-btn{display:none}
+.stage *,.stage *::before,.stage *::after{animation:none!important;opacity:1!important;transform:none!important;stroke-dashoffset:0!important}
+}
+</style></head>
+<body>
+<input id="pause" class="pausebox" type="checkbox" aria-label="Pause the animation">
+<div class="page">
+<header>
+  <div class="hleft">
+    <div class="kicker">PERFPAL · MAP CANDIDATE G · ENTRY-FLOW</div>
+    <div class="title">cJSON <small>estimated static flow</small></div>
+  </div>
+  <div class="entry-block">
+    <div class="entry-label">ENTRY · library root (no production main)</div>
+    <div class="entry-name">cJSON.c:253 · cJSON_Delete</div>
+    <div class="entry-policy">highest fan-in production lib-root (no production main) · confidence MEDIUM · alternatives: 2 (cJSON.c:2609; cJSON.c:1227)</div>
+  </div>
+  <div class="hright">
+    <a class="drill-link" href="g-cJSON-drill.html">Q2 reverse drill · cJSON.h →</a>
+    <label class="pause-btn" for="pause">Pause animation (CSS)</label>
+  </div>
+</header>
+<div class="subhead">
+  <div><b>6 files shown · 1 reachable (entry) · 0 reachable aggregated · 5 unreached production (grey)</b> · edges: all 5 shown file pairs drawn (5 back-edges) · call edges are structural and LOW confidence</div>
+  <div><span class="legend"><span class="sw prod"></span>production</span><span class="legend"><span class="sw test"></span>test / bench (demoted)</span><span class="legend"><span class="sw unreached"></span>unreached</span><span class="legend"><span class="sw back"></span>back-edge</span><span class="legend"><span class="sw path"></span>path trace</span> Entry policy: highest fan-in production lib-root (no production main). Animation plays once (~6.5 s); pause is CSS-only; reduced-motion/print show this final frame.</div>
+</div>
+<div class="stage">
+  <svg class="map" viewBox="0 0 868 796" width="868" height="796" role="img" aria-label="Entry-flow map for cJSON"><defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8d8577"/></marker><marker id="arrow-back" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#b45309"/></marker><marker id="arrow-trace" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c2410c"/></marker></defs><g class="hull"><path d="M140.0,391.0 L564.0,295.0 L728.0,295.0 L728.0,349.0 L304.0,445.0 L140.0,445.0 Z" fill="#2f6f8f" stroke="#2f6f8f"/><text x="144.0" y="291.0">cJSON · 2</text></g><g class="hull"><path d="M564.0,343.0 L728.0,343.0 L728.0,541.0 L564.0,541.0 Z" fill="#8a5a2b" stroke="#8a5a2b"/><text x="568.0" y="339.0">fuzzing · 3</text></g><g class="edges"><path class="edge back" marker-end="url(#arrow-back)" d="M721.0,322.0 C767.0,322.0 767.0,418.0 147.0,418.0" pathLength="1" stroke-width="2.53" style="animation-delay:1500ms"/><path class="edge back" marker-end="url(#arrow-back)" d="M721.0,370.0 C767.0,370.0 767.0,418.0 147.0,418.0" pathLength="1" stroke-width="1.62" style="animation-delay:1500ms"/><path class="edge back" marker-end="url(#arrow-back)" d="M721.0,418.0 C767.0,418.0 767.0,418.0 147.0,418.0" pathLength="1" stroke-width="1.99" style="animation-delay:1500ms"/><path class="edge back" marker-end="url(#arrow-back)" d="M721.0,466.0 C767.0,466.0 767.0,418.0 147.0,418.0" pathLength="1" stroke-width="1.69" style="animation-delay:1500ms"/><path class="edge back" marker-end="url(#arrow-back)" d="M721.0,514.0 C767.0,514.0 767.0,466.0 571.0,466.0" pathLength="1" stroke-width="1.18" style="animation-delay:1680ms"/><text class="edge-count" x="434.0" y="367.0">56</text><text class="edge-count" x="434.0" y="415.0">14</text></g><g class="trace-step" style="animation-delay:5250ms"><circle cx="295.0" cy="400.0" r="8"/><text x="295.0" y="403.5">1</text></g><g class="node entry hot" style="animation-delay:752ms"><title>cJSON.c — production, 2,605 static cost units (v2), 1,303× median; functions: cJSON.c:cJSON_Delete, cJSON.c:cJSON_Compare, cJSON.c:print_object, cJSON.c:parse_string</title><rect class="node-box" x="147.0" y="398.0" width="150" height="40" rx="5"/><text class="node-path" x="154.0" y="411.0">cJSON.c</text><text class="node-meta" x="154.0" y="423.0">2,605 static cost units (v2)</text><text class="node-anchor" x="154.0" y="433.0">1,303× median function</text><text class="node-tag entry-tag" x="290.0" y="393.0" text-anchor="end">ENTRY</text></g><g class="node unreached" style="animation-delay:1056ms"><title>cJSON_Utils.c — production, 1,048 static cost units (v2), 524× median; functions: cJSON_Utils.c:apply_patch, cJSON_Utils.c:create_patches, cJSON_Utils.c:compare_json, cJSON_Utils.c:sort_list</title><rect class="node-box" x="571.0" y="302.0" width="150" height="40" rx="5"/><text class="node-path" x="578.0" y="315.0">cJSON_Utils.c</text><text class="node-meta" x="578.0" y="327.0">1,048 static cost units (v2)</text><text class="node-anchor" x="578.0" y="337.0">524× median function · unreached</text></g><g class="node unreached" style="animation-delay:1128ms"><title>fuzzing/afl.c — production, 81 static cost units (v2), 40.5× median; functions: fuzzing/afl.c:main, fuzzing/afl.c:read_file</title><rect class="node-box" x="571.0" y="350.0" width="150" height="40" rx="5"/><text class="node-path" x="578.0" y="363.0">fuzzing/afl.c</text><text class="node-meta" x="578.0" y="375.0">81 static cost units (v2)</text><text class="node-anchor" x="578.0" y="385.0">40.5× median function · unreached</text></g><g class="node unreached" style="animation-delay:1182ms"><title>test.c — production, 71 static cost units (v2), 35.5× median; functions: test.c:create_objects, test.c:print_preallocated, test.c:(anonymous)</title><rect class="node-box" x="571.0" y="398.0" width="150" height="40" rx="5"/><text class="node-path" x="578.0" y="411.0">test.c</text><text class="node-meta" x="578.0" y="423.0">71 static cost units (v2)</text><text class="node-anchor" x="578.0" y="433.0">35.5× median function · unreached</text></g><g class="node unreached" style="animation-delay:1254ms"><title>fuzzing/cjson_read_fuzzer.c — production, 55 static cost units (v2), 27.5× median; functions: fuzzing/cjson_read_fuzzer.c:LLVMFuzzerTestOneInput</title><rect class="node-box" x="571.0" y="446.0" width="150" height="40" rx="5"/><text class="node-path" x="578.0" y="459.0">fuzzing/cjso…ead_fuzzer.c</text><text class="node-meta" x="578.0" y="471.0">55 static cost units (v2)</text><text class="node-anchor" x="578.0" y="481.0">27.5× median function · unreached</text></g><g class="node unreached" style="animation-delay:1308ms"><title>fuzzing/fuzz_main.c — production, 17 static cost units (v2), 8.5× median; functions: fuzzing/fuzz_main.c:main</title><rect class="node-box" x="571.0" y="494.0" width="150" height="40" rx="5"/><text class="node-path" x="578.0" y="507.0">fuzzing/fuzz_main.c</text><text class="node-meta" x="578.0" y="519.0">17 static cost units (v2)</text><text class="node-anchor" x="578.0" y="529.0">8.5× median function · unreached</text></g><text class="col-label" x="20.0" y="38" style="animation-delay:300ms">DEPTH 0 · ENTRY</text><text class="col-label" x="444.0" y="38" style="animation-delay:730ms">UNREACHED · no forward path</text><text class="map-note" x="854" y="788" text-anchor="end">forward callers → callees only · grey = unreached · dashed amber = back-edge · edge label = distinct call count</text></svg>
+  <div class="rail">
+    <div class="rail-title">FILE CARDS · 6 shown <span>× median function = multiple of the repo-wide median function cost</span></div>
+    <div class="cards"><div class="card entry hot" style="animation-delay:2700ms"><div class="card-path" title="cJSON.c">cJSON.c</div><div class="card-meta">entry · production · 2,605 static cost units (v2)</div><div class="card-anchor">1,303× median function · 116 fns</div><div class="card-funcs"><span class="cf" title="cJSON.c:cJSON_Delete — 137 static cost units (v2) · top 1%">cJSON_Delete <span class="pct">· top 1%</span></span><span class="cf" title="cJSON.c:cJSON_Compare — 101 static cost units (v2) · top 1%">cJSON_Compare <span class="pct">· top 1%</span></span><span class="cf" title="cJSON.c:print_object — 84 static cost units (v2) · top 1%">print_object <span class="pct">· top 1%</span></span></div><div class="card-find">PERF-C-STR-003 ×11 · warn</div></div><div class="card unreached" style="animation-delay:2745ms"><div class="card-path" title="cJSON_Utils.c">cJSON_Utils.c</div><div class="card-meta">unreached · production · 1,048 static cost units (v2)</div><div class="card-anchor">524× median function · 38 fns</div><div class="card-funcs"><span class="cf" title="cJSON_Utils.c:apply_patch — 131 static cost units (v2) · top 1%">apply_patch <span class="pct">· top 1%</span></span><span class="cf" title="cJSON_Utils.c:create_patches — 94 static cost units (v2) · top 1%">create_patches <span class="pct">· top 1%</span></span><span class="cf" title="cJSON_Utils.c:compare_json — 76 static cost units (v2) · top 2%">compare_json <span class="pct">· top 2%</span></span></div><div class="card-find">PERF-C-ARCH-003 ×56 · info</div></div><div class="card unreached" style="animation-delay:2790ms"><div class="card-path" title="fuzzing/afl.c">fuzzing/afl.c</div><div class="card-meta">unreached · production · 81 static cost units (v2)</div><div class="card-anchor">40.5× median function · 2 fns</div><div class="card-funcs"><span class="cf" title="fuzzing/afl.c:main — 59 static cost units (v2) · top 2%">main <span class="pct">· top 2%</span></span><span class="cf" title="fuzzing/afl.c:read_file — 22 static cost units (v2) · top 10%">read_file <span class="pct">· top 10%</span></span></div><div class="card-find">PERF-C-ARCH-003 ×5 · info</div></div><div class="card unreached" style="animation-delay:2835ms"><div class="card-path" title="test.c">test.c</div><div class="card-meta">unreached · production · 71 static cost units (v2)</div><div class="card-anchor">35.5× median function · 3 fns</div><div class="card-funcs"><span class="cf" title="test.c:create_objects — 43 static cost units (v2) · top 4%">create_objects <span class="pct">· top 4%</span></span><span class="cf" title="test.c:print_preallocated — 25 static cost units (v2) · top 9%">print_preallocated <span class="pct">· top 9%</span></span><span class="cf" title="test.c:(anonymous) — 3 static cost units (v2) · top 41%">(anonymous) <span class="pct">· top 41%</span></span></div><div class="card-find">PERF-C-ARCH-003 ×14 · info</div></div><div class="card unreached" style="animation-delay:2880ms"><div class="card-path" title="fuzzing/cjson_read_fuzzer.c">fuzzing/cjson_read_fuzzer.c</div><div class="card-meta">unreached · production · 55 static cost units (v2)</div><div class="card-anchor">27.5× median function · 1 fns</div><div class="card-funcs"><span class="cf" title="fuzzing/cjson_read_fuzzer.c:LLVMFuzzerTestOneInput — 55 static cost units (v2) · top 3%">LLVMFuzzerTestOneInput <span class="pct">· top 3%</span></span></div><div class="card-find">PERF-C-ARCH-003 ×6 · info</div></div><div class="card unreached" style="animation-delay:2925ms"><div class="card-path" title="fuzzing/fuzz_main.c">fuzzing/fuzz_main.c</div><div class="card-meta">unreached · production · 17 static cost units (v2)</div><div class="card-anchor">8.5× median function · 1 fns</div><div class="card-funcs"><span class="cf" title="fuzzing/fuzz_main.c:main — 17 static cost units (v2) · top 13%">main <span class="pct">· top 13%</span></span></div><div class="card-find">PERF-C-ARCH-003 ×1 · info</div></div></div>
+  </div>
+</div>
+</div>
+</body></html>
