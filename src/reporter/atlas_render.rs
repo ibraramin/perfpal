@@ -9,14 +9,19 @@
 //! Canvas purity (A9): only graph chrome (columns, nodes, edges, hulls, path
 //! badges, legend, caps, footer) — no tables, cards, bars or metric selectors.
 //! Zero `<script>`, zero event-handler attributes, zero network references.
+//!
+//! Pause semantics: the checkbox freezes the CSS timeline at its current
+//! frame; pausing during the initial reveal delay freezes that frame (the A2
+//! timed test judges whether that is acceptable).
 
 use std::collections::BTreeMap;
 
 use crate::charts::escape_xml;
 use crate::reporter::atlas::{AtlasColumn, AtlasEdge, AtlasNode, AtlasView, DEPTH_COLUMN_CAP};
 use crate::reporter::atlas_metrics::{
-    NO_ENTRY, NO_SOURCE_FUNCTIONS, format_cost, format_count, format_depth, format_distinct_edges,
-    format_edge_mix, format_entry, format_finding, format_multiple, format_reachable, format_top,
+    NO_ENTRY, NO_SOURCE_FUNCTIONS, format_cost, format_count, format_demoted_files, format_depth,
+    format_distinct_edges, format_edge_mix, format_entry, format_finding, format_multiple,
+    format_parse, format_reachable, format_top, format_unresolved_includes,
 };
 use crate::reporter::escape_html;
 use crate::reporter::views::CostScale;
@@ -54,6 +59,7 @@ const ANIMATION_CSS: &str = r#"#atlas-canvas{position:relative;background:#fffff
 #atlas-canvas .atlas-pause{display:inline-block;margin:0 16px 8px;padding:3px 10px;border:1px solid #94a3b8;border-radius:999px;background:#f8fafc;font-size:11px;cursor:pointer}
 #atlas-canvas .atlas-graph{background:#ffffff;border-bottom:1px solid #e2e8f0}
 #atlas-canvas .atlas-svg{display:block;width:100%;height:auto}
+#atlas-canvas .atlas-svg .atlas-edge,#atlas-canvas .atlas-svg .atlas-trace{fill:none}
 #atlas-canvas .atlas-legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
 #atlas-canvas .atlas-structural-caption{font-weight:700;color:#7c2d12}
 #atlas-canvas .atlas-footer{padding:8px 16px;font-size:11px;color:#334155}
@@ -73,7 +79,8 @@ const ANIMATION_CSS: &str = r#"#atlas-canvas{position:relative;background:#fffff
 #atlas-canvas .atlas-pause:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
 #atlas-canvas .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #1d4ed8;outline-offset:2px}
 @media (prefers-reduced-motion: reduce){#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
-@media print{#atlas-canvas{break-inside:avoid}#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#atlas-canvas .atlas-pause{display:none}}"#;
+@media print{#atlas-canvas{break-inside:avoid}#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#atlas-canvas .atlas-pause{display:none}}
+#atlas-canvas .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}"#;
 
 // ---------------------------------------------------------------------------
 // Geometry
@@ -269,7 +276,7 @@ fn node_title(node: &AtlasNode) -> String {
     let mut parts = vec![
         node.path.clone(),
         node.path_class.clone(),
-        node_anchor_text(node),
+        format!("file total {}", node_anchor_text(node)),
     ];
     if !node.top_functions.is_empty() {
         let functions = node
@@ -460,7 +467,7 @@ fn render_node(
     total_steps: usize,
 ) -> String {
     let max_chars = (rect.w / 5).clamp(12, 32) as usize;
-    let name = tail_keep(&node.file_name, max_chars);
+    let name = tail_keep(&node.path, max_chars);
     let rank = node_rank_text(node);
     let (name_size, meta_size) = if rect.h >= 60 {
         (8.0, 6.5)
@@ -654,7 +661,6 @@ fn render_graph_inner(view: &AtlasView) -> String {
                 "url(#atlas-arrow)",
             )
         };
-        let width = 1 + (edge.count / 8).min(2);
         let path_length = if edge.back { "" } else { " pathLength=\"1\"" };
         let title = format!(
             "{} → {} · {}",
@@ -663,7 +669,7 @@ fn render_graph_inner(view: &AtlasView) -> String {
             format_distinct_edges(edge.count)
         );
         edge_paths.push_str(&format!(
-            "<path class=\"{class}\" data-edge=\"{}\" d=\"{}\" stroke=\"{stroke}\" stroke-width=\"{width}\" \
+            "<path class=\"{class}\" data-edge=\"{}\" d=\"{}\" fill=\"none\" stroke=\"{stroke}\" stroke-width=\"2\" \
              stroke-dasharray=\"{dasharray}\" stroke-dashoffset=\"0\" marker-end=\"{marker}\"{path_length} \
              style=\"--atlas-edge:{index}\"><title>{}</title></path>",
             escape_xml(&format!("{}->{}", edge.from, edge.to)),
@@ -675,7 +681,7 @@ fn render_graph_inner(view: &AtlasView) -> String {
              fill=\"#334155\" stroke=\"#ffffff\" stroke-width=\"2.5\" paint-order=\"stroke\">{}</text>",
             shape.label_x,
             shape.label_y - 2,
-            format_count(edge.count as u64)
+            escape_xml(&format_distinct_edges(edge.count))
         ));
     }
 
@@ -692,7 +698,7 @@ fn render_graph_inner(view: &AtlasView) -> String {
             let step = index + 1;
             let title = format!("{PATH_CAPTION} · step {step} of {}", view.path.len());
             traces.push_str(&format!(
-                "<path class=\"atlas-trace\" d=\"{}\" stroke=\"#ea580c\" stroke-width=\"3\" \
+                "<path class=\"atlas-trace\" d=\"{}\" fill=\"none\" stroke=\"#ea580c\" stroke-width=\"3\" \
                  stroke-dasharray=\"1\" stroke-dashoffset=\"0\" pathLength=\"1\" \
                  style=\"--atlas-trace:{index}\"><title>{}</title></path>",
                 shape.path,
@@ -741,9 +747,13 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
         "PATH · {} steps · {PATH_CAPTION}",
         format_count(view.path.len() as u64)
     );
+    let reachable_shown = view
+        .caps
+        .reachable_files
+        .saturating_sub(view.caps.aggregated_files);
     let caps_line = format!(
         "{} of {} reachable files shown · {} aggregated",
-        format_count(view.caps.nodes_shown as u64),
+        format_count(reachable_shown as u64),
         format_count(view.caps.reachable_files as u64),
         format_count(view.caps.aggregated_files as u64)
     );
@@ -785,15 +795,22 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
         format_count(view.coverage.unreached_production as u64),
         format_count(view.coverage.unreached_nonproduction as u64)
     );
-    let mut footer_parts = vec![reachable, pairs, mix, unreached];
-    if view.coverage.parse_partial + view.coverage.parse_failed > 0 {
-        footer_parts.push(format!(
-            "parse {} ok / {} partial / {} failed",
-            format_count(u64::from(view.coverage.parse_ok)),
-            format_count(u64::from(view.coverage.parse_partial)),
-            format_count(u64::from(view.coverage.parse_failed))
-        ));
-    }
+    let footer_parts = [
+        reachable,
+        pairs,
+        mix,
+        unreached,
+        format_parse(
+            view.coverage.parse_ok,
+            view.coverage.parse_partial,
+            view.coverage.parse_failed,
+        ),
+        format_unresolved_includes(
+            view.coverage.unresolved_includes,
+            view.blast_radius.include_edges_total,
+        ),
+        format_demoted_files(view.coverage.demoted_files),
+    ];
     let footer = footer_parts
         .iter()
         .map(|part| escape_html(part))
@@ -859,7 +876,7 @@ pub fn render_canvas_page(view: &AtlasView) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::analyzer::Confidence;
+    use crate::analyzer::{Confidence, Severity};
     use crate::reporter::atlas::build_atlas_view;
     use crate::reporter::atlas::test_support::*;
 
@@ -886,6 +903,27 @@ mod tests {
                 }
             }
             index += 1;
+        }
+        false
+    }
+
+    fn contains_word(haystack: &str, needle: &str) -> bool {
+        let haystack = haystack.to_ascii_lowercase();
+        let bytes = haystack.as_bytes();
+        let mut start = 0;
+        while let Some(offset) = haystack[start..].find(needle) {
+            let index = start + offset;
+            let before = index.checked_sub(1).map(|i| bytes[i]);
+            let after = bytes.get(index + needle.len()).copied();
+            let boundary =
+                |byte: Option<u8>| byte.is_none_or(|value| !value.is_ascii_alphanumeric());
+            if boundary(before) && boundary(after) {
+                return true;
+            }
+            start = index + needle.len().max(1);
+            if start >= haystack.len() {
+                break;
+            }
         }
         false
     }
@@ -1076,6 +1114,8 @@ mod tests {
         assert!(html.contains("@media print"));
         assert!(html.contains("break-inside:avoid"));
         assert!(html.contains("Pause animation"));
+        assert!(html.contains("opacity:0!important"));
+        assert!(html.contains("inline-size:1px!important"));
     }
 
     #[test]
@@ -1183,5 +1223,156 @@ mod tests {
             "partial node badge missing"
         );
         assert!(html.contains("parse 1 ok / 1 partial / 0 failed"));
+    }
+
+    #[test]
+    fn edges_are_unfilled_uniform_width_and_labelled() {
+        let view = build_atlas_view(&application_fixture());
+        let html = render_canvas_html(&view);
+        for edge in &view.edges {
+            let marker = format!(
+                "data-edge=\"{}\"",
+                escape_xml(&format!("{}->{}", edge.from, edge.to))
+            );
+            let marker_start = html
+                .find(&marker)
+                .unwrap_or_else(|| panic!("missing edge marker for {}->{}", edge.from, edge.to));
+            let path_start = html[..marker_start].rfind("<path").expect("edge path open");
+            let path_end = marker_start
+                + html[marker_start..]
+                    .find("</path>")
+                    .expect("edge path close");
+            let chunk = &html[path_start..path_end];
+            assert!(chunk.contains("fill=\"none\""), "edge fill missing");
+            assert!(
+                chunk.contains("stroke-width=\"2\""),
+                "edge width is not uniform"
+            );
+        }
+        // M-10 visible label (not a bare count).
+        assert!(html.contains(&format_distinct_edges(1)));
+    }
+
+    #[test]
+    fn footer_always_prints_parse_coverage() {
+        let all_ok = render_canvas_html(&build_atlas_view(&application_fixture()));
+        assert!(all_ok.contains("parse "));
+        assert!(all_ok.contains("unresolved includes"));
+        assert!(all_ok.contains("files demoted"));
+
+        let partial = render_canvas_html(&build_atlas_view(&partial_parse_fixture()));
+        assert!(partial.contains("parse 1 ok / 1 partial / 0 failed"));
+    }
+
+    #[test]
+    fn caps_chip_excludes_forced_unreached_hottest() {
+        let mut builder = DocBuilder::new()
+            .file(file("src/main.c", "production", 1))
+            .function(function("src/main.c", "main", 1, Some(10), 0, Some("main")));
+        let mut edges = Vec::new();
+        for index in 0..19_u64 {
+            let path = format!("src/f{index}.c");
+            builder = builder
+                .file(file(&path, "production", 1))
+                .function(function(
+                    &path,
+                    &format!("f{index}"),
+                    1,
+                    Some(100 - index),
+                    0,
+                    None,
+                ));
+            edges.push(call_edge(
+                "src/main.c#main#1:1",
+                &format!("f{index}"),
+                "src/main.c",
+                Some(&path),
+                Confidence::Low,
+            ));
+        }
+        builder = builder
+            .file(file("src/hot.c", "production", 1))
+            .function(function("src/hot.c", "hot", 1, Some(9000), 0, None));
+        for edge in edges {
+            builder = builder.call_edge(edge);
+        }
+        let view = build_atlas_view(&builder.build());
+        assert_eq!(view.caps.reachable_files, 20);
+        assert_eq!(view.caps.aggregated_files, 1);
+        assert_eq!(view.caps.nodes_shown, 20);
+        let html = render_canvas_html(&view);
+        assert!(html.contains("19 of 20 reachable files shown · 1 aggregated"));
+    }
+
+    #[test]
+    fn node_title_carries_file_total_anchor_and_full_path_label() {
+        let html = render_canvas_html(&build_atlas_view(&application_fixture()));
+        assert!(html.contains("file total "));
+        assert!(html.contains(">src/main.c</text>"));
+    }
+
+    #[test]
+    fn legend_lists_every_unit_and_style_key() {
+        let html = render_canvas_html(&build_atlas_view(&application_fixture()));
+        for item in [
+            "depth = BFS from entry",
+            "solid = forward structural edge",
+            "dashed amber = back edge",
+            "hatch = non-production (test/bench/other)",
+            "grey = unreached",
+            "× median function = denominator",
+            "hulls = approximate prefix groups",
+        ] {
+            assert!(html.contains(item), "missing legend item `{item}`");
+        }
+    }
+
+    #[test]
+    fn hot_finding_renders_as_text_annotation() {
+        let doc = DocBuilder::new()
+            .file(file("src/main.c", "production", 1))
+            .function(function(
+                "src/main.c",
+                "main",
+                1,
+                Some(100),
+                0,
+                Some("main"),
+            ))
+            .finding(finding(
+                "PERF-C-ALLOC-001",
+                "src/main.c",
+                1,
+                Severity::Hot,
+                "hot allocation",
+            ))
+            .build();
+        let html = render_canvas_html(&build_atlas_view(&doc));
+        assert!(html.contains("HOT ×1"));
+    }
+
+    #[test]
+    fn emitted_surfaces_never_claim_time_or_runtime() {
+        let view = build_atlas_view(&application_fixture());
+        let artifacts = [
+            render_canvas_html(&view),
+            render_canvas_svg(&view),
+            render_canvas_page(&view),
+        ];
+        for artifact in artifacts {
+            for token in ["ms", "µs", "us"] {
+                assert!(
+                    !contains_word(&artifact, token),
+                    "forbidden unit token `{token}` emitted"
+                );
+            }
+            let lowered = artifact.to_ascii_lowercase();
+            for token in ["runtime", "speedup", "latency", "throughput", "hot path"] {
+                assert!(
+                    !lowered.contains(token),
+                    "forbidden runtime claim `{token}` emitted"
+                );
+            }
+        }
     }
 }

@@ -121,6 +121,16 @@ pub fn format_share(cost: u64, total: u64) -> String {
     }
 }
 
+/// `12% of scanned static cost · 7 files` (M-07 component share).
+#[must_use]
+pub fn format_component_share(cost: u64, total: u64, files: usize) -> String {
+    let files = grouped(files);
+    match format_percent(cost, total) {
+        Some(percent) => format!("{percent} of scanned static cost · {files} files"),
+        None => format!("{NO_SCANNED_COST} · {files} files"),
+    }
+}
+
 fn format_cost_anchor(
     cost: u64,
     scale: CostScale,
@@ -177,9 +187,6 @@ pub fn format_reachable(reachable: usize, source_files: usize) -> String {
     if source_files == 0 {
         return NO_SOURCE_FUNCTIONS.to_string();
     }
-    if reachable == 0 {
-        return format!("0 of {} source files reachable (0%)", grouped(source_files));
-    }
     let percent =
         format_percent(reachable as u64, source_files as u64).unwrap_or_else(|| "0%".to_string());
     format!(
@@ -189,9 +196,14 @@ pub fn format_reachable(reachable: usize, source_files: usize) -> String {
     )
 }
 
-/// `22 dependent files · 10% of source files [· top 2%]`.
+/// `22 dependent files · 10% of source files [· 2.0× median dependent count] [· top 2%]`.
 #[must_use]
-pub fn format_dependents(dependents: usize, source_files: usize, top_pct: Option<usize>) -> String {
+pub fn format_dependents(
+    dependents: usize,
+    source_files: usize,
+    median_multiple: Option<f64>,
+    top_pct: Option<usize>,
+) -> String {
     if dependents == 0 || source_files == 0 {
         return NO_RESOLVED_DEPENDENTS.to_string();
     }
@@ -201,6 +213,12 @@ pub fn format_dependents(dependents: usize, source_files: usize, top_pct: Option
         "{} dependent files · {percent} of source files",
         grouped(dependents)
     );
+    if let Some(median) = median_multiple {
+        label.push_str(&format!(
+            " · {} median dependent count",
+            format_multiple(median)
+        ));
+    }
     if let Some(top_pct) = top_pct {
         label.push_str(&format!(" · top {top_pct}%"));
     }
@@ -217,10 +235,11 @@ pub fn format_call_degree(callers: usize, callees: usize) -> String {
     )
 }
 
-/// `56 distinct structural edges`.
+/// `1 distinct structural edge` / `56 distinct structural edges`.
 #[must_use]
 pub fn format_distinct_edges(edges: usize) -> String {
-    format!("{} distinct structural edges", grouped(edges))
+    let noun = if edges == 1 { "edge" } else { "edges" };
+    format!("{} distinct structural {noun}", grouped(edges))
 }
 
 /// `57 MEDIUM / 88 LOW structural edges`, plus ` / K HIGH` when any exist.
@@ -265,6 +284,33 @@ pub fn format_nonproduction(cost: u64, total: u64, files: usize) -> String {
     }
 }
 
+/// `parse 100 ok / 116 partial / 0 failed` (M-13).
+#[must_use]
+pub fn format_parse(ok: u32, partial: u32, failed: u32) -> String {
+    format!(
+        "parse {} ok / {} partial / {} failed",
+        grouped(ok),
+        grouped(partial),
+        grouped(failed)
+    )
+}
+
+/// `0/234 unresolved includes` (M-13).
+#[must_use]
+pub fn format_unresolved_includes(unresolved: usize, total: usize) -> String {
+    format!(
+        "{}/{} unresolved includes",
+        grouped(unresolved),
+        grouped(total)
+    )
+}
+
+/// `42 files demoted` (M-13).
+#[must_use]
+pub fn format_demoted_files(files: usize) -> String {
+    format!("{} files demoted", grouped(files))
+}
+
 /// `representative path (static) · 4 steps` (zero steps still prints).
 #[must_use]
 pub fn format_path_steps(steps: usize) -> String {
@@ -280,8 +326,13 @@ pub fn format_entry(policy_label: &str, confidence: &str, alternatives: usize) -
     } else {
         confidence.to_ascii_uppercase()
     };
+    let noun = if alternatives == 1 {
+        "alternative"
+    } else {
+        "alternatives"
+    };
     format!(
-        "ENTRY · {policy_label} · confidence {confidence} · {} alternatives",
+        "ENTRY · {policy_label} · confidence {confidence} · {} {noun}",
         grouped(alternatives)
     )
 }
@@ -480,6 +531,41 @@ mod tests {
     }
 
     #[test]
+    fn component_share_has_its_denominator_and_file_count() {
+        assert_eq!(
+            format_component_share(12, 100, 7),
+            "12% of scanned static cost · 7 files"
+        );
+        assert_eq!(
+            format_component_share(1, 500, 1),
+            "0.2% of scanned static cost · 1 files"
+        );
+        assert_eq!(
+            format_component_share(0, 0, 7),
+            "no scanned static cost recorded · 7 files"
+        );
+    }
+
+    #[test]
+    fn coverage_formatters_print_counts_and_denominators() {
+        assert_eq!(
+            format_parse(100, 116, 0),
+            "parse 100 ok / 116 partial / 0 failed"
+        );
+        assert_eq!(format_parse(0, 0, 0), "parse 0 ok / 0 partial / 0 failed");
+        assert_eq!(
+            format_unresolved_includes(0, 234),
+            "0/234 unresolved includes"
+        );
+        assert_eq!(
+            format_unresolved_includes(7, 1_234),
+            "7/1,234 unresolved includes"
+        );
+        assert_eq!(format_demoted_files(42), "42 files demoted");
+        assert_eq!(format_demoted_files(0), "0 files demoted");
+    }
+
+    #[test]
     fn reachable_counts_handle_zero_and_partial_cases() {
         assert_eq!(
             format_reachable(19, 53),
@@ -487,7 +573,7 @@ mod tests {
         );
         assert_eq!(
             format_reachable(0, 53),
-            "0 of 53 source files reachable (0%)"
+            "0 of 53 source files reachable (0.0%)"
         );
         assert_eq!(
             format_reachable(2, 1_000),
@@ -499,15 +585,25 @@ mod tests {
     #[test]
     fn dependents_include_share_and_optional_top() {
         assert_eq!(
-            format_dependents(22, 220, Some(2)),
-            "22 dependent files · 10% of source files · top 2%"
+            format_dependents(22, 220, Some(2.0), Some(2)),
+            "22 dependent files · 10% of source files · 2.0× median dependent count · top 2%"
         );
         assert_eq!(
-            format_dependents(5, 10, None),
+            format_dependents(5, 10, None, None),
             "5 dependent files · 50% of source files"
         );
-        assert_eq!(format_dependents(0, 10, Some(1)), NO_RESOLVED_DEPENDENTS);
-        assert_eq!(format_dependents(3, 0, Some(1)), NO_RESOLVED_DEPENDENTS);
+        assert_eq!(
+            format_dependents(5, 10, Some(1.5), Some(50)),
+            "5 dependent files · 50% of source files · 1.5× median dependent count · top 50%"
+        );
+        assert_eq!(
+            format_dependents(0, 10, Some(2.0), Some(1)),
+            NO_RESOLVED_DEPENDENTS
+        );
+        assert_eq!(
+            format_dependents(3, 0, Some(2.0), Some(1)),
+            NO_RESOLVED_DEPENDENTS
+        );
     }
 
     #[test]
@@ -599,6 +695,10 @@ mod tests {
             "ENTRY · library root (no production main) · confidence MEDIUM · 2 alternatives"
         );
         assert_eq!(
+            format_entry("library root (no production main)", "medium", 1),
+            "ENTRY · library root (no production main) · confidence MEDIUM · 1 alternative"
+        );
+        assert_eq!(
             format_entry("no entry", "", 0),
             "ENTRY · no entry · confidence UNKNOWN · 0 alternatives"
         );
@@ -658,7 +758,7 @@ mod tests {
         assert_eq!(NO_PRODUCTION_COST, "no production cost recorded");
         assert_eq!(ESTIMATE_INCOMPLETE, "estimate incomplete");
         assert_eq!(format_reachable(0, 0), NO_SOURCE_FUNCTIONS);
-        assert_eq!(format_dependents(0, 0, None), NO_RESOLVED_DEPENDENTS);
+        assert_eq!(format_dependents(0, 0, None, None), NO_RESOLVED_DEPENDENTS);
         assert_eq!(format_share(0, 0), NO_SCANNED_COST);
         assert!(format_nonproduction(0, 0, 0).contains(NO_SCANNED_COST));
     }
@@ -676,12 +776,17 @@ mod tests {
             format_file_cost(611, CostScale::V2, Some(7.0), 4, 100),
             format_function_cost(611, CostScale::V1, None, 1, 1),
             format_reachable(19, 53),
-            format_dependents(22, 220, Some(2)),
+            format_dependents(22, 220, Some(2.0), Some(2)),
             format_call_degree(3, 4),
             format_distinct_edges(56),
+            format_distinct_edges(1),
             format_edge_mix(57, 88, 4),
             format_caps(20, 106, 86, 57, 145),
             format_nonproduction(17, 100, 42),
+            format_component_share(12, 100, 7),
+            format_parse(100, 116, 0),
+            format_unresolved_includes(0, 234),
+            format_demoted_files(42),
             format_nonproduction(0, 0, 42),
             format_path_steps(4),
             format_entry("production main", "high", 0),

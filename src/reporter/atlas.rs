@@ -178,7 +178,7 @@ pub struct AtlasPathStep {
 }
 
 /// Blast-radius counts for the entry file (M-08 / M-09).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AtlasBlastRadius {
     pub target: Option<String>,
     pub dependents: usize,
@@ -187,7 +187,13 @@ pub struct AtlasBlastRadius {
     pub callee_files: usize,
     pub include_edges_total: usize,
     pub include_edges_resolved: usize,
+    pub median_dependents: Option<f64>,
+    pub dependent_multiple: Option<f64>,
 }
+
+// `f64` prevents a derived `Eq`; the required public shape carries it, and
+// every ratio here is a finite reverse-include multiple.
+impl Eq for AtlasBlastRadius {}
 
 /// Coverage / noise counts (M-13).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -285,6 +291,7 @@ struct FileInfo {
     class: String,
     production: bool,
     cost: u64,
+    cost_exact: f64,
     scale: CostScale,
     fan_in: usize,
     rank: usize,
@@ -411,18 +418,23 @@ fn build_file_infos(
         } else {
             CostScale::V1
         };
-        let cost = match scale {
-            CostScale::V2 => indices
-                .iter()
-                .filter_map(|&index| doc.stats.functions[index].function_cost_v2)
-                .fold(0_u64, u64::saturating_add),
+        // v1 file cost is summed unrounded for the anchor multiple; only the
+        // displayed integer is HALF-UP rounded (ScaleOrdering parity).
+        let (cost, cost_exact) = match scale {
+            CostScale::V2 => {
+                let cost = indices
+                    .iter()
+                    .filter_map(|&index| doc.stats.functions[index].function_cost_v2)
+                    .fold(0_u64, u64::saturating_add);
+                (cost, cost as f64)
+            }
             CostScale::V1 => {
                 let sum: f64 = indices
                     .iter()
                     .map(|&index| crate::charts::function_cost(&doc.stats.functions[index]))
                     .sum();
                 let rounded = crate::schema::round_half_up(sum, 0).max(0);
-                u64::try_from(rounded).unwrap_or(u64::MAX)
+                (u64::try_from(rounded).unwrap_or(u64::MAX), sum)
             }
         };
         let class = file
@@ -436,6 +448,7 @@ fn build_file_infos(
                 production: class == "production",
                 class,
                 cost,
+                cost_exact,
                 scale,
                 fan_in: structural.fan_in.get(&file.path).map_or(0, BTreeSet::len),
                 rank: 0,
@@ -471,7 +484,7 @@ fn build_file_infos(
                 info.top_pct = top_pct(index + 1, population);
                 info.ratio = median.and_then(|value| {
                     if value > 0.0 {
-                        Some(info.cost as f64 / value)
+                        Some(info.cost_exact / value)
                     } else {
                         None
                     }
@@ -782,7 +795,7 @@ fn top_functions(
             let cost = function_cost_u64(function);
             let ratio = ordering.median().and_then(|median| {
                 if median > 0.0 {
-                    Some(cost as f64 / median)
+                    Some(function_value(function) / median)
                 } else {
                     None
                 }
@@ -908,7 +921,12 @@ fn components(files: &BTreeMap<String, FileInfo>) -> Vec<AtlasComponent> {
             members: accum.members,
         })
         .collect();
-    result.sort_by(|a, b| b.cost.cmp(&a.cost).then_with(|| a.prefix.cmp(&b.prefix)));
+    result.sort_by(|a, b| {
+        b.production_cost
+            .cmp(&a.production_cost)
+            .then_with(|| b.cost.cmp(&a.cost))
+            .then_with(|| a.prefix.cmp(&b.prefix))
+    });
     result
 }
 
@@ -916,34 +934,60 @@ fn blast_radius(
     doc: &MetricsDocument,
     target: Option<&str>,
     structural: &Structural,
+    source_paths: &BTreeSet<String>,
 ) -> AtlasBlastRadius {
-    let scanned: BTreeSet<&str> = doc.files.iter().map(|file| file.path.as_str()).collect();
     let mut include_edges_total = 0_usize;
     let mut include_edges_resolved = 0_usize;
-    let mut dependents: BTreeMap<String, usize> = BTreeMap::new();
+    // Reverse-include sets over EVERY source file (zeros included) feed the
+    // M-08 median; per-from occurrence counts feed the top-5 list. `from` may
+    // be any scanned file (M-08's `from in files`), not only a source file.
+    let scanned: BTreeSet<&str> = doc.files.iter().map(|file| file.path.as_str()).collect();
+    let mut reverse: BTreeMap<&str, BTreeSet<&str>> = source_paths
+        .iter()
+        .map(|path| (path.as_str(), BTreeSet::new()))
+        .collect();
+    let mut target_edge_counts: BTreeMap<String, usize> = BTreeMap::new();
     if let Some(graphs) = &doc.graphs {
         include_edges_total = graphs.include_graph.edges.len();
         for edge in &graphs.include_graph.edges {
             if edge.resolved {
                 include_edges_resolved += 1;
             }
-            let Some(target) = target else {
+            if !edge.resolved {
+                continue;
+            }
+            let Some(to) = edge.to.as_deref() else {
                 continue;
             };
-            if edge.resolved
-                && edge.to.as_deref() == Some(target)
-                && edge.from != target
-                && scanned.contains(edge.from.as_str())
+            if edge.from == to
+                || !scanned.contains(edge.from.as_str())
+                || !source_paths.contains(to)
             {
-                *dependents.entry(edge.from.clone()).or_insert(0) += 1;
+                continue;
+            }
+            reverse.entry(to).or_default().insert(edge.from.as_str());
+            if target == Some(to) {
+                *target_edge_counts.entry(edge.from.clone()).or_insert(0) += 1;
             }
         }
     }
 
-    let dependent_count = dependents.len();
-    let mut top_dependents: Vec<(String, usize)> = dependents.into_iter().collect();
+    let dependent_count = target
+        .and_then(|target| reverse.get(target))
+        .map_or(0, BTreeSet::len);
+    let mut top_dependents: Vec<(String, usize)> = target_edge_counts.into_iter().collect();
     top_dependents.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
     top_dependents.truncate(5);
+
+    let median_values: Vec<f64> = reverse
+        .values()
+        .map(|sources| sources.len() as f64)
+        .collect();
+    let median_dependents = crate::reporter::views::median(&median_values);
+    let dependent_multiple = match median_dependents {
+        Some(median) if target.is_some() && median > 0.0 => Some(dependent_count as f64 / median),
+        _ => None,
+    };
 
     let (caller_files, callee_files) = match target {
         Some(target) => {
@@ -972,6 +1016,8 @@ fn blast_radius(
         callee_files,
         include_edges_total,
         include_edges_resolved,
+        median_dependents,
+        dependent_multiple,
     }
 }
 
@@ -1314,6 +1360,7 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
         doc,
         entry.point.as_ref().map(|point| point.path.as_str()),
         &structural,
+        &source_paths,
     );
 
     let source_count = source_paths.len();
@@ -2217,6 +2264,64 @@ mod tests {
     }
 
     #[test]
+    fn bfs_parent_tie_break_prefers_the_higher_cost_parent() {
+        let doc = document(
+            vec![
+                file("src/main.c", "production", 1),
+                file("src/high.c", "production", 1),
+                file("src/low.c", "production", 1),
+                file("src/target.c", "production", 1),
+            ],
+            vec![
+                function("src/main.c", "main", 1, Some(100), 0, Some("main")),
+                function("src/high.c", "high", 1, Some(100), 0, None),
+                function("src/low.c", "low", 1, Some(10), 0, None),
+                function("src/target.c", "target", 1, Some(50), 0, None),
+            ],
+            Vec::new(),
+            vec![
+                call_edge(
+                    "src/main.c#main#1:1",
+                    "high",
+                    "src/main.c",
+                    Some("src/high.c"),
+                    Confidence::Low,
+                ),
+                call_edge(
+                    "src/main.c#main#1:1",
+                    "low",
+                    "src/main.c",
+                    Some("src/low.c"),
+                    Confidence::Low,
+                ),
+                call_edge(
+                    "src/high.c#high#1:1",
+                    "target",
+                    "src/high.c",
+                    Some("src/target.c"),
+                    Confidence::Low,
+                ),
+                call_edge(
+                    "src/low.c#low#1:1",
+                    "target",
+                    "src/low.c",
+                    Some("src/target.c"),
+                    Confidence::Low,
+                ),
+            ],
+            Vec::new(),
+        );
+        let view = build_atlas_view(&doc);
+        assert_eq!(
+            view.path
+                .iter()
+                .map(|step| step.path.as_str())
+                .collect::<Vec<_>>(),
+            vec!["src/main.c", "src/high.c", "src/target.c"]
+        );
+    }
+
+    #[test]
     fn edge_confidence_mix_counts_distinct_structural_edges() {
         let doc = document(
             vec![
@@ -2581,19 +2686,23 @@ mod tests {
                 file("src/a/y.c", "test", 1),
                 file("src/b/z.c", "production", 1),
                 file("root.c", "production", 1),
+                file("tests/heavy.c", "test", 1),
             ],
             vec![
                 function("src/a/x.c", "main", 1, Some(100), 0, Some("main")),
                 function("src/a/y.c", "test_helper", 1, Some(50), 0, None),
                 function("src/b/z.c", "z", 1, Some(200), 0, None),
                 function("root.c", "root_fn", 1, Some(10), 0, None),
+                function("tests/heavy.c", "heavy_test", 1, Some(500), 0, None),
             ],
             Vec::new(),
             Vec::new(),
             Vec::new(),
         );
         let view = build_atlas_view(&doc);
-        assert_eq!(view.components.len(), 3);
+        assert_eq!(view.components.len(), 4);
+        // Production-first: a 500-cost test component never outranks a
+        // 200-cost production component.
         assert_eq!(view.components[0].prefix, "src/b");
         assert_eq!(view.components[0].cost, 200);
         assert_eq!(view.components[0].production_cost, 200);
@@ -2607,6 +2716,11 @@ mod tests {
         assert_eq!(view.components[1].members, vec!["src/a/x.c", "src/a/y.c"]);
         assert_eq!(view.components[2].prefix, "root");
         assert_eq!(view.components[2].cost, 10);
+        assert_eq!(view.components[3].prefix, "tests");
+        assert_eq!(view.components[3].cost, 500);
+        assert_eq!(view.components[3].production_cost, 0);
+        assert_eq!(view.components[3].file_count, 1);
+        assert_eq!(view.components[3].production_file_count, 0);
     }
 
     // -- findings ----------------------------------------------------------
@@ -2764,6 +2878,40 @@ mod tests {
         assert_eq!(blast.callee_files, 2);
         assert_eq!(blast.include_edges_total, 5);
         assert_eq!(blast.include_edges_resolved, 4);
+        assert_eq!(blast.median_dependents, Some(0.0));
+        assert!(blast.dependent_multiple.is_none());
+    }
+
+    #[test]
+    fn blast_radius_median_dependents_sets_the_multiple() {
+        let doc = document(
+            vec![
+                file("src/main.c", "production", 1),
+                file("src/a.c", "production", 1),
+                file("src/b.c", "production", 1),
+                file("src/c.c", "production", 1),
+            ],
+            vec![
+                function("src/main.c", "main", 1, Some(100), 0, Some("main")),
+                function("src/a.c", "a", 1, Some(10), 0, None),
+                function("src/b.c", "b", 1, Some(10), 0, None),
+                function("src/c.c", "c", 1, Some(10), 0, None),
+            ],
+            Vec::new(),
+            Vec::new(),
+            vec![
+                include_edge("src/a.c", Some("src/main.c"), true),
+                include_edge("src/b.c", Some("src/main.c"), true),
+                include_edge("src/c.c", Some("src/a.c"), true),
+                include_edge("src/c.c", Some("src/b.c"), true),
+            ],
+        );
+        let view = build_atlas_view(&doc);
+        let blast = &view.blast_radius;
+        assert_eq!(blast.dependents, 2);
+        // Reverse counts: main 2, a 1, b 1, c 0 -> lower-middle median 1.0.
+        assert_eq!(blast.median_dependents, Some(1.0));
+        assert_close(blast.dependent_multiple, 2.0);
     }
 
     // -- path --------------------------------------------------------------
