@@ -27,6 +27,7 @@
 
 pub mod atlas;
 pub mod atlas_metrics;
+pub mod atlas_render;
 pub mod views;
 
 use std::collections::{BTreeMap, BTreeSet};
