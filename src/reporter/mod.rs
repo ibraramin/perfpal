@@ -26,6 +26,7 @@
 //! beyond the output-contract §5 template.
 
 pub mod atlas;
+pub mod atlas_metrics;
 pub mod views;
 
 use std::collections::{BTreeMap, BTreeSet};
