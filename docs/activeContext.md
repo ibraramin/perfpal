@@ -1,44 +1,53 @@
 # Active Context
 
 ## Current Task
-**Perfpal Atlas RATIFIED (2026-10-23).** Founder ratified **ADR-0009 (Atlas core)** and
-**ADR-0010 (declarative animation)** and the V8 amendments; **D-pf-239/D-pf-240 confirmed**.
-The Atlas model is binding: G entry-flow = core canvas (100% graph chrome), fixed seven-block
-brief below, F weight mass as an always-on strip, F treemap Explorer-only, no mode switch.
-Next session executes **`atlas-build` steps 2–4 only**: view model `src/reporter/atlas.rs`,
-metric formatting `src/reporter/atlas_metrics.rs`, canvas renderer `src/reporter/atlas_render.rs`,
-each with unit tests. **No schema change. No implementation in the ratification session.**
+**Atlas steps 2–4 GREEN (2026-10-23).** The ratified build landed: `src/reporter/atlas.rs` (pure
+view model), `src/reporter/atlas_metrics.rs` (M-01…M-18 display contract), and
+`src/reporter/atlas_render.rs` (deterministic static SVG + animated HTML canvas), each with unit
+tests. Commits `fe58299` (view model), `f76a63b` (metrics), `3fa7c07` (canvas), `5e6b45e`/`6c0f0f3`
+(review fixes). **No schema change, no `#map` wiring, no new JS/dependency, no holdout reads.**
+- **Review panel:** R1 correctness, R2 contract, Q1 scope and Q2 evidence all **APPROVED** on
+  `6c0f0f3`; zero unresolved blocking findings.
+- **Residuals (recorded):** dynamic canvas height can exceed the 1440×900 canonical first
+  viewport/print page-1/A1 frame for very deep paths (A2/vision judge); pausing during the initial
+  1.2s reveal freezes the current frame; step-7 integration tests and step-8 vision gate remain.
 - **Structural edges (D-pf-241):** ADR-0009 option A — LOW name-based + MEDIUM semantic, labelled
-  structural, `N MEDIUM / M LOW` mix printed, never `resolved`/`reachable_from_entry`. Resolved-only
-  rejected (0 resolved edges on default scans).
+  structural, `N MEDIUM / M LOW` mix printed, never `resolved`/`reachable_from_entry`.
 - **A8 amendment (D-pf-242):** first block = canvas carrying **entry + HOTTEST + path**; the one
   `path:line` action is in the first scroll (answer line + KV1).
 - **A12 (D-pf-243):** exactly one fixed existing `REPORT_SCRIPT` (unchanged); Atlas canvas/SVG/
   animation add zero scripts, zero handlers, zero network; CSS keyframes/SMIL only.
 - **A2 library holdout pre-registered (A-pf-116):** published `memchr` crate payload @
-  `bd6068c30e9074a90c285e47912fa0b047d07597` — root crate has no bin/build.rs/workspace; dev
-  `benchmarks/` + `fuzz/` excluded from the scan; never used in design; vaulted until A2
-  (`docs/evidence/map-vision/v8/PREREGISTRATION.md`).
+  `bd6068c30e9074a90c285e47912fa0b047d07597`; root crate has no bin/build.rs/workspace; dev
+  `benchmarks/` + `fuzz/` excluded; vaulted until A2 (`docs/evidence/map-vision/v8/PREREGISTRATION.md`).
 
 ## Recent Decisions
+- **D-pf-244 (live, 2026-10-23):** Atlas steps 2–4 implemented and green (view model, M-01…M-18,
+  canvas; 76 unit tests; panel APPROVED on `6c0f0f3`); steps 5–6 next; no schema; holdouts vaulted.
 - **D-pf-241/242/243 (live, ratified 2026-10-23):** structural-edge option A; A8 canvas-first
   placement; A12 no-new-JS scope.
 - **D-pf-239/240 (live, RATIFIED 2026-10-23):** Atlas model + contracts; ADRs Accepted; plan
-  `atlas-build` active (step 1 done).
+  `atlas-build` active (steps 1–4 done).
 - **D-pf-238 (live):** founder correction — G core, F components supporting (not fallback);
   full-page graph; metrics below.
 - **D-pf-237/236 (cold):** entry-flow direction + prototypes; consolidation (demoted to ledger).
 
 ## In Progress
-- **Nothing implemented yet.** The ratification gate is closed; the build starts fresh at step 2.
-- **`atlas-build` steps 5–10 remain queued:** brief/drills, `#map` wiring, tests/goldens, V8 vision
-  gate, founder A2 (application + library), ship/EOL.
+- **Nothing active in the hot tree.** Steps 2–4 are green; the plan is still active.
+- **`atlas-build` steps 5–10 remain queued:** brief/drills, `#map` wiring, integration tests/goldens,
+  V8 vision gate, founder A2 (application + library), ship/EOL.
 
 ## Next
-- **`/new` → atlas-build session 1: steps 2–4** (view model → metric formatting → canvas renderer
-  + unit tests). Read the plan, `atlas-metrics`, `atlas-layout`, ADR-0009/0010 first.
+- **`/new` → atlas-build session 2: steps 5–6 only.**
+  - Step 5: `src/reporter/atlas_brief.rs` — the fixed seven below-graph blocks + Q2 reverse drill,
+    complete action list, profile queue, weight detail, per-component pages; use `AtlasView`/
+    `atlas_metrics`; M-08 top P% must use `blast.dependent_top_pct`.
+  - Step 6: wire `report.html#map` (canvas first, brief below, answer line in the first scroll; keep
+    Explorer and the single fixed `REPORT_SCRIPT`); no new JS; no schema.
+- **Read first:** `docs/plans/atlas-build.md`, `atlas-metrics.md`, `atlas-layout.md`, ADR-0009/0010,
+  and the three committed modules.
 - **Keep holdouts vaulted:** django/postgres + the `memchr` crate payload until A2; no scan/render/
-  agent reads (dev `benchmarks/`/`fuzz/` are excluded from the scan).
+  agent reads (dev `benchmarks/`/`fuzz/` excluded).
 - **Agent report track** remains queued (A-pf-111).
 - **Do not mark `map-build` done.** A1b stays open. M5 needs B-pf-001 + B-pf-002.
 
@@ -69,3 +78,6 @@ each with unit tests. **No schema change. No implementation in the ratification 
 - **Atlas ratification (2026-10-23):** ADR-0009/0010 **Accepted**; V8 ratified; D-pf-239/240
   confirmed; D-pf-241/242/243 recorded; library A2 holdout pre-registered (`memchr` crate payload).
   Docs/state only.
+- **Atlas build session 1 (2026-10-23):** steps 2–4 implemented + unit tests (`fe58299`/`f76a63b`/
+  `3fa7c07`, review fixes `5e6b45e`/`6c0f0f3`); full gate green; panel R1/R2/Q1/Q2 APPROVED. No
+  schema/`#map` wiring/holdout reads.
