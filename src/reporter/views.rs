@@ -34,7 +34,7 @@ pub enum CostScale {
 }
 
 impl CostScale {
-    fn unit(self) -> &'static str {
+    pub(crate) fn unit(self) -> &'static str {
         match self {
             CostScale::V2 => "static cost units (v2)",
             CostScale::V1 => "static cost units (v1)",
@@ -265,7 +265,7 @@ fn confidence_rank(confidence: Confidence) -> u8 {
     }
 }
 
-fn scale_of(function: &FunctionStats) -> CostScale {
+pub(crate) fn scale_of(function: &FunctionStats) -> CostScale {
     if function.function_cost_v2.is_some() {
         CostScale::V2
     } else {
@@ -273,7 +273,7 @@ fn scale_of(function: &FunctionStats) -> CostScale {
     }
 }
 
-fn function_value(function: &FunctionStats) -> f64 {
+pub(crate) fn function_value(function: &FunctionStats) -> f64 {
     match function.function_cost_v2 {
         Some(cost) => cost as f64,
         None => crate::charts::function_cost(function),
@@ -285,14 +285,14 @@ fn format_cost(value: f64, _scale: CostScale) -> String {
 }
 
 /// Full ordering for one cost scale: cost desc, then path/name/id asc.
-struct ScaleOrdering {
+pub(crate) struct ScaleOrdering {
     median: Option<f64>,
     rank_by_id: BTreeMap<String, usize>,
     total: usize,
 }
 
 impl ScaleOrdering {
-    fn build(functions: &[FunctionStats], scale: CostScale) -> Self {
+    pub(crate) fn build(functions: &[FunctionStats], scale: CostScale) -> Self {
         let mut members: Vec<&FunctionStats> =
             functions.iter().filter(|f| scale_of(f) == scale).collect();
         members.sort_by(|a, b| {
@@ -313,6 +313,21 @@ impl ScaleOrdering {
             rank_by_id,
             total: members.len(),
         }
+    }
+
+    /// Nearest-rank median over this scale's members (zeros included).
+    pub(crate) fn median(&self) -> Option<f64> {
+        self.median
+    }
+
+    /// 1-based rank of `id` inside this scale's full cost ordering.
+    pub(crate) fn rank(&self, id: &str) -> Option<usize> {
+        self.rank_by_id.get(id).copied()
+    }
+
+    /// Number of functions in this scale's population.
+    pub(crate) fn total(&self) -> usize {
+        self.total
     }
 
     fn anchor(&self, function: &FunctionStats, scale: CostScale) -> String {

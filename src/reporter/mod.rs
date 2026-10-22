@@ -25,6 +25,7 @@
 //! Non-goals: reading source, IR, or scanner state; inventing aggregations
 //! beyond the output-contract §5 template.
 
+pub mod atlas;
 pub mod views;
 
 use std::collections::{BTreeMap, BTreeSet};
