@@ -19,7 +19,8 @@ findings ride as annotations on the map, never as a list to cross-reference by h
 - Drill path: report header → workspace → file/component → findings-detail rows (finding_id + path:line:col).
 - **V2 reading path (locked):** `report.html#map` = **KV1 Start here → KV2 Blast radius →
   KV3 Profile queue**; the Level-0/1/2 stems (all 8 current stems) are explorer evidence under
-  a labelled `#explorer` section. The first content block answers Q1 in plain language.
+  a labelled `#explorer` section. In the **legacy list-first report**, the first content block
+  answers Q1 in plain language; the Atlas page's first block is the canvas (V8 amendment).
 
 ## Honesty contract
 - Caps pre-layout (top-50, ties path-asc), top-10 report rows, labels tail-kept 32 chars.
@@ -124,6 +125,8 @@ NOT done; A1b is not claimed closed.
 Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runtime truth claims.
 
 ## Atlas composition (2026-10-23, founder D-pf-238)
+
+**Ratified 2026-10-23** (founder; ADR-0009/0010 Accepted; V8 amendment set).
 
 The core visual is **Perfpal Atlas**: an entry-flow graph page. G (entry-flow) is the core graph;
 F (weight map) is not a fallback and not discarded — its weight mass ships as a supporting

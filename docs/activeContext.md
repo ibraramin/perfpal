@@ -1,51 +1,54 @@
 # Active Context
 
 ## Current Task
-**Atlas research/planning COMPLETE (docs only). Founder D-pf-238 model locked into contracts:
-G (entry-flow) = core canvas; fixed stack = canvas + 7 below-graph blocks; F weight mass = always-on
-below-graph strip; F treemap = Explorer-only; no mode switch; graph page 100% graph; metrics/brief
-below. Founder ratification of ADR-0009/ADR-0010 + V8 amendments is the next gate; then plan
-`atlas-build` (no code yet).**
-- **Deliverables:** `docs/research/atlas-developer-needs.md` (needs N1–N6, seven-block brief,
-  six-test inclusion rule, noise ledger, falsifiers); `docs/specs/atlas-metrics.md` (M-01…M-18,
-  no time units, denominator-adjacent anchors); `docs/research/atlas-data-gap-audit.md` (**no schema
-  change**, I/O sinks downscoped); `docs/specs/atlas-layout.md` (canvas anatomy, states matrix,
-  animation, print/reduced-motion); `docs/specs/atlas-feature.md`; `docs/adr/ADR-0009-atlas-core.md`
-  + `ADR-0010-declarative-animation.md` (Proposed); V8 amendments in
-  `map-intelligibility`/`maintainer-map`/`map-animation`; `docs/plans/atlas-build.md` (10 steps,
-  runnable DoD, vision gate V8, founder A2 with a pre-registered library class).
-- **Key resolutions:** structural LOW+MEDIUM edges allowed on the Atlas canvas with disclosure
-  (default tier has 0 resolved edges); first screen = canvas, first answer block = answer line
-  (A8 amended for Atlas); component-inclusion rule is state-unconditional (no data-keyed mode
-  switch); metric contract forbids time units and mixed denominators.
-- **No code; no schema change; holdout vaulted; `map-build` NOT done; A1b NOT closed.**
+**Perfpal Atlas RATIFIED (2026-10-23).** Founder ratified **ADR-0009 (Atlas core)** and
+**ADR-0010 (declarative animation)** and the V8 amendments; **D-pf-239/D-pf-240 confirmed**.
+The Atlas model is binding: G entry-flow = core canvas (100% graph chrome), fixed seven-block
+brief below, F weight mass as an always-on strip, F treemap Explorer-only, no mode switch.
+Next session executes **`atlas-build` steps 2–4 only**: view model `src/reporter/atlas.rs`,
+metric formatting `src/reporter/atlas_metrics.rs`, canvas renderer `src/reporter/atlas_render.rs`,
+each with unit tests. **No schema change. No implementation in the ratification session.**
+- **Structural edges (D-pf-241):** ADR-0009 option A — LOW name-based + MEDIUM semantic, labelled
+  structural, `N MEDIUM / M LOW` mix printed, never `resolved`/`reachable_from_entry`. Resolved-only
+  rejected (0 resolved edges on default scans).
+- **A8 amendment (D-pf-242):** first block = canvas carrying **entry + HOTTEST + path**; the one
+  `path:line` action is in the first scroll (answer line + KV1).
+- **A12 (D-pf-243):** exactly one fixed existing `REPORT_SCRIPT` (unchanged); Atlas canvas/SVG/
+  animation add zero scripts, zero handlers, zero network; CSS keyframes/SMIL only.
+- **A2 library holdout pre-registered (A-pf-116):** published `memchr` crate payload @
+  `bd6068c30e9074a90c285e47912fa0b047d07597` — root crate has no bin/build.rs/workspace; dev
+  `benchmarks/` + `fuzz/` excluded from the scan; never used in design; vaulted until A2
+  (`docs/evidence/map-vision/v8/PREREGISTRATION.md`).
 
 ## Recent Decisions
-- **D-pf-239 (live, ratification pending):** Atlas model — G core canvas, fixed stack, no mode
-  switch, F weight strip + Explorer treemap, structural-edge disclosure, no schema change.
-- **D-pf-240 (live, ratification pending):** Atlas contracts — `atlas-metrics`, `atlas-layout`,
-  ADR-0009/0010 proposed, V8 amendments, `atlas-build` plan created.
+- **D-pf-241/242/243 (live, ratified 2026-10-23):** structural-edge option A; A8 canvas-first
+  placement; A12 no-new-JS scope.
+- **D-pf-239/240 (live, RATIFIED 2026-10-23):** Atlas model + contracts; ADRs Accepted; plan
+  `atlas-build` active (step 1 done).
 - **D-pf-238 (live):** founder correction — G core, F components supporting (not fallback);
-  full-page graph; metrics below; research/planning next.
-- **D-pf-237 (live):** entry-flow direction + prototypes + animation mandatory.
-- **D-pf-236 (live):** consolidation; one core + three consumers.
+  full-page graph; metrics below.
+- **D-pf-237/236 (cold):** entry-flow direction + prototypes; consolidation (demoted to ledger).
 
 ## In Progress
-- **Founder ratification gate** — ADR-0009 (Atlas core), ADR-0010 (declarative animation), V8
-  spec amendments, D-pf-239/240. No `atlas-build` implementation before ratification.
+- **Nothing implemented yet.** The ratification gate is closed; the build starts fresh at step 2.
+- **`atlas-build` steps 5–10 remain queued:** brief/drills, `#map` wiring, tests/goldens, V8 vision
+  gate, founder A2 (application + library), ship/EOL.
 
 ## Next
-- **Ratify** ADR-0009/0010 + V8 amendments (A-pf-114), then execute `atlas-build` (A-pf-115).
-- **Pre-register** the library-shaped A2 holdout repo (A-pf-116) before the Atlas vision gate.
-- **Agent report track** remains queued (A-pf-111); map research done per founder.
+- **`/new` → atlas-build session 1: steps 2–4** (view model → metric formatting → canvas renderer
+  + unit tests). Read the plan, `atlas-metrics`, `atlas-layout`, ADR-0009/0010 first.
+- **Keep holdouts vaulted:** django/postgres + the `memchr` crate payload until A2; no scan/render/
+  agent reads (dev `benchmarks/`/`fuzz/` are excluded from the scan).
+- **Agent report track** remains queued (A-pf-111).
 - **Do not mark `map-build` done.** A1b stays open. M5 needs B-pf-001 + B-pf-002.
 
 ## Blockers
-- **Atlas model:** R-pf-108 — ratification + A2 on application + library classes; structural LOW
-  edges on the hero canvas are the main honesty risk (ADR-0009 option A).
+- **Atlas A2:** R-pf-108 — the decisive gate is the founder timed test on application **and**
+  library classes (animation on); structural LOW/MEDIUM edges on the hero canvas remain the main
+  honesty risk (option A reversal trigger recorded).
 - **Map legibility:** R-pf-104/R-pf-105/R-pf-106 — views validated (A1), ranking recall (A1b)
-  open; the Atlas brief carries KV1 with the complete-list guarantee, but the rank-key/call-weighted
-  question moves to the build plan.
+  open; the brief carries KV1 with the complete-list guarantee; the rank-key/call-weighted
+  question moves into the build.
 - **M5 publish:** B-pf-001 (contact) + B-pf-002 (secrets) — founder-owned.
 - **Paper track:** prereg + scans + stats + Zenodo PENDING (PARKED behind the map).
 
@@ -61,5 +64,8 @@ below. Founder ratification of ADR-0009/ADR-0010 + V8 amendments is the next gat
   falsifier → V6a KV2 production-first amendment (6/6 reads PASS); V6 timed test scrapped.
 - **V7:** F/G prototypes + 12/12 blind reads (`docs/evidence/map-vision/v7/`); founder decision
   D-pf-238 (G core, F supporting); Atlas named.
-- **Atlas planning (this session):** needs research → metrics contract → data-gap audit → layout +
-  inclusion rule → ADR-0009/0010 + V8 amendments → `atlas-build` plan. Docs only.
+- **Atlas planning:** needs research → metrics contract → data-gap audit → layout + inclusion rule
+  → ADR-0009/0010 + V8 amendments → `atlas-build` plan. Docs only.
+- **Atlas ratification (2026-10-23):** ADR-0009/0010 **Accepted**; V8 ratified; D-pf-239/240
+  confirmed; D-pf-241/242/243 recorded; library A2 holdout pre-registered (`memchr` crate payload).
+  Docs/state only.

@@ -1,7 +1,8 @@
 # ADR-0010: Declarative animation over the static SVG (ADR-0002 amendment)
 
-- **Status:** Proposed (founder ratification required before build)
+- **Status:** Accepted (founder ratification 2026-10-23)
 - **Date:** 2026-10-23
+- **Ratified:** 2026-10-23 (founder)
 - **Deciders:** Founder + orchestrator
 - **Gates:** `atlas-build`; amends `ADR-0002` (static SVG, no new JavaScript) with a clarifying clause; does
   not change ADR-0002's emitter decision or license audit.
@@ -42,6 +43,22 @@
 6. **Scope.** The animation applies to the Atlas HTML report and its drills' key views; it does not
    apply to `metrics.json`, the agent report, or the Explorer static SVG stems by default.
 
+## Ratification
+
+Founder ratification **2026-10-23** (Perfpal Atlas ratification session; **D-pf-240 confirmed**).
+The decision above is accepted as written, with these recorded confirmations:
+
+- **A12 no-new-JS scope confirmed.** The report keeps exactly **one fixed existing
+  `REPORT_SCRIPT`** (unchanged, out of scope); the Atlas canvas/SVG/animation artifacts add
+  **zero scripts**, zero event-handler attributes and zero network references. CSS keyframes and/or
+  SVG SMIL only.
+- **Presentation-layer rule confirmed:** nothing is visible only mid-animation; the final frame is
+  complete; pause, `prefers-reduced-motion` and print show the final frame.
+- **Deterministic timeline confirmed:** delays/durations are a pure function of the view model;
+  double render stays byte-identical.
+- **Scope confirmed:** Atlas HTML report and its drills' key views; not `metrics.json`, the agent
+  report, or the Explorer static SVG stems by default.
+
 ## Options considered
 
 - **JavaScript animation (e.g. requestAnimationFrame) — rejected.** Breaks the no-new-JS rule, offline and
@@ -80,8 +97,8 @@
   canvas/SVG/animation artifacts have zero scripts; no handlers; no network), A4 (double-scan
   byte-identical), A5 (no information only mid-animation).
 - The Atlas build must pass the same gates plus the layout spec's A9/A10.
-- This ADR must be ratified before the Atlas renderer ships animation; prototypes already operated
-  under `map-animation`.
+- Ratified by the founder on 2026-10-23; the Atlas renderer may ship animation under A1–A5 and the
+  layout spec's A9/A10.
 
 ## References
 

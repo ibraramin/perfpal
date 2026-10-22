@@ -1,7 +1,8 @@
 # ADR-0009: Perfpal Atlas — entry-flow core, fixed page, supporting weight strip
 
-- **Status:** Proposed (founder ratification required before build)
+- **Status:** Accepted (founder ratification 2026-10-23)
 - **Date:** 2026-10-23
+- **Ratified:** 2026-10-23 (founder)
 - **Deciders:** Founder + orchestrator
 - **Gates:** `atlas-build`; supersedes `ADR-0008` level idioms where they conflict; amends the
   ADR-0002 call-graph policy for the Atlas canvas; amends the `map-intelligibility` first-screen
@@ -53,8 +54,10 @@
    unreached column, path trace, legend, caps chip, canvas footer.
 3. **Below the canvas: a fixed seven-block brief**, state-unconditional — answer line, KV1 actions,
    weight strip, blast radius, file cards, noise footer, drill links
-   (`docs/specs/atlas-layout.md` §4). The first block is the canvas; the first answer-bearing block
-   is the answer line directly below it. This **amends A8** for the Atlas page.
+   (`docs/specs/atlas-layout.md` §4). The first block is the canvas, and the canvas carries the
+   entry, the HOTTEST file and the path trace; the first answer-bearing block is the answer line
+   directly below it, and the one `path:line` action sits in the first scroll (answer line + KV1).
+   This **amends A8** for the Atlas page.
 4. **F support is a component, not a mode.** The weight mass ships as an **always-on below-graph
    weight strip** (`% of scanned static cost`; production-first; non-production (test/bench/other) mass in a labelled
    band). The **treemap is Explorer-only** (`weight-treemap`), never on the Atlas page. Component
@@ -78,6 +81,25 @@
    chart-side derivations (`docs/research/atlas-data-gap-audit.md` §2, §5). A general I/O-sink
    classification is **downscoped**; additive candidates (`components[].member_paths[]`,
    `entry_id`, `io_sink`, `call_site_count`, `cost_summary`) are recorded with triggers, not added.
+
+## Ratification
+
+Founder ratification **2026-10-23** (Perfpal Atlas ratification session; **D-pf-239 confirmed**).
+The decision above is accepted as written, with these recorded confirmations:
+
+- **Structural edges — option A confirmed.** The Atlas canvas draws the default-tier structural set
+  (LOW name-based + MEDIUM semantic), disclosed as
+  `structural (LOW name-based + MEDIUM semantic), may over/under-approximate`, prints the
+  `N MEDIUM / M LOW` mix, and never prints `resolved` or `reachable_from_entry` for that set.
+  The resolved-only option B is rejected because the default tier exports 0 resolved call edges
+  (an empty canvas on every default scan). The reversal trigger in "What would change the choice"
+  stays live.
+- **A8 amendment confirmed.** The first block is the canvas carrying **entry + HOTTEST + path**;
+  the one `path:line` action is in the first scroll (answer line + KV1). The legacy list-first A8
+  rule is retained only for the old report, not the Atlas page.
+- **No schema change confirmed** for Atlas v1; the additive candidates stay recorded with triggers.
+- **Page/edge/mass model confirmed:** fixed stack, no mode switch; F weight mass as an always-on
+  strip; F treemap Explorer-only; metrics/brief below the canvas.
 
 ## Options considered
 
@@ -143,7 +165,8 @@
 
 ## Gates
 
-- `atlas-build` may not start until this ADR is ratified by the founder.
+- Ratified by the founder on 2026-10-23; `atlas-build` may start. Step 1 of the plan (the
+  ratification gate) is complete.
 - The build must pass A1 (blind vision, all states), A2 (founder timed test on the holdout,
   application + library class), A4 (byte-determinism), A7/A11 (units/anchors/denominators), A9
   (canvas purity), A10 (state-unconditional) and A12 (no new JS).

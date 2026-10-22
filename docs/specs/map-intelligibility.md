@@ -338,6 +338,13 @@ is `docs/research/atlas-data-gap-audit.md`; the metric contract is `docs/specs/a
 the composition is `docs/specs/atlas-layout.md`; the ADRs are ADR-0009 (core) and ADR-0010
 (animation).
 
+**Ratified 2026-10-23.** Founder ratified ADR-0009 (Atlas core) and ADR-0010 (declarative
+animation) and the V8 amendments in this section: the A8 first-screen amendment (first block =
+canvas carrying entry + HOTTEST + path; the one `path:line` action in the first scroll, answer line
++ KV1), the structural-edge disclosure (LOW name-based + MEDIUM semantic, `N MEDIUM / M LOW`
+printed, never `resolved`/`reachable_from_entry` for that set), and A12 (exactly one fixed existing
+`REPORT_SCRIPT`; zero new scripts in the Atlas canvas/SVG/animation artifacts).
+
 **Placement (amends this spec's slot table for the Atlas page only).**
 
 | Slot | Question | Atlas placement | Encoding (unchanged) |

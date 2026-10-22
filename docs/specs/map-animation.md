@@ -69,6 +69,8 @@ prototypes may proceed under this spec.
 
 ## Atlas application (2026-10-23)
 
+**Ratified 2026-10-23** (founder; ADR-0010 Accepted; A12 scope confirmed).
+
 The animation applies to the Atlas entry-flow canvas and its key drills. The timeline is a
 deterministic function of the view model (fixed constants; no randomness, no wall-clock input):
 entry pulse 0–1.2s → depth-column reveal 1.2–2.8s →

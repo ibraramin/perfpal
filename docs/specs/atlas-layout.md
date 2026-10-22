@@ -4,7 +4,8 @@ Scope: feature
 
 # Spec: atlas-layout (feature)
 
-**Status:** planning lock, Atlas v1. **No implementation in this spec.**
+**Status:** planning lock, Atlas v1. **Ratified 2026-10-23** (founder; ADR-0009/0010 Accepted).
+**No implementation in this spec.**
 **Date:** 2026-10-23. **Owner:** orchestrator.
 **Founder constraints (D-pf-238):** the graph page is 100% graph — no metric panels on the canvas;
 metrics/brief live below or elsewhere; no mode switch; G is the core graph; F components are

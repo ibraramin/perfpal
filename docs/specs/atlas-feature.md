@@ -71,11 +71,16 @@ Surfaces:
 
 ## 5. Dependencies and gates
 
-- Founder ratification of ADR-0009 and ADR-0010 before any implementation.
+- ADR-0009 and ADR-0010 are **Accepted (founder ratification 2026-10-23)**; implementation proceeds
+  under them and the V8 amendment set.
 - `docs/specs/atlas-metrics.md` and `docs/specs/atlas-layout.md` are the binding contracts.
 - The V8 amendments in `map-intelligibility` / `maintainer-map` / `map-animation` apply.
-- The holdout (django/postgres) stays vaulted until the A2 test; a library-shaped repo is
-  pre-registered as the second A2 class.
+- The holdout (django/postgres) stays vaulted until the A2 test. The library-shaped second A2 class
+  is pre-registered as the **published `memchr` crate payload** at commit
+  `bd6068c30e9074a90c285e47912fa0b047d07597` (no root bin/build.rs/workspace; dev
+  `benchmarks/`+`fuzz/` excluded from the scan; never used during design);
+  see `docs/evidence/map-vision/v8/PREREGISTRATION.md`. Only a structural preflight may be recorded
+  before A2.
 - No schema change without a separate additive plan.
 
 ## 6. Rollback
