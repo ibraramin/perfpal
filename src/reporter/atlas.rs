@@ -155,6 +155,7 @@ pub struct AtlasColumn {
     pub files: Vec<String>,
     pub aggregated: Vec<AtlasAggregate>,
     pub file_count: usize,
+    pub nonproduction_unreached: usize,
 }
 
 /// One chart-side component (approximate prefix group).
@@ -189,6 +190,9 @@ pub struct AtlasBlastRadius {
     pub include_edges_resolved: usize,
     pub median_dependents: Option<f64>,
     pub dependent_multiple: Option<f64>,
+    pub dependent_rank: Option<usize>,
+    pub dependent_population: usize,
+    pub dependent_top_pct: Option<usize>,
 }
 
 // `f64` prevents a derived `Eq`; the required public shape carries it, and
@@ -218,6 +222,7 @@ pub struct AtlasCaps {
     pub edges_drawn: usize,
     pub edge_pairs_total: usize,
     pub depth_folded: usize,
+    pub reachable_shown: usize,
 }
 
 /// Estimated structural reachability counts (M-02).
@@ -266,6 +271,7 @@ pub struct AtlasState {
 pub struct AtlasView {
     pub entry: AtlasEntry,
     pub hottest: Option<String>,
+    pub hottest_node: Option<AtlasNode>,
     pub nodes: Vec<AtlasNode>,
     pub edges: Vec<AtlasEdge>,
     pub columns: Vec<AtlasColumn>,
@@ -989,6 +995,20 @@ fn blast_radius(
         _ => None,
     };
 
+    let mut ranked: Vec<(&str, usize)> = reverse
+        .iter()
+        .map(|(path, sources)| (*path, sources.len()))
+        .collect();
+    ranked.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(b.0)));
+    let dependent_population = source_paths.len();
+    let dependent_rank = target.and_then(|target| {
+        ranked
+            .iter()
+            .position(|(path, _)| *path == target)
+            .map(|index| index + 1)
+    });
+    let dependent_top_pct = dependent_rank.map(|rank| top_pct(rank, dependent_population));
+
     let (caller_files, callee_files) = match target {
         Some(target) => {
             let callers: BTreeSet<&str> = structural
@@ -1018,12 +1038,76 @@ fn blast_radius(
         include_edges_resolved,
         median_dependents,
         dependent_multiple,
+        dependent_rank,
+        dependent_population,
+        dependent_top_pct,
     }
 }
 
 // ---------------------------------------------------------------------------
 // Public entry point
 // ---------------------------------------------------------------------------
+
+struct NodeContext<'a> {
+    doc: &'a MetricsDocument,
+    depth: &'a BTreeMap<String, u32>,
+    statuses: &'a BTreeMap<String, ParseStatus>,
+    findings_by_path: &'a BTreeMap<&'a str, Vec<&'a crate::schema::FindingEntry>>,
+    functions_by_path: &'a BTreeMap<String, Vec<usize>>,
+    v2: &'a ScaleOrdering,
+    v1: &'a ScaleOrdering,
+    unreached_depth: u32,
+    unreached_column_shown: bool,
+    entry_path: Option<&'a str>,
+    hottest_path: Option<&'a str>,
+}
+
+impl NodeContext<'_> {
+    fn build(&self, info: &FileInfo) -> AtlasNode {
+        let path = info.path.as_str();
+        let file_depth = self.depth.get(path).copied();
+        let drawn_depth = match file_depth {
+            Some(value) => Some(value.min(DEPTH_COLUMN_CAP)),
+            None if self.unreached_column_shown => Some(self.unreached_depth),
+            None => None,
+        };
+        let indices = self
+            .functions_by_path
+            .get(path)
+            .map(Vec::as_slice)
+            .unwrap_or(&[]);
+        let empty_findings: Vec<&crate::schema::FindingEntry> = Vec::new();
+        AtlasNode {
+            path: info.path.clone(),
+            file_name: final_segment(&info.path).to_string(),
+            path_class: info.class.clone(),
+            production: info.production,
+            component: domain_of(&info.path),
+            depth: file_depth,
+            drawn_depth,
+            cost: info.cost,
+            scale: info.scale,
+            file_rank: info.rank,
+            file_population: info.population,
+            top_pct: info.top_pct,
+            ratio: info.ratio,
+            entry: self.entry_path == Some(path),
+            hottest: self.hottest_path == Some(path),
+            unreached: file_depth.is_none(),
+            partial_parse: self
+                .statuses
+                .get(path)
+                .is_some_and(|status| matches!(status, ParseStatus::Partial | ParseStatus::Failed)),
+            finding: dominant_finding(
+                self.findings_by_path
+                    .get(path)
+                    .map(Vec::as_slice)
+                    .unwrap_or(&empty_findings),
+            ),
+            top_functions: top_functions(self.doc, indices, self.v2, self.v1),
+        }
+    }
+}
 
 /// Build the complete deterministic Atlas view model.
 #[must_use]
@@ -1063,17 +1147,16 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
         None => (BTreeMap::new(), BTreeMap::new()),
     };
 
-    let hottest = entry.point.as_ref().and_then(|_| {
-        files
-            .values()
-            .min_by(|a, b| {
-                b.cost
-                    .cmp(&a.cost)
-                    .then_with(|| b.fan_in.cmp(&a.fan_in))
-                    .then_with(|| a.path.cmp(&b.path))
-            })
-            .map(|info| info.path.clone())
-    });
+    // M-04 rank 1 is global: it exists even when no entry is electable.
+    let hottest = files
+        .values()
+        .min_by(|a, b| {
+            b.cost
+                .cmp(&a.cost)
+                .then_with(|| b.fan_in.cmp(&a.fan_in))
+                .then_with(|| a.path.cmp(&b.path))
+        })
+        .map(|info| info.path.clone());
 
     let path_files = match entry.point.as_ref() {
         Some(point) if !depth.is_empty() => {
@@ -1142,7 +1225,10 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
     });
     let last_reached_column = max_depth.min(DEPTH_COLUMN_CAP);
     let unreached_depth = last_reached_column + 1;
-    let unreached_column_shown = !shown_unreached.is_empty();
+    let unreachable_production = sorted_unreachable(&files, &depth, true);
+    let unreachable_nonproduction = sorted_unreachable(&files, &depth, false);
+    let unreached_column_shown =
+        !shown_unreached.is_empty() || !unreachable_nonproduction.is_empty();
 
     let mut findings_by_path: BTreeMap<&str, Vec<&crate::schema::FindingEntry>> = BTreeMap::new();
     for finding in &doc.findings {
@@ -1152,53 +1238,27 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
             .push(finding);
     }
 
+    let context = NodeContext {
+        doc,
+        depth: &depth,
+        statuses: &statuses,
+        findings_by_path: &findings_by_path,
+        functions_by_path: &functions_by_path,
+        v2: &v2,
+        v1: &v1,
+        unreached_depth,
+        // No entry means no drawn column, so the undrawn HOTTEST node must not
+        // pretend to occupy the unreached column.
+        unreached_column_shown: entry.point.is_some() && unreached_column_shown,
+        entry_path: entry.point.as_ref().map(|point| point.path.as_str()),
+        hottest_path: hottest.as_deref(),
+    };
+
     let mut nodes: Vec<AtlasNode> = Vec::new();
     for path in &selected {
-        let Some(info) = files.get(path) else {
-            continue;
-        };
-        let file_depth = depth.get(path).copied();
-        let drawn_depth = match file_depth {
-            Some(value) => Some(value.min(DEPTH_COLUMN_CAP)),
-            None if unreached_column_shown => Some(unreached_depth),
-            None => None,
-        };
-        let indices = functions_by_path
-            .get(path)
-            .map(Vec::as_slice)
-            .unwrap_or(&[]);
-        let empty_findings: Vec<&crate::schema::FindingEntry> = Vec::new();
-        nodes.push(AtlasNode {
-            path: info.path.clone(),
-            file_name: final_segment(&info.path).to_string(),
-            path_class: info.class.clone(),
-            production: info.production,
-            component: domain_of(&info.path),
-            depth: file_depth,
-            drawn_depth,
-            cost: info.cost,
-            scale: info.scale,
-            file_rank: info.rank,
-            file_population: info.population,
-            top_pct: info.top_pct,
-            ratio: info.ratio,
-            entry: entry
-                .point
-                .as_ref()
-                .is_some_and(|point| point.path == info.path),
-            hottest: hottest.as_deref() == Some(info.path.as_str()),
-            unreached: file_depth.is_none(),
-            partial_parse: statuses
-                .get(path)
-                .is_some_and(|status| matches!(status, ParseStatus::Partial | ParseStatus::Failed)),
-            finding: dominant_finding(
-                findings_by_path
-                    .get(path.as_str())
-                    .map(Vec::as_slice)
-                    .unwrap_or(&empty_findings),
-            ),
-            top_functions: top_functions(doc, indices, &v2, &v1),
-        });
+        if let Some(info) = files.get(path) {
+            nodes.push(context.build(info));
+        }
     }
     nodes.sort_by(|a, b| {
         a.drawn_depth
@@ -1207,6 +1267,10 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
             .then_with(|| b.cost.cmp(&a.cost))
             .then_with(|| a.path.cmp(&b.path))
     });
+    let hottest_node = hottest
+        .as_ref()
+        .and_then(|path| files.get(path))
+        .map(|info| context.build(info));
 
     // Columns (reached depth buckets + the trailing unreached column).
     let mut columns: Vec<AtlasColumn> = Vec::new();
@@ -1260,16 +1324,22 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
                 file_count: files_in_column.len() + omitted_count,
                 files: files_in_column,
                 aggregated,
+                nonproduction_unreached: 0,
             });
         }
         if unreached_column_shown {
+            let nonproduction_unreached = unreachable_nonproduction
+                .iter()
+                .filter(|path| !shown_unreached.contains(path))
+                .count();
             columns.push(AtlasColumn {
                 depth: unreached_depth,
                 folded: false,
                 unreached: true,
-                file_count: shown_unreached.len(),
+                file_count: shown_unreached.len() + nonproduction_unreached,
                 files: shown_unreached.clone(),
                 aggregated: Vec::new(),
+                nonproduction_unreached,
             });
         }
     }
@@ -1340,9 +1410,6 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
         })
         .collect();
 
-    let unreachable_production = sorted_unreachable(&files, &depth, true);
-    let unreachable_nonproduction = sorted_unreachable(&files, &depth, false);
-
     let path: Vec<AtlasPathStep> = path_files
         .iter()
         .enumerate()
@@ -1392,6 +1459,7 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
         edges_drawn: edges.len(),
         edge_pairs_total,
         depth_folded,
+        reachable_shown: reachable_selected,
     };
     let state = AtlasState {
         empty: source_count == 0,
@@ -1408,6 +1476,7 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
     AtlasView {
         entry,
         hottest,
+        hottest_node,
         nodes,
         edges,
         columns,
@@ -2197,7 +2266,14 @@ mod tests {
         assert!(view.entry.alternatives.is_empty());
         assert!(view.nodes.is_empty());
         assert!(view.path.is_empty());
-        assert!(view.hottest.is_none());
+        // M-04 rank 1 exists globally even without an entry.
+        assert_eq!(view.hottest.as_deref(), Some("src/handler.c"));
+        let hottest_node = view.hottest_node.as_ref().expect("hottest node");
+        assert_eq!(hottest_node.path, "src/handler.c");
+        assert!(hottest_node.hottest);
+        assert!(hottest_node.unreached);
+        assert!(!hottest_node.entry);
+        assert_eq!(hottest_node.drawn_depth, None);
         assert_eq!(view.totals.function_count, 1);
     }
 
@@ -2398,6 +2474,7 @@ mod tests {
         assert_eq!(view.caps.nodes_shown, NODE_CAP);
         assert_eq!(view.caps.reachable_files, 26);
         assert_eq!(view.caps.aggregated_files, 6);
+        assert_eq!(view.caps.reachable_shown, 20);
         assert!(view.state.capped);
         assert!(view.nodes.iter().all(|node| node.path != "src/deep.c"));
 
@@ -2471,6 +2548,7 @@ mod tests {
         let view = build_atlas_view(&builder.build());
         assert_eq!(view.caps.reachable_files, 20);
         assert_eq!(view.caps.nodes_shown, 20);
+        assert_eq!(view.caps.reachable_shown, 19);
         assert_eq!(view.caps.aggregated_files, 1);
         assert!(view.state.capped);
         assert!(node(&view, "src/hot.c").unreached);
@@ -2880,6 +2958,9 @@ mod tests {
         assert_eq!(blast.include_edges_resolved, 4);
         assert_eq!(blast.median_dependents, Some(0.0));
         assert!(blast.dependent_multiple.is_none());
+        assert_eq!(blast.dependent_rank, Some(1));
+        assert_eq!(blast.dependent_population, 4);
+        assert_eq!(blast.dependent_top_pct, Some(25));
     }
 
     #[test]
@@ -2912,6 +2993,38 @@ mod tests {
         // Reverse counts: main 2, a 1, b 1, c 0 -> lower-middle median 1.0.
         assert_eq!(blast.median_dependents, Some(1.0));
         assert_close(blast.dependent_multiple, 2.0);
+        assert_eq!(blast.dependent_rank, Some(1));
+        assert_eq!(blast.dependent_population, 4);
+        assert_eq!(blast.dependent_top_pct, Some(25));
+    }
+
+    #[test]
+    fn blast_radius_ranks_the_target_for_m08_top_pct() {
+        let doc = document(
+            vec![
+                file("src/main.c", "production", 1),
+                file("src/a.c", "production", 1),
+                file("src/b.c", "production", 1),
+            ],
+            vec![
+                function("src/main.c", "main", 1, Some(100), 0, Some("main")),
+                function("src/a.c", "a", 1, Some(10), 0, None),
+                function("src/b.c", "b", 1, Some(10), 0, None),
+            ],
+            Vec::new(),
+            Vec::new(),
+            vec![
+                include_edge("src/a.c", Some("src/main.c"), true),
+                include_edge("src/b.c", Some("src/main.c"), true),
+                include_edge("src/b.c", Some("src/a.c"), true),
+            ],
+        );
+        let view = build_atlas_view(&doc);
+        let blast = &view.blast_radius;
+        assert_eq!(blast.dependents, 2);
+        assert_eq!(blast.dependent_rank, Some(1));
+        assert_eq!(blast.dependent_population, 3);
+        assert_eq!(blast.dependent_top_pct, Some(33));
     }
 
     // -- path --------------------------------------------------------------
@@ -3103,6 +3216,9 @@ mod tests {
         let all_test = build_atlas_view(&all_test_fixture());
         assert!(all_test.state.all_test);
         assert!(all_test.state.no_entry);
+        assert_eq!(all_test.hottest.as_deref(), Some("tests/test_main.c"));
+        assert!(all_test.hottest_node.is_some());
+        assert!(all_test.nodes.is_empty());
 
         let capped = build_atlas_view(&capped_fixture());
         assert!(capped.state.capped);

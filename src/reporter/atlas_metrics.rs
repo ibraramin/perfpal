@@ -27,6 +27,8 @@ pub const NO_SCANNED_COST: &str = "no scanned static cost recorded";
 pub const NO_PRODUCTION_COST: &str = "no production cost recorded";
 /// Stub: a loop trip count that is not a known literal.
 pub const ESTIMATE_INCOMPLETE: &str = "estimate incomplete";
+/// Stub: no include edges at all (unresolved ratio has no denominator).
+pub const NO_INCLUDE_EDGES: &str = "no include edges recorded";
 
 /// Insert thousands separators into a decimal string, leaving any sign and
 /// fractional part untouched (manual grouping; no locale).
@@ -124,10 +126,11 @@ pub fn format_share(cost: u64, total: u64) -> String {
 /// `12% of scanned static cost · 7 files` (M-07 component share).
 #[must_use]
 pub fn format_component_share(cost: u64, total: u64, files: usize) -> String {
+    let noun = if files == 1 { "file" } else { "files" };
     let files = grouped(files);
     match format_percent(cost, total) {
-        Some(percent) => format!("{percent} of scanned static cost · {files} files"),
-        None => format!("{NO_SCANNED_COST} · {files} files"),
+        Some(percent) => format!("{percent} of scanned static cost · {files} {noun}"),
+        None => format!("{NO_SCANNED_COST} · {files} {noun}"),
     }
 }
 
@@ -209,11 +212,15 @@ pub fn format_dependents(
     }
     let percent =
         format_percent(dependents as u64, source_files as u64).unwrap_or_else(|| "0%".to_string());
-    let mut label = format!(
-        "{} dependent files · {percent} of source files",
-        grouped(dependents)
-    );
-    if let Some(median) = median_multiple {
+    let noun = if dependents == 1 {
+        "dependent file"
+    } else {
+        "dependent files"
+    };
+    let mut label = format!("{} {noun} · {percent} of source files", grouped(dependents));
+    if let Some(median) = median_multiple
+        && median > 0.0
+    {
         label.push_str(&format!(
             " · {} median dependent count",
             format_multiple(median)
@@ -298,6 +305,9 @@ pub fn format_parse(ok: u32, partial: u32, failed: u32) -> String {
 /// `0/234 unresolved includes` (M-13).
 #[must_use]
 pub fn format_unresolved_includes(unresolved: usize, total: usize) -> String {
+    if total == 0 {
+        return NO_INCLUDE_EDGES.to_string();
+    }
     format!(
         "{}/{} unresolved includes",
         grouped(unresolved),
@@ -308,7 +318,8 @@ pub fn format_unresolved_includes(unresolved: usize, total: usize) -> String {
 /// `42 files demoted` (M-13).
 #[must_use]
 pub fn format_demoted_files(files: usize) -> String {
-    format!("{} files demoted", grouped(files))
+    let noun = if files == 1 { "file" } else { "files" };
+    format!("{} {noun} demoted", grouped(files))
 }
 
 /// `representative path (static) · 4 steps` (zero steps still prints).
@@ -538,7 +549,7 @@ mod tests {
         );
         assert_eq!(
             format_component_share(1, 500, 1),
-            "0.2% of scanned static cost · 1 files"
+            "0.2% of scanned static cost · 1 file"
         );
         assert_eq!(
             format_component_share(0, 0, 7),
@@ -561,7 +572,9 @@ mod tests {
             format_unresolved_includes(7, 1_234),
             "7/1,234 unresolved includes"
         );
+        assert_eq!(format_unresolved_includes(0, 0), NO_INCLUDE_EDGES);
         assert_eq!(format_demoted_files(42), "42 files demoted");
+        assert_eq!(format_demoted_files(1), "1 file demoted");
         assert_eq!(format_demoted_files(0), "0 files demoted");
     }
 
@@ -595,6 +608,18 @@ mod tests {
         assert_eq!(
             format_dependents(5, 10, Some(1.5), Some(50)),
             "5 dependent files · 50% of source files · 1.5× median dependent count · top 50%"
+        );
+        assert_eq!(
+            format_dependents(1, 10, Some(2.0), Some(10)),
+            "1 dependent file · 10% of source files · 2.0× median dependent count · top 10%"
+        );
+        assert_eq!(
+            format_dependents(5, 10, Some(0.0), None),
+            "5 dependent files · 50% of source files"
+        );
+        assert_eq!(
+            format_dependents(5, 10, Some(-1.0), None),
+            "5 dependent files · 50% of source files"
         );
         assert_eq!(
             format_dependents(0, 10, Some(2.0), Some(1)),
@@ -757,6 +782,8 @@ mod tests {
         assert_eq!(NO_SCANNED_COST, "no scanned static cost recorded");
         assert_eq!(NO_PRODUCTION_COST, "no production cost recorded");
         assert_eq!(ESTIMATE_INCOMPLETE, "estimate incomplete");
+        assert_eq!(NO_INCLUDE_EDGES, "no include edges recorded");
+        assert_eq!(format_unresolved_includes(0, 0), NO_INCLUDE_EDGES);
         assert_eq!(format_reachable(0, 0), NO_SOURCE_FUNCTIONS);
         assert_eq!(format_dependents(0, 0, None, None), NO_RESOLVED_DEPENDENTS);
         assert_eq!(format_share(0, 0), NO_SCANNED_COST);
@@ -786,6 +813,8 @@ mod tests {
             format_component_share(12, 100, 7),
             format_parse(100, 116, 0),
             format_unresolved_includes(0, 234),
+            format_unresolved_includes(0, 0),
+            NO_INCLUDE_EDGES.to_string(),
             format_demoted_files(42),
             format_nonproduction(0, 0, 42),
             format_path_steps(4),

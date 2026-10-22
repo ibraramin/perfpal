@@ -13,6 +13,10 @@
 //! Pause semantics: the checkbox freezes the CSS timeline at its current
 //! frame; pausing during the initial reveal delay freezes that frame (the A2
 //! timed test judges whether that is acceptable).
+//!
+//! A deep mandatory path grows the canvas vertically (the SVG height is
+//! `max(720, TOP + rows*row_h + BOTTOM)`) so nodes are never clipped; print
+//! and A2 should judge the tall case.
 
 use std::collections::BTreeMap;
 
@@ -69,7 +73,7 @@ const ANIMATION_CSS: &str = r#"#atlas-canvas{position:relative;background:#fffff
  @keyframes atlas-edge-fade{from{opacity:0}to{opacity:1}}
  @keyframes atlas-trace-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
  @keyframes atlas-hottest-pulse{0%,100%{opacity:1}50%{opacity:.5}}
- #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .2s) both}
+ #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
  #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
  #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
  #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
@@ -105,6 +109,7 @@ struct ColumnLayout {
 struct Layout {
     row_h: i64,
     node_h: i64,
+    height: i64,
     columns: Vec<ColumnLayout>,
     rows: BTreeMap<String, NodeRect>,
 }
@@ -113,13 +118,18 @@ fn compute_layout(view: &AtlasView) -> Layout {
     let max_items = view
         .columns
         .iter()
-        .map(|column| column.files.len() + column.aggregated.len())
+        .map(|column| {
+            column.files.len()
+                + column.aggregated.len()
+                + usize::from(column.unreached && column.nonproduction_unreached > 0)
+        })
         .max()
         .unwrap_or(1)
         .max(1);
     let available_h = SVG_H - TOP - BOTTOM;
     let row_h = (available_h / max_items as i64).clamp(26, 88);
     let node_h = (row_h - 8).clamp(18, 80);
+    let height = SVG_H.max(TOP + max_items as i64 * row_h + BOTTOM);
 
     let count = view.columns.len();
     let mut columns = Vec::with_capacity(count);
@@ -160,6 +170,7 @@ fn compute_layout(view: &AtlasView) -> Layout {
     Layout {
         row_h,
         node_h,
+        height,
         columns,
         rows,
     }
@@ -307,14 +318,14 @@ fn column_header(view: &AtlasView, column: &AtlasColumn) -> String {
 // SVG fragments
 // ---------------------------------------------------------------------------
 
-fn svg_open(standalone: bool) -> String {
+fn svg_open(standalone: bool, height: i64) -> String {
     let xmlns = if standalone {
         " xmlns=\"http://www.w3.org/2000/svg\""
     } else {
         ""
     };
     format!(
-        "<svg{xmlns} viewBox=\"0 0 {SVG_W} {SVG_H}\" width=\"{SVG_W}\" height=\"{SVG_H}\" \
+        "<svg{xmlns} viewBox=\"0 0 {SVG_W} {height}\" width=\"{SVG_W}\" height=\"{height}\" \
          class=\"atlas-svg\" role=\"img\" aria-label=\"Perfpal Atlas entry-flow canvas\" \
          preserveAspectRatio=\"xMidYMid meet\">"
     )
@@ -613,12 +624,32 @@ fn render_nodes(
                 },
             ));
         }
+        if column.unreached && column.nonproduction_unreached > 0 {
+            let y = TOP + (column.files.len() + column.aggregated.len()) as i64 * layout.row_h;
+            let count = format_count(column.nonproduction_unreached as u64);
+            let title =
+                format!("{count} non-production unreached files (test/bench/other) · not drawn");
+            out.push_str(&format!(
+                "<g class=\"atlas-unreached-nonprod\" data-nonprod-unreached=\"{}\"\
+                 ><title>{}</title><rect x=\"{}\" y=\"{y}\" width=\"{}\" height=\"{}\" rx=\"6\" \
+                 fill=\"#f8fafc\" stroke=\"#94a3b8\" stroke-dasharray=\"4 3\"/>\
+                 <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"6.2\" \
+                 font-weight=\"700\" fill=\"#475569\">+{count} non-production unreached</text></g>",
+                column.nonproduction_unreached,
+                escape_xml(&title),
+                column_layout.node_x,
+                column_layout.node_w,
+                layout.node_h,
+                column_layout.node_x + column_layout.node_w / 2,
+                y + layout.node_h / 2 + 2
+            ));
+        }
         out.push_str("</g>");
     }
     out
 }
 
-fn render_graph_inner(view: &AtlasView) -> String {
+fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
     let mut out = String::new();
     out.push_str(&render_defs());
     if view.columns.is_empty() {
@@ -626,7 +657,6 @@ fn render_graph_inner(view: &AtlasView) -> String {
         return out;
     }
 
-    let layout = compute_layout(view);
     let node_map: BTreeMap<&str, &AtlasNode> = view
         .nodes
         .iter()
@@ -709,7 +739,7 @@ fn render_graph_inner(view: &AtlasView) -> String {
 
     out.push_str(&edge_paths);
     out.push_str(&traces);
-    out.push_str(&render_nodes(view, &layout, &node_map, &path_steps));
+    out.push_str(&render_nodes(view, layout, &node_map, &path_steps));
     out.push_str(&edge_labels);
     out
 }
@@ -718,13 +748,15 @@ fn render_graph_inner(view: &AtlasView) -> String {
 // Public API
 // ---------------------------------------------------------------------------
 
-/// Standalone static SVG: the complete final frame, no animation.
+/// Standalone static SVG graph final frame (no animation, no header/legend/
+/// footer — those are HTML chrome in [`render_canvas_html`]).
 #[must_use]
 pub fn render_canvas_svg(view: &AtlasView) -> String {
+    let layout = compute_layout(view);
     format!(
         "{}\n<style>{STATIC_CSS}</style>\n{}\n</svg>",
-        svg_open(true),
-        render_graph_inner(view)
+        svg_open(true, layout.height),
+        render_graph_inner(view, &layout)
     )
 }
 
@@ -738,22 +770,17 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
         view.entry.alternatives.len(),
     );
     let hottest_line = view
-        .hottest
+        .hottest_node
         .as_ref()
-        .and_then(|path| view.nodes.iter().find(|node| &node.path == path))
         .map(|node| format!("HOTTEST: {} · {}", node.path, node_anchor_text(node)))
         .unwrap_or_else(|| "HOTTEST: no file".to_string());
     let path_line = format!(
         "PATH · {} steps · {PATH_CAPTION}",
         format_count(view.path.len() as u64)
     );
-    let reachable_shown = view
-        .caps
-        .reachable_files
-        .saturating_sub(view.caps.aggregated_files);
     let caps_line = format!(
         "{} of {} reachable files shown · {} aggregated",
-        format_count(reachable_shown as u64),
+        format_count(view.caps.reachable_shown as u64),
         format_count(view.caps.reachable_files as u64),
         format_count(view.caps.aggregated_files as u64)
     );
@@ -817,6 +844,7 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
         .collect::<Vec<_>>()
         .join(" · ");
 
+    let layout = compute_layout(view);
     let mut out = String::new();
     out.push_str("<section id=\"atlas-canvas\" class=\"atlas-canvas\">\n");
     out.push_str(&format!("<style>{ANIMATION_CSS}</style>\n"));
@@ -841,9 +869,9 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
     ));
     out.push_str("</header>\n");
     out.push_str("<div class=\"atlas-graph\">\n");
-    out.push_str(&svg_open(false));
+    out.push_str(&svg_open(false, layout.height));
     out.push('\n');
-    out.push_str(&render_graph_inner(view));
+    out.push_str(&render_graph_inner(view, &layout));
     out.push_str("\n</svg>\n</div>\n");
     out.push_str(&format!(
         "<div class=\"atlas-legend\">{legend_items} · <span class=\"atlas-structural-caption\">{}</span></div>\n",
@@ -1048,17 +1076,23 @@ mod tests {
     fn canvas_renders_no_entry_and_empty_stubs() {
         let no_entry = render_canvas_html(&build_atlas_view(&no_entry_fixture()));
         assert!(no_entry.contains("NO ENTRY"));
-        assert!(no_entry.contains("HOTTEST: no file"));
+        assert!(no_entry.contains("HOTTEST: src/handler.c"));
         assert!(no_entry.contains("PATH · 0 steps"));
-        assert!(!no_entry.contains("handler.c"), "no fake node in NO ENTRY");
+        assert!(
+            !no_entry.contains("data-node=\"src/handler.c\""),
+            "no fake HOTTEST node in NO ENTRY"
+        );
         assert!(!no_entry.contains("data-node="), "no fake node group");
 
         let empty = render_canvas_html(&build_atlas_view(&empty_fixture()));
         assert!(empty.contains("no source functions recorded"));
+        assert!(empty.contains("HOTTEST: no file"));
         assert!(
             !empty.contains("data-node="),
             "no fake node group in empty state"
         );
+        assert!(empty.contains("no include edges recorded"));
+        assert!(!empty.contains("0/0"), "empty footer must not emit 0/0");
     }
 
     #[test]
@@ -1116,6 +1150,7 @@ mod tests {
         assert!(html.contains("Pause animation"));
         assert!(html.contains("opacity:0!important"));
         assert!(html.contains("inline-size:1px!important"));
+        assert!(html.contains("var(--atlas-col) * .12s"));
     }
 
     #[test]
@@ -1300,6 +1335,7 @@ mod tests {
         assert_eq!(view.caps.reachable_files, 20);
         assert_eq!(view.caps.aggregated_files, 1);
         assert_eq!(view.caps.nodes_shown, 20);
+        assert_eq!(view.caps.reachable_shown, 19);
         let html = render_canvas_html(&view);
         assert!(html.contains("19 of 20 reachable files shown · 1 aggregated"));
     }
@@ -1374,5 +1410,85 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn nonproduction_unreached_renders_as_a_chip_not_a_node() {
+        let doc = DocBuilder::new()
+            .file(file("src/main.c", "production", 1))
+            .file(file("src/a.c", "production", 1))
+            .file(file("tests/t.c", "test", 1))
+            .function(function(
+                "src/main.c",
+                "main",
+                1,
+                Some(100),
+                0,
+                Some("main"),
+            ))
+            .function(function("src/a.c", "a", 1, Some(50), 0, None))
+            .function(function("tests/t.c", "test_fn", 1, Some(40), 0, None))
+            .call_edge(call_edge(
+                "src/main.c#main#1:1",
+                "a",
+                "src/main.c",
+                Some("src/a.c"),
+                Confidence::Low,
+            ))
+            .build();
+        let view = build_atlas_view(&doc);
+        assert_eq!(
+            view.columns
+                .last()
+                .map(|column| column.nonproduction_unreached),
+            Some(1)
+        );
+        let html = render_canvas_html(&view);
+        assert!(html.contains("UNREACHED"));
+        assert!(html.contains("+1 non-production unreached"));
+        assert!(html.contains("non-production unreached files (test/bench/other) · not drawn"));
+        assert!(
+            !html.contains("data-node=\"tests/t.c\""),
+            "non-production unreached must not be a drawn node"
+        );
+    }
+
+    #[test]
+    fn deep_mandatory_path_grows_canvas_height() {
+        let mut builder = DocBuilder::new().file(file("src/f0.c", "production", 1));
+        let mut functions = vec![function("src/f0.c", "main", 1, Some(100), 0, Some("main"))];
+        let mut edges = Vec::new();
+        for index in 1..40_u64 {
+            let path = format!("src/f{index}.c");
+            builder = builder.file(file(&path, "production", 1));
+            functions.push(function(
+                &path,
+                &format!("f{index}"),
+                1,
+                Some(100 - index),
+                0,
+                None,
+            ));
+            edges.push(call_edge(
+                &format!("src/f{}.c#f{}#1:1", index - 1, index - 1),
+                &format!("f{index}"),
+                &format!("src/f{}.c", index - 1),
+                Some(&path),
+                Confidence::Low,
+            ));
+        }
+        for function in functions {
+            builder = builder.function(function);
+        }
+        for edge in edges {
+            builder = builder.call_edge(edge);
+        }
+        let view = build_atlas_view(&builder.build());
+        assert_eq!(view.nodes.len(), 40);
+        let html = render_canvas_html(&view);
+        assert!(html.contains("viewBox=\"0 0 1400 900\""));
+        assert_eq!(html.matches("data-node=\"").count(), 40);
+        let svg = render_canvas_svg(&view);
+        assert!(svg.contains("viewBox=\"0 0 1400 900\""));
     }
 }
