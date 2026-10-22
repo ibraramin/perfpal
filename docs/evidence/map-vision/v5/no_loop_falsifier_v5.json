@@ -1,0 +1,126 @@
+{
+  "_comment": "V5 KV3 no-loop falsifier. Reproduces the shipped KV3 rank and the counterfactual rank without the no-loop key over the schema-1.7 out-v5 scans; includes the per-leaf source evidence for the three pre-registered Q3 targets.",
+  "falsifier": {
+    "counterfactual_inline_top8_all": false,
+    "demoted_by_no_loop": true,
+    "guard_is_sole_cause": false,
+    "hidden_from_inline_top8": true,
+    "ranks_shipped_to_counterfactual": "tmux 820->325, hyperfine 58->46, cJSON 60->45"
+  },
+  "generated": "2026-10-22",
+  "held_out": "django/postgres deliberately absent (V6)",
+  "targets": [
+    {
+      "call_fanin": 5,
+      "call_fanout": 7,
+      "counterfactual_inline_top8": false,
+      "counterfactual_rank_without_no_loop": 325,
+      "demotions": [
+        "no-loop"
+      ],
+      "entry_kind": "lib-root",
+      "function_cost_v2": 60,
+      "inline_top8": false,
+      "leaf_evidence": "per-printable-byte leaf: no loop inside; branch ladder decides collect vs. direct write, then stores one cell byte at `screen-write.c:2830`; called from `input.c:1244` and `input.c:2892` (pre-registered Q3).",
+      "max_loop_depth": 0,
+      "path_class": "production",
+      "rank": 820,
+      "reachable_from_entry": true,
+      "repo": "tmux",
+      "source": [
+        {
+          "file": "screen-write.c",
+          "lines": "2775-2780",
+          "text": "2775: void\n2776: screen_write_collect_add(struct screen_write_ctx *ctx,\n2777:     const struct grid_cell *gc)\n2778: {\n2779: \tstruct screen\t\t\t*s = ctx->s;\n2780: \tstruct screen_write_citem\t*ci;"
+        },
+        {
+          "file": "screen-write.c",
+          "lines": "2794-2807",
+          "text": "2794: \tcollect = 1;\n2795: \tif (gc->data.width != 1 || gc->data.size != 1 || *gc->data.data >= 0x7f)\n2796: \t\tcollect = 0;\n2797: \telse if (gc->flags & GRID_FLAG_TAB)\n2798: \t\tcollect = 0;\n2799: \telse if (gc->attr & GRID_ATTR_CHARSET)\n2800: \t\tcollect = 0;\n2801: \telse if ((~s->mode & MODE_WRAP) &&\n2802: \t    s->cx + ctx->item->used >= sx - 1)\n2803: \t\tcollect = 0;\n2804: \telse if (s->mode & MODE_INSERT)\n2805: \t\tcollect = 0;\n2806: \telse if (s->sel != NULL)\n2807: \t\tcollect = 0;"
+        },
+        {
+          "file": "screen-write.c",
+          "lines": "2824-2831",
+          "text": "2824: \t}\n2825: \n2826: \tif (ci->used == 0)\n2827: \t\tmemcpy(&ci->gc, gc, sizeof ci->gc);\n2828: \tif (ctx->s->write_list[s->cy].data == NULL)\n2829: \t\tctx->s->write_list[s->cy].data = xmalloc(screen_size_x(ctx->s));\n2830: \tctx->s->write_list[s->cy].data[s->cx + ci->used++] = gc->data.data[0];\n2831: }"
+        }
+      ],
+      "target": "screen_write_collect_add|screen-write.c",
+      "total": 3189
+    },
+    {
+      "call_fanin": 1,
+      "call_fanout": 3,
+      "counterfactual_inline_top8": false,
+      "counterfactual_rank_without_no_loop": 46,
+      "demotions": [
+        "no-loop"
+      ],
+      "entry_kind": "lib-root",
+      "function_cost_v2": 18,
+      "inline_top8": false,
+      "leaf_evidence": "per-measurement leaf: no loop inside; starts the wall clock, spawns the child and blocks in `wait4` (`src/timer/unix_timer.rs:33-41`), so wall-clock time is dominated by the child wait (pre-registered Q3).",
+      "max_loop_depth": 0,
+      "path_class": "production",
+      "rank": 58,
+      "reachable_from_entry": true,
+      "repo": "hyperfine",
+      "source": [
+        {
+          "file": "src/timer/mod.rs",
+          "lines": "64-82",
+          "text": "64: pub fn execute_and_measure(\n65:     mut command: Command,\n66:     _collect_hardware_counters: bool,\n67: ) -> Result<Measurement> {\n68:     #[cfg(target_os = \"linux\")]\n69:     let counters = _collect_hardware_counters.then(linux_counters::CounterGroup::new);\n70:     #[cfg(not(windows))]\n71:     let cpu_timer = self::unix_timer::CPUTimer::start();\n72: \n73:     #[cfg(windows)]\n74:     {\n75:         use std::os::windows::process::CommandExt;\n76: \n77:         // Create the process in a suspended state so that we don't miss any cpu time between process creation and `CPUTimer` start.\n78:         command.creation_flags(CREATE_SUSPENDED);\n79:     }\n80: \n81:     let wallclock_timer = WallClockTimer::start();\n82:     let mut child = command.spawn()?;"
+        },
+        {
+          "file": "src/timer/unix_timer.rs",
+          "lines": "33-42",
+          "text": "33: fn wait4(mut child: Child) -> io::Result<(ExitStatus, ResourceUsage)> {\n34:     drop(child.stdin.take());\n35: \n36:     let pid = child.id() as i32;\n37:     let mut status = 0;\n38:     let mut rusage = MaybeUninit::zeroed();\n39: \n40:     loop {\n41:         let result = unsafe { libc::wait4(pid, &mut status, 0, rusage.as_mut_ptr()) };\n42:         if result >= 0 {"
+        }
+      ],
+      "target": "execute_and_measure|src/timer/mod.rs",
+      "total": 353
+    },
+    {
+      "call_fanin": 17,
+      "call_fanout": 0,
+      "counterfactual_inline_top8": false,
+      "counterfactual_rank_without_no_loop": 45,
+      "demotions": [
+        "no-loop"
+      ],
+      "entry_kind": null,
+      "function_cost_v2": 27,
+      "inline_top8": false,
+      "leaf_evidence": "per-item allocation leaf: no loop inside; one allocator call plus `memset` (`cJSON.c:243-246`), called for the root, every array element, every object member, every string and every number temp (pre-registered Q3).",
+      "max_loop_depth": 0,
+      "path_class": "production",
+      "rank": 60,
+      "reachable_from_entry": false,
+      "repo": "cJSON",
+      "source": [
+        {
+          "file": "cJSON.c",
+          "lines": "241-250",
+          "text": "241: static cJSON *cJSON_New_Item(const internal_hooks * const hooks)\n242: {\n243:     cJSON* node = (cJSON*)hooks->allocate(sizeof(cJSON));\n244:     if (node)\n245:     {\n246:         memset(node, '\\0', sizeof(cJSON));\n247:     }\n248: \n249:     return node;\n250: }"
+        },
+        {
+          "file": "cJSON.c",
+          "lines": "1166-1166",
+          "text": "1166:     item = cJSON_New_Item(&global_hooks);"
+        },
+        {
+          "file": "cJSON.c",
+          "lines": "1535-1535",
+          "text": "1535:         cJSON *new_item = cJSON_New_Item(&(input_buffer->hooks));"
+        },
+        {
+          "file": "cJSON.c",
+          "lines": "1698-1698",
+          "text": "1698:         cJSON *new_item = cJSON_New_Item(&(input_buffer->hooks));"
+        }
+      ],
+      "target": "cJSON_New_Item|cJSON.c",
+      "total": 1055
+    }
+  ],
+  "verdict": "PARTIALLY FALSIFIED - the no-loop guard demotes all three pre-registered Q3 targets (3/3), but removing only the no-loop term does NOT restore any to the inline top 8 (shipped->counterfactual ranks: tmux 820->325, hyperfine 58->46, cJSON 60->45; top 8). The guard is a contributing demotion, not the sole cause of the Q3 recall miss: the static-cost key cannot surface per-byte/per-call leaves (the V1 H1 prediction for call weights). V7 must adopt call-weighted/per-iteration cost (or a separate call-frequency view), not merely drop the guard; a two-list variant of the same static cost is insufficient. Note cJSON cJSON_New_Item is also reachable_from_entry=false in the default-tier call graph, so a reachable-only Q3 (R-pf-098) would hide it further."
+}

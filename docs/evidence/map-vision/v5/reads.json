@@ -1,0 +1,755 @@
+{
+  "_comment": "V5 blind vision validation. Two fresh, independent @vision reads per key view (9 views x 2 = 18 valid reads) on the V5 renders, which are byte-identical to the V4-approved key views. Each read got one image only, no source, no sibling views, no expected answer; it described the view first and then emitted the strict four-key JSON. Empty agent outputs are recorded as attempt 1 and retried once.",
+  "blind_mapping": {
+    "01.png": {
+      "read": 1,
+      "view": "tmux-kv3"
+    },
+    "02.png": {
+      "read": 1,
+      "view": "hyperfine-kv1"
+    },
+    "03.png": {
+      "read": 1,
+      "view": "hyperfine-kv3"
+    },
+    "04.png": {
+      "read": 2,
+      "view": "hyperfine-kv1"
+    },
+    "05.png": {
+      "read": 2,
+      "view": "cJSON-kv2"
+    },
+    "06.png": {
+      "read": 2,
+      "view": "tmux-kv1"
+    },
+    "07.png": {
+      "read": 1,
+      "view": "cJSON-kv3"
+    },
+    "08.png": {
+      "read": 1,
+      "view": "tmux-kv2"
+    },
+    "09.png": {
+      "read": 1,
+      "view": "hyperfine-kv2"
+    },
+    "10.png": {
+      "read": 1,
+      "view": "cJSON-kv2"
+    },
+    "11.png": {
+      "read": 2,
+      "view": "cJSON-kv3"
+    },
+    "12.png": {
+      "read": 1,
+      "view": "cJSON-kv1"
+    },
+    "13.png": {
+      "read": 2,
+      "view": "tmux-kv2"
+    },
+    "14.png": {
+      "read": 2,
+      "view": "cJSON-kv1"
+    },
+    "15.png": {
+      "read": 1,
+      "view": "tmux-kv1"
+    },
+    "16.png": {
+      "read": 2,
+      "view": "tmux-kv3"
+    },
+    "17.png": {
+      "read": 2,
+      "view": "hyperfine-kv2"
+    },
+    "18.png": {
+      "read": 2,
+      "view": "hyperfine-kv3"
+    }
+  },
+  "generated": "2026-10-22",
+  "observations": [
+    {
+      "evidence": "05, 08, 09, 10, 13, 17",
+      "finding": "All six KV2 reads flag the `top N%` anchor as ambiguous: it can read as a rank ordinal, and its denominator is unstated next to `% of scanned files`.",
+      "id": "O1",
+      "severity": "non-blocking",
+      "status": "confirms the V4-deferred wording risk; V7/founder follow-up (relabel as `top P% of files by dependents` or drop the redundant anchor). No V5 code change: both reads still name the question and a concrete file-level action."
+    },
+    {
+      "evidence": "05, 10",
+      "finding": "cJSON KV2 is dominated by Unity test headers (22/22/21 dependents) and buries the public ABI header `cJSON.h` at #4 (5 dependents); the two reads even disagree on which file is riskiest (test header vs the production ABI header), strengthening the ambiguity case.",
+      "id": "O2",
+      "severity": "non-blocking",
+      "status": "supports the pending KV2 production-first amendment; founder decision before V6, not silently applied."
+    },
+    {
+      "evidence": "01, 16, 18",
+      "finding": "KV3's per-block bar scale is understood from the caption but still invites cross-block length comparison (a demoted 418-unit bar looks longer than a ranked 331-unit bar).",
+      "id": "O3",
+      "severity": "non-blocking",
+      "status": "accepted V4 design (f896631); readers read the numbers and answer correctly."
+    },
+    {
+      "evidence": "02, 03, 04, 06, 16, 18",
+      "finding": "Readers want in-view definitions of `static cost units (v2)`, `\u00d7 median`, `trip`, and `top N%`; the report/README define them but the key views do not.",
+      "id": "O4",
+      "severity": "non-blocking",
+      "status": "definition lives in the report body; no A1 failure. Candidate V7 polish (glossary line), not a V5 fix."
+    },
+    {
+      "evidence": "12",
+      "finding": "One cJSON KV1 reader perceived a missing space between the function name and the rule title on #4 (`create_patchesHigh...`); the HTML contains a space between the spans.",
+      "id": "O5",
+      "severity": "non-blocking",
+      "status": "cosmetic/wrap perception, not reproducible in the DOM; no fix."
+    },
+    {
+      "evidence": "06, 15",
+      "finding": "tmux KV1 #5 is HOT at 0.7x median / top 60%; severity is the rule's heuristic severity, not a cost claim.",
+      "id": "O6",
+      "severity": "non-blocking",
+      "status": "working as designed (rank key is production -> severity -> confidence -> cost)."
+    }
+  ],
+  "per_view": {
+    "cJSON-kv1": {
+      "actions": [
+        "Open cJSON_Utils.c:1188 (create_patches) and hoist/batch the sprintf",
+        "Open cJSON_Utils.c:1188 (create_patches) and hoist/batch the sprintf"
+      ],
+      "both_pass": true,
+      "question": "Where do I look first?",
+      "reads": [
+        "12.png",
+        "14.png"
+      ]
+    },
+    "cJSON-kv2": {
+      "actions": [
+        "Treat tests/unity/examples/unity_config.h as edit-critical; cJSON.h is the top production header",
+        "Avoid hand-editing tests/unity/examples/unity_config.h; cJSON.h is the highest-impact production header at 5 dependents"
+      ],
+      "both_pass": true,
+      "question": "What breaks if I touch it?",
+      "reads": [
+        "10.png",
+        "05.png"
+      ]
+    },
+    "cJSON-kv3": {
+      "actions": [
+        "Profile cJSON.c:253 (cJSON_Delete) first",
+        "Profile cJSON.c:253 (cJSON_Delete) first"
+      ],
+      "both_pass": true,
+      "question": "Where might time plausibly go?",
+      "reads": [
+        "07.png",
+        "11.png"
+      ]
+    },
+    "hyperfine-kv1": {
+      "actions": [
+        "Open src/output/report.rs:144 (print) and profile it",
+        "Open src/output/report.rs:144 (print) and profile it"
+      ],
+      "both_pass": true,
+      "question": "Where do I look first?",
+      "reads": [
+        "02.png",
+        "04.png"
+      ]
+    },
+    "hyperfine-kv2": {
+      "actions": [
+        "Avoid hand-editing src/quantity/mod.rs (12 dependents)",
+        "Treat src/quantity/mod.rs as the riskiest file (12 dependents)"
+      ],
+      "both_pass": true,
+      "question": "What breaks if I touch it?",
+      "reads": [
+        "09.png",
+        "17.png"
+      ]
+    },
+    "hyperfine-kv3": {
+      "actions": [
+        "Profile src/output/report.rs:19 (print) first",
+        "Profile src/output/report.rs:19 (print) first"
+      ],
+      "both_pass": true,
+      "question": "Where might time plausibly go?",
+      "reads": [
+        "03.png",
+        "18.png"
+      ]
+    },
+    "tmux-kv1": {
+      "actions": [
+        "Open compat/getline.c:85 (getdelim) and profile it",
+        "Open compat/getline.c:85 (getdelim) and profile it"
+      ],
+      "both_pass": true,
+      "question": "Where do I look first?",
+      "reads": [
+        "15.png",
+        "06.png"
+      ]
+    },
+    "tmux-kv2": {
+      "actions": [
+        "Do not edit tmux.h directly (160 dependents); prefer compat/imsg.h",
+        "Treat tmux.h as the highest-risk edit (160 dependents); prefer compat/imsg.h"
+      ],
+      "both_pass": true,
+      "question": "What breaks if I touch it?",
+      "reads": [
+        "08.png",
+        "13.png"
+      ]
+    },
+    "tmux-kv3": {
+      "actions": [
+        "Run a profiler on format_replace at format.c:6052",
+        "Profile format_replace at format.c:6052 first"
+      ],
+      "both_pass": true,
+      "question": "Where might time plausibly go?",
+      "reads": [
+        "01.png",
+        "16.png"
+      ]
+    }
+  },
+  "protocol": {
+    "blind": "one image per task; no source, no sibling views, no expected answer",
+    "blind_mapping_seed": 20261022,
+    "blind_mapping_sha256": "d3ad08c6016479a06cc01d3890fb4ebd05e0cfdf8fa3e0d827bbc10294378362",
+    "describe_first": true,
+    "holdout": "django/postgres deliberately absent from every render and read",
+    "json_contract": [
+      "question_answered",
+      "action",
+      "blockers",
+      "confidence"
+    ],
+    "pass_rule": "both reads per key view state the slot question and one concrete path:line/function action; non-blocking ambiguity notes do not fail A1",
+    "renderer": "Playwright chromium-1243",
+    "viewport": "1440x900 @ 100% zoom (device_scale_factor=1); element screenshots at 1152 CSS px",
+    "vision_model": "@vision (image-only)"
+  },
+  "reads": [
+    {
+      "action": "Run a profiler on format_replace at format.c:6052",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "STEP 1 \u2014 DESCRIPTION\n\n**Header block (top-left, plain text on white):**\n- Heading: `Where might time plausibly go?`\n- Sub-line: `Profile the named function first \u2014 static candidate, confirm with a profiler.`\n- Legend/caption: `Bars scale within each block: blue = ranked functions, grey = demoted functions.`\n\n**Layout:** a single table-like list of 10 rows. Each row = `path:line` + function name (monospace, left), a horizontal bar in a light-grey trough (centre), and a right-aligned metrics line plus an optional pill badge beneath it.\n\n**Ranked (blue) rows, top to bottom:**\n\n| # | path:line + function | bar (visual length) | metrics line | badge |\n|---|---|---|---|---|\n| 1 | `format.c:6052 format_replace` | blue, longest (fills ~full track) | `1331 static cost units (v2) \u00b7 67\u00d7 median \u00b7 top 1%` | orange/yellow outline: `UNKNOWN-TRIP \u00d76 \u2013 ESTIMATE INCOMPLETE` |\n| 2 | `style.c:68 style_parse` | blue, ~95% of #1 | `1274 static cost units (v2) \u00b7 64\u00d7 median \u00b7 top 1%` | `UNKNOWN-TRIP \u00d72 \u2013 ESTIMATE INCOMPLETE` |\n| 3 | `colour.c:1292 colour_palette_from_option` | blue, ~78% | `1059 static cost units (v2) \u00b7 53\u00d7 median \u00b7 top 1%` | green outline: `KNOWN TRIP \u00d7256 \u2013 VERIFY IT ACTUALLY RUNS` |\n| 4 | `colour.c:1271 colour_palette_set` | blue, ~41% | `535 static cost units (v2) \u00b7 27\u00d7 median \u00b7 top 1%` | green: `KNOWN TRIP \u00d7256 \u2013 VERIFY IT ACTUALLY RUNS` |\n| 5 | `cmd-join-pane.c:69 cmd_join_pane_place` | blue, ~38% | `498 static cost units (v2) \u00b7 25\u00d7 median \u00b7 top 1%` | `UNKNOWN-TRIP \u00d74 \u2013 ESTIMATE INCOMPLETE` |\n| 6 | `input.c:1465 input_csi_dispatch` | blue, ~35% | `454 static cost units (v2) \u00b7 23\u00d7 median \u00b7 top 1%` | `UNKNOWN-TRIP \u00d73 \u2013 ESTIMATE INCOMPLETE` |\n| 7 | `mode-tree.c:1504 mode_tree_key` | blue, ~26% | `332 static cost units (v2) \u00b7 17\u00d7 median \u00b7 top 1%` | `UNKNOWN-TRIP \u00d76 \u2013 ESTIMATE INCOMPLETE` |\n| 8 | `format-draw.c:689 format_draw` | blue, ~25% | `331 static cost units (v2) \u00b7 17\u00d7 median \u00b7 top 1%` | `UNKNOWN-TRIP \u00d77 \u2013 ESTIMATE INCOMPLETE` |\n\n**Demoted (grey) rows, at the bottom in a separate block:**\n\n| # | path:line + function | badge on the label | bar | metrics line |\n|---|---|---|---|---|\n| 9 | `server-client.c:747` / `server_client_check_mouse` (label wraps to two lines) | grey pill: `NO-LOOP \u2013 DEMOTED` | grey, long (~fills its own track) | `418 static cost units (v2) \u00b7 21\u00d7 median \u00b7 top 1%` |\n| 10 | `xmalloc.c:86 xstrdup` | grey pill: `NO-LOOP \u2013 DEMOTED` | grey, long | `388 static cost units (v2) \u00b7 19\u00d7 median \u00b7 top 1%` |\n\n**Footer:**\n- Blue underlined link: `Complete cost-ranked list (3189 functions)`\n- Grey summary line: `1 startup function demoted \u00b7 2511 no-loop functions demoted \u00b7 1 non-production file demoted`\n\n**Visual encoding:** length of horizontal bar = static cost units; blue = ranked, grey = demoted; bars are normalised *within each block*, so the grey rows (#9, #10) render visually longer than blue rows with lower numbers (#7: 332, #8: 331) even though their values (418, 388) only sit mid-pack \u2014 cross-block bar-length comparison is therefore invalid. Numeric anchors are explicit on the right (units, \"\u00d7 median\", \"top 1%\"), so the number text, not the bar, carries cross-row comparison. Badges encode data-quality: green = known trip count with a \"verify it runs\" caveat, orange = incomplete estimate, grey = demotion reason.\n\n**Ambiguous / unreadable:** nothing is illegible. Minor open points: \"static cost units (v2)\" is undefined in-view; \"median\" and \"top 1%\" anchors don't state what population they refer to; the exact meaning of \"trip \u00d7N\" is only implied by the badge wording.\n\n```json\n{\n  \"question_answered\": \"Which functions are the most plausible places where runtime is going, so I know which single function to profile first (static estimate, to be confirmed with a real profiler)?\",\n  \"action\": \"Run a profiler on format_replace at format.c:6052 \u2014 it is the top-ranked candidate at 1331 static cost units (67\u00d7 median, top 1%), though its badge says UNKNOWN-TRIP \u00d76 \u2013 ESTIMATE INCOMPLETE; alternatively, first verify that colour_palette_from_option (colour.c:1292) actually executes at runtime, since it carries KNOWN TRIP \u00d7256 \u2013 VERIFY IT ACTUALLY RUNS.\",\n  \"blockers\": [],\n  \"confidence\": 0.78\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.78,
+      "image": "01.png",
+      "question_answered": "Where might time plausibly go? \u2014 which function should I profile first",
+      "read": 1,
+      "slot": "KV3",
+      "verdict": "PASS",
+      "view": "tmux-kv3"
+    },
+    {
+      "action": "Open src/output/report.rs:144 (print) and profile it",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description of what I actually see\n\n**Format:** A rendered report panel (monospace body text on white), no charts or bars \u2014 ranking is expressed purely by position, rank numerals, and badges.\n\n**Heading (bold, top-left):** `Where do I look first?`\n\n**Instruction line:** `Open the first path:line and profile it \u2014 static candidates, confirm with a profiler.`\n\n**Ranking rule line:** `Ranked: production code first, then severity, then confidence, then static cost.`\n\n**Ranked list \u2014 5 rows, each separated by a thin horizontal rule.** Each row: large bold rank numeral (`#1`\u2026`#5`) in the left margin, then a bold `path:line`, then the function name (plain monospace), then the heuristic title (bold), then badges, then a metrics line, then a wrapped explanation.\n\n- **#1** `src/output/report.rs:144` `print` **Heap allocation inside loop (Rust)** \u2014 badges: `HOT` (red/orange text+border), `HIGH` (dark border), `PRODUCTION` (dark border)\n  Metrics: `213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%`\n  Text: `loop performs 10 per-iteration allocation(s) (format, to_string) at loop depth 2 \u2014 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n\n- **#2** `src/output/report.rs:49` `print` **Heap allocation inside loop (Rust)** \u2014 badges `HOT`, `HIGH`, `PRODUCTION`\n  Metrics: `213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%`\n  Text: `loop performs 3 per-iteration allocation(s) (format, to_owned, vec) at loop depth 1 \u2014 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n\n- **#3** `src/options.rs:304` `from_cli_arguments` **Heap allocation inside loop (Rust)** \u2014 badges `HOT`, `HIGH`, `PRODUCTION`\n  Metrics: `165 static cost units (v2) \u00b7 24\u00d7 median \u00b7 top 1%`\n  Text: `loop performs 1 per-iteration allocation(s) (to_string) at loop depth 1 \u2014 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n\n- **#4** `src/export/csv.rs:29` `serialize` **Heap allocation inside loop (Rust)** \u2014 badges `HOT`, `HIGH`, `PRODUCTION`\n  Metrics: `61 static cost units (v2) \u00b7 8.7\u00d7 median \u00b7 top 2%`\n  Text: `loop performs 1 per-iteration allocation(s) (format) at loop depth 1 \u2014 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n\n- **#5** `src/export/csv.rs:47` `serialize` **Heap allocation inside loop (Rust)** \u2014 badges `HOT`, `HIGH`, `PRODUCTION`\n  Metrics: `61 static cost units (v2) \u00b7 8.7\u00d7 median \u00b7 top 2%`\n  Text: `loop performs 2 per-iteration allocation(s) (to_owned, to_string) at loop depth 2 \u2014 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n\n**Footer link (blue, underlined):** `Complete ranked list \u2014 all 346 findings (production-first)`\n\n**Footer caption:** `16 non-production files demoted \u00b7 2 component-level findings in Explorer`\n\n**Visual encoding observed:** rank = vertical order + large `#N` numerals; severity = `HOT`/`HIGH` badges (HOT is the only coloured one, red/orange); scope = `PRODUCTION` badge; magnitude = plain numeric text (`static cost units (v2)`, `\u00d7 median`, `top N%`). **No bars, no axes, no colour scale, no icons** are visible.\n\n**Ambiguous/unreadable:** nothing was illegible. Unexplained semantics: what \"static cost units (v2)\" measures, what population \"median\" and \"top 1%/2%\" refer to, and whether #1 vs #2 (identical 213 / 30\u00d7 / top 1%) differ only by allocation count/depth. All five rows are the same heuristic, so the view shows no diversity of finding type.\n\n```json\n{\n  \"question_answered\": \"Which specific file:line should I open and profile first when triaging this codebase's static performance findings, given that the list is ordered production-code-first rather than by raw score?\",\n  \"action\": \"Open src/output/report.rs:144 in function `print` and profile it: the loop there makes 10 per-iteration heap allocations (format, to_string) at loop depth 2 (213 static cost units, 30\u00d7 median, top 1%) \u2014 hoist those allocations or reuse a buffer; then do the same for src/output/report.rs:49.\",\n  \"blockers\": [],\n  \"confidence\": 0.92\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.92,
+      "image": "02.png",
+      "question_answered": "Where do I look first? \u2014 which file:line should I open and profile first",
+      "read": 1,
+      "slot": "KV1",
+      "verdict": "PASS",
+      "view": "hyperfine-kv1"
+    },
+    {
+      "action": "Profile src/output/report.rs:19 (print) first",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "**STEP 1 \u2014 DESCRIPTION**\n\n**Heading / question:** \"Where might time plausibly go?\"\n**Sub-caption:** \"Profile the named function first \u2014 static candidate, confirm with a profiler.\"\n**Legend line:** \"Bars scale within each block: blue = ranked functions, grey = demoted functions.\"\n\n**Ranked block (blue horizontal bars, left-aligned path:line + function name, bar in middle column, metrics right):**\n\n1. `src/output/report.rs:19 print` \u2014 bar full width \u2014 \"213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%\" \u2014 orange badge: \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n2. `src/options.rs:254 from_cli_arguments` \u2014 bar \u224878% width \u2014 \"165 static cost units (v2) \u00b7 24\u00d7 median \u00b7 top 1%\" \u2014 badge \"UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE\"\n3. `src/command.rs:226 build_from_cli_arguments` \u2014 bar \u224851% \u2014 \"109 static cost units (v2) \u00b7 16\u00d7 median \u00b7 top 1%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n4. `src/export/csv.rs:13 serialize` \u2014 bar \u224829% \u2014 \"61 static cost units (v2) \u00b7 8.7\u00d7 median \u00b7 top 2%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n5. `src/shell_syntax.rs:71 next` \u2014 bar \u224827% \u2014 \"57 static cost units (v2) \u00b7 8.1\u00d7 median \u00b7 top 3%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n6. `src/main.rs:34 run` \u2014 bar \u224821% \u2014 \"45 static cost units (v2) \u00b7 6.4\u00d7 median \u00b7 top 4%\" \u2014 badge \"UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE\"\n7. `src/metric.rs:196 parse_list` \u2014 bar \u224821% \u2014 \"44 static cost units (v2) \u00b7 6.3\u00d7 median \u00b7 top 4%\" \u2014 badge \"UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE\"\n8. `src/command.rs:362 build_parameter_scan_commands` (wraps to two lines) \u2014 bar \u224820% \u2014 \"43 static cost units (v2) \u00b7 6.1\u00d7 median \u00b7 top 5%\" \u2014 badge \"UNKNOWN-TRIP \u00d72 \u2014 ESTIMATE INCOMPLETE\"\n\n**Demoted block (grey bars, separate visual block below a divider):**\n\n9. `src/benchmark/mod.rs:160 run` \u2014 grey tag badge under the path: \"NON-PRODUCTION \u2014 DEMOTED\" \u2014 grey bar full width (its own block's max) \u2014 \"178 static cost units (v2) \u00b7 25\u00d7 median \u00b7 top 1%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n10. `tests/execution_order_tests.rs:31 arg` \u2014 grey tag: \"NON-PRODUCTION + NO-LOOP \u2014 DEMOTED\" \u2014 grey bar \u224846% \u2014 \"81 static cost units (v2) \u00b7 12\u00d7 median \u00b7 top 1%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n\n**Footer:**\n- Blue underlined link: \"Complete cost-ranked list (353 functions)\"\n- Muted line: \"9 startup functions demoted \u00b7 297 no-loop functions demoted \u00b7 16 non-production files demoted\"\n\n**Visual encoding:** horizontal bars on a shared per-block track (light-grey background track visible behind each bar), blue = ranked production functions, grey = demoted; bar length \u221d static cost units, rescaled independently within each block (so grey 178-unit bar looks as long as blue 213-unit bar \u2014 not comparable across blocks). Row order = descending cost within block. Right column: three comma/\u00b7-separated anchors \u2014 absolute \"static cost units (v2)\", a \"\u00d7 median\" multiple, and a \"top N%\" percentile. Orange bordered badges flag estimate quality.\n\n**Ambiguous / unreadable:** none is illegible; the image renders crisply. Semantically ambiguous: the definitions of \"static cost units (v2)\", \"median\" anchor, and \"UNKNOWN-TRIP \u00d7N\" are not explained in the view; and \"top 1%\" for a demoted test/benchmark function is unexplained (percentile appears computed against all 353 functions, not within block).\n\n```json\n{\n  \"question_answered\": \"Which named functions are the most plausible places where runtime is being spent \u2014 ranked by static cost estimate \u2014 so I know which single function to point a profiler at first, while keeping demoted (non-production / no-loop / startup) functions visibly separated from the production ranking.\",\n  \"action\": \"Profile src/output/report.rs:19 `print` first (213 static cost units (v2), 30\u00d7 median, top 1%, the longest blue bar), then src/options.rs:254 `from_cli_arguments` (165, 24\u00d7 median); note both carry an \"UNKNOWN-TRIP \u2014 ESTIMATE INCOMPLETE\" badge, so confirm with a real profiler before acting on the ranking.\",\n  \"blockers\": [\n    \"Every row, including the #1 candidate, is flagged \"ESTIMATE INCOMPLETE\" (UNKNOWN-TRIP \u00d7N), so the magnitudes are explicitly unconfirmed and the ranking order could shift.\",\n    \"The view does not define what \"static cost units (v2)\", the \"\u00d7 median\" anchor, or \"UNKNOWN-TRIP \u00d7N\" mean, so absolute severity cannot be judged from this image alone.\",\n    \"Bars rescale within each block, so the grey 178-unit demoted bar visually matches the blue 213-unit bar \u2014 cross-block length comparison is misleading without reading the numbers.\",\n    \"Percentiles (e.g. \"top 1%\" for the demoted tests/execution_order_tests.rs:31 arg) are not labelled as block-relative vs overall, leaving their scope ambiguous.\"\n  ],\n  \"confidence\": 0.88\n}\n```"
+        }
+      ],
+      "blockers": [
+        "static cost units / median / trip terms are not defined in-view",
+        "bars rescale per block"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.88,
+      "image": "03.png",
+      "question_answered": "Where might time plausibly go? \u2014 which function should I profile first",
+      "read": 1,
+      "slot": "KV3",
+      "verdict": "PASS",
+      "view": "hyperfine-kv3"
+    },
+    {
+      "action": "Open src/output/report.rs:144 (print) and profile it",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "empty",
+          "transcript": "Blind vision read of `/var/tmp/opencode/v5-blind/04.png` delivered above \u2014 description first, then the strict JSON block. Awaiting the next image or instruction."
+        },
+        {
+          "attempt": 2,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 DESCRIPTION\n\n**Header block**\n- Heading (bold, larger): `Where do I look first?`\n- Line below: `Open the first path:line and profile it \u2013 static candidates, confirm with a profiler.` (en-dash before \"static\")\n- Line below: `Ranked: production code first, then severity, then confidence, then static cost.`\n\n**Ranked rows \u2014 5 visible, each separated by a thin horizontal rule.** Rank marker (#1\u2026#5) is large bold type at far left. Each row header = bold monospace `path:line`, then function name (plain monospace), then heuristic title (bold), then badges. Under the header: a metrics line, then a two-line explanation.\n\n- **#1** `src/output/report.rs:144` `print` **Heap allocation inside loop (Rust)** \u2014 badges: `HOT` (red text/border), `HIGH`, `PRODUCTION` (dark text, grey border)\n  - `213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%`\n  - `loop performs 10 per-iteration allocation(s) (format, to_string) at loop depth 2 \u2013 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n- **#2** `src/output/report.rs:49` `print` **Heap allocation inside loop (Rust)** \u2014 `HOT` `HIGH` `PRODUCTION`\n  - `213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%`\n  - `loop performs 3 per-iteration allocation(s) (format, to_owned, vec) at loop depth 1 \u2013 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n- **#3** `src/options.rs:304` `from_cli_arguments` **Heap allocation inside loop (Rust)** \u2014 `HOT` `HIGH` `PRODUCTION`\n  - `165 static cost units (v2) \u00b7 24\u00d7 median \u00b7 top 1%`\n  - `loop performs 1 per-iteration allocation(s) (to_string) at loop depth 1 \u2013 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n- **#4** `src/export/csv.rs:29` `serialize` **Heap allocation inside loop (Rust)** \u2014 `HOT` `HIGH` `PRODUCTION`\n  - `61 static cost units (v2) \u00b7 8.7\u00d7 median \u00b7 top 2%`\n  - `loop performs 1 per-iteration allocation(s) (format) at loop depth 1 \u2013 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n- **#5** `src/export/csv.rs:47` `serialize` **Heap allocation inside loop (Rust)** \u2014 `HOT` `HIGH` `PRODUCTION`\n  - `61 static cost units (v2) \u00b7 8.7\u00d7 median \u00b7 top 2%`\n  - `loop performs 2 per-iteration allocation(s) (to_owned, to_string) at loop depth 2 \u2013 allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization`\n\n**Footer**\n- Blue underlined link: `Complete ranked list \u2013 all 346 findings (production-first)`\n- Grey line: `16 non-production files demoted \u00b7 2 component-level findings in Explorer`\n\n**Visual encoding:** there are **no bars, no charts, no colour scale, no numeric axis**. Encoding is purely ordinal \u2014 rank position (#1\u2013#5, top-to-bottom), large rank numerals, and badge colour (only `HOT` is red; `HIGH`/`PRODUCTION` are neutral). All five rows are the same heuristic; only file/function/counts differ.\n\n**Ambiguous/unreadable:** nothing is illegible, but three things are unexplained by the view itself: (a) what \"static cost units (v2)\" measures, (b) what the \"median\"/\"top %\" baseline population is (30\u00d7 median of what?), (c) #1 and #2 share identical metrics (213 / 30\u00d7 / top 1%) yet #1 is ranked above \u2014 the tiebreak shown in the ranking line is not demonstrated.\n\n```json\n{\n  \"question_answered\": \"Which single file:line should I open and profile first to get the biggest static-analysis-predicted performance win, given that these are static candidates I must confirm with a profiler?\",\n  \"action\": \"Open src/output/report.rs:144 in function print and profile it \u2014 it reports 10 per-iteration heap allocations (format, to_string) at loop depth 2; hoist the allocation or reuse a buffer, then re-run to confirm against the profiler.\",\n  \"blockers\": [\n    \"No definition given for 'static cost units (v2)' or for the 'median'/'top %' baseline, so 30\u00d7 median cannot be interpreted as real speedup potential\",\n    \"Ranking ties (#1 and #2 both 213 units / 30\u00d7 median / top 1%) are not visibly broken by any shown field, so #1's precedence over #2 is unexplained by the image\",\n    \"No bar/scale visual encoding \u2014 ordering is positional only, so relative magnitude between rows must be read from the numbers\"\n  ],\n  \"confidence\": 0.72\n}\n```"
+        }
+      ],
+      "blockers": [
+        "static cost units / median baseline undefined",
+        "tie #1/#2 not visibly broken",
+        "no bar scale"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.72,
+      "image": "04.png",
+      "question_answered": "Where do I look first? \u2014 which file:line should I open and profile first",
+      "read": 2,
+      "slot": "KV1",
+      "verdict": "PASS",
+      "view": "hyperfine-kv1"
+    },
+    {
+      "action": "Avoid hand-editing tests/unity/examples/unity_config.h; cJSON.h is the highest-impact production header at 5 dependents",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "**STEP 1 \u2014 Description**\n\n**Heading:** `What breaks if I touch it?`\n**Sub-caption:** `Changing a file here forces re-import of its dependents \u2013 do not edit directly.`\n\n**Table of 8 rows** (each row = file path, optional badge, horizontal bar, right-aligned metrics text):\n\n| # | Path | Badge | Metrics text |\n|---|---|---|---|\n| 1 | `tests/unity/examples/unity_config.h` | `TEST` | `22 dependents \u00b7 22% of scanned files \u00b7 top 1%` |\n| 2 | `tests/unity/src/unity.h` | `TEST` | `22 dependents \u00b7 22% of scanned files \u00b7 top 2%` |\n| 3 | `tests/common.h` | `TEST` | `21 dependents \u00b7 21% of scanned files \u00b7 top 3%` |\n| 4 | `cJSON.h` | (none) | `5 dependents \u00b7 5% of scanned files \u00b7 top 4%` |\n| 5 | `cJSON_Utils.h` | (none) | `4 dependents \u00b7 4% of scanned files \u00b7 top 5%` |\n| 6 | `tests/unity/test/testdata/Defs.h` | `TEST` | `3 dependents \u00b7 3% of scanned files \u00b7 top 6%` |\n| 7 | `tests/unity/extras/fixture/test/unity_output_Spy.h` (wraps onto a second line as `\u2026unity_outpu` / `t_Spy.h`) | `TEST` | `2 dependents \u00b7 2% of scanned files \u00b7 top 7%` |\n| 8 | `tests/unity/test/testdata/CException.h` | `TEST` | `2 dependents \u00b7 2% of scanned files \u00b7 top 8%` |\n\n**Badges:** `TEST` appears as a small pill with light lavender fill and purple outlined border, right after the path, on all test-tree files; `cJSON.h` and `cJSON_Utils.h` have no badge.\n\n**Visual encoding:** one horizontal bar per row inside a light-grey full-width track. Bar fill is a solid medium blue; length grows with dependent count (rows 1\u20132 longest, row 3 just behind, then a large drop-off to rows 4\u20138 which are short stubs). Rows are separated by thin horizontal rules; the list is left-aligned paths, centred bars, right-aligned metric text.\n\n**Footer (two lines):**\n- `showing top 8 of 23 files with resolved dependents`\n- `resolved 96 of 229 include edges`\n\n**Ambiguous / unreadable:**\n- No line numbers and no function names anywhere \u2014 file paths only.\n- The `top N%` suffix runs 1%\u20268% in lockstep with row order, so it reads as a **rank ordinal mislabelled as a percent**, not a percentile.\n- `N dependents` and `N% of scanned files` are numerically identical in every row, implying a scanned-file denominator of exactly 100 \u2014 unstated in the view.\n- Bar pixel lengths aren't perfectly proportional to counts at the low end (small rows look floored), so exact scaling is uncertain.\n- Row 7's path is wrapped/truncated mid-word (`unity_outpu` + `t_Spy.h`).\n\n```json\n{\n  \"question_answered\": \"Which header files are the riskiest to edit because the largest number of other scanned files include them, so touching them forces a re-import of those dependents?\",\n  \"action\": \"Avoid hand-editing tests/unity/examples/unity_config.h (ranked top 1%, 22 dependents, 22% of scanned files) \u2014 the next-safest edit target with real impact is cJSON.h at only 5 dependents; no line numbers or functions are shown, so the action can only be scoped to the file.\",\n  \"blockers\": [\n    \"No file:line or function names are displayed, so no precise edit location can be cited\",\n    \"The 'top N%' column appears to be a row rank (1-8) labelled as a percentage, which is ambiguous\",\n    \"Percent-of-scanned-files duplicates the dependent count exactly (denominator of 100 is never stated)\",\n    \"Row 7 path is wrapped mid-word (unity_outpu / t_Spy.h)\"\n  ],\n  \"confidence\": 0.74\n}\n```"
+        }
+      ],
+      "blockers": [
+        "top N% reads like a rank ordinal",
+        "no file:line by design",
+        "row 7 wraps mid-word"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.74,
+      "image": "05.png",
+      "question_answered": "What breaks if I touch it? \u2014 which header files are riskiest to edit",
+      "read": 2,
+      "slot": "KV2",
+      "verdict": "PASS",
+      "view": "cJSON-kv2"
+    },
+    {
+      "action": "Open compat/getline.c:85 (getdelim) and profile it",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "**STEP 1 \u2014 Description of what I actually see**\n\n**Heading:** `Where do I look first?` (bold, monospace, top-left)\n\n**Sub-instruction line 1:** `Open the first path:line and profile it \u2014 static candidates, confirm with a profiler.`\n**Sub-instruction line 2:** `Ranked: production code first, then severity, then confidence, then static cost.`\n\n**Layout:** a vertical ranked list of 5 numbered finding cards, each separated by a thin horizontal rule. Rank markers `#1`\u2013`#5` are large bold at far left. Each row's first line = `path:line` (bold) + function name (bold) + rule title (bold) + pill badges. Second line = three metrics. Third/fourth lines = plain-language explanation. No bars, no sparklines, no colour scale \u2014 encoding is purely ordinal rank + badges + numeric metrics.\n\n**Row #1** \u2014 `compat/getline.c:85` `getdelim` **Heap allocation inside loop** \u2014 badges: `HOT` (red/pink outline), `HIGH` (dark outline), `PRODUCTION` (dark outline)\n- `51 static cost units (v2) \u00b7 2.6\u00d7 median \u00b7 top 14%`\n- `per-iteration heap allocation via \\`realloc\\` at loop depth 1 \u2014 allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization`\n\n**Row #2** \u2014 `screen.c:823` `screen_print` **Expensive setup or I/O call inside loop** \u2014 badges: `HOT`, `MEDIUM`, `PRODUCTION`\n- `92 static cost units (v2) \u00b7 4.6\u00d7 median \u00b7 top 4%`\n- `\\`snprintf\\` runs every iteration at loop depth 1 \u2014 hoisting the call out of the loop or batching its work is a candidate optimization`\n\n**Row #3** \u2014 `compat/forkpty-aix.c:61` `forkpty` **Expensive setup or I/O call inside loop** \u2014 badges: `HOT`, `MEDIUM`, `PRODUCTION`\n- `59 static cost units (v2) \u00b7 3.0\u00d7 median \u00b7 top 10%`\n- `\\`read\\` performs streaming I/O every iteration at loop depth 1 \u2014 the call transfers element-wise and cannot be hoisted; batching into block reads or writes is a candidate optimization`\n\n**Row #4** \u2014 `tty.c:601` `tty_raw` **Expensive setup or I/O call inside loop** \u2014 badges: `HOT`, `MEDIUM`, `PRODUCTION`\n- `36 static cost units (v2) \u00b7 1.8\u00d7 median \u00b7 top 28%`\n- `\\`write\\` performs streaming I/O every iteration at loop depth 1 \u2014 the call transfers element-wise and cannot be hoisted; batching into block reads or writes is a candidate optimization`\n\n**Row #5** \u2014 `compat/closefrom.c:84` `closefrom_fallback` **Expensive setup or I/O call inside loop** \u2014 badges: `HOT`, `MEDIUM`, `PRODUCTION`\n- `14 static cost units (v2) \u00b7 0.7\u00d7 median \u00b7 top 60%`\n- `\\`close\\` runs every iteration at loop depth 1 \u2014 hoisting the call out of the loop or batching its work is a candidate optimization`\n\n**Footer:** blue underlined link `Complete ranked list \u2014 all 7543 findings (production-first)`; caption beneath: `1 non-production file demoted \u00b7 2 component-level findings in Explorer`\n\n**Ambiguous/unreadable:** nothing illegible. Notable oddities (not unreadable): the list is not sorted by static cost (92 units sits at #2 while 51 is #1), consistent with the stated production\u2192severity\u2192confidence\u2192cost ordering; #5's `0.7\u00d7 median` and `top 60%` are below-median/bottom-half values yet still shown as `HOT`; there is no visual bar/position encoding beyond the `#N` rank numerals.\n\n```json\n{\n  \"question_answered\": \"Which specific lines of code should I open and profile first to get the most value out of a static-analysis scan, given a huge pile of findings \u2014 i.e. what is the single highest-priority optimization candidate right now?\",\n  \"action\": \"Open compat/getline.c:85 in getdelim and profile it \u2014 it is ranked #1 (HOT/HIGH/PRODUCTION, 51 static cost units, 2.6x median, top 14%) because of a per-iteration realloc heap allocation at loop depth 1; then confirm with a profiler before hoisting the allocation or reusing the buffer.\",\n  \"blockers\": [\n    \"No bars or shared visual scale \u2014 all encoding is textual, so magnitude comparison relies entirely on reading the three metrics per row\",\n    \"Rank order does not follow static cost (92 units at #2 vs 51 at #1); the stated multi-key ordering (production, severity, confidence, cost) is not shown as explicit columns, so the tie-break is inferred rather than visible\",\n    \"#5 shows HOT despite 0.7x median / top 60% (below-median values); the meaning of the HOT badge threshold is not explained in the view\",\n    \"No indication of what the 'v2' cost unit scale is or its range across the full 7543 findings\"\n  ],\n  \"confidence\": 0.85\n}\n```"
+        }
+      ],
+      "blockers": [
+        "rank order does not follow cost",
+        "units undefined"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.85,
+      "image": "06.png",
+      "question_answered": "Where do I look first? \u2014 which file:line should I open and profile first",
+      "read": 2,
+      "slot": "KV1",
+      "verdict": "PASS",
+      "view": "tmux-kv1"
+    },
+    {
+      "action": "Profile cJSON.c:253 (cJSON_Delete) first",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description\n\n**Header**\n- Heading (bold, sans-serif): \"Where might time plausibly go?\"\n- Sub-caption: \"Profile the named function first \u2014 static candidate, confirm with a profiler.\"\n- Encoding note: \"Bars scale within each block: blue = ranked functions, grey = demoted functions.\"\n\n**Visual encoding:** horizontal bar chart + list hybrid. Each row = left column with monospaced `file:line function` (path and line number bolded), middle column with a horizontal bar, right column with numeric stats and pill badges. Two blocks: blue bars (ranked) on top, grey bars (demoted) below, each block scaled independently to its own max.\n\n**Ranked block (blue bars, top 1%, all with orange \"UNKNOWN-TRIP \u2014 ESTIMATE INCOMPLETE\" badges):**\n\n| Path:line | Function | Bar | Stats | Badge |\n|---|---|---|---|---|\n| cJSON.c:253 | cJSON_Delete | full width (block max) | 137 static cost units (v2) \u00b7 69\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE |\n| cJSON.c:3072 | cJSON_Compare | ~74% | 101 static cost units (v2) \u00b7 51\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE |\n| cJSON_Utils.c:1141 | create_patches | ~69% | 94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d74 \u2014 ESTIMATE INCOMPLETE |\n| cJSON.c:1780 | print_object | ~61% | 84 static cost units (v2) \u00b7 42\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE |\n| cJSON.c:824 | parse_string | ~56% | 76 static cost units (v2) \u00b7 38\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d72 \u2014 ESTIMATE INCOMPLETE |\n| cJSON.c:954 | print_string_ptr | ~56% | 76 static cost units (v2) \u00b7 38\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d72 \u2014 ESTIMATE INCOMPLETE |\n| cJSON_Utils.c:604 | compare_json | ~56% | 76 static cost units (v2) \u00b7 38\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d72 \u2014 ESTIMATE INCOMPLETE |\n| cJSON.c:307 | parse_number | ~54% | 74 static cost units (v2) \u00b7 37\u00d7 median \u00b7 top 1% | UNKNOWN-TRIP \u00d72 \u2014 ESTIMATE INCOMPLETE |\n\n**Demoted block (grey bars):**\n\n| Path:line | Function | Bar | Stats | Badges |\n|---|---|---|---|---|\n| tests/unity/test/tests/testunity.c:4557 | testFloatPrintingRandomSamples | near-full (block max) | 2000008 static cost units (v2) \u00b7 1000004\u00d7 median \u00b7 top 1% | grey: NON-PRODUCTION \u2014 DEMOTED; green: KNOWN TRIP \u00d71000000 \u2014 VERIFY IT ACTUALLY RUNS |\n| tests/parse_hex4.c:31 | parse_hex4_should_parse_all_combinations | very short (~6%) | 131078 static cost units (v2) \u00b7 65539\u00d7 median \u00b7 top 1% | grey: NON-PRODUCTION \u2014 DEMOTED; green: KNOWN TRIP \u00d765536 \u2014 VERIFY IT ACTUALLY RUNS |\n\n**Footer**\n- Blue underlined link: \"Complete cost-ranked list (1055 functions)\"\n- Caption: \"31 startup functions demoted \u00b7 970 no-loop functions demoted \u00b7 93 non-production files demoted\"\n\n**Badge styling:** UNKNOWN-TRIP = amber/orange text on pale-yellow fill; KNOWN TRIP = green text on pale-green fill; NON-PRODUCTION \u2014 DEMOTED = grey text on pale-grey fill.\n\n**Ambiguities/unreadable:** None structurally \u2014 all text is legible. Terms like \"static cost units (v2)\", \"UNKNOWN-TRIP\", and \"KNOWN TRIP\" are not defined inline (jargon the view assumes the reader knows). The two green \"KNOWN TRIP\" badges on the demoted rows sit tight against the \"top 1%\" text, slightly crowded, but readable.\n\n```json\n{\n  \"question_answered\": \"In this cJSON codebase, which functions are the most plausible static candidates for where execution time goes, so a maintainer knows which function to point a profiler at first \u2014 and which high-cost-looking entries are test/non-production code that were demoted from the ranking?\",\n  \"action\": \"Profile cJSON_Delete at cJSON.c:253 first \u2014 it is the top-ranked candidate (137 static cost units, 69\u00d7 the median), but note its estimate is flagged UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE, so treat the number as a hint, not ground truth; alternatively, verify whether the demoted test function testFloatPrintingRandomSamples (tests/unity/test/tests/testunity.c:4557, KNOWN TRIP \u00d71000000) actually runs, since its huge trip count suggests it dominates raw cost if enabled.\",\n  \"blockers\": [],\n  \"confidence\": 0.9\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.9,
+      "image": "07.png",
+      "question_answered": "Where might time plausibly go? \u2014 which function should I profile first",
+      "read": 1,
+      "slot": "KV3",
+      "verdict": "PASS",
+      "view": "cJSON-kv3"
+    },
+    {
+      "action": "Do not edit tmux.h directly (160 dependents); prefer compat/imsg.h",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "**STEP 1 \u2014 DESCRIPTION**\n\n**Heading/question (verbatim):**\n- Title: `What breaks if I touch it?`\n- Subtitle: `Changing a file here forces re-import of its dependents \u2014 do not edit directly.`\n\n**Layout:** A single-column list of 8 rows. Each row = a file path on the left (monospace, no visible column header for this column), a horizontal bar in a light track in the middle, and a text readout on the right. Thin horizontal rules separate rows; rows appear to alternate whitever/very-faint shading. Footer has two lines.\n\n**Every visible row (path \u2192 bar \u2192 right-hand text, verbatim):**\n1. `tmux.h` \u2192 longest blue bar (fills roughly 60\u201375% of the track) \u2192 `160 dependents \u00b7 74% of scanned files \u00b7 top 1%`\n2. `compat.h` \u2192 bar ~25% of track \u2192 `43 dependents \u00b7 20% of scanned files \u00b7 top 1%`\n3. `compat/imsg.h` \u2192 tiny sliver \u2192 `3 dependents \u00b7 1% of scanned files \u00b7 top 1%`\n4. `xmalloc.h` \u2192 tiny sliver \u2192 `2 dependents \u00b7 1% of scanned files \u00b7 top 2%`\n5. `compat/bitstring.h` \u2192 hairline sliver \u2192 `1 dependent \u00b7 0% of scanned files \u00b7 top 2%`\n6. `compat/queue.h` \u2192 hairline sliver \u2192 `1 dependent \u00b7 0% of scanned files \u00b7 top 3%`\n7. `compat/tree.h` \u2192 hairline sliver \u2192 `1 dependent \u00b7 0% of scanned files \u00b7 top 3%`\n8. `compat/vis.h` \u2192 hairline sliver \u2192 `1 dependent \u00b7 0% of scanned files \u00b7 top 4%`\n\n**Footer (verbatim):**\n- `showing top 8 of 10 files with resolved dependents`\n- `resolved 214 of 234 include edges`\n\n**Visual encoding:** Horizontal bar chart. Bar length is proportional to dependent count (linear scale anchored at 160 = near-full track; 43 \u2248 quarter; 1\u20133 = barely visible). Fill is a solid medium blue; track is a pale blue-grey. Colour carries no additional encoding (all bars same blue). The right-hand text repeats the magnitude as a count, a percentage \"of scanned files\", and a `top N%` rank label. No axis, no gridlines, no legend.\n\n**Ambiguous / unreadable / missing:**\n- No column headers at all \u2014 the labels \"dependents / % of scanned files / top %\" are only inferable from the inline text.\n- The `top N%` field has no stated denominator (top 1% of what \u2014 files by rank? by size?).\n- No line numbers and no function names anywhere in the view; only file paths.\n- Only 8 of 10 rows shown; the bottom 2 are omitted by the `top 8 of 10` cap.\n- \"resolved 214 of 234 include edges\" leaves 20 edges unresolved \u2014 impact of those is unknown.\n- Nothing is illegible at this resolution.\n\n```json\n{\n  \"question_answered\": \"Which header files have the biggest downstream blast radius \u2014 i.e. if I edit this file, how many other scanned files get force-re-imported, so I know which files are risky to touch directly.\",\n  \"action\": \"Do not edit `tmux.h` directly (160 dependents, 74% of scanned files) \u2014 put the change behind a narrower header such as `compat/imsg.h` (3 dependents) or `xmalloc.h` (2 dependents) to avoid re-importing three quarters of the codebase; if the tmux.h edit is unavoidable, budget for re-processing 160 dependents.\",\n  \"blockers\": [\n    \"No line numbers or function names are shown, so the action can only reference whole files, not a specific site\",\n    \"No column headers; field meanings are inferred from inline text\",\n    \"Semantics of the 'top N%' column are undefined (no stated denominator)\",\n    \"Only top 8 of 10 rows are displayed; 2 files are hidden\",\n    \"20 of 234 include edges are unresolved, so blast radius may be understated\"\n  ],\n  \"confidence\": 0.78\n}\n```"
+        }
+      ],
+      "blockers": [
+        "no file:line by design",
+        "top N% denominator undefined",
+        "top 8 of 10 shown"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.78,
+      "image": "08.png",
+      "question_answered": "What breaks if I touch it? \u2014 biggest downstream blast radius",
+      "read": 1,
+      "slot": "KV2",
+      "verdict": "PASS",
+      "view": "tmux-kv2"
+    },
+    {
+      "action": "Avoid hand-editing src/quantity/mod.rs (12 dependents)",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description\n\n**Header (top-left, bold, black on white):**\n> **What breaks if I touch it?**\n\n**Sub-caption (grey, below heading):**\n> Changing a file here forces re-import of its dependents \u2013 do not edit directly.\n\n**Body:** a table-like list of 8 rows. Each row has: (a) a monospace file path on the left, (b) an optional purple-outlined rectangular badge reading `BENCH` immediately after the path, (c) a horizontal **blue bar inside a light-grey track** (bar length encodes dependent count, rows sorted descending), (d) a right-hand metric block in monospace with four values.\n\n| # | Path | Badge | Metrics (right side) |\n|---|------|-------|----------------------|\n| 1 | `src/quantity/mod.rs` | \u2014 | `12 dependents \u00b7 23% of scanned files \u00b7 top 2% \u00b7 6.0\u00d7 median` |\n| 2 | `src/metric.rs` | \u2014 | `10 dependents \u00b7 19% of scanned files \u00b7 top 4% \u00b7 5.0\u00d7 median` |\n| 3 | `src/benchmark/measurement.rs` | `BENCH` | `9 dependents \u00b7 17% of scanned files \u00b7 top 6% \u00b7 4.5\u00d7 median` |\n| 4 | `src/benchmark/benchmark_result.rs` | `BENCH` | `8 dependents \u00b7 15% of scanned files \u00b7 top 8% \u00b7 4.0\u00d7 median` |\n| 5 | `src/export/mod.rs` | \u2014 | `6 dependents \u00b7 11% of scanned files \u00b7 top 9% \u00b7 3.0\u00d7 median` |\n| 6 | `src/command.rs` | \u2014 | `5 dependents \u00b7 9% of scanned files \u00b7 top 11% \u00b7 2.5\u00d7 median` |\n| 7 | `src/options.rs` | \u2014 | `5 dependents \u00b7 9% of scanned files \u00b7 top 13% \u00b7 2.5\u00d7 median` |\n| 8 | `src/benchmark/mod.rs` | `BENCH` | `4 dependents \u00b7 8% of scanned files \u00b7 top 15% \u00b7 2.0\u00d7 median` |\n\n**Visual encoding:** horizontal bar chart; blue fill vs. light-grey remainder of a fixed-width track; row 1's bar nearly fills the track, row 8's is shortest. Position is rank-ordered (descending dependents). No axis, ticks, or max-value label; no legend explaining the track's full width. The implied median is 2 dependents (every \"\u00d7 median\" value = dependents \u00f7 2). \"top N%\" appears to be the rank percentile (rank \u00f7 ~52 scanned files), not a share.\n\n**Footer (two grey lines, bottom-left):**\n> showing top 8 of 41 files with resolved dependents\n> resolved 205 of 238 include edges\n\n**Ambiguous / unreadable:** Nothing is pixel-unreadable, but **no line numbers and no function names appear anywhere** \u2014 only file paths. The `BENCH` badge's meaning is unexplained. The bar track's absolute scale is unlabeled. The `top 2% \u2026 top 15%` column's semantics (rank percentile vs. percentage share) is not stated and reads counterintuitively for the #1 row.\n\n```json\n{\n  \"question_answered\": \"Which source files have the largest re-import blast radius \u2014 i.e. if I edit this file, how many other files must be re-imported/rebuilt, so I know which files are riskiest to touch and should not be edited casually\",\n  \"action\": \"Avoid hand-editing src/quantity/mod.rs: it has 12 dependents (6.0\u00d7 the median of 2, 23% of scanned files, top 2% by rank), so any change there forces re-import of nearly a quarter of the codebase \u2014 if a change is unavoidable, change its interface deliberately and expect downstream re-import of those 12 dependents (image shows no line numbers or function names, so no finer citation is possible)\",\n  \"blockers\": [\n    \"No line numbers or function names are shown \u2014 only file paths, so no file:line action can be cited\",\n    \"Bar track has no axis, ticks, or max-value label; absolute scale is only inferable from the text metrics\",\n    \"Semantics of the 'top 2%' \u2026 'top 15%' column are unstated (rank percentile vs. share) and read counterintuitively for the top row\",\n    \"The BENCH badge is not defined anywhere in the view\"\n  ],\n  \"confidence\": 0.84\n}\n```"
+        }
+      ],
+      "blockers": [
+        "no file:line by design",
+        "top N% semantics unstated",
+        "BENCH badge undefined"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.84,
+      "image": "09.png",
+      "question_answered": "What breaks if I touch it? \u2014 biggest downstream blast radius",
+      "read": 1,
+      "slot": "KV2",
+      "verdict": "PASS",
+      "view": "hyperfine-kv2"
+    },
+    {
+      "action": "Treat tests/unity/examples/unity_config.h as edit-critical; cJSON.h is the top production header",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description\n\n**Heading:** \"What breaks if I touch it?\"\n**Subtitle:** \"Changing a file here forces re-import of its dependents \u2013 do not edit directly.\"\n\n**Table rows** (each row: file path, optional TEST badge, horizontal bar, then right-side stats \"N dependents \u00b7 N% of scanned files \u00b7 top N%\"):\n\n1. `tests/unity/examples/unity_config.h` [TEST badge] \u2014 longest blue bar (~90% of track width) \u2014 \"22 dependents \u00b7 22% of scanned files \u00b7 top 1%\"\n2. `tests/unity/src/unity.h` [TEST] \u2014 bar nearly identical length \u2014 \"22 dependents \u00b7 22% of scanned files \u00b7 top 2%\"\n3. `tests/common.h` [TEST] \u2014 bar slightly shorter \u2014 \"21 dependents \u00b7 21% of scanned files \u00b7 top 3%\"\n4. `cJSON.h` \u2014 short bar (~23% of track) \u2014 \"5 dependents \u00b7 5% of scanned files \u00b7 top 4%\"\n5. `cJSON_Utils.h` \u2014 shorter bar \u2014 \"4 dependents \u00b7 4% of scanned files \u00b7 top 5%\"\n6. `tests/unity/test/testdata/Defs.h` [TEST] \u2014 small bar \u2014 \"3 dependents \u00b7 3% of scanned files \u00b7 top 6%\"\n7. `tests/unity/extras/fixture/test/unity_output_Spy.h` [TEST] \u2014 path wraps across two lines (\"...unity_outpu\" / \"t_Spy.h\") \u2014 small bar \u2014 \"2 dependents \u00b7 2% of scanned files \u00b7 top 7%\"\n8. `tests/unity/test/testdata/CException.h` [TEST] \u2014 small bar \u2014 \"2 dependents \u00b7 2% of scanned files \u00b7 top 8%\"\n\n**Footer (two lines):** \"showing top 8 of 23 files with resolved dependents\" and \"resolved 96 of 229 include edges\".\n\n**Visual encoding:** horizontal bar chart; blue filled bar on a pale track; bar length proportional to dependent count; rows sorted descending by dependents. TEST badge = light lavender pill with purple monospace text. No line numbers anywhere (paths only). The \"top N%\" value increments 1,2,\u20268 down the rows (looks like rank, not a true percentile). All rows are legible; the only wrap is row 7's long path.\n\n```json\n{\n  \"question_answered\": \"Which files in this scanned codebase (a C project with Unity test framework headers \u2014 looks like cJSON) have the highest fan-in, i.e., which files would force the most other files to be re-imported or rebuilt if edited \u2014 'what breaks if I touch it'.\",\n  \"action\": \"Treat tests/unity/examples/unity_config.h as edit-critical: it has 22 dependents (22% of scanned files, ranked top 1%), so any change forces re-import of roughly a fifth of the codebase; if a non-test file must be changed, cJSON.h is the highest-ranked production header (5 dependents, 5% of scanned files) and its 5 dependents should be rebuilt/verified first.\",\n  \"blockers\": [],\n  \"confidence\": 0.9\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.9,
+      "image": "10.png",
+      "question_answered": "What breaks if I touch it? \u2014 biggest downstream blast radius",
+      "read": 1,
+      "slot": "KV2",
+      "verdict": "PASS",
+      "view": "cJSON-kv2"
+    },
+    {
+      "action": "Profile cJSON.c:253 (cJSON_Delete) first",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description\n\n**Heading:** \"Where might time plausibly go?\"\n**Subtitle:** \"Profile the named function first \u2013 static candidate, confirm with a profiler.\"\n**Legend:** \"Bars scale within each block: blue = ranked functions, grey = demoted functions.\"\n\n**Ranked (blue) rows** \u2014 each shows `path:line function`, a horizontal blue bar, and stats \"N static cost units (v2) \u00b7 N\u00d7 median \u00b7 top 1%\" with an orange badge:\n\n1. `cJSON.c:253 cJSON_Delete` \u2014 longest blue bar \u2014 137 static cost units (v2) \u00b7 69\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d71 \u2013 ESTIMATE INCOMPLETE`\n2. `cJSON.c:3072 cJSON_Compare` \u2014 101 units \u00b7 51\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d71 \u2013 ESTIMATE INCOMPLETE`\n3. `cJSON_Utils.c:1141 create_patches` \u2014 94 units \u00b7 47\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d74 \u2013 ESTIMATE INCOMPLETE`\n4. `cJSON.c:1780 print_object` \u2014 84 units \u00b7 42\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d73 \u2013 ESTIMATE INCOMPLETE`\n5. `cJSON.c:824 parse_string` \u2014 76 units \u00b7 38\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d72 \u2013 ESTIMATE INCOMPLETE`\n6. `cJSON.c:954 print_string_ptr` \u2014 76 units \u00b7 38\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d72 \u2013 ESTIMATE INCOMPLETE`\n7. `cJSON_Utils.c:604 compare_json` \u2014 76 units \u00b7 38\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d72 \u2013 ESTIMATE INCOMPLETE`\n8. `cJSON.c:307 parse_number` \u2014 74 units \u00b7 37\u00d7 median \u00b7 top 1% \u2014 `UNKNOWN-TRIP \u00d72 \u2013 ESTIMATE INCOMPLETE`\n\n**Demoted (grey) rows** \u2014 grey bar, grey \"NON-PRODUCTION \u2014 DEMOTED\" badge, green trip badge:\n\n9. `tests/unity/test/tests/testunity.c:4557 testFloatPrintingRandomSamples` \u2014 very long grey bar \u2014 2000008 units \u00b7 1000004\u00d7 median \u00b7 top 1% \u2014 `KNOWN TRIP \u00d71000000 \u2013 VERIFY IT ACTUALLY RUNS`\n10. `tests/parse_hex4.c:31 parse_hex4_should_parse_all_combinations` \u2014 tiny grey stub \u2014 131078 units \u00b7 65539\u00d7 median \u00b7 top 1% \u2014 `KNOWN TRIP \u00d765536 \u2013 VERIFY IT ACTUALLY RUNS`\n\n**Footer:** blue link \"Complete cost-ranked list (1055 functions)\"; below it \"31 startup functions demoted \u00b7 970 no-loop functions demoted \u00b7 93 non-production files demoted\".\n\n**Encoding:** horizontal bars; bar length = relative static cost, scaled separately within the ranked block and the demoted block (the 2,000,008-unit test bar is near-full-width while the ranked block maxes at 137). Blue = ranked production candidates, grey = demoted. Orange badges flag incomplete trip estimates; green badges flag known loop-trip multipliers on demoted test code.\n\n**Ambiguous/unreadable:** nothing illegible; all text is crisp. One interpretive nuance: \"top 1%\" appears on every row (including demoted ones) with no visible column header explaining its anchor.\n\n## STEP 2 \u2014 JSON\n\n```json\n{\n  \"question_answered\": \"Which named functions are the top static-analysis candidates for where execution time plausibly goes in this cJSON codebase \u2014 i.e., which function should a maintainer profile first to hunt a performance bottleneck \u2014 and which huge-cost entries are correctly demoted as non-production test noise?\",\n  \"action\": \"Profile cJSON_Delete at cJSON.c:253 first \u2014 it is the top-ranked production candidate (137 static cost units, 69\u00d7 median, top 1%), per the view's own instruction to profile the named function and confirm with a real profiler.\",\n  \"blockers\": [],\n  \"confidence\": 0.9\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.9,
+      "image": "11.png",
+      "question_answered": "Where might time plausibly go? \u2014 which function should I profile first",
+      "read": 2,
+      "slot": "KV3",
+      "verdict": "PASS",
+      "view": "cJSON-kv3"
+    },
+    {
+      "action": "Open cJSON_Utils.c:1188 (create_patches) and hoist/batch the sprintf",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description\n\n**Heading:** \"Where do I look first?\" (bold, monospace, top-left)\n\n**Subheading line 1:** \"Open the first path:line and profile it \u2014 static candidates, confirm with a profiler.\"\n\n**Subheading line 2:** \"Ranked: production code first, then severity, then confidence, then static cost.\"\n\n**Visual encoding:** A vertical ranked list of 5 cards (rows), each with a large bold rank number (#1\u2013#5) on the left. No bars or charts \u2014 ranking is positional. Each row contains: `path:line`, function name (bold), finding title (bold), badge chips, a metrics line, and a plain-language explanation paragraph. Badges: severity chips with coloured fills (red-filled `HOT`, orange/amber-filled `WARN`) and bordered greyscale chips (`MEDIUM`, `HIGH`, `PRODUCTION`). Thin horizontal rules separate cards.\n\n**Visible rows (verbatim):**\n\n- **#1** \u2014 `cJSON_Utils.c:1188` **create_patches** **Expensive setup or I/O call inside loop** \u2014 badges: `HOT` (red), `MEDIUM`, `PRODUCTION`. Metrics: \"94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%\". Text: \"'sprintf' runs every iteration at loop depth 1 \u2014 hoisting the call out of the loop or batching its work is a candidate optimization\"\n\n- **#2** \u2014 `cJSON_Utils.c:1203` **create_patches** **Expensive setup or I/O call inside loop** \u2014 badges: `HOT`, `MEDIUM`, `PRODUCTION`. Metrics: \"94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%\". Text: same sprintf/hoisting explanation as #1.\n\n- **#3** \u2014 `cJSON_Utils.c:807` **apply_patch** **High cyclomatic complexity** \u2014 badges: `WARN` (orange), `HIGH`, `PRODUCTION`. Metrics: \"131 static cost units (v2) \u00b7 66\u00d7 median \u00b7 top 1%\". Text: \"'apply_patch' branches 37 ways (threshold 15) \u2014 complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization\"\n\n- **#4** \u2014 `cJSON_Utils.c:1141` **create_patches` **High cyclomatic complexity** \u2014 badges: `WARN`, `HIGH`, `PRODUCTION`. Metrics: \"94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%\". Text: \"'create_patches' branches 24 ways (threshold 15) \u2014 complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization\"\n\n- **#5** \u2014 `cJSON_Utils.c:1188` **create_patches** **Unbounded string operation** \u2014 small grey caption to the right of the title: \"same location as #1\"; badges: `WARN`, `HIGH`, `PRODUCTION`. Metrics: \"94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%\". Text: \"unbounded operation via 'sprintf' \u2014 a bounded variant or explicit length tracking is a candidate optimization\"\n\n**Footer:** Blue underlined link: \"Complete ranked list \u2014 all 835 findings (production-first)\". Below it, grey caption: \"93 non-production files demoted \u00b7 2 component-level findings in Explorer\".\n\n**Ambiguities:** None significant; all text is legible. Note #4's title appears immediately adjacent to the function name without a space in rendering (\"create_patchesHigh cyclomatic complexity\") \u2014 likely a minor spacing/typography glitch rather than distinct content.\n\n```json\n{\n  \"question_answered\": \"Which specific file:line should a maintainer open and profile first to find the most promising performance optimization candidates in this codebase, and why each one matters\",\n  \"action\": \"Open cJSON_Utils.c:1188 in function create_patches and hoist or batch the 'sprintf' call that runs every iteration (loop depth 1) \u2014 it is the #1 ranked hot finding (94 static cost units, 47\u00d7 median); then check cJSON_Utils.c:807 apply_patch which branches 37 ways against a threshold of 15\",\n  \"blockers\": [],\n  \"confidence\": 0.9\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.9,
+      "image": "12.png",
+      "question_answered": "Where do I look first? \u2014 which file:line should I open and profile first",
+      "read": 1,
+      "slot": "KV1",
+      "verdict": "PASS",
+      "view": "cJSON-kv1"
+    },
+    {
+      "action": "Treat tmux.h as the highest-risk edit (160 dependents); prefer compat/imsg.h",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "empty",
+          "transcript": "Task complete \u2014 the blind read (STEP 1 description + STEP 2 strict JSON) was delivered above for `/var/tmp/opencode/v5-blind/13.png`."
+        },
+        {
+          "attempt": 2,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 DESCRIPTION (what is actually visible)\n\n**Heading (bold, monospace-ish sans):** `What breaks if I touch it?`\n\n**Sub-caption (grey, regular weight):** `Changing a file here forces re-import of its dependents \u2013 do not edit directly.`\n\n**Structure:** a horizontal bar chart rendered as a table-like list. Left column = file path (left-aligned, monospace). Middle column = a light grey/blue track (~320 px wide) containing a solid steel-blue fill bar. Right column = a single line of stats in small grey text. Rows are separated by thin light-grey horizontal rules; alternating row backgrounds appear white vs. very pale blue. There is no visible column header row. No badges, chips, icons, or colour-legend appear anywhere. No line numbers are shown \u2014 paths only (no `path:line`).\n\n**Rows, verbatim (path | bar fill | stats text):**\n\n1. `tmux.h` | bar filled to ~100% of the track (longest bar) | `160 dependents \u00b7 74% of scanned files \u00b7 top 1%`\n2. `compat.h` | bar filled to ~28\u201331% of the track | `43 dependents \u00b7 20% of scanned files \u00b7 top 1%`\n3. `compat/imsg.h` | sliver, ~1\u20132% | `3 dependents \u00b7 1% of scanned files \u00b7 top 1%`\n4. `xmalloc.h` | hairline sliver | `2 dependents \u00b7 1% of scanned files \u00b7 top 2%`\n5. `compat/bitstring.h` | hairline (near-invisible) | `1 dependent \u00b7 0% of scanned files \u00b7 top 2%`\n6. `compat/queue.h` | hairline | `1 dependent \u00b7 0% of scanned files \u00b7 top 3%`\n7. `compat/tree.h` | hairline | `1 dependent \u00b7 0% of scanned files \u00b7 top 3%`\n8. `compat/vis.h` | hairline | `1 dependent \u00b7 0% of scanned files \u00b7 top 4%`\n\n**Footer lines (two, grey, lower-left):**\n- `showing top 8 of 10 files with resolved dependents`\n- `resolved 214 of 234 include edges`\n\n**Visual encoding:** horizontal bar length in a shared track = magnitude of the fan-out; the two candidates for the underlying quantity are (a) raw dependents count (160 = full width, 43 \u2248 27%, 3 \u2248 2%) or (b) \"% of scanned files\" (74/74 = full, 20/74 \u2248 27%) \u2014 both fit within rounding, so the exact encoding is ambiguous. Colour is uniform steel-blue for every bar (no severity/heatmap ramp, no categorical colour, no threshold highlighting). Row position is descending by dependents (rank order), not alphabetical. Scale is linear, not log \u2014 hence rows 5\u20138 render as invisible hairlines. The right-hand text gives three quantities: absolute dependents (singular \"dependent\" for count = 1), a percentage of scanned files, and a \"top N%\" label whose meaning (rank percentile vs. share) is not defined anywhere on screen.\n\n**Ambiguous / unreadable:** the \"top 1%\u2026top 4%\" column semantics; whether bar length encodes count or percent; 2 of the 10 files are cut off by the \"top 8\" cap and not visible; no line-level anchors exist in this view.\n\n## STEP 2 \u2014 JSON\n\n```json\n{\n  \"question_answered\": \"Which header files have the largest dependency blast radius, i.e. if I edit this file, how many other scanned files are forced to re-import it (so I know what not to touch casually)?\",\n  \"action\": \"Treat tmux.h as the highest-risk edit: it shows 160 dependents (74% of scanned files), so any change there triggers a near-full re-import; either avoid editing tmux.h directly or split/trim its declarations into a narrow header such as compat/imsg.h (3 dependents) to shrink the fan-out.\",\n  \"blockers\": [\n    \"No line numbers are shown (file-level paths only), so no file:line anchor can be named from this image.\",\n    \"Bar-length encoding is ambiguous: bars fit both raw dependents count and % of scanned files within rounding, and there is no axis or legend.\",\n    \"The 'top 1%'..'top 4%' column is undefined (rank percentile vs. share of dependents unclear).\",\n    \"List is truncated: 'showing top 8 of 10 files', so 2 files are not visible.\"\n  ],\n  \"confidence\": 0.86\n}\n```"
+        }
+      ],
+      "blockers": [
+        "no file:line by design",
+        "top N% semantics undefined",
+        "top 8 of 10 shown"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.86,
+      "image": "13.png",
+      "question_answered": "What breaks if I touch it? \u2014 biggest downstream blast radius",
+      "read": 2,
+      "slot": "KV2",
+      "verdict": "PASS",
+      "view": "tmux-kv2"
+    },
+    {
+      "action": "Open cJSON_Utils.c:1188 (create_patches) and hoist/batch the sprintf",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description (what I actually see)\n\n**Layout:** A monospace, text-first ranked list (no bars, no charts \u2014 encoding is purely textual: rank number, file:line, function, rule name, badges, and metric line). White background, black text, thin horizontal separators between rows.\n\n**Heading:** `Where do I look first?`\n\n**Sub-caption:** `Open the first path:line and profile it \u2014 static candidates, confirm with a profiler.`\n\n**Ranking rule line:** `Ranked: production code first, then severity, then confidence, then static cost.`\n\n**Rows (verbatim transcription):**\n\n- **#1** \u2014 `cJSON_Utils.c:1188` \u00b7 `create_patches` \u00b7 **Expensive setup or I/O call inside loop** \u00b7 badges: [HOT] (red text) [MEDIUM] [PRODUCTION]\n  - `94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%`\n  - `'sprintf' runs every iteration at loop depth 1 \u2014 hoisting the call out of the loop or batching its work is a candidate optimization`\n\n- **#2** \u2014 `cJSON_Utils.c:1203` \u00b7 `create_patches` \u00b7 **Expensive setup or I/O call inside loop** \u00b7 badges: [HOT] [MEDIUM] [PRODUCTION]\n  - `94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%`\n  - same explanation text as #1 (`'sprintf' runs every iteration at loop depth 1\u2026`)\n\n- **#3** \u2014 `cJSON_Utils.c:807` \u00b7 `apply_patch` \u00b7 **High cyclomatic complexity** \u00b7 badges: [WARN] (amber/orange text) [HIGH] [PRODUCTION]\n  - `131 static cost units (v2) \u00b7 66\u00d7 median \u00b7 top 1%`\n  - `'apply_patch' branches 37 ways (threshold 15) \u2014 complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization`\n\n- **#4** \u2014 `cJSON_Utils.c:1141` \u00b7 `create_patches` \u00b7 **High cyclomatic complexity** \u00b7 badges: [WARN] [HIGH] [PRODUCTION]\n  - `94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%`\n  - `'create_patches' branches 24 ways (threshold 15) \u2014 complex control flow hides hot paths\u2026` (same closing sentence as #3)\n\n- **#5** \u2014 `cJSON_Utils.c:1188` \u00b7 `create_patches` \u00b7 **Unbounded string operation** \u00b7 gray note `same location as #1` \u00b7 badges: [WARN] [HIGH] [PRODUCTION]\n  - `94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%`\n  - `unbounded operation via 'sprintf' \u2014 a bounded variant or explicit length tracking is a candidate optimization`\n\n**Footer:** blue underlined link `Complete ranked list \u2014 all 835 findings (production-first)`, followed by `93 non-production files demoted \u00b7 2 component-level findings in Explorer`.\n\n**Visual encoding summary:** order = rank; color only distinguishes alert badges (HOT red vs WARN amber) and bordered neutral badges (MEDIUM/HIGH/PRODUCTION); no quantitative bars. All text is legible; nothing ambiguous or unreadable.\n\n```json\n{\n  \"question_answered\": \"Which single code location should I open and profile first to find performance wins, given ranked static-analysis candidates (production code prioritized over severity/cost)?\",\n  \"action\": \"Open cJSON_Utils.c:1188 in create_patches and profile the 'sprintf' call that runs every loop iteration \u2014 hoist it out of the loop or batch its work (note: cJSON_Utils.c:1203 is a second HOT sprintf-in-loop finding in the same function).\",\n  \"blockers\": [],\n  \"confidence\": 0.9\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.9,
+      "image": "14.png",
+      "question_answered": "Where do I look first? \u2014 which file:line should I open and profile first",
+      "read": 2,
+      "slot": "KV1",
+      "verdict": "PASS",
+      "view": "cJSON-kv1"
+    },
+    {
+      "action": "Open compat/getline.c:85 (getdelim) and profile it",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "empty",
+          "transcript": "Blind vision read complete \u2014 description and strict JSON block delivered above."
+        },
+        {
+          "attempt": 2,
+          "status": "completed",
+          "transcript": "STEP 1 \u2014 DESCRIPTION\n\n**Heading:** \"Where do I look first?\"\n\n**Sub-instructions (two lines):**\n- \"Open the first path:line and profile it \u2014 static candidates, confirm with a profiler.\"\n- \"Ranked: production code first, then severity, then confidence, then static cost.\"\n\n**Visual encoding:** A vertical ranked list. Each row is a finding card separated by a thin horizontal rule. Far left shows a large bold rank number (#1\u2013#5). Next, a bold monospace `path:line function` followed by the finding kind in bold, then a row of small rectangular badges: `HOT` (red text and red border), `HIGH`/`MEDIUM` (black text/border), `PRODUCTION` (black text/border). Below that, a metrics line: \"N static cost units (v2) \u00b7 X\u00d7 median \u00b7 top P%\". Then a plain-language explanation paragraph. Encoding is by vertical position (rank = order), badges = severity/scope flags, and numeric metrics (cost units, median multiple, top-percentile) \u2014 no bars or colour gradients; colour is used only for the HOT badge.\n\n**Rows (verbatim):**\n\n- **#1** `compat/getline.c:85 getdelim` \u2014 \"Heap allocation inside loop\" \u2014 badges: HOT, HIGH, PRODUCTION\n  - \"51 static cost units (v2) \u00b7 2.6\u00d7 median \u00b7 top 14%\"\n  - \"per-iteration heap allocation via `realloc` at loop depth 1 \u2014 allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization\"\n\n- **#2** `screen.c:823 screen_print` \u2014 \"Expensive setup or I/O call inside loop\" \u2014 badges: HOT, MEDIUM, PRODUCTION\n  - \"92 static cost units (v2) \u00b7 4.6\u00d7 median \u00b7 top 4%\"\n  - \"`snprintf` runs every iteration at loop depth 1 \u2014 hoisting the call out of the loop or batching its work is a candidate optimization\"\n\n- **#3** `compat/forkpty-aix.c:61 forkpty` \u2014 \"Expensive setup or I/O call inside loop\" \u2014 badges: HOT, MEDIUM, PRODUCTION\n  - \"59 static cost units (v2) \u00b7 3.0\u00d7 median \u00b7 top 10%\"\n  - \"`read` performs streaming I/O every iteration at loop depth 1 \u2014 the call transfers element-wise and cannot be hoisted; batching into block reads or writes is a candidate optimization\"\n\n- **#4** `tty.c:601 tty_raw` \u2014 \"Expensive setup or I/O call inside loop\" \u2014 badges: HOT, MEDIUM, PRODUCTION\n  - \"36 static cost units (v2) \u00b7 1.8\u00d7 median \u00b7 top 28%\"\n  - \"`write` performs streaming I/O every iteration at loop depth 1 \u2014 the call transfers element-wise and cannot be hoisted; batching into block reads or writes is a candidate optimization\"\n\n- **#5** `compat/closefrom.c:84 closefrom_fallback` \u2014 \"Expensive setup or I/O call inside loop\" \u2014 badges: HOT, MEDIUM, PRODUCTION\n  - \"14 static cost units (v2) \u00b7 0.7\u00d7 median \u00b7 top 60%\"\n  - \"`close` runs every iteration at loop depth 1 \u2014 hoisting the call out of the loop or batching its work is a candidate optimization\"\n\n**Footer:** A blue underlined link \"Complete ranked list \u2014 all 7543 findings (production-first)\" and a note: \"1 non-production file demoted \u00b7 2 component-level findings in Explorer\".\n\nEverything was legible; no ambiguous or unreadable elements.\n\n```json\n{\n  \"question_answered\": \"Which single code location (path:line:function) should a maintainer open and profile first when triaging this codebase's static performance findings, given the ranking (production code first, then severity, confidence, and static cost)?\",\n  \"action\": \"Open compat/getline.c:85 in function getdelim and profile it: it is the #1-ranked finding (HOT/HIGH/PRODUCTION, 51 static cost units, 2.6\u00d7 median) \u2014 a per-iteration heap allocation via realloc at loop depth 1 \u2014 so try hoisting the allocation or reusing the buffer to cut allocator churn.\",\n  \"blockers\": [],\n  \"confidence\": 0.93\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.93,
+      "image": "15.png",
+      "question_answered": "Where do I look first? \u2014 which file:line should I open and profile first",
+      "read": 1,
+      "slot": "KV1",
+      "verdict": "PASS",
+      "view": "tmux-kv1"
+    },
+    {
+      "action": "Profile format_replace at format.c:6052 first",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description\n\n**Header block (top-left, black text on white):**\n- Heading: **\"Where might time plausibly go?\"**\n- Line 1 sub: \"Profile the named function first \u2014 static candidate, confirm with a profiler.\"\n- Line 2 caption: \"Bars scale within each block: blue = ranked functions, grey = demoted functions.\"\n\n**Body:** a single-column list of 10 rows. Each row = monospace `path:line function_name` on the left, a horizontal bar on a light-grey track in the middle, and right-aligned statistics + a pill badge.\n\n| # | path:line + function | bar | right-hand stats | badge |\n|---|---|---|---|---|\n| 1 | `format.c:6052 format_replace` | blue, longest (~full track) | 1331 static cost units (v2) \u00b7 67\u00d7 median \u00b7 top 1% | orange dashed: `UNKNOWN-TRIP \u00d76 \u2014 ESTIMATE INCOMPLETE` |\n| 2 | `style.c:68 style_parse` | blue, ~97% | 1274 static cost units (v2) \u00b7 64\u00d7 median \u00b7 top 1% | orange dashed: `UNKNOWN-TRIP \u00d72 \u2014 ESTIMATE INCOMPLETE` |\n| 3 | `colour.c:1292 colour_palette_from_option` | blue, ~62% | 1059 static cost units (v2) \u00b7 53\u00d7 median \u00b7 top 1% | green: `KNOWN TRIP \u00d7256 \u2014 VERIFY IT ACTUALLY RUNS` |\n| 4 | `colour.c:1271 colour_palette_set` | blue, ~34% | 535 static cost units (v2) \u00b7 27\u00d7 median \u00b7 top 1% | green: `KNOWN TRIP \u00d7256 \u2014 VERIFY IT ACTUALLY RUNS` |\n| 5 | `cmd-join-pane.c:69 cmd_join_pane_place` | blue, ~31% | 498 static cost units (v2) \u00b7 25\u00d7 median \u00b7 top 1% | orange dashed: `UNKNOWN-TRIP \u00d74 \u2014 ESTIMATE INCOMPLETE` |\n| 6 | `input.c:1465 input_csi_dispatch` | blue, ~28% | 454 static cost units (v2) \u00b7 23\u00d7 median \u00b7 top 1% | orange dashed: `UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE` |\n| 7 | `mode-tree.c:1504 mode_tree_key` | blue, ~17% | 332 static cost units (v2) \u00b7 17\u00d7 median \u00b7 top 1% | orange dashed: `UNKNOWN-TRIP \u00d76 \u2014 ESTIMATE INCOMPLETE` |\n| 8 | `format-draw.c:689 format_draw` | blue, ~17% | 331 static cost units (v2) \u00b7 17\u00d7 median \u00b7 top 1% | orange dashed: `UNKNOWN-TRIP \u00d77 \u2014 ESTIMATE INCOMPLETE` |\n| 9 | `server-client.c:747 server_client_check_mouse` + grey pill `NO-LOOP \u2014 DEMOTED` (name wraps to 2nd line) | grey, ~95% | 418 static cost units (v2) \u00b7 21\u00d7 median \u00b7 top 1% | (pill is on the left label) |\n| 10 | `xmalloc.c:86 xstrdup` + grey pill `NO-LOOP \u2014 DEMOTED` | grey, ~87% | 388 static cost units (v2) \u00b7 19\u00d7 median \u00b7 top 1% | (pill on left label) |\n\n**Footer:**\n- Blue underlined link: **\"Complete cost-ranked list (3189 functions)\"**\n- Small grey line: \"1 startup function demoted \u00b7 2511 no-loop functions demoted \u00b7 1 non-production file demoted\"\n\n**Visual encoding:** horizontal bar chart; bar length = static cost units; blue fill = ranked rows, grey-blue fill = demoted rows; faint grey track behind each bar shows the block maximum. Bars are explicitly scaled *within each block*, so grey bar for row 9 (418 units) appears longer than blue bar for row 8 (331 units) \u2014 cross-block length comparison is invalid. Badges encode evidence quality: orange dashed = incomplete estimate (unknown loop trips), green solid = known trip count but unverified runtime reachability, grey dashed = demoted (no loop).\n\n**Ambiguous/unreadable:** all text is legible. Undefined jargon inside the view: \"static cost units (v2)\", \"trip\", \"median\" (the anchor distribution is not shown), and \"top 1%\" (of what \u2014 functions? cost?). No units of time (ms/\u00b5s) anywhere.\n\n```json\n{\n  \"question_answered\": \"Which functions in this codebase are the most plausible places where execution time is spent, ranked by static cost, so I know which one to point a profiler at first \u2014 and how trustworthy each ranking entry is.\",\n  \"action\": \"Profile format_replace at format.c:6052 first (1331 static cost units, 67\u00d7 median, top 1%), but treat its ranking as provisional because its UNKNOWN-TRIP \u00d76 badge says the estimate is incomplete; alternatively start with colour_palette_from_option at colour.c:1292 (1059 units, KNOWN TRIP \u00d7256) whose trip count is known but which needs confirmation that it actually runs.\",\n  \"blockers\": [\n    \"Terms used in the stats line ('static cost units (v2)', 'trip', '\u00d7 median', 'top 1%') are not defined in the view, so the numbers cannot be converted into time or interpreted without outside knowledge.\",\n    \"Bar lengths are scaled separately per block (blue vs grey), so demoted row server_client_check_mouse (418 units) draws a longer bar than ranked format_draw (331 units) \u2014 easy to misread as ranking order.\"\n  ],\n  \"confidence\": 0.85\n}\n```"
+        }
+      ],
+      "blockers": [
+        "terms undefined",
+        "per-block bar scale"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.85,
+      "image": "16.png",
+      "question_answered": "Where might time plausibly go? \u2014 which function should I profile first",
+      "read": 2,
+      "slot": "KV3",
+      "verdict": "PASS",
+      "view": "tmux-kv3"
+    },
+    {
+      "action": "Treat src/quantity/mod.rs as the riskiest file (12 dependents)",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "## STEP 1 \u2014 Description\n\n**Heading:** \"What breaks if I touch it?\"\n\n**Subtitle/caption:** \"Changing a file here forces re-import of its dependents \u2013 do not edit directly.\"\n\n**Layout:** A ranked horizontal bar chart of 8 rows. Each row has: a monospace file path on the left, a horizontal bar in the middle (blue fill on a light gray track), and a two-line stats annotation on the right. Rows are sorted descending by dependent count.\n\n**Rows (verbatim):**\n\n1. `src/quantity/mod.rs` \u2014 longest blue bar \u2014 \"12 dependents \u00b7 23% of scanned files \u00b7 top 2% \u00b7 6.0\u00d7 median\"\n2. `src/metric.rs` \u2014 \"10 dependents \u00b7 19% of scanned files \u00b7 top 4% \u00b7 5.0\u00d7 median\"\n3. `src/benchmark/measurement.rs` + purple/lavender badge \"BENCH\" \u2014 \"9 dependents \u00b7 17% of scanned files \u00b7 top 6% \u00b7 4.5\u00d7 median\"\n4. `src/benchmark/benchmark_result.rs` + badge \"BENCH\" \u2014 \"8 dependents \u00b7 15% of scanned files \u00b7 top 8% \u00b7 4.0\u00d7 median\"\n5. `src/export/mod.rs` \u2014 \"6 dependents \u00b7 11% of scanned files \u00b7 top 9% \u00b7 3.0\u00d7 median\"\n6. `src/command.rs` \u2014 \"5 dependents \u00b7 9% of scanned files \u00b7 top 11% \u00b7 2.5\u00d7 median\"\n7. `src/options.rs` \u2014 \"5 dependents \u00b7 9% of scanned files \u00b7 top 13% \u00b7 2.5\u00d7 median\"\n8. `src/benchmark/mod.rs` + badge \"BENCH\" \u2014 \"4 dependents \u00b7 8% of scanned files \u00b7 top 15% \u00b7 2.0\u00d7 median\"\n\n**Footer lines:** \"showing top 8 of 41 files with resolved dependents\" and \"resolved 205 of 238 include edges\".\n\n**Visual encoding:** Bar length \u221d dependent count (12 \u2192 longest, 4 \u2192 shortest); blue fill on a faint gray track that extends slightly past the fill (the track's full width/scale is not labelled \u2014 no x-axis ticks or legend). Colour: medium-blue bars, light gray tracks, lavender \"BENCH\" badges with dark text, dark gray/black monospace text on white. The \"\u00d7 median\" figure is a text-anchored scale (implied median \u2248 2 dependents, since 12/2=6.0\u00d7, 4/2=2.0\u00d7). Small faint tick marks appear beneath some bars \u2014 ambiguous (possibly a median marker); no legend confirms it.\n\n**Ambiguities/unreadable:** The bar chart's absolute x-scale is unlabelled (only the \u00d7median text anchors it); the meaning of the faint under-bar ticks is unclear; \"top N%\" percentile basis (of what distribution) is not defined in-view. All text is legible.\n\n## STEP 2 \u2014 JSON\n\n```json\n{\n  \"question_answered\": \"Which source files have the highest fan-in (most dependents), so that editing them forces re-import/recompilation churn across the largest share of the codebase \u2014 i.e. where do I need to be most careful or avoid direct edits?\",\n  \"action\": \"Treat src/quantity/mod.rs as the riskiest file: it has 12 dependents (23% of scanned files, top 2%, 6.0\u00d7 median), so before editing it, stabilize or narrow its public interface (or extract the changing pieces into a submodule) to avoid forcing re-imports of nearly a quarter of the scanned files; also review the BENCH-tagged src/benchmark/measurement.rs (9 dependents, 4.5\u00d7 median) the same way.\",\n  \"blockers\": [],\n  \"confidence\": 0.88\n}\n```"
+        }
+      ],
+      "blockers": [],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.88,
+      "image": "17.png",
+      "question_answered": "What breaks if I touch it? \u2014 biggest downstream blast radius",
+      "read": 2,
+      "slot": "KV2",
+      "verdict": "PASS",
+      "view": "hyperfine-kv2"
+    },
+    {
+      "action": "Profile src/output/report.rs:19 (print) first",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "completed",
+          "transcript": "**STEP 1 \u2014 Description**\n\n*Heading block:*\n- Title (bold): \"Where might time plausibly go?\"\n- Subtitle (mono): \"Profile the named function first \u2014 static candidate, confirm with a profiler.\"\n- Legend line: \"Bars scale within each block: blue = ranked functions, grey = demoted functions.\"\n\n*Ranked (blue) rows \u2014 left label `path:line function`, center horizontal blue bar in a light track, right two lines (metrics + badge):*\n\n1. `src/output/report.rs:19 print` \u2014 longest blue bar (full track) \u2014 \"213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%\" \u2014 orange badge: \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n2. `src/options.rs:254 from_cli_arguments` \u2014 bar \u2248 2/3 \u2014 \"165 static cost units (v2) \u00b7 24\u00d7 median \u00b7 top 1%\" \u2014 badge \"UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE\"\n3. `src/command.rs:226 build_from_cli_arguments` \u2014 bar \u2248 1/2 \u2014 \"109 static cost units (v2) \u00b7 16\u00d7 median \u00b7 top 1%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n4. `src/export/csv.rs:13 serialize` \u2014 bar \u2248 1/4 \u2014 \"61 static cost units (v2) \u00b7 8.7\u00d7 median \u00b7 top 2%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n5. `src/shell_syntax.rs:71 next` \u2014 bar \u2248 1/4 (slightly shorter) \u2014 \"57 static cost units (v2) \u00b7 8.1\u00d7 median \u00b7 top 3%\" \u2014 badge \"UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE\"\n6. `src/main.rs:34 run` \u2014 bar \u2248 1/5 \u2014 \"45 static cost units (v2) \u00b7 6.4\u00d7 median \u00b7 top 4%\" \u2014 badge \"UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE\"\n7. `src/metric.rs:196 parse_list` \u2014 bar \u2248 1/5 \u2014 \"44 static cost units (v2) \u00b7 6.3\u00d7 median \u00b7 top 4%\" \u2014 badge \"UNKNOWN-TRIP \u00d71 \u2014 ESTIMATE INCOMPLETE\"\n8. `src/command.rs:362 build_parameter_scan_commands` (label wraps to two lines) \u2014 bar \u2248 1/5 \u2014 \"43 static cost units (v2) \u00b7 6.1\u00d7 median \u00b7 top 5%\" \u2014 badge \"UNKNOWN-TRIP \u00d72 \u2014 ESTIMATE INCOMPLETE\"\n\n*Demoted (grey) rows \u2014 separated by a horizontal rule, each has a grey tag chip under the path:*\n\n9. `src/benchmark/mod.rs:160 run`, chip \"NON-PRODUCTION \u2014 DEMOTED\" \u2014 long grey bar \u2014 \"178 static cost units (v2) \u00b7 25\u00d7 median \u00b7 top 1%\"\n10. `tests/execution_order_tests.rs:31 arg`, chip \"NON-PRODUCTION + NO-LOOP \u2014 DEMOTED\" \u2014 grey bar \u2248 1/2 \u2014 \"81 static cost units (v2) \u00b7 12\u00d7 median \u00b7 top 1%\"\n\n*Footer:*\n- Blue underlined link: \"Complete cost-ranked list (353 functions)\"\n- Caption: \"9 startup functions demoted \u00b7 297 no-loop functions demoted \u00b7 16 non-production files demoted\"\n\n*Visual encoding:* ranked-list of functions as a bar chart; bar length = static cost units, **rescaled independently inside each block** (blue block max = 213, grey block max = 178), so blue and grey bars are not directly comparable. Colour encodes ranked (blue) vs demoted (grey). All units are dimensionless \"static cost units (v2)\"; the multipliers are relative to a \"median\" (unspecified function) and \"top N%\" is a rank percentile.\n\n*Ambiguous/unreadable:* the term \"UNKNOWN-TRIP\" and what an incomplete estimate means are not defined; \"static cost units (v2)\" has no absolute meaning; the median baseline is unnamed; every ranked row carries an ESTIMATE INCOMPLETE badge.\n\n```json\n{\n  \"question_answered\": \"Which functions are the most plausible places for runtime to be spent, so I know which single function to point a profiler at first, and how they rank against the median.\",\n  \"action\": \"Profile src/output/report.rs:19 print first \u2014 it is the top-ranked candidate at 213 static cost units (v2), 30\u00d7 median, top 1%; because its badge reads UNKNOWN-TRIP \u00d73 \u2014 ESTIMATE INCOMPLETE, also resolve why three trips are unknown before trusting the ranking.\",\n  \"blockers\": [\n    \"Bar scale is explicitly per-block, so blue ranked bars and grey demoted bars cannot be compared to each other (demoted src/benchmark/mod.rs:160 run shows 178 units but its bar is not shorter than the 213-unit top row).\",\n    \"No definition given for 'UNKNOWN-TRIP', for 'static cost units (v2)', or for which function is the 'median' baseline; all eight ranked rows are flagged ESTIMATE INCOMPLETE, so absolute trust in the ordering is unclear.\"\n  ],\n  \"confidence\": 0.85\n}\n```"
+        }
+      ],
+      "blockers": [
+        "per-block bar scale",
+        "terms undefined"
+      ],
+      "checks": {
+        "action_named": true,
+        "blockers_non_blocking": true,
+        "concrete_anchor": true,
+        "described_before_json": true,
+        "question_stated": true
+      },
+      "confidence": 0.85,
+      "image": "18.png",
+      "question_answered": "Where might time plausibly go? \u2014 which function should I profile first",
+      "read": 2,
+      "slot": "KV3",
+      "verdict": "PASS",
+      "view": "hyperfine-kv3"
+    }
+  ],
+  "renders": {
+    "byte_identical_to_v4": true,
+    "dir": "docs/evidence/map-vision/v5",
+    "manifest": "manifest.json",
+    "scan_inputs": "perfpal-test/out-v5-{tmux,hyperfine,cJSON} (schema 1.7, HEAD binary at 758f492; metrics identical to out-v4 modulo run metadata)"
+  },
+  "verdict": "A1 PASS \u2014 18/18 valid reads (two per key view) state the slot question and one concrete path:line/function action. Three first attempts (04, 13, 15) returned empty agent messages and were retried once; no view defect was exposed. The renders are byte-identical to the V4-approved key views (manifest sha256), so this is a fresh-reader confirmation, not a re-render change. Non-blocking observations O1-O6 are recorded; O1 (KV2 top N% wording) and O2 (KV2 production-first) feed V6/V7 decisions. No code change in V5."
+}

@@ -104,6 +104,14 @@ dependent count is 0, KV2 anchors with `% of scanned files` + `top P%`, not `× 
 V4 (2026-10-22) shipped the three key views and the `Explorer` rename; `ARCH-002` component
 aggregates are suppressed from KV1 (counted, not ranked; `ARCH-001`/`ARCH-003` stay), KV2 keeps the V2 lock (labels path
 class without demotion), and A1b is not claimed closed on severity (V7 re-triages the rank key).
+V5 (2026-10-22) validated the V4 views with two fresh blind reads per key view: **18/18 valid
+reads** state the slot question and one concrete action; the renders are byte-identical to V4
+(`docs/evidence/map-vision/v5/`). The **KV3 no-loop falsifier is partially falsified**: the
+guard demotes all three Q3 targets, but dropping it alone still leaves them outside the inline
+top 8 (shipped→counterfactual ranks 820→325, 58→46, 60→45), so V7 needs call-weighted /
+per-iteration ranking, not guard removal. O1 (KV2 `top N%` wording) and O2 (KV2
+production-first evidence) feed the founder/V6 decisions. Holdout intact; A1b not claimed
+closed.
 
 ## Non-goals
 Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runtime truth claims.

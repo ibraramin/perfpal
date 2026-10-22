@@ -186,6 +186,14 @@ exactly these fields; every row carries its **what would change it** trigger.
 | density guard (R-pf-100) | `components[].metrics.finding_density` exists | **chart-side, Explorer only** — minimum (≥5 findings or ≥200 LOC) + `N small scopes hidden (components/files)` on component/file density views; `layer-findings` stays Explorer and may not claim "density" until it has a denominator. No key view is scope-density ranked. | the guard must be contractual for JSON consumers ⇒ `finding_density_guarded` |
 | uniform call-edge tier | `confidence` exists; semantic tier separate | **deferred** — KV2 makes no call-based claim, so no uniform `resolved`/`tier` field is needed for the accepted set | a key view starts making call-based blast-radius claims |
 
+**V5 falsifier update (2026-10-22):** the KV3 no-loop guard demotes all three pre-registered
+Q3 targets (`max_loop_depth == 0`), but removing only the no-loop term still leaves them out
+of the inline top 8 (shipped→counterfactual ranks 820→325, 58→46, 60→45). The trigger in the
+KV3 row fired as a **guard contribution, not a sole cause**: the static-cost key cannot
+surface per-byte/per-call leaves. V7 owns the switch to call-weighted/per-iteration cost or a
+separate call-frequency view; a two-list variant of the same static cost is insufficient.
+Evidence: `docs/evidence/map-vision/v5/no_loop_falsifier_v5.json`.
+
 **Not a schema gap:** rule titles/symbols/lines already exist (`findings[].title`,
 `stats.functions[].name`, `span`); `#map` printing bare IDs is a display defect
 (`src/reporter/mod.rs:1556`).

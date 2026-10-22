@@ -1,50 +1,45 @@
 # Active Context
 
 ## Current Task
-**map-intelligibility V4 DONE, dual-APPROVED + vision-gated (implementation shipped).**
-- **Key views:** KV1 text-first brief, KV2 horizontal dependents bars, KV3 horizontal cost
-  bars; first screen = KV1; all 8 legacy stems under `<section id="explorer">` with a
-  `Key views` nav entry; units/anchors + counted demotions per the V2 lock.
-- **Schema 1.7:** additive `files[].path_class` + `stats.functions[].trip_count_source` /
-  `known_trip_value` (optional on the wire; docs + embedded copies byte-identical).
-- **Drill lists:** `findings-detail.html#ranked-actions` (complete KV1 action list) and the new
-  `profile-queue.md/.html` (complete cost list); output contract + README updated.
-- **V4 fix list:** only `ARCH-002` suppressed from KV1 (`ARCH-001`/`ARCH-003` stay actions);
-  full rationale (no `…`); one KV2 action line; `scripts/` → `bench`; 900px card rule recorded.
-- **Vision gate APPROVED:** 9 key views + 3 first screens; `docs/evidence/map-vision/v4/`
-  (`reads.json`, `manifest.json`, 12 PNGs).
-- **Recall:** shipped-key ranks tmux 209/7543 (Q1) / 820/3189 (Q3); hyperfine 172/346 / 58/353;
-  cJSON 37/835 / 60/1055 — still not inline. **A1b is NOT closed on severity**; V7 owns the KV1
-  rank-key re-triage; V5 tests the KV3 no-loop guard.
+**map-intelligibility V5 evidence complete; dual review APPROVED; EOL commit pending; next V6.**
+- **18/18 valid blind reads PASS** — two fresh reads per key view (tmux/hyperfine/cJSON ×
+  KV1/KV2/KV3), one image per task, no source/sibling views, describe-first + strict JSON
+  `{question_answered, action, blockers, confidence}`. Three empty agent outputs were
+  retried once. Transcripts: `docs/evidence/map-vision/v5/reads.json`.
+- **Renders are byte-identical to V4** (9/9 PNG sha256; fresh HEAD scans reproduce the
+  schema-1.7 V4 metrics modulo run metadata). 9 PNGs + `manifest.json` + `render_v5.py`.
+- **KV3 no-loop falsifier: PARTIALLY FALSIFIED.** All three Q3 targets
+  (`screen_write_collect_add`, `execute_and_measure`, `cJSON_New_Item`) have
+  `max_loop_depth == 0` and are demoted, but removing only the no-loop term still leaves
+  them outside the inline top 8 (820→325, 58→46, 60→45). The static-cost key cannot surface
+  per-byte/per-call leaves; **V7 must adopt call-weighted/per-iteration ranking** (or a
+  call-frequency view). Reproducer: `no_loop_falsifier_v5.py/.json`.
+- **No code change.** Holdout (django/postgres) untouched. **`map-build` NOT done.**
+  **A1b NOT claimed closed** (KV1 Q1 ranks 209/172/37 stay out of line; V7).
 
 ## Recent Decisions
-- **D-pf-231 (live):** V4 shipped + dual-APPROVED (round 2). Brief/bars/bars; schema 1.7;
-  profile-queue + ranked findings-detail; only ARCH-002 suppressed; KV2 production-first still
-  pending founder; vision evidence committed.
-- **D-pf-230 (live):** V3 idiom A/B dual-APPROVED; brief/bars/bars; V2 lock intact; KV2
-  production-first proposal pending; V3 prototype recall ranks recorded.
-- **D-pf-229 (live):** V2 locked; 3 slots/encodings; first screen = Q1; Explorer divider;
-  units/anchors; KV1/KV3 complete lists; V4 fields `path_class` + trip provenance.
+- **D-pf-232 (live):** V5 evidence complete — 18/18 reads PASS; renders byte-identical;
+  no-loop falsifier partial; no code change; O1 KV2 `top N%` wording + O2 cJSON KV2
+  production-first evidence feed the founder/V6.
+- **D-pf-231 (live):** V4 shipped + dual-APPROVED; KV1 brief, KV2/KV3 bars, schema 1.7,
+  Explorer tier, drill lists, vision gate APPROVED.
 
 ## In Progress
-- **V4 complete; nothing in flight.** EOL state/handoff/CHANGELOG committed.
+- Dual review **APPROVED** (both; non-blocking findings reconciled). EOL state/handoff/CHANGELOG
+  commit is the only remaining step. No code in flight.
 
 ## Next
-- **V5:** two fresh blind `@vision` reads per key view on tmux/hyperfine/cJSON (no source, no
-  sibling views), strict `{question_answered, action, blockers, confidence}`; iterate until both
-  name the question + one concrete action; commit transcripts. Then **V6** founder timed test
-  including django/postgres (holdout) → V7 rank-key re-triage/open findings → V8 closeout.
-- **Before V6:** founder decides the KV2 production-first amendment and whether to run the
-  randomized pair re-run (KV1 was B/B/A, partly confirmatory).
-- **Signpost:** plan `map-intelligibility` (V5), specs `map-intelligibility` +
-  `maintainer-map`, evidence `map-idiom-ab.md` + `map-data-coverage.md` §8 +
-  `docs/evidence/map-vision/v4/reads.json`, handoff `state/handoff/latest.md`.
+- **Founder before V6:** decide the KV2 production-first amendment (V5 O2 supports it) and
+  whether to run the randomized KV1 pair re-run (V3 was B/B/A).
+- **V6:** founder timed eye-test on an unfamiliar repo **including the django/postgres
+  holdout** (never rendered/read in V5); 3 actions in <10 min + "understandable".
+- **V7:** KV1 rank-key re-triage + call-weighted/per-iteration Q3 ranking; fix or explicitly
+  accept R-pf-098/099/100. A1b stays open.
 - **Do not mark `map-build` done.** M5 needs B-pf-001 + B-pf-002.
-- **Do not claim A1b closed on severity.**
 
 ## Blockers
-- **Map legibility:** R-pf-104/R-pf-105 — views shipped, ranking open (V7); founder timed A2
-  remains the gate (V6).
+- **Map legibility:** R-pf-104/R-pf-105/R-pf-106 — views validated (A1), but ranking recall
+  (A1b) is open; founder A2 is the V6 gate.
 - **M5 publish:** B-pf-001 (contact) + B-pf-002 (secrets) — founder-owned.
 - **Paper track:** prereg + scans + stats + Zenodo PENDING (PARKED behind the map).
 
@@ -61,4 +56,6 @@
 - **V3:** prereg `1f042af` → 18 prototypes + 27 blind reads → decisions `81b685e`; EOL `e0ded77`.
 - **V4:** schema 1.7 `bc887ef` → key views `de93292` → ARCH scope `0bd6d08` → rank key/nav
   `ae50e61` → dual bar scale `f896631` → review round 2 `882ddce` → vision/recall evidence
-  `2ec547c`; EOL this session.
+  `2ec547c`; EOL `758f492`.
+- **V5:** fresh scans + 9 byte-identical renders + 18 blind reads + no-loop falsifier;
+  evidence `docs/evidence/map-vision/v5/`; EOL this commit.

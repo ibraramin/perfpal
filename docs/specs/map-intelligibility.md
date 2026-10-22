@@ -255,3 +255,36 @@ is not a shippable core feature. M5 remains gated by `B-pf-001`/`B-pf-002`.
 - **`PERF-RS-ARCH-002` (I5 GENUINE #6)** is a component aggregate and is explicitly out of KV1's
   action scope: it remains reachable through `findings-detail` and the Explorer
   `hot-components` stem, not the ranked action brief.
+
+## V5 vision validation (2026-10-22)
+
+Two fresh blind reads per key view (3 repos × 3 views = 18 valid reads; 3 first attempts
+returned empty agent messages and were retried once) on the V5 renders, which are
+**byte-identical** to the V4-approved key views (manifest sha256; fresh HEAD scans reproduce
+the schema-1.7 V4 metrics modulo run metadata). Protocol: one image per task, no source, no
+sibling views, no expected answer; describe first, then strict JSON
+`{question_answered, action, blockers, confidence}`. **18/18 valid reads state the slot
+question and one concrete `path:line`/function action** → A1 PASS. Evidence:
+`docs/evidence/map-vision/v5/reads.json`, `manifest.json`, 9 PNGs, `render_v5.py`.
+Non-blocking observations: (O1) all six KV2 reads call the `top N%` anchor ambiguous (reads
+like a rank; denominator unstated next to `% of scanned files`) — confirms the V4-deferred
+wording risk, a V7/founder follow-up, not a V5 code change; (O2) cJSON KV2 is dominated by
+unity test headers and buries `cJSON.h` at #4 — evidence for the pending KV2 production-first
+amendment, and the two cJSON KV2 reads even disagree on the riskiest file (test header vs the
+production ABI header), strengthening the ambiguity case; (O3) KV3's per-block scale is understood from the caption but still invites
+cross-block comparison; (O4) readers want in-view definitions of the cost unit/anchors;
+(O5) one reader perceived a missing space in cJSON KV1 #4 (the DOM has a space); (O6) tmux
+KV1 #5 is HOT at 0.7× median because severity is rule severity, not a cost claim.
+
+**KV3 no-loop falsifier (result, not a fix):** all three pre-registered Q3 targets
+(`screen_write_collect_add`, `execute_and_measure`, `cJSON_New_Item`) have
+`max_loop_depth == 0` and are demoted, but **removing only the no-loop term does not restore
+any of them to the inline top 8** (shipped→counterfactual ranks 820→325, 58→46, 60→45).
+The guard is a contributing demotion, not the sole cause of the Q3 recall miss: the static
+cost key cannot surface per-byte/per-call leaves (the V1 H1 prediction). V7 must adopt
+call-weighted/per-iteration ranking or a separate call-frequency view — not merely drop the
+guard; a two-list variant of the same static cost is insufficient. cJSON `cJSON_New_Item` is
+also `reachable_from_entry = false`, so a reachable-only Q3 (R-pf-098) would hide it further.
+Reproducer: `docs/evidence/map-vision/v5/no_loop_falsifier_v5.py` → `.json` (exits non-zero on
+rank drift). **No V5 code change**; no read exposed a blocking defect. Holdout untouched;
+`map-build` remains NOT done; A1b is not claimed closed.

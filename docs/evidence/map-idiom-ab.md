@@ -160,12 +160,26 @@ stands; KV2 stays inline (tmux 1/216, hyperfine 6/53, cJSON 4/101). Reproducer:
 - Bars win every repo; treemap loses because tiles carry no `path:line`, near-equal areas are
   hard to rank, and uncertainty badges have no home.
 - **What would change it:** (a) V5 shows the no-loop demotion hides a genuine hot leaf
-  (`screen_write_collect_add` rank 811, demoted) → switch to per-iteration cost or the
-  two-list (known-trip vs unknown-trip) variant **before** changing idiom; (b) a treemap
+  (`screen_write_collect_add` V3 prototype rank 811 / V5 shipped rank 820, demoted) →
+  switch to per-iteration cost or the two-list (known-trip vs unknown-trip) variant
+  **before** changing idiom; see the V5 result below; (b) a treemap
   variant with mandatory `path:line` + rank labels wins a re-run 2/3; (c) the founder wants
   module grouping (a different question than Q3).
 - **Guard status:** the known-literal-trip flag remains a V4 field; this prototype showed only
   the unknown-trip badge. The V5 falsifier stands.
+
+### V5 falsifier result (2026-10-22)
+
+The pre-registered falsifier ran on the schema-1.7 V5 scans. All three Q3 targets are
+`max_loop_depth == 0` and demoted by the guard, but removing only the no-loop term does
+**not** restore any to the inline top 8: shipped→counterfactual ranks tmux 820→325,
+hyperfine 58→46, cJSON 60→45. The guard is therefore a contributing demotion, not the sole
+cause of the Q3 recall miss — static cost cannot represent per-byte/per-call leaves (V1 H1).
+Per the trigger above, the fix must be **call-weighted/per-iteration cost** (or a separate
+call-frequency list); dropping the guard or a two-list variant of the same static cost is
+insufficient. cJSON `cJSON_New_Item` is also `reachable_from_entry = false`, so a
+reachable-only Q3 would hide it further. Evidence:
+`docs/evidence/map-vision/v5/no_loop_falsifier_v5.{py,json}`. V7 owns the ranking change.
 
 ## 6. Findings that feed V4/V5/V7 (not idiom choices)
 
