@@ -81,6 +81,8 @@ pub struct Kv2Row {
     pub path: String,
     pub path_class: String,
     pub production: bool,
+    /// Non-production row greyed and shown after the ranked production rows.
+    pub demoted: bool,
     /// Distinct resolved includers (`from`) for this file.
     pub dependents: usize,
     /// Integer percentage of the largest shown row.
@@ -377,6 +379,11 @@ impl<'a> Context<'a> {
         (class.to_string(), class == "production")
     }
 
+    /// Non-allocating production check for sort comparators.
+    fn is_production(&self, path: &str) -> bool {
+        self.classes.get(path).copied() == Some("production")
+    }
+
     fn nonprod_file_count(&self) -> usize {
         self.doc
             .files
@@ -517,7 +524,7 @@ fn scale_width(value: f64, max: f64) -> u32 {
     }
 }
 
-/// KV2: dependents bars, no production-first demotion.
+/// KV2: dependents bars, production-first with demoted non-production rows.
 #[must_use]
 pub fn kv2(doc: &MetricsDocument) -> Kv2View {
     let context = Context::new(doc);
@@ -548,7 +555,14 @@ pub fn kv2(doc: &MetricsDocument) -> Kv2View {
             )
         })
         .collect();
-    ordering.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(b.0)));
+    ordering.sort_by(|a, b| {
+        let prod_a = context.is_production(a.0);
+        let prod_b = context.is_production(b.0);
+        (!prod_a)
+            .cmp(&(!prod_b))
+            .then_with(|| b.1.cmp(&a.1))
+            .then_with(|| a.0.cmp(b.0))
+    });
 
     let ranks: BTreeMap<&str, usize> = ordering
         .iter()
@@ -565,7 +579,21 @@ pub fn kv2(doc: &MetricsDocument) -> Kv2View {
         .filter(|(_, degree)| *degree > 0)
         .collect();
     let total_with_dependents = with_dependents.len();
-    let mut shown: Vec<(&str, usize)> = with_dependents.into_iter().take(8).collect();
+    // Up to eight production rows, then up to two demoted rows — the demoted
+    // rows are never excluded from the ordering, only the inline slice.
+    let mut shown: Vec<(&str, usize)> = with_dependents
+        .iter()
+        .filter(|(path, _)| context.is_production(path))
+        .take(8)
+        .copied()
+        .collect();
+    shown.extend(
+        with_dependents
+            .iter()
+            .filter(|(path, _)| !context.is_production(path))
+            .take(2)
+            .copied(),
+    );
     let max_degree = shown.iter().map(|(_, degree)| *degree).max().unwrap_or(0);
     let mut rows = Vec::with_capacity(shown.len());
     for (path, degree) in shown.drain(..) {
@@ -590,6 +618,7 @@ pub fn kv2(doc: &MetricsDocument) -> Kv2View {
             path: path.to_string(),
             path_class,
             production,
+            demoted: !production,
             dependents: degree,
             width_pct: scale_width(degree as f64, max_degree as f64),
             value_label: parts.join(" · "),
@@ -1133,7 +1162,7 @@ mod tests {
     }
 
     #[test]
-    fn kv2_counts_distinct_resolvers_without_production_demotion() {
+    fn kv2_demotes_non_production_without_excluding() {
         let files = vec![
             file("src/a.c", "production"),
             file("src/b.c", "production"),
@@ -1152,21 +1181,86 @@ mod tests {
         assert_eq!(view.resolved_edges, 5);
         assert_eq!(view.scanned_files, 3);
         assert_eq!(view.median_in_degree, 1);
+        assert_eq!(view.total_with_dependents, 3);
+        // Production ranks first even at equal degree (path asc tie-break).
         assert_eq!(view.rows[0].path, "src/a.c");
         assert_eq!(view.rows[0].dependents, 2);
+        assert!(!view.rows[0].demoted);
+        assert_eq!(view.rows[1].path, "src/b.c");
+        assert!(!view.rows[1].demoted);
         assert!(view.rows[0].value_label.contains("% of scanned files"));
         assert!(view.rows[0].value_label.contains("top "));
-        // The test file is NOT demoted (V2 lock: no production-first in KV2).
-        assert!(view.rows.iter().any(|r| r.path == "tests/t.c"));
-        assert!(
-            !view
-                .rows
-                .iter()
-                .find(|r| r.path == "tests/t.c")
-                .unwrap()
-                .production
-        );
+        // The test file is demoted but never excluded.
+        let test_row = view
+            .rows
+            .iter()
+            .find(|r| r.path == "tests/t.c")
+            .expect("demoted row must stay in the inline slice");
+        assert!(!test_row.production);
+        assert!(test_row.demoted);
+        assert_eq!(test_row.dependents, 1);
         assert_eq!(view.nonprod_file_count, 1);
+    }
+
+    #[test]
+    fn kv2_test_file_with_more_dependents_ranks_below_production() {
+        let files = vec![file("src/p.c", "production"), file("tests/t.c", "test")];
+        let edges = vec![
+            edge("src/a.c", Some("src/p.c"), true),
+            edge("src/a.c", Some("tests/t.c"), true),
+            edge("src/b.c", Some("tests/t.c"), true),
+            edge("src/c.c", Some("tests/t.c"), true),
+        ];
+        let view = kv2(&doc(files, Vec::new(), Vec::new(), edges));
+        assert_eq!(view.total_with_dependents, 2);
+        assert_eq!(view.rows[0].path, "src/p.c");
+        assert_eq!(view.rows[0].dependents, 1);
+        assert!(view.rows[0].value_label.contains("top 50%"));
+        assert_eq!(view.rows[1].path, "tests/t.c");
+        assert_eq!(view.rows[1].dependents, 3);
+        assert!(view.rows[1].demoted);
+        // Ranked position follows the production-first ordering, not raw degree.
+        assert!(view.rows[1].value_label.contains("top 100%"));
+        // Median still counts every scanned file, zeros included.
+        assert_eq!(view.median_in_degree, 1);
+    }
+
+    #[test]
+    fn kv2_slots_eight_production_then_two_demoted() {
+        let mut files: Vec<FileEntry> = (0..10)
+            .map(|index| file(&format!("src/p{index}.c"), "production"))
+            .collect();
+        files.extend((0..3).map(|index| file(&format!("tests/t{index}.c"), "test")));
+        let mut edges = Vec::new();
+        for entry in &files {
+            edges.push(edge("src/hub.c", Some(&entry.path), true));
+        }
+        let view = kv2(&doc(files, Vec::new(), Vec::new(), edges));
+        assert_eq!(view.total_with_dependents, 13);
+        assert_eq!(view.rows.len(), 10);
+        let production: Vec<&str> = view
+            .rows
+            .iter()
+            .take(8)
+            .map(|row| row.path.as_str())
+            .collect();
+        assert_eq!(
+            production,
+            vec![
+                "src/p0.c", "src/p1.c", "src/p2.c", "src/p3.c", "src/p4.c", "src/p5.c", "src/p6.c",
+                "src/p7.c",
+            ]
+        );
+        assert!(view.rows.iter().take(8).all(|row| !row.demoted));
+        let demoted: Vec<&str> = view
+            .rows
+            .iter()
+            .skip(8)
+            .map(|row| row.path.as_str())
+            .collect();
+        assert_eq!(demoted, vec!["tests/t0.c", "tests/t1.c"]);
+        assert!(view.rows.iter().skip(8).all(|row| row.demoted));
+        assert_eq!(view.nonprod_file_count, 3);
     }
 
     #[test]

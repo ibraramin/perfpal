@@ -502,6 +502,56 @@ fn kv2_labels_use_full_repo_relative_paths_and_pluralize() {
 }
 
 #[test]
+fn kv2_demoted_rows_are_greyed_with_demoted_caption() {
+    let mut d = doc();
+    d.files = vec![
+        file("src/a.c", "production"),
+        file("src/b.c", "production"),
+        file("tests/t.c", "test"),
+    ];
+    d.stats.functions = Vec::new();
+    d.findings = Vec::new();
+    d.graphs = Some(GraphsSection {
+        include_graph: IncludeGraph {
+            nodes: Vec::new(),
+            edges: vec![
+                edge("src/b.c", "src/a.c"),
+                edge("src/a.c", "src/b.c"),
+                edge("src/a.c", "tests/t.c"),
+                edge("src/b.c", "tests/t.c"),
+            ],
+        },
+        call_graph: None,
+    });
+
+    let html = render_html(&d, &[]);
+    let map = map_section(&html);
+    // The test file carries MORE dependents (2) than either production file
+    // (1) yet is slotted after them and greyed.
+    let production = map.find("src/a.c").expect("production row");
+    let demoted = map.find("tests/t.c").expect("demoted row");
+    assert!(
+        production < demoted,
+        "demoted row must follow production rows"
+    );
+    assert!(map.contains("kv-brow kv-demoted"), "demoted row class");
+    assert!(map.contains("kv-fill demoted"), "demoted bar fill class");
+    assert!(map.contains("<span class=\"kv-class nonprod\">test</span>"));
+    assert!(
+        map.contains("files with resolved dependents · 1 non-production file demoted"),
+        "KV2 demoted caption missing"
+    );
+
+    let md = perfpal::reporter::render_report(&d, &[]);
+    assert!(
+        md.contains("tests/t\\.c"),
+        "demoted row missing from markdown"
+    );
+    assert!(md.contains(" · test · demoted"));
+    assert!(md.contains("files with resolved dependents · 1 non-production file demoted"));
+}
+
+#[test]
 fn kv1_marks_repeated_inline_locations_without_changing_ranks() {
     let mut d = doc();
     d.findings = vec![

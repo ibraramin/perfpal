@@ -1,0 +1,35 @@
+{
+  "repo": "postgres",
+  "repo_commit": "856a659",
+  "build_commit": "",
+  "protocol": "docs/evidence/map-vision/v6/protocol.md",
+  "started_at": "",
+  "ended_at": "",
+  "elapsed_seconds": 0,
+  "under_ten_minutes": false,
+  "actions": [
+    {
+      "n": 1,
+      "verbatim": "",
+      "key_view": "KV1|KV2|KV3",
+      "path_line": ""
+    },
+    {
+      "n": 2,
+      "verbatim": "",
+      "key_view": "KV1|KV2|KV3",
+      "path_line": ""
+    },
+    {
+      "n": 3,
+      "verbatim": "",
+      "key_view": "KV1|KV2|KV3",
+      "path_line": ""
+    }
+  ],
+  "understandable": null,
+  "assessment_verbatim": "",
+  "blockers": "",
+  "protocol_deviations": "",
+  "verdict": "PASS|FAIL"
+}

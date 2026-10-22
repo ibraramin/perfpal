@@ -1,0 +1,105 @@
+{
+  "protocol": "Two fresh blind @vision reads per KV2 view (tmux/hyperfine/cJSON), one image per task, no source, no sibling views, no expected answer; describe-first then strict JSON {question_answered, action, blockers, confidence}. Verbatim transcripts below.",
+  "change_under_test": "KV2 production-first amendment (V6a): production rows rank first; up to 8 production + up to 2 greyed non-production rows; demoted count printed; ordering never excludes non-production.",
+  "blind_mapping_seed": 20261022,
+  "blind_mapping": {
+    "01.png": "tmux",
+    "02.png": "hyperfine",
+    "03.png": "cJSON"
+  },
+  "manifest": "manifest.json",
+  "reads": {
+    "01.png": [
+      {
+        "read": "A",
+        "description": "The image is a horizontal bar chart titled \"What breaks if I touch it?\" with the warning subtitle \"Changing a file here forces re-import of its dependents — do not edit directly.\" It ranks C header files by fan-in (how many other files depend on them). Each row shows the file name, a blue bar whose length is proportional to the dependent count, and the text \"N dependents · X% of scanned files · top Y%\". `tmux.h` dominates with 160 dependents (74% of scanned files, top 1%), followed by `compat.h` at 43 dependents (20%, top 1%); every other file (`compat/imsg.h` with 3, `xmalloc.h` with 2, and five `compat/` headers with 1 each) is near-zero by comparison. The footer notes it is \"showing top 8 of 10 files with resolved dependents · 1 non-production file demoted\" and \"resolved 214 of 234 include edges\". The standout is that touching `tmux.h` would force re-imports across roughly three-quarters of the scanned codebase, making it the riskiest file to edit.",
+        "json": {
+          "question_answered": "What breaks if I touch it?",
+          "action": "Avoid direct edits to headers ranked here — start with /tmux.h (160 dependents, 74% of scanned files) and inspect its include graph before any change",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "description": "This view is a ranked list titled \"What breaks if I touch it?\" with the subtitle \"Changing a file here forces re-import of its dependents — do not edit directly.\" Each row is a header file, paired with a horizontal blue bar whose length is proportional to how many other files depend on it, plus three numbers: the dependent count, the percentage of scanned files that represents, and the file's percentile rank. `tmux.h` dominates overwhelmingly at 160 dependents (74% of scanned files, top 1%), followed by `compat.h` at 43 dependents (20% of scanned files, top 1%) — then a dramatic cliff down to single-digit dependents for the remaining headers (`compat/imsg.h` at 3, `xmalloc.h` at 2, and several `compat/*` headers at 1 each). The bar lengths mirror this skew: two long bars and then slivers. A footer notes \"showing top 8 of 10 files with resolved dependents · 1 non-production file demoted\" and \"resolved 214 of 234 include edges\", indicating near-complete but not total coverage of the include graph. What stands out is the extreme single point of failure: touching `tmux.h` would force re-imports in roughly three-quarters of the scanned codebase.",
+        "json": {
+          "question_answered": "What breaks if I touch it?",
+          "action": "Treat tmux.h as effectively frozen: any edit forces re-import of 160 dependents (74% of scanned files), so route changes through a narrower internal interface or split the header before modifying it directly.",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "02.png": [
+      {
+        "read": "A",
+        "description": "This is a horizontal bar chart titled \"What breaks if I touch it?\", with the subtitle \"Changing a file here forces re-import of its dependents – do not edit directly.\" It ranks source files (mostly under `src/`) by how disruptive editing them would be — the blue bars represent a dependent-count/impact score. Each row shows the file path, a blue bar, and metrics like \"12 dependents · 23% of scanned files · top 2% · 6.0× median\". The top-ranked file is `src/quantity/mod.rs` with the longest bar (12 dependents, 23% of files, 6.0× median), followed by `src/metric.rs` (10 dependents, 19%, 5.0×). Two bottom rows (`src/benchmark/measurement.rs` and `src/benchmark/benchmark_result.rs`) are tagged BENCH and rendered in muted gray, indicating they're demoted (non-production) despite having 9 and 8 dependents respectively. The footer states \"showing top 10 of 41 files with resolved dependents · 16 non-production files demoted\" and \"resolved 205 of 238 include edges\".",
+        "json": {
+          "question_answered": "What breaks if I touch it?",
+          "action": "Before editing src/quantity/mod.rs (top-ranked blast radius: 12 dependents, 23% of scanned files, 6.0× median), coordinate with owners of dependent modules or re-export through a narrower interface",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "description": "The image shows a horizontal bar chart titled \"What breaks if I touch it?\" with the subtitle \"Changing a file here forces re-import of its dependents — do not edit directly.\" It ranks Rust source files by blast radius: each row shows a filename, a blue bar whose length encodes how many dependent files would need re-import if that file changes, and on the right the exact stats — number of dependents, share of scanned files, percentile (\"top X%\"), and a multiple of the median (e.g., \"6.0× median\"). The top of the list is `src/quantity/mod.rs` (12 dependents · 23% of scanned files · top 2% · 6.0× median) and `src/metric.rs` (10 dependents · top 4% · 5.0× median), followed by export/command/options/error/output modules with 4–6 dependents. What stands out is that two `src/benchmark/` files tagged [BENCH] — `measurement.rs` (9 dependents, 4.5× median) and `benchmark_result.rs` (8 dependents, 4.0× median) — have more dependents than many mid-list entries but are pushed to the bottom with grey (not blue) bars, because 16 non-production files are demoted. The footer notes this is the top 10 of 41 files with resolved dependents, and that 205 of 238 include edges were resolved.",
+        "json": {
+          "question_answered": "What breaks if I touch it?",
+          "action": "Before editing src/quantity/mod.rs (highest blast radius: 12 dependents, 23% of scanned files, 6.0× median), plan for re-import churn in its 12 dependents or reconsider the change",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "03.png": [
+      {
+        "read": "A",
+        "description": "This is a horizontal bar chart titled \"What breaks if I touch it?\" with the subtitle \"Changing a file here forces re-import of its dependents — do not edit directly.\" It ranks source files by how many other files depend on them (import/include fan-in), with the longest-impact files listed first. Five rows are shown: `cJSON.h` (5 dependents, 5% of scanned files, top 1%), `cJSON_Utils.h` (4 dependents, 4%, top 2%), `cJSON.c` (1 dependent, 1%, top 3%), `tests/unity/examples/unity_config.h` (22 dependents, 22%, top 9%, labeled with a purple TEST badge), and `tests/unity/src/unity.h` (22 dependents, 22%, top 10%, also TEST). The first three rows use short blue bars (production code), while the two TEST rows use long gray bars reflecting their much higher dependent counts (22 each). What stands out: the ranking deliberately demotes the two test files despite them having far more dependents — footers explain \"showing top 5 of 23 files with resolved dependents · 93 non-production files demoted\" and \"resolved 96 of 229 include edges.\" So production headers (`cJSON.h`) rank above test infrastructure even though the bars make the test files look dominant.",
+        "json": {
+          "question_answered": "What breaks if I touch it?",
+          "action": "Treat cJSON.h as the most fragile production file: any edit there forces re-import of 5 dependents (5% of scanned files, top 1%), so review include structure before touching it",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "description": "This is a ranked \"fan-in\" view titled \"What breaks if I touch it?\", with the subtitle \"Changing a file here forces re-import of its dependents — do not edit directly.\" Each row is a source file with a horizontal bar whose length reflects its number of dependents (importers), followed by the exact count, that count as a percentage of scanned files, and a \"top N%\" rank. The top three rows are production files shown with blue bars: `cJSON.h` (5 dependents, top 1%), `cJSON_Utils.h` (4 dependents, top 2%), and `cJSON.c` (1 dependent, top 3%). The next two rows are test files tagged with a purple TEST badge and gray bars — `tests/unity/examples/unity_config.h` and `tests/unity/src/unity.h` — each with 22 dependents (22% of scanned files, top 9% and top 10%), yet visually demoted below files with fewer dependents. What stands out is this inversion: the longest bars belong to demoted test files, while the \"most breaking\" production file to touch is `cJSON.h` with only 5 dependents. The footer notes \"showing top 5 of 23 files with resolved dependents · 93 non-production files demoted\" and \"resolved 96 of 229 include edges,\" so the list is a filtered, ranked subset of a larger include graph.",
+        "json": {
+          "question_answered": "What breaks if I touch it? — which files force re-import of the most dependents when changed (do not edit directly)",
+          "action": "Treat cJSON.h as the highest-risk production edit (5 dependents, top 1%) and verify its 5 dependents after any change; do not edit tests/unity/src/unity.h or tests/unity/examples/unity_config.h directly (22 dependents each)",
+          "blockers": "",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ]
+  },
+  "verdict": "A1-KV2 PASS (6/6)",
+  "observations": [
+    "O1: hyperfine readers correctly interpreted the greyed BENCH rows as demoted-but-never-excluded despite their higher dependent counts — the intended 'production first, never silent' semantics is legible from the view alone.",
+    "O2 (resolves V5 O2 for cJSON): cJSON.h now ranks #1 and both readers name it as the highest-risk production edit; the 22-dependent unity TEST headers are visibly demoted. The V5 disagreement on the riskiest file no longer occurs.",
+    "O3: tmux readers see the 160-dependent tmux.h as a single point of failure and the 1 non-production-file demotion; no blocker reported.",
+    "O4: all six reads returned high confidence and an empty blockers field; the demoted-count caption is read aloud by four of six.",
+    "O5: the demoted rows' long grey bars visibly exceed the production bars (cJSON/hyperfine); both readers explained why rather than misreading it as an error. Keep the caption; this is the intended 'bars show magnitude, position shows policy' split."
+  ]
+}

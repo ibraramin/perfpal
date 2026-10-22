@@ -35,7 +35,7 @@ showing top 5 of 14 actions
 
 - `src/util\.h` — 2 dependents · 67% of scanned files · top 33%
 
-showing top 1 of 1 files with resolved dependents
+showing top 1 of 1 files with resolved dependents · 0 non-production files demoted
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 2 of 2 include edges.
 

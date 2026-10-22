@@ -1,0 +1,38 @@
+{
+  "_comment": "V6 KV2 production-first amendment render manifest. 3 blind element screenshots, one per design repo. Holdout deliberately absent. Mapping revealed after the blind reads were recorded.",
+  "blind_mapping": {
+    "01.png": "tmux",
+    "02.png": "hyperfine",
+    "03.png": "cJSON"
+  },
+  "blind_mapping_seed": 20261022,
+  "generated": "2026-10-22",
+  "holdout": "django/postgres deliberately absent (V6 timed test only)",
+  "images": [
+    {
+      "file": "01.png",
+      "height": 391,
+      "sha256": "c346c58504b01fd3311b77fd93dd10289319e6358a8cc4e70c7e7313dd292f4c",
+      "width": 1152
+    },
+    {
+      "file": "02.png",
+      "height": 585,
+      "sha256": "91d6cbc5f82bd9f6c5d1cb17fb3076cbb269e6bc74d2ca4dfd107539f9406d5f",
+      "width": 1152
+    },
+    {
+      "file": "03.png",
+      "height": 288,
+      "sha256": "62aa409f9069f2f4d422071a108e0f7eb1fc1530aa3f8215f119c29d1fdcaa15",
+      "width": 1152
+    }
+  ],
+  "renderer": "Playwright chromium-1243",
+  "scan_inputs": {
+    "cJSON": "perfpal-test/out-v6-cJSON (schema 1.7)",
+    "hyperfine": "perfpal-test/out-v6-hyperfine (schema 1.7)",
+    "tmux": "perfpal-test/out-v6-tmux (schema 1.7)"
+  },
+  "viewport": "1440x900 @ device_scale_factor=1; element screenshots at 1152 CSS px"
+}

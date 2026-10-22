@@ -37,7 +37,7 @@ showing top 5 of 31 actions
 - `src/cycle\_b\.rs` — 2 dependents · 14% of scanned files · top 14%
 - `src/common\.rs` — 1 dependent · 7% of scanned files · top 21%
 
-showing top 3 of 3 files with resolved dependents
+showing top 3 of 3 files with resolved dependents · 0 non-production files demoted
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 5 include edges.
 

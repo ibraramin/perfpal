@@ -948,16 +948,18 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
             } else {
                 format!(" · {}", escape_md(&row.path_class))
             };
+            let demoted = if row.demoted { " · demoted" } else { "" };
             out.push_str(&format!(
-                "- `{}` — {}{class}\n",
+                "- `{}` — {}{class}{demoted}\n",
                 escape_md(&row.path),
                 row.value_label
             ));
         }
         out.push_str(&format!(
-            "\nshowing top {} of {} files with resolved dependents\n\nBlast-radius bars: [report.html#map](report.html#map). resolved {} of {} include edges.\n\n",
+            "\nshowing top {} of {} files with resolved dependents · {} demoted\n\nBlast-radius bars: [report.html#map](report.html#map). resolved {} of {} include edges.\n\n",
             kv2.rows.len().min(5),
             kv2.total_with_dependents,
+            views::plural(kv2.nonprod_file_count, "non-production file"),
             kv2.resolved_edges,
             kv2.total_edges,
         ));
@@ -1968,8 +1970,18 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
                     escape_html(&row.path_class)
                 )
             };
+            let row_class = if row.demoted {
+                "kv-brow kv-demoted"
+            } else {
+                "kv-brow"
+            };
+            let fill_class = if row.demoted {
+                "kv-fill demoted"
+            } else {
+                "kv-fill"
+            };
             out.push_str(&format!(
-                "<div class=\"kv-brow\"><span class=\"kv-blabel\">{path} {class}</span>                 <div class=\"kv-track\"><div class=\"kv-fill\" style=\"width:{width}%\"></div></div>                 <span class=\"kv-value\">{value}</span></div>\n",
+                "<div class=\"{row_class}\"><span class=\"kv-blabel\">{path} {class}</span>                 <div class=\"kv-track\"><div class=\"{fill_class}\" style=\"width:{width}%\"></div></div>                 <span class=\"kv-value\">{value}</span></div>\n",
                 path = escape_html(&row.path),
                 class = class,
                 width = row.width_pct,
@@ -1978,9 +1990,10 @@ fn html_map(out: &mut String, doc: &MetricsDocument) {
         }
         out.push_str("</div>\n");
         out.push_str(&format!(
-            "<p class=\"kv-counts\">showing top {} of {} files with resolved dependents</p>\n",
+            "<p class=\"kv-counts\">showing top {} of {} files with resolved dependents · {} demoted</p>\n",
             kv2.rows.len(),
             kv2.total_with_dependents,
+            views::plural(kv2.nonprod_file_count, "non-production file"),
         ));
     }
     out.push_str(&format!(

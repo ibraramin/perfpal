@@ -1,1 +1,107 @@
-{"schema_version":2,"goal":"Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.","current_phase":"V5 complete (dual-APPROVED): 18/18 blind reads PASS; no-loop falsifier partial; next V6 founder timed test.","stage":"dev","north_star_ref":"docs/NORTH-STAR.md","sessions_since_alignment_audit":0,"last_alignment_audit":"2026-10-16","decisions":[{"id":"D-pf-231","status":"live","title":"V4 SHIPPED + DUAL-APPROVED (round 2). KV1 text-first brief, KV2 dependents bars, KV3 cost bars with dual bar scale; first screen KV1; 8 stems under #explorer; units/anchors + counted demotions; schema 1.7 additive (files[].path_class, stats.functions[].trip_count_source/known_trip_value); profile-queue.md/.html + findings-detail#ranked-actions; only ARCH-002 suppressed from KV1; scripts/ -> bench; 900px card rule recorded. Vision evidence docs/evidence/map-vision/v4/. A1b NOT claimed closed on severity; shipped ranks recorded; KV2 no production-first (V2 lock)."},{"id":"D-pf-232","status":"live","title":"V5 DONE (evidence; dual-APPROVED). 18/18 valid blind reads (2 per key view; 3 empty agent outputs retried) state the slot question + one concrete path:line/function action; renders byte-identical to V4 (docs/evidence/map-vision/v5/). KV3 no-loop falsifier PARTIALLY FALSIFIED: guard demotes all three Q3 targets but is not the sole cause; counterfactual ranks 820->325, 58->46, 60->45 (still outside top 8). V7 must adopt call-weighted/per-iteration ranking or a call-frequency view; cJSON target is reachable_from_entry=false. Non-blocking O1 KV2 top N% wording, O2 KV2 production-first evidence. No code change. Holdout intact; map-build NOT done; A1b NOT closed."}],"open_risks":[{"id":"R-pf-063","status":"open","severity":"high","title":"MINISIGN secrets must exist/match minisign.pub before tag"},{"id":"R-pf-067","status":"open","severity":"high","title":"EULA/PRIVACY contact placeholder before beta tag"},{"id":"R-pf-104","status":"open","severity":"high","title":"Map unintelligible: V0/V1 isolate H2 for Q1/Q3 and include-Q2; call-Q2 is H1 in the default tier. Founder A2 remains open (V6)."},{"id":"R-pf-105","severity":"medium","title":"V4 shipped-key recall: KV1 Q1 targets rank tmux 209/7543, hyperfine 172/346, cJSON 37/835 (not inline); KV3 Q3 targets 820/3189, 58/353, 60/1055 (no-loop demoted). V7 re-triages the KV1 rank key; V5 tests the KV3 no-loop guard; KV2 production-first amendment + randomized pair re-run remain founder decisions before V6."},{"id":"R-pf-106","status":"open","severity":"medium","title":"V5 falsifier: static cost cannot surface per-byte/per-call Q3 leaves (counterfactual ranks 325/46/45 after removing the no-loop term). V7 owns call-weighted/per-iteration ranking or a separate call-frequency view; KV2 top N% wording + production-first amendment remain founder decisions before V6."}],"blocked_by":[{"id":"B-pf-001","status":"open","blocker":"Founder supplies real contact address for EULA/PRIVACY before tag"},{"id":"B-pf-002","status":"open","blocker":"Repo secrets MINISIGN_SECRET_KEY + MINISIGN_PASSWORD before tag"}],"next_actions":[{"id":"A-pf-098","status":"active","action":"Map-quality fix 1 (R-pf-098): decide + implement entry-detection semantics so layer-entry depth strata are non-trivial on real C corpora; new ADR/spec amendment, then re-golden."},{"id":"A-pf-099","status":"active","action":"Map-quality fix 2 (R-pf-099): production-path ranking policy + known-trip sanity guard so test/example/fixture heat cannot outrank production code."},{"id":"A-pf-100","status":"active","action":"Map-quality fix 3 (R-pf-100): minimum-findings/denominator guard for component finding-density ranks."},{"id":"A-pf-103","status":"active","action":"Semantic-tier golden coverage (R-pf-103): add a small semantic-specific golden set or equivalent regression lock for chart/report topology under --features semantic-clang."},{"id":"A-pf-107","status":"active","action":"V6 founder timed eye-test on an unfamiliar repo INCLUDING the django/postgres holdout (never rendered/read in V5); record verbatim; A2 bar = 3 actions in <10 min + intelligible. Before V6 the founder decides the KV2 production-first amendment and whether to run the randomized KV1 pair re-run."},{"id":"A-pf-108","status":"active","action":"V7 re-triage: KV1 rank key + call-weighted/per-iteration Q3 ranking per the V5 falsifier; fix or explicitly accept R-pf-098/099/100; keep A1b open until recall is inline or explicitly scoped."}],"last_updated":"2026-10-22"}
+{
+  "schema_version": 2,
+  "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
+  "current_phase": "V6a complete (KV2 production-first, 6/6 blind reads); V6 founder timed test pending on the released holdout (postgres timed, django smoke).",
+  "stage": "dev",
+  "north_star_ref": "docs/NORTH-STAR.md",
+  "sessions_since_alignment_audit": 0,
+  "last_alignment_audit": "2026-10-16",
+  "decisions": [
+    {
+      "id": "D-pf-231",
+      "status": "live",
+      "title": "V4 SHIPPED + DUAL-APPROVED (round 2). KV1 text-first brief, KV2 dependents bars, KV3 cost bars with dual bar scale; first screen KV1; 8 stems under #explorer; units/anchors + counted demotions; schema 1.7 additive (files[].path_class, stats.functions[].trip_count_source/known_trip_value); profile-queue.md/.html + findings-detail#ranked-actions; only ARCH-002 suppressed from KV1; scripts/ -> bench; 900px card rule recorded. Vision evidence docs/evidence/map-vision/v4/. A1b NOT claimed closed on severity; shipped ranks recorded; KV2 no production-first (V2 lock)."
+    },
+    {
+      "id": "D-pf-232",
+      "status": "live",
+      "title": "V5 DONE (evidence; dual-APPROVED). 18/18 valid blind reads (2 per key view; 3 empty agent outputs retried) state the slot question + one concrete path:line/function action; renders byte-identical to V4 (docs/evidence/map-vision/v5/). KV3 no-loop falsifier PARTIALLY FALSIFIED: guard demotes all three Q3 targets but is not the sole cause; counterfactual ranks 820->325, 58->46, 60->45 (still outside top 8). V7 must adopt call-weighted/per-iteration ranking or a call-frequency view; cJSON target is reachable_from_entry=false. Non-blocking O1 KV2 top N% wording, O2 KV2 production-first evidence. No code change. Holdout intact; map-build NOT done; A1b NOT closed."
+    },
+    {
+      "id": "D-pf-233",
+      "status": "live",
+      "title": "V6 pre-test founder decisions: KV2 production-first amendment APPROVED (implement + re-validate with 2 blind reads per design-repo KV2 view; holdout untouched); randomized KV1 pair re-run SKIPPED (founder timed test is the decisive gate; V3 2/3 stands, recorded as accepted non-blocking). Holdout release for V6: scan both django + postgres, timed test on postgres (C path at scale), django untimed smoke; no agent reads of holdout key views."
+    },
+    {
+      "id": "D-pf-234",
+      "status": "live",
+      "title": "V6a DONE: KV2 production-first amendment implemented (founder-ratified). Production first -> dependents desc -> path; top P% follows the production-first key; median over all files; inline = up to 8 production + up to 2 greyed demoted, never excluded; HTML/MD print N non-production files demoted. cJSON.h #1, unity TEST headers demoted. Vision gate 6/6 blind reads PASS (docs/evidence/map-vision/v6/kv2-amendment/). Tests + 4 golden trees regenerated (caption-only diff; second regen stable). No schema change. Holdout django/postgres scanned with HEAD for V6 only; preflight PASS (structural only, no agent reads). V5 byte-identical claim historical (KV2 changed by design)."
+    }
+  ],
+  "open_risks": [
+    {
+      "id": "R-pf-063",
+      "status": "open",
+      "severity": "high",
+      "title": "MINISIGN secrets must exist/match minisign.pub before tag"
+    },
+    {
+      "id": "R-pf-067",
+      "status": "open",
+      "severity": "high",
+      "title": "EULA/PRIVACY contact placeholder before beta tag"
+    },
+    {
+      "id": "R-pf-104",
+      "status": "open",
+      "severity": "high",
+      "title": "Map unintelligible: V0/V1 isolate H2 for Q1/Q3 and include-Q2; call-Q2 is H1 in the default tier. Founder A2 remains open (V6)."
+    },
+    {
+      "id": "R-pf-105",
+      "severity": "medium",
+      "title": "V4 shipped-key recall: KV1 Q1 targets rank tmux 209/7543, hyperfine 172/346, cJSON 37/835 (not inline); KV3 Q3 targets 820/3189, 58/353, 60/1055 (no-loop demoted). V7 re-triages the KV1 rank key; V5 tests the KV3 no-loop guard; KV2 production-first amendment + randomized pair re-run remain founder decisions before V6."
+    },
+    {
+      "id": "R-pf-106",
+      "status": "open",
+      "severity": "medium",
+      "title": "V5 falsifier: static cost cannot surface per-byte/per-call Q3 leaves (counterfactual ranks 325/46/45 after removing the no-loop term). V7 owns call-weighted/per-iteration ranking or a separate call-frequency view; KV2 top N% wording + production-first amendment remain founder decisions before V6."
+    }
+  ],
+  "blocked_by": [
+    {
+      "id": "B-pf-001",
+      "status": "open",
+      "blocker": "Founder supplies real contact address for EULA/PRIVACY before tag"
+    },
+    {
+      "id": "B-pf-002",
+      "status": "open",
+      "blocker": "Repo secrets MINISIGN_SECRET_KEY + MINISIGN_PASSWORD before tag"
+    }
+  ],
+  "next_actions": [
+    {
+      "id": "A-pf-098",
+      "status": "active",
+      "action": "Map-quality fix 1 (R-pf-098): decide + implement entry-detection semantics so layer-entry depth strata are non-trivial on real C corpora; new ADR/spec amendment, then re-golden."
+    },
+    {
+      "id": "A-pf-099",
+      "status": "active",
+      "action": "Map-quality fix 2 (R-pf-099): production-path ranking policy + known-trip sanity guard so test/example/fixture heat cannot outrank production code."
+    },
+    {
+      "id": "A-pf-100",
+      "status": "active",
+      "action": "Map-quality fix 3 (R-pf-100): minimum-findings/denominator guard for component finding-density ranks."
+    },
+    {
+      "id": "A-pf-103",
+      "status": "active",
+      "action": "Semantic-tier golden coverage (R-pf-103): add a small semantic-specific golden set or equivalent regression lock for chart/report topology under --features semantic-clang."
+    },
+    {
+      "id": "A-pf-107",
+      "status": "active",
+      "action": "V6 founder timed eye-test on an unfamiliar repo INCLUDING the django/postgres holdout (never rendered/read in V5); record verbatim; A2 bar = 3 actions in <10 min + intelligible. Before V6 the founder decides the KV2 production-first amendment and whether to run the randomized KV1 pair re-run."
+    },
+    {
+      "id": "A-pf-108",
+      "status": "active",
+      "action": "V7 re-triage: KV1 rank key + call-weighted/per-iteration Q3 ranking per the V5 falsifier; fix or explicitly accept R-pf-098/099/100; keep A1b open until recall is inline or explicitly scoped."
+    }
+  ],
+  "last_updated": "2026-10-22"
+}

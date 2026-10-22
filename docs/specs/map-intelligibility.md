@@ -121,9 +121,11 @@ Rules that bind the slots:
 - **Default-tier honesty.** KV2 claims include blast radius only. Every default-tier scan
   exports only LOW-confidence call edges, so a call-based claim must carry the LOW/semantic-tier
   label or be absent. KV2 prints include coverage (`resolved N of M include edges`).
-- **Production-first, never silent.** KV1/KV3 rank production code first
+- **Production-first, never silent.** KV1/KV2/KV3 rank production code first
   (`files[].path_class`), demote test/example/bench/fixture/generated/vendor files, and print
-  `N non-production files demoted`. KV3 also demotes `entry_kind = main/script` (startup) and
+  `N non-production files demoted`. KV2 slots up to 8 production rows then up to 2 greyed
+  demoted rows; demotion never excludes a file from the ordering. KV3 also demotes
+  `entry_kind = main/script` (startup) and
   no-loop functions (`max_loop_depth == 0`) below loop-bearing ones — never excluding either —
   and prints `N startup functions demoted` + `N no-loop functions demoted`; it labels
   `unknown_trip_loops > 0` as "estimate incomplete" and prints `known trip ×N — verify it
@@ -170,11 +172,13 @@ all three Q3 targets down (811/66/58). The idiom choice stands, but **V4 must no
 closed on severity alone — V7 owns the KV1 rank-key re-triage and V5 must test the no-loop
 guard against the per-byte-leaf evidence**.
 
-**KV2 production-first (proposed V2 amendment, pending founder ratification).** V3 applied
+**KV2 production-first (V2 amendment, ratified 2026-10-22; implemented V6a).** V3 applied
 production-first demotion to KV2 because cJSON's public ABI header (`cJSON.h`, 5 production
-dependents) is otherwise buried by unity test headers with 22 dependents. V2 names
-production-first only for KV1/KV3; until ratified, the V2 text stands and V4 may not silently
-demote KV2 rows.
+dependents) is otherwise buried by unity test headers with 22 dependents. V5 O2 confirmed it:
+the two cJSON KV2 reads disagreed on the riskiest file. The founder ratified the amendment
+before V6 and it is implemented (see V6a below): production rows first, up to 8 production +
+up to 2 greyed demoted rows, demoted count printed, never excluded. V4 shipped the label-only
+behavior; that is historical.
 
 **KV2 anchor.** When the median dependent count is 0 (tmux, cJSON), `× median dependent count`
 is undefined; the key view uses `% of scanned files` + `top P%` and keeps `× median` only when
@@ -236,9 +240,9 @@ is not a shippable core feature. M5 remains gated by `B-pf-001`/`B-pf-002`.
   changing analyzer wording.
 - **Rationale truncation:** key views render the full `finding.message`; the 32-char tail-keep cap
   remains chart-label-only. Duplicate KV2 captions are gone (one action line).
-- **KV2 production-first is NOT applied** — the V2 lock stands and the rows label their
-  `path_class` (including test/bench) instead of demoting. The amendment remains pending founder
-  ratification.
+- **KV2 production-first was NOT applied in V4** — the V2 lock stood and the rows labelled
+  their `path_class` (including test/bench) instead of demoting. The amendment was ratified by
+  the founder on 2026-10-22 and implemented in V6a (below); this V4 note is historical.
 - **`scripts/` classification:** repo tooling is `bench` in schema 1.7 (aggregator-owned); the
   decision is documented rather than re-derived in the reporter.
 - **No card idiom ships.** One line for the record: any future card idiom must fit one 900×900
@@ -288,3 +292,37 @@ also `reachable_from_entry = false`, so a reachable-only Q3 (R-pf-098) would hid
 Reproducer: `docs/evidence/map-vision/v5/no_loop_falsifier_v5.py` → `.json` (exits non-zero on
 rank drift). **No V5 code change**; no read exposed a blocking defect. Holdout untouched;
 `map-build` remains NOT done; A1b is not claimed closed.
+
+## V6a — KV2 production-first amendment (2026-10-22, founder-ratified)
+
+The founder ratified the V3-proposed KV2 production-first amendment before V6, using V5 O2 as
+supporting evidence (cJSON `cJSON.h` at #4 behind 22-dependent unity test headers; the two V5
+cJSON KV2 reads disagreed on the riskiest file). Implementation:
+
+- KV2 ordering: production first (`files[].path_class`), then distinct resolved dependents desc,
+  then path asc. `top P%` ranks follow this production-first ordering; the median stays over every
+  scanned file, zeros included (unchanged honesty).
+- Inline slotting mirrors KV3: up to 8 production rows + up to 2 greyed demoted rows; demoted
+  rows are never excluded from the ordering. HTML/Markdown print `N non-production files demoted`
+  alongside `showing top X of Y files with resolved dependents` and the `resolved N of M include
+  edges` coverage line.
+- No schema change; KV1/KV3 semantics, the `top N%` wording (O1, V7) and the holdout are
+  untouched.
+
+Vision gate: 3 fresh blind renders (tmux/hyperfine/cJSON, 1440×900 element screenshots) and 6
+fresh blind `@vision` reads (2 per view, one image per task, no source/siblings/expected answer).
+**6/6 PASS** — each states "What breaks if I touch it?" and one concrete path action. `cJSON.h`
+now ranks #1 and both readers name it as the highest-risk production edit; the 22-dependent unity
+`TEST` headers are visibly greyed and both readers correctly explain the demotion. Hyperfine
+readers likewise read the greyed `BENCH` rows (9/8 dependents) as demoted-but-never-excluded below
+production rows (12/10). Evidence: `docs/evidence/map-vision/v6/kv2-amendment/` (`reads.json`,
+`manifest.json`, 3 PNGs, `render_v6_kv2.py`). The V5 "byte-identical to V4" claim is historical:
+KV2 now differs by design; KV1/KV3 renders are unchanged.
+
+- Tests: `kv2_demotes_non_production_without_excluding`,
+  `kv2_test_file_with_more_dependents_ranks_below_production`,
+  `kv2_slots_eight_production_then_two_demoted`, plus the integration
+  `kv2_demoted_rows_are_greyed_with_demoted_caption`; four golden trees regenerated (KV2 caption
+  lines only) and stable on a second regeneration.
+- Holdout: fresh HEAD scans of django + postgres released **only** for the V6 timed test; structural
+  preflight only (`docs/evidence/map-vision/v6/preflight.py`, `preflight.json`). No agent reads.

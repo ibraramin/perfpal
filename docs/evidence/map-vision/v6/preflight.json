@@ -1,0 +1,84 @@
+{
+  "_comment": "V6 holdout preflight \u2014 structural only; no screenshots, no key-view content extraction, no interpretation. Holdout released for the founder timed test only.",
+  "generated": "2026-10-22",
+  "repos": {
+    "django": {
+      "checks": {
+        "first_kv_is_kv1": true,
+        "kv1_has_rows": true,
+        "kv2_caption_discloses_demotion": true,
+        "kv2_has_rows": true,
+        "kv3_has_rows": true,
+        "no_page_errors": true,
+        "one_kv1": true,
+        "one_kv2": true,
+        "one_kv3": true
+      },
+      "dom": {
+        "first_kv_class": "kv kv1",
+        "kv1": 1,
+        "kv1_rows": 5,
+        "kv2": 1,
+        "kv2_caption_has_demoted": true,
+        "kv2_demoted_rows": 2,
+        "kv2_rows": 10,
+        "kv3": 1,
+        "kv3_rows": 10
+      },
+      "files": 2932,
+      "findings": 26089,
+      "load_ms": 346,
+      "metrics_sha256": "9e458b37e06eb141582057c5638263f2aca6000abc713a0dbf7a5f51ca8ddbe5",
+      "page_errors": [],
+      "parse_health_summary": {
+        "failed": 0,
+        "ok": 2932,
+        "partial": 0
+      },
+      "repo_commit": "d430084",
+      "report_sha256": "0646ec78b6c604a08e526d226fa53f28fb29ab15db4ff45072bcd95a26d6c9eb"
+    },
+    "postgres": {
+      "checks": {
+        "first_kv_is_kv1": true,
+        "kv1_has_rows": true,
+        "kv2_caption_discloses_demotion": true,
+        "kv2_has_rows": true,
+        "kv3_has_rows": true,
+        "no_page_errors": true,
+        "one_kv1": true,
+        "one_kv2": true,
+        "one_kv3": true
+      },
+      "dom": {
+        "first_kv_class": "kv kv1",
+        "kv1": 1,
+        "kv1_rows": 5,
+        "kv2": 1,
+        "kv2_caption_has_demoted": true,
+        "kv2_demoted_rows": 2,
+        "kv2_rows": 10,
+        "kv3": 1,
+        "kv3_rows": 10
+      },
+      "files": 2566,
+      "findings": 102933,
+      "load_ms": 301,
+      "metrics_sha256": "aa20b56c3613b8dbd86ccb496e54aa0fcb215125a46c944d617098972aaddffe",
+      "page_errors": [],
+      "parse_health_summary": {
+        "failed": 0,
+        "ok": 1401,
+        "partial": 1165
+      },
+      "repo_commit": "856a659",
+      "report_sha256": "3f40bed15a14dce2e7db77761a4fd485b5d219d231f72b6b02c6200c834e9a2c"
+    }
+  },
+  "timed_repo": "postgres",
+  "verdict": "PASS",
+  "viewport": {
+    "height": 900,
+    "width": 1440
+  }
+}

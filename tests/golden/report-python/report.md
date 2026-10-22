@@ -37,7 +37,7 @@ showing top 5 of 28 actions
 - `pkg/cycle\_b\.py` — 2 dependents · 10% of scanned files · top 10%
 - `pkg/arch\_helpers\.py` — 1 dependent · 5% of scanned files · top 15%
 
-showing top 3 of 3 files with resolved dependents
+showing top 3 of 3 files with resolved dependents · 0 non-production files demoted
 
 Blast-radius bars: [report.html#map](report.html#map). resolved 5 of 10 include edges.
 

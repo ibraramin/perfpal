@@ -81,8 +81,9 @@ Binding rules:
   cost targets stay traceable (A1b).
 - **Default-tier honesty.** KV2 claims include blast radius only (0 non-LOW call edges in the
   default tier) and prints `resolved N of M include edges`.
-- **Production-first, never silent.** KV1/KV3 demote test/example/bench/fixture/generated/vendor
-  files (`files[].path_class`), print the demoted count; KV3 also demotes `entry_kind =
+- **Production-first, never silent.** KV1/KV2/KV3 demote test/example/bench/fixture/generated/vendor
+  files (`files[].path_class`), print the demoted count; KV2 slots production rows first then up to
+  2 greyed demoted rows (never excluded); KV3 also demotes `entry_kind =
   main/script` and no-loop functions below loop-bearing ones (never excluding either; prints both
   counts), labels unknown-trip estimates, and flags known literal trips
   (`known trip ×N — verify it actually runs`).
@@ -97,13 +98,14 @@ brief** (2/3), **KV2 = horizontal dependents bars** (3/3), **KV3 = horizontal co
 Matrices lose on basename ambiguity; treemaps lose on missing `path:line` and near-equal areas.
 The V3 recall check found the locked KV1 severity ranking does not put the pre-registered Q1
 answer inline (ranks 210/197/35) and the KV3 no-loop demotion pushes all three Q3 targets down;
-V7 re-triages the KV1 rank key and V5 tests the no-loop guard. **KV2 production-first is a
-proposed V2 amendment pending founder ratification** (cJSON's `cJSON.h` is otherwise buried by
-unity test headers); until then V2's production-first scope (KV1/KV3) stands. When the median
-dependent count is 0, KV2 anchors with `% of scanned files` + `top P%`, not `× median`.
+V7 re-triages the KV1 rank key and V5 tests the no-loop guard. **KV2 production-first was
+ratified by the founder on 2026-10-22 and implemented in V6a** (production rows first, up to 8 +
+2 greyed demoted rows, count printed; cJSON's `cJSON.h` now ranks #1 instead of being buried by
+22-dependent unity test headers). When the median dependent count is 0, KV2 anchors with
+`% of scanned files` + `top P%`, not `× median`.
 V4 (2026-10-22) shipped the three key views and the `Explorer` rename; `ARCH-002` component
-aggregates are suppressed from KV1 (counted, not ranked; `ARCH-001`/`ARCH-003` stay), KV2 keeps the V2 lock (labels path
-class without demotion), and A1b is not claimed closed on severity (V7 re-triages the rank key).
+aggregates are suppressed from KV1 (counted, not ranked; `ARCH-001`/`ARCH-003` stay), KV2
+shipped label-only (historical), and A1b is not claimed closed on severity (V7 re-triages the rank key).
 V5 (2026-10-22) validated the V4 views with two fresh blind reads per key view: **18/18 valid
 reads** state the slot question and one concrete action; the renders are byte-identical to V4
 (`docs/evidence/map-vision/v5/`). The **KV3 no-loop falsifier is partially falsified**: the
@@ -111,7 +113,11 @@ guard demotes all three Q3 targets, but dropping it alone still leaves them outs
 top 8 (shipped→counterfactual ranks 820→325, 58→46, 60→45), so V7 needs call-weighted /
 per-iteration ranking, not guard removal. O1 (KV2 `top N%` wording) and O2 (KV2
 production-first evidence) feed the founder/V6 decisions. Holdout intact; A1b not claimed
-closed.
+closed. V6a (2026-10-22) implemented the founder-ratified KV2 amendment: production rows first,
+up to 8 + 2 greyed demoted rows, demoted count printed; 3 fresh blind renders + **6/6 blind
+reads PASS** (cJSON `cJSON.h` #1; hyperfine `BENCH` rows read as demoted-but-never-excluded).
+Holdout released only for the V6 timed test (postgres timed, django smoke); `map-build` remains
+NOT done; A1b is not claimed closed.
 
 ## Non-goals
 Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runtime truth claims.
