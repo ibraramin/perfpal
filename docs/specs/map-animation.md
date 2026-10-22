@@ -15,10 +15,13 @@ only carrier of information: everything visible mid-animation is visible in the 
 
 ## Contract
 
-- **No JavaScript.** The report/HTML contains no `<script>` and no event handlers. Animation is
-  CSS keyframes and/or SVG SMIL only. The static SVG remains the canonical chart artifact.
-- **Deterministic timeline.** Delays/durations are fixed constants derived from the view model
-  (BFS depth, rank, path position). No randomness, no wall-clock input, no data-dependent timing.
+- **No new JavaScript.** The Atlas canvas/SVG/animation artifacts contain no `<script>` and no
+  event handlers. Animation is CSS keyframes and/or SVG SMIL only. The static SVG remains the
+  canonical chart artifact. The report already ships exactly one fixed enhancement script
+  (`REPORT_SCRIPT`, pan/zoom/filter; fixed source, no interpolated data, no network); it is
+  unchanged and outside the animation clause.
+- **Deterministic timeline.** Delays/durations are a deterministic function of the view model
+  (BFS depth, rank, path position) with fixed constants. No randomness, no wall-clock input.
   The generated HTML/SVG bytes are byte-identical across runs; the animation runtime is not part of
   the bytes.
 - **Static final frame.** The final frame is the complete view (all nodes/cells, labels, numbers,
@@ -43,8 +46,9 @@ only carrier of information: everything visible mid-animation is visible in the 
 
 ## ADR consequence
 
-ADR-0002 currently says static SVG, zero-JS. This spec requires a **clarifying amendment**:
-artifacts stay static, offline, zero-JS and byte-deterministic; the HTML report may include
+ADR-0002 currently says static SVG, zero-JS for artifacts. This spec requires a **clarifying
+amendment**:
+artifacts stay static, offline, zero-new-JS and byte-deterministic; the HTML report may include
 declarative CSS/SMIL animation over the static SVG with pause, reduced-motion and print fallbacks.
 The static SVG remains the canonical artifact. The amendment is recorded before the winner ships;
 prototypes may proceed under this spec.
@@ -55,6 +59,27 @@ prototypes may proceed under this spec.
   action, no blockers.
 - A2: founder timed test passes with animation; pause + reduced-motion + print show the complete
   final frame.
-- A3: `grep -c '<script'` = 0 in the emitted report; no event-handler attributes; no network refs.
+- A3: **no new JavaScript.** The Atlas canvas/SVG/animation artifacts contain no `<script>` and no
+  event-handler attributes; no network refs. The report already ships exactly one fixed
+  enhancement script (`REPORT_SCRIPT`, fixed source, no interpolated document data, no network);
+  it is unchanged and outside the animation clause. The gate asserts exactly one block in
+  `report.html` and zero in the canvas/SVG/animation artifacts.
 - A4: double-scan byte-identical for the emitted HTML/SVG (excluding run provenance).
 - A5: no information exists only mid-animation; the final frame is complete.
+
+## Atlas application (2026-10-23)
+
+The animation applies to the Atlas entry-flow canvas and its key drills. The timeline is a
+deterministic function of the view model (fixed constants; no randomness, no wall-clock input):
+entry pulse 0–1.2s → depth-column reveal 1.2–2.8s →
+edge draw-on 2.8–4.2s → path-trace numbering 4.2–5.4s → HOTTEST pulse 5.4s+. The CSS-only pause
+control sits in the canvas header; `prefers-reduced-motion: reduce` and `@media print` show the
+complete final frame. The final frame includes every node, label, number, caption, edge and the
+full seven-block brief (`docs/specs/atlas-layout.md` §7–§8).
+
+Animation is presentation only: the canvas is readable with animation disabled, and no metric or
+answer exists only mid-animation. The metric contract (`docs/specs/atlas-metrics.md`) applies to
+every frame: no time units, units + anchors present, one measured encoding (cost). ADR-0010 records
+the ADR-0002 amendment for the shipped renderer. The report's existing single fixed
+`REPORT_SCRIPT` enhancement (pan/zoom + click-to-filter) is unchanged and is not part of the
+animation; no new script is added for the Atlas.

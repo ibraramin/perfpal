@@ -1,7 +1,7 @@
 ---
 plan name: map-shipped
 plan description: Shipped combined map research
-plan status: active
+plan status: done
 ---
 
 ## Idea

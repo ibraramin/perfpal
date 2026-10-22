@@ -1,6 +1,11 @@
 # ADR-0002: Visualization Approach — hand-rolled deterministic SVG, zero chart dependencies
 
 - **Status:** Accepted (founder-approved 2026-08-23)
+- **Amended by:** [ADR-0010](ADR-0010-declarative-animation.md) (2026-10-23, proposed) — the HTML
+  report may carry declarative CSS/SMIL animation over the static SVG; artifacts stay static,
+  offline, zero-JS and byte-deterministic, and the static SVG remains canonical. The call-graph
+  policy ("no standalone call-graph chart in v1") is amended for the Atlas canvas only by
+  [ADR-0009](ADR-0009-atlas-core.md).
 - **Date:** 2026-08-23
 - **Deciders:** Founder + orchestrator (evidence: @librarian survey of chart tech, licenses verified against primary sources)
 - **Gates:** All reporter/chart implementation in `mvp-architecture` and beyond; owns the chart set deferred by [output-contract §3](../report/output-contract.md).

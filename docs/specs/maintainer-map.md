@@ -64,8 +64,9 @@ inside a slot; it may not add a fourth slot or stack a second encoding. The feat
 
 Binding rules:
 
-- **First screen = KV1.** No workspace node-link on the first screen; a plain-language Q1
-  answer is the first content block.
+- **First screen = KV1 (legacy list-first report; superseded for the Atlas page by the V8
+  amendment below).** No workspace node-link on the first screen; a plain-language Q1 answer is
+  the first content block.
 - **All emitted stems under `Explorer`.** The existing `#architecture` section is renamed (heading +
   nav label `Explorer`, `#explorer`), not duplicated. Stems stay available, gated as today
   (fewer than 8 on small scans), and make no answer claim. `layer-findings` is not "density"
@@ -121,3 +122,29 @@ NOT done; A1b is not claimed closed.
 
 ## Non-goals
 Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runtime truth claims.
+
+## Atlas composition (2026-10-23, founder D-pf-238)
+
+The core visual is **Perfpal Atlas**: an entry-flow graph page. G (entry-flow) is the core graph;
+F (weight map) is not a fallback and not discarded — its weight mass ships as a supporting
+below-graph strip, its treemap is Explorer-only, and any other supporting component must pass the
+six-test inclusion rule (`docs/research/atlas-developer-needs.md` §7). No mode switch. The graph
+page is 100% graph; metrics/brief live below.
+
+| Level | Composition |
+|---|---|
+| **Atlas canvas** (first screen) | Elected entry (production `main`, then production `script` (Python `__main__`), else highest-fan-in production `lib-root`; else `NO ENTRY` stub), file nodes on BFS depth columns, structural call edges (LOW+MEDIUM, disclosed), component hulls (approximate), unreached tail, numbered representative path trace, legend + caps chip |
+| **Atlas brief** (below) | Answer line → KV1 actions → weight strip (F mass) → blast radius → file cards → noise footer → drill links; fixed seven blocks, state-unconditional |
+| **Drills** | Q2 reverse drill, complete action list, complete profile queue, weight detail, per-component pages |
+| **Explorer** | The 8 legacy stems + `weight-treemap` (F), labelled Explorer-tier, no answer claim |
+
+The three questions keep their slots but move on the Atlas page: Q1 = canvas + KV1 actions below;
+Q2 = blast-radius block below + drill; Q3 = weight strip below (file/component share) + complete
+function-level profile queue in the drill. One encoding each; severity/confidence stay text. The
+first block is the canvas and the first answer-bearing block is the answer line below it
+(`map-intelligibility.md` V8, amending A8 for the Atlas page).
+
+Honesty contract unchanged: caps, stubs, LOW/structural labels and counted demotions survive; the
+canvas never prints `resolved` or `reachable_from_entry` for the structural call set; no time
+units (`docs/specs/atlas-metrics.md`). Data decision: no schema change in Atlas v1
+(`docs/research/atlas-data-gap-audit.md`).

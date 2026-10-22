@@ -1,6 +1,8 @@
 # ADR-0008: Map Idiom Decision (R4 gate)
 
-- **Status:** Proposed
+- **Status:** Proposed — **superseded in part by [ADR-0009](ADR-0009-atlas-core.md)** (2026-10-23):
+  the human map's core idiom is the Atlas entry-flow canvas; the DSM/Sugiyama/treemap level idioms
+  remain available for Explorer stems and are not silently reinterpreted.
 - **Date:** 2026-10-17
 - **Deciders:** Founder + orchestrator
 - **Gates:** Map-build increments I1–I5 (entry/reachability, cost-v2, map

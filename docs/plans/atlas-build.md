@@ -1,0 +1,51 @@
+---
+plan name: atlas-build
+plan description: Ship the Atlas map page
+plan status: pending-ratification
+---
+
+## Idea
+Build and ship Perfpal Atlas: the entry-flow core graph (G) as a full-bleed 100%-graph canvas, with the fixed seven-block below-graph brief (answer line, KV1 actions, weight strip, blast radius, file cards, noise footer, drill links), the F weight mass as an always-on below-graph strip, the F treemap as an Explorer-only stem, and no mode switch. This plan implements the decisions of ADR-0009 (Atlas core) and ADR-0010 (declarative animation), the metric contract docs/specs/atlas-metrics.md, the composition docs/specs/atlas-layout.md, and the V8 amendments to map-intelligibility/maintainer-map/map-animation. Data decision: NO schema change in v1 — every element is an existing v1.7 field or a deterministic chart-side derivation (docs/research/atlas-data-gap-audit.md); I/O sinks are downscoped; loop-I/O findings stay in KV1. Honesty: the canvas draws the default-tier structural call graph (LOW name-based + MEDIUM semantic; 0 resolved edges exist in the default tier), labels it "structural (LOW name-based + MEDIUM semantic)", prints the MEDIUM/LOW mix, never prints "resolved"/"reachable_from_entry" for that set, and never claims runtime truth. Entry policy: production main, then production script (Python `__main__`), else highest-fan-in production lib-root labelled "library root (no production main)"; else a NO ENTRY stub — never abort. Findings ride as text annotations on the canvas nodes (M-18, `HOT ×N`/`WARN ×N`/`INFO ×N`), satisfying the north-star's "findings as annotations" without a second encoding. All blocks are state-unconditional; the page shape is identical for application, library, no-entry, empty, all-test, capped, partial-parse and single-file scans. The report's existing single fixed enhancement script (`REPORT_SCRIPT`, pan/zoom/filter) is unchanged; the Atlas adds no new script (A12). The holdout (django/postgres) stays vaulted until the founder A2 timed test; a library-shaped repo is pre-registered (A-pf-116) as the second A2 class. This is a build plan: it starts only after founder ratification of ADR-0009/ADR-0010, and it is done only when the Definition of Done below passes with evidence committed.
+
+## Implementation
+- Ratification gate: founder ratifies ADR-0009 (Atlas core) and ADR-0010 (declarative animation) plus the V8 amendments to map-intelligibility/maintainer-map/map-animation; record the ratification in state/session-state.json (D-pf-239/D-pf-240 confirmed) and update the ADR status lines. No implementation before this step completes.
+- View model in src/reporter/atlas.rs: pure deterministic functions over MetricsDocument — entry election (production main, then production script (Python `__main__`), else highest-fan-in production lib-root, else NO ENTRY stub) with alternatives, structural adjacency from graphs.call_graph.edges with a MEDIUM/LOW confidence split, BFS depth/parent/reachable over the full pre-cap structural edge set, node and edge caps with aggregated boxes, file cost (sum function_cost_v2), component grouping/hulls and production-first cost shares, dominant finding rule + per-file finding annotation count, top functions, blast-radius counts from graphs.include_graph reverse edges, coverage/noise counts from parse_health/parse_health_summary and confidence, and the representative path trace (BFS-tree leaf by cost↓/depth↓/path asc, then parent-chain). Reuse src/reporter/views.rs ScaleOrdering for the median value and ranks (the shipped median is lower-middle for even N); sort every traversal; unit tests for entry matrix, caps, path determinism and confidence split.
+- Metric formatting module in src/reporter/atlas_metrics.rs: implement docs/specs/atlas-metrics.md — units (static cost units (v2)/(v1)), '× median function' + 'top P%' anchors, '% of scanned static cost' shares, dependent-file blast-radius anchors, thousands separators, <10× one decimal vs ≥10× integer, stub strings, and the no-time-unit/no-runtime-claim rule. Unit tests: huge multiple (83,354×), zero median, zero total cost, v1 fallback, percentile ties, stub text, and no emitted 'ms'/'µs'/'runtime' claim in any string.
+- Canvas renderer in src/reporter/atlas_render.rs: deterministic SVG/HTML for the 100%-graph canvas — depth columns, file nodes (name, cost, × median function, HOTTEST, M-18 finding annotation), forward/back structural edges with distinct-edge labels, component hulls with the approximate-prefix disclosure, unreached column, numbered representative path trace, legend with units and the structural caption, caps chip and canvas footer. Graph chrome only (no cards/tables/bars/metric selectors). CSS/SMIL animation (entry pulse, depth reveal, edge draw-on, path trace, HOTTEST pulse), CSS-only pause, prefers-reduced-motion and print final frames. Zero new <script>/event handlers/network; the report's existing fixed REPORT_SCRIPT is unchanged. Byte-identical double render.
+- Brief and drills renderer in src/reporter/atlas_brief.rs: the fixed seven below-graph blocks (answer line; KV1 actions; weight strip with production-first top files/components + labelled non-production (test/bench/other) band; blast radius with include dependents + structural caller/callee counts + coverage; file cards with top functions and dominant finding; noise/confidence footer; drill links) plus the Q2 reverse drill, complete action list, complete profile queue, weight detail, and per-component pages. Wire the legacy 8 stems + weight-treemap under the labelled #explorer section (the treemap lives in Explorer only; weight detail links to it).
+- Wire report.html#map in src/reporter/mod.rs: canvas first, brief below, first answer-bearing block = answer line; update nav and breadcrumbs; remove the V4 list-first first screen from #map (KV rows remain in the brief/drill); keep the report's Explorer section intact and the existing REPORT_SCRIPT unchanged. Integration tests: A9 canvas purity (no table/bar/card list/selector inside the canvas element), A10 state-unconditional (application, library, no-entry, empty, all-test, capped, partial-parse, single-file fixtures render the same canvas + seven blocks), first-screen A8-amended DOM assertion (entry + HOTTEST + path on the canvas; the path:line action in the first scroll).
+- Tests and goldens: extend tests/ with atlas unit + integration suites (entry election, structural reachability, caps/aggregation, path trace, anchors/formatting, stubs, confidence mix, noise footer, finding annotations), add the state-matrix fixtures, regenerate the cJSON/hyperfine/tmux goldens for the new #map page, and add a determinism test (double scan → byte-identical HTML/SVG). Assert src/schema/ and docs/schema/ are unchanged (no schema change in v1). No-new-JS assertion: report.html has exactly one (existing) script block; the canvas/SVG/animation artifacts have zero; no event-handler attributes.
+- Vision gate (V8): render the full state matrix at 1440×900 final frames, run two fresh blind @vision reads per state (one image per task, no source/siblings/expected answer), record transcripts/blockers under docs/evidence/map-vision/v8/, fix blocking findings, re-run until A1 passes for every state including library and capped. Commit the evidence, including strip-specific reads for the weight strip (the inclusion rule is provisional until these pass).
+- Founder A2: pre-register the library-shaped holdout repo (A-pf-116; single-file C lib or Rust lib crate with no bin) alongside the vaulted django/postgres holdout; run the timed test with animation enabled (3 actions in under 10 minutes, understandable, pause/reduced-motion/print work), record the transcript and the verdict in docs/evidence/map-vision/v8/. If A2 fails on both application and library classes, stop and escalate a superseding ADR instead of tuning.
+- Ship/docs/EOL: update the output contract and README for the Atlas page, add the CHANGELOG entry, archive the V7 prototypes' role, run the Definition of Done below, run @reviewer + @requirements-reviewer on the final tree, mark the plan done, update state/session-state.json + state/handoff/latest.md + docs/activeContext.md, and commit.
+
+## Definition of Done
+
+All commands run from the repo root. **Every command must exit 0** (the task is NOT done otherwise).
+
+1. `cargo fmt --all -- --check` — exit 0.
+2. `cargo clippy --locked --all-targets -- -D warnings` — exit 0.
+3. `cargo test --locked` — exit 0 (includes the Atlas unit/integration suites).
+4. `cargo deny check licenses` — exit 0.
+5. `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` — exit 0.
+6. `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` — exit 0.
+7. `cargo test --locked --test atlas_render atlas_double_render_is_byte_identical` — exit 0 (double scan → byte-identical HTML/SVG, modulo run provenance).
+8. `cargo test --locked --test atlas_render atlas_adds_no_new_script` — exit 0 (report.html has exactly one existing `REPORT_SCRIPT` block; the canvas/SVG/animation artifacts have zero; no event-handler attributes).
+9. `cargo test --locked --test atlas_render atlas_canvas_has_no_metric_panels` — exit 0 (A9: no table/bar/card list/metric selector inside the canvas element).
+10. `cargo test --locked --test atlas_states atlas_states_render_same_stack` — exit 0 (A10: all eight states render the same canvas + seven blocks).
+11. `test -z "$(git status --short src/schema/ docs/schema/)"` — exit 0 (no schema change).
+12. `test -f docs/evidence/map-vision/v8/reads.json && test -f docs/evidence/map-vision/v8/a2.md` — exit 0 (vision + A2 evidence committed).
+13. `@reviewer` and `@requirements-reviewer` both APPROVED on the final tree.
+
+## Required Specs
+<!-- SPECS_START -->
+- perfpal-core-spec
+- evidence-beta-spec
+- divergence-study
+- maintainer-map
+- map-intelligibility
+- map-animation
+- atlas-metrics
+- atlas-layout
+- atlas-feature
+<!-- SPECS_END -->
