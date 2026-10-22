@@ -100,6 +100,12 @@ pub struct AtlasFunction {
     pub cost: u64,
     pub scale: CostScale,
     pub ratio: Option<f64>,
+    /// 1-based rank inside this function's cost scale (M-05 anchor).
+    pub rank: usize,
+    /// Population of this function's cost scale (M-05 anchor).
+    pub population: usize,
+    /// Nearest-rank median of this function's cost scale (M-05 multiple).
+    pub median: Option<f64>,
     pub top_pct: usize,
     pub fan_in: u32,
 }
@@ -124,6 +130,30 @@ pub struct AtlasNode {
     pub hottest: bool,
     pub unreached: bool,
     pub partial_parse: bool,
+    pub finding: Option<AtlasFinding>,
+    pub top_functions: Vec<AtlasFunction>,
+}
+
+/// One source file in the production-first file ordering (below-graph brief).
+///
+/// Unlike [`AtlasNode`], this summary exists for **every** source file, so the
+/// weight strip, file cards and weight drill never depend on the canvas cap.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AtlasFile {
+    pub path: String,
+    pub file_name: String,
+    pub path_class: String,
+    pub production: bool,
+    pub component: String,
+    pub cost: u64,
+    pub scale: CostScale,
+    pub file_rank: usize,
+    pub file_population: usize,
+    pub top_pct: usize,
+    pub ratio: Option<f64>,
+    /// Nearest-rank median of this file's cost scale (M-04 multiple).
+    pub median: Option<f64>,
+    pub fan_in: u32,
     pub finding: Option<AtlasFinding>,
     pub top_functions: Vec<AtlasFunction>,
 }
@@ -273,6 +303,8 @@ pub struct AtlasView {
     pub hottest: Option<String>,
     pub hottest_node: Option<AtlasNode>,
     pub nodes: Vec<AtlasNode>,
+    /// Every source file (production-first, cost desc, fan-in desc, path asc).
+    pub files: Vec<AtlasFile>,
     pub edges: Vec<AtlasEdge>,
     pub columns: Vec<AtlasColumn>,
     pub unreachable_production: Vec<String>,
@@ -304,6 +336,7 @@ struct FileInfo {
     population: usize,
     top_pct: usize,
     ratio: Option<f64>,
+    median: Option<f64>,
 }
 
 struct Structural {
@@ -317,7 +350,7 @@ fn final_segment(path: &str) -> &str {
 }
 
 /// Chart-side approximate component grouping (`domain_of`).
-fn domain_of(path: &str) -> String {
+pub(crate) fn domain_of(path: &str) -> String {
     let parts: Vec<&str> = path.split('/').collect();
     if path.starts_with("src/") && parts.len() >= 3 {
         return format!("src/{}", parts[1]);
@@ -339,7 +372,7 @@ fn top_pct(rank: usize, population: usize) -> usize {
     ((100 * rank + population / 2) / population).clamp(1, 100)
 }
 
-fn function_cost_u64(function: &FunctionStats) -> u64 {
+pub(crate) fn function_cost_u64(function: &FunctionStats) -> u64 {
     let rounded = crate::schema::round_half_up(function_value(function), 0).max(0);
     u64::try_from(rounded).unwrap_or(u64::MAX)
 }
@@ -461,6 +494,7 @@ fn build_file_infos(
                 population: 0,
                 top_pct: 1,
                 ratio: None,
+                median: None,
             },
         );
     }
@@ -488,6 +522,7 @@ fn build_file_infos(
                 info.rank = index + 1;
                 info.population = population;
                 info.top_pct = top_pct(index + 1, population);
+                info.median = median;
                 info.ratio = median.and_then(|value| {
                     if value > 0.0 {
                         Some(info.cost_exact / value)
@@ -813,6 +848,9 @@ fn top_functions(
                 cost,
                 scale,
                 ratio,
+                rank,
+                population,
+                median: ordering.median(),
                 top_pct: top_pct(rank, population),
                 fan_in: function_fan_in(function),
             }
@@ -1107,6 +1145,39 @@ impl NodeContext<'_> {
             top_functions: top_functions(self.doc, indices, self.v2, self.v1),
         }
     }
+
+    /// All-file summary for the below-graph brief (weight strip, cards, drill).
+    fn build_file(&self, info: &FileInfo) -> AtlasFile {
+        let path = info.path.as_str();
+        let indices = self
+            .functions_by_path
+            .get(path)
+            .map(Vec::as_slice)
+            .unwrap_or(&[]);
+        let empty_findings: Vec<&crate::schema::FindingEntry> = Vec::new();
+        AtlasFile {
+            path: info.path.clone(),
+            file_name: final_segment(&info.path).to_string(),
+            path_class: info.class.clone(),
+            production: info.production,
+            component: domain_of(&info.path),
+            cost: info.cost,
+            scale: info.scale,
+            file_rank: info.rank,
+            file_population: info.population,
+            top_pct: info.top_pct,
+            ratio: info.ratio,
+            median: info.median,
+            fan_in: u32::try_from(info.fan_in).unwrap_or(u32::MAX),
+            finding: dominant_finding(
+                self.findings_by_path
+                    .get(path)
+                    .map(Vec::as_slice)
+                    .unwrap_or(&empty_findings),
+            ),
+            top_functions: top_functions(self.doc, indices, self.v2, self.v1),
+        }
+    }
 }
 
 /// Build the complete deterministic Atlas view model.
@@ -1253,6 +1324,18 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
         entry_path: entry.point.as_ref().map(|point| point.path.as_str()),
         hottest_path: hottest.as_deref(),
     };
+
+    let mut file_summaries: Vec<AtlasFile> = files
+        .values()
+        .map(|info| context.build_file(info))
+        .collect();
+    file_summaries.sort_by(|a, b| {
+        b.production
+            .cmp(&a.production)
+            .then_with(|| b.cost.cmp(&a.cost))
+            .then_with(|| b.fan_in.cmp(&a.fan_in))
+            .then_with(|| a.path.cmp(&b.path))
+    });
 
     let mut nodes: Vec<AtlasNode> = Vec::new();
     for path in &selected {
@@ -1478,6 +1561,7 @@ pub fn build_atlas_view(doc: &MetricsDocument) -> AtlasView {
         hottest,
         hottest_node,
         nodes,
+        files: file_summaries,
         edges,
         columns,
         unreachable_production,

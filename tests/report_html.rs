@@ -278,10 +278,19 @@ fn fixed_script_and_linked_chart_references() {
     assert!(!html.contains("onerror"));
     assert!(!html.contains("onload"));
     assert!(!html.contains("javascript:"));
-    // LINKED variant: relative links, no inlined SVG content.
+    // LINKED variant for chart stems: relative links, no inlined chart SVG.
+    // The one inline SVG is the ratified Atlas canvas (ADR-0009/0010).
     assert!(html.contains("<img src=\"charts/include-graph.svg\""));
     assert!(html.contains("<a href=\"charts/include-graph.svg\""));
-    assert!(!html.contains("<svg"));
+    assert_eq!(
+        html.matches("<svg").count(),
+        1,
+        "only the Atlas canvas SVG may be inlined"
+    );
+    let canvas = html.find("id=\"atlas-canvas\"").expect("atlas canvas");
+    let inline = html.find("<svg").expect("inline canvas svg");
+    let brief = html.find("id=\"atlas-brief\"").expect("atlas brief");
+    assert!(canvas < inline && inline < brief);
     // Pan/zoom figures carry the enhancement hook (buttons are added by the
     // script at runtime, so no-JS output stays fully usable static).
     assert!(html.contains("<figure class=\"pz\" data-chart=\"layer-workspace\">"));

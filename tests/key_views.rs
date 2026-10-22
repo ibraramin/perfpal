@@ -264,12 +264,13 @@ fn doc() -> MetricsDocument {
 }
 
 fn map_section(html: &str) -> &str {
-    html.split("<section id=\"map\">")
-        .nth(1)
-        .expect("#map")
-        .split("</section>")
-        .next()
-        .expect("#map close")
+    // `#map` now nests the canvas/brief/drill sections, so the section ends
+    // where the Explorer section begins, not at the first `</section>`.
+    let start = html.find("<section id=\"map\">").expect("#map");
+    let end = html[start..]
+        .find("<section id=\"explorer\">")
+        .expect("#explorer after map");
+    &html[start..start + end]
 }
 
 fn explorer_section(html: &str) -> &str {
@@ -282,25 +283,29 @@ fn explorer_section(html: &str) -> &str {
 }
 
 #[test]
-fn key_views_are_the_first_blocks_in_order() {
+fn atlas_page_orders_canvas_brief_blocks_then_explorer() {
     let doc = doc();
     let charts = perfpal::charts::render(&doc);
     let names: Vec<String> = charts.iter().map(|(name, _)| name.clone()).collect();
     let html = render_html(&doc, &names);
     let map = map_section(&html);
-    let kv1 = map.find("Where do I look first?").expect("KV1 question");
-    let kv2 = map
-        .find("What breaks if I touch it?")
-        .expect("KV2 question");
-    let kv3 = map
-        .find("Where might time plausibly go?")
-        .expect("KV3 question");
-    assert!(kv1 < kv2 && kv2 < kv3, "key-view order wrong");
     assert!(
-        !map[..kv1].contains("<figure") && !map[..kv1].contains("<table"),
-        "KV1 must be the first content block inside #map"
+        map.starts_with("<section id=\"map\">\n<section id=\"atlas-canvas\""),
+        "the canvas must be the first block inside #map"
     );
-    // No workspace figure / component table in #map.
+    let canvas = map.find("<section id=\"atlas-canvas\"").expect("canvas");
+    let mut last = canvas;
+    for block in [
+        "answer", "actions", "weight", "blast", "cards", "noise", "links",
+    ] {
+        let marker = format!("data-atlas-block=\"{block}\"");
+        let position = map.find(&marker).unwrap_or_else(|| panic!("{block} block"));
+        assert!(position > last, "{block} block out of order");
+        last = position;
+    }
+    assert!(map.contains("id=\"atlas-drill-q2\""));
+    assert!(map.contains("id=\"atlas-drill-weight\""));
+    // No workspace figure / component table / chart stems in #map.
     assert!(!map.contains("data-chart="));
     assert!(!map.contains("Component index"));
 
@@ -327,59 +332,33 @@ fn key_views_are_the_first_blocks_in_order() {
 }
 
 #[test]
-fn key_views_carry_units_anchors_and_full_rationale() {
+fn atlas_brief_carries_units_anchors_and_full_rationale() {
     let doc = doc();
     let html = render_html(&doc, &[]);
     let map = map_section(&html);
     assert!(map.contains("static cost units (v2)"));
     assert!(map.contains("static cost units (v1)"));
-    assert!(map.contains("% of scanned files"));
-    assert!(map.contains("top "));
-    assert!(map.contains("× median"));
-    assert!(map.contains("dependents"));
-    assert!(map.contains(
-        "Ranked: production code first, then severity, then confidence, then static cost."
-    ));
-    assert!(map.contains(
-        "Bars scale within each block: blue = ranked functions, grey = demoted functions."
-    ));
-    assert_eq!(
-        map.matches("do not edit directly.").count(),
-        1,
-        "KV2 action line must appear exactly once"
-    );
-    assert!(
-        map.contains("showing top 2 of 2 files with resolved dependents"),
-        "KV2 inline cap disclosure missing"
-    );
-    let md = perfpal::reporter::render_report(&doc, &[]);
-    assert!(md.contains(
-        "Ranked: production code first, then severity, then confidence, then static cost."
-    ));
-    assert!(md.contains(
-        "Bars scale within each block: blue = ranked functions, grey = demoted functions."
-    ));
-    assert!(md.contains("showing top 5 of 4 actions") || md.contains("showing top 4 of 4 actions"));
-    assert!(
-        md.contains("showing top 5 of 5 functions") || md.contains("showing top 4 of 5 functions")
-    );
-    assert!(md.contains("unknown-trip ×1 — estimate incomplete"));
-    assert!(md.contains("known trip ×8 — verify it actually runs"));
-    assert!(md.contains("no-loop — demoted"));
-    assert!(md.contains("non-production file demoted"));
+    assert!(map.contains("% of scanned static cost"));
+    assert!(map.contains("× median function"));
+    assert!(map.contains("of functions"));
+    assert!(map.contains("of files"));
+    assert!(map.contains("dependent file"));
+    assert!(map.contains("(production first)"));
     assert!(
         map.contains("This is the complete rationale for PERF-C-CALL-001"),
-        "KV1 must show the full message"
+        "the brief must show the full finding rationale"
     );
-    assert!(!map.contains('…'), "key views must not truncate text");
-    // KV1 suppresses component aggregates but reports them.
-    assert!(!map.contains("Title for PERF-C-ARCH-002"));
-    assert!(map.contains("1 component-level finding in Explorer"));
-    // Honest demotion/coverage lines.
-    assert!(map.contains("1 non-production file demoted"));
-    assert!(map.contains("resolved 3 of 3 include edges"));
-    assert!(map.contains("1 startup function demoted"));
-    assert!(map.contains("1 no-loop function demoted"));
+    assert!(!map.contains('…'), "the brief must not truncate text");
+    // ARCH-002 aggregates stay out of the action list but are counted.
+    let actions = map
+        .split("id=\"atlas-actions\"")
+        .nth(1)
+        .expect("actions block")
+        .split("id=\"atlas-weight\"")
+        .next()
+        .expect("actions close");
+    assert!(!actions.contains("Title for PERF-C-ARCH-002"));
+    assert!(actions.contains("1 component-level finding"));
 }
 
 #[test]
@@ -485,18 +464,13 @@ fn kv2_labels_use_full_repo_relative_paths_and_pluralize() {
         call_graph: None,
     });
 
-    let html = render_html(&d, &[]);
-    let map = map_section(&html);
+    let kv2 = views::kv2(&d);
     assert!(
-        map.contains("compat/imsg.h"),
-        "nested KV2 label must keep its directory prefix"
+        kv2.rows
+            .iter()
+            .any(|row| row.path == "compat/imsg.h" && row.value_label.contains("1 dependent")),
+        "nested KV2 label must keep its directory prefix and singular count"
     );
-    assert!(!map.contains(">imsg.h<"), "basename-only KV2 label leaked");
-    assert!(
-        map.contains("1 dependent ·"),
-        "singular counts must read `1 dependent`"
-    );
-
     let md = perfpal::reporter::render_report(&d, &[]);
     assert!(md.contains("compat/imsg") && md.contains("1 dependent"));
 }
@@ -524,23 +498,24 @@ fn kv2_demoted_rows_are_greyed_with_demoted_caption() {
         call_graph: None,
     });
 
-    let html = render_html(&d, &[]);
-    let map = map_section(&html);
-    // The test file carries MORE dependents (2) than either production file
-    // (1) yet is slotted after them and greyed.
-    let production = map.find("src/a.c").expect("production row");
-    let demoted = map.find("tests/t.c").expect("demoted row");
+    let kv2 = views::kv2(&d);
+    let production = kv2
+        .rows
+        .iter()
+        .position(|row| row.path == "src/a.c")
+        .expect("production row");
+    let demoted = kv2
+        .rows
+        .iter()
+        .position(|row| row.path == "tests/t.c")
+        .expect("demoted row");
     assert!(
         production < demoted,
         "demoted row must follow production rows"
     );
-    assert!(map.contains("kv-brow kv-demoted"), "demoted row class");
-    assert!(map.contains("kv-fill demoted"), "demoted bar fill class");
-    assert!(map.contains("<span class=\"kv-class nonprod\">test</span>"));
-    assert!(
-        map.contains("files with resolved dependents · 1 non-production file demoted"),
-        "KV2 demoted caption missing"
-    );
+    assert!(kv2.rows[demoted].demoted);
+    assert!(!kv2.rows[production].demoted);
+    assert_eq!(kv2.rows[demoted].dependents, 2);
 
     let md = perfpal::reporter::render_report(&d, &[]);
     assert!(

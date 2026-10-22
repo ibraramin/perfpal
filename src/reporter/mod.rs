@@ -26,6 +26,7 @@
 //! beyond the output-contract §5 template.
 
 pub mod atlas;
+pub mod atlas_brief;
 pub mod atlas_metrics;
 pub mod atlas_render;
 pub mod views;
@@ -468,10 +469,11 @@ pub fn escape_html(input: &str) -> String {
 /// (no `started_at`, no `duration_ms`, no `root_path`; header carries only
 /// `schema_version`, tool version, file/finding counts).
 ///
-/// Contents: header, § architecture (the §5 chart links mirrored as linked
-/// figures), component index (top-10 rank, prefix, metrics + detail-page
-/// links, with an honest `showing top … of M` note), file drill-down (top
-/// files by degree/cost + their top-10 finding_id lists linking into
+/// Contents: header, the Perfpal Atlas `#map` page (100%-graph canvas +
+/// fixed seven-block brief + drills, ADR-0009), the Explorer chart links,
+/// component index (top-10 rank, prefix, metrics + detail-page links, with an
+/// honest `showing top … of M` note), file drill-down (top files by
+/// degree/cost + their top-10 finding_id lists linking into
 /// `findings-detail.html`), findings section (C-split: per-rule
 /// `<details><summary>` groups ONLY, each linking to the detail page
 /// anchors — zero per-finding rows here). Drill-down anchors link
@@ -487,7 +489,7 @@ pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
     // artifact's bytes a hard contract.
     html_header(&mut out, doc, true);
     html_nav(&mut out);
-    html_map(&mut out, doc);
+    html_map(&mut out, doc, emitted_charts);
     html_architecture(&mut out, doc, emitted_charts);
     html_components(&mut out, doc, emitted_charts);
     html_files(&mut out, doc, emitted_charts);
@@ -1661,7 +1663,7 @@ fn html_header(out: &mut String, doc: &MetricsDocument, breadcrumb: bool) {
 fn html_breadcrumb(out: &mut String) {
     out.push_str(&format!(
         "<p class=\"breadcrumb\"><a href=\"#map\">{}</a> › <a href=\"#components\">{}</a> › <a href=\"#files\">{}</a> › <a href=\"findings-detail.html\">{}</a></p>\n",
-        escape_html("Map"),
+        escape_html("Atlas"),
         escape_html("Components"),
         escape_html("Files"),
         escape_html("Findings detail"),
@@ -1671,7 +1673,7 @@ fn html_breadcrumb(out: &mut String) {
 fn html_nav(out: &mut String) {
     out.push_str(
         "<nav>\n<ul>\n\
-         <li><a href=\"#map\">Key views</a></li>\n\
+         <li><a href=\"#map\">Atlas</a></li>\n\
          <li><a href=\"#explorer\">Explorer</a></li>\n\
          <li><a href=\"#components\">Components</a></li>\n\
          <li><a href=\"#files\">Files</a></li>\n\
@@ -1879,188 +1881,20 @@ fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
     ));
 }
 
-/// `#map` — the answer-first key views (map-intelligibility V4).
+/// `#map` — the Perfpal Atlas page (ADR-0009; `map-intelligibility` A8
+/// amended for this page).
 ///
-/// First content block is KV1 (where do I look first?), then KV2 (what
-/// breaks if I touch it?) and KV3 (where might time plausibly go?). Bars are
-/// plain CSS `<div>` rows — no SVG, no JavaScript, integer widths. The old
-/// workspace figure / component table live on as the `layer-workspace` stem
-/// and the `#components` section; the eight stems render under `Explorer`.
-fn html_map(out: &mut String, doc: &MetricsDocument) {
-    out.push_str("<section id=\"map\">\n<h2>Key views</h2>\n");
-    let kv1 = views::kv1(doc);
-    let kv2 = views::kv2(doc);
-    let kv3 = views::kv3(doc);
-    let anchors = finding_anchor_assignments(doc).1;
-
-    // --- KV1: ranked maintainer brief -----------------------------------
-    out.push_str(
-        "<div class=\"kv kv1\">\n<h3>Where do I look first?</h3>\n         <p class=\"kv-action\">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>\n         <p class=\"kv-key\">Ranked: production code first, then severity, then confidence, then static cost.</p>\n",
-    );
-    if kv1.rows.is_empty() {
-        out.push_str("<p>No function-granularity actions to rank.</p>\n");
-    } else {
-        out.push_str("<ol class=\"kv-rows\">\n");
-        let mut seen_locations: BTreeMap<(String, u32), usize> = BTreeMap::new();
-        for row in &kv1.rows {
-            let finding = &doc.findings[row.finding_index];
-            let location = format!("{}:{}", finding.path, finding.span.start_line);
-            let same_as = seen_locations
-                .get(&(finding.path.clone(), finding.span.start_line))
-                .copied();
-            out.push_str(&format!(
-                "<li class=\"kv-row\"><span class=\"kv-rank\">#{rank}</span>                 <div class=\"kv-body\">\n<div class=\"kv-line1\">                 <a class=\"kv-loc\" href=\"findings-detail.html#{anchor}\">{location}</a>",
-                rank = row.rank,
-                anchor = escape_html(&anchors[row.finding_index]),
-                location = escape_html(&location),
-            ));
-            if let Some(function) = &row.function {
-                out.push_str(&format!(
-                    " <span class=\"kv-fn\">{}</span>",
-                    escape_html(function)
-                ));
-            }
-            out.push_str(&format!(
-                " <span class=\"kv-title\">{}</span>{}                 <span class=\"kv-badge sev-{}\">{}</span>                 <span class=\"kv-badge\">{}</span>                 <span class=\"kv-class{}\">{}</span></div>\n",
-                escape_html(&finding.title),
-                same_as.map_or_else(String::new, |prior| format!(
-                    " <span class=\"kv-note\">same location as #{prior}</span>"
-                )),
-                severity_token(finding.severity),
-                severity_token(finding.severity),
-                confidence_token(finding.confidence),
-                if row.production { "" } else { " nonprod" },
-                escape_html(&row.path_class),
-            ));
-            seen_locations
-                .entry((finding.path.clone(), finding.span.start_line))
-                .or_insert(row.rank);
-            if let Some(anchor) = &row.cost_anchor {
-                out.push_str(&format!(
-                    "<div class=\"kv-anchor\">{}</div>\n",
-                    escape_html(anchor)
-                ));
-            }
-            out.push_str(&format!(
-                "<div class=\"kv-why\">{}</div>\n</div></li>\n",
-                escape_html(&finding.message)
-            ));
-        }
-        out.push_str("</ol>\n");
-        out.push_str(&format!(
-            "<p class=\"kv-more\"><a href=\"findings-detail.html#ranked-actions\">             Complete ranked list — all {total} (production-first)</a></p>\n             <p class=\"kv-counts\">{nonprod} demoted · {component} in Explorer</p>\n",
-            total = views::plural(kv1.total_actions, "finding"),
-            nonprod = views::plural(kv1.nonprod_file_count, "non-production file"),
-            component = views::plural(kv1.component_findings, "component-level finding"),
-        ));
-    }
-    out.push_str("</div>\n");
-
-    // --- KV2: blast radius ----------------------------------------------
-    out.push_str(
-        "<div class=\"kv kv2\">\n<h3>What breaks if I touch it?</h3>\n         <p class=\"kv-action\">Changing a file here forces re-import of its          dependents — do not edit directly.</p>\n",
-    );
-    if kv2.rows.is_empty() {
-        out.push_str("<p>No resolved include dependents to rank.</p>\n");
-    } else {
-        out.push_str("<div class=\"kv-bars\">\n");
-        for row in &kv2.rows {
-            let class = if row.production {
-                String::new()
-            } else {
-                format!(
-                    "<span class=\"kv-class nonprod\">{}</span>",
-                    escape_html(&row.path_class)
-                )
-            };
-            let row_class = if row.demoted {
-                "kv-brow kv-demoted"
-            } else {
-                "kv-brow"
-            };
-            let fill_class = if row.demoted {
-                "kv-fill demoted"
-            } else {
-                "kv-fill"
-            };
-            out.push_str(&format!(
-                "<div class=\"{row_class}\"><span class=\"kv-blabel\">{path} {class}</span>                 <div class=\"kv-track\"><div class=\"{fill_class}\" style=\"width:{width}%\"></div></div>                 <span class=\"kv-value\">{value}</span></div>\n",
-                path = escape_html(&row.path),
-                class = class,
-                width = row.width_pct,
-                value = escape_html(&row.value_label),
-            ));
-        }
-        out.push_str("</div>\n");
-        out.push_str(&format!(
-            "<p class=\"kv-counts\">showing top {} of {} files with resolved dependents · {} demoted</p>\n",
-            kv2.rows.len(),
-            kv2.total_with_dependents,
-            views::plural(kv2.nonprod_file_count, "non-production file"),
-        ));
-    }
-    out.push_str(&format!(
-        "<p class=\"kv-counts\">resolved {} of {} include edges</p>\n",
-        kv2.resolved_edges, kv2.total_edges,
-    ));
-    out.push_str("</div>\n");
-
-    // --- KV3: static cost ------------------------------------------------
-    out.push_str(
-        "<div class=\"kv kv3\">\n<h3>Where might time plausibly go?</h3>\n         <p class=\"kv-action\">Profile the named function first — static          candidate, confirm with a profiler.</p>\n         <p class=\"kv-caption\">Bars scale within each block: blue = ranked functions, grey = demoted functions.</p>\n",
-    );
-    if kv3.rows.is_empty() {
-        out.push_str("<p>No functions to rank.</p>\n");
-    } else {
-        out.push_str("<div class=\"kv-bars\">\n");
-        for row in &kv3.rows {
-            let line = doc.stats.functions[row.function_index].span.start_line;
-            let location = format!("{}:{}", row.path, line);
-            let demotion = row.demotion_label().map_or_else(String::new, |label| {
-                format!("<span class=\"kv-dem\">{}</span>", escape_html(&label))
-            });
-            let mut badges = String::new();
-            if let Some(badge) = row.unknown_trip_badge() {
-                badges.push_str(&format!(
-                    "<span class=\"kv-badge trip\">{}</span>",
-                    escape_html(&badge)
-                ));
-            }
-            if let Some(badge) = row.known_trip_badge() {
-                badges.push_str(&format!(
-                    "<span class=\"kv-badge known\">{}</span>",
-                    escape_html(&badge)
-                ));
-            }
-            out.push_str(&format!(
-                "<div class=\"kv-brow kv-vrow{}{}\">\
-                 <span class=\"kv-blabel\"><span class=\"kv-loc\">{location}</span>                 <span class=\"kv-fn\">{function}</span>{demotion}</span>\
-                 <div class=\"kv-track\"><div class=\"kv-fill{}\" style=\"width:{width}%\"></div></div>\
-                 <span class=\"kv-value\">{anchor}{badges}</span></div>\n",
-                if row.is_demoted() { " kv-demoted" } else { "" },
-                if row.cost_scale == views::CostScale::V1 { " kv-v1" } else { "" },
-                if row.is_demoted() { " demoted" } else { "" },
-                location = escape_html(&location),
-                function = escape_html(&row.function),
-                demotion = demotion,
-                width = row.width_pct,
-                anchor = escape_html(&row.cost_anchor),
-                badges = badges,
-            ));
-        }
-        out.push_str("</div>\n");
-        out.push_str(&format!(
-            "<p class=\"kv-more\"><a href=\"profile-queue.html\">             Complete cost-ranked list ({})</a></p>\n",
-            views::plural(kv3.total_functions, "function"),
-        ));
-        out.push_str(&format!(
-            "<p class=\"kv-counts\">{} demoted · {} demoted · {} demoted</p>\n",
-            views::plural(kv3.startup_count, "startup function"),
-            views::plural(kv3.no_loop_count, "no-loop function"),
-            views::plural(kv3.nonprod_file_count, "non-production file"),
-        ));
-    }
-    out.push_str("</div>\n</section>\n");
+/// The first content block is the 100%-graph canvas; the fixed seven-block
+/// brief follows it, then the Q2/weight drills. Every block renders in every
+/// scan state. The legacy V4 KV1/KV2/KV3 list-first markup no longer lives
+/// here: KV1 actions, the weight mass and the blast radius ride in the brief,
+/// and the complete lists stay in `findings-detail.html` / `profile-queue.html`.
+fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
+    let view = atlas::build_atlas_view(doc);
+    out.push_str("<section id=\"map\">\n");
+    out.push_str(&atlas_render::render_canvas_html(&view));
+    out.push_str(&atlas_brief::render_brief(&view, doc, emitted_charts));
+    out.push_str("</section>\n");
 }
 
 /// Component index: rank, prefix, metrics + link to the

@@ -50,6 +50,10 @@ pub struct Kv1Row {
     pub rank: usize,
     /// Index into `doc.findings`.
     pub finding_index: usize,
+    /// Index into `doc.stats.functions` for the narrowest containing function
+    /// (`None` when no span contains the finding). The Atlas brief reuses this
+    /// lookup instead of re-deriving it.
+    pub function_index: Option<usize>,
     /// Containing function name (`None` when no span contains the finding).
     pub function: Option<String>,
     /// `files[].path_class` label (`unknown` when absent).
@@ -496,6 +500,7 @@ fn build_kv1_rows(doc: &MetricsDocument) -> (Vec<Kv1Row>, usize, usize) {
         rows.push(Kv1Row {
             rank: rank + 1,
             finding_index: index,
+            function_index: container,
             function,
             path_class,
             production,

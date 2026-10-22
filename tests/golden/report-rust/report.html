@@ -65,12 +65,12 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <body>
 <header>
 <h1>Perfpal Report</h1>
-<p class="breadcrumb"><a href="#map">Map</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
+<p class="breadcrumb"><a href="#map">Atlas</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
 <p>schema_version 1.7 · perfpal perfpal 0.2.0-beta.1 · 14 files · 32 findings (10 hot, 9 warn, 13 info) · languages: rust</p>
 </header>
 <nav>
 <ul>
-<li><a href="#map">Key views</a></li>
+<li><a href="#map">Atlas</a></li>
 <li><a href="#explorer">Explorer</a></li>
 <li><a href="#components">Components</a></li>
 <li><a href="#files">Files</a></li>
@@ -80,71 +80,255 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </ul>
 </nav>
 <section id="map">
-<h2>Key views</h2>
-<div class="kv kv1">
-<h3>Where do I look first?</h3>
-         <p class="kv-action">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>
-         <p class="kv-key">Ranked: production code first, then severity, then confidence, then static cost.</p>
-<ol class="kv-rows">
-<li class="kv-row"><span class="kv-rank">#1</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5">src/01_alloc_churn.rs:34</a> <span class="kv-fn">build_row_labels</span> <span class="kv-title">Heap allocation inside loop (Rust)</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">22 static cost units (v2) · 3.1× median · top 8%</div>
-<div class="kv-why">loop performs 3 per-iteration allocation(s) (format, to_string, vec) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#2</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-06-memory-ops-rs-27-9">src/06_memory_ops.rs:27</a> <span class="kv-fn">duplicate_rows</span> <span class="kv-title">Heap allocation inside loop (Rust)</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">22 static cost units (v2) · 3.1× median · top 10%</div>
-<div class="kv-why">loop performs 1 per-iteration allocation(s) (to_vec) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#3</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9">src/01_alloc_churn.rs:39</a> <span class="kv-fn">build_row_labels</span> <span class="kv-title">Deallocation inside loop (Rust)</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">22 static cost units (v2) · 3.1× median · top 8%</div>
-<div class="kv-why">deallocation via &#39;drop&#39; at loop depth 1 — repeated drop-per-iteration teardown; hoisting the drop or restructuring value ownership is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#4</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9">src/01_alloc_churn.rs:58</a> <span class="kv-fn">grid_reset</span> <span class="kv-title">Heap allocation inside loop (Rust)</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">19 static cost units (v2) · 2.7× median · top 13%</div>
-<div class="kv-why">loop performs 1 per-iteration allocation(s) (vec) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#5</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5">src/02_string_building.rs:41</a> <span class="kv-fn">len_with_reassignment</span> <span class="kv-title">Heap allocation inside loop (Rust)</span>                 <span class="kv-badge sev-hot">hot</span>                 <span class="kv-badge">HIGH</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">14 static cost units (v2) · 2.0× median · top 18%</div>
-<div class="kv-why">loop performs 1 per-iteration allocation(s) (format) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization</div>
-</div></li>
+<section id="atlas-canvas" class="atlas-canvas">
+<style>#atlas-canvas{position:relative;background:#ffffff;color:#0f172a;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#atlas-canvas .atlas-head{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px}
+#atlas-canvas .atlas-entry{font-weight:700}
+#atlas-canvas .atlas-hottest{color:#9a3412}
+#atlas-canvas .atlas-caps{color:#475569}
+#atlas-canvas .atlas-pause-input{position:absolute;inline-size:1px;block-size:1px;opacity:0}
+#atlas-canvas .atlas-pause{display:inline-block;margin:0 16px 8px;padding:3px 10px;border:1px solid #94a3b8;border-radius:999px;background:#f8fafc;font-size:11px;cursor:pointer}
+#atlas-canvas .atlas-graph{background:#ffffff;border-bottom:1px solid #e2e8f0}
+#atlas-canvas .atlas-svg{display:block;width:100%;height:auto}
+#atlas-canvas .atlas-svg .atlas-edge,#atlas-canvas .atlas-svg .atlas-trace{fill:none}
+#atlas-canvas .atlas-legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
+#atlas-canvas .atlas-structural-caption{font-weight:700;color:#7c2d12}
+#atlas-canvas .atlas-footer{padding:8px 16px;font-size:11px;color:#334155}
+@keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
+@keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
+ @keyframes atlas-edge-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-edge-fade{from{opacity:0}to{opacity:1}}
+ @keyframes atlas-trace-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-hottest-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+ #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
+ #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
+ #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #atlas-canvas .atlas-trace{animation:atlas-trace-draw 1.2s 4.2s both}
+#atlas-canvas .atlas-node.is-hottest{animation:atlas-hottest-pulse .8s 5.4s 2 both}
+#atlas-canvas .atlas-pause-input:checked ~ .atlas-graph *{animation-play-state:paused !important}
+#atlas-canvas .atlas-pause:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
+#atlas-canvas .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #1d4ed8;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
+@media print{#atlas-canvas{break-inside:avoid}#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#atlas-canvas .atlas-pause{display:none}}
+#atlas-canvas .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}</style>
+<input type="checkbox" id="atlas-pause" class="atlas-pause-input">
+<label for="atlas-pause" class="atlas-pause">Pause animation</label>
+<header class="atlas-head">
+<span class="atlas-entry">ENTRY · library root (no production main) · confidence MEDIUM · 5 alternatives</span>
+<span class="atlas-hottest">HOTTEST: src/01_alloc_churn.rs · 58 static cost units (v2) · 8.3× median function · top 8% of files</span>
+<span class="atlas-path-summary">PATH · 1 steps · representative path (static, BFS-derived)</span>
+<span class="atlas-caps">1 of 1 reachable files shown · 0 aggregated</span>
+</header>
+<div class="atlas-graph">
+<svg viewBox="0 0 1400 720" width="1400" height="720" class="atlas-svg" role="img" aria-label="Perfpal Atlas entry-flow canvas" preserveAspectRatio="xMidYMid meet">
+<defs><pattern id="atlas-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#f8fafc"/><line x1="0" y1="0" x2="0" y2="6" stroke="#cbd5e1" stroke-width="2"/></pattern><marker id="atlas-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker><marker id="atlas-arrow-back" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#b45309"/></marker></defs><g class="atlas-hull"><title>approximate prefix group; not a canonical component id</title><rect x="527" y="40" width="346" height="660" rx="10" fill="#eef2ff" fill-opacity=".55" stroke="#cbd5e1" stroke-width="1"/><text x="535" y="52" font-size="7" font-weight="700" fill="#475569">src · 13</text></g><path class="atlas-edge atlas-edge--back" data-edge="src/10_cross_file_and_arch.rs-&gt;src/01_alloc_churn.rs" d="M 865 453 C 897 453 717 75 685 75" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:0"><title>src/10_cross_file_and_arch.rs → src/01_alloc_churn.rs · 1 distinct structural edge</title></path><path class="atlas-edge atlas-edge--back" data-edge="src/10_cross_file_and_arch.rs-&gt;src/03_deep_nesting.rs" d="M 865 453 C 897 453 897 345 865 345" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:1"><title>src/10_cross_file_and_arch.rs → src/03_deep_nesting.rs · 1 distinct structural edge</title></path><path class="atlas-edge atlas-edge--back" data-edge="src/10_cross_file_and_arch.rs-&gt;src/common.rs" d="M 865 453 C 897 453 897 669 865 669" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:2"><title>src/10_cross_file_and_arch.rs → src/common.rs · 1 distinct structural edge</title></path><path class="atlas-edge atlas-edge--back" data-edge="src/cycle_a.rs-&gt;src/cycle_b.rs" d="M 865 507 C 897 507 897 561 865 561" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:3"><title>src/cycle_a.rs → src/cycle_b.rs · 1 distinct structural edge</title></path><path class="atlas-edge atlas-edge--back" data-edge="src/cycle_b.rs-&gt;src/cycle_a.rs" d="M 865 561 C 897 561 897 507 865 507" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:4"><title>src/cycle_b.rs → src/cycle_a.rs · 1 distinct structural edge</title></path><g class="atlas-column" style="--atlas-col:0"><text class="atlas-column-header" x="610" y="22" text-anchor="middle" font-size="7.5" font-weight="700" fill="#334155">depth 0 · ENTRY · 1 file</text><g class="atlas-node is-entry is-hottest" data-node="src/01_alloc_churn.rs"><title>src/01_alloc_churn.rs · production · file total 58 static cost units (v2) · 8.3× median function · top 8% of files · top functions: build_row_labels @ 32, grid_reset @ 56, grow_one_at_a_time @ 46</title><rect x="535" y="52" width="150" height="46" rx="7" fill="#1f2937" stroke="#d97706" stroke-width="2"/><text x="683" y="49" text-anchor="end" font-size="6" fill="#475569">ENTRY · HOTTEST · HOT ×2</text><text x="610" y="61" text-anchor="middle" font-size="7" font-weight="700" fill="#ffffff">src/01_alloc_churn.rs</text><text x="610" y="75" text-anchor="middle" font-size="6" fill="#ffffff">58 static cost units (v2)</text><text x="610" y="89" text-anchor="middle" font-size="6" fill="#ffffff">8.3× median function · top 8% of files</text><g class="atlas-path-badge"><title>representative path (static, BFS-derived) · step 1 of 1</title><circle cx="678" cy="59" r="7" fill="#ea580c" stroke="#ffffff" stroke-width="1"/><text x="678" y="61" text-anchor="middle" font-size="6.5" font-weight="700" fill="#ffffff">1</text></g></g></g><g class="atlas-column is-unreached" style="--atlas-col:1"><text class="atlas-column-header" x="790" y="22" text-anchor="middle" font-size="7.5" font-weight="700" fill="#334155">UNREACHED · no forward path · 12 files</text><g class="atlas-node is-unreached" data-node="src/02_string_building.rs"><title>src/02_string_building.rs · production · file total 41 static cost units (v2) · 5.9× median function · top 15% of files · top functions: len_with_reassignment @ 38, append_via_add_assign @ 49, accumulate @ 20</title><rect x="715" y="52" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="49" text-anchor="end" font-size="6" fill="#475569">HOT ×1 · unreached</text><text x="790" y="61" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/02_string_building.rs</text><text x="790" y="75" text-anchor="middle" font-size="6" fill="#1e293b">41 static cost units (v2)</text><text x="790" y="89" text-anchor="middle" font-size="6" fill="#1e293b">5.9× median function · top 15% of files</text></g><g class="atlas-node is-unreached" data-node="src/05_recursion_complexity.rs"><title>src/05_recursion_complexity.rs · production · file total 40 static cost units (v2) · 5.7× median function · top 23% of files · top functions: classify @ 20, fib @ 10</title><rect x="715" y="106" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="103" text-anchor="end" font-size="6" fill="#475569">HOT ×1 · unreached</text><text x="790" y="115" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/05_recursion_complexity.rs</text><text x="790" y="129" text-anchor="middle" font-size="6" fill="#1e293b">40 static cost units (v2)</text><text x="790" y="143" text-anchor="middle" font-size="6" fill="#1e293b">5.7× median function · top 23% of files</text></g><g class="atlas-node is-unreached" data-node="src/08_globals_and_chains.rs"><title>src/08_globals_and_chains.rs · production · file total 39 static cost units (v2) · 5.6× median function · top 31% of files · top functions: call_directly @ 49, read_depth @ 56, read_depth_member @ 66</title><rect x="715" y="160" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="157" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="169" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/08_globals_and_chains.rs</text><text x="790" y="183" text-anchor="middle" font-size="6" fill="#1e293b">39 static cost units (v2)</text><text x="790" y="197" text-anchor="middle" font-size="6" fill="#1e293b">5.6× median function · top 31% of files</text></g><g class="atlas-node is-unreached" data-node="src/06_memory_ops.rs"><title>src/06_memory_ops.rs · production · file total 32 static cost units (v2) · 4.6× median function · top 38% of files · top functions: duplicate_rows @ 24, capacity_from_count @ 19, over_reserve @ 14</title><rect x="715" y="214" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="211" text-anchor="end" font-size="6" fill="#475569">HOT ×1 · unreached</text><text x="790" y="223" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/06_memory_ops.rs</text><text x="790" y="237" text-anchor="middle" font-size="6" fill="#1e293b">32 static cost units (v2)</text><text x="790" y="251" text-anchor="middle" font-size="6" fill="#1e293b">4.6× median function · top 38% of files</text></g><g class="atlas-node is-unreached" data-node="src/09_membership_scan.rs"><title>src/09_membership_scan.rs · production · file total 29 static cost units (v2) · 4.1× median function · top 46% of files · top functions: contains_nested @ 13, first_match_shallow @ 26</title><rect x="715" y="268" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="265" text-anchor="end" font-size="6" fill="#475569">WARN ×1 · unreached</text><text x="790" y="277" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/09_membership_scan.rs</text><text x="790" y="291" text-anchor="middle" font-size="6" fill="#1e293b">29 static cost units (v2)</text><text x="790" y="305" text-anchor="middle" font-size="6" fill="#1e293b">4.1× median function · top 46% of files</text></g><g class="atlas-node is-unreached" data-node="src/03_deep_nesting.rs"><title>src/03_deep_nesting.rs · production · file total 28 static cost units (v2) · 4.0× median function · top 54% of files · top functions: grid_checksum @ 15, scale_checksum @ 30</title><rect x="715" y="322" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="319" text-anchor="end" font-size="6" fill="#475569">WARN ×1 · unreached</text><text x="790" y="331" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/03_deep_nesting.rs</text><text x="790" y="345" text-anchor="middle" font-size="6" fill="#1e293b">28 static cost units (v2)</text><text x="790" y="359" text-anchor="middle" font-size="6" fill="#1e293b">4.0× median function · top 54% of files</text></g><g class="atlas-node is-unreached" data-node="src/04_stdio_churn.rs"><title>src/04_stdio_churn.rs · production · file total 21 static cost units (v2) · 3.0× median function · top 62% of files · top functions: consume_all @ 35, count_chars_per_iteration @ 16, emit_rows @ 26</title><rect x="715" y="376" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="373" text-anchor="end" font-size="6" fill="#475569">HOT ×2 · unreached</text><text x="790" y="385" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/04_stdio_churn.rs</text><text x="790" y="399" text-anchor="middle" font-size="6" fill="#1e293b">21 static cost units (v2)</text><text x="790" y="413" text-anchor="middle" font-size="6" fill="#1e293b">3.0× median function · top 62% of files</text></g><g class="atlas-node is-unreached" data-node="src/10_cross_file_and_arch.rs"><title>src/10_cross_file_and_arch.rs · production · file total 19 static cost units (v2) · 2.7× median function · top 69% of files · top functions: clamp_all @ 40, clamp_int @ 29, orchestrate @ 20</title><rect x="715" y="430" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="427" text-anchor="end" font-size="6" fill="#475569">INFO ×3 · unreached</text><text x="790" y="439" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/10_cross_file_and_arch.rs</text><text x="790" y="453" text-anchor="middle" font-size="6" fill="#1e293b">19 static cost units (v2)</text><text x="790" y="467" text-anchor="middle" font-size="6" fill="#1e293b">2.7× median function · top 69% of files</text></g><g class="atlas-node is-unreached" data-node="src/cycle_a.rs"><title>src/cycle_a.rs · production · file total 5 static cost units (v2) · 0.7× median function · top 77% of files · top functions: cycle_a_root @ 12, cycle_a_step @ 17</title><rect x="715" y="484" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="481" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="493" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/cycle_a.rs</text><text x="790" y="507" text-anchor="middle" font-size="6" fill="#1e293b">5 static cost units (v2)</text><text x="790" y="521" text-anchor="middle" font-size="6" fill="#1e293b">0.7× median function · top 77% of files</text></g><g class="atlas-node is-unreached" data-node="src/cycle_b.rs"><title>src/cycle_b.rs · production · file total 5 static cost units (v2) · 0.7× median function · top 85% of files · top functions: cycle_b_step @ 9, cycle_b_root @ 14</title><rect x="715" y="538" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="535" text-anchor="end" font-size="6" fill="#475569">WARN ×1 · unreached</text><text x="790" y="547" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/cycle_b.rs</text><text x="790" y="561" text-anchor="middle" font-size="6" fill="#1e293b">5 static cost units (v2)</text><text x="790" y="575" text-anchor="middle" font-size="6" fill="#1e293b">0.7× median function · top 85% of files</text></g><g class="atlas-node is-unreached" data-node="src/07_struct_by_value.rs"><title>src/07_struct_by_value.rs · production · file total 3 static cost units (v2) · 0.4× median function · top 100% of files · top functions: consume_blob @ 40, consume_blob_ref @ 45, layout_total @ 50</title><rect x="715" y="592" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="589" text-anchor="end" font-size="6" fill="#475569">WARN ×1 · unreached</text><text x="790" y="601" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/07_struct_by_value.rs</text><text x="790" y="615" text-anchor="middle" font-size="6" fill="#1e293b">3 static cost units (v2)</text><text x="790" y="629" text-anchor="middle" font-size="6" fill="#1e293b">0.4× median function · top 100% of files</text></g><g class="atlas-node is-unreached" data-node="src/common.rs"><title>src/common.rs · production · file total 3 static cost units (v2) · 0.4× median function · top 92% of files · top functions: shared_checksum @ 15</title><rect x="715" y="646" width="150" height="46" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="643" text-anchor="end" font-size="6" fill="#475569">unreached</text><text x="790" y="655" text-anchor="middle" font-size="7" font-weight="700" fill="#1e293b">src/common.rs</text><text x="790" y="669" text-anchor="middle" font-size="6" fill="#1e293b">3 static cost units (v2)</text><text x="790" y="683" text-anchor="middle" font-size="6" fill="#1e293b">0.4× median function · top 92% of files</text></g></g><text class="atlas-edge-label" x="799" y="262" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text><text class="atlas-edge-label" x="889" y="397" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text><text class="atlas-edge-label" x="889" y="559" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text><text class="atlas-edge-label" x="889" y="532" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text><text class="atlas-edge-label" x="889" y="532" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text>
+</svg>
+</div>
+<div class="atlas-legend"><span>static cost units (v2)</span> · <span>depth = BFS from entry</span> · <span>solid = forward structural edge</span> · <span>dashed amber = back edge</span> · <span>hatch = non-production (test/bench/other)</span> · <span>grey = unreached</span> · <span>× median function = denominator</span> · <span>hulls = approximate prefix groups</span> · <span class="atlas-structural-caption">structural (LOW name-based + MEDIUM semantic), may over/under-approximate</span></div>
+<footer class="atlas-footer">1 of 13 source files reachable (7.7%) · 5 of 5 file pairs drawn · 0 MEDIUM / 5 LOW structural edges · 12 unreached production · 0 unreached non-production · parse 14 ok / 0 partial / 0 failed · 0/5 unresolved includes · 0 files demoted</footer>
+</section>
+<section id="atlas-brief" class="atlas-brief">
+<style>#atlas-brief,#atlas-drill-q2,#atlas-drill-weight{font-family:monospace,monospace;color:#0f172a;max-width:72rem;margin:0 auto;padding:0 1rem}#atlas-brief .atlas-block{border-top:1px solid #cbd5e1;padding:.9rem 0}#atlas-brief h3,#atlas-drill-q2 h3,#atlas-drill-weight h3{font-size:1rem;margin:.2rem 0 .5rem}#atlas-brief h4,#atlas-drill-q2 h4,#atlas-drill-weight h4{font-size:.95rem;margin:.6rem 0 .3rem}.atlas-answer-line{font-size:1.02rem;line-height:1.5}.atlas-caveat{display:block;margin-top:.35rem;color:#334155}.atlas-rank{font-weight:bold;margin-right:.4rem}.atlas-action{margin:.6rem 0}.atlas-anchor,.atlas-share,.atlas-caption,.atlas-counts,.atlas-trip,.atlas-note{color:#334155;font-size:.9rem}.atlas-badge{display:inline-block;border:1px solid #334155;border-radius:3px;padding:0 .25rem;margin-left:.25rem;font-size:.85rem}.atlas-class{display:inline-block;border:1px solid #64748b;border-radius:3px;padding:0 .25rem;font-size:.85rem}.atlas-class.nonprod{color:#7c2d12;border:1px dashed #9a3412}.atlas-action-list,.atlas-weight-list,.atlas-dependent-list,.atlas-fn-list,.atlas-drill-links{padding-left:1.2rem}.atlas-why{margin:.2rem 0}.atlas-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:.75rem}.atlas-card{border:1px solid #cbd5e1;border-radius:6px;padding:.6rem}.atlas-card h4{margin:.1rem 0 .35rem;font-size:.95rem}.atlas-nonprod{border-left:4px solid #9a3412;padding-left:.5rem}.atlas-drill{border-top:2px solid #334155;padding:.9rem 0}.atlas-table-scroll{overflow-x:auto;max-width:100%}.atlas-drill table{border-collapse:collapse;width:100%;margin:.5rem 0}.atlas-drill th,.atlas-drill td{border:1px solid #999;padding:.2rem .4rem;text-align:left;vertical-align:top}.atlas-drill th{background:#eee}@media print{.atlas-drill{display:none}}</style>
+<div class="atlas-block" data-atlas-block="answer" id="atlas-answer">
+<h3>What to open first</h3>
+<p class="atlas-answer-line"><strong>ENTRY · library root (no production main) · confidence MEDIUM · 5 alternatives</strong>. Elected as the highest fan-in production library root; this scan has no production main. The largest static cost is src/01_alloc_churn.rs (file total 58 static cost units (v2) · 8.3× median function · top 8% of files). Open first: <a href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5"><code>src/01_alloc_churn.rs:34</code></a> <span class="atlas-fn">build_row_labels</span> — Heap allocation inside loop (Rust) (HOT · HIGH). <span class="atlas-caveat">Caveat: there is no forward path from the library root; callers are listed in the Q2 drill.</span></p>
+</div>
+<div class="atlas-block" data-atlas-block="actions" id="atlas-actions">
+<h3>Start here — ranked actions (production first)</h3>
+<ol class="atlas-action-list">
+<li class="atlas-action"><span class="atlas-rank">#1</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5"><code>src/01_alloc_churn.rs:34</code></a> <span class="atlas-fn">build_row_labels</span> <span class="atlas-rule">Heap allocation inside loop (Rust)</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">22 static cost units (v2) · 3.1× median function · top 8% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">loop performs 3 per-iteration allocation(s) (format, to_string, vec) at loop depth 1 — allocator churn dominates static cost; hoisting the allocation or reusing a buffer is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#2</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-06-memory-ops-rs-27-9"><code>src/06_memory_ops.rs:27</code></a> <span class="atlas-fn">duplicate_rows</span> <span class="atlas-rule">Heap allocation inside loop (Rust)</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">22 static cost units (v2) · 3.1× median function · top 10% of functions</div>
+<div class="atlas-trip">unknown-trip ×2 — estimate incomplete</div>
+<div class="atlas-why">loop performs 1 per-iteration allocation(s) (to_vec) at loop depth 2 — allocator churn dominates static cost; hoisting the allocation or reusing a buffer is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#3</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9"><code>src/01_alloc_churn.rs:39</code></a> <span class="atlas-fn">build_row_labels</span> <span class="atlas-rule">Deallocation inside loop (Rust)</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">22 static cost units (v2) · 3.1× median function · top 8% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">deallocation via &#39;drop&#39; at loop depth 1 — repeated drop-per-iteration teardown; hoisting the drop or restructuring value ownership is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#4</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9"><code>src/01_alloc_churn.rs:58</code></a> <span class="atlas-fn">grid_reset</span> <span class="atlas-rule">Heap allocation inside loop (Rust)</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">19 static cost units (v2) · 2.7× median function · top 13% of functions</div>
+<div class="atlas-trip">unknown-trip ×2 — estimate incomplete</div>
+<div class="atlas-why">loop performs 1 per-iteration allocation(s) (vec) at loop depth 2 — allocator churn dominates static cost; hoisting the allocation or reusing a buffer is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#5</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5"><code>src/02_string_building.rs:41</code></a> <span class="atlas-fn">len_with_reassignment</span> <span class="atlas-rule">Heap allocation inside loop (Rust)</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 18% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">loop performs 1 per-iteration allocation(s) (format) at loop depth 1 — allocator churn dominates static cost; hoisting the allocation or reusing a buffer is a candidate optimization</div></li>
 </ol>
-<p class="kv-more"><a href="findings-detail.html#ranked-actions">             Complete ranked list — all 31 findings (production-first)</a></p>
-             <p class="kv-counts">0 non-production files demoted · 1 component-level finding in Explorer</p>
+<p class="atlas-counts">0 non-production files demoted · 1 component-level finding in the full list</p>
+<p class="atlas-more"><a href="findings-detail.html#ranked-actions">Complete ranked action list — 31 actions (production-first)</a></p>
 </div>
-<div class="kv kv2">
-<h3>What breaks if I touch it?</h3>
-         <p class="kv-action">Changing a file here forces re-import of its          dependents — do not edit directly.</p>
-<div class="kv-bars">
-<div class="kv-brow"><span class="kv-blabel">src/cycle_a.rs </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 14% of scanned files · top 7%</span></div>
-<div class="kv-brow"><span class="kv-blabel">src/cycle_b.rs </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 14% of scanned files · top 14%</span></div>
-<div class="kv-brow"><span class="kv-blabel">src/common.rs </span>                 <div class="kv-track"><div class="kv-fill" style="width:50%"></div></div>                 <span class="kv-value">1 dependent · 7% of scanned files · top 21%</span></div>
+<div class="atlas-block" data-atlas-block="weight" id="atlas-weight">
+<h3>Where is the mass? — share of scanned static cost</h3>
+<p class="atlas-caption">Production files first; non-production cost is counted in the labelled band, never dropped.</p>
+<ol class="atlas-weight-list">
+<li><span class="atlas-path">src/01_alloc_churn.rs</span> <span class="atlas-share">18% of scanned static cost</span></li>
+<li><span class="atlas-path">src/02_string_building.rs</span> <span class="atlas-share">13% of scanned static cost</span></li>
+<li><span class="atlas-path">src/05_recursion_complexity.rs</span> <span class="atlas-share">12% of scanned static cost</span></li>
+<li><span class="atlas-path">src/08_globals_and_chains.rs</span> <span class="atlas-share">12% of scanned static cost</span></li>
+<li><span class="atlas-path">src/06_memory_ops.rs</span> <span class="atlas-share">9.9% of scanned static cost</span></li>
+</ol>
+<ul class="atlas-weight-list">
+<li><span class="atlas-path">src</span> <span class="atlas-share">100% of scanned static cost · 13 files</span></li>
+</ul>
+<p class="atlas-caption">Component shares include every member file; component groups are approximate prefix groups.</p>
+<p class="atlas-nonprod">non-production (test/bench/other) = 0.0% of scanned static cost (0 files)</p>
 </div>
-<p class="kv-counts">showing top 3 of 3 files with resolved dependents · 0 non-production files demoted</p>
-<p class="kv-counts">resolved 5 of 5 include edges</p>
+<div class="atlas-block" data-atlas-block="blast" id="atlas-blast">
+<h3>What breaks if I touch it? — blast radius</h3>
+<p class="atlas-blast-line">no resolved dependents · target <span class="atlas-path">src/01_alloc_churn.rs</span></p>
+<p>1 caller files · 0 callee files (structural)</p>
+<p class="atlas-caption">5 of 5 include edges resolved · 0/5 unresolved includes</p>
+<p><a href="#atlas-drill-q2">Full dependent list and Q2 reverse drill</a></p>
+<p class="atlas-caption">Callers and callees are structural (LOW name-based + MEDIUM semantic) and may over/under-approximate.</p>
 </div>
-<div class="kv kv3">
-<h3>Where might time plausibly go?</h3>
-         <p class="kv-action">Profile the named function first — static          candidate, confirm with a profiler.</p>
-         <p class="kv-caption">Bars scale within each block: blue = ranked functions, grey = demoted functions.</p>
-<div class="kv-bars">
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/03_deep_nesting.rs:15</span>                 <span class="kv-fn">grid_checksum</span></span><div class="kv-track"><div class="kv-fill" style="width:100%"></div></div><span class="kv-value">25 static cost units (v2) · 3.6× median · top 5%<span class="kv-badge trip">unknown-trip ×3 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/01_alloc_churn.rs:32</span>                 <span class="kv-fn">build_row_labels</span></span><div class="kv-track"><div class="kv-fill" style="width:88%"></div></div><span class="kv-value">22 static cost units (v2) · 3.1× median · top 8%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/06_memory_ops.rs:24</span>                 <span class="kv-fn">duplicate_rows</span></span><div class="kv-track"><div class="kv-fill" style="width:88%"></div></div><span class="kv-value">22 static cost units (v2) · 3.1× median · top 10%<span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/01_alloc_churn.rs:56</span>                 <span class="kv-fn">grid_reset</span></span><div class="kv-track"><div class="kv-fill" style="width:76%"></div></div><span class="kv-value">19 static cost units (v2) · 2.7× median · top 13%<span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/09_membership_scan.rs:13</span>                 <span class="kv-fn">contains_nested</span></span><div class="kv-track"><div class="kv-fill" style="width:76%"></div></div><span class="kv-value">19 static cost units (v2) · 2.7× median · top 15%<span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/02_string_building.rs:38</span>                 <span class="kv-fn">len_with_reassignment</span></span><div class="kv-track"><div class="kv-fill" style="width:56%"></div></div><span class="kv-value">14 static cost units (v2) · 2.0× median · top 18%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/01_alloc_churn.rs:46</span>                 <span class="kv-fn">grow_one_at_a_time</span></span><div class="kv-track"><div class="kv-fill" style="width:44%"></div></div><span class="kv-value">11 static cost units (v2) · 1.6× median · top 20%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">src/02_string_building.rs:49</span>                 <span class="kv-fn">append_via_add_assign</span></span><div class="kv-track"><div class="kv-fill" style="width:44%"></div></div><span class="kv-value">11 static cost units (v2) · 1.6× median · top 23%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/05_recursion_complexity.rs:20</span>                 <span class="kv-fn">classify</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:100%"></div></div><span class="kv-value">33 static cost units (v2) · 4.7× median · top 3%</span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">src/05_recursion_complexity.rs:10</span>                 <span class="kv-fn">fib</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:21%"></div></div><span class="kv-value">7 static cost units (v2) · 1.0× median · top 45%</span></div>
+<div class="atlas-block" data-atlas-block="cards" id="atlas-cards">
+<h3>File cards — what is inside the top files</h3>
+<div class="atlas-cards">
+<article class="atlas-card">
+<h4><span class="atlas-path">src/01_alloc_churn.rs</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 58 static cost units (v2) · 8.3× median function · top 8% of files</p>
+<p class="atlas-share">18% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-RS-ALLOC-001</code> HOT ×2 — Heap allocation inside loop (Rust)</p>
+<ol class="atlas-fn-list">
+<li><code>src/01_alloc_churn.rs:32</code> <span class="atlas-fn">build_row_labels</span> <span class="atlas-anchor">22 static cost units (v2) · 3.1× median function · top 8% of functions</span></li>
+<li><code>src/01_alloc_churn.rs:56</code> <span class="atlas-fn">grid_reset</span> <span class="atlas-anchor">19 static cost units (v2) · 2.7× median function · top 13% of functions</span></li>
+<li><code>src/01_alloc_churn.rs:46</code> <span class="atlas-fn">grow_one_at_a_time</span> <span class="atlas-anchor">11 static cost units (v2) · 1.6× median function · top 20% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-src-01-alloc-churn-rs">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">src/02_string_building.rs</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 41 static cost units (v2) · 5.9× median function · top 15% of files</p>
+<p class="atlas-share">13% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-RS-ALLOC-001</code> HOT ×1 — Heap allocation inside loop (Rust)</p>
+<ol class="atlas-fn-list">
+<li><code>src/02_string_building.rs:38</code> <span class="atlas-fn">len_with_reassignment</span> <span class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 18% of functions</span></li>
+<li><code>src/02_string_building.rs:49</code> <span class="atlas-fn">append_via_add_assign</span> <span class="atlas-anchor">11 static cost units (v2) · 1.6× median function · top 23% of functions</span></li>
+<li><code>src/02_string_building.rs:20</code> <span class="atlas-fn">accumulate</span> <span class="atlas-anchor">7 static cost units (v2) · 1.0× median function · top 33% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-src-02-string-building-rs">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">src/05_recursion_complexity.rs</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 40 static cost units (v2) · 5.7× median function · top 23% of files</p>
+<p class="atlas-share">12% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-RS-ARCH-002</code> HOT ×1 — Hot component (Rust)</p>
+<ol class="atlas-fn-list">
+<li><code>src/05_recursion_complexity.rs:20</code> <span class="atlas-fn">classify</span> <span class="atlas-anchor">33 static cost units (v2) · 4.7× median function · top 3% of functions</span></li>
+<li><code>src/05_recursion_complexity.rs:10</code> <span class="atlas-fn">fib</span> <span class="atlas-anchor">7 static cost units (v2) · 1.0× median function · top 45% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-src-05-recursion-complexity-rs">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">src/08_globals_and_chains.rs</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 39 static cost units (v2) · 5.6× median function · top 31% of files</p>
+<p class="atlas-share">12% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-RS-LOOP-005</code> INFO ×1 — Global variable written inside loop (Rust)</p>
+<ol class="atlas-fn-list">
+<li><code>src/08_globals_and_chains.rs:49</code> <span class="atlas-fn">call_directly</span> <span class="atlas-anchor">8 static cost units (v2) · 1.1× median function · top 28% of functions</span></li>
+<li><code>src/08_globals_and_chains.rs:56</code> <span class="atlas-fn">read_depth</span> <span class="atlas-anchor">7 static cost units (v2) · 1.0× median function · top 48% of functions</span></li>
+<li><code>src/08_globals_and_chains.rs:66</code> <span class="atlas-fn">read_depth_member</span> <span class="atlas-anchor">7 static cost units (v2) · 1.0× median function · top 50% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-src-08-globals-and-chains-rs">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">src/06_memory_ops.rs</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 32 static cost units (v2) · 4.6× median function · top 38% of files</p>
+<p class="atlas-share">9.9% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-RS-ALLOC-001</code> HOT ×1 — Heap allocation inside loop (Rust)</p>
+<ol class="atlas-fn-list">
+<li><code>src/06_memory_ops.rs:24</code> <span class="atlas-fn">duplicate_rows</span> <span class="atlas-anchor">22 static cost units (v2) · 3.1× median function · top 10% of functions</span></li>
+<li><code>src/06_memory_ops.rs:19</code> <span class="atlas-fn">capacity_from_count</span> <span class="atlas-anchor">5 static cost units (v2) · 0.7× median function · top 63% of functions</span></li>
+<li><code>src/06_memory_ops.rs:14</code> <span class="atlas-fn">over_reserve</span> <span class="atlas-anchor">5 static cost units (v2) · 0.7× median function · top 65% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-src-06-memory-ops-rs">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">src/09_membership_scan.rs</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 29 static cost units (v2) · 4.1× median function · top 46% of files</p>
+<p class="atlas-share">9.0% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-RS-STR-002</code> WARN ×1 — Length query recomputed in loop (Rust)</p>
+<ol class="atlas-fn-list">
+<li><code>src/09_membership_scan.rs:13</code> <span class="atlas-fn">contains_nested</span> <span class="atlas-anchor">19 static cost units (v2) · 2.7× median function · top 15% of functions</span></li>
+<li><code>src/09_membership_scan.rs:26</code> <span class="atlas-fn">first_match_shallow</span> <span class="atlas-anchor">10 static cost units (v2) · 1.4× median function · top 25% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-src-09-membership-scan-rs">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
 </div>
-<p class="kv-more"><a href="profile-queue.html">             Complete cost-ranked list (40 functions)</a></p>
-<p class="kv-counts">0 startup functions demoted · 20 no-loop functions demoted · 0 non-production files demoted</p>
+<p class="atlas-counts">showing top 6 of 13 source files (production-first)</p>
 </div>
+<div class="atlas-block" data-atlas-block="noise" id="atlas-noise">
+<h3>Noise and confidence</h3>
+<p>parse 14 ok / 0 partial / 0 failed</p>
+<p>0/5 unresolved includes · 5 of 5 include edges resolved</p>
+<p>0 MEDIUM / 5 LOW structural edges</p>
+<p>0 files demoted · 1 of 1 reachable files shown · 0 aggregated · 5 of 5 file pairs drawn</p>
+<p>12 production + 0 non-production of 13 source files unreached</p>
+<p>1 of 14 scanned files have no functions · 0 source files partial or failed</p>
+<p class="atlas-caption">Structural edges are LOW name-based + MEDIUM semantic and may over/under-approximate; static cost is not ground truth.</p>
+</div>
+<div class="atlas-block" data-atlas-block="links" id="atlas-links">
+<h3>Drills</h3>
+<ul class="atlas-drill-links">
+<li><a href="findings-detail.html#ranked-actions">Complete ranked action list</a> — 31 actions (production-first)</li>
+<li><a href="profile-queue.html">Complete profile queue</a> — 40 functions ranked by static cost</li>
+<li><a href="#atlas-drill-q2">Q2 reverse drill</a> — dependents and structural callers/callees for src/01_alloc_churn.rs</li>
+<li><a href="#atlas-drill-weight">Weight detail</a> — 13 source files and 1 component by share</li>
+<li>Component pages: <a href="charts/component-01-src.svg">src</a> (100% of scanned static cost · 13 files)</li>
+<li><a href="#explorer">Explorer</a> — legacy static chart stems</li>
+</ul>
+</div>
+</section>
+<section id="atlas-drill-q2" class="atlas-drill" data-atlas-drill="q2">
+<h3>Q2 reverse drill — what breaks if I touch the focus file</h3>
+<p>focus: <code>src/01_alloc_churn.rs</code> · include coverage: 5 of 5 include edges resolved</p>
+<h4>1-hop include dependents</h4>
+<p>no resolved dependents</p>
+<h4>Component DSM — approximate prefix groups (resolved include edges)</h4>
+<div class="atlas-table-scroll"><table>
+<thead><tr><th>from component</th><th>to component</th><th>include edges</th></tr></thead>
+<tbody>
+<tr><td>src</td><td>src</td><td>5</td></tr>
+</tbody>
+</table>
+</div>
+<h4>Structural callers and callees</h4>
+<p>1 caller files · 0 callee files (structural)</p>
+<p>caller files: <span class="atlas-path">src/10_cross_file_and_arch.rs</span></p>
+<p>callee files: no structural call edges recorded</p>
+<p class="atlas-caption">Callers and callees are structural (LOW name-based + MEDIUM semantic) and may over/under-approximate.</p>
+</section>
+<section id="atlas-drill-weight" class="atlas-drill" data-atlas-drill="weight">
+<h3>Weight detail — every source file and component by share</h3>
+<p class="atlas-caption">13 source files · every share is relative to total scanned static cost.</p>
+<div class="atlas-table-scroll"><table>
+<thead><tr><th>file</th><th>class</th><th>cost</th><th>share</th></tr></thead>
+<tbody>
+<tr id="atlas-file-src-01-alloc-churn-rs"><td><span class="atlas-path">src/01_alloc_churn.rs</span></td><td>production</td><td>file total 58 static cost units (v2) · 8.3× median function · top 8% of files</td><td>18% of scanned static cost</td></tr>
+<tr id="atlas-file-src-02-string-building-rs"><td><span class="atlas-path">src/02_string_building.rs</span></td><td>production</td><td>file total 41 static cost units (v2) · 5.9× median function · top 15% of files</td><td>13% of scanned static cost</td></tr>
+<tr id="atlas-file-src-05-recursion-complexity-rs"><td><span class="atlas-path">src/05_recursion_complexity.rs</span></td><td>production</td><td>file total 40 static cost units (v2) · 5.7× median function · top 23% of files</td><td>12% of scanned static cost</td></tr>
+<tr id="atlas-file-src-08-globals-and-chains-rs"><td><span class="atlas-path">src/08_globals_and_chains.rs</span></td><td>production</td><td>file total 39 static cost units (v2) · 5.6× median function · top 31% of files</td><td>12% of scanned static cost</td></tr>
+<tr id="atlas-file-src-06-memory-ops-rs"><td><span class="atlas-path">src/06_memory_ops.rs</span></td><td>production</td><td>file total 32 static cost units (v2) · 4.6× median function · top 38% of files</td><td>9.9% of scanned static cost</td></tr>
+<tr id="atlas-file-src-09-membership-scan-rs"><td><span class="atlas-path">src/09_membership_scan.rs</span></td><td>production</td><td>file total 29 static cost units (v2) · 4.1× median function · top 46% of files</td><td>9.0% of scanned static cost</td></tr>
+<tr id="atlas-file-src-03-deep-nesting-rs"><td><span class="atlas-path">src/03_deep_nesting.rs</span></td><td>production</td><td>file total 28 static cost units (v2) · 4.0× median function · top 54% of files</td><td>8.7% of scanned static cost</td></tr>
+<tr id="atlas-file-src-04-stdio-churn-rs"><td><span class="atlas-path">src/04_stdio_churn.rs</span></td><td>production</td><td>file total 21 static cost units (v2) · 3.0× median function · top 62% of files</td><td>6.5% of scanned static cost</td></tr>
+<tr id="atlas-file-src-10-cross-file-and-arch-rs"><td><span class="atlas-path">src/10_cross_file_and_arch.rs</span></td><td>production</td><td>file total 19 static cost units (v2) · 2.7× median function · top 69% of files</td><td>5.9% of scanned static cost</td></tr>
+<tr id="atlas-file-src-cycle-a-rs"><td><span class="atlas-path">src/cycle_a.rs</span></td><td>production</td><td>file total 5 static cost units (v2) · 0.7× median function · top 77% of files</td><td>1.6% of scanned static cost</td></tr>
+<tr id="atlas-file-src-cycle-b-rs"><td><span class="atlas-path">src/cycle_b.rs</span></td><td>production</td><td>file total 5 static cost units (v2) · 0.7× median function · top 85% of files</td><td>1.6% of scanned static cost</td></tr>
+<tr id="atlas-file-src-common-rs"><td><span class="atlas-path">src/common.rs</span></td><td>production</td><td>file total 3 static cost units (v2) · 0.4× median function · top 92% of files</td><td>0.9% of scanned static cost</td></tr>
+<tr id="atlas-file-src-07-struct-by-value-rs"><td><span class="atlas-path">src/07_struct_by_value.rs</span></td><td>production</td><td>file total 3 static cost units (v2) · 0.4× median function · top 100% of files</td><td>0.9% of scanned static cost</td></tr>
+</tbody>
+</table>
+</div>
+<h4>Components</h4>
+<div class="atlas-table-scroll"><table>
+<thead><tr><th>component</th><th>files</th><th>production files</th><th>share</th></tr></thead>
+<tbody>
+<tr><td>src</td><td>13</td><td>13</td><td>100% of scanned static cost · 13 files</td></tr>
+</tbody>
+</table>
+</div>
+<p class="atlas-caption">Component rows are approximate prefix groups; the non-production band in the brief counts the rest.</p>
+</section>
 </section>
 <section id="explorer">
 <h2>Explorer</h2>

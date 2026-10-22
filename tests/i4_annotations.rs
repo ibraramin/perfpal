@@ -590,17 +590,14 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         !crumb_line.contains("#architecture") && !crumb_line.contains("Workspace"),
         "breadcrumb must not claim #architecture is the workspace section: {crumb_line}"
     );
-    // Key views have their own nav entry (first), then the Explorer tier.
-    let nav_key_views = html
-        .find("<li><a href=\"#map\">Key views</a></li>")
-        .expect("Key views nav item");
+    // The Atlas has its own nav entry (first), then the Explorer tier.
+    let nav_atlas = html
+        .find("<li><a href=\"#map\">Atlas</a></li>")
+        .expect("Atlas nav item");
     let nav_explorer = html
         .find("<li><a href=\"#explorer\">Explorer</a></li>")
         .expect("Explorer nav item");
-    assert!(
-        nav_key_views < nav_explorer,
-        "Key views must precede Explorer"
-    );
+    assert!(nav_atlas < nav_explorer, "Atlas must precede Explorer");
     assert!(html.contains("<li><a href=\"#explorer\">Explorer</a></li>"));
     assert!(!html.contains("<li><a href=\"#architecture\">Architecture</a></li>"));
     assert!(html.contains("<a href=\"findings-detail.html\">Findings detail</a>"));
@@ -615,25 +612,29 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
     );
     assert_eq!(html.matches("<section id=\"map\">").count(), 1);
 
-    // #map opens with the KV1 question and carries no workspace figure.
-    let map_section = html
-        .split("<section id=\"map\">")
-        .nth(1)
-        .expect("#map body")
-        .split("</section>")
-        .next()
-        .expect("#map close");
-    assert!(map_section.contains("Where do I look first?"));
+    // #map opens with the canvas, then the answer line (A8 amended).
+    let map_start = html.find("<section id=\"map\">").expect("#map body");
+    let map_end = html[map_start..]
+        .find("<section id=\"explorer\">")
+        .expect("#explorer after map");
+    let map_body = &html[map_start..map_start + map_end];
     assert!(
-        map_section.find("Where do I look first?").unwrap()
-            < map_section.find("What breaks if I touch it?").unwrap()
+        map_body.starts_with("<section id=\"map\">\n<section id=\"atlas-canvas\""),
+        "#map must open with the Atlas canvas"
     );
-    assert!(
-        map_section.find("What breaks if I touch it?").unwrap()
-            < map_section.find("Where might time plausibly go?").unwrap()
-    );
-    assert!(!map_section.contains("data-chart=\"layer-workspace\""));
-    assert!(!map_section.contains(FINDING_LEGEND));
+    let canvas = map_body.find("id=\"atlas-canvas\"").expect("canvas");
+    let answer = map_body.find("id=\"atlas-answer\"").expect("answer line");
+    assert!(canvas < answer, "answer line must follow the canvas");
+    for block in [
+        "answer", "actions", "weight", "blast", "cards", "noise", "links",
+    ] {
+        assert!(
+            map_body.contains(&format!("data-atlas-block=\"{block}\"")),
+            "missing Atlas block {block}"
+        );
+    }
+    assert!(!map_body.contains("data-chart=\"layer-workspace\""));
+    assert!(!map_body.contains(FINDING_LEGEND));
 
     // The eight stems render under Explorer, including the workspace figure
     // and every emitted component detail page.

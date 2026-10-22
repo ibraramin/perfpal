@@ -65,12 +65,12 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <body>
 <header>
 <h1>Perfpal Report</h1>
-<p class="breadcrumb"><a href="#map">Map</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
+<p class="breadcrumb"><a href="#map">Atlas</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
 <p>schema_version 1.7 · perfpal perfpal 0.2.0-beta.1 · 20 files · 29 findings (0 hot, 12 warn, 17 info) · languages: python</p>
 </header>
 <nav>
 <ul>
-<li><a href="#map">Key views</a></li>
+<li><a href="#map">Atlas</a></li>
 <li><a href="#explorer">Explorer</a></li>
 <li><a href="#components">Components</a></li>
 <li><a href="#files">Files</a></li>
@@ -80,71 +80,292 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </ul>
 </nav>
 <section id="map">
-<h2>Key views</h2>
-<div class="kv kv1">
-<h3>Where do I look first?</h3>
-         <p class="kv-action">Open the first <code>path:line</code> and profile it —          static candidates, confirm with a profiler.</p>
-         <p class="kv-key">Ranked: production code first, then severity, then confidence, then static cost.</p>
-<ol class="kv-rows">
-<li class="kv-row"><span class="kv-rank">#1</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14">04_stdio_churn.py:8</a> <span class="kv-fn">read_each</span> <span class="kv-title">Expensive I/O call inside loop</span>                 <span class="kv-badge sev-warn">warn</span>                 <span class="kv-badge">MEDIUM</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">11 static cost units (v2) · 2.8× median · top 10%</div>
-<div class="kv-why">&#39;open&#39; acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#2</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18">07_membership_scan.py:19</a> <span class="kv-fn">index_scan</span> <span class="kv-title">Linear index scan of a list inside loop</span>                 <span class="kv-badge sev-warn">warn</span>                 <span class="kv-badge">MEDIUM</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">11 static cost units (v2) · 2.8× median · top 12%</div>
-<div class="kv-why">list &#39;data&#39; is indexed by loop variable &#39;i&#39; at depth 1 — CPython&#39;s list subscript is O(1) per access, but a scan over the whole list re-walks it per outer iteration (O(n²)); iterating directly, using `enumerate`, or building a set/dict lookup is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#3</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-PY-LOOP-007-07-membership-scan-py-9-12">07_membership_scan.py:9</a> <span class="kv-fn">contains_any</span> <span class="kv-title">Linear list scan inside loop</span>                 <span class="kv-badge sev-warn">warn</span>                 <span class="kv-badge">MEDIUM</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">10 static cost units (v2) · 2.5× median · top 15%</div>
-<div class="kv-why">list &#39;table&#39; is tested with &#39;in&#39; inside a loop at depth 1 — CPython&#39;s list membership is an O(n) linear scan, so re-testing per outer iteration is O(n²); building a set/dict lookup or iterating directly is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#4</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-PY-ALLOC-003-10-comprehension-py-12-9">10_comprehension.py:12</a> <span class="kv-fn">transform_all</span> <span class="kv-title">Superlinear list accumulation in loop</span>                 <span class="kv-badge sev-warn">warn</span>                 <span class="kv-badge">MEDIUM</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">8 static cost units (v2) · 2.0× median · top 19%</div>
-<div class="kv-why">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</div>
-</div></li>
-<li class="kv-row"><span class="kv-rank">#5</span>                 <div class="kv-body">
-<div class="kv-line1">                 <a class="kv-loc" href="findings-detail.html#finding-PERF-PY-ALLOC-003-10-comprehension-py-21-9">10_comprehension.py:21</a> <span class="kv-fn">accumulate_multi</span> <span class="kv-title">Superlinear list accumulation in loop</span>                 <span class="kv-badge sev-warn">warn</span>                 <span class="kv-badge">MEDIUM</span>                 <span class="kv-class">production</span></div>
-<div class="kv-anchor">8 static cost units (v2) · 2.0× median · top 18%</div>
-<div class="kv-why">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</div>
-</div></li>
+<section id="atlas-canvas" class="atlas-canvas">
+<style>#atlas-canvas{position:relative;background:#ffffff;color:#0f172a;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#atlas-canvas .atlas-head{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px}
+#atlas-canvas .atlas-entry{font-weight:700}
+#atlas-canvas .atlas-hottest{color:#9a3412}
+#atlas-canvas .atlas-caps{color:#475569}
+#atlas-canvas .atlas-pause-input{position:absolute;inline-size:1px;block-size:1px;opacity:0}
+#atlas-canvas .atlas-pause{display:inline-block;margin:0 16px 8px;padding:3px 10px;border:1px solid #94a3b8;border-radius:999px;background:#f8fafc;font-size:11px;cursor:pointer}
+#atlas-canvas .atlas-graph{background:#ffffff;border-bottom:1px solid #e2e8f0}
+#atlas-canvas .atlas-svg{display:block;width:100%;height:auto}
+#atlas-canvas .atlas-svg .atlas-edge,#atlas-canvas .atlas-svg .atlas-trace{fill:none}
+#atlas-canvas .atlas-legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
+#atlas-canvas .atlas-structural-caption{font-weight:700;color:#7c2d12}
+#atlas-canvas .atlas-footer{padding:8px 16px;font-size:11px;color:#334155}
+@keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
+@keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
+ @keyframes atlas-edge-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-edge-fade{from{opacity:0}to{opacity:1}}
+ @keyframes atlas-trace-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-hottest-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+ #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
+ #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
+ #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #atlas-canvas .atlas-trace{animation:atlas-trace-draw 1.2s 4.2s both}
+#atlas-canvas .atlas-node.is-hottest{animation:atlas-hottest-pulse .8s 5.4s 2 both}
+#atlas-canvas .atlas-pause-input:checked ~ .atlas-graph *{animation-play-state:paused !important}
+#atlas-canvas .atlas-pause:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
+#atlas-canvas .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #1d4ed8;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
+@media print{#atlas-canvas{break-inside:avoid}#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#atlas-canvas .atlas-pause{display:none}}
+#atlas-canvas .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}</style>
+<input type="checkbox" id="atlas-pause" class="atlas-pause-input">
+<label for="atlas-pause" class="atlas-pause">Pause animation</label>
+<header class="atlas-head">
+<span class="atlas-entry">ENTRY · library root (no production main) · confidence MEDIUM · 5 alternatives</span>
+<span class="atlas-hottest">HOTTEST: 01_alloc_churn.py · 47 static cost units (v2) · 12× median function · top 5% of files</span>
+<span class="atlas-path-summary">PATH · 1 steps · representative path (static, BFS-derived)</span>
+<span class="atlas-caps">1 of 1 reachable files shown · 0 aggregated</span>
+</header>
+<div class="atlas-graph">
+<svg viewBox="0 0 1400 720" width="1400" height="720" class="atlas-svg" role="img" aria-label="Perfpal Atlas entry-flow canvas" preserveAspectRatio="xMidYMid meet">
+<defs><pattern id="atlas-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#f8fafc"/><line x1="0" y1="0" x2="0" y2="6" stroke="#cbd5e1" stroke-width="2"/></pattern><marker id="atlas-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker><marker id="atlas-arrow-back" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#b45309"/></marker></defs><g class="atlas-hull"><title>approximate prefix group; not a canonical component id</title><rect x="527" y="40" width="346" height="658" rx="10" fill="#eef2ff" fill-opacity=".55" stroke="#cbd5e1" stroke-width="1"/><text x="535" y="52" font-size="7" font-weight="700" fill="#475569">pkg · 4</text></g><path class="atlas-edge atlas-edge--back" data-edge="pkg/cycle_b.py-&gt;pkg/cycle_a.py" d="M 865 541 C 897 541 897 609 865 609" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:0"><title>pkg/cycle_b.py → pkg/cycle_a.py · 1 distinct structural edge</title></path><path class="atlas-edge atlas-edge--back" data-edge="15_cross_file_and_arch.py-&gt;pkg/arch_helpers.py" d="M 865 575 C 897 575 717 65 685 65" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:1"><title>15_cross_file_and_arch.py → pkg/arch_helpers.py · 1 distinct structural edge</title></path><path class="atlas-edge atlas-edge--back" data-edge="pkg/cycle_a.py-&gt;pkg/cycle_b.py" d="M 865 609 C 897 609 897 541 865 541" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4" stroke-dashoffset="0" marker-end="url(#atlas-arrow-back)" style="--atlas-edge:2"><title>pkg/cycle_a.py → pkg/cycle_b.py · 1 distinct structural edge</title></path><g class="atlas-column" style="--atlas-col:0"><text class="atlas-column-header" x="610" y="22" text-anchor="middle" font-size="7.5" font-weight="700" fill="#334155">depth 0 · ENTRY · 1 file</text><g class="atlas-node is-entry" data-node="pkg/arch_helpers.py"><title>pkg/arch_helpers.py · production · file total 11 static cost units (v2) · 2.8× median function · top 65% of files · top functions: clamp_value @ 9, normalize @ 17, &lt;module&gt; @ 1</title><rect x="535" y="52" width="150" height="26" rx="7" fill="#1f2937" stroke="#111827" stroke-width="2"/><text x="683" y="49" text-anchor="end" font-size="6" fill="#475569">ENTRY</text><text x="610" y="57" text-anchor="middle" font-size="5.8" font-weight="700" fill="#ffffff">pkg/arch_helpers.py</text><text x="610" y="65" text-anchor="middle" font-size="5.2" fill="#ffffff">11 static cost units (v2)</text><text x="610" y="73" text-anchor="middle" font-size="5.2" fill="#ffffff">2.8× median function · top 65% of files</text><g class="atlas-path-badge"><title>representative path (static, BFS-derived) · step 1 of 1</title><circle cx="678" cy="59" r="7" fill="#ea580c" stroke="#ffffff" stroke-width="1"/><text x="678" y="61" text-anchor="middle" font-size="6.5" font-weight="700" fill="#ffffff">1</text></g></g></g><g class="atlas-column is-unreached" style="--atlas-col:1"><text class="atlas-column-header" x="790" y="22" text-anchor="middle" font-size="7.5" font-weight="700" fill="#334155">UNREACHED · no forward path · 19 files</text><g class="atlas-node is-hottest is-unreached" data-node="01_alloc_churn.py"><title>01_alloc_churn.py · production · file total 47 static cost units (v2) · 12× median function · top 5% of files · top functions: eager_materialise @ 38, loop_invariant_construction @ 5, local_rebuild_is_benign @ 27</title><rect x="715" y="52" width="150" height="26" rx="7" fill="#d1d5db" stroke="#d97706" stroke-width="2"/><text x="863" y="49" text-anchor="end" font-size="6" fill="#475569">HOTTEST · WARN ×1 · unreached</text><text x="790" y="57" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">01_alloc_churn.py</text><text x="790" y="65" text-anchor="middle" font-size="5.2" fill="#1e293b">47 static cost units (v2)</text><text x="790" y="73" text-anchor="middle" font-size="5.2" fill="#1e293b">12× median function · top 5% of files</text></g><g class="atlas-node is-unreached" data-node="05_recursion_complexity.py"><title>05_recursion_complexity.py · production · file total 43 static cost units (v2) · 11× median function · top 10% of files · top functions: branchy @ 16, walk_down @ 4, &lt;module&gt; @ 1</title><rect x="715" y="86" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="83" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="91" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">05_recursion_complexity.py</text><text x="790" y="99" text-anchor="middle" font-size="5.2" fill="#1e293b">43 static cost units (v2)</text><text x="790" y="107" text-anchor="middle" font-size="5.2" fill="#1e293b">11× median function · top 10% of files</text></g><g class="atlas-node is-unreached" data-node="03_deep_nesting.py"><title>03_deep_nesting.py · production · file total 41 static cost units (v2) · 10× median function · top 15% of files · top functions: triple_nested @ 4, double_nested @ 14, &lt;module&gt; @ 1</title><rect x="715" y="120" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="117" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="125" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">03_deep_nesting.py</text><text x="790" y="133" text-anchor="middle" font-size="5.2" fill="#1e293b">41 static cost units (v2)</text><text x="790" y="141" text-anchor="middle" font-size="5.2" fill="#1e293b">10× median function · top 15% of files</text></g><g class="atlas-node is-unreached" data-node="07_membership_scan.py"><title>07_membership_scan.py · production · file total 39 static cost units (v2) · 9.8× median function · top 20% of files · top functions: index_scan @ 14, contains_any @ 4, set_membership @ 32</title><rect x="715" y="154" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="151" text-anchor="end" font-size="6" fill="#475569">WARN ×3 · unreached</text><text x="790" y="159" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">07_membership_scan.py</text><text x="790" y="167" text-anchor="middle" font-size="5.2" fill="#1e293b">39 static cost units (v2)</text><text x="790" y="175" text-anchor="middle" font-size="5.2" fill="#1e293b">9.8× median function · top 20% of files</text></g><g class="atlas-node is-unreached" data-node="08_range_len.py"><title>08_range_len.py · production · file total 23 static cost units (v2) · 5.8× median function · top 25% of files · top functions: positional_sum @ 4, counter_sum @ 13, &lt;module&gt; @ 1</title><rect x="715" y="188" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="185" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="193" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">08_range_len.py</text><text x="790" y="201" text-anchor="middle" font-size="5.2" fill="#1e293b">23 static cost units (v2)</text><text x="790" y="209" text-anchor="middle" font-size="5.2" fill="#1e293b">5.8× median function · top 25% of files</text></g><g class="atlas-node is-unreached" data-node="10_comprehension.py"><title>10_comprehension.py · production · file total 21 static cost units (v2) · 5.3× median function · top 30% of files · top functions: accumulate_multi @ 16, transform_all @ 8, transform @ 4</title><rect x="715" y="222" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="219" text-anchor="end" font-size="6" fill="#475569">WARN ×2 · unreached</text><text x="790" y="227" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">10_comprehension.py</text><text x="790" y="235" text-anchor="middle" font-size="5.2" fill="#1e293b">21 static cost units (v2)</text><text x="790" y="243" text-anchor="middle" font-size="5.2" fill="#1e293b">5.3× median function · top 30% of files</text></g><g class="atlas-node is-unreached" data-node="04_stdio_churn.py"><title>04_stdio_churn.py · production · file total 19 static cost units (v2) · 4.8× median function · top 35% of files · top functions: read_each @ 4, log_each @ 14, &lt;module&gt; @ 1</title><rect x="715" y="256" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="253" text-anchor="end" font-size="6" fill="#475569">WARN ×1 · unreached</text><text x="790" y="261" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">04_stdio_churn.py</text><text x="790" y="269" text-anchor="middle" font-size="5.2" fill="#1e293b">19 static cost units (v2)</text><text x="790" y="277" text-anchor="middle" font-size="5.2" fill="#1e293b">4.8× median function · top 35% of files</text></g><g class="atlas-node is-unreached" data-node="14_async_blocking.py"><title>14_async_blocking.py · production · file total 17 static cost units (v2) · 4.3× median function · top 40% of files · top functions: await_each @ 23, fetch_blocking @ 8, await_once @ 31</title><rect x="715" y="290" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="287" text-anchor="end" font-size="6" fill="#475569">WARN ×2 · unreached</text><text x="790" y="295" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">14_async_blocking.py</text><text x="790" y="303" text-anchor="middle" font-size="5.2" fill="#1e293b">17 static cost units (v2)</text><text x="790" y="311" text-anchor="middle" font-size="5.2" fill="#1e293b">4.3× median function · top 40% of files</text></g><g class="atlas-node is-unreached" data-node="09_try_in_loop.py"><title>09_try_in_loop.py · production · file total 16 static cost units (v2) · 4.0× median function · top 45% of files · top functions: swallow @ 4, guarded @ 15, &lt;module&gt; @ 1</title><rect x="715" y="324" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="321" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="329" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">09_try_in_loop.py</text><text x="790" y="337" text-anchor="middle" font-size="5.2" fill="#1e293b">16 static cost units (v2)</text><text x="790" y="345" text-anchor="middle" font-size="5.2" fill="#1e293b">4.0× median function · top 45% of files</text></g><g class="atlas-node is-unreached" data-node="13_pandas.py"><title>13_pandas.py · production · file total 16 static cost units (v2) · 4.0× median function · top 50% of files · top functions: append_frames @ 14, row_wise @ 6, &lt;module&gt; @ 1</title><rect x="715" y="358" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="355" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="363" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">13_pandas.py</text><text x="790" y="371" text-anchor="middle" font-size="5.2" fill="#1e293b">16 static cost units (v2)</text><text x="790" y="379" text-anchor="middle" font-size="5.2" fill="#1e293b">4.0× median function · top 50% of files</text></g><g class="atlas-node is-unreached" data-node="02_string_building.py"><title>02_string_building.py · production · file total 15 static cost units (v2) · 3.8× median function · top 55% of files · top functions: build_string @ 4, loop_invariant_prefix @ 12, &lt;module&gt; @ 1</title><rect x="715" y="392" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="389" text-anchor="end" font-size="6" fill="#475569">WARN ×1 · unreached</text><text x="790" y="397" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">02_string_building.py</text><text x="790" y="405" text-anchor="middle" font-size="5.2" fill="#1e293b">15 static cost units (v2)</text><text x="790" y="413" text-anchor="middle" font-size="5.2" fill="#1e293b">3.8× median function · top 55% of files</text></g><g class="atlas-node is-unreached" data-node="11_executors.py"><title>11_executors.py · production · file total 15 static cost units (v2) · 3.8× median function · top 60% of files · top functions: fan_out @ 6, fan_out_once @ 13, &lt;module&gt; @ 1</title><rect x="715" y="426" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="423" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="431" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">11_executors.py</text><text x="790" y="439" text-anchor="middle" font-size="5.2" fill="#1e293b">15 static cost units (v2)</text><text x="790" y="447" text-anchor="middle" font-size="5.2" fill="#1e293b">3.8× median function · top 60% of files</text></g><g class="atlas-node is-unreached" data-node="06_memory_ops.py"><title>06_memory_ops.py · production · file total 9 static cost units (v2) · 2.3× median function · top 75% of files · top functions: copy_each @ 6, &lt;module&gt; @ 1, copy_once @ 14</title><rect x="715" y="460" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="457" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="465" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">06_memory_ops.py</text><text x="790" y="473" text-anchor="middle" font-size="5.2" fill="#1e293b">9 static cost units (v2)</text><text x="790" y="481" text-anchor="middle" font-size="5.2" fill="#1e293b">2.3× median function · top 75% of files</text></g><g class="atlas-node is-unreached" data-node="12_io_n1.py"><title>12_io_n1.py · production · file total 9 static cost units (v2) · 2.3× median function · top 80% of files · top functions: fetch_each @ 4, &lt;module&gt; @ 1, fetch_once @ 12</title><rect x="715" y="494" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="491" text-anchor="end" font-size="6" fill="#475569">WARN ×1 · unreached</text><text x="790" y="499" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">12_io_n1.py</text><text x="790" y="507" text-anchor="middle" font-size="5.2" fill="#1e293b">9 static cost units (v2)</text><text x="790" y="515" text-anchor="middle" font-size="5.2" fill="#1e293b">2.3× median function · top 80% of files</text></g><g class="atlas-node is-unreached" data-node="pkg/cycle_b.py"><title>pkg/cycle_b.py · production · file total 9 static cost units (v2) · 2.3× median function · top 70% of files · top functions: ping_b @ 6, &lt;module&gt; @ 1</title><rect x="715" y="528" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="525" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="533" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">pkg/cycle_b.py</text><text x="790" y="541" text-anchor="middle" font-size="5.2" fill="#1e293b">9 static cost units (v2)</text><text x="790" y="549" text-anchor="middle" font-size="5.2" fill="#1e293b">2.3× median function · top 70% of files</text></g><g class="atlas-node is-unreached" data-node="15_cross_file_and_arch.py"><title>15_cross_file_and_arch.py · production · file total 8 static cost units (v2) · 2.0× median function · top 85% of files · top functions: local_only @ 16, local_helper @ 11, use_cross_file @ 6</title><rect x="715" y="562" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="559" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="567" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">15_cross_file_and_arch.py</text><text x="790" y="575" text-anchor="middle" font-size="5.2" fill="#1e293b">8 static cost units (v2)</text><text x="790" y="583" text-anchor="middle" font-size="5.2" fill="#1e293b">2.0× median function · top 85% of files</text></g><g class="atlas-node is-unreached" data-node="pkg/cycle_a.py"><title>pkg/cycle_a.py · production · file total 6 static cost units (v2) · 1.5× median function · top 90% of files · top functions: walk_cycle @ 6, &lt;module&gt; @ 1</title><rect x="715" y="596" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="593" text-anchor="end" font-size="6" fill="#475569">INFO ×1 · unreached</text><text x="790" y="601" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">pkg/cycle_a.py</text><text x="790" y="609" text-anchor="middle" font-size="5.2" fill="#1e293b">6 static cost units (v2)</text><text x="790" y="617" text-anchor="middle" font-size="5.2" fill="#1e293b">1.5× median function · top 90% of files</text></g><g class="atlas-node is-unreached" data-node="__init__.py"><title>__init__.py · production · file total 1 static cost units (v2) · 0.3× median function · top 95% of files · top functions: &lt;module&gt; @ 1</title><rect x="715" y="630" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="627" text-anchor="end" font-size="6" fill="#475569">unreached</text><text x="790" y="635" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">__init__.py</text><text x="790" y="643" text-anchor="middle" font-size="5.2" fill="#1e293b">1 static cost units (v2)</text><text x="790" y="651" text-anchor="middle" font-size="5.2" fill="#1e293b">0.3× median function · top 95% of files</text></g><g class="atlas-node is-unreached" data-node="pkg/__init__.py"><title>pkg/__init__.py · production · file total 1 static cost units (v2) · 0.3× median function · top 100% of files · top functions: &lt;module&gt; @ 1</title><rect x="715" y="664" width="150" height="26" rx="7" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/><text x="863" y="661" text-anchor="end" font-size="6" fill="#475569">unreached</text><text x="790" y="669" text-anchor="middle" font-size="5.8" font-weight="700" fill="#1e293b">pkg/__init__.py</text><text x="790" y="677" text-anchor="middle" font-size="5.2" fill="#1e293b">1 static cost units (v2)</text><text x="790" y="685" text-anchor="middle" font-size="5.2" fill="#1e293b">0.3× median function · top 100% of files</text></g></g><text class="atlas-edge-label" x="889" y="573" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text><text class="atlas-edge-label" x="799" y="318" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text><text class="atlas-edge-label" x="889" y="573" text-anchor="middle" font-size="6.5" fill="#334155" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">1 distinct structural edge</text>
+</svg>
+</div>
+<div class="atlas-legend"><span>static cost units (v2)</span> · <span>depth = BFS from entry</span> · <span>solid = forward structural edge</span> · <span>dashed amber = back edge</span> · <span>hatch = non-production (test/bench/other)</span> · <span>grey = unreached</span> · <span>× median function = denominator</span> · <span>hulls = approximate prefix groups</span> · <span class="atlas-structural-caption">structural (LOW name-based + MEDIUM semantic), may over/under-approximate</span></div>
+<footer class="atlas-footer">1 of 20 source files reachable (5.0%) · 3 of 3 file pairs drawn · 0 MEDIUM / 3 LOW structural edges · 19 unreached production · 0 unreached non-production · parse 20 ok / 0 partial / 0 failed · 5/10 unresolved includes · 0 files demoted</footer>
+</section>
+<section id="atlas-brief" class="atlas-brief">
+<style>#atlas-brief,#atlas-drill-q2,#atlas-drill-weight{font-family:monospace,monospace;color:#0f172a;max-width:72rem;margin:0 auto;padding:0 1rem}#atlas-brief .atlas-block{border-top:1px solid #cbd5e1;padding:.9rem 0}#atlas-brief h3,#atlas-drill-q2 h3,#atlas-drill-weight h3{font-size:1rem;margin:.2rem 0 .5rem}#atlas-brief h4,#atlas-drill-q2 h4,#atlas-drill-weight h4{font-size:.95rem;margin:.6rem 0 .3rem}.atlas-answer-line{font-size:1.02rem;line-height:1.5}.atlas-caveat{display:block;margin-top:.35rem;color:#334155}.atlas-rank{font-weight:bold;margin-right:.4rem}.atlas-action{margin:.6rem 0}.atlas-anchor,.atlas-share,.atlas-caption,.atlas-counts,.atlas-trip,.atlas-note{color:#334155;font-size:.9rem}.atlas-badge{display:inline-block;border:1px solid #334155;border-radius:3px;padding:0 .25rem;margin-left:.25rem;font-size:.85rem}.atlas-class{display:inline-block;border:1px solid #64748b;border-radius:3px;padding:0 .25rem;font-size:.85rem}.atlas-class.nonprod{color:#7c2d12;border:1px dashed #9a3412}.atlas-action-list,.atlas-weight-list,.atlas-dependent-list,.atlas-fn-list,.atlas-drill-links{padding-left:1.2rem}.atlas-why{margin:.2rem 0}.atlas-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:.75rem}.atlas-card{border:1px solid #cbd5e1;border-radius:6px;padding:.6rem}.atlas-card h4{margin:.1rem 0 .35rem;font-size:.95rem}.atlas-nonprod{border-left:4px solid #9a3412;padding-left:.5rem}.atlas-drill{border-top:2px solid #334155;padding:.9rem 0}.atlas-table-scroll{overflow-x:auto;max-width:100%}.atlas-drill table{border-collapse:collapse;width:100%;margin:.5rem 0}.atlas-drill th,.atlas-drill td{border:1px solid #999;padding:.2rem .4rem;text-align:left;vertical-align:top}.atlas-drill th{background:#eee}@media print{.atlas-drill{display:none}}</style>
+<div class="atlas-block" data-atlas-block="answer" id="atlas-answer">
+<h3>What to open first</h3>
+<p class="atlas-answer-line"><strong>ENTRY · library root (no production main) · confidence MEDIUM · 5 alternatives</strong>. Elected as the highest fan-in production library root; this scan has no production main. The largest static cost is 01_alloc_churn.py (file total 47 static cost units (v2) · 12× median function · top 5% of files). Open first: <a href="findings-detail.html#finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14"><code>04_stdio_churn.py:8</code></a> <span class="atlas-fn">read_each</span> — Expensive I/O call inside loop (WARN · MEDIUM). <span class="atlas-caveat">Caveat: there is no forward path from the library root; callers are listed in the Q2 drill.</span></p>
+</div>
+<div class="atlas-block" data-atlas-block="actions" id="atlas-actions">
+<h3>Start here — ranked actions (production first)</h3>
+<ol class="atlas-action-list">
+<li class="atlas-action"><span class="atlas-rank">#1</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14"><code>04_stdio_churn.py:8</code></a> <span class="atlas-fn">read_each</span> <span class="atlas-rule">Expensive I/O call inside loop</span><span class="atlas-badge">WARN · MEDIUM</span><span class="atlas-class">production</span><div class="atlas-anchor">11 static cost units (v2) · 2.8× median function · top 10% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">&#39;open&#39; acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#2</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18"><code>07_membership_scan.py:19</code></a> <span class="atlas-fn">index_scan</span> <span class="atlas-rule">Linear index scan of a list inside loop</span><span class="atlas-badge">WARN · MEDIUM</span><span class="atlas-class">production</span><div class="atlas-anchor">11 static cost units (v2) · 2.8× median function · top 12% of functions</div>
+<div class="atlas-trip">known trip ×3 — verify it actually runs</div>
+<div class="atlas-why">list &#39;data&#39; is indexed by loop variable &#39;i&#39; at depth 1 — CPython&#39;s list subscript is O(1) per access, but a scan over the whole list re-walks it per outer iteration (O(n²)); iterating directly, using `enumerate`, or building a set/dict lookup is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#3</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-PY-LOOP-007-07-membership-scan-py-9-12"><code>07_membership_scan.py:9</code></a> <span class="atlas-fn">contains_any</span> <span class="atlas-rule">Linear list scan inside loop</span><span class="atlas-badge">WARN · MEDIUM</span><span class="atlas-class">production</span><div class="atlas-anchor">10 static cost units (v2) · 2.5× median function · top 15% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">list &#39;table&#39; is tested with &#39;in&#39; inside a loop at depth 1 — CPython&#39;s list membership is an O(n) linear scan, so re-testing per outer iteration is O(n²); building a set/dict lookup or iterating directly is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#4</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-PY-ALLOC-003-10-comprehension-py-12-9"><code>10_comprehension.py:12</code></a> <span class="atlas-fn">transform_all</span> <span class="atlas-rule">Superlinear list accumulation in loop</span><span class="atlas-badge">WARN · MEDIUM</span><span class="atlas-class">production</span><div class="atlas-anchor">8 static cost units (v2) · 2.0× median function · top 19% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#5</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-PY-ALLOC-003-10-comprehension-py-21-9"><code>10_comprehension.py:21</code></a> <span class="atlas-fn">accumulate_multi</span> <span class="atlas-rule">Superlinear list accumulation in loop</span><span class="atlas-badge">WARN · MEDIUM</span><span class="atlas-class">production</span><div class="atlas-anchor">8 static cost units (v2) · 2.0× median function · top 18% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">list &#39;out&#39; is grown with &#39;append&#39; inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization</div></li>
 </ol>
-<p class="kv-more"><a href="findings-detail.html#ranked-actions">             Complete ranked list — all 28 findings (production-first)</a></p>
-             <p class="kv-counts">0 non-production files demoted · 1 component-level finding in Explorer</p>
+<p class="atlas-counts">0 non-production files demoted · 1 component-level finding in the full list</p>
+<p class="atlas-more"><a href="findings-detail.html#ranked-actions">Complete ranked action list — 28 actions (production-first)</a></p>
 </div>
-<div class="kv kv2">
-<h3>What breaks if I touch it?</h3>
-         <p class="kv-action">Changing a file here forces re-import of its          dependents — do not edit directly.</p>
-<div class="kv-bars">
-<div class="kv-brow"><span class="kv-blabel">pkg/cycle_a.py </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 10% of scanned files · top 5%</span></div>
-<div class="kv-brow"><span class="kv-blabel">pkg/cycle_b.py </span>                 <div class="kv-track"><div class="kv-fill" style="width:100%"></div></div>                 <span class="kv-value">2 dependents · 10% of scanned files · top 10%</span></div>
-<div class="kv-brow"><span class="kv-blabel">pkg/arch_helpers.py </span>                 <div class="kv-track"><div class="kv-fill" style="width:50%"></div></div>                 <span class="kv-value">1 dependent · 5% of scanned files · top 15%</span></div>
+<div class="atlas-block" data-atlas-block="weight" id="atlas-weight">
+<h3>Where is the mass? — share of scanned static cost</h3>
+<p class="atlas-caption">Production files first; non-production cost is counted in the labelled band, never dropped.</p>
+<ol class="atlas-weight-list">
+<li><span class="atlas-path">01_alloc_churn.py</span> <span class="atlas-share">13% of scanned static cost</span></li>
+<li><span class="atlas-path">05_recursion_complexity.py</span> <span class="atlas-share">12% of scanned static cost</span></li>
+<li><span class="atlas-path">03_deep_nesting.py</span> <span class="atlas-share">11% of scanned static cost</span></li>
+<li><span class="atlas-path">07_membership_scan.py</span> <span class="atlas-share">11% of scanned static cost</span></li>
+<li><span class="atlas-path">08_range_len.py</span> <span class="atlas-share">6.3% of scanned static cost</span></li>
+</ol>
+<ul class="atlas-weight-list">
+<li><span class="atlas-path">01</span> <span class="atlas-share">13% of scanned static cost · 1 file</span></li>
+<li><span class="atlas-path">05</span> <span class="atlas-share">12% of scanned static cost · 1 file</span></li>
+<li><span class="atlas-path">03</span> <span class="atlas-share">11% of scanned static cost · 1 file</span></li>
+</ul>
+<p class="atlas-caption">Component shares include every member file; component groups are approximate prefix groups.</p>
+<p class="atlas-nonprod">non-production (test/bench/other) = 0.0% of scanned static cost (0 files)</p>
 </div>
-<p class="kv-counts">showing top 3 of 3 files with resolved dependents · 0 non-production files demoted</p>
-<p class="kv-counts">resolved 5 of 10 include edges</p>
+<div class="atlas-block" data-atlas-block="blast" id="atlas-blast">
+<h3>What breaks if I touch it? — blast radius</h3>
+<p class="atlas-blast-line">1 dependent file · 5.0% of source files · top 15% · target <span class="atlas-path">pkg/arch_helpers.py</span></p>
+<p>1 caller files · 0 callee files (structural)</p>
+<p class="atlas-caption">5 of 10 include edges resolved · 5/10 unresolved includes</p>
+<ul class="atlas-dependent-list">
+<li><span class="atlas-path">15_cross_file_and_arch.py</span> · 1 include edges</li>
+</ul>
+<p><a href="#atlas-drill-q2">Full dependent list and Q2 reverse drill</a></p>
+<p class="atlas-caption">Callers and callees are structural (LOW name-based + MEDIUM semantic) and may over/under-approximate.</p>
 </div>
-<div class="kv kv3">
-<h3>Where might time plausibly go?</h3>
-         <p class="kv-action">Profile the named function first — static          candidate, confirm with a profiler.</p>
-         <p class="kv-caption">Bars scale within each block: blue = ranked functions, grey = demoted functions.</p>
-<div class="kv-bars">
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">03_deep_nesting.py:4</span>                 <span class="kv-fn">triple_nested</span></span><div class="kv-track"><div class="kv-fill" style="width:100%"></div></div><span class="kv-value">25 static cost units (v2) · 6.3× median · top 3%<span class="kv-badge trip">unknown-trip ×3 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">03_deep_nesting.py:14</span>                 <span class="kv-fn">double_nested</span></span><div class="kv-track"><div class="kv-fill" style="width:60%"></div></div><span class="kv-value">15 static cost units (v2) · 3.8× median · top 4%<span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">08_range_len.py:4</span>                 <span class="kv-fn">positional_sum</span></span><div class="kv-track"><div class="kv-fill" style="width:60%"></div></div><span class="kv-value">15 static cost units (v2) · 3.8× median · top 6%<span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">01_alloc_churn.py:38</span>                 <span class="kv-fn">eager_materialise</span></span><div class="kv-track"><div class="kv-fill" style="width:44%"></div></div><span class="kv-value">11 static cost units (v2) · 2.8× median · top 7%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">01_alloc_churn.py:5</span>                 <span class="kv-fn">loop_invariant_construction</span></span><div class="kv-track"><div class="kv-fill" style="width:44%"></div></div><span class="kv-value">11 static cost units (v2) · 2.8× median · top 9%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">04_stdio_churn.py:4</span>                 <span class="kv-fn">read_each</span></span><div class="kv-track"><div class="kv-fill" style="width:44%"></div></div><span class="kv-value">11 static cost units (v2) · 2.8× median · top 10%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">07_membership_scan.py:14</span>                 <span class="kv-fn">index_scan</span></span><div class="kv-track"><div class="kv-fill" style="width:44%"></div></div><span class="kv-value">11 static cost units (v2) · 2.8× median · top 12%<span class="kv-badge known">known trip ×3 — verify it actually runs</span></span></div>
-<div class="kv-brow kv-vrow"><span class="kv-blabel"><span class="kv-loc">09_try_in_loop.py:4</span>                 <span class="kv-fn">swallow</span></span><div class="kv-track"><div class="kv-fill" style="width:44%"></div></div><span class="kv-value">11 static cost units (v2) · 2.8× median · top 13%<span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">05_recursion_complexity.py:16</span>                 <span class="kv-fn">branchy</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:100%"></div></div><span class="kv-value">33 static cost units (v2) · 8.3× median · top 1%</span></div>
-<div class="kv-brow kv-vrow kv-demoted"><span class="kv-blabel"><span class="kv-loc">pkg/arch_helpers.py:9</span>                 <span class="kv-fn">clamp_value</span><span class="kv-dem">no-loop — demoted</span></span><div class="kv-track"><div class="kv-fill demoted" style="width:24%"></div></div><span class="kv-value">8 static cost units (v2) · 2.0× median · top 22%</span></div>
+<div class="atlas-block" data-atlas-block="cards" id="atlas-cards">
+<h3>File cards — what is inside the top files</h3>
+<div class="atlas-cards">
+<article class="atlas-card">
+<h4><span class="atlas-path">01_alloc_churn.py</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 47 static cost units (v2) · 12× median function · top 5% of files</p>
+<p class="atlas-share">13% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-PY-ALLOC-003</code> WARN ×1 — Superlinear list accumulation in loop</p>
+<ol class="atlas-fn-list">
+<li><code>01_alloc_churn.py:38</code> <span class="atlas-fn">eager_materialise</span> <span class="atlas-anchor">11 static cost units (v2) · 2.8× median function · top 7% of functions</span></li>
+<li><code>01_alloc_churn.py:5</code> <span class="atlas-fn">loop_invariant_construction</span> <span class="atlas-anchor">11 static cost units (v2) · 2.8× median function · top 9% of functions</span></li>
+<li><code>01_alloc_churn.py:27</code> <span class="atlas-fn">local_rebuild_is_benign</span> <span class="atlas-anchor">7 static cost units (v2) · 1.8× median function · top 25% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-01-alloc-churn-py">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">05_recursion_complexity.py</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 43 static cost units (v2) · 11× median function · top 10% of files</p>
+<p class="atlas-share">12% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-PY-ARCH-002</code> INFO ×1 — Hot component</p>
+<ol class="atlas-fn-list">
+<li><code>05_recursion_complexity.py:16</code> <span class="atlas-fn">branchy</span> <span class="atlas-anchor">33 static cost units (v2) · 8.3× median function · top 1% of functions</span></li>
+<li><code>05_recursion_complexity.py:4</code> <span class="atlas-fn">walk_down</span> <span class="atlas-anchor">7 static cost units (v2) · 1.8× median function · top 32% of functions</span></li>
+<li><code>05_recursion_complexity.py:1</code> <span class="atlas-fn">&lt;module&gt;</span> <span class="atlas-anchor">1 static cost units (v2) · 0.3× median function · top 68% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-05-recursion-complexity-py">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">03_deep_nesting.py</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 41 static cost units (v2) · 10× median function · top 15% of files</p>
+<p class="atlas-share">11% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-PY-LOOP-001</code> INFO ×1 — Deep loop nesting</p>
+<ol class="atlas-fn-list">
+<li><code>03_deep_nesting.py:4</code> <span class="atlas-fn">triple_nested</span> <span class="atlas-anchor">25 static cost units (v2) · 6.3× median function · top 3% of functions</span></li>
+<li><code>03_deep_nesting.py:14</code> <span class="atlas-fn">double_nested</span> <span class="atlas-anchor">15 static cost units (v2) · 3.8× median function · top 4% of functions</span></li>
+<li><code>03_deep_nesting.py:1</code> <span class="atlas-fn">&lt;module&gt;</span> <span class="atlas-anchor">1 static cost units (v2) · 0.3× median function · top 65% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-03-deep-nesting-py">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">07_membership_scan.py</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 39 static cost units (v2) · 9.8× median function · top 20% of files</p>
+<p class="atlas-share">11% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-PY-LOOP-007</code> WARN ×3 — Linear index scan of a list inside loop</p>
+<ol class="atlas-fn-list">
+<li><code>07_membership_scan.py:14</code> <span class="atlas-fn">index_scan</span> <span class="atlas-anchor">11 static cost units (v2) · 2.8× median function · top 12% of functions</span></li>
+<li><code>07_membership_scan.py:4</code> <span class="atlas-fn">contains_any</span> <span class="atlas-anchor">10 static cost units (v2) · 2.5× median function · top 15% of functions</span></li>
+<li><code>07_membership_scan.py:32</code> <span class="atlas-fn">set_membership</span> <span class="atlas-anchor">10 static cost units (v2) · 2.5× median function · top 16% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-07-membership-scan-py">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">08_range_len.py</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 23 static cost units (v2) · 5.8× median function · top 25% of files</p>
+<p class="atlas-share">6.3% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-PY-LOOP-003</code> INFO ×1 — `range(len(seq))` iteration</p>
+<ol class="atlas-fn-list">
+<li><code>08_range_len.py:4</code> <span class="atlas-fn">positional_sum</span> <span class="atlas-anchor">15 static cost units (v2) · 3.8× median function · top 6% of functions</span></li>
+<li><code>08_range_len.py:13</code> <span class="atlas-fn">counter_sum</span> <span class="atlas-anchor">7 static cost units (v2) · 1.8× median function · top 37% of functions</span></li>
+<li><code>08_range_len.py:1</code> <span class="atlas-fn">&lt;module&gt;</span> <span class="atlas-anchor">1 static cost units (v2) · 0.3× median function · top 76% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-08-range-len-py">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">10_comprehension.py</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 21 static cost units (v2) · 5.3× median function · top 30% of files</p>
+<p class="atlas-share">5.7% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-PY-ALLOC-003</code> WARN ×2 — Superlinear list accumulation in loop</p>
+<ol class="atlas-fn-list">
+<li><code>10_comprehension.py:16</code> <span class="atlas-fn">accumulate_multi</span> <span class="atlas-anchor">8 static cost units (v2) · 2.0× median function · top 18% of functions</span></li>
+<li><code>10_comprehension.py:8</code> <span class="atlas-fn">transform_all</span> <span class="atlas-anchor">8 static cost units (v2) · 2.0× median function · top 19% of functions</span></li>
+<li><code>10_comprehension.py:4</code> <span class="atlas-fn">transform</span> <span class="atlas-anchor">4 static cost units (v2) · 1.0× median function · top 51% of functions</span></li>
+</ol>
+<p><a href="#atlas-file-10-comprehension-py">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
 </div>
-<p class="kv-more"><a href="profile-queue.html">             Complete cost-ranked list (68 functions)</a></p>
-<p class="kv-counts">0 startup functions demoted · 42 no-loop functions demoted · 0 non-production files demoted</p>
+<p class="atlas-counts">showing top 6 of 20 source files (production-first)</p>
 </div>
+<div class="atlas-block" data-atlas-block="noise" id="atlas-noise">
+<h3>Noise and confidence</h3>
+<p>parse 20 ok / 0 partial / 0 failed</p>
+<p>5/10 unresolved includes · 5 of 10 include edges resolved</p>
+<p>0 MEDIUM / 3 LOW structural edges</p>
+<p>0 files demoted · 1 of 1 reachable files shown · 0 aggregated · 3 of 3 file pairs drawn</p>
+<p>19 production + 0 non-production of 20 source files unreached</p>
+<p>0 of 20 scanned files have no functions · 0 source files partial or failed</p>
+<p class="atlas-caption">Structural edges are LOW name-based + MEDIUM semantic and may over/under-approximate; static cost is not ground truth.</p>
+</div>
+<div class="atlas-block" data-atlas-block="links" id="atlas-links">
+<h3>Drills</h3>
+<ul class="atlas-drill-links">
+<li><a href="findings-detail.html#ranked-actions">Complete ranked action list</a> — 28 actions (production-first)</li>
+<li><a href="profile-queue.html">Complete profile queue</a> — 68 functions ranked by static cost</li>
+<li><a href="#atlas-drill-q2">Q2 reverse drill</a> — dependents and structural callers/callees for pkg/arch_helpers.py</li>
+<li><a href="#atlas-drill-weight">Weight detail</a> — 20 source files and 17 components by share</li>
+<li>Component pages: <a href="#components">01</a> (13% of scanned static cost · 1 file) · <a href="#components">05</a> (12% of scanned static cost · 1 file) · <a href="#components">03</a> (11% of scanned static cost · 1 file)</li>
+<li><a href="#explorer">Explorer</a> — legacy static chart stems</li>
+</ul>
+</div>
+</section>
+<section id="atlas-drill-q2" class="atlas-drill" data-atlas-drill="q2">
+<h3>Q2 reverse drill — what breaks if I touch the focus file</h3>
+<p>focus: <code>pkg/arch_helpers.py</code> · include coverage: 5 of 10 include edges resolved</p>
+<h4>1-hop include dependents</h4>
+<div class="atlas-table-scroll"><table>
+<thead><tr><th>dependent file</th><th>include edges into focus</th></tr></thead>
+<tbody>
+<tr><td><span class="atlas-path">15_cross_file_and_arch.py</span></td><td>1 include edges</td></tr>
+</tbody>
+</table>
+</div>
+<h4>Component DSM — approximate prefix groups (resolved include edges)</h4>
+<div class="atlas-table-scroll"><table>
+<thead><tr><th>from component</th><th>to component</th><th>include edges</th></tr></thead>
+<tbody>
+<tr><td>pkg</td><td>pkg</td><td>4</td></tr>
+<tr><td>15</td><td>pkg</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<h4>Structural callers and callees</h4>
+<p>1 caller files · 0 callee files (structural)</p>
+<p>caller files: <span class="atlas-path">15_cross_file_and_arch.py</span></p>
+<p>callee files: no structural call edges recorded</p>
+<p class="atlas-caption">Callers and callees are structural (LOW name-based + MEDIUM semantic) and may over/under-approximate.</p>
+</section>
+<section id="atlas-drill-weight" class="atlas-drill" data-atlas-drill="weight">
+<h3>Weight detail — every source file and component by share</h3>
+<p class="atlas-caption">20 source files · every share is relative to total scanned static cost.</p>
+<div class="atlas-table-scroll"><table>
+<thead><tr><th>file</th><th>class</th><th>cost</th><th>share</th></tr></thead>
+<tbody>
+<tr id="atlas-file-01-alloc-churn-py"><td><span class="atlas-path">01_alloc_churn.py</span></td><td>production</td><td>file total 47 static cost units (v2) · 12× median function · top 5% of files</td><td>13% of scanned static cost</td></tr>
+<tr id="atlas-file-05-recursion-complexity-py"><td><span class="atlas-path">05_recursion_complexity.py</span></td><td>production</td><td>file total 43 static cost units (v2) · 11× median function · top 10% of files</td><td>12% of scanned static cost</td></tr>
+<tr id="atlas-file-03-deep-nesting-py"><td><span class="atlas-path">03_deep_nesting.py</span></td><td>production</td><td>file total 41 static cost units (v2) · 10× median function · top 15% of files</td><td>11% of scanned static cost</td></tr>
+<tr id="atlas-file-07-membership-scan-py"><td><span class="atlas-path">07_membership_scan.py</span></td><td>production</td><td>file total 39 static cost units (v2) · 9.8× median function · top 20% of files</td><td>11% of scanned static cost</td></tr>
+<tr id="atlas-file-08-range-len-py"><td><span class="atlas-path">08_range_len.py</span></td><td>production</td><td>file total 23 static cost units (v2) · 5.8× median function · top 25% of files</td><td>6.3% of scanned static cost</td></tr>
+<tr id="atlas-file-10-comprehension-py"><td><span class="atlas-path">10_comprehension.py</span></td><td>production</td><td>file total 21 static cost units (v2) · 5.3× median function · top 30% of files</td><td>5.7% of scanned static cost</td></tr>
+<tr id="atlas-file-04-stdio-churn-py"><td><span class="atlas-path">04_stdio_churn.py</span></td><td>production</td><td>file total 19 static cost units (v2) · 4.8× median function · top 35% of files</td><td>5.2% of scanned static cost</td></tr>
+<tr id="atlas-file-14-async-blocking-py"><td><span class="atlas-path">14_async_blocking.py</span></td><td>production</td><td>file total 17 static cost units (v2) · 4.3× median function · top 40% of files</td><td>4.6% of scanned static cost</td></tr>
+<tr id="atlas-file-09-try-in-loop-py"><td><span class="atlas-path">09_try_in_loop.py</span></td><td>production</td><td>file total 16 static cost units (v2) · 4.0× median function · top 45% of files</td><td>4.4% of scanned static cost</td></tr>
+<tr id="atlas-file-13-pandas-py"><td><span class="atlas-path">13_pandas.py</span></td><td>production</td><td>file total 16 static cost units (v2) · 4.0× median function · top 50% of files</td><td>4.4% of scanned static cost</td></tr>
+<tr id="atlas-file-02-string-building-py"><td><span class="atlas-path">02_string_building.py</span></td><td>production</td><td>file total 15 static cost units (v2) · 3.8× median function · top 55% of files</td><td>4.1% of scanned static cost</td></tr>
+<tr id="atlas-file-11-executors-py"><td><span class="atlas-path">11_executors.py</span></td><td>production</td><td>file total 15 static cost units (v2) · 3.8× median function · top 60% of files</td><td>4.1% of scanned static cost</td></tr>
+<tr id="atlas-file-pkg-arch-helpers-py"><td><span class="atlas-path">pkg/arch_helpers.py</span></td><td>production</td><td>file total 11 static cost units (v2) · 2.8× median function · top 65% of files</td><td>3.0% of scanned static cost</td></tr>
+<tr id="atlas-file-pkg-cycle-b-py"><td><span class="atlas-path">pkg/cycle_b.py</span></td><td>production</td><td>file total 9 static cost units (v2) · 2.3× median function · top 70% of files</td><td>2.5% of scanned static cost</td></tr>
+<tr id="atlas-file-06-memory-ops-py"><td><span class="atlas-path">06_memory_ops.py</span></td><td>production</td><td>file total 9 static cost units (v2) · 2.3× median function · top 75% of files</td><td>2.5% of scanned static cost</td></tr>
+<tr id="atlas-file-12-io-n1-py"><td><span class="atlas-path">12_io_n1.py</span></td><td>production</td><td>file total 9 static cost units (v2) · 2.3× median function · top 80% of files</td><td>2.5% of scanned static cost</td></tr>
+<tr id="atlas-file-15-cross-file-and-arch-py"><td><span class="atlas-path">15_cross_file_and_arch.py</span></td><td>production</td><td>file total 8 static cost units (v2) · 2.0× median function · top 85% of files</td><td>2.2% of scanned static cost</td></tr>
+<tr id="atlas-file-pkg-cycle-a-py"><td><span class="atlas-path">pkg/cycle_a.py</span></td><td>production</td><td>file total 6 static cost units (v2) · 1.5× median function · top 90% of files</td><td>1.6% of scanned static cost</td></tr>
+<tr id="atlas-file-init-py"><td><span class="atlas-path">__init__.py</span></td><td>production</td><td>file total 1 static cost units (v2) · 0.3× median function · top 95% of files</td><td>0.3% of scanned static cost</td></tr>
+<tr id="atlas-file-pkg-init-py"><td><span class="atlas-path">pkg/__init__.py</span></td><td>production</td><td>file total 1 static cost units (v2) · 0.3× median function · top 100% of files</td><td>0.3% of scanned static cost</td></tr>
+</tbody>
+</table>
+</div>
+<h4>Components</h4>
+<div class="atlas-table-scroll"><table>
+<thead><tr><th>component</th><th>files</th><th>production files</th><th>share</th></tr></thead>
+<tbody>
+<tr><td>01</td><td>1</td><td>1</td><td>13% of scanned static cost · 1 file</td></tr>
+<tr><td>05</td><td>1</td><td>1</td><td>12% of scanned static cost · 1 file</td></tr>
+<tr><td>03</td><td>1</td><td>1</td><td>11% of scanned static cost · 1 file</td></tr>
+<tr><td>07</td><td>1</td><td>1</td><td>11% of scanned static cost · 1 file</td></tr>
+<tr><td>pkg</td><td>4</td><td>4</td><td>7.4% of scanned static cost · 4 files</td></tr>
+<tr><td>08</td><td>1</td><td>1</td><td>6.3% of scanned static cost · 1 file</td></tr>
+<tr><td>10</td><td>1</td><td>1</td><td>5.7% of scanned static cost · 1 file</td></tr>
+<tr><td>04</td><td>1</td><td>1</td><td>5.2% of scanned static cost · 1 file</td></tr>
+<tr><td>14</td><td>1</td><td>1</td><td>4.6% of scanned static cost · 1 file</td></tr>
+<tr><td>09</td><td>1</td><td>1</td><td>4.4% of scanned static cost · 1 file</td></tr>
+<tr><td>13</td><td>1</td><td>1</td><td>4.4% of scanned static cost · 1 file</td></tr>
+<tr><td>02</td><td>1</td><td>1</td><td>4.1% of scanned static cost · 1 file</td></tr>
+<tr><td>11</td><td>1</td><td>1</td><td>4.1% of scanned static cost · 1 file</td></tr>
+<tr><td>06</td><td>1</td><td>1</td><td>2.5% of scanned static cost · 1 file</td></tr>
+<tr><td>12</td><td>1</td><td>1</td><td>2.5% of scanned static cost · 1 file</td></tr>
+<tr><td>15</td><td>1</td><td>1</td><td>2.2% of scanned static cost · 1 file</td></tr>
+<tr><td></td><td>1</td><td>1</td><td>0.3% of scanned static cost · 1 file</td></tr>
+</tbody>
+</table>
+</div>
+<p class="atlas-caption">Component rows are approximate prefix groups; the non-production band in the brief counts the rest.</p>
+</section>
 </section>
 <section id="explorer">
 <h2>Explorer</h2>
