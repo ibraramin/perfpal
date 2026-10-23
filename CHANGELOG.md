@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `sim/extract.py`, fail-closed) and includes three labelled synthetic state demos with no fabricated
   nodes or numbers. Evidence: `docs/evidence/atlas-sim/` (eleven 1440×900 frames, `checks.json` 101/101,
   `NOTES.md`, `VISION.md` PASS); vision, D2 review criteria and the D3 runtime-trace proposal are in
-  `docs/research/atlas-run.md`. Uncommitted pending founder approval; D2 (founder review) is next.
+  `docs/research/atlas-run.md`. Committed `7093c77`; D2 (founder review) is next.
 
 ### Changed
 - **Atlas v2 steps 9–10 — signed G visual system + first-page fit (2026-10-23).** Step 9 produced the

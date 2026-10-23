@@ -1,40 +1,48 @@
 # Active Context
 
 ## Current Task
-**Atlas v2 steps 9–10 are implemented (2026-10-23/24) and the step-10 first page is founder-approved
-(2026-10-24); the step-13 final gate is PENDING. Step 11 (G-style detail rail) is next.**
-- **Step 9:** side-by-side G vs Atlas at 1440×900 (hyperfine + cJSON), the G-baseline diff and the
-  signed founder decision (Option A: port G; `report.html#map` capture; detail rail step 11; F
-  candidate step 12) under `docs/evidence/atlas-visual/v2/`.
-- **Step 10:** first-page fit (**canvas bottom 862 ≤ 900**), G warm paper/charcoal/burnt-orange +
-  sans chrome/mono data, 58px masthead, **53px key-metrics strip outside the canvas** (entry,
-  hottest, path, caps, top-3 KV1 actions, one legend/unit definition/caveat), one footer inside the
-  canvas, mid-ellipsis + full-path titles, path-only edge labels, opaque test/bench fills, explicit
-  unreached totals (21/11 hyperfine, 4/75 cJSON). Evidence: `step10.json`, `STEP10.md`, `gate.txt`,
-  `atlas-v2-*-final.png`.
-- **Panel:** R1/R2/Q1/Q2 + a fresh confirmation lane all **APPROVED**; zero blocking findings. The
-  chip `+` wording, evidence transcript/vision record, README/state, fit disclosures and fail-closed
-  reproducer were fixed.
-- **Committed 2026-10-24 (`468d772` + this docs/state commit); no push; no schema/JS/deps; holdouts
-  vaulted; `map-build` NOT done; A1b open; A2/ship (steps 14–15) blocked by R-pf-109.**
+**Track D1 (Atlas run story) is implemented and gated (2026-10-24): 101/101 checks, vision PASS, panel green; it is
+committed `7093c77`.** D2 (founder watches the prototype; companion-vs-in-report) is
+next. Separately, Atlas v2 steps 9–10 remain founder-approved; the step-13 final gate is PENDING and
+step 11 (G-style detail rail) is the next Atlas work item.
+- **D1:** a standalone `sim/` companion (no build step, no deps, no network, no production edits) plays
+  a scrubbable **static, inferred** run story over the real 1400×718 Atlas map for hyperfine and
+  cJSON: boot at entry → representative path → node/function highlights → loop/trip moments →
+  off-path branch points → hottest → stop/summary (leaf, no forward path, partial parse, capped).
+  Controls: play/pause, step, scrub, speed, node select + inspector, reset; keyboard; reduced motion
+  shows the final frame. Persistent honesty label, no time units, unknown trips ×1.
+- **Provenance:** the shared `perfpal-test/out-atlas-v2-*` dirs were **overwritten at 02:06** by a
+  step-11 build from another worktree (868px canvas + rail). `sim/make-source.sh` rebuilds the
+  approved full-bleed render from **this worktree** into `sim/source/` (gitignored) and `extract.py`
+  fails closed on any layout change.
+- **Evidence:** `docs/evidence/atlas-sim/` (eleven 1440×900 frames, `checks.json` 101/101, `NOTES.md`,
+  `VISION.md` PASS); `docs/research/atlas-run.md` (vision, D2 criteria, D3 proposal);
+  `state/tracks/atlas-sim/handoff.md`.
 
 ## Recent Decisions
-- **D-pf-248 (live, 2026-10-23/24):** Atlas v2 steps 9–10 implemented; Option A signed; step 10
+- **D-pf-249 (live, 2026-10-24):** Track D1 Atlas run-story prototype — standalone `sim/`, five cases
+  (hyperfine, cJSON, no-forward-path, empty, capped), 101/101 gate, vision PASS, panel R1/R2/Q1/Q2/R3 APPROVED; no production edits,
+  no schema/deps/network; committed `7093c77`; D2 next, D3 parked.
+- **D-pf-248 (live, 2026-10-23/24):** Atlas v2 steps 9–10 implemented; Option A signed; step-10
   first-page fit/G visual language/key-metrics strip/chrome hygiene; panel R1/R2/Q1/Q2 + fresh R3
-  APPROVED; step-10 founder check approved 2026-10-24; step-13 final gate pending; steps 11–12 not started.
+  APPROVED; step-10 founder check approved 2026-10-24; step-13 final gate pending; steps 11–12 not
+  started.
 - **D-pf-247 (live):** plan reordered — steps 9–13 = v2 visual rework; A2/ship 14–15 blocked.
 - **R-pf-109 (open, high):** Atlas visual regression; A2/ship blocked until the step-13 gate.
 - **D-pf-246/245/244** moved to the cold ledger (historical session status); **A-pf-119** settled.
 
 ## In Progress
-- Step 10 implementation + evidence are green; the panel is green; the founder approved the first page.
-- **Committed 2026-10-24 (`468d772` + this docs/state commit); no push.**
-- Next: step 11 detail rail.
+- **D1 complete, gated and committed (`7093c77`).**
+- Atlas v2: step 10 approved; step 11 next; step 13 gate pending.
+- **Step 10 committed 2026-10-24 (`468d772` + docs/state); D1 feature committed `7093c77`; no push.**
 
 ## Next
-- **Step 10 approved and committed;** `/new` → **Session 5: steps 11–13** (G-style
-  detail rail; progressive weight/blast/file charts + F treemap candidate; founder visual gate +
-  G-baseline diff + V8 A1/strip rerun).
+- **Founder:** watch D1 (`python3 -m http.server 8768 --directory sim`) and approve the commit
+  (`sim/` + `docs/research/atlas-run.md` + `docs/evidence/atlas-sim/` + state).
+- **D2:** founder review of pacing/controls; decide companion vs in-report (in-report needs a new ADR
+  and an A12 amendment; the static report stays zero-new-JS with the single fixed `REPORT_SCRIPT`).
+- **Atlas:** `/new` → Session 5: steps 11–13 (G-style detail rail; progressive charts/F candidate;
+  founder visual gate + V8).
 - Do **not** start A2 (step 14) or ship (step 15); holdouts vaulted; `map-build` not done; A1b open.
 
 ## Blockers
@@ -71,3 +79,7 @@
   side-by-sides; first-page fit 862 ≤ 900; warm/sans/mono system; key-metrics strip; chrome hygiene;
   evidence under `docs/evidence/atlas-visual/v2/`. Step-10 founder check approved 2026-10-24; committed
   (`468d772` + docs/state); step-13 final gate pending.
+- **Track D1 (2026-10-24):** Atlas run-story prototype `sim/`; reproducible step-10 source renders
+  (`sim/make-source.sh`), deterministic extraction (5 cases), deterministic beat engine (13/8 beats),
+  inspector, 3-row key strip, unreached lane; gate 101/101; vision PASS (five reads); research doc +
+  evidence + track handoff; **committed `7093c77`**; no production/schema/deps/network.
