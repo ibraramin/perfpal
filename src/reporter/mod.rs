@@ -27,6 +27,7 @@
 
 pub mod atlas;
 pub mod atlas_brief;
+pub mod atlas_layout;
 pub mod atlas_metrics;
 pub mod atlas_render;
 pub mod views;
@@ -1899,6 +1900,25 @@ fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) 
     ));
     out.push_str(&atlas_brief::render_brief(&view, doc, emitted_charts));
     out.push_str("</section>\n");
+}
+
+/// JSON companion of the `#map` canvas (S1a): the exact Atlas story geometry
+/// the SVG draws, reusing the same view, start actions and findings counts as
+/// [`html_map`]. Only emitted when `--story` is passed.
+#[must_use]
+pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
+    let view = atlas::build_atlas_view(doc);
+    let start_actions = atlas_brief::start_actions(doc);
+    // The story covers only the drawn file slice: findings_included is the sum
+    // of the per-node counts (many findings live on undrawn files), while
+    // findings_total stays the full scan total.
+    let findings_included = view
+        .nodes
+        .iter()
+        .map(|node| node.findings.hot + node.findings.warn + node.findings.info)
+        .sum();
+    let findings_total = doc.findings.len();
+    atlas_layout::to_json(&view, &start_actions, findings_included, findings_total)
 }
 
 /// Component index: rank, prefix, metrics + link to the

@@ -486,6 +486,55 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     assert_eq!(dot1, dot2, "graph.dot not byte-stable across runs");
 }
 
+/// `--story` is additive: it emits `atlas-layout.json` while `metrics.json`
+/// and `report.html` stay byte-identical to the non-story run.
+#[test]
+fn story_flag_emits_atlas_layout_only_when_requested() {
+    let plain = temp_dir("story-off").join("perfpal-report");
+    let story = temp_dir("story-on").join("perfpal-report");
+
+    let plain_code = run_with(argv(&[
+        "--output",
+        plain.to_string_lossy().as_ref(),
+        fixture_root().to_string_lossy().as_ref(),
+    ]));
+    let story_code = run_with(argv(&[
+        "--output",
+        story.to_string_lossy().as_ref(),
+        "--story",
+        fixture_root().to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(plain_code, 0);
+    assert_eq!(story_code, 0);
+
+    assert!(
+        !plain.join("atlas-layout.json").exists(),
+        "atlas-layout.json must not be emitted without --story"
+    );
+    assert!(
+        story.join("atlas-layout.json").is_file(),
+        "atlas-layout.json missing with --story"
+    );
+
+    let plain_metrics = fs::read_to_string(plain.join("metrics.json")).expect("plain metrics");
+    let story_metrics = fs::read_to_string(story.join("metrics.json")).expect("story metrics");
+    assert_eq!(
+        common::mask_metrics_provenance(&plain_metrics),
+        common::mask_metrics_provenance(&story_metrics),
+        "metrics.json changed beyond provenance when --story was passed"
+    );
+    let plain_html = fs::read(plain.join("report.html")).expect("plain report");
+    let story_html = fs::read(story.join("report.html")).expect("story report");
+    assert_eq!(
+        story_html, plain_html,
+        "report.html changed when --story was passed"
+    );
+
+    let raw = fs::read_to_string(story.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    assert_eq!(layout["layout_version"], 1);
+}
+
 /// Slice `text` from the END of the `start` marker up to the `end` marker.
 fn section<'a>(text: &'a str, start: &str, end: &str) -> &'a str {
     let s = text.find(start).expect("section start marker") + start.len();

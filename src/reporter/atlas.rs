@@ -108,6 +108,24 @@ pub struct AtlasFunction {
     pub median: Option<f64>,
     pub top_pct: usize,
     pub fan_in: u32,
+    /// `max_loop_depth` carried for the JSON story projection.
+    pub loop_depth: u32,
+    /// `trip_count_source` (absent when the function has no loops).
+    pub trip_source: Option<String>,
+    /// Loops whose trip count is genuinely unknown.
+    pub unknown_trip_loops: u32,
+    /// Distinct direct-callee count.
+    pub fan_out: u32,
+    /// True when the function can reach itself statically.
+    pub recursive: bool,
+}
+
+/// Per-node finding severity counts (drives the JSON story projection).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct AtlasFindingCounts {
+    pub hot: usize,
+    pub warn: usize,
+    pub info: usize,
 }
 
 /// One drawn file node.
@@ -131,6 +149,7 @@ pub struct AtlasNode {
     pub unreached: bool,
     pub partial_parse: bool,
     pub finding: Option<AtlasFinding>,
+    pub findings: AtlasFindingCounts,
     pub top_functions: Vec<AtlasFunction>,
 }
 
@@ -762,6 +781,18 @@ fn representative_path(
     reversed
 }
 
+fn finding_counts(findings: &[&crate::schema::FindingEntry]) -> AtlasFindingCounts {
+    let mut counts = AtlasFindingCounts::default();
+    for finding in findings {
+        match finding.severity {
+            Severity::Hot => counts.hot += 1,
+            Severity::Warn => counts.warn += 1,
+            Severity::Info => counts.info += 1,
+        }
+    }
+    counts
+}
+
 fn dominant_finding(findings: &[&crate::schema::FindingEntry]) -> Option<AtlasFinding> {
     if findings.is_empty() {
         return None;
@@ -857,6 +888,11 @@ fn top_functions(
                 median: ordering.median(),
                 top_pct: top_pct(rank, population),
                 fan_in: function_fan_in(function),
+                loop_depth: function.max_loop_depth,
+                trip_source: function.trip_count_source.clone(),
+                unknown_trip_loops: function.unknown_trip_loops,
+                fan_out: function.call_fanout.unwrap_or(0),
+                recursive: function.is_recursive.unwrap_or(false),
             }
         })
         .collect()
@@ -1119,6 +1155,11 @@ impl NodeContext<'_> {
             .map(Vec::as_slice)
             .unwrap_or(&[]);
         let empty_findings: Vec<&crate::schema::FindingEntry> = Vec::new();
+        let node_findings = self
+            .findings_by_path
+            .get(path)
+            .map(Vec::as_slice)
+            .unwrap_or(&empty_findings);
         AtlasNode {
             path: info.path.clone(),
             file_name: final_segment(&info.path).to_string(),
@@ -1140,12 +1181,8 @@ impl NodeContext<'_> {
                 .statuses
                 .get(path)
                 .is_some_and(|status| matches!(status, ParseStatus::Partial | ParseStatus::Failed)),
-            finding: dominant_finding(
-                self.findings_by_path
-                    .get(path)
-                    .map(Vec::as_slice)
-                    .unwrap_or(&empty_findings),
-            ),
+            finding: dominant_finding(node_findings),
+            findings: finding_counts(node_findings),
             top_functions: top_functions(self.doc, indices, self.v2, self.v1),
         }
     }

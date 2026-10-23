@@ -38,7 +38,8 @@ pub const STRUCTURAL_CAPTION: &str = "structural (LOW name-based + MEDIUM semant
 /// Mandatory label for the representative path trace.
 pub const PATH_CAPTION: &str = "representative path (static, BFS-derived)";
 
-const SVG_W: i64 = 1400;
+/// Canvas viewBox width. The JSON story projection reuses this verbatim.
+pub(crate) const SVG_W: i64 = 1400;
 const SVG_H: i64 = 720;
 const MARGIN_X: i64 = 20;
 /// First-row top. Leaves room above the first node for the component-hull
@@ -139,30 +140,30 @@ const ANIMATION_CSS: &str = r#"#map{background:#f4f1ea;color:#202b35;font-family
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Copy)]
-struct NodeRect {
-    x: i64,
-    y: i64,
-    w: i64,
-    h: i64,
+pub(crate) struct NodeRect {
+    pub(crate) x: i64,
+    pub(crate) y: i64,
+    pub(crate) w: i64,
+    pub(crate) h: i64,
 }
 
 #[derive(Debug, Clone, Copy)]
-struct ColumnLayout {
-    x: i64,
-    width: i64,
-    node_x: i64,
-    node_w: i64,
+pub(crate) struct ColumnLayout {
+    pub(crate) x: i64,
+    pub(crate) width: i64,
+    pub(crate) node_x: i64,
+    pub(crate) node_w: i64,
 }
 
-struct Layout {
-    row_h: i64,
-    node_h: i64,
-    height: i64,
-    columns: Vec<ColumnLayout>,
-    rows: BTreeMap<String, NodeRect>,
+pub(crate) struct Layout {
+    pub(crate) row_h: i64,
+    pub(crate) node_h: i64,
+    pub(crate) height: i64,
+    pub(crate) columns: Vec<ColumnLayout>,
+    pub(crate) rows: BTreeMap<String, NodeRect>,
 }
 
-fn compute_layout(view: &AtlasView) -> Layout {
+pub(crate) fn compute_layout(view: &AtlasView) -> Layout {
     let max_items = view
         .columns
         .iter()
@@ -235,10 +236,10 @@ fn compute_layout(view: &AtlasView) -> Layout {
 }
 
 #[derive(Debug, Clone)]
-struct EdgeShape {
-    path: String,
-    label_x: i64,
-    label_y: i64,
+pub(crate) struct EdgeShape {
+    pub(crate) path: String,
+    pub(crate) label_x: i64,
+    pub(crate) label_y: i64,
 }
 
 /// Bulge used by back-edge cubic controls. Kept in one place so the collision
@@ -348,7 +349,7 @@ fn resolve_edge_label(
     (base_x, base_y)
 }
 
-fn edge_shape(edge: &AtlasEdge, layout: &Layout) -> Option<EdgeShape> {
+pub(crate) fn edge_shape(edge: &AtlasEdge, layout: &Layout) -> Option<EdgeShape> {
     let rows = &layout.rows;
     let from = *rows.get(&edge.from)?;
     let to = *rows.get(&edge.to)?;
@@ -466,7 +467,7 @@ fn node_rank_text(node: &AtlasNode) -> String {
 
 /// The two rank lines drawn inside a node (the joined anchor text used in
 /// titles and the answer line stays [`node_rank_text`]).
-fn node_rank_lines(node: &AtlasNode) -> (Option<String>, Option<String>) {
+pub(crate) fn node_rank_lines(node: &AtlasNode) -> (Option<String>, Option<String>) {
     let multiple = node
         .ratio
         .map(|ratio| format!("{} median function", format_multiple(ratio)));
@@ -488,7 +489,7 @@ fn node_anchor_text(node: &AtlasNode) -> String {
     parts.join(" · ")
 }
 
-fn node_badges(node: &AtlasNode) -> String {
+pub(crate) fn node_badges(node: &AtlasNode) -> String {
     let mut badges = Vec::new();
     if node.entry {
         badges.push("ENTRY".to_string());
@@ -648,7 +649,16 @@ fn node_badge_baseline(rect: NodeRect) -> i64 {
     rect.y - 3
 }
 
-fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
+/// One component-hull box. Shared by the SVG renderer and the JSON story
+/// projection so the two can never drift.
+pub(crate) struct HullBox {
+    pub(crate) label: String,
+    pub(crate) rect: NodeRect,
+    pub(crate) label_x: i64,
+    pub(crate) label_y: i64,
+}
+
+pub(crate) fn hull_boxes(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> Vec<HullBox> {
     let mut groups: BTreeMap<&str, Vec<&AtlasNode>> = BTreeMap::new();
     for node in &view.nodes {
         groups
@@ -656,7 +666,7 @@ fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
             .or_default()
             .push(node);
     }
-    let mut out = String::new();
+    let mut boxes = Vec::new();
     for (prefix, members) in &groups {
         if members.len() < 2 {
             continue;
@@ -678,16 +688,33 @@ fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
         }
         let x = (min_x - 8).max(0);
         let y = (min_y - HULL_TOP_MARGIN).max(0);
-        let width = (max_x + 8 - x).max(20);
-        let height = (max_y + 8 - y).max(20);
+        boxes.push(HullBox {
+            label: format!("{prefix} · {}", members.len()),
+            rect: NodeRect {
+                x,
+                y,
+                w: (max_x + 8 - x).max(20),
+                h: (max_y + 8 - y).max(20),
+            },
+            label_x: x + 8,
+            label_y: hull_label_baseline(min_y),
+        });
+    }
+    boxes
+}
+
+fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
+    let mut out = String::new();
+    for hull in hull_boxes(view, rows) {
+        let NodeRect { x, y, w, h } = hull.rect;
         out.push_str(&format!(
             "<g class=\"atlas-hull\"><title>approximate prefix group; not a canonical component id</title>\
-             <rect x=\"{x}\" y=\"{y}\" width=\"{width}\" height=\"{height}\" rx=\"10\" fill=\"none\" \
+             <rect x=\"{x}\" y=\"{y}\" width=\"{w}\" height=\"{h}\" rx=\"10\" fill=\"none\" \
              stroke=\"#d6d0c4\" stroke-width=\"1\" stroke-dasharray=\"5 3\"/>\
              <text x=\"{}\" y=\"{}\" font-size=\"9.2\" font-weight=\"700\" fill=\"#6f6a61\">{}</text></g>",
-            x + 8,
-            hull_label_baseline(min_y),
-            escape_xml(&format!("{prefix} · {}", members.len()))
+            hull.label_x,
+            hull.label_y,
+            escape_xml(&hull.label)
         ));
     }
     out
@@ -738,6 +765,31 @@ fn render_aggregate(aggregate: &crate::reporter::atlas::AtlasAggregate, rect: No
     )
 }
 
+/// Node fill/stroke/dash selection, shared by the SVG renderer and the JSON
+/// story projection so the two can never drift.
+pub(crate) fn node_style(node: &AtlasNode) -> (&'static str, &'static str, i64, &'static str) {
+    // Opaque G fills for non-production nodes (no hatch-through-text); bench
+    // keeps its own lilac fill. Entry/unreached/production stay solid.
+    let (fill, mut stroke, mut stroke_width, dash) = if node.entry {
+        ("#1f2d3a", "#1f2d3a", 2, "")
+    } else if node.unreached {
+        ("#e8e5df", "#b8b2a7", 1, "")
+    } else if !node.production {
+        if node.path_class == "bench" {
+            ("#f7f0f7", "#8a6f9e", 1, "3 2")
+        } else {
+            ("#eef2f7", "#7f93aa", 1, "3 2")
+        }
+    } else {
+        ("#fdfbf6", "#8b8173", 1, "")
+    };
+    if node.hottest {
+        stroke = "#c2410c";
+        stroke_width = 2;
+    }
+    (fill, stroke, stroke_width, dash)
+}
+
 fn render_node(
     node: &AtlasNode,
     rect: NodeRect,
@@ -770,25 +822,7 @@ fn render_node(
     let top_y = multiple_y + gap.round() as i64;
 
     let text_fill = if node.entry { "#ffffff" } else { "#23303a" };
-    // Opaque G fills for non-production nodes (no hatch-through-text); bench
-    // keeps its own lilac fill. Entry/unreached/production stay solid.
-    let (fill, mut stroke, mut stroke_width, dash) = if node.entry {
-        ("#1f2d3a", "#1f2d3a", 2, "")
-    } else if node.unreached {
-        ("#e8e5df", "#b8b2a7", 1, "")
-    } else if !node.production {
-        if node.path_class == "bench" {
-            ("#f7f0f7", "#8a6f9e", 1, "3 2")
-        } else {
-            ("#eef2f7", "#7f93aa", 1, "3 2")
-        }
-    } else {
-        ("#fdfbf6", "#8b8173", 1, "")
-    };
-    if node.hottest {
-        stroke = "#c2410c";
-        stroke_width = 2;
-    }
+    let (fill, stroke, stroke_width, dash) = node_style(node);
     let dash_attr = if dash.is_empty() {
         String::new()
     } else {
@@ -886,6 +920,45 @@ fn render_node(
     out
 }
 
+/// Aggregate box rect inside a depth column (shared with the JSON projection).
+pub(crate) fn aggregate_rect(
+    column_layout: &ColumnLayout,
+    layout: &Layout,
+    column: &AtlasColumn,
+    aggregate_index: usize,
+) -> NodeRect {
+    let row = (column.files.len() + aggregate_index) as i64;
+    NodeRect {
+        x: column_layout.node_x,
+        y: TOP + row * layout.row_h,
+        w: column_layout.node_w,
+        h: layout.node_h,
+    }
+}
+
+/// Unreached cap-chip rect, or `None` when the chip is not drawn. The chip
+/// reports the same global unreached totals as the footer (shared with the
+/// JSON projection).
+pub(crate) fn cap_chip_rect(
+    view: &AtlasView,
+    column_layout: &ColumnLayout,
+    layout: &Layout,
+    column: &AtlasColumn,
+) -> Option<NodeRect> {
+    let prod_unreached = view.coverage.unreached_production;
+    let nonprod_unreached = view.coverage.unreached_nonproduction;
+    if !(column.unreached && (prod_unreached > 0 || nonprod_unreached > 0)) {
+        return None;
+    }
+    let row = (column.files.len() + column.aggregated.len()) as i64;
+    Some(NodeRect {
+        x: column_layout.node_x,
+        y: TOP + row * layout.row_h,
+        w: column_layout.node_w,
+        h: layout.node_h,
+    })
+}
+
 fn render_nodes(
     view: &AtlasView,
     layout: &Layout,
@@ -934,25 +1007,17 @@ fn render_nodes(
             out.push_str(&render_node(node, rect, step, view.path.len()));
         }
         for (aggregate_index, aggregate) in column.aggregated.iter().enumerate() {
-            let row = (column.files.len() + aggregate_index) as i64;
-            let y = TOP + row * layout.row_h;
             out.push_str(&render_aggregate(
                 aggregate,
-                NodeRect {
-                    x: column_layout.node_x,
-                    y,
-                    w: column_layout.node_w,
-                    h: layout.node_h,
-                },
+                aggregate_rect(column_layout, layout, column, aggregate_index),
             ));
         }
         // The chip reports the same global unreached totals as the footer,
         // never a not-drawn subset (so the two always agree).
         let prod_unreached = view.coverage.unreached_production;
         let nonprod_unreached = view.coverage.unreached_nonproduction;
-        if column.unreached && (prod_unreached > 0 || nonprod_unreached > 0) {
-            let row = (column.files.len() + column.aggregated.len()) as i64;
-            let y = TOP + row * layout.row_h;
+        if let Some(chip) = cap_chip_rect(view, column_layout, layout, column) {
+            let y = chip.y;
             let mut lines = Vec::new();
             if prod_unreached > 0 {
                 lines.push(format!(
@@ -1146,7 +1211,7 @@ fn view_scale_tag(view: &AtlasView) -> &'static str {
 
 /// Entry description for the key-metrics strip (policy, `path:line function`,
 /// confidence, alternatives) — no repo name / root_path provenance.
-fn strip_entry_line(view: &AtlasView) -> String {
+pub(crate) fn strip_entry_line(view: &AtlasView) -> String {
     let confidence = {
         let trimmed = view.entry.confidence.trim();
         if trimmed.is_empty() {
@@ -1169,6 +1234,77 @@ fn strip_entry_line(view: &AtlasView) -> String {
         format_count(view.entry.alternatives.len() as u64)
     ));
     line
+}
+
+/// Masthead HOTTEST line (path · cost · `× median function`).
+pub(crate) fn hottest_line(view: &AtlasView) -> String {
+    view.hottest_node
+        .as_ref()
+        .map(|node| {
+            // Path, cost and the `× median` anchor (the `top N%` rank stays in
+            // the node title / brief; the strip stays on one compact line).
+            let mut parts = vec![node.path.clone(), format_cost(node.cost, node.scale)];
+            if let Some(ratio) = node.ratio {
+                parts.push(format!("{} median function", format_multiple(ratio)));
+            }
+            parts.join(" · ")
+        })
+        .unwrap_or_else(|| "no file".to_string())
+}
+
+/// Masthead PATH line.
+pub(crate) fn path_line(view: &AtlasView) -> String {
+    format!(
+        "PATH · {} steps · {PATH_CAPTION}",
+        format_count(view.path.len() as u64)
+    )
+}
+
+/// Masthead caps line.
+pub(crate) fn caps_line(view: &AtlasView) -> String {
+    format!(
+        "{} of {} reachable files shown · {} aggregated",
+        format_count(view.caps.reachable_shown as u64),
+        format_count(view.caps.reachable_files as u64),
+        format_count(view.caps.aggregated_files as u64)
+    )
+}
+
+/// Canvas footer text (unescaped; the HTML path escapes the joined string).
+pub(crate) fn footer_text(view: &AtlasView) -> String {
+    let reachable = format_reachable(
+        view.reachability.reachable_files,
+        view.reachability.source_files,
+    );
+    let pairs = format!(
+        "{} of {} file pairs drawn",
+        format_count(view.caps.edges_drawn as u64),
+        format_count(view.caps.edge_pairs_total as u64)
+    );
+    let mix = format_edge_mix(view.edge_mix.medium, view.edge_mix.low, view.edge_mix.high);
+    // F9: one unambiguous unreached label — production and non-production.
+    let unreached = format!(
+        "unreached production: {} · non-production: {}",
+        format_count(view.coverage.unreached_production as u64),
+        format_count(view.coverage.unreached_nonproduction as u64)
+    );
+    let footer_parts = [
+        reachable,
+        pairs,
+        mix,
+        unreached,
+        format_parse(
+            view.coverage.parse_ok,
+            view.coverage.parse_partial,
+            view.coverage.parse_failed,
+        ),
+        format_unresolved_includes(
+            view.coverage.unresolved_includes,
+            view.blast_radius.include_edges_total,
+        ),
+        format_demoted_files(view.coverage.demoted_files),
+    ];
+    footer_parts.join(" · ")
 }
 
 /// The three inline KV1 action chips (visible `path:line — rule`, full title).
@@ -1279,29 +1415,9 @@ fn render_page_chrome(
 #[must_use]
 pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartAction]) -> String {
     let entry_line = strip_entry_line(view);
-    let hottest_line = view
-        .hottest_node
-        .as_ref()
-        .map(|node| {
-            // Path, cost and the `× median` anchor (the `top N%` rank stays in
-            // the node title / brief; the strip stays on one compact line).
-            let mut parts = vec![node.path.clone(), format_cost(node.cost, node.scale)];
-            if let Some(ratio) = node.ratio {
-                parts.push(format!("{} median function", format_multiple(ratio)));
-            }
-            parts.join(" · ")
-        })
-        .unwrap_or_else(|| "no file".to_string());
-    let path_line = format!(
-        "PATH · {} steps · {PATH_CAPTION}",
-        format_count(view.path.len() as u64)
-    );
-    let caps_line = format!(
-        "{} of {} reachable files shown · {} aggregated",
-        format_count(view.caps.reachable_shown as u64),
-        format_count(view.caps.reachable_files as u64),
-        format_count(view.caps.aggregated_files as u64)
-    );
+    let hottest_line = hottest_line(view);
+    let path_line = path_line(view);
+    let caps_line = caps_line(view);
 
     let scale_tag = view_scale_tag(view);
     let scale_label = format!("static cost units ({scale_tag})");
@@ -1316,43 +1432,7 @@ pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartA
     };
     let start_chips = render_start_chips(start_actions);
 
-    let reachable = format_reachable(
-        view.reachability.reachable_files,
-        view.reachability.source_files,
-    );
-    let pairs = format!(
-        "{} of {} file pairs drawn",
-        format_count(view.caps.edges_drawn as u64),
-        format_count(view.caps.edge_pairs_total as u64)
-    );
-    let mix = format_edge_mix(view.edge_mix.medium, view.edge_mix.low, view.edge_mix.high);
-    // F9: one unambiguous unreached label — production and non-production.
-    let unreached = format!(
-        "unreached production: {} · non-production: {}",
-        format_count(view.coverage.unreached_production as u64),
-        format_count(view.coverage.unreached_nonproduction as u64)
-    );
-    let footer_parts = [
-        reachable,
-        pairs,
-        mix,
-        unreached,
-        format_parse(
-            view.coverage.parse_ok,
-            view.coverage.parse_partial,
-            view.coverage.parse_failed,
-        ),
-        format_unresolved_includes(
-            view.coverage.unresolved_includes,
-            view.blast_radius.include_edges_total,
-        ),
-        format_demoted_files(view.coverage.demoted_files),
-    ];
-    let footer = footer_parts
-        .iter()
-        .map(|part| escape_html(part))
-        .collect::<Vec<_>>()
-        .join(" · ");
+    let footer = escape_html(&footer_text(view));
 
     let layout = compute_layout(view);
     let mut out = String::new();
