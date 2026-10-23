@@ -20,3 +20,6 @@
 # Python bytecode from committed evidence/repro scripts (docs/evidence/**/render)
 __pycache__/
 *.pyc
+
+# Atlas sim source renders (regenerate with sim/make-source.sh)
+/sim/source/

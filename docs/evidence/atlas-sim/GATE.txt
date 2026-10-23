@@ -1,0 +1,162 @@
+# Atlas sim — gate transcript
+
+Date: 2026-10-24
+Worktree: /home/shafin/Opencode/Perfpal-atlas-sim
+Branch: feat/atlas-sim
+Base: 821b984
+
+## 1. Source renders (build this worktree + scan fixtures)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+scanned 53 files (53 ok, 0 partial, 0 failed) · 348 findings (20 hot, 52 warn, 276 info)
+report: /home/shafin/Opencode/Perfpal-atlas-sim/sim/source/out-hyperfine
+scanned 101 files (63 ok, 38 partial, 0 failed) · 837 findings (7 hot, 77 warn, 753 info)
+report: /home/shafin/Opencode/Perfpal-atlas-sim/sim/source/out-cjson
+source renders ready in /home/shafin/Opencode/Perfpal-atlas-sim/sim/source (1400x718 full-bleed)
+exit=0
+
+## 2. Extraction, run 1
+hyperfine: 19 nodes · 49 edges · 5 hulls · 6 columns · 3 trace steps · 148 findings -> data-hyperfine.json
+cjson: 7 nodes · 5 edges · 2 hulls · 3 columns · 2 trace steps · 153 findings -> data-cjson.json
+no-forward-path: 0 nodes · 0 edges · 0 hulls · 0 columns · 0 trace steps · 0 findings -> data-no-forward-path.json
+empty: 0 nodes · 0 edges · 0 hulls · 0 columns · 0 trace steps · 0 findings -> data-empty.json
+capped: 0 nodes · 0 edges · 0 hulls · 0 columns · 0 trace steps · 0 findings -> data-capped.json
+index: 5 cases -> data-index.json
+sha256 bcad0a81cbcd45f892f76a7e9eaaa700c5938a3771f642e55a1ccb77417d43b6 data-hyperfine.json
+sha256 2bee0a596d81e6d67c48441aae375ad33f66bfb1ed3a6fa975f68523d84bfbfb data-cjson.json
+sha256 9aebe16710c68d5f1bad3fee0ead56aac5ae8184a364d9f112cb309adfc37aaf data-no-forward-path.json
+sha256 ee405fa98ddf1678c20113ef61e8b7496a72319498dacd9ee82845ed5b277d5e data-empty.json
+sha256 c23fdb504545c7a45a8422cbc03b6004d6f826b044f6d2051093d1e9cdcf5ec5 data-capped.json
+sha256 d42564a03db5977541a60c62b8a43e8f412c0ea5d4b27b0d2864a7e0870dad22 data-index.json
+exit=0
+
+## 3. Data hashes, run 1
+c23fdb504545c7a45a8422cbc03b6004d6f826b044f6d2051093d1e9cdcf5ec5  sim/data-capped.json
+2bee0a596d81e6d67c48441aae375ad33f66bfb1ed3a6fa975f68523d84bfbfb  sim/data-cjson.json
+ee405fa98ddf1678c20113ef61e8b7496a72319498dacd9ee82845ed5b277d5e  sim/data-empty.json
+bcad0a81cbcd45f892f76a7e9eaaa700c5938a3771f642e55a1ccb77417d43b6  sim/data-hyperfine.json
+d42564a03db5977541a60c62b8a43e8f412c0ea5d4b27b0d2864a7e0870dad22  sim/data-index.json
+9aebe16710c68d5f1bad3fee0ead56aac5ae8184a364d9f112cb309adfc37aaf  sim/data-no-forward-path.json
+
+## 4. Extraction, run 2
+exit=0
+sha256 ee405fa98ddf1678c20113ef61e8b7496a72319498dacd9ee82845ed5b277d5e data-empty.json
+sha256 c23fdb504545c7a45a8422cbc03b6004d6f826b044f6d2051093d1e9cdcf5ec5 data-capped.json
+sha256 d42564a03db5977541a60c62b8a43e8f412c0ea5d4b27b0d2864a7e0870dad22 data-index.json
+
+## 5. Data hashes, run 2
+c23fdb504545c7a45a8422cbc03b6004d6f826b044f6d2051093d1e9cdcf5ec5  sim/data-capped.json
+2bee0a596d81e6d67c48441aae375ad33f66bfb1ed3a6fa975f68523d84bfbfb  sim/data-cjson.json
+ee405fa98ddf1678c20113ef61e8b7496a72319498dacd9ee82845ed5b277d5e  sim/data-empty.json
+bcad0a81cbcd45f892f76a7e9eaaa700c5938a3771f642e55a1ccb77417d43b6  sim/data-hyperfine.json
+d42564a03db5977541a60c62b8a43e8f412c0ea5d4b27b0d2864a7e0870dad22  sim/data-index.json
+9aebe16710c68d5f1bad3fee0ead56aac5ae8184a364d9f112cb309adfc37aaf  sim/data-no-forward-path.json
+
+## 6. Playwright gate
+PASS  data files present  · data-capped.json, data-cjson.json, data-empty.json, data-hyperfine.json, data-index.json, data-no-forward-path.json
+PASS  index has the five D1 cases  · hyperfine, cjson, no-forward-path, empty, capped
+PASS  index.html: no external/network reference  · []
+PASS  index.html: no fetch of a remote origin  · local data only
+PASS  sim.css: no external/network reference  · []
+PASS  sim.css: no fetch of a remote origin  · local data only
+PASS  sim.js: no external/network reference  · []
+PASS  sim.js: no fetch of a remote origin  · local data only
+PASS  hyperfine: non-empty graph
+PASS  hyperfine: on-path edges match trace  · 2 edges
+PASS  hyperfine: findings accounting present  · 148/348
+PASS  hyperfine: no absolute paths in data
+PASS  cjson: non-empty graph
+PASS  cjson: on-path edges match trace  · 1 edges
+PASS  cjson: findings accounting present  · 153/837
+PASS  cjson: no absolute paths in data
+PASS  server answers on :8768
+PASS  index.html returns 200  · 200
+PASS  hyperfine: beats derived  · 13 beats
+PASS  hyperfine: case is not synthetic
+PASS  hyperfine: every node rendered  · 19/19
+PASS  hyperfine: footer matches the render
+PASS  hyperfine: honesty label present
+PASS  hyperfine: no time units rendered  · none
+PASS  hyperfine: beats include loop and summary  · boot,branch,enter,hottest,loop,stop,summary
+PASS  hyperfine: loop honesty caveat  · run (line 34) carries 45 static cost units · max loop depth 1 · 1 unknown-trip loop · trip
+PASS  hyperfine: function highlight rendered  · src/main.rs#run#34:1 -> ▶ run · L34
+PASS  hyperfine: loop keyframe  · 259301 bytes
+PASS  hyperfine: no time units at the final beat  · none
+PASS  hyperfine: step forward advances  · 1
+PASS  hyperfine: step back returns
+PASS  hyperfine: play advances the clock  · 353
+PASS  hyperfine: pause freezes
+PASS  hyperfine: speed control  · 4
+PASS  hyperfine: scrub reaches the final beat  · 12/12
+PASS  hyperfine: reset returns to beat 0  · 0 @ 0
+PASS  hyperfine: node select opens the inspector  · src/main.rs
+PASS  hyperfine: inspector shows the path
+PASS  hyperfine: Escape closes the inspector
+PASS  hyperfine: start keyframe  · 251432 bytes
+PASS  hyperfine: mid keyframe  · 244463 bytes
+PASS  hyperfine: end keyframe  · 252369 bytes
+PASS  hyperfine: final frame shows every node
+PASS  hyperfine: final frame keeps the honesty label
+PASS  cjson: beats derived  · 8 beats
+PASS  cjson: case is not synthetic
+PASS  cjson: every node rendered  · 7/7
+PASS  cjson: footer matches the render
+PASS  cjson: honesty label present
+PASS  cjson: no time units rendered  · none
+PASS  cjson: beats include loop and summary  · boot,enter,hottest,loop,stop,summary
+PASS  cjson: loop honesty caveat  · main (line 85) carries 59 static cost units · max loop depth 1 · 1 unknown-trip loop · tri
+PASS  cjson: function highlight rendered  · fuzzing/afl.c#main#85:1 -> ▶ main · L85
+PASS  cjson: loop keyframe  · 133073 bytes
+PASS  cjson: no time units at the final beat  · none
+PASS  cjson: findings cap disclosed  · rs drawn · 0 MEDIUM / 587 LOW structural edges · unreached production: 4 · non-production: 75 · parse 63 ok / 38 partial / 0 failed · 133/229 unresolved includes · 75 files demoted
+PASS  cjson: step forward advances  · 1
+PASS  cjson: step back returns
+PASS  cjson: play advances the clock  · 354
+PASS  cjson: pause freezes
+PASS  cjson: speed control  · 4
+PASS  cjson: scrub reaches the final beat  · 7/7
+PASS  cjson: reset returns to beat 0  · 0 @ 0
+PASS  cjson: node select opens the inspector  · fuzzing/afl.c
+PASS  cjson: inspector shows the path
+PASS  cjson: Escape closes the inspector
+PASS  cjson: start keyframe  · 134500 bytes
+PASS  cjson: mid keyframe  · 134640 bytes
+PASS  cjson: end keyframe  · 134197 bytes
+PASS  cjson: final frame shows every node
+PASS  cjson: final frame keeps the honesty label
+PASS  no-forward-path: labelled synthetic
+PASS  no-forward-path: stub panel visible
+PASS  no-forward-path: no fabricated nodes
+PASS  no-forward-path: stop title names the state  · stop · no forward path
+PASS  no-forward-path: summary does not claim a scan  · 0 steps · state demo · no canvas nodes · no findings in this state demo. static cost units
+PASS  no-forward-path: state keyframe  · 67086 bytes
+PASS  empty: labelled synthetic
+PASS  empty: stub panel visible
+PASS  empty: no fabricated nodes
+PASS  empty: stop title names the state  · stop · empty
+PASS  empty: summary does not claim a scan  · 0 steps · state demo · no canvas nodes · no findings in this state demo. static cost units
+PASS  empty: state keyframe  · 64088 bytes
+PASS  capped: labelled synthetic
+PASS  capped: stub panel visible
+PASS  capped: no fabricated nodes
+PASS  capped: stop title names the state  · stop · capped
+PASS  capped: summary does not claim a scan  · 0 steps · state demo · no canvas nodes · no findings in this state demo. static cost units
+PASS  capped: state keyframe  · 71267 bytes
+PASS  first page fits 1440x900  · footer 894
+PASS  no horizontal scroll at 1440  · {'footerBottom': 894, 'scrollWidth': 1440, 'clientWidth': 1440, 'bodyScrollWidth': 1440, 'innerWidth': 1440}
+PASS  no horizontal overflow (body at 1440)  · {'footerBottom': 894, 'scrollWidth': 1440, 'clientWidth': 1440, 'bodyScrollWidth': 1440, 'innerWidth': 1440}
+PASS  dominant-badge definition present
+PASS  no horizontal scroll at 1280x800  · {'scrollWidth': 1280, 'clientWidth': 1280}
+PASS  reduced motion starts at the final frame  · 12/12
+PASS  reduced motion: no non-local requests  · []
+PASS  reduced motion: no console errors
+PASS  no non-local network requests  · []
+PASS  no console errors
+PASS  no page errors
+PASS  data files unchanged by the gate
+
+101/101 checks passed -> /home/shafin/Opencode/Perfpal-atlas-sim/docs/evidence/atlas-sim/checks.json
+exit=0
+
+## 7. Production tree untouched
+git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock:
+lines=0

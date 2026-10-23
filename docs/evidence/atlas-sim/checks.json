@@ -1,0 +1,514 @@
+{
+  "checks": [
+    {
+      "check": "data files present",
+      "detail": "data-capped.json, data-cjson.json, data-empty.json, data-hyperfine.json, data-index.json, data-no-forward-path.json",
+      "ok": true
+    },
+    {
+      "check": "index has the five D1 cases",
+      "detail": "hyperfine, cjson, no-forward-path, empty, capped",
+      "ok": true
+    },
+    {
+      "check": "index.html: no external/network reference",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "index.html: no fetch of a remote origin",
+      "detail": "local data only",
+      "ok": true
+    },
+    {
+      "check": "sim.css: no external/network reference",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "sim.css: no fetch of a remote origin",
+      "detail": "local data only",
+      "ok": true
+    },
+    {
+      "check": "sim.js: no external/network reference",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "sim.js: no fetch of a remote origin",
+      "detail": "local data only",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: non-empty graph",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: on-path edges match trace",
+      "detail": "2 edges",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: findings accounting present",
+      "detail": "148/348",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: no absolute paths in data",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: non-empty graph",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: on-path edges match trace",
+      "detail": "1 edges",
+      "ok": true
+    },
+    {
+      "check": "cjson: findings accounting present",
+      "detail": "153/837",
+      "ok": true
+    },
+    {
+      "check": "cjson: no absolute paths in data",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "server answers on :8768",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "index.html returns 200",
+      "detail": "200",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: beats derived",
+      "detail": "13 beats",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: case is not synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: every node rendered",
+      "detail": "19/19",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: footer matches the render",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: honesty label present",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: no time units rendered",
+      "detail": "none",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: beats include loop and summary",
+      "detail": "boot,branch,enter,hottest,loop,stop,summary",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: loop honesty caveat",
+      "detail": "run (line 34) carries 45 static cost units \u00b7 max loop depth 1 \u00b7 1 unknown-trip loop \u00b7 trip",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: function highlight rendered",
+      "detail": "src/main.rs#run#34:1 -> \u25b6 run \u00b7 L34",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: loop keyframe",
+      "detail": "259301 bytes",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: no time units at the final beat",
+      "detail": "none",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: step forward advances",
+      "detail": "1",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: step back returns",
+      "detail": "0",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: play advances the clock",
+      "detail": "353",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: pause freezes",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: speed control",
+      "detail": "4",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: scrub reaches the final beat",
+      "detail": "12/12",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: reset returns to beat 0",
+      "detail": "0 @ 0",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: node select opens the inspector",
+      "detail": "src/main.rs",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: inspector shows the path",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: Escape closes the inspector",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: start keyframe",
+      "detail": "251432 bytes",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: mid keyframe",
+      "detail": "244463 bytes",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: end keyframe",
+      "detail": "252369 bytes",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: final frame shows every node",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: final frame keeps the honesty label",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: beats derived",
+      "detail": "8 beats",
+      "ok": true
+    },
+    {
+      "check": "cjson: case is not synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: every node rendered",
+      "detail": "7/7",
+      "ok": true
+    },
+    {
+      "check": "cjson: footer matches the render",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: honesty label present",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: no time units rendered",
+      "detail": "none",
+      "ok": true
+    },
+    {
+      "check": "cjson: beats include loop and summary",
+      "detail": "boot,enter,hottest,loop,stop,summary",
+      "ok": true
+    },
+    {
+      "check": "cjson: loop honesty caveat",
+      "detail": "main (line 85) carries 59 static cost units \u00b7 max loop depth 1 \u00b7 1 unknown-trip loop \u00b7 tri",
+      "ok": true
+    },
+    {
+      "check": "cjson: function highlight rendered",
+      "detail": "fuzzing/afl.c#main#85:1 -> \u25b6 main \u00b7 L85",
+      "ok": true
+    },
+    {
+      "check": "cjson: loop keyframe",
+      "detail": "133073 bytes",
+      "ok": true
+    },
+    {
+      "check": "cjson: no time units at the final beat",
+      "detail": "none",
+      "ok": true
+    },
+    {
+      "check": "cjson: findings cap disclosed",
+      "detail": "rs drawn \u00b7 0 MEDIUM / 587 LOW structural edges \u00b7 unreached production: 4 \u00b7 non-production: 75 \u00b7 parse 63 ok / 38 partial / 0 failed \u00b7 133/229 unresolved includes \u00b7 75 files demoted",
+      "ok": true
+    },
+    {
+      "check": "cjson: step forward advances",
+      "detail": "1",
+      "ok": true
+    },
+    {
+      "check": "cjson: step back returns",
+      "detail": "0",
+      "ok": true
+    },
+    {
+      "check": "cjson: play advances the clock",
+      "detail": "354",
+      "ok": true
+    },
+    {
+      "check": "cjson: pause freezes",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: speed control",
+      "detail": "4",
+      "ok": true
+    },
+    {
+      "check": "cjson: scrub reaches the final beat",
+      "detail": "7/7",
+      "ok": true
+    },
+    {
+      "check": "cjson: reset returns to beat 0",
+      "detail": "0 @ 0",
+      "ok": true
+    },
+    {
+      "check": "cjson: node select opens the inspector",
+      "detail": "fuzzing/afl.c",
+      "ok": true
+    },
+    {
+      "check": "cjson: inspector shows the path",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: Escape closes the inspector",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: start keyframe",
+      "detail": "134500 bytes",
+      "ok": true
+    },
+    {
+      "check": "cjson: mid keyframe",
+      "detail": "134640 bytes",
+      "ok": true
+    },
+    {
+      "check": "cjson: end keyframe",
+      "detail": "134197 bytes",
+      "ok": true
+    },
+    {
+      "check": "cjson: final frame shows every node",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: final frame keeps the honesty label",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: labelled synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: stub panel visible",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: no fabricated nodes",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: stop title names the state",
+      "detail": "stop \u00b7 no forward path",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: summary does not claim a scan",
+      "detail": "0 steps \u00b7 state demo \u00b7 no canvas nodes \u00b7 no findings in this state demo. static cost units",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: state keyframe",
+      "detail": "67086 bytes",
+      "ok": true
+    },
+    {
+      "check": "empty: labelled synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "empty: stub panel visible",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "empty: no fabricated nodes",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "empty: stop title names the state",
+      "detail": "stop \u00b7 empty",
+      "ok": true
+    },
+    {
+      "check": "empty: summary does not claim a scan",
+      "detail": "0 steps \u00b7 state demo \u00b7 no canvas nodes \u00b7 no findings in this state demo. static cost units",
+      "ok": true
+    },
+    {
+      "check": "empty: state keyframe",
+      "detail": "64088 bytes",
+      "ok": true
+    },
+    {
+      "check": "capped: labelled synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "capped: stub panel visible",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "capped: no fabricated nodes",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "capped: stop title names the state",
+      "detail": "stop \u00b7 capped",
+      "ok": true
+    },
+    {
+      "check": "capped: summary does not claim a scan",
+      "detail": "0 steps \u00b7 state demo \u00b7 no canvas nodes \u00b7 no findings in this state demo. static cost units",
+      "ok": true
+    },
+    {
+      "check": "capped: state keyframe",
+      "detail": "71267 bytes",
+      "ok": true
+    },
+    {
+      "check": "first page fits 1440x900",
+      "detail": "footer 894",
+      "ok": true
+    },
+    {
+      "check": "no horizontal scroll at 1440",
+      "detail": "{'footerBottom': 894, 'scrollWidth': 1440, 'clientWidth': 1440, 'bodyScrollWidth': 1440, 'innerWidth': 1440}",
+      "ok": true
+    },
+    {
+      "check": "no horizontal overflow (body at 1440)",
+      "detail": "{'footerBottom': 894, 'scrollWidth': 1440, 'clientWidth': 1440, 'bodyScrollWidth': 1440, 'innerWidth': 1440}",
+      "ok": true
+    },
+    {
+      "check": "dominant-badge definition present",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no horizontal scroll at 1280x800",
+      "detail": "{'scrollWidth': 1280, 'clientWidth': 1280}",
+      "ok": true
+    },
+    {
+      "check": "reduced motion starts at the final frame",
+      "detail": "12/12",
+      "ok": true
+    },
+    {
+      "check": "reduced motion: no non-local requests",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "reduced motion: no console errors",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no non-local network requests",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "no console errors",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no page errors",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "data files unchanged by the gate",
+      "detail": "",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-24",
+  "failed": 0,
+  "passed": 101,
+  "total": 101,
+  "viewport": "1440x900"
+}

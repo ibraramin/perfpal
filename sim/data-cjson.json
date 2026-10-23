@@ -1,0 +1,1971 @@
+{
+  "case": "cjson",
+  "columns": [
+    {
+      "countText": "1 file",
+      "depth": 0,
+      "label": "depth 0 · ENTRY",
+      "order": 0,
+      "unreached": false,
+      "x": 520
+    },
+    {
+      "countText": "1 file",
+      "depth": 1,
+      "label": "depth 1",
+      "order": 1,
+      "unreached": false,
+      "x": 700
+    },
+    {
+      "countText": "no forward path",
+      "depth": 2,
+      "label": "UNREACHED",
+      "order": 2,
+      "unreached": true,
+      "x": 880
+    }
+  ],
+  "edges": [
+    {
+      "back": false,
+      "className": "forward",
+      "count": 5,
+      "d": "M 595 112 C 615 112 605 112 625 112",
+      "from": "fuzzing/afl.c",
+      "onPath": true,
+      "order": 0,
+      "to": "cJSON.c"
+    },
+    {
+      "back": true,
+      "className": "back",
+      "count": 56,
+      "d": "M 955 217 C 1015 217 835 112 775 112",
+      "from": "cJSON_Utils.c",
+      "onPath": false,
+      "order": 1,
+      "to": "cJSON.c"
+    },
+    {
+      "back": true,
+      "className": "back",
+      "count": 14,
+      "d": "M 955 322 C 1015 322 835 112 775 112",
+      "from": "test.c",
+      "onPath": false,
+      "order": 2,
+      "to": "cJSON.c"
+    },
+    {
+      "back": true,
+      "className": "back",
+      "count": 6,
+      "d": "M 955 427 C 1007 427 827 112 775 112",
+      "from": "fuzzing/cjson_read_fuzzer.c",
+      "onPath": false,
+      "order": 3,
+      "to": "cJSON.c"
+    },
+    {
+      "back": true,
+      "className": "back",
+      "count": 1,
+      "d": "M 955 532 C 987 532 987 427 955 427",
+      "from": "fuzzing/fuzz_main.c",
+      "onPath": false,
+      "order": 4,
+      "to": "fuzzing/cjson_read_fuzzer.c"
+    }
+  ],
+  "findings": [
+    {
+      "line": 127,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "cJSON_Version",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 261,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "cJSON_Delete",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 265,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-LOOP-006",
+      "severity": "info",
+      "symbol": "cJSON_Delete",
+      "title": "Indirect call via function pointer in innermost loop"
+    },
+    {
+      "line": 270,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-LOOP-006",
+      "severity": "info",
+      "symbol": "cJSON_Delete",
+      "title": "Indirect call via function pointer in innermost loop"
+    },
+    {
+      "line": 273,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-LOOP-006",
+      "severity": "info",
+      "symbol": "cJSON_Delete",
+      "title": "Indirect call via function pointer in innermost loop"
+    },
+    {
+      "line": 307,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "parse_number",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 461,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "cJSON_SetValuestring",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 614,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_number",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 618,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_number",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 623,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_number",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 629,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_number",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 703,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "utf16_literal_to_utf8",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 824,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "parse_string",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 954,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "print_string_ptr",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 976,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_string_ptr",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1063,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-LOOP-002",
+      "severity": "warn",
+      "symbol": "print_string_ptr",
+      "title": "Expensive setup or I/O call inside loop"
+    },
+    {
+      "line": 1063,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_string_ptr",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1368,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "parse_value",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 1423,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "print_value",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 1440,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_value",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1449,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_value",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1458,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "print_value",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1497,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "parse_array",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 1662,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "parse_object",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 1780,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "print_object",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 2789,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "cJSON_Duplicate_rec",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 2839,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "cJSON_Duplicate_rec",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 3072,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "cJSON_Compare",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 3137,
+      "path": "cJSON.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "cJSON_Compare",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 72,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_strdup",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 120,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "compare_pointers",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 217,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 221,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 224,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 230,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 234,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-LOOP-002",
+      "severity": "warn",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Expensive setup or I/O call inside loop"
+    },
+    {
+      "line": 234,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 240,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 245,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "cJSONUtils_FindPointerFromObjectTo",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 314,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "get_item_from_pointer",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 324,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "get_item_from_pointer",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 455,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "detach_path",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 464,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "detach_path",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 466,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "detach_path",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 477,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "detach_path",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 484,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "sort_list",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 530,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "sort_list",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 604,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "compare_json",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 638,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "compare_json",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 708,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "insert_item_in_array",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 734,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "get_object_item",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 737,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "get_object_item",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 745,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "decode_patch_operation",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 793,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "overwrite_item",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 801,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "overwrite_item",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 807,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-002",
+      "severity": "hot",
+      "symbol": "apply_patch",
+      "title": "Hot component"
+    },
+    {
+      "line": 807,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "apply_patch",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 818,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 861,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 872,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 896,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 981,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 985,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1005,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1009,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1013,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1015,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "apply_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1043,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_ApplyPatches",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1072,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_ApplyPatchesCaseSensitive",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1105,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "compose_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1110,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "compose_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1110,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "compose_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1120,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "compose_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1122,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "compose_patch",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1126,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "compose_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1131,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "compose_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1133,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "compose_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1141,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "create_patches",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 1175,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_patches",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1185,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_patches",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1188,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-LOOP-002",
+      "severity": "hot",
+      "symbol": "create_patches",
+      "title": "Expensive setup or I/O call inside loop"
+    },
+    {
+      "line": 1188,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "create_patches",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1189,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "create_patches",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 1203,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-LOOP-002",
+      "severity": "hot",
+      "symbol": "create_patches",
+      "title": "Expensive setup or I/O call inside loop"
+    },
+    {
+      "line": 1203,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "create_patches",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1248,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-LOOP-002",
+      "severity": "warn",
+      "symbol": "create_patches",
+      "title": "Expensive setup or I/O call inside loop"
+    },
+    {
+      "line": 1248,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "create_patches",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 1290,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_GeneratePatches",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1305,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "cJSONUtils_GeneratePatchesCaseSensitive",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1325,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1331,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1332,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1339,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1345,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1350,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1354,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1364,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1368,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1371,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 1378,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1403,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "generate_merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1405,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "generate_merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1407,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "generate_merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1415,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "generate_merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1442,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "generate_merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1470,
+      "path": "cJSON_Utils.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "generate_merge_patch",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 85,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "main",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 116,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "main",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 133,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "main",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 140,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "main",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 144,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "main",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 152,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-LOOP-002",
+      "severity": "warn",
+      "symbol": "main",
+      "title": "Expensive setup or I/O call inside loop"
+    },
+    {
+      "line": 158,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "main",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 163,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-ALLOC-002",
+      "severity": "warn",
+      "symbol": "main",
+      "title": "Deallocation inside loop"
+    },
+    {
+      "line": 168,
+      "path": "fuzzing/afl.c",
+      "ruleId": "PERF-C-ALLOC-002",
+      "severity": "warn",
+      "symbol": "main",
+      "title": "Deallocation inside loop"
+    },
+    {
+      "line": 13,
+      "path": "fuzzing/cjson_read_fuzzer.c",
+      "ruleId": "PERF-C-CALL-002",
+      "severity": "warn",
+      "symbol": "LLVMFuzzerTestOneInput",
+      "title": "High cyclomatic complexity"
+    },
+    {
+      "line": 34,
+      "path": "fuzzing/cjson_read_fuzzer.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "LLVMFuzzerTestOneInput",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 40,
+      "path": "fuzzing/cjson_read_fuzzer.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "LLVMFuzzerTestOneInput",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 47,
+      "path": "fuzzing/cjson_read_fuzzer.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "LLVMFuzzerTestOneInput",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 51,
+      "path": "fuzzing/cjson_read_fuzzer.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "LLVMFuzzerTestOneInput",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 64,
+      "path": "fuzzing/cjson_read_fuzzer.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "LLVMFuzzerTestOneInput",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 69,
+      "path": "fuzzing/cjson_read_fuzzer.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "LLVMFuzzerTestOneInput",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 48,
+      "path": "fuzzing/fuzz_main.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "main",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 53,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "print_preallocated",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 75,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "print_preallocated",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 168,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 169,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 169,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 171,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 172,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 174,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 179,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 185,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 194,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 197,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 197,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "create_objects",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 262,
+      "path": "test.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 7,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-ARCH-001",
+      "severity": "info",
+      "symbol": "",
+      "title": "Unresolved quoted include"
+    },
+    {
+      "line": 77,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "tearDown",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 1919,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "TEST_ASSERT_EQUAL_STRING_ARRAY",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 3343,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "testFailureCountIncrementsAndIsReturnedAtEnd",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 3348,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "testFailureCountIncrementsAndIsReturnedAtEnd",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 3360,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "testCstringsEscapeSequence",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 3372,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "testHexPrintsUpToMaxNumberOfNibbles",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 4285,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "TEST_ASSERT_EQUAL_FLOAT_ARRAY",
+      "title": "Direct recursion"
+    },
+    {
+      "line": 4533,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-ARCH-003",
+      "severity": "info",
+      "symbol": "printFloatValue",
+      "title": "Cross-file call coupling"
+    },
+    {
+      "line": 4535,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "printFloatValue",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 4538,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "printFloatValue",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 4544,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "printFloatValue",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 4544,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "printFloatValue",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 4545,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "printFloatValue",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 4545,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-STR-003",
+      "severity": "warn",
+      "symbol": "printFloatValue",
+      "title": "Unbounded string operation"
+    },
+    {
+      "line": 5076,
+      "path": "tests/unity/test/tests/testunity.c",
+      "ruleId": "PERF-C-CALL-001",
+      "severity": "info",
+      "symbol": "TEST_ASSERT_EQUAL_DOUBLE_ARRAY",
+      "title": "Direct recursion"
+    }
+  ],
+  "hulls": [
+    {
+      "h": 221,
+      "label": "cJSON · 2",
+      "w": 346,
+      "x": 617,
+      "y": 44
+    },
+    {
+      "h": 536,
+      "label": "fuzzing · 3",
+      "w": 526,
+      "x": 437,
+      "y": 44
+    }
+  ],
+  "meta": {
+    "actions": [
+      {
+        "anchor": "cJSON_Utils.c:1188",
+        "title": "Expensive setup or I/O call inside loop"
+      },
+      {
+        "anchor": "cJSON_Utils.c:1203",
+        "title": "Expensive setup or I/O call inside loop"
+      },
+      {
+        "anchor": "cJSON_Utils.c:807",
+        "title": "High cyclomatic complexity"
+      }
+    ],
+    "caps": "2 of 2 reachable files shown · 0 aggregated",
+    "entry": "production main · fuzzing/afl.c:85 main · confidence HIGH · 1 alternative",
+    "fileCount": 101,
+    "findingsIncluded": 153,
+    "findingsTotal": 837,
+    "footer": "2 of 81 source files reachable (2.5%) · 5 of 5 file pairs drawn · 0 MEDIUM / 587 LOW structural edges · unreached production: 4 · non-production: 75 · parse 63 ok / 38 partial / 0 failed · 133/229 unresolved includes · 75 files demoted",
+    "hottest": "tests/unity/test/tests/testunity.c · 2,000,468 static cost units (v2) · 1,000,234× median function",
+    "kicker": "PERFPAL · ATLAS",
+    "languages": [
+      "c",
+      "python"
+    ],
+    "locCode": 16215,
+    "path": "2 steps",
+    "repo": "cJSON",
+    "stub": null,
+    "subline": "entry-flow map · static, profile to confirm",
+    "wordmark": "Atlas"
+  },
+  "nodes": [
+    {
+      "badge": "ENTRY · INFO ×5 · partial",
+      "cost": 81,
+      "costText": "81 static cost units (v2)",
+      "dash": null,
+      "entry": true,
+      "fill": "#1f2d3a",
+      "findings": {
+        "hot": 0,
+        "info": 5,
+        "warn": 0
+      },
+      "functions": [
+        {
+          "cost": 59,
+          "fanIn": 0,
+          "fanOut": 6,
+          "id": "fuzzing/afl.c#main#85:1",
+          "line": 85,
+          "maxLoopDepth": 1,
+          "name": "main",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        },
+        {
+          "cost": 22,
+          "fanIn": 1,
+          "fanOut": 0,
+          "id": "fuzzing/afl.c#read_file#29:1",
+          "line": 29,
+          "maxLoopDepth": 0,
+          "name": "read_file",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        }
+      ],
+      "h": 80,
+      "hottest": false,
+      "id": "fuzzing/afl.c",
+      "name": "fuzzing/afl.c",
+      "nonproduction": false,
+      "order": 0,
+      "pathStep": 1,
+      "ratioText": "41× median function",
+      "stroke": "#1f2d3a",
+      "strokeWidth": 2,
+      "title": "fuzzing/afl.c · production · file total 81 static cost units (v2) · 41× median function · top 17% of files · top functions: main @ 85, read_file @ 29",
+      "topText": "top 17% of files",
+      "w": 150,
+      "x": 445,
+      "y": 72
+    },
+    {
+      "badge": "WARN ×11 · partial",
+      "cost": 2605,
+      "costText": "2,605 static cost units (v2)",
+      "dash": null,
+      "entry": false,
+      "fill": "#fdfbf6",
+      "findings": {
+        "hot": 0,
+        "info": 0,
+        "warn": 11
+      },
+      "functions": [
+        {
+          "cost": 137,
+          "fanIn": 105,
+          "fanOut": 1,
+          "id": "cJSON.c#cJSON_Delete#253:1",
+          "line": 253,
+          "maxLoopDepth": 1,
+          "name": "cJSON_Delete",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        },
+        {
+          "cost": 101,
+          "fanIn": 10,
+          "fanOut": 3,
+          "id": "cJSON.c#cJSON_Compare#3072:1",
+          "line": 3072,
+          "maxLoopDepth": 1,
+          "name": "cJSON_Compare",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        },
+        {
+          "cost": 84,
+          "fanIn": 2,
+          "fanOut": 4,
+          "id": "cJSON.c#print_object#1780:1",
+          "line": 1780,
+          "maxLoopDepth": 2,
+          "name": "print_object",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 3
+        },
+        {
+          "cost": 76,
+          "fanIn": 4,
+          "fanOut": 1,
+          "id": "cJSON.c#parse_string#824:1",
+          "line": 824,
+          "maxLoopDepth": 1,
+          "name": "parse_string",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 2
+        },
+        {
+          "cost": 76,
+          "fanIn": 3,
+          "fanOut": 1,
+          "id": "cJSON.c#print_string_ptr#954:1",
+          "line": 954,
+          "maxLoopDepth": 1,
+          "name": "print_string_ptr",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 2
+        },
+        {
+          "cost": 74,
+          "fanIn": 3,
+          "fanOut": 1,
+          "id": "cJSON.c#parse_number#307:1",
+          "line": 307,
+          "maxLoopDepth": 1,
+          "name": "parse_number",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 2
+        },
+        {
+          "cost": 62,
+          "fanIn": 4,
+          "fanOut": 5,
+          "id": "cJSON.c#parse_object#1662:1",
+          "line": 1662,
+          "maxLoopDepth": 1,
+          "name": "parse_object",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        },
+        {
+          "cost": 56,
+          "fanIn": 1,
+          "fanOut": 1,
+          "id": "cJSON.c#utf16_literal_to_utf8#703:1",
+          "line": 703,
+          "maxLoopDepth": 1,
+          "name": "utf16_literal_to_utf8",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        }
+      ],
+      "h": 80,
+      "hottest": false,
+      "id": "cJSON.c",
+      "name": "cJSON.c",
+      "nonproduction": false,
+      "order": 1,
+      "pathStep": 2,
+      "ratioText": "1,303× median function",
+      "stroke": "#8b8173",
+      "strokeWidth": 1,
+      "title": "cJSON.c · production · file total 2,605 static cost units (v2) · 1,303× median function · top 4% of files · top functions: cJSON_Delete @ 253, cJSON_Compare @ 3072, print_object @ 1780",
+      "topText": "top 4% of files",
+      "w": 150,
+      "x": 625,
+      "y": 72
+    },
+    {
+      "badge": "HOTTEST · WARN ×6 · unreached · partial · test",
+      "cost": 2000468,
+      "costText": "2,000,468 static cost units (v2)",
+      "dash": null,
+      "entry": false,
+      "fill": "#e8e5df",
+      "findings": {
+        "hot": 0,
+        "info": 0,
+        "warn": 6
+      },
+      "functions": [
+        {
+          "cost": 2000008,
+          "fanIn": 0,
+          "fanOut": 1,
+          "id": "tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1",
+          "line": 4557,
+          "maxLoopDepth": 1,
+          "name": "testFloatPrintingRandomSamples",
+          "recursive": false,
+          "tripSource": "literal",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 18,
+          "fanIn": 1,
+          "fanOut": 3,
+          "id": "tests/unity/test/tests/testunity.c#printFloatValue#4525:1",
+          "line": 4525,
+          "maxLoopDepth": 0,
+          "name": "printFloatValue",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 9,
+          "fanIn": 0,
+          "fanOut": 2,
+          "id": "tests/unity/test/tests/testunity.c#tearDown#66:1",
+          "line": 66,
+          "maxLoopDepth": 0,
+          "name": "tearDown",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 7,
+          "fanIn": 2,
+          "fanOut": 1,
+          "id": "tests/unity/test/tests/testunity.c#TEST_ASSERT_EQUAL_STRING_ARRAY#1899:5",
+          "line": 1899,
+          "maxLoopDepth": 0,
+          "name": "TEST_ASSERT_EQUAL_STRING_ARRAY",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 7,
+          "fanIn": 4,
+          "fanOut": 0,
+          "id": "tests/unity/test/tests/testunity.c#startPutcharSpy#3312:1",
+          "line": 3312,
+          "maxLoopDepth": 0,
+          "name": "startPutcharSpy",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 6,
+          "fanIn": 4,
+          "fanOut": 0,
+          "id": "tests/unity/test/tests/testunity.c#endPutcharSpy#3314:1",
+          "line": 3314,
+          "maxLoopDepth": 0,
+          "name": "endPutcharSpy",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 6,
+          "fanIn": 3,
+          "fanOut": 0,
+          "id": "tests/unity/test/tests/testunity.c#getBufferPutcharSpy#3316:1",
+          "line": 3316,
+          "maxLoopDepth": 0,
+          "name": "getBufferPutcharSpy",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 6,
+          "fanIn": 0,
+          "fanOut": 0,
+          "id": "tests/unity/test/tests/testunity.c#putcharSpy#3326:1",
+          "line": 3326,
+          "maxLoopDepth": 0,
+          "name": "putcharSpy",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        }
+      ],
+      "h": 80,
+      "hottest": true,
+      "id": "tests/unity/test/tests/testunity.c",
+      "name": "tests/unity/test/tests/testunity.c",
+      "nonproduction": true,
+      "order": 2,
+      "pathStep": null,
+      "ratioText": "1,000,234× median function",
+      "stroke": "#c2410c",
+      "strokeWidth": 2,
+      "title": "tests/unity/test/tests/testunity.c · test · file total 2,000,468 static cost units (v2) · 1,000,234× median function · top 1% of files · top functions: testFloatPrintingRandomSamples @ 4557, printFloatValue @ 4525, tearDown @ 66",
+      "topText": "top 1% of files",
+      "w": 150,
+      "x": 805,
+      "y": 72
+    },
+    {
+      "badge": "INFO ×56 · unreached",
+      "cost": 1048,
+      "costText": "1,048 static cost units (v2)",
+      "dash": null,
+      "entry": false,
+      "fill": "#e8e5df",
+      "findings": {
+        "hot": 0,
+        "info": 56,
+        "warn": 0
+      },
+      "functions": [
+        {
+          "cost": 131,
+          "fanIn": 2,
+          "fanOut": 20,
+          "id": "cJSON_Utils.c#apply_patch#807:1",
+          "line": 807,
+          "maxLoopDepth": 0,
+          "name": "apply_patch",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 94,
+          "fanIn": 3,
+          "fanOut": 9,
+          "id": "cJSON_Utils.c#create_patches#1141:1",
+          "line": 1141,
+          "maxLoopDepth": 1,
+          "name": "create_patches",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 4
+        },
+        {
+          "cost": 76,
+          "fanIn": 3,
+          "fanOut": 4,
+          "id": "cJSON_Utils.c#compare_json#604:1",
+          "line": 604,
+          "maxLoopDepth": 1,
+          "name": "compare_json",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 2
+        },
+        {
+          "cost": 67,
+          "fanIn": 2,
+          "fanOut": 2,
+          "id": "cJSON_Utils.c#sort_list#484:1",
+          "line": 484,
+          "maxLoopDepth": 1,
+          "name": "sort_list",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 3
+        },
+        {
+          "cost": 56,
+          "fanIn": 4,
+          "fanOut": 5,
+          "id": "cJSON_Utils.c#get_item_from_pointer#301:1",
+          "line": 301,
+          "maxLoopDepth": 2,
+          "name": "get_item_from_pointer",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 3
+        },
+        {
+          "cost": 53,
+          "fanIn": 2,
+          "fanOut": 9,
+          "id": "cJSON_Utils.c#generate_merge_patch#1395:1",
+          "line": 1395,
+          "maxLoopDepth": 1,
+          "name": "generate_merge_patch",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        },
+        {
+          "cost": 49,
+          "fanIn": 1,
+          "fanOut": 0,
+          "id": "cJSON_Utils.c#compare_pointers#120:1",
+          "line": 120,
+          "maxLoopDepth": 1,
+          "name": "compare_pointers",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        },
+        {
+          "cost": 44,
+          "fanIn": 3,
+          "fanOut": 11,
+          "id": "cJSON_Utils.c#merge_patch#1321:1",
+          "line": 1321,
+          "maxLoopDepth": 1,
+          "name": "merge_patch",
+          "recursive": true,
+          "tripSource": "unknown",
+          "unknownTripLoops": 1
+        }
+      ],
+      "h": 80,
+      "hottest": false,
+      "id": "cJSON_Utils.c",
+      "name": "cJSON_Utils.c",
+      "nonproduction": false,
+      "order": 3,
+      "pathStep": null,
+      "ratioText": "524× median function",
+      "stroke": "#b8b2a7",
+      "strokeWidth": 1,
+      "title": "cJSON_Utils.c · production · file total 1,048 static cost units (v2) · 524× median function · top 6% of files · top functions: apply_patch @ 807, create_patches @ 1141, compare_json @ 604",
+      "topText": "top 6% of files",
+      "w": 150,
+      "x": 805,
+      "y": 177
+    },
+    {
+      "badge": "INFO ×14 · unreached · partial",
+      "cost": 71,
+      "costText": "71 static cost units (v2)",
+      "dash": null,
+      "entry": false,
+      "fill": "#e8e5df",
+      "findings": {
+        "hot": 0,
+        "info": 14,
+        "warn": 0
+      },
+      "functions": [
+        {
+          "cost": 43,
+          "fanIn": 1,
+          "fanOut": 12,
+          "id": "test.c#create_objects#109:1",
+          "line": 109,
+          "maxLoopDepth": 1,
+          "name": "create_objects",
+          "recursive": false,
+          "tripSource": "literal",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 25,
+          "fanIn": 1,
+          "fanOut": 2,
+          "id": "test.c#print_preallocated#43:1",
+          "line": 43,
+          "maxLoopDepth": 0,
+          "name": "print_preallocated",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        },
+        {
+          "cost": 3,
+          "fanIn": 0,
+          "fanOut": 2,
+          "id": "test.c##259:17",
+          "line": 259,
+          "maxLoopDepth": 0,
+          "name": "",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        }
+      ],
+      "h": 80,
+      "hottest": false,
+      "id": "test.c",
+      "name": "test.c",
+      "nonproduction": false,
+      "order": 4,
+      "pathStep": null,
+      "ratioText": "36× median function",
+      "stroke": "#b8b2a7",
+      "strokeWidth": 1,
+      "title": "test.c · production · file total 71 static cost units (v2) · 36× median function · top 19% of files · top functions: create_objects @ 109, print_preallocated @ 43, @ 259",
+      "topText": "top 19% of files",
+      "w": 150,
+      "x": 805,
+      "y": 282
+    },
+    {
+      "badge": "INFO ×6 · unreached · partial",
+      "cost": 55,
+      "costText": "55 static cost units (v2)",
+      "dash": null,
+      "entry": false,
+      "fill": "#e8e5df",
+      "findings": {
+        "hot": 0,
+        "info": 6,
+        "warn": 0
+      },
+      "functions": [
+        {
+          "cost": 55,
+          "fanIn": 1,
+          "fanOut": 6,
+          "id": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+          "line": 13,
+          "maxLoopDepth": 0,
+          "name": "LLVMFuzzerTestOneInput",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        }
+      ],
+      "h": 80,
+      "hottest": false,
+      "id": "fuzzing/cjson_read_fuzzer.c",
+      "name": "fuzzing/cjson_read_fuzzer.c",
+      "nonproduction": false,
+      "order": 5,
+      "pathStep": null,
+      "ratioText": "28× median function",
+      "stroke": "#b8b2a7",
+      "strokeWidth": 1,
+      "title": "fuzzing/cjson_read_fuzzer.c · production · file total 55 static cost units (v2) · 28× median function · top 22% of files · top functions: LLVMFuzzerTestOneInput @ 13",
+      "topText": "top 22% of files",
+      "w": 150,
+      "x": 805,
+      "y": 387
+    },
+    {
+      "badge": "INFO ×1 · unreached",
+      "cost": 17,
+      "costText": "17 static cost units (v2)",
+      "dash": null,
+      "entry": false,
+      "fill": "#e8e5df",
+      "findings": {
+        "hot": 0,
+        "info": 1,
+        "warn": 0
+      },
+      "functions": [
+        {
+          "cost": 17,
+          "fanIn": 0,
+          "fanOut": 1,
+          "id": "fuzzing/fuzz_main.c#main#9:1",
+          "line": 9,
+          "maxLoopDepth": 0,
+          "name": "main",
+          "recursive": false,
+          "tripSource": "unknown",
+          "unknownTripLoops": 0
+        }
+      ],
+      "h": 80,
+      "hottest": false,
+      "id": "fuzzing/fuzz_main.c",
+      "name": "fuzzing/fuzz_main.c",
+      "nonproduction": false,
+      "order": 6,
+      "pathStep": null,
+      "ratioText": "8.5× median function",
+      "stroke": "#b8b2a7",
+      "strokeWidth": 1,
+      "title": "fuzzing/fuzz_main.c · production · file total 17 static cost units (v2) · 8.5× median function · top 44% of files · top functions: main @ 9",
+      "topText": "top 44% of files",
+      "w": 150,
+      "x": 805,
+      "y": 492
+    }
+  ],
+  "source": {
+    "metrics": "metrics.json",
+    "renderDir": "out-cjson",
+    "report": "report.html",
+    "schemaVersion": "1.7"
+  },
+  "stage": {
+    "h": 718,
+    "w": 1400
+  },
+  "state": {
+    "allTest": false,
+    "capped": false,
+    "empty": false,
+    "library": false,
+    "noEntry": false,
+    "partialParse": true,
+    "singleFile": false
+  },
+  "synthetic": false,
+  "trace": [
+    {
+      "path": "fuzzing/afl.c",
+      "step": 1
+    },
+    {
+      "path": "cJSON.c",
+      "step": 2
+    }
+  ]
+}

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Track D1 — Atlas run-story prototype (2026-10-24).** A standalone `sim/` companion (no build step,
+  no dependency, no network, no production edits) that plays a scrubbable **static, inferred** run
+  story over the real Atlas entry-flow map for hyperfine and cJSON: boot at the elected entry →
+  representative path → node/function highlights (the focused file node's bottom line becomes the
+  function at its line) → loop/trip moments (`max_loop_depth`,
+  `unknown_trip_loops`, `trip_source`) → off-path branch points → hottest file → stop/summary (leaf,
+  no forward path, partial parse, capped). Controls: play/pause, step, scrub, speed, node select with
+  an inspector, reset; keyboard; `prefers-reduced-motion` shows the final frame. Persistent honesty
+  label (`STATIC, INFERRED · not a runtime trace · profile to confirm`), no time units, unknown trips
+  weight ×1. Data is extracted from a reproducible step-10 render (`sim/make-source.sh` +
+  `sim/extract.py`, fail-closed) and includes three labelled synthetic state demos with no fabricated
+  nodes or numbers. Evidence: `docs/evidence/atlas-sim/` (eleven 1440×900 frames, `checks.json` 101/101,
+  `NOTES.md`, `VISION.md` PASS); vision, D2 review criteria and the D3 runtime-trace proposal are in
+  `docs/research/atlas-run.md`. Uncommitted pending founder approval; D2 (founder review) is next.
+
 ### Changed
 - **Atlas v2 steps 9–10 — signed G visual system + first-page fit (2026-10-23).** Step 9 produced the
   1440×900 G-vs-Atlas side-by-sides (`hyperfine` + `cJSON`), the G-baseline token/type/composition
