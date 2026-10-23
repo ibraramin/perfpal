@@ -1764,7 +1764,7 @@
  "source": {
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
-  "metricsSha256": "d27adba66dbcc29ce375f921921676591b92351810d656b0375797b9cfd49512",
+  "metricsContentSha256": "1f1c0ebfc869a363f2b91934494730e4cc4ecaeca038bd2f9d9a28bbfe79cc3a",
   "sha256": "74f3674d063e6292f6328416f0bfead64205eafb29fb38e7869d3b15687ad07b"
  },
  "stage": {

@@ -25,8 +25,10 @@ bash sim/make-source.sh   # builds this worktree, scans both repos with --story,
 `make-source.sh` writes `sim/source/out-{hyperfine,cjson}/` (gitignored) and fails closed unless the
 canvas is `viewBox="0 0 1400 718"` (the approved full-bleed composition). The sim data is built from
 Perfpal's own `atlas-layout.json` (`--story`) plus `metrics.json` by `sim/from-layout.py`; **no HTML is
-read**. Each data file embeds the layout artifact's SHA-256 in `source.sha256`. This keeps the sim
-independent of whatever the shared `perfpal-test/out-*` directories contain at any moment.
+read**. Each data file embeds the layout artifact's SHA-256 in `source.sha256` and a canonical
+`source.metricsContentSha256` (metrics bytes with `scan.started_at`/`scan.duration_ms` stripped, so two
+scans of the same tree produce byte-identical data). This keeps the sim independent of whatever the
+shared `perfpal-test/out-*` directories contain at any moment.
 
 | Case | Source render | Nodes / edges / hulls / columns / path |
 |---|---|---|

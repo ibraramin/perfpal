@@ -25,6 +25,23 @@ from pathlib import Path
 CASES = (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson"))
 
 
+def content_sha256(value: object) -> str:
+    """Hash canonical JSON with scan provenance removed.
+
+    ``metrics.json`` carries ``scan.started_at`` and ``scan.duration_ms``, which
+    change on every run. The story data must stay byte-identical across scans
+    of the same tree, so that block is stripped before hashing; the field is
+    named ``metricsContentSha256`` rather than the file bytes' hash.
+    """
+    probe = json.loads(json.dumps(value))
+    scan = probe.get("scan")
+    if isinstance(scan, dict):
+        for key in ("started_at", "duration_ms"):
+            scan.pop(key, None)
+    payload = json.dumps(probe, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(payload).hexdigest()
+
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -147,7 +164,7 @@ def build(case: str, out_dir: Path) -> dict:
             "artifact": "atlas-layout.json",
             "layoutVersion": layout["layout_version"],
             "sha256": sha256(layout_bytes),
-            "metricsSha256": sha256(metrics_bytes),
+            "metricsContentSha256": content_sha256(metrics),
         },
         "meta": {
             "entry": meta["entry_text"],
