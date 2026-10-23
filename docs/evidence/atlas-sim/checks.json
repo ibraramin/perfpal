@@ -81,7 +81,7 @@
       "ok": true
     },
     {
-      "check": "server answers on :8769",
+      "check": "server answers on :8770",
       "detail": "",
       "ok": true
     },
@@ -137,7 +137,7 @@
     },
     {
       "check": "hyperfine: loop keyframe",
-      "detail": "249607 bytes",
+      "detail": "249974 bytes",
       "ok": true
     },
     {
@@ -157,7 +157,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "351",
+      "detail": "352",
       "ok": true
     },
     {
@@ -197,17 +197,17 @@
     },
     {
       "check": "hyperfine: start keyframe",
-      "detail": "242259 bytes",
+      "detail": "242655 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: mid keyframe",
-      "detail": "235724 bytes",
+      "detail": "236094 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: end keyframe",
-      "detail": "246826 bytes",
+      "detail": "247213 bytes",
       "ok": true
     },
     {
@@ -267,7 +267,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "128406 bytes",
+      "detail": "130543 bytes",
       "ok": true
     },
     {
@@ -292,7 +292,7 @@
     },
     {
       "check": "cjson: play advances the clock",
-      "detail": "354",
+      "detail": "353",
       "ok": true
     },
     {
@@ -332,17 +332,17 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "129831 bytes",
+      "detail": "131970 bytes",
       "ok": true
     },
     {
       "check": "cjson: mid keyframe",
-      "detail": "129982 bytes",
+      "detail": "132116 bytes",
       "ok": true
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "133603 bytes",
+      "detail": "135748 bytes",
       "ok": true
     },
     {
@@ -382,7 +382,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "67103 bytes",
+      "detail": "67085 bytes",
       "ok": true
     },
     {
@@ -412,7 +412,7 @@
     },
     {
       "check": "empty: state keyframe",
-      "detail": "64132 bytes",
+      "detail": "64090 bytes",
       "ok": true
     },
     {
@@ -442,7 +442,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "71309 bytes",
+      "detail": "71294 bytes",
       "ok": true
     },
     {
