@@ -708,7 +708,10 @@ fn render_weight_drill(
         out.push_str("</tbody>\n</table>\n</div>\n");
     }
     out.push_str(
-        "<p class=\"atlas-caption\">Component rows are approximate prefix groups; the non-production band in the brief counts the rest.</p>\n",
+        "<p class=\"atlas-caption\">Component rows are approximate prefix groups; each share includes every member file, including non-production members.</p>\n",
+    );
+    out.push_str(
+        "<p><a href=\"#explorer\">Explorer — legacy static chart stems</a> (the deferred treemap would live here).</p>\n",
     );
     out.push_str("</section>\n");
 }
