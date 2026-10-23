@@ -1,27 +1,32 @@
 # Active Context
 
 ## Current Task
-**Atlas steps 2–4 GREEN (2026-10-23).** The ratified build landed: `src/reporter/atlas.rs` (pure
-view model), `src/reporter/atlas_metrics.rs` (M-01…M-18 display contract), and
-`src/reporter/atlas_render.rs` (deterministic static SVG + animated HTML canvas), each with unit
-tests. Commits `fe58299` (view model), `f76a63b` (metrics), `3fa7c07` (canvas), `5e6b45e`/`6c0f0f3`
-(review fixes). **No schema change, no `#map` wiring, no new JS/dependency, no holdout reads.**
-- **Review panel:** R1 correctness, R2 contract, Q1 scope and Q2 evidence all **APPROVED** on
-  `6c0f0f3`; zero unresolved blocking findings.
-- **Residuals (recorded):** dynamic canvas height can exceed the 1440×900 canonical first
-  viewport/print page-1/A1 frame for very deep paths (A2/vision judge); pausing during the initial
-  1.2s reveal freezes the current frame; step-7 integration tests and step-8 vision gate remain.
+**Atlas steps 5–6 GREEN (2026-10-23).** `src/reporter/atlas_brief.rs` now renders the fixed
+seven-block below-graph brief + the Q2 reverse drill + complete weight detail + schema-component
+page links, and `report.html#map` is wired as **canvas → brief → drills** (commits `672e4b6`,
+review fixes `a2a4c99`). The Explorer section and the single fixed `REPORT_SCRIPT` are unchanged;
+no schema, no new JS/dependency, no holdout reads.
+- **Review round 1:** R2/Q1 blockers were real and are fixed — plural `hot paths` sanitization,
+  identifier preservation, the library-only "no forward path" claim, schema-component page links
+  (Python root/pkg now resolve), stale plan/state, and the A8 canvas (entry/HOTTEST/path) and A9
+  integration assertions. Q2 independently reproduced every gate command on `672e4b6`.
+- **Gate:** fmt / clippy / `cargo test --locked` (54 suites) / `cargo deny check licenses` /
+  semantic-clang clippy+test all exit 0; schema diff empty; only the four `report.html` goldens moved.
+- **Deferred (recorded):** the `weight-treemap` Explorer stem (Explorer kept unchanged this
+  session; the weight detail links to `#explorer`); step-7 remaining suites/goldens; step-8 V8
+  vision; dynamic canvas height vs 1440×900/print/A2; pause-at-t0.
 - **Structural edges (D-pf-241):** ADR-0009 option A — LOW name-based + MEDIUM semantic, labelled
   structural, `N MEDIUM / M LOW` mix printed, never `resolved`/`reachable_from_entry`.
 - **A8 amendment (D-pf-242):** first block = canvas carrying **entry + HOTTEST + path**; the one
   `path:line` action is in the first scroll (answer line + KV1).
 - **A12 (D-pf-243):** exactly one fixed existing `REPORT_SCRIPT` (unchanged); Atlas canvas/SVG/
-  animation add zero scripts, zero handlers, zero network; CSS keyframes/SMIL only.
-- **A2 library holdout pre-registered (A-pf-116):** published `memchr` crate payload @
-  `bd6068c30e9074a90c285e47912fa0b047d07597`; root crate has no bin/build.rs/workspace; dev
-  `benchmarks/` + `fuzz/` excluded; vaulted until A2 (`docs/evidence/map-vision/v8/PREREGISTRATION.md`).
+  animation add zero scripts, zero handlers, zero network.
 
 ## Recent Decisions
+- **D-pf-245 (live, 2026-10-23):** Atlas steps 5–6 implemented and green (brief/drills + `#map`
+  wiring; A8/A9/A10/A12 integration tests; four report.html goldens; commits `672e4b6`/`a2a4c99`);
+  review round 1 fixes applied; treemap deferred by session constraint; steps 7–10 queued; no
+  schema; holdouts vaulted.
 - **D-pf-244 (live, 2026-10-23):** Atlas steps 2–4 implemented and green (view model, M-01…M-18,
   canvas; 76 unit tests; panel APPROVED on `6c0f0f3`); steps 5–6 next; no schema; holdouts vaulted.
 - **D-pf-241/242/243 (live, ratified 2026-10-23):** structural-edge option A; A8 canvas-first
@@ -33,19 +38,21 @@ tests. Commits `fe58299` (view model), `f76a63b` (metrics), `3fa7c07` (canvas), 
 - **D-pf-237/236 (cold):** entry-flow direction + prototypes; consolidation (demoted to ledger).
 
 ## In Progress
-- **Nothing active in the hot tree.** Steps 2–4 are green; the plan is still active.
-- **`atlas-build` steps 5–10 remain queued:** brief/drills, `#map` wiring, integration tests/goldens,
-  V8 vision gate, founder A2 (application + library), ship/EOL.
+- **Nothing active in the hot tree.** Steps 5–6 are green; the plan is still active.
+- **`atlas-build` steps 7–10 remain queued:** remaining integration suites/goldens, V8 vision
+  gate (all eight states incl. library/capped + strip-specific reads), founder A2 (application +
+  library), ship/EOL. The weight-treemap stays deferred.
 
 ## Next
-- **`/new` → atlas-build session 2: steps 5–6 only.**
-  - Step 5: `src/reporter/atlas_brief.rs` — the fixed seven below-graph blocks + Q2 reverse drill,
-    complete action list, profile queue, weight detail, per-component pages; use `AtlasView`/
-    `atlas_metrics`; M-08 top P% must use `blast.dependent_top_pct`.
-  - Step 6: wire `report.html#map` (canvas first, brief below, answer line in the first scroll; keep
-    Explorer and the single fixed `REPORT_SCRIPT`); no new JS; no schema.
-- **Read first:** `docs/plans/atlas-build.md`, `atlas-metrics.md`, `atlas-layout.md`, ADR-0009/0010,
-  and the three committed modules.
+- **`/new` → atlas-build session 3: steps 7–8 only** (remaining integration/goldens + V8 vision).
+  - Step 7: extend the unit/integration suites and the state-matrix fixtures; regenerate any
+    remaining goldens; keep the schema/no-new-JS/determinism locks.
+  - Step 8: render the full state matrix at 1440×900 final frames; two fresh blind `@vision`
+    reads per state (one image per task), including strip-specific reads; fix blockers and
+    re-run until A1 passes for every state.
+- **Then steps 9–10:** founder A2 (application + library, animation on) → ship/docs/EOL.
+- **Read first:** `docs/plans/atlas-build.md`, `atlas-metrics.md`, `atlas-layout.md`,
+  ADR-0009/0010, and the four modules (`atlas`, `atlas_metrics`, `atlas_render`, `atlas_brief`).
 - **Keep holdouts vaulted:** django/postgres + the `memchr` crate payload until A2; no scan/render/
   agent reads (dev `benchmarks/`/`fuzz/` excluded).
 - **Agent report track** remains queued (A-pf-111).
