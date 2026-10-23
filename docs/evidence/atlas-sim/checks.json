@@ -157,7 +157,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "352",
+      "detail": "349",
       "ok": true
     },
     {
@@ -197,17 +197,17 @@
     },
     {
       "check": "hyperfine: start keyframe",
-      "detail": "242655 bytes",
+      "detail": "242727 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: mid keyframe",
-      "detail": "236148 bytes",
+      "detail": "236169 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: end keyframe",
-      "detail": "247213 bytes",
+      "detail": "247288 bytes",
       "ok": true
     },
     {
@@ -267,7 +267,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "130525 bytes",
+      "detail": "130545 bytes",
       "ok": true
     },
     {
@@ -292,7 +292,7 @@
     },
     {
       "check": "cjson: play advances the clock",
-      "detail": "352",
+      "detail": "351",
       "ok": true
     },
     {
@@ -332,7 +332,7 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "131898 bytes",
+      "detail": "131873 bytes",
       "ok": true
     },
     {
@@ -342,7 +342,7 @@
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "135679 bytes",
+      "detail": "135655 bytes",
       "ok": true
     },
     {
@@ -382,7 +382,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "67105 bytes",
+      "detail": "67032 bytes",
       "ok": true
     },
     {
@@ -412,7 +412,7 @@
     },
     {
       "check": "empty: state keyframe",
-      "detail": "64063 bytes",
+      "detail": "64135 bytes",
       "ok": true
     },
     {
@@ -442,7 +442,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "71311 bytes",
+      "detail": "71237 bytes",
       "ok": true
     },
     {
