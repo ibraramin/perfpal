@@ -32,10 +32,10 @@ Produce the JS/TS backend specification, execution plan, ADR, Phase 0 inventory 
 | No untracked production code | `git status --porcelain --untracked-files=all -- src tests Cargo.toml Cargo.lock deny.toml` | empty; `NO_UNTRACKED_CODE_OK` | 0 |
 | No A-owned surface or main-state diff | `git diff --quiet 3a84a0e -- 'src/reporter/atlas*' src/reporter/views.rs src/reporter/mod.rs 'docs/specs/atlas-*' tests/atlas_fixtures state/session-state.json state/handoff/latest.md` | empty; `NO_A_SURFACE_DIFF_OK` | 0 |
 | Base is an ancestor of HEAD | `git merge-base --is-ancestor 821b984 HEAD` | `BASE_ANCESTOR_OK` | 0 |
-| Branch tip vs moving `main` | `git rev-parse --short HEAD main` | `3a84a0e` / `189df91` — main advanced (A step 11); B2 rebases | 0 |
+| Branch tip vs moving `main` | `git rev-parse --short HEAD main` | `9c3b0b4` / `189df91` — main advanced (A step 11); B2 rebases | 0 |
 | Track-state counts | `jq -c '{decisions:(.decisions\|length),risks:(.open_risks\|length),blockers:(.blocked_by\|length),next:(.next_actions\|length),artifacts:(.artifacts\|length)}' state/tracks/js-ts/session-state.json` | `{"decisions":11,"risks":13,"blockers":3,"next":6,"artifacts":7}` | 0 |
 | Hot-state budget | `test "$(wc -c < state/tracks/js-ts/session-state.json)" -le 8192` | 8,175 bytes; `STATE_BUDGET_OK` | 0 |
-| Uncommitted block matches reality | `git status --short` | ` M docs/tracks/js-ts.md` + `?? docs/adr/ADR-0011-js-ts-backend.md`, `?? docs/architecture/js-ts.md`, `?? docs/plans/js-ts.md`, `?? docs/specs/js-ts.md`, `?? state/tracks/` | 0 |
+| B1 commit contains no code | `git show --stat --oneline 9c3b0b4` | 7 files: 5 docs + 2 state; zero `src/`, `Cargo*`, `deny.toml`, `tests/` paths | 0 |
 
 Non-runnable evidence (external verification, fetched during B1):
 
@@ -105,16 +105,11 @@ Full text: `state/tracks/js-ts/session-state.json`.
 ## Uncommitted files
 
 ```
- M docs/tracks/js-ts.md
-?? docs/adr/ADR-0011-js-ts-backend.md
-?? docs/architecture/js-ts.md
-?? docs/plans/js-ts.md
-?? docs/specs/js-ts.md
-?? state/tracks/
+(clean — B1 artifacts committed as 9c3b0b4; this handoff-hash update is the only follow-up)
 ```
 
 ## Commits (this session)
 
-- none — awaiting founder approval (Track B rule: commit only with explicit go-ahead).
+- `9c3b0b4` — docs(js-ts): B1 Phase 0 spec, plan, ADR-0011, inventory + track state.
 
-**Resume in a fresh session:** plan `js-ts`, next task **B2-W0** (grammar pins + canary), commit `<none yet>`.
+**Resume in a fresh session:** plan `js-ts`, next task **B2-W0** (grammar pins + canary), commit `9c3b0b4`.
