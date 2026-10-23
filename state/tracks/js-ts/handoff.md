@@ -157,26 +157,13 @@ zero for v1 (no TS-only candidate was proven).
 ## Uncommitted files
 
 ```
-M  Cargo.toml
-M  Cargo.lock
-M  docs/architecture/js-ts.md
-M  docs/plans/js-ts.md
-M  docs/specs/js-ts.md
-M  docs/tracks/js-ts.md
-M  docs/tracks/README.md
-M  state/tracks/js-ts/session-state.json
-M  state/tracks/js-ts/handoff.md
-?? docs/evidence/js-canary.md
-?? docs/evidence/js-canary/run.sh
-?? docs/evidence/js-canary/canary_results.json
-?? tools/js_canary.rs
-?? tests/javascript_grammar_link.rs
-?? tests/typescript_grammar_link.rs
+(clean — W0 artifacts committed as 6a3b7b1; this handoff-hash update is the follow-up)
 ```
 
 ## Commits (this session)
 
-- `B2-W0` — grammar pins + link tests + canary + frozen catalog (this change; hash appended after commit).
+- `6a3b7b1` — feat(js-ts): B2-W0 pin JS/TS grammars and freeze rule catalog.
+- `docs(js-ts): record B2-W0 commit hash in track handoff` — this follow-up (hash not self-recorded).
 
 **Resume in a fresh session:** plan `js-ts`, next task **B2-W1** (JS backend), branch `feat/js-ts`
-rebased on `main` @ `189df91`, W0 commit `<pending>`.
+rebased on `main` @ `189df91`, W0 commit `6a3b7b1`.
