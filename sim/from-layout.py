@@ -139,8 +139,17 @@ def build(case: str, out_dir: Path) -> dict:
 
     if layout.get("layout_version") != 1:
         raise SystemExit(f"{layout_path}: unsupported layout_version {layout.get('layout_version')!r}")
-    if layout.get("canvas") != {"w": 1400, "h": 718}:
-        raise SystemExit(f"{layout_path}: unexpected canvas {layout.get('canvas')} (expected 1400x718)")
+    canvas = layout.get("canvas") or {}
+    height = canvas.get("h")
+    if (
+        canvas.get("w") != 1400
+        or not isinstance(height, int)
+        or not 480 <= height <= 20_000
+    ):
+        raise SystemExit(
+            f"{layout_path}: unexpected canvas {canvas} "
+            "(expected width 1400 and height 480..20000; the approved fixtures are 718)"
+        )
 
     state = layout["state"]
     meta = layout["meta"]

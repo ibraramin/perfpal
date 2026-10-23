@@ -581,6 +581,24 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
         );
     }
 
+    for (index, column) in columns.iter().enumerate() {
+        let centre = column["x"].as_i64().expect("column x");
+        let width = column["width"].as_i64().expect("column width");
+        for node in nodes
+            .iter()
+            .filter(|node| node["column"].as_u64() == Some(index as u64))
+        {
+            let node_x = node["x"].as_i64().expect("node x");
+            let node_w = node["w"].as_i64().expect("node w");
+            assert_eq!(
+                node_x + node_w / 2,
+                centre,
+                "column header centre must equal the node centre: {column} vs {node}"
+            );
+        }
+        assert!(width > 0, "column width must be positive: {column}");
+    }
+
     for node in nodes {
         assert!(node["cost"].as_i64().is_some(), "node cost missing: {node}");
         let column = node["column"].as_u64().expect("node column");

@@ -20,7 +20,8 @@ export PATH="$HOME/.cargo/bin:$PATH"
   echo "Date: $(date -I)"
   echo "Worktree: $ROOT"
   echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
-  echo "Commit: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
+  echo "Code commit: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
+  echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence."
   echo
 
   echo "## 1. Format, lint, tests"
@@ -73,7 +74,7 @@ case = sys.argv[1]
 d = json.load(open(f"/var/tmp/opencode/gate-on/{case}/atlas-layout.json"))
 print("canvas", d["canvas"], "nodes", len(d["nodes"]), "edges", len(d["edges"]),
       "stages", len(d["stages"]), "findings", f'{d["meta"]["findings_included"]}/{d["meta"]["findings_total"]}')
-print("columns", [(c["depth"], c["x"], c["label"], c["count_text"]) for c in d["columns"]][:4])
+print("columns", [(c["depth"], c["x"], c["width"], c["label"], c["count_text"]) for c in d["columns"]])
 PY
     echo
   done
@@ -103,7 +104,7 @@ PY
   echo "\$ SIM_PORT=$PORT python3 sim/verify.py"
   SIM_PORT="$PORT" python3 sim/verify.py 2>&1 | tail -3; echo "exit=${PIPESTATUS[0]}"
   echo
-  echo "## 5. No production scope leak"
+  echo "## 5. Worktree clean (scope containment is proven in section 2)"
   echo '$ git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock'
   git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock
   echo "lines=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)"

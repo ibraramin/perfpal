@@ -95,40 +95,58 @@
 
 ## S1 record (2026-10-24) — P4 + P5, status `prototype`
 
-- **Commits:** `5faacb7` (core), `deb2cc2` (sim + docs), plus the post-panel geometry fix
-  (`git log --grep 'panel blockers'`). P4 and P5 share one emitter and ship together — a **recorded
-  deviation** from the one-probe-per-commit rule; neither is independently useful.
+- **Commits (each reproducible with `git show --stat <sha>`):**
+  - `5faacb7` — core emitter + tests: `src/cli/mod.rs` +9, `src/reporter/atlas.rs` +49/−6,
+    `src/reporter/atlas_layout.rs` (new), `src/reporter/atlas_render.rs` +328/−124,
+    `src/reporter/mod.rs` +20, `tests/pipeline_e2e.rs` +49.
+  - `996d47e` — panel fixes: column geometry (header centre + width + label/count_text), provenance,
+    `sim/gate.sh`, e2e invariants (16 files).
+  - `462f4f4` — stable metrics content hash across scans (4 files).
+- **Deviations (recorded, not silent):**
+  1. **P4 + P5 share one emitter and shipped in one commit.** The one-probe-per-commit rule is waived
+     because neither is independently useful; cherry-pick the pair.
+  2. **`stages` live in `atlas-layout.json`, not the `flow` block.** Spec §4 corrected 2026-10-24.
+  3. **CLI is `--story` on the existing command.** `perfpal story <repo>` remains the S4 entry point.
+  4. **The artifact carries more than geometry:** presentation strings, state flags, top functions and
+     KV1 actions. The beats need them; re-deriving them in the sim would be a second source of truth.
 - **Emitted by:** `perfpal <repo> -o <dir> --story` → `atlas-layout.json` (story-only; no other
-  artifact changes). The target entry point `perfpal story <repo>` is S4; until then the flag is the
-  shipped interface (recorded deviation).
-- **Fields:** `canvas`; `columns[]` (depth, **x = the SVG header centre**, width, label, count_text,
-  unreached, folded, file_count, nonproduction_unreached); `hulls[]`; `nodes[]` (rect, column, depth,
-  drawn_depth, entry/hottest/unreached/production, path_step, partial_parse,
-  fill/stroke/stroke_width/dash, badge, cost, cost_text, ratio_text, top_text,
-  findings{hot,warn,info}, functions[] with
-  loop_depth/trip_source/unknown_trip_loops/fan_in/fan_out/recursive); `edges[]` (from, to, **d = the
-  SVG path**, count, back, on_path); `aggregates[]`; `cap_chips[]`; `stages[]` (order, label, depth,
-  files, leaf); `actions[]` (KV1); `meta` (entry/hottest/path/caps/footer text, findings counts);
-  `state` (the seven flags).
+  artifact changes).
+- **Fields (complete):**
+  - top level: `layout_version`, `canvas{w,h}` (height is layout-dependent; the approved fixtures are
+    1400×718, deep paths grow it), `meta{entry_text, hottest_path, hottest_text, path_text, caps_text,
+    footer_text, findings_included, findings_total}`, `state{empty,no_entry,library,all_test,capped,
+    partial_parse,single_file}`.
+  - `columns[]{depth,x,width,label,count_text,unreached,folded,file_count,nonproduction_unreached}` —
+    `x` is the **SVG header centre**, not the column's left edge.
+  - `hulls[]{x,y,w,h,label}`.
+  - `nodes[]{path,name,x,y,w,h,column,depth,drawn_depth,entry,hottest,unreached,production,path_step,
+    partial_parse,fill,stroke,stroke_width,dash,badge,cost,cost_text,ratio_text,top_text,
+    findings{hot,warn,info},functions[]{id,name,line,cost,loop_depth,trip_source,unknown_trip_loops,
+    fan_in,fan_out,recursive}}`.
+  - `edges[]{from,to,d,count,back,on_path}` — `d` is the SVG path.
+  - `aggregates[]{column,x,y,w,h,count,incoming_calls}`.
+  - `cap_chips[]{column,x,y,w,h,production_unreached,nonproduction_unreached}`.
+  - `stages[]{order,label,depth,files,leaf}`.
+  - `actions[]{location,rule,function,severity_confidence,production,cost_anchor}` (KV1).
 - **Shared layout math:** `compute_layout`, `edge_shape`, `hull_boxes`, `aggregate_rect`,
   `cap_chip_rect`, `node_style`, `node_rank_lines`, `node_badges`, `column_header_lines` live in
   `atlas_render.rs` and are used by both the SVG and the JSON. No geometry is recomputed.
 - **Additive proof (`docs/evidence/atlas-sim/GATE.txt`):** `report.html` byte-identical with/without
   `--story` on hyperfine and cJSON; `metrics.json` content-equal after removing
   `scan.duration_ms`/`scan.started_at`.
-- **Output:** canvas 1400×718; hyperfine 19 nodes / 49 edges / 3 stages, findings 148/348; cJSON
-  7 nodes / 5 edges / 2 stages, findings 153/837.
+- **Output (fixtures):** hyperfine 19 nodes / 49 edges / 3 stages, findings 148/348; cJSON 7 / 5 / 2,
+  153/837.
 - **Definitions pinned:** `findings_included` = sum of severity counts on drawn nodes (the converter
   asserts it); `stages` = one per `view.path` step, first `ENTRY`, last `leaf`.
-- **Post-panel fix:** the first cut emitted `columns[].x` as the column's left edge while the SVG draws
-  the header at its centre (90 px drift; caught by review lane R1). Columns now carry the header centre
-  plus width and the renderer's own label/count-text helper. **Follow-up:** add a DOM-vs-JSON geometry
-  parity test so this class of drift cannot recur silently.
-- **Real implementation must do:** P5 = keep one layout function with two outputs (never fork into the
-  story); P4 = extend stages to multi-entry/scene order in S4; both stay story-only until the `flow`
-  block graduates.
+- **Post-panel fix:** the first cut emitted `columns[].x` as the left edge while the SVG draws headers at
+  the centre (90 px drift; caught by R1). Now shared. **Follow-up:** the e2e test asserts
+  `node.x + node.w/2 == column.x`; keep it.
+- **Real implementation must do:** P5 = one layout function with two outputs (never fork into the
+  story); P4 = extend stages to multi-entry/scene order in S4; both stay story-only until `flow`
+  graduates.
 - **Known limits:** `--story` builds the view twice (single-pass later); no data-movement fields yet
-  (P1–P3 = S2/S3); `aggregates`/`cap_chips` have no fixture with a capped/aggregated column.
+  (P1–P3 = S2/S3); no fixture with a capped/aggregated column; the JSON carries pre-fit header text
+  while the SVG applies `fit_header_line` (equal today, may diverge at 11 columns).
 
 ## Status legend
 

@@ -49,8 +49,9 @@ define what an action is (`docs/specs/map-intelligibility.md:93-95`).
 ## 4. Data contract (Perfpal core owns it)
 
 All story data comes from the Perfpal scan. The story renders from core-emitted JSON:
-`metrics.json` (existing `AtlasView`), **`atlas-layout.json`** (geometry, derived `stages`, KV1 actions,
-drawn/scan findings counts — `--story` only) and, from S2, an optional **`flow`** block for data
+`metrics.json` (existing `AtlasView`), **`atlas-layout.json`** (geometry, the presentation strings the
+SVG renders, state flags, top functions, derived `stages`, KV1 actions and drawn/scan findings counts —
+`--story` only) and, from S2, an optional **`flow`** block for data
 movement. `sim/extract.py`'s HTML scraping is deleted.
 
 ```
@@ -148,3 +149,5 @@ Each slice = one commit per probe + evidence + probe-registry row status flip.
    amendment (A12 already permits CSS/SMIL, not a second script).
 4. **CLI shape:** S1 ships `--story` on the existing command; the target entry point remains
    `perfpal story <repo>` (S4). Recorded as a deviation in `docs/atlas/core-probes.md`.
+5. **`stages` placement:** derived stages ship inside `atlas-layout.json` (they are a projection of the
+   same layout), not in the `flow` block; §4 was corrected 2026-10-24.
