@@ -13,20 +13,20 @@ python3 -m http.server 8768 --directory sim   # then open http://127.0.0.1:8768/
 
 ## Provenance (read this first)
 
-The extraction is only reproducible against a **known render**. During D1 the external fixture
+The data is only reproducible against a **known Perfpal build**. During D1 the external fixture
 directory `/home/shafin/Opencode/perfpal-test/out-atlas-v2-*` was overwritten (02:06) by a newer
 build from a different worktree — that render has an 868px canvas plus a right rail and does **not**
 match this worktree's committed step-10 layout. The prototype therefore pins its own source:
 
 ```bash
-bash sim/make-source.sh        # builds this worktree + scans the two fixture repos
-python3 sim/extract.py         # -> sim/data-*.json (byte-stable)
+bash sim/make-source.sh   # builds this worktree, scans both repos with --story, rebuilds sim/data-*.json
 ```
 
 `make-source.sh` writes `sim/source/out-{hyperfine,cjson}/` (gitignored) and fails closed unless the
-canvas is `viewBox="0 0 1400 718"` (the approved full-bleed composition). `extract.py` parses the
-viewBox and fails closed on any unexpected stage size. This keeps the sim independent of whatever
-the shared `perfpal-test/out-*` directories contain at any moment.
+canvas is `viewBox="0 0 1400 718"` (the approved full-bleed composition). The sim data is built from
+Perfpal's own `atlas-layout.json` (`--story`) plus `metrics.json` by `sim/from-layout.py`; **no HTML is
+read**. Each data file embeds the layout artifact's SHA-256 in `source.sha256`. This keeps the sim
+independent of whatever the shared `perfpal-test/out-*` directories contain at any moment.
 
 | Case | Source render | Nodes / edges / hulls / columns / path |
 |---|---|---|
@@ -49,7 +49,7 @@ d42564a03db5977541a60c62b8a43e8f412c0ea5d4b27b0d2864a7e0870dad22  data-index.jso
 | File | Role |
 |---|---|
 | `sim/index.html`, `sim/sim.css`, `sim/sim.js` | The prototype: masthead + transport, honesty strip, 3-row key strip, SVG stage, inspector rail (overlay), narration, canvas footer. |
-| `sim/extract.py` | Stdlib-only extractor: geometry from `report.html` (nodes, edges, hulls, columns incl. `UNREACHED`, path badges, footer, strip) + function/loop/finding detail from `metrics.json`; fail-closed structural assertions; sorted deterministic JSON. |
+| `sim/from-layout.py` | Stdlib-only mapper: reads Perfpal's `atlas-layout.json` (geometry, badges, strip text, state flags, stages, actions) + `metrics.json` (drawn-file findings) and writes `sim/data-<case>.json`; asserts the drawn-findings count equals the core's `findings_included`, records the layout SHA-256, sorted deterministic JSON. |
 | `sim/make-source.sh` | Builds this worktree and regenerates the two source renders into `sim/source/`. |
 | `sim/verify.py` | Playwright gate: serves `:8768`, drives every control, checks honesty/no-time/no-network, captures keyframes, writes `checks.json`. |
 | `sim/data-*.json` | Generated replay data (two real scans + three labelled synthetic state demos: no-forward-path, empty, capped). |
@@ -101,7 +101,8 @@ Run: `python3 sim/verify.py` (it starts and stops its own server on `:8768`).
 
 | Claim | Check | Result |
 |---|---|---|
-| Data extraction is deterministic | `extract.py` twice + `sha256sum` diff | identical (6/6 files) |
+| Data build is deterministic | `from-layout.py` twice + `sha256sum` diff | identical (6/6 files) |
+| Data comes from Perfpal core | `source.sha256` in `data-*.json` vs `source/out-*/atlas-layout.json` | match, no HTML input |
 | Gate | `python3 sim/verify.py` | **101/101 checks, exit 0** |
 | Loop honesty | loop-beat narration | contains `Inferred trip weight, not measured iterations` |
 | Function highlight | loop-beat node bottom line | `▶ <function> · L<line>` in orange, both cases |

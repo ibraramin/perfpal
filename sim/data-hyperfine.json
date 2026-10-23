@@ -1,3608 +1,3070 @@
 {
-  "case": "hyperfine",
-  "columns": [
-    {
-      "countText": "1 file",
-      "depth": 0,
-      "label": "depth 0 · ENTRY",
-      "order": 0,
-      "unreached": false,
-      "x": 250
-    },
-    {
-      "countText": "5 files",
-      "depth": 1,
-      "label": "depth 1",
-      "order": 1,
-      "unreached": false,
-      "x": 430
-    },
-    {
-      "countText": "6 files",
-      "depth": 2,
-      "label": "depth 2",
-      "order": 2,
-      "unreached": false,
-      "x": 610
-    },
-    {
-      "countText": "5 files",
-      "depth": 3,
-      "label": "depth 3",
-      "order": 3,
-      "unreached": false,
-      "x": 790
-    },
-    {
-      "countText": "2 files",
-      "depth": 4,
-      "label": "depth 4",
-      "order": 4,
-      "unreached": false,
-      "x": 970
-    },
-    {
-      "countText": "no forward path",
-      "depth": 5,
-      "label": "UNREACHED",
-      "order": 5,
-      "unreached": true,
-      "x": 1150
-    }
-  ],
-  "edges": [
-    {
-      "back": false,
-      "className": "forward",
-      "count": 2,
-      "d": "M 325 112 C 345 112 335 112 355 112",
-      "from": "src/main.rs",
-      "onPath": true,
-      "order": 0,
-      "to": "src/command.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 325 112 C 345 112 335 217 355 217",
-      "from": "src/main.rs",
-      "onPath": false,
-      "order": 1,
-      "to": "src/options.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 2,
-      "d": "M 325 112 C 345 112 335 322 355 322",
-      "from": "src/main.rs",
-      "onPath": false,
-      "order": 2,
-      "to": "src/shell_syntax.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 2,
-      "d": "M 325 112 C 345 112 335 427 355 427",
-      "from": "src/main.rs",
-      "onPath": false,
-      "order": 3,
-      "to": "src/benchmark/scheduler.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 325 112 C 345 112 335 532 355 532",
-      "from": "src/main.rs",
-      "onPath": false,
-      "order": 4,
-      "to": "src/cli.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 4,
-      "d": "M 505 112 C 549 112 549 532 505 532",
-      "from": "src/command.rs",
-      "onPath": false,
-      "order": 5,
-      "to": "src/cli.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 6,
-      "d": "M 505 112 C 525 112 515 112 535 112",
-      "from": "src/command.rs",
-      "onPath": true,
-      "order": 6,
-      "to": "src/metric.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 12,
-      "d": "M 505 112 C 525 112 515 427 535 427",
-      "from": "src/command.rs",
-      "onPath": false,
-      "order": 7,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 2,
-      "d": "M 505 217 C 541 217 541 112 505 112",
-      "from": "src/options.rs",
-      "onPath": false,
-      "order": 8,
-      "to": "src/command.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 6,
-      "d": "M 505 217 C 525 217 515 112 535 112",
-      "from": "src/options.rs",
-      "onPath": false,
-      "order": 9,
-      "to": "src/metric.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 4,
-      "d": "M 505 217 C 525 217 515 427 535 427",
-      "from": "src/options.rs",
-      "onPath": false,
-      "order": 10,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 505 217 C 525 217 515 532 535 532",
-      "from": "src/options.rs",
-      "onPath": false,
-      "order": 11,
-      "to": "src/quantity/statistics.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 505 322 C 537 322 537 112 505 112",
-      "from": "src/shell_syntax.rs",
-      "onPath": false,
-      "order": 12,
-      "to": "src/command.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 505 322 C 525 322 515 112 535 112",
-      "from": "src/shell_syntax.rs",
-      "onPath": false,
-      "order": 13,
-      "to": "src/metric.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 2,
-      "d": "M 505 427 C 541 427 541 112 505 112",
-      "from": "src/benchmark/scheduler.rs",
-      "onPath": false,
-      "order": 14,
-      "to": "src/command.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 505 427 C 537 427 537 217 505 217",
-      "from": "src/benchmark/scheduler.rs",
-      "onPath": false,
-      "order": 15,
-      "to": "src/options.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 505 427 C 537 427 537 532 505 532",
-      "from": "src/benchmark/scheduler.rs",
-      "onPath": false,
-      "order": 16,
-      "to": "src/cli.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 505 427 C 525 427 515 322 535 322",
-      "from": "src/benchmark/scheduler.rs",
-      "onPath": false,
-      "order": 17,
-      "to": "src/benchmark/executor.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 505 427 C 525 427 515 427 535 427",
-      "from": "src/benchmark/scheduler.rs",
-      "onPath": false,
-      "order": 18,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 2,
-      "d": "M 505 427 C 525 427 515 637 535 637",
-      "from": "src/benchmark/scheduler.rs",
-      "onPath": false,
-      "order": 19,
-      "to": "src/export/mod.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 505 532 C 525 532 515 217 535 217",
-      "from": "src/cli.rs",
-      "onPath": false,
-      "order": 20,
-      "to": "tests/execution_order_tests.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 4,
-      "d": "M 685 112 C 729 112 549 112 505 112",
-      "from": "src/metric.rs",
-      "onPath": false,
-      "order": 21,
-      "to": "src/command.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 4,
-      "d": "M 685 112 C 729 112 729 427 685 427",
-      "from": "src/metric.rs",
-      "onPath": false,
-      "order": 22,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 5,
-      "d": "M 685 112 C 733 112 733 532 685 532",
-      "from": "src/metric.rs",
-      "onPath": false,
-      "order": 23,
-      "to": "src/quantity/statistics.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 685 217 C 717 217 717 112 685 112",
-      "from": "tests/execution_order_tests.rs",
-      "onPath": false,
-      "order": 24,
-      "to": "src/metric.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 685 217 C 717 217 717 427 685 427",
-      "from": "tests/execution_order_tests.rs",
-      "onPath": false,
-      "order": 25,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 685 217 C 705 217 695 112 715 112",
-      "from": "tests/execution_order_tests.rs",
-      "onPath": false,
-      "order": 26,
-      "to": "tests/common.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 4,
-      "d": "M 685 322 C 729 322 549 112 505 112",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 27,
-      "to": "src/command.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 3,
-      "d": "M 685 322 C 725 322 545 217 505 217",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 28,
-      "to": "src/options.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 3,
-      "d": "M 685 322 C 725 322 725 112 685 112",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 29,
-      "to": "src/metric.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 685 322 C 717 322 717 217 685 217",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 30,
-      "to": "tests/execution_order_tests.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 4,
-      "d": "M 685 322 C 729 322 729 427 685 427",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 31,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 685 322 C 705 322 695 217 715 217",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 32,
-      "to": "src/output/progress_bar.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 685 322 C 705 322 695 322 715 322",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 33,
-      "to": "src/timer/mod.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 685 322 C 705 322 695 532 715 532",
-      "from": "src/benchmark/executor.rs",
-      "onPath": false,
-      "order": 34,
-      "to": "src/util/exit_code.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 5,
-      "d": "M 685 427 C 733 427 553 112 505 112",
-      "from": "src/benchmark/measurement.rs",
-      "onPath": false,
-      "order": 35,
-      "to": "src/command.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 4,
-      "d": "M 685 427 C 729 427 729 532 685 532",
-      "from": "src/benchmark/measurement.rs",
-      "onPath": false,
-      "order": 36,
-      "to": "src/quantity/statistics.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 685 427 C 705 427 695 427 715 427",
-      "from": "src/benchmark/measurement.rs",
-      "onPath": false,
-      "order": 37,
-      "to": "src/quantity/mod.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 685 427 C 705 427 695 532 715 532",
-      "from": "src/benchmark/measurement.rs",
-      "onPath": false,
-      "order": 38,
-      "to": "src/util/exit_code.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 2,
-      "d": "M 685 532 C 721 532 541 112 505 112",
-      "from": "src/quantity/statistics.rs",
-      "onPath": false,
-      "order": 39,
-      "to": "src/command.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 685 532 C 717 532 717 427 685 427",
-      "from": "src/quantity/statistics.rs",
-      "onPath": false,
-      "order": 40,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 2,
-      "d": "M 685 637 C 721 637 721 112 685 112",
-      "from": "src/export/mod.rs",
-      "onPath": false,
-      "order": 41,
-      "to": "src/metric.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 685 637 C 717 637 717 427 685 427",
-      "from": "src/export/mod.rs",
-      "onPath": false,
-      "order": 42,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 865 217 C 897 217 717 112 685 112",
-      "from": "src/output/progress_bar.rs",
-      "onPath": false,
-      "order": 43,
-      "to": "src/metric.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 865 217 C 897 217 717 427 685 427",
-      "from": "src/output/progress_bar.rs",
-      "onPath": false,
-      "order": 44,
-      "to": "src/benchmark/measurement.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 865 322 C 885 322 875 112 895 112",
-      "from": "src/timer/mod.rs",
-      "onPath": false,
-      "order": 45,
-      "to": "src/timer/macos_counters.rs"
-    },
-    {
-      "back": false,
-      "className": "forward",
-      "count": 1,
-      "d": "M 865 322 C 885 322 875 217 895 217",
-      "from": "src/timer/mod.rs",
-      "onPath": false,
-      "order": 46,
-      "to": "src/timer/windows_timer.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 1045 112 C 1077 112 1077 217 1045 217",
-      "from": "src/timer/macos_counters.rs",
-      "onPath": false,
-      "order": 47,
-      "to": "src/timer/windows_timer.rs"
-    },
-    {
-      "back": true,
-      "className": "back",
-      "count": 1,
-      "d": "M 1045 217 C 1077 217 1077 112 1045 112",
-      "from": "src/timer/windows_timer.rs",
-      "onPath": false,
-      "order": 48,
-      "to": "src/timer/macos_counters.rs"
-    }
-  ],
-  "findings": [
-    {
-      "line": 11,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Deep module chain (Rust)"
-    },
-    {
-      "line": 27,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "to_env_var_value",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 71,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-CALL-002",
-      "severity": "warn",
-      "symbol": "run_command_and_measure_common",
-      "title": "High cyclomatic complexity (Rust)"
-    },
-    {
-      "line": 80,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure_common",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 81,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure_common",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 93,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure_common",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 94,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure_common",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 108,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure_common",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 166,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 179,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_intermediate_command_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 179,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "run_intermediate_command_and_measure",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 218,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 219,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 224,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 265,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "calibrate",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 276,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ALLOC-001",
-      "severity": "hot",
-      "symbol": "calibrate",
-      "title": "Heap allocation inside loop (Rust)"
-    },
-    {
-      "line": 279,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-LOOP-002",
-      "severity": "hot",
-      "symbol": "calibrate",
-      "title": "Expensive setup or I/O call inside loop (Rust)"
-    },
-    {
-      "line": 288,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "calibrate",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 299,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "calibrate",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 313,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "calibrate",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 314,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "calibrate",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 314,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "calibrate",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 373,
-      "path": "src/benchmark/executor.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_command_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 14,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "serialize_exit_status",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 28,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "serialize_optional_information",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 119,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "len",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 123,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "is_empty",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 126,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-TYPE-001",
-      "severity": "warn",
-      "symbol": "push",
-      "title": "Large struct passed by value (Rust)"
-    },
-    {
-      "line": 127,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "push",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 131,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "wall_clock_times",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 136,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "time_wall_clock_mean",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 141,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "modified_zscores",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 146,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "modified_zscores",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 151,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "time_user_mean",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 151,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "time_user_mean",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 156,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "time_system_mean",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 156,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "time_system_mean",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 169,
-      "path": "src/benchmark/measurement.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "outliers_follow_the_selected_metric",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 2,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Deep module chain (Rust)"
-    },
-    {
-      "line": 39,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_benchmarks",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 41,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_benchmarks",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 42,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_benchmarks",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 48,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run_benchmarks",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 55,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "final_export",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 63,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "generate_results",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 66,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "generate_results",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 74,
-      "path": "src/benchmark/scheduler.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "generate_results",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 33,
-      "path": "src/cli.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "build_command",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 43,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "new",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 67,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "get_name",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 70,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "get_name",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 83,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "get_name_with_unused_parameters",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 86,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "get_name_with_unused_parameters",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 102,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "get_command",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 131,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "is_parameter_unused",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 148,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ALLOC-001",
-      "severity": "hot",
-      "symbol": "replace_parameters_in",
-      "title": "Heap allocation inside loop (Rust)"
-    },
-    {
-      "line": 149,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "replace_parameters_in",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 161,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "replace_parameters_in",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 161,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-STR-002",
-      "severity": "warn",
-      "symbol": "replace_parameters_in",
-      "title": "Length query recomputed in loop (Rust)"
-    },
-    {
-      "line": 165,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "replace_parameters_in",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 177,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ALLOC-001",
-      "severity": "hot",
-      "symbol": "parse_environment",
-      "title": "Heap allocation inside loop (Rust)"
-    },
-    {
-      "line": 179,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "parse_environment",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 200,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "parse_environment",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 220,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 220,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-STR-002",
-      "severity": "warn",
-      "symbol": "from_cli_arguments",
-      "title": "Length query recomputed in loop (Rust)"
-    },
-    {
-      "line": 262,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "build_from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 267,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "build_from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 306,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "build_from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 335,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-LOOP-002",
-      "severity": "hot",
-      "symbol": "build_from_cli_arguments",
-      "title": "Expensive setup or I/O call inside loop (Rust)"
-    },
-    {
-      "line": 342,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "iter",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 346,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "num_commands",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 371,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "build_parameter_scan_commands",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 381,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "build_parameter_scan_commands",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 488,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "test_build_commands_cross_product",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 526,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "test_build_parameter_list_commands",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 546,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "test_build_parameter_scan_commands",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 569,
-      "path": "src/command.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "test_build_parameter_scan_commands_named",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 13,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Module-graph cycle (Rust)"
-    },
-    {
-      "line": 14,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Module-graph cycle (Rust)"
-    },
-    {
-      "line": 15,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Module-graph cycle (Rust)"
-    },
-    {
-      "line": 16,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Module-graph cycle (Rust)"
-    },
-    {
-      "line": 19,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Deep module chain (Rust)"
-    },
-    {
-      "line": 105,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "add_exporter",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 111,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "add_exporter",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 156,
-      "path": "src/export/mod.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "write_to_file",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 39,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 42,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 48,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 49,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 50,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 58,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 76,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 77,
-      "path": "src/main.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "run",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 5,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Module-graph cycle (Rust)"
-    },
-    {
-      "line": 158,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 163,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 167,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 168,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 170,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 172,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 173,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 174,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summarize",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 203,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "parse_list",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 230,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "parse_list",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 247,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "display_unit",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 278,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "format",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 393,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ALLOC-001",
-      "severity": "hot",
-      "symbol": "large_changes_include_factors",
-      "title": "Heap allocation inside loop (Rust)"
-    },
-    {
-      "line": 420,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "cpu_time_statistics_use_per_run_totals",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 482,
-      "path": "src/metric.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "summaries_require_complete_samples",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 51,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "parse_from_str",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 234,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "default",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 245,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "default",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 254,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-002",
-      "severity": "hot",
-      "symbol": "from_cli_arguments",
-      "title": "Hot component (Rust)"
-    },
-    {
-      "line": 254,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-CALL-002",
-      "severity": "warn",
-      "symbol": "from_cli_arguments",
-      "title": "High cyclomatic complexity (Rust)"
-    },
-    {
-      "line": 275,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 304,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ALLOC-001",
-      "severity": "hot",
-      "symbol": "from_cli_arguments",
-      "title": "Heap allocation inside loop (Rust)"
-    },
-    {
-      "line": 317,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 341,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 415,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 418,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 424,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "from_cli_arguments",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 458,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "validate_against_command_list",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 463,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "validate_against_command_list",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 481,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "validate_against_command_list",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 500,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "test_platform_default_shell",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 511,
-      "path": "src/options.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "test_can_parse_shell_command_line_from_str",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 20,
-      "path": "src/output/progress_bar.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "style_with_template",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 23,
-      "path": "src/output/progress_bar.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "style_with_template",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 56,
-      "path": "src/quantity/statistics.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "median",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 105,
-      "path": "src/quantity/statistics.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "standard_deviation_f64",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 134,
-      "path": "src/quantity/statistics.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "modified_zscores_f64",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 36,
-      "path": "src/shell_syntax.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "first_unquoted_operator",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 71,
-      "path": "src/shell_syntax.rs",
-      "ruleId": "PERF-RS-CALL-002",
-      "severity": "warn",
-      "symbol": "next",
-      "title": "High cyclomatic complexity (Rust)"
-    },
-    {
-      "line": 77,
-      "path": "src/shell_syntax.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "next",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 202,
-      "path": "src/shell_syntax.rs",
-      "ruleId": "PERF-RS-ALLOC-001",
-      "severity": "hot",
-      "symbol": "finds_supported_operators_in_command_order",
-      "title": "Heap allocation inside loop (Rust)"
-    },
-    {
-      "line": 203,
-      "path": "src/shell_syntax.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "finds_supported_operators_in_command_order",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 5,
-      "path": "src/timer/macos_counters.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Deep module chain (Rust)"
-    },
-    {
-      "line": 10,
-      "path": "src/timer/macos_counters.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "wait",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 24,
-      "path": "src/timer/mod.rs",
-      "ruleId": "PERF-RS-ARCH-001",
-      "severity": "warn",
-      "symbol": "",
-      "title": "Deep module chain (Rust)"
-    },
-    {
-      "line": 64,
-      "path": "src/timer/mod.rs",
-      "ruleId": "PERF-RS-TYPE-001",
-      "severity": "warn",
-      "symbol": "execute_and_measure",
-      "title": "Large struct passed by value (Rust)"
-    },
-    {
-      "line": 87,
-      "path": "src/timer/mod.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "execute_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 97,
-      "path": "src/timer/mod.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "execute_and_measure",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 88,
-      "path": "src/timer/windows_timer.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "stop",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 20,
-      "path": "tests/execution_order_tests.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "new",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 25,
-      "path": "tests/execution_order_tests.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "new",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 32,
-      "path": "tests/execution_order_tests.rs",
-      "ruleId": "PERF-RS-CALL-001",
-      "severity": "info",
-      "symbol": "arg",
-      "title": "Direct recursion (Rust)"
-    },
-    {
-      "line": 37,
-      "path": "tests/execution_order_tests.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "get_command",
-      "title": "Cross-module call coupling (Rust)"
-    },
-    {
-      "line": 77,
-      "path": "tests/execution_order_tests.rs",
-      "ruleId": "PERF-RS-ARCH-003",
-      "severity": "info",
-      "symbol": "expect_output",
-      "title": "Cross-module call coupling (Rust)"
-    }
-  ],
-  "hulls": [
-    {
-      "h": 536,
-      "label": "src · 6",
-      "w": 526,
-      "x": 167,
-      "y": 44
-    },
-    {
-      "h": 221,
-      "label": "src/benchmark · 3",
-      "w": 346,
-      "x": 347,
-      "y": 254
-    },
-    {
-      "h": 221,
-      "label": "src/quantity · 2",
-      "w": 346,
-      "x": 527,
-      "y": 359
-    },
-    {
-      "h": 326,
-      "label": "src/timer · 3",
-      "w": 346,
-      "x": 707,
-      "y": 44
-    },
-    {
-      "h": 221,
-      "label": "tests · 2",
-      "w": 346,
-      "x": 527,
-      "y": 44
-    }
-  ],
-  "meta": {
-    "actions": [
-      {
-        "anchor": "src/output/report.rs:144",
-        "title": "Heap allocation inside loop (Rust)"
-      },
-      {
-        "anchor": "src/output/report.rs:49",
-        "title": "Heap allocation inside loop (Rust)"
-      },
-      {
-        "anchor": "src/options.rs:304",
-        "title": "Heap allocation inside loop (Rust)"
-      }
-    ],
-    "caps": "19 of 19 reachable files shown · 0 aggregated",
-    "entry": "production main · src/main.rs:88 main · confidence HIGH · 0 alternatives",
-    "fileCount": 53,
-    "findingsIncluded": 148,
-    "findingsTotal": 348,
-    "footer": "19 of 51 source files reachable (37%) · 49 of 49 file pairs drawn · 0 MEDIUM / 297 LOW structural edges · unreached production: 21 · non-production: 11 · parse 53 ok / 0 partial / 0 failed · 33/238 unresolved includes · 16 files demoted",
-    "hottest": "src/command.rs · 611 static cost units (v2) · 87× median function",
-    "kicker": "PERFPAL · ATLAS",
-    "languages": [
-      "python",
-      "rust"
-    ],
-    "locCode": 7703,
-    "path": "3 steps",
-    "repo": "hyperfine",
-    "stub": null,
-    "subline": "entry-flow map · static, profile to confirm",
-    "wordmark": "Atlas"
+ "case": "hyperfine",
+ "columns": [
+  {
+   "countText": "1 file",
+   "depth": 0,
+   "label": "depth 0 \u00b7 ENTRY",
+   "order": 0,
+   "unreached": false,
+   "x": 160
   },
-  "nodes": [
-    {
-      "badge": "ENTRY · INFO ×8",
-      "cost": 58,
-      "costText": "58 static cost units (v2)",
-      "dash": null,
-      "entry": true,
-      "fill": "#1f2d3a",
-      "findings": {
-        "hot": 0,
-        "info": 8,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 45,
-          "fanIn": 1,
-          "fanOut": 8,
-          "id": "src/main.rs#run#34:1",
-          "line": 34,
-          "maxLoopDepth": 1,
-          "name": "run",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 10,
-          "fanIn": 0,
-          "fanOut": 2,
-          "id": "src/main.rs#main#88:1",
-          "line": 88,
-          "maxLoopDepth": 0,
-          "name": "main",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 3,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/main.rs#caused_by_broken_console_pipe#82:1",
-          "line": 82,
-          "maxLoopDepth": 0,
-          "name": "caused_by_broken_console_pipe",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/main.rs",
-      "name": "src/main.rs",
-      "nonproduction": false,
-      "order": 0,
-      "pathStep": 1,
-      "ratioText": "8.3× median function",
-      "stroke": "#1f2d3a",
-      "strokeWidth": 2,
-      "title": "src/main.rs · production · file total 58 static cost units (v2) · 8.3× median function · top 39% of files · top functions: run @ 34, main @ 88, caused_by_broken_console_pipe @ 82",
-      "topText": "top 39% of files",
-      "w": 150,
-      "x": 175,
-      "y": 72
-    },
-    {
-      "badge": "HOTTEST · INFO ×22",
-      "cost": 611,
-      "costText": "611 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 22,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 109,
-          "fanIn": 1,
-          "fanOut": 8,
-          "id": "src/command.rs#build_from_cli_arguments#226:5",
-          "line": 226,
-          "maxLoopDepth": 2,
-          "name": "build_from_cli_arguments",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 3
-        },
-        {
-          "cost": 43,
-          "fanIn": 3,
-          "fanOut": 4,
-          "id": "src/command.rs#replace_parameters_in#145:5",
-          "line": 145,
-          "maxLoopDepth": 2,
-          "name": "replace_parameters_in",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 3
-        },
-        {
-          "cost": 43,
-          "fanIn": 6,
-          "fanOut": 4,
-          "id": "src/command.rs#build_parameter_scan_commands#362:5",
-          "line": 362,
-          "maxLoopDepth": 2,
-          "name": "build_parameter_scan_commands",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 2
-        },
-        {
-          "cost": 40,
-          "fanIn": 31,
-          "fanOut": 1,
-          "id": "src/command.rs#iter#341:5",
-          "line": 341,
-          "maxLoopDepth": 0,
-          "name": "iter",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 33,
-          "fanIn": 4,
-          "fanOut": 4,
-          "id": "src/command.rs#from_cli_arguments#206:5",
-          "line": 206,
-          "maxLoopDepth": 1,
-          "name": "from_cli_arguments",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 32,
-          "fanIn": 1,
-          "fanOut": 3,
-          "id": "src/command.rs#parse_environment#175:1",
-          "line": 175,
-          "maxLoopDepth": 1,
-          "name": "parse_environment",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 26,
-          "fanIn": 9,
-          "fanOut": 1,
-          "id": "src/command.rs#new#39:5",
-          "line": 39,
-          "maxLoopDepth": 0,
-          "name": "new",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 25,
-          "fanIn": 2,
-          "fanOut": 5,
-          "id": "src/command.rs#get_name#61:5",
-          "line": 61,
-          "maxLoopDepth": 0,
-          "name": "get_name",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": true,
-      "id": "src/command.rs",
-      "name": "src/command.rs",
-      "nonproduction": false,
-      "order": 1,
-      "pathStep": 2,
-      "ratioText": "87× median function",
-      "stroke": "#c2410c",
-      "strokeWidth": 2,
-      "title": "src/command.rs · production · file total 611 static cost units (v2) · 87× median function · top 2% of files · top functions: build_from_cli_arguments @ 226, build_parameter_scan_commands @ 362, replace_parameters_in @ 145",
-      "topText": "top 2% of files",
-      "w": 150,
-      "x": 355,
-      "y": 72
-    },
-    {
-      "badge": "INFO ×13",
-      "cost": 276,
-      "costText": "276 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 13,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 165,
-          "fanIn": 0,
-          "fanOut": 8,
-          "id": "src/options.rs#from_cli_arguments#254:5",
-          "line": 254,
-          "maxLoopDepth": 1,
-          "name": "from_cli_arguments",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 32,
-          "fanIn": 2,
-          "fanOut": 3,
-          "id": "src/options.rs#validate_against_command_list#455:5",
-          "line": 455,
-          "maxLoopDepth": 1,
-          "name": "validate_against_command_list",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 15,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/options.rs#get_stdout_stderr#159:5",
-          "line": 159,
-          "maxLoopDepth": 0,
-          "name": "get_stdout_stderr",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 12,
-          "fanIn": 2,
-          "fanOut": 1,
-          "id": "src/options.rs#parse_from_str#49:5",
-          "line": 49,
-          "maxLoopDepth": 0,
-          "name": "parse_from_str",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 11,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/options.rs#get_stdin#127:5",
-          "line": 127,
-          "maxLoopDepth": 0,
-          "name": "get_stdin",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 8,
-          "fanIn": 2,
-          "fanOut": 0,
-          "id": "src/options.rs#command#57:5",
-          "line": 57,
-          "maxLoopDepth": 0,
-          "name": "command",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 8,
-          "fanIn": 0,
-          "fanOut": 3,
-          "id": "src/options.rs#test_platform_default_shell#497:1",
-          "line": 497,
-          "maxLoopDepth": 0,
-          "name": "test_platform_default_shell",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 8,
-          "fanIn": 0,
-          "fanOut": 3,
-          "id": "src/options.rs#test_can_parse_shell_command_line_from_str#508:1",
-          "line": 508,
-          "maxLoopDepth": 0,
-          "name": "test_can_parse_shell_command_line_from_str",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/options.rs",
-      "name": "src/options.rs",
-      "nonproduction": false,
-      "order": 2,
-      "pathStep": null,
-      "ratioText": "39× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/options.rs · production · file total 276 static cost units (v2) · 39× median function · top 10% of files · top functions: from_cli_arguments @ 254, validate_against_command_list @ 455, get_stdout_stderr @ 159",
-      "topText": "top 10% of files",
-      "w": 150,
-      "x": 355,
-      "y": 177
-    },
-    {
-      "badge": "INFO ×2",
-      "cost": 210,
-      "costText": "210 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 2,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 57,
-          "fanIn": 2,
-          "fanOut": 1,
-          "id": "src/shell_syntax.rs#next#71:5",
-          "line": 71,
-          "maxLoopDepth": 2,
-          "name": "next",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 3
-        },
-        {
-          "cost": 39,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/shell_syntax.rs#tokenizer_preserves_words_quotes_and_escapes#143:5",
-          "line": 143,
-          "maxLoopDepth": 1,
-          "name": "tokenizer_preserves_words_quotes_and_escapes",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 30,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/shell_syntax.rs#handles_empty_and_malformed_commands_without_panicking#247:5",
-          "line": 247,
-          "maxLoopDepth": 1,
-          "name": "handles_empty_and_malformed_commands_without_panicking",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 27,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/shell_syntax.rs#tokenizer_handles_comments_and_continuations#177:5",
-          "line": 177,
-          "maxLoopDepth": 1,
-          "name": "tokenizer_handles_comments_and_continuations",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 24,
-          "fanIn": 1,
-          "fanOut": 2,
-          "id": "src/shell_syntax.rs#starts_with_assignment#8:1",
-          "line": 8,
-          "maxLoopDepth": 1,
-          "name": "starts_with_assignment",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 12,
-          "fanIn": 0,
-          "fanOut": 1,
-          "id": "src/shell_syntax.rs#finds_supported_operators_in_command_order#201:5",
-          "line": 201,
-          "maxLoopDepth": 1,
-          "name": "finds_supported_operators_in_command_order",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 8,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/shell_syntax.rs#ignores_quoted_escaped_and_attached_operators#217:5",
-          "line": 217,
-          "maxLoopDepth": 1,
-          "name": "ignores_quoted_escaped_and_attached_operators",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 6,
-          "fanIn": 1,
-          "fanOut": 2,
-          "id": "src/shell_syntax.rs#first_unquoted_operator#34:1",
-          "line": 34,
-          "maxLoopDepth": 0,
-          "name": "first_unquoted_operator",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/shell_syntax.rs",
-      "name": "src/shell_syntax.rs",
-      "nonproduction": false,
-      "order": 3,
-      "pathStep": null,
-      "ratioText": "30× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/shell_syntax.rs · production · file total 210 static cost units (v2) · 30× median function · top 16% of files · top functions: next @ 71, tokenizer_preserves_words_quotes_and_escapes @ 143, handles_empty_and_malformed_commands_without_panicking @ 247",
-      "topText": "top 16% of files",
-      "w": 150,
-      "x": 355,
-      "y": 282
-    },
-    {
-      "badge": "INFO ×8 · bench",
-      "cost": 74,
-      "costText": "74 static cost units (v2)",
-      "dash": "3 2",
-      "entry": false,
-      "fill": "#f7f0f7",
-      "findings": {
-        "hot": 0,
-        "info": 8,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 40,
-          "fanIn": 2,
-          "fanOut": 4,
-          "id": "src/benchmark/scheduler.rs#run_benchmarks#32:5",
-          "line": 32,
-          "maxLoopDepth": 1,
-          "name": "run_benchmarks",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 17,
-          "fanIn": 0,
-          "fanOut": 5,
-          "id": "src/benchmark/scheduler.rs#generate_results#60:1",
-          "line": 60,
-          "maxLoopDepth": 0,
-          "name": "generate_results",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 10,
-          "fanIn": 2,
-          "fanOut": 0,
-          "id": "src/benchmark/scheduler.rs#new#19:5",
-          "line": 19,
-          "maxLoopDepth": 0,
-          "name": "new",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 5,
-          "fanIn": 1,
-          "fanOut": 1,
-          "id": "src/benchmark/scheduler.rs#final_export#54:5",
-          "line": 54,
-          "maxLoopDepth": 0,
-          "name": "final_export",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 2,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/benchmark/scheduler.rs#scheduler_basic#83:1",
-          "line": 83,
-          "maxLoopDepth": 0,
-          "name": "scheduler_basic",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/benchmark/scheduler.rs",
-      "name": "src/benchmark/scheduler.rs",
-      "nonproduction": true,
-      "order": 4,
-      "pathStep": null,
-      "ratioText": "11× median function",
-      "stroke": "#8a6f9e",
-      "strokeWidth": 1,
-      "title": "src/benchmark/scheduler.rs · bench · file total 74 static cost units (v2) · 11× median function · top 29% of files · top functions: run_benchmarks @ 32, generate_results @ 60, new @ 19",
-      "topText": "top 29% of files",
-      "w": 150,
-      "x": 355,
-      "y": 387
-    },
-    {
-      "badge": "INFO ×1",
-      "cost": 21,
-      "costText": "21 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 1,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 10,
-          "fanIn": 6,
-          "fanOut": 1,
-          "id": "src/cli.rs#get_cli_arguments#16:1",
-          "line": 16,
-          "maxLoopDepth": 0,
-          "name": "get_cli_arguments",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 9,
-          "fanIn": 3,
-          "fanOut": 1,
-          "id": "src/cli.rs#build_command#32:1",
-          "line": 32,
-          "maxLoopDepth": 0,
-          "name": "build_command",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 2,
-          "fanIn": 0,
-          "fanOut": 1,
-          "id": "src/cli.rs#verify_app#457:1",
-          "line": 457,
-          "maxLoopDepth": 0,
-          "name": "verify_app",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/cli.rs",
-      "name": "src/cli.rs",
-      "nonproduction": false,
-      "order": 5,
-      "pathStep": null,
-      "ratioText": "3.0× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/cli.rs · production · file total 21 static cost units (v2) · 3.0× median function · top 76% of files · top functions: get_cli_arguments @ 16, build_command @ 32, verify_app @ 457",
-      "topText": "top 76% of files",
-      "w": 150,
-      "x": 355,
-      "y": 492
-    },
-    {
-      "badge": "INFO ×13",
-      "cost": 431,
-      "costText": "431 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 13,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 56,
-          "fanIn": 40,
-          "fanOut": 2,
-          "id": "src/metric.rs#format#273:5",
-          "line": 273,
-          "maxLoopDepth": 0,
-          "name": "format",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 44,
-          "fanIn": 5,
-          "fanOut": 5,
-          "id": "src/metric.rs#parse_list#196:5",
-          "line": 196,
-          "maxLoopDepth": 1,
-          "name": "parse_list",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 41,
-          "fanIn": 2,
-          "fanOut": 3,
-          "id": "src/metric.rs#format_factor_from#350:5",
-          "line": 350,
-          "maxLoopDepth": 0,
-          "name": "format_factor_from",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 28,
-          "fanIn": 6,
-          "fanOut": 10,
-          "id": "src/metric.rs#summarize#157:5",
-          "line": 157,
-          "maxLoopDepth": 0,
-          "name": "summarize",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 25,
-          "fanIn": 2,
-          "fanOut": 0,
-          "id": "src/metric.rs#name#37:5",
-          "line": 37,
-          "maxLoopDepth": 0,
-          "name": "name",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 25,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/metric.rs#value#68:5",
-          "line": 68,
-          "maxLoopDepth": 0,
-          "name": "value",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 24,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/metric.rs#label#52:5",
-          "line": 52,
-          "maxLoopDepth": 0,
-          "name": "label",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 21,
-          "fanIn": 2,
-          "fanOut": 2,
-          "id": "src/metric.rs#format_change_from#339:5",
-          "line": 339,
-          "maxLoopDepth": 0,
-          "name": "format_change_from",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/metric.rs",
-      "name": "src/metric.rs",
-      "nonproduction": false,
-      "order": 6,
-      "pathStep": 3,
-      "ratioText": "62× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/metric.rs · production · file total 431 static cost units (v2) · 62× median function · top 4% of files · top functions: format @ 273, parse_list @ 196, format_factor_from @ 350",
-      "topText": "top 4% of files",
-      "w": 150,
-      "x": 535,
-      "y": 72
-    },
-    {
-      "badge": "INFO ×3 · test",
-      "cost": 373,
-      "costText": "373 static cost units (v2)",
-      "dash": "3 2",
-      "entry": false,
-      "fill": "#eef2f7",
-      "findings": {
-        "hot": 0,
-        "info": 3,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 81,
-          "fanIn": 73,
-          "fanOut": 1,
-          "id": "tests/execution_order_tests.rs#arg#31:5",
-          "line": 31,
-          "maxLoopDepth": 0,
-          "name": "arg",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 33,
-          "fanIn": 21,
-          "fanOut": 3,
-          "id": "tests/execution_order_tests.rs#new#17:5",
-          "line": 17,
-          "maxLoopDepth": 0,
-          "name": "new",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 27,
-          "fanIn": 22,
-          "fanOut": 2,
-          "id": "tests/execution_order_tests.rs#command#44:5",
-          "line": 44,
-          "maxLoopDepth": 0,
-          "name": "command",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 25,
-          "fanIn": 18,
-          "fanOut": 1,
-          "id": "tests/execution_order_tests.rs#run#81:5",
-          "line": 81,
-          "maxLoopDepth": 0,
-          "name": "run",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 21,
-          "fanIn": 18,
-          "fanOut": 1,
-          "id": "tests/execution_order_tests.rs#expect_output#69:5",
-          "line": 69,
-          "maxLoopDepth": 0,
-          "name": "expect_output",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 11,
-          "fanIn": 7,
-          "fanOut": 2,
-          "id": "tests/execution_order_tests.rs#prepare#54:5",
-          "line": 54,
-          "maxLoopDepth": 0,
-          "name": "prepare",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 10,
-          "fanIn": 1,
-          "fanOut": 1,
-          "id": "tests/execution_order_tests.rs#get_command#36:5",
-          "line": 36,
-          "maxLoopDepth": 0,
-          "name": "get_command",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 10,
-          "fanIn": 6,
-          "fanOut": 2,
-          "id": "tests/execution_order_tests.rs#setup#49:5",
-          "line": 49,
-          "maxLoopDepth": 0,
-          "name": "setup",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "tests/execution_order_tests.rs",
-      "name": "tests/execution_order_tests.rs",
-      "nonproduction": true,
-      "order": 7,
-      "pathStep": null,
-      "ratioText": "53× median function",
-      "stroke": "#7f93aa",
-      "strokeWidth": 1,
-      "title": "tests/execution_order_tests.rs · test · file total 373 static cost units (v2) · 53× median function · top 6% of files · top functions: arg @ 31, new @ 17, command @ 44",
-      "topText": "top 6% of files",
-      "w": 150,
-      "x": 535,
-      "y": 177
-    },
-    {
-      "badge": "INFO ×18 · bench",
-      "cost": 170,
-      "costText": "170 static cost units (v2)",
-      "dash": "3 2",
-      "entry": false,
-      "fill": "#f7f0f7",
-      "findings": {
-        "hot": 0,
-        "info": 18,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 71,
-          "fanIn": 2,
-          "fanOut": 5,
-          "id": "src/benchmark/executor.rs#run_command_and_measure_common#71:1",
-          "line": 71,
-          "maxLoopDepth": 0,
-          "name": "run_command_and_measure_common",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 35,
-          "fanIn": 0,
-          "fanOut": 6,
-          "id": "src/benchmark/executor.rs#calibrate#262:5",
-          "line": 262,
-          "maxLoopDepth": 1,
-          "name": "calibrate",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 18,
-          "fanIn": 1,
-          "fanOut": 1,
-          "id": "src/benchmark/executor.rs#to_env_var_value#24:5",
-          "line": 24,
-          "maxLoopDepth": 0,
-          "name": "to_env_var_value",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 16,
-          "fanIn": 0,
-          "fanOut": 4,
-          "id": "src/benchmark/executor.rs#run_command_and_measure#209:5",
-          "line": 209,
-          "maxLoopDepth": 0,
-          "name": "run_command_and_measure",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 6,
-          "fanIn": 0,
-          "fanOut": 2,
-          "id": "src/benchmark/executor.rs#run_command_and_measure#153:5",
-          "line": 153,
-          "maxLoopDepth": 0,
-          "name": "run_command_and_measure",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 6,
-          "fanIn": 0,
-          "fanOut": 1,
-          "id": "src/benchmark/executor.rs#time_overhead#387:5",
-          "line": 387,
-          "maxLoopDepth": 0,
-          "name": "time_overhead",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 4,
-          "fanIn": 2,
-          "fanOut": 0,
-          "id": "src/benchmark/executor.rs#extract_time#340:5",
-          "line": 340,
-          "maxLoopDepth": 0,
-          "name": "extract_time",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 3,
-          "fanIn": 0,
-          "fanOut": 2,
-          "id": "src/benchmark/executor.rs#run_command_and_measure#353:5",
-          "line": 353,
-          "maxLoopDepth": 0,
-          "name": "run_command_and_measure",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/benchmark/executor.rs",
-      "name": "src/benchmark/executor.rs",
-      "nonproduction": true,
-      "order": 8,
-      "pathStep": null,
-      "ratioText": "24× median function",
-      "stroke": "#8a6f9e",
-      "strokeWidth": 1,
-      "title": "src/benchmark/executor.rs · bench · file total 170 static cost units (v2) · 24× median function · top 18% of files · top functions: run_command_and_measure_common @ 71, calibrate @ 262, to_env_var_value @ 24",
-      "topText": "top 18% of files",
-      "w": 150,
-      "x": 535,
-      "y": 282
-    },
-    {
-      "badge": "INFO ×11 · bench",
-      "cost": 120,
-      "costText": "120 static cost units (v2)",
-      "dash": "3 2",
-      "entry": false,
-      "fill": "#f7f0f7",
-      "findings": {
-        "hot": 0,
-        "info": 11,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 27,
-          "fanIn": 18,
-          "fanOut": 1,
-          "id": "src/benchmark/measurement.rs#push#126:5",
-          "line": 126,
-          "maxLoopDepth": 0,
-          "name": "push",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 21,
-          "fanIn": 14,
-          "fanOut": 1,
-          "id": "src/benchmark/measurement.rs#is_empty#122:5",
-          "line": 122,
-          "maxLoopDepth": 0,
-          "name": "is_empty",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 20,
-          "fanIn": 11,
-          "fanOut": 1,
-          "id": "src/benchmark/measurement.rs#len#118:5",
-          "line": 118,
-          "maxLoopDepth": 0,
-          "name": "len",
-          "recursive": true,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 9,
-          "fanIn": 1,
-          "fanOut": 2,
-          "id": "src/benchmark/measurement.rs#modified_zscores#140:5",
-          "line": 140,
-          "maxLoopDepth": 0,
-          "name": "modified_zscores",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 7,
-          "fanIn": 0,
-          "fanOut": 2,
-          "id": "src/benchmark/measurement.rs#outliers_follow_the_selected_metric#167:5",
-          "line": 167,
-          "maxLoopDepth": 0,
-          "name": "outliers_follow_the_selected_metric",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 6,
-          "fanIn": 0,
-          "fanOut": 1,
-          "id": "src/benchmark/measurement.rs#serialize_optional_information#20:1",
-          "line": 20,
-          "maxLoopDepth": 0,
-          "name": "serialize_optional_information",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 6,
-          "fanIn": 2,
-          "fanOut": 1,
-          "id": "src/benchmark/measurement.rs#wall_clock_times#130:5",
-          "line": 130,
-          "maxLoopDepth": 0,
-          "name": "wall_clock_times",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 5,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/benchmark/measurement.rs#serialize_exit_status#10:1",
-          "line": 10,
-          "maxLoopDepth": 0,
-          "name": "serialize_exit_status",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/benchmark/measurement.rs",
-      "name": "src/benchmark/measurement.rs",
-      "nonproduction": true,
-      "order": 9,
-      "pathStep": null,
-      "ratioText": "17× median function",
-      "stroke": "#8a6f9e",
-      "strokeWidth": 1,
-      "title": "src/benchmark/measurement.rs · bench · file total 120 static cost units (v2) · 17× median function · top 20% of files · top functions: push @ 126, is_empty @ 122, len @ 118",
-      "topText": "top 20% of files",
-      "w": 150,
-      "x": 535,
-      "y": 387
-    },
-    {
-      "badge": "INFO ×3",
-      "cost": 110,
-      "costText": "110 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 3,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 18,
-          "fanIn": 6,
-          "fanOut": 0,
-          "id": "src/quantity/statistics.rs#mean#28:1",
-          "line": 28,
-          "maxLoopDepth": 1,
-          "name": "mean",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 16,
-          "fanIn": 2,
-          "fanOut": 2,
-          "id": "src/quantity/statistics.rs#modified_zscores_f64#130:1",
-          "line": 130,
-          "maxLoopDepth": 0,
-          "name": "modified_zscores_f64",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 14,
-          "fanIn": 3,
-          "fanOut": 1,
-          "id": "src/quantity/statistics.rs#median#44:1",
-          "line": 44,
-          "maxLoopDepth": 0,
-          "name": "median",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 14,
-          "fanIn": 1,
-          "fanOut": 2,
-          "id": "src/quantity/statistics.rs#standard_deviation_f64#104:1",
-          "line": 104,
-          "maxLoopDepth": 1,
-          "name": "standard_deviation_f64",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 11,
-          "fanIn": 2,
-          "fanOut": 1,
-          "id": "src/quantity/statistics.rs#standard_deviation#118:1",
-          "line": 118,
-          "maxLoopDepth": 0,
-          "name": "standard_deviation",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 8,
-          "fanIn": 4,
-          "fanOut": 0,
-          "id": "src/quantity/statistics.rs#max#20:1",
-          "line": 20,
-          "maxLoopDepth": 0,
-          "name": "max",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 7,
-          "fanIn": 3,
-          "fanOut": 0,
-          "id": "src/quantity/statistics.rs#min#12:1",
-          "line": 12,
-          "maxLoopDepth": 0,
-          "name": "min",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 5,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/quantity/statistics.rs#test_min#157:5",
-          "line": 157,
-          "maxLoopDepth": 0,
-          "name": "test_min",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/quantity/statistics.rs",
-      "name": "src/quantity/statistics.rs",
-      "nonproduction": false,
-      "order": 10,
-      "pathStep": null,
-      "ratioText": "16× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/quantity/statistics.rs · production · file total 110 static cost units (v2) · 16× median function · top 22% of files · top functions: mean @ 28, modified_zscores_f64 @ 130, median @ 44",
-      "topText": "top 22% of files",
-      "w": 150,
-      "x": 535,
-      "y": 492
-    },
-    {
-      "badge": "WARN ×5",
-      "cost": 108,
-      "costText": "108 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 0,
-        "warn": 5
-      },
-      "functions": [
-        {
-          "cost": 41,
-          "fanIn": 2,
-          "fanOut": 1,
-          "id": "src/export/mod.rs#write_results#125:5",
-          "line": 125,
-          "maxLoopDepth": 1,
-          "name": "write_results",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 28,
-          "fanIn": 1,
-          "fanOut": 2,
-          "id": "src/export/mod.rs#add_exporter#96:5",
-          "line": 96,
-          "maxLoopDepth": 0,
-          "name": "add_exporter",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 25,
-          "fanIn": 0,
-          "fanOut": 1,
-          "id": "src/export/mod.rs#from_cli_arguments#74:5",
-          "line": 74,
-          "maxLoopDepth": 0,
-          "name": "from_cli_arguments",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 14,
-          "fanIn": 1,
-          "fanOut": 1,
-          "id": "src/export/mod.rs#write_to_file#149:1",
-          "line": 149,
-          "maxLoopDepth": 0,
-          "name": "write_to_file",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/export/mod.rs",
-      "name": "src/export/mod.rs",
-      "nonproduction": false,
-      "order": 11,
-      "pathStep": null,
-      "ratioText": "15× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/export/mod.rs · production · file total 108 static cost units (v2) · 15× median function · top 24% of files · top functions: write_results @ 125, add_exporter @ 96, from_cli_arguments @ 74",
-      "topText": "top 24% of files",
-      "w": 150,
-      "x": 535,
-      "y": 597
-    },
-    {
-      "badge": "test",
-      "cost": 53,
-      "costText": "53 static cost units (v2)",
-      "dash": "3 2",
-      "entry": false,
-      "fill": "#eef2f7",
-      "findings": {
-        "hot": 0,
-        "info": 0,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 44,
-          "fanIn": 39,
-          "fanOut": 1,
-          "id": "tests/common.rs#hyperfine#10:1",
-          "line": 10,
-          "maxLoopDepth": 0,
-          "name": "hyperfine",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 9,
-          "fanIn": 4,
-          "fanOut": 0,
-          "id": "tests/common.rs#hyperfine_raw_command#3:1",
-          "line": 3,
-          "maxLoopDepth": 0,
-          "name": "hyperfine_raw_command",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "tests/common.rs",
-      "name": "tests/common.rs",
-      "nonproduction": true,
-      "order": 12,
-      "pathStep": null,
-      "ratioText": "7.6× median function",
-      "stroke": "#7f93aa",
-      "strokeWidth": 1,
-      "title": "tests/common.rs · test · file total 53 static cost units (v2) · 7.6× median function · top 41% of files · top functions: hyperfine @ 10, hyperfine_raw_command @ 3",
-      "topText": "top 41% of files",
-      "w": 150,
-      "x": 715,
-      "y": 72
-    },
-    {
-      "badge": "INFO ×2",
-      "cost": 45,
-      "costText": "45 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 2,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 17,
-          "fanIn": 3,
-          "fanOut": 2,
-          "id": "src/output/progress_bar.rs#style_with_template#19:1",
-          "line": 19,
-          "maxLoopDepth": 0,
-          "name": "style_with_template",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 16,
-          "fanIn": 2,
-          "fanOut": 0,
-          "id": "src/output/progress_bar.rs#get_progress_bar#52:1",
-          "line": 52,
-          "maxLoopDepth": 0,
-          "name": "get_progress_bar",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 4,
-          "fanIn": 1,
-          "fanOut": 1,
-          "id": "src/output/progress_bar.rs#set_benchmark_header#29:1",
-          "line": 29,
-          "maxLoopDepth": 0,
-          "name": "set_benchmark_header",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 4,
-          "fanIn": 1,
-          "fanOut": 1,
-          "id": "src/output/progress_bar.rs#start_initial_measurement#35:1",
-          "line": 35,
-          "maxLoopDepth": 0,
-          "name": "start_initial_measurement",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 4,
-          "fanIn": 1,
-          "fanOut": 1,
-          "id": "src/output/progress_bar.rs#finish_initial_measurement#46:1",
-          "line": 46,
-          "maxLoopDepth": 0,
-          "name": "finish_initial_measurement",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/output/progress_bar.rs",
-      "name": "src/output/progress_bar.rs",
-      "nonproduction": false,
-      "order": 13,
-      "pathStep": null,
-      "ratioText": "6.4× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/output/progress_bar.rs · production · file total 45 static cost units (v2) · 6.4× median function · top 49% of files · top functions: style_with_template @ 19, get_progress_bar @ 52, finish_initial_measurement @ 46",
-      "topText": "top 49% of files",
-      "w": 150,
-      "x": 715,
-      "y": 177
-    },
-    {
-      "badge": "INFO ×2",
-      "cost": 43,
-      "costText": "43 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 2,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 25,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/timer/mod.rs#discard#33:1",
-          "line": 33,
-          "maxLoopDepth": 1,
-          "name": "discard",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 2
-        },
-        {
-          "cost": 18,
-          "fanIn": 1,
-          "fanOut": 3,
-          "id": "src/timer/mod.rs#execute_and_measure#64:1",
-          "line": 64,
-          "maxLoopDepth": 0,
-          "name": "execute_and_measure",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/timer/mod.rs",
-      "name": "src/timer/mod.rs",
-      "nonproduction": false,
-      "order": 14,
-      "pathStep": null,
-      "ratioText": "6.1× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/timer/mod.rs · production · file total 43 static cost units (v2) · 6.1× median function · top 55% of files · top functions: discard @ 33, execute_and_measure @ 64",
-      "topText": "top 55% of files",
-      "w": 150,
-      "x": 715,
-      "y": 282
-    },
-    {
-      "badge": "",
-      "cost": 21,
-      "costText": "21 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 0,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 10,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/quantity/mod.rs#serialize_information#35:1",
-          "line": 35,
-          "maxLoopDepth": 0,
-          "name": "serialize_information",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 8,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/quantity/mod.rs#serialize_time#25:1",
-          "line": 25,
-          "maxLoopDepth": 0,
-          "name": "serialize_time",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 1,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/quantity/mod.rs#const_time_from_seconds#16:1",
-          "line": 16,
-          "maxLoopDepth": 0,
-          "name": "const_time_from_seconds",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 1,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/quantity/mod.rs#test_time#46:1",
-          "line": 46,
-          "maxLoopDepth": 0,
-          "name": "test_time",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 1,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/quantity/mod.rs#test_information#58:1",
-          "line": 58,
-          "maxLoopDepth": 0,
-          "name": "test_information",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/quantity/mod.rs",
-      "name": "src/quantity/mod.rs",
-      "nonproduction": false,
-      "order": 15,
-      "pathStep": null,
-      "ratioText": "3.0× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/quantity/mod.rs · production · file total 21 static cost units (v2) · 3.0× median function · top 78% of files · top functions: serialize_information @ 35, serialize_time @ 25, const_time_from_seconds @ 16",
-      "topText": "top 78% of files",
-      "w": 150,
-      "x": 715,
-      "y": 387
-    },
-    {
-      "badge": "",
-      "cost": 2,
-      "costText": "2 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 0,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 1,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/util/exit_code.rs#extract_exit_code#4:1",
-          "line": 4,
-          "maxLoopDepth": 0,
-          "name": "extract_exit_code",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 1,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/util/exit_code.rs#extract_exit_code#20:1",
-          "line": 20,
-          "maxLoopDepth": 0,
-          "name": "extract_exit_code",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/util/exit_code.rs",
-      "name": "src/util/exit_code.rs",
-      "nonproduction": false,
-      "order": 16,
-      "pathStep": null,
-      "ratioText": "0.3× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/util/exit_code.rs · production · file total 2 static cost units (v2) · 0.3× median function · top 92% of files · top functions: extract_exit_code @ 20, extract_exit_code @ 4",
-      "topText": "top 92% of files",
-      "w": 150,
-      "x": 715,
-      "y": 492
-    },
-    {
-      "badge": "WARN ×1",
-      "cost": 23,
-      "costText": "23 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 0,
-        "warn": 1
-      },
-      "functions": [
-        {
-          "cost": 20,
-          "fanIn": 2,
-          "fanOut": 1,
-          "id": "src/timer/macos_counters.rs#wait#9:1",
-          "line": 9,
-          "maxLoopDepth": 1,
-          "name": "wait",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 1
-        },
-        {
-          "cost": 3,
-          "fanIn": 0,
-          "fanOut": 0,
-          "id": "src/timer/macos_counters.rs#read#32:1",
-          "line": 32,
-          "maxLoopDepth": 0,
-          "name": "read",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/timer/macos_counters.rs",
-      "name": "src/timer/macos_counters.rs",
-      "nonproduction": false,
-      "order": 17,
-      "pathStep": null,
-      "ratioText": "3.3× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/timer/macos_counters.rs · production · file total 23 static cost units (v2) · 3.3× median function · top 75% of files · top functions: wait @ 9, read @ 32",
-      "topText": "top 75% of files",
-      "w": 150,
-      "x": 895,
-      "y": 72
-    },
-    {
-      "badge": "INFO ×1",
-      "cost": 20,
-      "costText": "20 static cost units (v2)",
-      "dash": null,
-      "entry": false,
-      "fill": "#fdfbf6",
-      "findings": {
-        "hot": 0,
-        "info": 1,
-        "warn": 0
-      },
-      "functions": [
-        {
-          "cost": 8,
-          "fanIn": 3,
-          "fanOut": 0,
-          "id": "src/timer/windows_timer.rs#drop#127:5",
-          "line": 127,
-          "maxLoopDepth": 0,
-          "name": "drop",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 7,
-          "fanIn": 0,
-          "fanOut": 1,
-          "id": "src/timer/windows_timer.rs#stop#87:5",
-          "line": 87,
-          "maxLoopDepth": 0,
-          "name": "stop",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        },
-        {
-          "cost": 5,
-          "fanIn": 1,
-          "fanOut": 0,
-          "id": "src/timer/windows_timer.rs#start_suspended_process#55:5",
-          "line": 55,
-          "maxLoopDepth": 0,
-          "name": "start_suspended_process",
-          "recursive": false,
-          "tripSource": "unknown",
-          "unknownTripLoops": 0
-        }
-      ],
-      "h": 80,
-      "hottest": false,
-      "id": "src/timer/windows_timer.rs",
-      "name": "src/timer/windows_timer.rs",
-      "nonproduction": false,
-      "order": 18,
-      "pathStep": null,
-      "ratioText": "2.9× median function",
-      "stroke": "#8b8173",
-      "strokeWidth": 1,
-      "title": "src/timer/windows_timer.rs · production · file total 20 static cost units (v2) · 2.9× median function · top 80% of files · top functions: drop @ 127, stop @ 87, start_suspended_process @ 55",
-      "topText": "top 80% of files",
-      "w": 150,
-      "x": 895,
-      "y": 177
-    }
+  {
+   "countText": "5 files",
+   "depth": 1,
+   "label": "depth 1",
+   "order": 1,
+   "unreached": false,
+   "x": 340
+  },
+  {
+   "countText": "6 files",
+   "depth": 2,
+   "label": "depth 2",
+   "order": 2,
+   "unreached": false,
+   "x": 520
+  },
+  {
+   "countText": "5 files",
+   "depth": 3,
+   "label": "depth 3",
+   "order": 3,
+   "unreached": false,
+   "x": 700
+  },
+  {
+   "countText": "2 files",
+   "depth": 4,
+   "label": "depth 4",
+   "order": 4,
+   "unreached": false,
+   "x": 880
+  },
+  {
+   "countText": "no forward path",
+   "depth": 5,
+   "label": "UNREACHED",
+   "order": 5,
+   "unreached": true,
+   "x": 1060
+  }
+ ],
+ "edges": [
+  {
+   "back": true,
+   "className": "back",
+   "count": 4,
+   "d": "M 685 322 C 729 322 729 427 685 427",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 0,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 4,
+   "d": "M 685 322 C 729 322 549 112 505 112",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 1,
+   "to": "src/command.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 3,
+   "d": "M 685 322 C 725 322 725 112 685 112",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 2,
+   "to": "src/metric.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 3,
+   "d": "M 685 322 C 725 322 545 217 505 217",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 3,
+   "to": "src/options.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 685 322 C 705 322 695 217 715 217",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 4,
+   "to": "src/output/progress_bar.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 685 322 C 705 322 695 322 715 322",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 5,
+   "to": "src/timer/mod.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 685 322 C 705 322 695 532 715 532",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 6,
+   "to": "src/util/exit_code.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 685 322 C 717 322 717 217 685 217",
+   "from": "src/benchmark/executor.rs",
+   "onPath": false,
+   "order": 7,
+   "to": "tests/execution_order_tests.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 5,
+   "d": "M 685 427 C 733 427 553 112 505 112",
+   "from": "src/benchmark/measurement.rs",
+   "onPath": false,
+   "order": 8,
+   "to": "src/command.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 685 427 C 705 427 695 427 715 427",
+   "from": "src/benchmark/measurement.rs",
+   "onPath": false,
+   "order": 9,
+   "to": "src/quantity/mod.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 4,
+   "d": "M 685 427 C 729 427 729 532 685 532",
+   "from": "src/benchmark/measurement.rs",
+   "onPath": false,
+   "order": 10,
+   "to": "src/quantity/statistics.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 685 427 C 705 427 695 532 715 532",
+   "from": "src/benchmark/measurement.rs",
+   "onPath": false,
+   "order": 11,
+   "to": "src/util/exit_code.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 505 427 C 525 427 515 322 535 322",
+   "from": "src/benchmark/scheduler.rs",
+   "onPath": false,
+   "order": 12,
+   "to": "src/benchmark/executor.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 505 427 C 525 427 515 427 535 427",
+   "from": "src/benchmark/scheduler.rs",
+   "onPath": false,
+   "order": 13,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 505 427 C 537 427 537 532 505 532",
+   "from": "src/benchmark/scheduler.rs",
+   "onPath": false,
+   "order": 14,
+   "to": "src/cli.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 2,
+   "d": "M 505 427 C 541 427 541 112 505 112",
+   "from": "src/benchmark/scheduler.rs",
+   "onPath": false,
+   "order": 15,
+   "to": "src/command.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 2,
+   "d": "M 505 427 C 525 427 515 637 535 637",
+   "from": "src/benchmark/scheduler.rs",
+   "onPath": false,
+   "order": 16,
+   "to": "src/export/mod.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 505 427 C 537 427 537 217 505 217",
+   "from": "src/benchmark/scheduler.rs",
+   "onPath": false,
+   "order": 17,
+   "to": "src/options.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 505 532 C 525 532 515 217 535 217",
+   "from": "src/cli.rs",
+   "onPath": false,
+   "order": 18,
+   "to": "tests/execution_order_tests.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 12,
+   "d": "M 505 112 C 525 112 515 427 535 427",
+   "from": "src/command.rs",
+   "onPath": false,
+   "order": 19,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 4,
+   "d": "M 505 112 C 549 112 549 532 505 532",
+   "from": "src/command.rs",
+   "onPath": false,
+   "order": 20,
+   "to": "src/cli.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 6,
+   "d": "M 505 112 C 525 112 515 112 535 112",
+   "from": "src/command.rs",
+   "onPath": true,
+   "order": 21,
+   "to": "src/metric.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 685 637 C 717 637 717 427 685 427",
+   "from": "src/export/mod.rs",
+   "onPath": false,
+   "order": 22,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 2,
+   "d": "M 685 637 C 721 637 721 112 685 112",
+   "from": "src/export/mod.rs",
+   "onPath": false,
+   "order": 23,
+   "to": "src/metric.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 2,
+   "d": "M 325 112 C 345 112 335 427 355 427",
+   "from": "src/main.rs",
+   "onPath": false,
+   "order": 24,
+   "to": "src/benchmark/scheduler.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 325 112 C 345 112 335 532 355 532",
+   "from": "src/main.rs",
+   "onPath": false,
+   "order": 25,
+   "to": "src/cli.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 2,
+   "d": "M 325 112 C 345 112 335 112 355 112",
+   "from": "src/main.rs",
+   "onPath": true,
+   "order": 26,
+   "to": "src/command.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 325 112 C 345 112 335 217 355 217",
+   "from": "src/main.rs",
+   "onPath": false,
+   "order": 27,
+   "to": "src/options.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 2,
+   "d": "M 325 112 C 345 112 335 322 355 322",
+   "from": "src/main.rs",
+   "onPath": false,
+   "order": 28,
+   "to": "src/shell_syntax.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 4,
+   "d": "M 685 112 C 729 112 729 427 685 427",
+   "from": "src/metric.rs",
+   "onPath": false,
+   "order": 29,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 4,
+   "d": "M 685 112 C 729 112 549 112 505 112",
+   "from": "src/metric.rs",
+   "onPath": false,
+   "order": 30,
+   "to": "src/command.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 5,
+   "d": "M 685 112 C 733 112 733 532 685 532",
+   "from": "src/metric.rs",
+   "onPath": false,
+   "order": 31,
+   "to": "src/quantity/statistics.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 4,
+   "d": "M 505 217 C 525 217 515 427 535 427",
+   "from": "src/options.rs",
+   "onPath": false,
+   "order": 32,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 2,
+   "d": "M 505 217 C 541 217 541 112 505 112",
+   "from": "src/options.rs",
+   "onPath": false,
+   "order": 33,
+   "to": "src/command.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 6,
+   "d": "M 505 217 C 525 217 515 112 535 112",
+   "from": "src/options.rs",
+   "onPath": false,
+   "order": 34,
+   "to": "src/metric.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 505 217 C 525 217 515 532 535 532",
+   "from": "src/options.rs",
+   "onPath": false,
+   "order": 35,
+   "to": "src/quantity/statistics.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 865 217 C 897 217 717 427 685 427",
+   "from": "src/output/progress_bar.rs",
+   "onPath": false,
+   "order": 36,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 865 217 C 897 217 717 112 685 112",
+   "from": "src/output/progress_bar.rs",
+   "onPath": false,
+   "order": 37,
+   "to": "src/metric.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 685 532 C 717 532 717 427 685 427",
+   "from": "src/quantity/statistics.rs",
+   "onPath": false,
+   "order": 38,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 2,
+   "d": "M 685 532 C 721 532 541 112 505 112",
+   "from": "src/quantity/statistics.rs",
+   "onPath": false,
+   "order": 39,
+   "to": "src/command.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 505 322 C 537 322 537 112 505 112",
+   "from": "src/shell_syntax.rs",
+   "onPath": false,
+   "order": 40,
+   "to": "src/command.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 505 322 C 525 322 515 112 535 112",
+   "from": "src/shell_syntax.rs",
+   "onPath": false,
+   "order": 41,
+   "to": "src/metric.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 1045 112 C 1077 112 1077 217 1045 217",
+   "from": "src/timer/macos_counters.rs",
+   "onPath": false,
+   "order": 42,
+   "to": "src/timer/windows_timer.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 865 322 C 885 322 875 112 895 112",
+   "from": "src/timer/mod.rs",
+   "onPath": false,
+   "order": 43,
+   "to": "src/timer/macos_counters.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 865 322 C 885 322 875 217 895 217",
+   "from": "src/timer/mod.rs",
+   "onPath": false,
+   "order": 44,
+   "to": "src/timer/windows_timer.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 1045 217 C 1077 217 1077 112 1045 112",
+   "from": "src/timer/windows_timer.rs",
+   "onPath": false,
+   "order": 45,
+   "to": "src/timer/macos_counters.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 685 217 C 717 217 717 427 685 427",
+   "from": "tests/execution_order_tests.rs",
+   "onPath": false,
+   "order": 46,
+   "to": "src/benchmark/measurement.rs"
+  },
+  {
+   "back": true,
+   "className": "back",
+   "count": 1,
+   "d": "M 685 217 C 717 217 717 112 685 112",
+   "from": "tests/execution_order_tests.rs",
+   "onPath": false,
+   "order": 47,
+   "to": "src/metric.rs"
+  },
+  {
+   "back": false,
+   "className": "forward",
+   "count": 1,
+   "d": "M 685 217 C 705 217 695 112 715 112",
+   "from": "tests/execution_order_tests.rs",
+   "onPath": false,
+   "order": 48,
+   "to": "tests/common.rs"
+  }
+ ],
+ "findings": [
+  {
+   "line": 11,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Deep module chain (Rust)"
+  },
+  {
+   "line": 27,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "to_env_var_value",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 71,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-CALL-002",
+   "severity": "warn",
+   "symbol": "run_command_and_measure_common",
+   "title": "High cyclomatic complexity (Rust)"
+  },
+  {
+   "line": 80,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure_common",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 81,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure_common",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 93,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure_common",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 94,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure_common",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 108,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure_common",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 166,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 179,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_intermediate_command_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 179,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "run_intermediate_command_and_measure",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 218,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 219,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 224,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 265,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "calibrate",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 276,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ALLOC-001",
+   "severity": "hot",
+   "symbol": "calibrate",
+   "title": "Heap allocation inside loop (Rust)"
+  },
+  {
+   "line": 279,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-LOOP-002",
+   "severity": "hot",
+   "symbol": "calibrate",
+   "title": "Expensive setup or I/O call inside loop (Rust)"
+  },
+  {
+   "line": 288,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "calibrate",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 299,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "calibrate",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 313,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "calibrate",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 314,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "calibrate",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 314,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "calibrate",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 373,
+   "path": "src/benchmark/executor.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_command_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 14,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "serialize_exit_status",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 28,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "serialize_optional_information",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 119,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "len",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 123,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "is_empty",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 126,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-TYPE-001",
+   "severity": "warn",
+   "symbol": "push",
+   "title": "Large struct passed by value (Rust)"
+  },
+  {
+   "line": 127,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "push",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 131,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "wall_clock_times",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 136,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "time_wall_clock_mean",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 141,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "modified_zscores",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 146,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "modified_zscores",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 151,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "time_user_mean",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 151,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "time_user_mean",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 156,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "time_system_mean",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 156,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "time_system_mean",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 169,
+   "path": "src/benchmark/measurement.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "outliers_follow_the_selected_metric",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 2,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Deep module chain (Rust)"
+  },
+  {
+   "line": 39,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_benchmarks",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 41,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_benchmarks",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 42,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_benchmarks",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 48,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run_benchmarks",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 55,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "final_export",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 63,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "generate_results",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 66,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "generate_results",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 74,
+   "path": "src/benchmark/scheduler.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "generate_results",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 33,
+   "path": "src/cli.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "build_command",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 43,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "new",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 67,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "get_name",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 70,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "get_name",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 83,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "get_name_with_unused_parameters",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 86,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "get_name_with_unused_parameters",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 102,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "get_command",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 131,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "is_parameter_unused",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 148,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ALLOC-001",
+   "severity": "hot",
+   "symbol": "replace_parameters_in",
+   "title": "Heap allocation inside loop (Rust)"
+  },
+  {
+   "line": 149,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "replace_parameters_in",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 161,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "replace_parameters_in",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 161,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-STR-002",
+   "severity": "warn",
+   "symbol": "replace_parameters_in",
+   "title": "Length query recomputed in loop (Rust)"
+  },
+  {
+   "line": 165,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "replace_parameters_in",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 177,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ALLOC-001",
+   "severity": "hot",
+   "symbol": "parse_environment",
+   "title": "Heap allocation inside loop (Rust)"
+  },
+  {
+   "line": 179,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "parse_environment",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 200,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "parse_environment",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 220,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 220,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-STR-002",
+   "severity": "warn",
+   "symbol": "from_cli_arguments",
+   "title": "Length query recomputed in loop (Rust)"
+  },
+  {
+   "line": 262,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "build_from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 267,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "build_from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 306,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "build_from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 335,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-LOOP-002",
+   "severity": "hot",
+   "symbol": "build_from_cli_arguments",
+   "title": "Expensive setup or I/O call inside loop (Rust)"
+  },
+  {
+   "line": 342,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "iter",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 346,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "num_commands",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 371,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "build_parameter_scan_commands",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 381,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "build_parameter_scan_commands",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 488,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "test_build_commands_cross_product",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 526,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "test_build_parameter_list_commands",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 546,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "test_build_parameter_scan_commands",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 569,
+   "path": "src/command.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "test_build_parameter_scan_commands_named",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 13,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Module-graph cycle (Rust)"
+  },
+  {
+   "line": 14,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Module-graph cycle (Rust)"
+  },
+  {
+   "line": 15,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Module-graph cycle (Rust)"
+  },
+  {
+   "line": 16,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Module-graph cycle (Rust)"
+  },
+  {
+   "line": 19,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Deep module chain (Rust)"
+  },
+  {
+   "line": 105,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "add_exporter",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 111,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "add_exporter",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 156,
+   "path": "src/export/mod.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "write_to_file",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 39,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 42,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 48,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 49,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 50,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 58,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 76,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 77,
+   "path": "src/main.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "run",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 5,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Module-graph cycle (Rust)"
+  },
+  {
+   "line": 158,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 163,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 167,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 168,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 170,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 172,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 173,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 174,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summarize",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 203,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "parse_list",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 230,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "parse_list",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 247,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "display_unit",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 278,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "format",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 393,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ALLOC-001",
+   "severity": "hot",
+   "symbol": "large_changes_include_factors",
+   "title": "Heap allocation inside loop (Rust)"
+  },
+  {
+   "line": 420,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "cpu_time_statistics_use_per_run_totals",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 482,
+   "path": "src/metric.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "summaries_require_complete_samples",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 51,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "parse_from_str",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 234,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "default",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 245,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "default",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 254,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-002",
+   "severity": "hot",
+   "symbol": "from_cli_arguments",
+   "title": "Hot component (Rust)"
+  },
+  {
+   "line": 254,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-CALL-002",
+   "severity": "warn",
+   "symbol": "from_cli_arguments",
+   "title": "High cyclomatic complexity (Rust)"
+  },
+  {
+   "line": 275,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 304,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ALLOC-001",
+   "severity": "hot",
+   "symbol": "from_cli_arguments",
+   "title": "Heap allocation inside loop (Rust)"
+  },
+  {
+   "line": 317,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 341,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 415,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 418,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 424,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "from_cli_arguments",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 458,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "validate_against_command_list",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 463,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "validate_against_command_list",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 481,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "validate_against_command_list",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 500,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "test_platform_default_shell",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 511,
+   "path": "src/options.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "test_can_parse_shell_command_line_from_str",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 20,
+   "path": "src/output/progress_bar.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "style_with_template",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 23,
+   "path": "src/output/progress_bar.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "style_with_template",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 56,
+   "path": "src/quantity/statistics.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "median",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 105,
+   "path": "src/quantity/statistics.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "standard_deviation_f64",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 134,
+   "path": "src/quantity/statistics.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "modified_zscores_f64",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 36,
+   "path": "src/shell_syntax.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "first_unquoted_operator",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 71,
+   "path": "src/shell_syntax.rs",
+   "ruleId": "PERF-RS-CALL-002",
+   "severity": "warn",
+   "symbol": "next",
+   "title": "High cyclomatic complexity (Rust)"
+  },
+  {
+   "line": 77,
+   "path": "src/shell_syntax.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "next",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 202,
+   "path": "src/shell_syntax.rs",
+   "ruleId": "PERF-RS-ALLOC-001",
+   "severity": "hot",
+   "symbol": "finds_supported_operators_in_command_order",
+   "title": "Heap allocation inside loop (Rust)"
+  },
+  {
+   "line": 203,
+   "path": "src/shell_syntax.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "finds_supported_operators_in_command_order",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 5,
+   "path": "src/timer/macos_counters.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Deep module chain (Rust)"
+  },
+  {
+   "line": 10,
+   "path": "src/timer/macos_counters.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "wait",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 24,
+   "path": "src/timer/mod.rs",
+   "ruleId": "PERF-RS-ARCH-001",
+   "severity": "warn",
+   "symbol": "",
+   "title": "Deep module chain (Rust)"
+  },
+  {
+   "line": 64,
+   "path": "src/timer/mod.rs",
+   "ruleId": "PERF-RS-TYPE-001",
+   "severity": "warn",
+   "symbol": "execute_and_measure",
+   "title": "Large struct passed by value (Rust)"
+  },
+  {
+   "line": 87,
+   "path": "src/timer/mod.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "execute_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 97,
+   "path": "src/timer/mod.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "execute_and_measure",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 88,
+   "path": "src/timer/windows_timer.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "stop",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 20,
+   "path": "tests/execution_order_tests.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "new",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 25,
+   "path": "tests/execution_order_tests.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "new",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 32,
+   "path": "tests/execution_order_tests.rs",
+   "ruleId": "PERF-RS-CALL-001",
+   "severity": "info",
+   "symbol": "arg",
+   "title": "Direct recursion (Rust)"
+  },
+  {
+   "line": 37,
+   "path": "tests/execution_order_tests.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "get_command",
+   "title": "Cross-module call coupling (Rust)"
+  },
+  {
+   "line": 77,
+   "path": "tests/execution_order_tests.rs",
+   "ruleId": "PERF-RS-ARCH-003",
+   "severity": "info",
+   "symbol": "expect_output",
+   "title": "Cross-module call coupling (Rust)"
+  }
+ ],
+ "hulls": [
+  {
+   "h": 536,
+   "label": "src \u00b7 6",
+   "w": 526,
+   "x": 167,
+   "y": 44
+  },
+  {
+   "h": 221,
+   "label": "src/benchmark \u00b7 3",
+   "w": 346,
+   "x": 347,
+   "y": 254
+  },
+  {
+   "h": 221,
+   "label": "src/quantity \u00b7 2",
+   "w": 346,
+   "x": 527,
+   "y": 359
+  },
+  {
+   "h": 326,
+   "label": "src/timer \u00b7 3",
+   "w": 346,
+   "x": 707,
+   "y": 44
+  },
+  {
+   "h": 221,
+   "label": "tests \u00b7 2",
+   "w": 346,
+   "x": 527,
+   "y": 44
+  }
+ ],
+ "meta": {
+  "actions": [
+   {
+    "anchor": "src/output/report.rs:144",
+    "title": "Heap allocation inside loop (Rust)"
+   },
+   {
+    "anchor": "src/output/report.rs:49",
+    "title": "Heap allocation inside loop (Rust)"
+   },
+   {
+    "anchor": "src/options.rs:304",
+    "title": "Heap allocation inside loop (Rust)"
+   }
   ],
-  "source": {
-    "metrics": "metrics.json",
-    "renderDir": "out-hyperfine",
-    "report": "report.html",
-    "schemaVersion": "1.7"
-  },
-  "stage": {
-    "h": 718,
-    "w": 1400
-  },
-  "state": {
-    "allTest": false,
-    "capped": false,
-    "empty": false,
-    "library": false,
-    "noEntry": false,
-    "partialParse": false,
-    "singleFile": false
-  },
-  "synthetic": false,
-  "trace": [
+  "caps": "19 of 19 reachable files shown \u00b7 0 aggregated",
+  "entry": "production main \u00b7 src/main.rs:88 main \u00b7 confidence HIGH \u00b7 0 alternatives",
+  "findingsIncluded": 148,
+  "findingsTotal": 348,
+  "footer": "19 of 51 source files reachable (37%) \u00b7 49 of 49 file pairs drawn \u00b7 0 MEDIUM / 297 LOW structural edges \u00b7 unreached production: 21 \u00b7 non-production: 11 \u00b7 parse 53 ok / 0 partial / 0 failed \u00b7 33/238 unresolved includes \u00b7 16 files demoted",
+  "hottest": "src/command.rs \u00b7 611 static cost units (v2) \u00b7 87\u00d7 median function",
+  "path": "PATH \u00b7 3 steps \u00b7 representative path (static, BFS-derived)"
+ },
+ "nodes": [
+  {
+   "badge": "ENTRY \u00b7 INFO \u00d78",
+   "column": 0,
+   "cost": 58,
+   "costText": "58 static cost units (v2)",
+   "dash": null,
+   "entry": true,
+   "fill": "#1f2d3a",
+   "findings": {
+    "hot": 0,
+    "info": 8,
+    "warn": 0
+   },
+   "functions": [
     {
-      "path": "src/main.rs",
-      "step": 1
+     "cost": 45,
+     "fanIn": 1,
+     "fanOut": 8,
+     "id": "src/main.rs#run#34:1",
+     "line": 34,
+     "maxLoopDepth": 1,
+     "name": "run",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
     },
     {
-      "path": "src/command.rs",
-      "step": 2
+     "cost": 10,
+     "fanIn": 0,
+     "fanOut": 2,
+     "id": "src/main.rs#main#88:1",
+     "line": 88,
+     "maxLoopDepth": 0,
+     "name": "main",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
     },
     {
-      "path": "src/metric.rs",
-      "step": 3
+     "cost": 3,
+     "fanIn": 1,
+     "fanOut": 0,
+     "id": "src/main.rs#caused_by_broken_console_pipe#82:1",
+     "line": 82,
+     "maxLoopDepth": 0,
+     "name": "caused_by_broken_console_pipe",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
     }
-  ]
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/main.rs",
+   "name": "main.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": 1,
+   "ratioText": "8.3\u00d7 median function",
+   "stroke": "#1f2d3a",
+   "strokeWidth": 2,
+   "title": "src/main.rs \u00b7 58 static cost units (v2)",
+   "topText": "top 39% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 175,
+   "y": 72
+  },
+  {
+   "badge": "HOTTEST \u00b7 INFO \u00d722",
+   "column": 1,
+   "cost": 611,
+   "costText": "611 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 3,
+    "info": 24,
+    "warn": 2
+   },
+   "functions": [
+    {
+     "cost": 109,
+     "fanIn": 1,
+     "fanOut": 8,
+     "id": "src/command.rs#build_from_cli_arguments#226:5",
+     "line": 226,
+     "maxLoopDepth": 2,
+     "name": "build_from_cli_arguments",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 3
+    },
+    {
+     "cost": 43,
+     "fanIn": 3,
+     "fanOut": 4,
+     "id": "src/command.rs#replace_parameters_in#145:5",
+     "line": 145,
+     "maxLoopDepth": 2,
+     "name": "replace_parameters_in",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 3
+    },
+    {
+     "cost": 43,
+     "fanIn": 6,
+     "fanOut": 4,
+     "id": "src/command.rs#build_parameter_scan_commands#362:5",
+     "line": 362,
+     "maxLoopDepth": 2,
+     "name": "build_parameter_scan_commands",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 2
+    }
+   ],
+   "h": 80,
+   "hottest": true,
+   "id": "src/command.rs",
+   "name": "command.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": 2,
+   "ratioText": "87\u00d7 median function",
+   "stroke": "#c2410c",
+   "strokeWidth": 2,
+   "title": "src/command.rs \u00b7 611 static cost units (v2)",
+   "topText": "top 2% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 355,
+   "y": 72
+  },
+  {
+   "badge": "INFO \u00d713",
+   "column": 1,
+   "cost": 276,
+   "costText": "276 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 2,
+    "info": 14,
+    "warn": 1
+   },
+   "functions": [
+    {
+     "cost": 165,
+     "fanIn": 0,
+     "fanOut": 8,
+     "id": "src/options.rs#from_cli_arguments#254:5",
+     "line": 254,
+     "maxLoopDepth": 1,
+     "name": "from_cli_arguments",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 32,
+     "fanIn": 2,
+     "fanOut": 3,
+     "id": "src/options.rs#validate_against_command_list#455:5",
+     "line": 455,
+     "maxLoopDepth": 1,
+     "name": "validate_against_command_list",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 15,
+     "fanIn": 1,
+     "fanOut": 0,
+     "id": "src/options.rs#get_stdout_stderr#159:5",
+     "line": 159,
+     "maxLoopDepth": 0,
+     "name": "get_stdout_stderr",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/options.rs",
+   "name": "options.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "39\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/options.rs \u00b7 276 static cost units (v2)",
+   "topText": "top 10% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 355,
+   "y": 177
+  },
+  {
+   "badge": "INFO \u00d72",
+   "column": 1,
+   "cost": 210,
+   "costText": "210 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 1,
+    "info": 3,
+    "warn": 1
+   },
+   "functions": [
+    {
+     "cost": 57,
+     "fanIn": 2,
+     "fanOut": 1,
+     "id": "src/shell_syntax.rs#next#71:5",
+     "line": 71,
+     "maxLoopDepth": 2,
+     "name": "next",
+     "recursive": true,
+     "tripSource": "unknown",
+     "unknownTripLoops": 3
+    },
+    {
+     "cost": 39,
+     "fanIn": 0,
+     "fanOut": 0,
+     "id": "src/shell_syntax.rs#tokenizer_preserves_words_quotes_and_escapes#143:5",
+     "line": 143,
+     "maxLoopDepth": 1,
+     "name": "tokenizer_preserves_words_quotes_and_escapes",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 30,
+     "fanIn": 0,
+     "fanOut": 0,
+     "id": "src/shell_syntax.rs#handles_empty_and_malformed_commands_without_panicking#247:5",
+     "line": 247,
+     "maxLoopDepth": 1,
+     "name": "handles_empty_and_malformed_commands_without_panicking",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/shell_syntax.rs",
+   "name": "shell_syntax.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "30\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/shell_syntax.rs \u00b7 210 static cost units (v2)",
+   "topText": "top 16% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 355,
+   "y": 282
+  },
+  {
+   "badge": "INFO \u00d78 \u00b7 bench",
+   "column": 1,
+   "cost": 74,
+   "costText": "74 static cost units (v2)",
+   "dash": "3 2",
+   "entry": false,
+   "fill": "#f7f0f7",
+   "findings": {
+    "hot": 0,
+    "info": 8,
+    "warn": 1
+   },
+   "functions": [
+    {
+     "cost": 40,
+     "fanIn": 2,
+     "fanOut": 4,
+     "id": "src/benchmark/scheduler.rs#run_benchmarks#32:5",
+     "line": 32,
+     "maxLoopDepth": 1,
+     "name": "run_benchmarks",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 17,
+     "fanIn": 0,
+     "fanOut": 5,
+     "id": "src/benchmark/scheduler.rs#generate_results#60:1",
+     "line": 60,
+     "maxLoopDepth": 0,
+     "name": "generate_results",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 10,
+     "fanIn": 2,
+     "fanOut": 0,
+     "id": "src/benchmark/scheduler.rs#new#19:5",
+     "line": 19,
+     "maxLoopDepth": 0,
+     "name": "new",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/benchmark/scheduler.rs",
+   "name": "scheduler.rs",
+   "nonproduction": true,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "11\u00d7 median function",
+   "stroke": "#8a6f9e",
+   "strokeWidth": 1,
+   "title": "src/benchmark/scheduler.rs \u00b7 74 static cost units (v2)",
+   "topText": "top 29% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 355,
+   "y": 387
+  },
+  {
+   "badge": "INFO \u00d71",
+   "column": 1,
+   "cost": 21,
+   "costText": "21 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 1,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 10,
+     "fanIn": 6,
+     "fanOut": 1,
+     "id": "src/cli.rs#get_cli_arguments#16:1",
+     "line": 16,
+     "maxLoopDepth": 0,
+     "name": "get_cli_arguments",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 9,
+     "fanIn": 3,
+     "fanOut": 1,
+     "id": "src/cli.rs#build_command#32:1",
+     "line": 32,
+     "maxLoopDepth": 0,
+     "name": "build_command",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 2,
+     "fanIn": 0,
+     "fanOut": 1,
+     "id": "src/cli.rs#verify_app#457:1",
+     "line": 457,
+     "maxLoopDepth": 0,
+     "name": "verify_app",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/cli.rs",
+   "name": "cli.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "3.0\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/cli.rs \u00b7 21 static cost units (v2)",
+   "topText": "top 76% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 355,
+   "y": 492
+  },
+  {
+   "badge": "INFO \u00d713",
+   "column": 2,
+   "cost": 431,
+   "costText": "431 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 1,
+    "info": 14,
+    "warn": 1
+   },
+   "functions": [
+    {
+     "cost": 56,
+     "fanIn": 40,
+     "fanOut": 2,
+     "id": "src/metric.rs#format#273:5",
+     "line": 273,
+     "maxLoopDepth": 0,
+     "name": "format",
+     "recursive": true,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 44,
+     "fanIn": 5,
+     "fanOut": 5,
+     "id": "src/metric.rs#parse_list#196:5",
+     "line": 196,
+     "maxLoopDepth": 1,
+     "name": "parse_list",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 41,
+     "fanIn": 2,
+     "fanOut": 3,
+     "id": "src/metric.rs#format_factor_from#350:5",
+     "line": 350,
+     "maxLoopDepth": 0,
+     "name": "format_factor_from",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/metric.rs",
+   "name": "metric.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": 3,
+   "ratioText": "62\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/metric.rs \u00b7 431 static cost units (v2)",
+   "topText": "top 4% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 535,
+   "y": 72
+  },
+  {
+   "badge": "INFO \u00d73 \u00b7 test",
+   "column": 2,
+   "cost": 373,
+   "costText": "373 static cost units (v2)",
+   "dash": "3 2",
+   "entry": false,
+   "fill": "#eef2f7",
+   "findings": {
+    "hot": 0,
+    "info": 5,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 81,
+     "fanIn": 73,
+     "fanOut": 1,
+     "id": "tests/execution_order_tests.rs#arg#31:5",
+     "line": 31,
+     "maxLoopDepth": 0,
+     "name": "arg",
+     "recursive": true,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 33,
+     "fanIn": 21,
+     "fanOut": 3,
+     "id": "tests/execution_order_tests.rs#new#17:5",
+     "line": 17,
+     "maxLoopDepth": 0,
+     "name": "new",
+     "recursive": true,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 27,
+     "fanIn": 22,
+     "fanOut": 2,
+     "id": "tests/execution_order_tests.rs#command#44:5",
+     "line": 44,
+     "maxLoopDepth": 0,
+     "name": "command",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "tests/execution_order_tests.rs",
+   "name": "execution_order_tests.rs",
+   "nonproduction": true,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "53\u00d7 median function",
+   "stroke": "#7f93aa",
+   "strokeWidth": 1,
+   "title": "tests/execution_order_tests.rs \u00b7 373 static cost units (v2)",
+   "topText": "top 6% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 535,
+   "y": 177
+  },
+  {
+   "badge": "INFO \u00d718 \u00b7 bench",
+   "column": 2,
+   "cost": 170,
+   "costText": "170 static cost units (v2)",
+   "dash": "3 2",
+   "entry": false,
+   "fill": "#f7f0f7",
+   "findings": {
+    "hot": 2,
+    "info": 19,
+    "warn": 2
+   },
+   "functions": [
+    {
+     "cost": 71,
+     "fanIn": 2,
+     "fanOut": 5,
+     "id": "src/benchmark/executor.rs#run_command_and_measure_common#71:1",
+     "line": 71,
+     "maxLoopDepth": 0,
+     "name": "run_command_and_measure_common",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 35,
+     "fanIn": 0,
+     "fanOut": 6,
+     "id": "src/benchmark/executor.rs#calibrate#262:5",
+     "line": 262,
+     "maxLoopDepth": 1,
+     "name": "calibrate",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 18,
+     "fanIn": 1,
+     "fanOut": 1,
+     "id": "src/benchmark/executor.rs#to_env_var_value#24:5",
+     "line": 24,
+     "maxLoopDepth": 0,
+     "name": "to_env_var_value",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/benchmark/executor.rs",
+   "name": "executor.rs",
+   "nonproduction": true,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "24\u00d7 median function",
+   "stroke": "#8a6f9e",
+   "strokeWidth": 1,
+   "title": "src/benchmark/executor.rs \u00b7 170 static cost units (v2)",
+   "topText": "top 18% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 535,
+   "y": 282
+  },
+  {
+   "badge": "INFO \u00d711 \u00b7 bench",
+   "column": 2,
+   "cost": 120,
+   "costText": "120 static cost units (v2)",
+   "dash": "3 2",
+   "entry": false,
+   "fill": "#f7f0f7",
+   "findings": {
+    "hot": 0,
+    "info": 14,
+    "warn": 1
+   },
+   "functions": [
+    {
+     "cost": 27,
+     "fanIn": 18,
+     "fanOut": 1,
+     "id": "src/benchmark/measurement.rs#push#126:5",
+     "line": 126,
+     "maxLoopDepth": 0,
+     "name": "push",
+     "recursive": true,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 21,
+     "fanIn": 14,
+     "fanOut": 1,
+     "id": "src/benchmark/measurement.rs#is_empty#122:5",
+     "line": 122,
+     "maxLoopDepth": 0,
+     "name": "is_empty",
+     "recursive": true,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 20,
+     "fanIn": 11,
+     "fanOut": 1,
+     "id": "src/benchmark/measurement.rs#len#118:5",
+     "line": 118,
+     "maxLoopDepth": 0,
+     "name": "len",
+     "recursive": true,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/benchmark/measurement.rs",
+   "name": "measurement.rs",
+   "nonproduction": true,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "17\u00d7 median function",
+   "stroke": "#8a6f9e",
+   "strokeWidth": 1,
+   "title": "src/benchmark/measurement.rs \u00b7 120 static cost units (v2)",
+   "topText": "top 20% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 535,
+   "y": 387
+  },
+  {
+   "badge": "INFO \u00d73",
+   "column": 2,
+   "cost": 110,
+   "costText": "110 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 3,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 18,
+     "fanIn": 6,
+     "fanOut": 0,
+     "id": "src/quantity/statistics.rs#mean#28:1",
+     "line": 28,
+     "maxLoopDepth": 1,
+     "name": "mean",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 16,
+     "fanIn": 2,
+     "fanOut": 2,
+     "id": "src/quantity/statistics.rs#modified_zscores_f64#130:1",
+     "line": 130,
+     "maxLoopDepth": 0,
+     "name": "modified_zscores_f64",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 14,
+     "fanIn": 3,
+     "fanOut": 1,
+     "id": "src/quantity/statistics.rs#median#44:1",
+     "line": 44,
+     "maxLoopDepth": 0,
+     "name": "median",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/quantity/statistics.rs",
+   "name": "statistics.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "16\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/quantity/statistics.rs \u00b7 110 static cost units (v2)",
+   "topText": "top 22% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 535,
+   "y": 492
+  },
+  {
+   "badge": "WARN \u00d75",
+   "column": 2,
+   "cost": 108,
+   "costText": "108 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 3,
+    "warn": 5
+   },
+   "functions": [
+    {
+     "cost": 41,
+     "fanIn": 2,
+     "fanOut": 1,
+     "id": "src/export/mod.rs#write_results#125:5",
+     "line": 125,
+     "maxLoopDepth": 1,
+     "name": "write_results",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 28,
+     "fanIn": 1,
+     "fanOut": 2,
+     "id": "src/export/mod.rs#add_exporter#96:5",
+     "line": 96,
+     "maxLoopDepth": 0,
+     "name": "add_exporter",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 25,
+     "fanIn": 0,
+     "fanOut": 1,
+     "id": "src/export/mod.rs#from_cli_arguments#74:5",
+     "line": 74,
+     "maxLoopDepth": 0,
+     "name": "from_cli_arguments",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/export/mod.rs",
+   "name": "mod.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "15\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/export/mod.rs \u00b7 108 static cost units (v2)",
+   "topText": "top 24% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 535,
+   "y": 597
+  },
+  {
+   "badge": "test",
+   "column": 3,
+   "cost": 53,
+   "costText": "53 static cost units (v2)",
+   "dash": "3 2",
+   "entry": false,
+   "fill": "#eef2f7",
+   "findings": {
+    "hot": 0,
+    "info": 0,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 44,
+     "fanIn": 39,
+     "fanOut": 1,
+     "id": "tests/common.rs#hyperfine#10:1",
+     "line": 10,
+     "maxLoopDepth": 0,
+     "name": "hyperfine",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 9,
+     "fanIn": 4,
+     "fanOut": 0,
+     "id": "tests/common.rs#hyperfine_raw_command#3:1",
+     "line": 3,
+     "maxLoopDepth": 0,
+     "name": "hyperfine_raw_command",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "tests/common.rs",
+   "name": "common.rs",
+   "nonproduction": true,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "7.6\u00d7 median function",
+   "stroke": "#7f93aa",
+   "strokeWidth": 1,
+   "title": "tests/common.rs \u00b7 53 static cost units (v2)",
+   "topText": "top 41% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 715,
+   "y": 72
+  },
+  {
+   "badge": "INFO \u00d72",
+   "column": 3,
+   "cost": 45,
+   "costText": "45 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 2,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 17,
+     "fanIn": 3,
+     "fanOut": 2,
+     "id": "src/output/progress_bar.rs#style_with_template#19:1",
+     "line": 19,
+     "maxLoopDepth": 0,
+     "name": "style_with_template",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 16,
+     "fanIn": 2,
+     "fanOut": 0,
+     "id": "src/output/progress_bar.rs#get_progress_bar#52:1",
+     "line": 52,
+     "maxLoopDepth": 0,
+     "name": "get_progress_bar",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 4,
+     "fanIn": 1,
+     "fanOut": 1,
+     "id": "src/output/progress_bar.rs#finish_initial_measurement#46:1",
+     "line": 46,
+     "maxLoopDepth": 0,
+     "name": "finish_initial_measurement",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/output/progress_bar.rs",
+   "name": "progress_bar.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "6.4\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/output/progress_bar.rs \u00b7 45 static cost units (v2)",
+   "topText": "top 49% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 715,
+   "y": 177
+  },
+  {
+   "badge": "INFO \u00d72",
+   "column": 3,
+   "cost": 43,
+   "costText": "43 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 2,
+    "warn": 2
+   },
+   "functions": [
+    {
+     "cost": 25,
+     "fanIn": 1,
+     "fanOut": 0,
+     "id": "src/timer/mod.rs#discard#33:1",
+     "line": 33,
+     "maxLoopDepth": 1,
+     "name": "discard",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 2
+    },
+    {
+     "cost": 18,
+     "fanIn": 1,
+     "fanOut": 3,
+     "id": "src/timer/mod.rs#execute_and_measure#64:1",
+     "line": 64,
+     "maxLoopDepth": 0,
+     "name": "execute_and_measure",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/timer/mod.rs",
+   "name": "mod.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "6.1\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/timer/mod.rs \u00b7 43 static cost units (v2)",
+   "topText": "top 55% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 715,
+   "y": 282
+  },
+  {
+   "badge": "",
+   "column": 3,
+   "cost": 21,
+   "costText": "21 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 0,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 10,
+     "fanIn": 1,
+     "fanOut": 0,
+     "id": "src/quantity/mod.rs#serialize_information#35:1",
+     "line": 35,
+     "maxLoopDepth": 0,
+     "name": "serialize_information",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 8,
+     "fanIn": 0,
+     "fanOut": 0,
+     "id": "src/quantity/mod.rs#serialize_time#25:1",
+     "line": 25,
+     "maxLoopDepth": 0,
+     "name": "serialize_time",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 1,
+     "fanIn": 0,
+     "fanOut": 0,
+     "id": "src/quantity/mod.rs#const_time_from_seconds#16:1",
+     "line": 16,
+     "maxLoopDepth": 0,
+     "name": "const_time_from_seconds",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/quantity/mod.rs",
+   "name": "mod.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "3.0\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/quantity/mod.rs \u00b7 21 static cost units (v2)",
+   "topText": "top 78% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 715,
+   "y": 387
+  },
+  {
+   "badge": "",
+   "column": 3,
+   "cost": 2,
+   "costText": "2 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 0,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 1,
+     "fanIn": 0,
+     "fanOut": 0,
+     "id": "src/util/exit_code.rs#extract_exit_code#4:1",
+     "line": 4,
+     "maxLoopDepth": 0,
+     "name": "extract_exit_code",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 1,
+     "fanIn": 0,
+     "fanOut": 0,
+     "id": "src/util/exit_code.rs#extract_exit_code#20:1",
+     "line": 20,
+     "maxLoopDepth": 0,
+     "name": "extract_exit_code",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/util/exit_code.rs",
+   "name": "exit_code.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "0.3\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/util/exit_code.rs \u00b7 2 static cost units (v2)",
+   "topText": "top 92% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 715,
+   "y": 492
+  },
+  {
+   "badge": "WARN \u00d71",
+   "column": 4,
+   "cost": 23,
+   "costText": "23 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 1,
+    "warn": 1
+   },
+   "functions": [
+    {
+     "cost": 20,
+     "fanIn": 2,
+     "fanOut": 1,
+     "id": "src/timer/macos_counters.rs#wait#9:1",
+     "line": 9,
+     "maxLoopDepth": 1,
+     "name": "wait",
+     "recursive": false,
+     "tripSource": "unknown",
+     "unknownTripLoops": 1
+    },
+    {
+     "cost": 3,
+     "fanIn": 0,
+     "fanOut": 0,
+     "id": "src/timer/macos_counters.rs#read#32:1",
+     "line": 32,
+     "maxLoopDepth": 0,
+     "name": "read",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/timer/macos_counters.rs",
+   "name": "macos_counters.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "3.3\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/timer/macos_counters.rs \u00b7 23 static cost units (v2)",
+   "topText": "top 75% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 895,
+   "y": 72
+  },
+  {
+   "badge": "INFO \u00d71",
+   "column": 4,
+   "cost": 20,
+   "costText": "20 static cost units (v2)",
+   "dash": null,
+   "entry": false,
+   "fill": "#fdfbf6",
+   "findings": {
+    "hot": 0,
+    "info": 1,
+    "warn": 0
+   },
+   "functions": [
+    {
+     "cost": 8,
+     "fanIn": 3,
+     "fanOut": 0,
+     "id": "src/timer/windows_timer.rs#drop#127:5",
+     "line": 127,
+     "maxLoopDepth": 0,
+     "name": "drop",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 7,
+     "fanIn": 0,
+     "fanOut": 1,
+     "id": "src/timer/windows_timer.rs#stop#87:5",
+     "line": 87,
+     "maxLoopDepth": 0,
+     "name": "stop",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    },
+    {
+     "cost": 5,
+     "fanIn": 1,
+     "fanOut": 0,
+     "id": "src/timer/windows_timer.rs#start_suspended_process#55:5",
+     "line": 55,
+     "maxLoopDepth": 0,
+     "name": "start_suspended_process",
+     "recursive": false,
+     "tripSource": "",
+     "unknownTripLoops": 0
+    }
+   ],
+   "h": 80,
+   "hottest": false,
+   "id": "src/timer/windows_timer.rs",
+   "name": "windows_timer.rs",
+   "nonproduction": false,
+   "partialParse": false,
+   "pathStep": null,
+   "ratioText": "2.9\u00d7 median function",
+   "stroke": "#8b8173",
+   "strokeWidth": 1,
+   "title": "src/timer/windows_timer.rs \u00b7 20 static cost units (v2)",
+   "topText": "top 80% of files",
+   "unreached": false,
+   "w": 150,
+   "x": 895,
+   "y": 177
+  }
+ ],
+ "source": {
+  "artifact": "atlas-layout.json",
+  "layoutVersion": 1,
+  "sha256": "2b3d933e65375a2a0bd1f26c518eaa2be6287c0c4d375b8344fb5fc50b23a4ca"
+ },
+ "stage": {
+  "h": 718,
+  "w": 1400
+ },
+ "state": {
+  "allTest": false,
+  "capped": false,
+  "empty": false,
+  "library": false,
+  "noEntry": false,
+  "partialParse": false,
+  "singleFile": false
+ },
+ "synthetic": false,
+ "trace": [
+  {
+   "path": "src/main.rs",
+   "step": 1
+  },
+  {
+   "path": "src/command.rs",
+   "step": 2
+  },
+  {
+   "path": "src/metric.rs",
+   "step": 3
+  }
+ ]
 }

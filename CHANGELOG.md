@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Atlas Story S1a — `perfpal --story` emits `atlas-layout.json` (2026-10-24).** The core now writes
+  the exact story geometry the SVG draws (canvas, columns, node rects, edge `d` paths, hulls,
+  aggregate boxes, cap chips), the presentation strings the nodes already render (badge, cost/ratio/top
+  lines, fill/stroke/dash), the drawn-slice/scan findings counts, KV1 start actions, and derived
+  `stages`. Emitted **only** with `--story`, so existing scans are unchanged: `report.html` is
+  byte-identical for hyperfine and cJSON, and `metrics.json` differs only in `scan.duration_ms` /
+  `scan.started_at`. No new dependency, no schema change, `preserve_order` still absent.
+  Record: `docs/atlas/core-probes.md` (P4/P5). This is the S1 pipeline slice of
+  `docs/specs/atlas-story.md`.
 - **Track D1 — Atlas run-story prototype (2026-10-24).** A standalone `sim/` companion (no build step,
   no dependency, no network, no production edits) that plays a scrubbable **static, inferred** run
   story over the real Atlas entry-flow map for hyperfine and cJSON: boot at the elected entry →

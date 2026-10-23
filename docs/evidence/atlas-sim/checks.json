@@ -81,7 +81,7 @@
       "ok": true
     },
     {
-      "check": "server answers on :8768",
+      "check": "server answers on :8769",
       "detail": "",
       "ok": true
     },
@@ -137,7 +137,7 @@
     },
     {
       "check": "hyperfine: loop keyframe",
-      "detail": "259301 bytes",
+      "detail": "249607 bytes",
       "ok": true
     },
     {
@@ -157,7 +157,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "353",
+      "detail": "351",
       "ok": true
     },
     {
@@ -197,17 +197,17 @@
     },
     {
       "check": "hyperfine: start keyframe",
-      "detail": "251432 bytes",
+      "detail": "242259 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: mid keyframe",
-      "detail": "244463 bytes",
+      "detail": "235724 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: end keyframe",
-      "detail": "252369 bytes",
+      "detail": "246826 bytes",
       "ok": true
     },
     {
@@ -267,7 +267,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "133073 bytes",
+      "detail": "128406 bytes",
       "ok": true
     },
     {
@@ -332,17 +332,17 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "134500 bytes",
+      "detail": "129831 bytes",
       "ok": true
     },
     {
       "check": "cjson: mid keyframe",
-      "detail": "134640 bytes",
+      "detail": "129982 bytes",
       "ok": true
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "134197 bytes",
+      "detail": "133603 bytes",
       "ok": true
     },
     {
@@ -382,7 +382,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "67086 bytes",
+      "detail": "67103 bytes",
       "ok": true
     },
     {
@@ -412,7 +412,7 @@
     },
     {
       "check": "empty: state keyframe",
-      "detail": "64088 bytes",
+      "detail": "64132 bytes",
       "ok": true
     },
     {
@@ -442,7 +442,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "71267 bytes",
+      "detail": "71309 bytes",
       "ok": true
     },
     {
