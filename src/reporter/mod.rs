@@ -1588,7 +1588,7 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
     ));
     out.push_str(
         "<style>\n\
-         body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
+         body{font-family:monospace,monospace;max-width:90rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
          .table-scroll{overflow-x:auto;max-width:100%}\n\
          table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
          th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
@@ -2218,8 +2218,9 @@ fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
 
 /// Detail-page head: same markup as [`html_head`] (doctype, charset,
 /// viewport, empty favicon, inline `<style>`), titled for the findings
-/// detail artifact. The style block is intentionally identical to the
-/// report page so table/filter/figure rendering is shared.
+/// detail artifact. It keeps the 72rem body width: the 90rem width on the
+/// report page exists for the Atlas canvas, while this page and the
+/// profile-queue page intentionally stay at 72rem for dense tables.
 fn html_detail_head(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
     out.push_str("<meta charset=\"utf-8\">\n");

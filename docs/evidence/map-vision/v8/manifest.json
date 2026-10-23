@@ -1,0 +1,149 @@
+{
+  "_comment": "Synthetic 8-state fixture matrix; no holdout read.",
+  "protocol": "Two blind reads per state on the 1440x900 final frame; one image per task; no source/siblings/expected answer; final frame captured with prefers-reduced-motion + animations disabled.",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "device_scale_factor": 1,
+  "animation": "CSS/SMIL declarative only; final frame; zero script added by Atlas",
+  "holdout": "django/postgres and the memchr A2 payload deliberately absent",
+  "states": [
+    {
+      "state": "application",
+      "html": "html/application.html",
+      "html_sha256": "b3ab40b0baeeeb0d912462cdd02f5a8d55c849e7638689acbf48f1fe8849d4b4",
+      "final": {
+        "file": "application-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "569c12d5c86452970c230e5b42e3928eb2015855bb8c3e4427edbc6375a7aa3e"
+      },
+      "strip": {
+        "file": "application-weight-strip.png",
+        "width": 1152,
+        "height": 298,
+        "sha256": "4d7ca83a1b918b9b2328f135d74a7e9d71ed18e0feeeaa2bb84a614ff3569870"
+      }
+    },
+    {
+      "state": "library",
+      "html": "html/library.html",
+      "html_sha256": "3ea2e3f827bf07c88d89cd16d4f7b7e15d58ed83057b0d2d2c31009f534dee55",
+      "final": {
+        "file": "library-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "7e69da0a8363c7c99b05f0cceadf5cf309577a7dc5ad4a1b3b366eedf4b3841a"
+      },
+      "strip": {
+        "file": "library-weight-strip.png",
+        "width": 1152,
+        "height": 298,
+        "sha256": "82971b397cefe37052be8d1b2716ed1a0fd6daf45e12b423d171451c5fa45bf3"
+      }
+    },
+    {
+      "state": "no-entry",
+      "html": "html/no-entry.html",
+      "html_sha256": "71c044c2155dd277a859349adbdc2fc21ffecc81ce0d81f68520db07ea6bf602",
+      "final": {
+        "file": "no-entry-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "51f8f899a0b0079da3eee28467ee661a58f33229579681e26f12b760db62bec7"
+      },
+      "strip": {
+        "file": "no-entry-weight-strip.png",
+        "width": 1152,
+        "height": 255,
+        "sha256": "9d730829a6d4fdb6de947b075aa690fc4c26e6a3d1dffde93d8b0fa8867304b1"
+      }
+    },
+    {
+      "state": "empty",
+      "html": "html/empty.html",
+      "html_sha256": "b82204d7d870fe0eb4eb5615dc23efe1fcbdf7394c1fa6b0356faedbd33f20bf",
+      "final": {
+        "file": "empty-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "e4c3ff57f8058f54ca79fd867ffbdd962877029303efc17d1b1ebce2d665f0f0"
+      },
+      "strip": {
+        "file": "empty-weight-strip.png",
+        "width": 1152,
+        "height": 181,
+        "sha256": "bd788443395debf712e5a57b31f5457a570c730c931afc40a3e0b0a5f56e624b"
+      }
+    },
+    {
+      "state": "all-test",
+      "html": "html/all-test.html",
+      "html_sha256": "2f62e4ae982e98e457531359f7c0832f5ee6bca66d9aebe113dbdc116b09a932",
+      "final": {
+        "file": "all-test-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "eac111decacd165bdda0240262377025f559cf34d96b3e227997940ed3f805a5"
+      },
+      "strip": {
+        "file": "all-test-weight-strip.png",
+        "width": 1152,
+        "height": 253,
+        "sha256": "dee79bc93c9ec68cc53a053bb6c9381f04ab43afeee7f8ea3664a2ba27b81494"
+      }
+    },
+    {
+      "state": "capped",
+      "html": "html/capped.html",
+      "html_sha256": "5ff486d564dc7191acedceaf13691b73023554f1a22e4540804158b18c2791dc",
+      "final": {
+        "file": "capped-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "f87f23a5a3ad8e6d12aa7bb43ebb0205a4533102593272736aab8a3de9b7a478"
+      },
+      "strip": {
+        "file": "capped-weight-strip.png",
+        "width": 1152,
+        "height": 343,
+        "sha256": "ea7ebec277f3eb882f156485c50b07ac688649c1d981880764139641d3fa9e73"
+      }
+    },
+    {
+      "state": "partial-parse",
+      "html": "html/partial-parse.html",
+      "html_sha256": "7b42db4030e30c8d61d1f2598886594421eb29a99872c5e96d544b9f663d9263",
+      "final": {
+        "file": "partial-parse-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "e41229039731be3774dedbece1a4379790b53420c1b13775451b1bff7efe96d3"
+      },
+      "strip": {
+        "file": "partial-parse-weight-strip.png",
+        "width": 1152,
+        "height": 277,
+        "sha256": "feff8f5deea9f05c226691495420ad9469ec2a196f03a4b7e03dd0e47a34fca2"
+      }
+    },
+    {
+      "state": "single-file",
+      "html": "html/single-file.html",
+      "html_sha256": "2d73150cd46d0ec96e1a2c87569e9cb5838abd61364f339f0f8ea320d596d944",
+      "final": {
+        "file": "single-file-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "7e43e880b0cc3a00bb2ac4d98a5d31f30cd89ce3220e5365ffcd40ed4d7b8ed0"
+      },
+      "strip": {
+        "file": "single-file-weight-strip.png",
+        "width": 1152,
+        "height": 255,
+        "sha256": "32de7ff7a5c44ec57e436f0c50ca026e892a3b8feef8525e66204296928583dc"
+      }
+    }
+  ]
+}

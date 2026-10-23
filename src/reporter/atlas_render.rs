@@ -39,12 +39,32 @@ pub const PATH_CAPTION: &str = "representative path (static, BFS-derived)";
 const SVG_W: i64 = 1400;
 const SVG_H: i64 = 720;
 const MARGIN_X: i64 = 20;
-const TOP: i64 = 52;
+/// First-row top. Leaves room above the first node for the component-hull
+/// label (baseline `TOP - 16`) and the node badge (baseline `TOP - 3`) while
+/// keeping both below the column header at [`HEADER_Y`].
+const TOP: i64 = 72;
 const BOTTOM: i64 = 16;
 const HEADER_Y: i64 = 22;
 const MAX_COL_W: i64 = 180;
 const MIN_NODE_W: i64 = 96;
 const MAX_NODE_W: i64 = 150;
+/// Minimum node height keeps four readable text lines inside the rect.
+const MIN_NODE_H: i64 = 46;
+const MAX_NODE_H: i64 = 80;
+/// Vertical gap between node rects so badges above a node never touch the row
+/// above. Combined with [`MIN_NODE_H`] it sets the effective row floor.
+const ROW_GAP: i64 = 12;
+/// Component-hull top margin above the first member node, and the hull label
+/// offset below the hull rect top. Together the label baseline sits 16px above
+/// the first node top and >= 10px above that node's badge baseline.
+const HULL_TOP_MARGIN: i64 = 28;
+/// Edge-pill collision geometry: the visible pill is [`PILL_H`] tall and
+/// `edge_label_width()` wide; collision checks pad it by [`PILL_PAD`] on every
+/// side and clear node rects by [`NODE_CLEAR_PAD`].
+const PILL_H: i64 = 12;
+const PILL_PAD: i64 = 2;
+const NODE_CLEAR_PAD: i64 = 4;
+const HULL_LABEL_OFFSET: i64 = 12;
 
 const HULL_COLORS: [&str; 8] = [
     "#eef2ff", "#f0fdf4", "#fef3c7", "#fce7f3", "#e0f2fe", "#f5f3ff", "#ecfccb", "#ffe4e6",
@@ -56,6 +76,8 @@ const STATIC_CSS: &str = r#".atlas-svg{background:#ffffff}
 
 const ANIMATION_CSS: &str = r#"#atlas-canvas{position:relative;background:#ffffff;color:#0f172a;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 #atlas-canvas .atlas-head{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px}
+#atlas-canvas .atlas-units{flex-basis:100%;font-size:11.5px;color:#334155}
+#atlas-canvas .atlas-keys{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
 #atlas-canvas .atlas-entry{font-weight:700}
 #atlas-canvas .atlas-hottest{color:#9a3412}
 #atlas-canvas .atlas-caps{color:#475569}
@@ -127,9 +149,15 @@ fn compute_layout(view: &AtlasView) -> Layout {
         .unwrap_or(1)
         .max(1);
     let available_h = SVG_H - TOP - BOTTOM;
-    let row_h = (available_h / max_items as i64).clamp(26, 88);
-    let node_h = (row_h - 8).clamp(18, 80);
-    let height = SVG_H.max(TOP + max_items as i64 * row_h + BOTTOM);
+    // `row_h = max(54, available_h / max_items)` floors at 54 in the plan, but
+    // the 46px node minimum plus the 12px inter-row gap require 58 for badges
+    // to clear the row above. No upper cap: capped/deep states grow the SVG.
+    let row_h = (available_h / max_items as i64).max(MIN_NODE_H + ROW_GAP);
+    let node_h = (row_h - ROW_GAP).clamp(MIN_NODE_H, MAX_NODE_H);
+    // Rows start directly below the column headers: no vertical centring of
+    // the row block inside a taller canvas. Sparse states keep the minimum
+    // canvas height and strand the leftover space below the last row.
+    let height = 480.max(TOP + max_items as i64 * row_h + BOTTOM);
 
     let count = view.columns.len();
     let mut columns = Vec::with_capacity(count);
@@ -183,15 +211,123 @@ struct EdgeShape {
     label_y: i64,
 }
 
-fn edge_shape(edge: &AtlasEdge, rows: &BTreeMap<String, NodeRect>) -> Option<EdgeShape> {
-    let from = rows.get(&edge.from)?;
-    let to = rows.get(&edge.to)?;
+/// Bulge used by back-edge cubic controls. Kept in one place so the collision
+/// resolver can place a pill just outside the same outer curve.
+fn back_bulge(edge: &AtlasEdge) -> i64 {
+    (28 + (edge.count.min(8) as i64) * 4).min(72)
+}
+
+/// Padded pill box used only for collision checks (not for drawing).
+fn edge_pill_rect(label_x: i64, label_y: i64, count: usize) -> NodeRect {
+    let w = edge_label_width(count) + 2 * PILL_PAD;
+    let h = PILL_H + 2 * PILL_PAD;
+    NodeRect {
+        x: label_x - w / 2,
+        y: label_y - h / 2,
+        w,
+        h,
+    }
+}
+
+fn rects_overlap(a: NodeRect, b: NodeRect) -> bool {
+    a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+}
+
+fn pill_is_clear(pill: NodeRect, layout: &Layout) -> bool {
+    layout.rows.values().all(|rect| {
+        let clear = NodeRect {
+            x: rect.x - NODE_CLEAR_PAD,
+            y: rect.y - NODE_CLEAR_PAD,
+            w: rect.w + 2 * NODE_CLEAR_PAD,
+            h: rect.h + 2 * NODE_CLEAR_PAD,
+        };
+        !rects_overlap(pill, clear)
+    })
+}
+
+fn pill_in_bounds(pill: NodeRect, layout: &Layout) -> bool {
+    pill.x >= MARGIN_X
+        && pill.x + pill.w <= SVG_W - MARGIN_X
+        && pill.y >= 0
+        && pill.y + pill.h <= layout.height
+}
+
+/// True when the drawn pill (no collision padding) overlaps a node rect. This
+/// is the trigger: pills that merely sit close to a node keep their midpoint,
+/// while the 4px node clearance plus pill padding is applied to every
+/// candidate position considered by [`resolve_edge_label`].
+fn pill_hits_node(label_x: i64, label_y: i64, count: usize, layout: &Layout) -> bool {
+    let width = edge_label_width(count);
+    let pill = NodeRect {
+        x: label_x - width / 2,
+        y: label_y - PILL_H / 2,
+        w: width,
+        h: PILL_H,
+    };
+    layout.rows.values().any(|rect| rects_overlap(pill, *rect))
+}
+
+/// Deterministic edge-pill placement: keep the curve midpoint unless the drawn
+/// pill overlaps a node. Candidates are tried in a fixed order — outer side of
+/// the back-edge bulge, vertical row offsets, then horizontal column offsets —
+/// and the first point that is in-bounds and clear of every node rect
+/// (expanded by [`NODE_CLEAR_PAD`], with the pill padded by [`PILL_PAD`]) wins.
+/// If nothing clears, the base point is kept so no label is ever dropped.
+fn resolve_edge_label(
+    edge: &AtlasEdge,
+    from: NodeRect,
+    to: NodeRect,
+    base_x: i64,
+    base_y: i64,
+    layout: &Layout,
+) -> (i64, i64) {
+    if !pill_hits_node(base_x, base_y, edge.count, layout) {
+        return (base_x, base_y);
+    }
+
+    let candidate = |x: i64, y: i64| {
+        let pill = edge_pill_rect(x, y, edge.count);
+        (pill_in_bounds(pill, layout) && pill_is_clear(pill, layout)).then_some((x, y))
+    };
+
+    if edge.back {
+        let outer_x = (from.x + from.w).max(to.x + to.w) + back_bulge(edge) / 2 + 8;
+        if let Some(position) = candidate(outer_x, base_y) {
+            return position;
+        }
+    }
+
+    for factor in [0.5_f64, 1.0, 1.5] {
+        let delta = (layout.row_h as f64 * factor).round() as i64;
+        if let Some(position) = candidate(base_x, base_y - delta) {
+            return position;
+        }
+        if let Some(position) = candidate(base_x, base_y + delta) {
+            return position;
+        }
+    }
+
+    let half_column = layout.columns.first().map_or(0, |column| column.width / 2);
+    if let Some(position) = candidate(base_x - half_column, base_y) {
+        return position;
+    }
+    if let Some(position) = candidate(base_x + half_column, base_y) {
+        return position;
+    }
+
+    (base_x, base_y)
+}
+
+fn edge_shape(edge: &AtlasEdge, layout: &Layout) -> Option<EdgeShape> {
+    let rows = &layout.rows;
+    let from = *rows.get(&edge.from)?;
+    let to = *rows.get(&edge.to)?;
     let source_x = from.x + from.w;
     let source_y = from.y + from.h / 2;
     let (target_x, target_y, control_one_x, control_two_x) = if edge.back {
         let target_x = to.x + to.w;
         let target_y = to.y + to.h / 2;
-        let bulge = (28 + (edge.count.min(8) as i64) * 4).min(72);
+        let bulge = back_bulge(edge);
         (target_x, target_y, source_x + bulge, target_x + bulge)
     } else {
         let target_x = to.x;
@@ -202,8 +338,9 @@ fn edge_shape(edge: &AtlasEdge, rows: &BTreeMap<String, NodeRect>) -> Option<Edg
     let path = format!(
         "M {source_x} {source_y} C {control_one_x} {source_y} {control_two_x} {target_y} {target_x} {target_y}"
     );
-    let label_x = (source_x + 3 * control_one_x + 3 * control_two_x + target_x) / 8;
-    let label_y = (source_y + target_y) / 2;
+    let base_x = (source_x + 3 * control_one_x + 3 * control_two_x + target_x) / 8;
+    let base_y = (source_y + target_y) / 2;
+    let (label_x, label_y) = resolve_edge_label(edge, from, to, base_x, base_y, layout);
     Some(EdgeShape {
         path,
         label_x,
@@ -237,6 +374,42 @@ fn files_label(count: usize) -> String {
     )
 }
 
+/// Monospace advance estimate (~0.62em per character). When a line would
+/// exceed the box, SVG `textLength` compresses the glyph run instead of
+/// shrinking the font or spilling past the node rect.
+fn fit_attrs(text: &str, size: f64, max_w: i64) -> String {
+    let estimated = text.chars().count() as f64 * size * 0.62;
+    if estimated > max_w as f64 {
+        format!(
+            " textLength=\"{}\" lengthAdjust=\"spacingAndGlyphs\"",
+            max_w.max(1)
+        )
+    } else {
+        String::new()
+    }
+}
+
+/// Compact visible edge label (M-10 metric stays in the group `<title>`).
+/// Counts above 999 are clamped so the visible pill stays bounded; the full
+/// count remains in the `<title>` via [`format_distinct_edges`].
+fn edge_label_text(count: usize) -> String {
+    if count > 999 {
+        "×999+".to_string()
+    } else {
+        format!("×{count}")
+    }
+}
+
+/// Estimated pill width: monospace advance (~0.62em) plus horizontal padding,
+/// so the label fits the ~30px inter-column gap. Five-character labels (the
+/// `×999+` clamp) use 6.5px padding to stay inside the 32px preflight bound.
+fn edge_label_width(count: usize) -> i64 {
+    let text = edge_label_text(count);
+    let padding = if text.chars().count() >= 5 { 6.5 } else { 8.0 };
+    let advance = text.chars().count() as f64 * 8.2 * 0.62;
+    (advance + padding).ceil() as i64
+}
+
 fn node_rank_text(node: &AtlasNode) -> String {
     let mut parts = Vec::new();
     if let Some(ratio) = node.ratio {
@@ -249,6 +422,21 @@ fn node_rank_text(node: &AtlasNode) -> String {
         ));
     }
     parts.join(" · ")
+}
+
+/// The two rank lines drawn inside a node (the joined anchor text used in
+/// titles and the answer line stays [`node_rank_text`]).
+fn node_rank_lines(node: &AtlasNode) -> (Option<String>, Option<String>) {
+    let multiple = node
+        .ratio
+        .map(|ratio| format!("{} median function", format_multiple(ratio)));
+    let top = (node.file_population > 0).then(|| {
+        format!(
+            "{} of files",
+            format_top(node.file_rank, node.file_population)
+        )
+    });
+    (multiple, top)
 }
 
 fn node_anchor_text(node: &AtlasNode) -> String {
@@ -301,16 +489,47 @@ fn node_title(node: &AtlasNode) -> String {
     parts.join(" · ")
 }
 
-fn column_header(view: &AtlasView, column: &AtlasColumn) -> String {
-    let count = files_label(column.file_count);
+/// Header font size and line-2 baseline. Column headers are two lines so the
+/// long `UNREACHED` label keeps to its own column; line 2 clears the first
+/// node row (`TOP = 72`) with room to spare.
+const HEADER_FONT_SIZE: f64 = 10.5;
+const HEADER_LINE2_Y: i64 = 36;
+/// Monospace advance estimate (~0.62em per character) used to keep each
+/// header line inside its column.
+const HEADER_CHAR_EM: f64 = 0.62;
+
+/// Estimated rendered width of `text` at `size` in the header's monospace face.
+fn estimated_header_width(text: &str, size: f64) -> f64 {
+    text.chars().count() as f64 * size * HEADER_CHAR_EM
+}
+
+/// Tail-keep `line` so its estimated width stays within `max_w`.
+fn fit_header_line(line: &str, max_w: i64) -> String {
+    if estimated_header_width(line, HEADER_FONT_SIZE) <= max_w as f64 {
+        return line.to_string();
+    }
+    let max_chars = (max_w as f64 / (HEADER_FONT_SIZE * HEADER_CHAR_EM)).floor() as usize;
+    tail_keep(line, max_chars.max(1))
+}
+
+/// Two-line column header. Line 1 names the depth/entry (or `UNREACHED`);
+/// line 2 carries the file count and aggregation note.
+fn column_header_lines(view: &AtlasView, column: &AtlasColumn) -> (String, String) {
+    let mut count = files_label(column.file_count);
+    if !column.aggregated.is_empty() {
+        count.push_str(&format!(" · {} aggregated", column.aggregated.len()));
+    }
     if column.unreached {
-        format!("UNREACHED · no forward path · {count}")
+        (
+            "UNREACHED".to_string(),
+            format!("no forward path · {count}"),
+        )
     } else if column.folded {
-        format!("depth {DEPTH_COLUMN_CAP}+ · {count}")
+        (format!("depth {DEPTH_COLUMN_CAP}+"), count)
     } else if column.depth == 0 && view.entry.point.is_some() {
-        format!("{} · ENTRY · {count}", format_depth(0))
+        (format!("{} · ENTRY", format_depth(0)), count)
     } else {
-        format!("{} · {count}", format_depth(column.depth))
+        (format_depth(column.depth), count)
     }
 }
 
@@ -370,12 +589,25 @@ fn render_stub(view: &AtlasView) -> String {
     ));
     if !detail.is_empty() {
         out.push_str(&format!(
-            "<text x=\"700\" y=\"376\" text-anchor=\"middle\" font-size=\"11\" fill=\"#64748b\">{}</text>",
+            "<text x=\"700\" y=\"376\" text-anchor=\"middle\" font-size=\"13.5\" fill=\"#64748b\">{}</text>",
             escape_xml(&detail)
         ));
     }
     out.push_str("</g>");
     out
+}
+
+/// Hull label baseline for a group whose topmost member starts at `min_y`.
+/// The `.max(0)` keeps the group rect on-canvas for the first row.
+fn hull_label_baseline(min_y: i64) -> i64 {
+    (min_y - HULL_TOP_MARGIN).max(0) + HULL_LABEL_OFFSET
+}
+
+/// Node badge baseline for a node whose top edge is `rect.y`. Badges always sit
+/// above the node: `compute_layout` guarantees `row_h >= MIN_NODE_H + ROW_GAP`
+/// and `node_h <= row_h - ROW_GAP`, so the inter-row gap always holds a badge.
+fn node_badge_baseline(rect: NodeRect) -> i64 {
+    rect.y - 3
 }
 
 fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
@@ -408,7 +640,7 @@ fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
             continue;
         }
         let x = (min_x - 8).max(0);
-        let y = (min_y - 12).max(0);
+        let y = (min_y - HULL_TOP_MARGIN).max(0);
         let width = (max_x + 8 - x).max(20);
         let height = (max_y + 8 - y).max(20);
         let color = HULL_COLORS[palette_index % HULL_COLORS.len()];
@@ -417,9 +649,9 @@ fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
             "<g class=\"atlas-hull\"><title>approximate prefix group; not a canonical component id</title>\
              <rect x=\"{x}\" y=\"{y}\" width=\"{width}\" height=\"{height}\" rx=\"10\" fill=\"{color}\" \
              fill-opacity=\".55\" stroke=\"#cbd5e1\" stroke-width=\"1\"/>\
-             <text x=\"{}\" y=\"{}\" font-size=\"7\" font-weight=\"700\" fill=\"#475569\">{}</text></g>",
+             <text x=\"{}\" y=\"{}\" font-size=\"9.2\" font-weight=\"700\" fill=\"#475569\">{}</text></g>",
             x + 8,
-            y + 12,
+            hull_label_baseline(min_y),
             escape_xml(&format!("{prefix} · {}", members.len()))
         ));
     }
@@ -454,8 +686,8 @@ fn render_aggregate(aggregate: &crate::reporter::atlas::AtlasAggregate, rect: No
         "<g class=\"atlas-aggregate\" data-aggregate=\"depth-{}\"><title>{}</title>\
          <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" \
          stroke-dasharray=\"5 4\"/>\
-         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"6.2\" font-weight=\"700\" fill=\"#334155\">+{} more</text>\
-         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"5.6\" fill=\"#475569\">{} calls in</text></g>",
+         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"9.1\" font-weight=\"700\" fill=\"#334155\">+{} more</text>\
+         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.6\" fill=\"#475569\">{} calls in</text></g>",
         aggregate.depth,
         escape_xml(&title),
         rect.x,
@@ -477,21 +709,31 @@ fn render_node(
     path_step: Option<usize>,
     total_steps: usize,
 ) -> String {
-    let max_chars = (rect.w / 5).clamp(12, 32) as usize;
-    let name = tail_keep(&node.path, max_chars);
-    let rank = node_rank_text(node);
+    // Tall nodes get a slightly larger name; every node keeps the four-line
+    // block (name, cost, multiple, top) at >=10px / >=8.5px.
     let (name_size, meta_size) = if rect.h >= 60 {
-        (8.0, 6.5)
-    } else if rect.h >= 40 {
-        (7.0, 6.0)
+        (11.5_f64, 9.0_f64)
     } else {
-        (5.8, 5.2)
+        (10.0_f64, 8.5_f64)
     };
-    let center = rect.y + rect.h / 2;
-    let gap = (rect.h / 3).clamp(6, 14);
-    let name_y = center - gap;
-    let cost_y = center;
-    let rank_y = center + gap;
+    let name_max_w = rect.w - 10 - if path_step.is_some() { 14 } else { 0 };
+    let max_chars = ((name_max_w.max(20) as f64) / (name_size * 0.62))
+        .floor()
+        .max(4.0) as usize;
+    let name = tail_keep(&node.path, max_chars);
+    let (multiple, top) = node_rank_lines(node);
+    let cost = format_cost(node.cost, node.scale);
+
+    // Distribute four baselines through the rect. At the 46px node floor the
+    // last descender can graze the bottom edge after baseline rounding; taller
+    // rows (the common case) keep it comfortably inside.
+    let gap = ((rect.h as f64 - 12.0) / 4.0).clamp(8.5, 15.0);
+    let top_pad = (rect.h as f64 - 3.0 * gap) / 2.0;
+    let name_y = (rect.y as f64 + top_pad + name_size * 0.75).round() as i64;
+    let cost_y = name_y + gap.round() as i64;
+    let multiple_y = cost_y + gap.round() as i64;
+    let top_y = multiple_y + gap.round() as i64;
+
     let text_fill = if node.entry { "#ffffff" } else { "#1e293b" };
     let (fill, mut stroke, mut stroke_width) = if node.entry {
         ("#1f2937", "#111827", 2)
@@ -524,6 +766,7 @@ fn render_node(
         classes.push_str(" is-partial");
     }
 
+    let text_max_w = rect.w - 8;
     let mut out = String::new();
     out.push_str(&format!(
         "<g class=\"{classes}\" data-node=\"{}\">",
@@ -537,42 +780,60 @@ fn render_node(
     ));
     let badges = node_badges(node);
     if !badges.is_empty() {
+        // The layout guarantees a full inter-row gap, so badges sit above the
+        // node's top-right corner (never over the centred name block).
+        let (badge_x, badge_y) = (rect.x + rect.w - 2, node_badge_baseline(rect));
         out.push_str(&format!(
-            "<text x=\"{}\" y=\"{}\" text-anchor=\"end\" font-size=\"6\" fill=\"#475569\">{}</text>",
-            rect.x + rect.w - 2,
-            rect.y - 3,
+            "<text class=\"atlas-node-badge\" x=\"{}\" y=\"{}\" text-anchor=\"end\" \
+             font-size=\"8\" fill=\"#475569\"{}>{}</text>",
+            badge_x,
+            badge_y,
+            fit_attrs(&badges, 8.0, rect.w - 4),
             escape_xml(&badges)
         ));
     }
     out.push_str(&format!(
-        "<text x=\"{}\" y=\"{name_y}\" text-anchor=\"middle\" font-size=\"{name_size}\" font-weight=\"700\" \
-         fill=\"{text_fill}\">{}</text>",
+        "<text class=\"atlas-node-name\" x=\"{}\" y=\"{name_y}\" text-anchor=\"middle\" \
+         font-size=\"{name_size}\" font-weight=\"700\" fill=\"{text_fill}\">{}</text>",
         rect.x + rect.w / 2,
         escape_xml(&name)
     ));
     out.push_str(&format!(
-        "<text x=\"{}\" y=\"{cost_y}\" text-anchor=\"middle\" font-size=\"{meta_size}\" fill=\"{text_fill}\">{}</text>",
+        "<text class=\"atlas-node-meta atlas-node-cost\" x=\"{}\" y=\"{cost_y}\" \
+         text-anchor=\"middle\" font-size=\"{meta_size}\" fill=\"{text_fill}\"{}>{}</text>",
         rect.x + rect.w / 2,
-        escape_xml(&format_cost(node.cost, node.scale))
+        fit_attrs(&cost, meta_size, text_max_w),
+        escape_xml(&cost)
     ));
-    if !rank.is_empty() {
+    if let Some(multiple) = &multiple {
         out.push_str(&format!(
-            "<text x=\"{}\" y=\"{rank_y}\" text-anchor=\"middle\" font-size=\"{meta_size}\" fill=\"{text_fill}\">{}</text>",
+            "<text class=\"atlas-node-meta atlas-node-rank\" x=\"{}\" y=\"{multiple_y}\" \
+             text-anchor=\"middle\" font-size=\"{meta_size}\" fill=\"{text_fill}\"{}>{}</text>",
             rect.x + rect.w / 2,
-            escape_xml(&rank)
+            fit_attrs(multiple, meta_size, text_max_w),
+            escape_xml(multiple)
+        ));
+    }
+    if let Some(top) = &top {
+        out.push_str(&format!(
+            "<text class=\"atlas-node-meta atlas-node-rank\" x=\"{}\" y=\"{top_y}\" \
+             text-anchor=\"middle\" font-size=\"{meta_size}\" fill=\"{text_fill}\"{}>{}</text>",
+            rect.x + rect.w / 2,
+            fit_attrs(top, meta_size, text_max_w),
+            escape_xml(top)
         ));
     }
     if let Some(step) = path_step {
-        let cx = rect.x + rect.w - 7;
-        let cy = rect.y + 7;
+        let cx = rect.x + rect.w - 10;
+        let cy = rect.y + 10;
         let title = format!("{PATH_CAPTION} · step {step} of {total_steps}");
         out.push_str(&format!(
             "<g class=\"atlas-path-badge\"><title>{}</title>\
-             <circle cx=\"{cx}\" cy=\"{cy}\" r=\"7\" fill=\"#ea580c\" stroke=\"#ffffff\" stroke-width=\"1\"/>\
-             <text x=\"{cx}\" y=\"{}\" text-anchor=\"middle\" font-size=\"6.5\" font-weight=\"700\" \
+             <circle cx=\"{cx}\" cy=\"{cy}\" r=\"8\" fill=\"#ea580c\" stroke=\"#ffffff\" stroke-width=\"1\"/>\
+             <text x=\"{cx}\" y=\"{}\" text-anchor=\"middle\" font-size=\"9.5\" font-weight=\"700\" \
              fill=\"#ffffff\">{step}</text></g>",
             escape_xml(&title),
-            cy + 2
+            cy + 3
         ));
     }
     out.push_str("</g>");
@@ -595,12 +856,26 @@ fn render_nodes(
         out.push_str(&format!(
             "<g class=\"{classes}\" style=\"--atlas-col:{index}\">"
         ));
-        let header = column_header(view, column);
+        let (line1, line2) = column_header_lines(view, column);
+        let fitted1 = fit_header_line(&line1, column_layout.width);
+        let fitted2 = fit_header_line(&line2, column_layout.width);
+        let title = if fitted1 != line1 || fitted2 != line2 {
+            format!(
+                "<title>{}</title>",
+                escape_xml(&format!("{line1} · {line2}"))
+            )
+        } else {
+            String::new()
+        };
+        let center_x = column_layout.x + column_layout.width / 2;
         out.push_str(&format!(
-            "<text class=\"atlas-column-header\" x=\"{}\" y=\"{HEADER_Y}\" text-anchor=\"middle\" \
-             font-size=\"7.5\" font-weight=\"700\" fill=\"#334155\">{}</text>",
-            column_layout.x + column_layout.width / 2,
-            escape_xml(&header)
+            "<g class=\"atlas-column-header-group\">{title}\
+             <text class=\"atlas-column-header\" x=\"{center_x}\" y=\"{HEADER_Y}\" text-anchor=\"middle\" \
+             font-size=\"{HEADER_FONT_SIZE}\" font-weight=\"700\" fill=\"#334155\">{}</text>\
+             <text class=\"atlas-column-header\" x=\"{center_x}\" y=\"{HEADER_LINE2_Y}\" text-anchor=\"middle\" \
+             font-size=\"{HEADER_FONT_SIZE}\" fill=\"#475569\">{}</text></g>",
+            escape_xml(&fitted1),
+            escape_xml(&fitted2)
         ));
         for path in &column.files {
             let Some(node) = nodes.get(path.as_str()) else {
@@ -613,7 +888,8 @@ fn render_nodes(
             out.push_str(&render_node(node, rect, step, view.path.len()));
         }
         for (aggregate_index, aggregate) in column.aggregated.iter().enumerate() {
-            let y = TOP + (column.files.len() + aggregate_index) as i64 * layout.row_h;
+            let row = (column.files.len() + aggregate_index) as i64;
+            let y = TOP + row * layout.row_h;
             out.push_str(&render_aggregate(
                 aggregate,
                 NodeRect {
@@ -625,23 +901,27 @@ fn render_nodes(
             ));
         }
         if column.unreached && column.nonproduction_unreached > 0 {
-            let y = TOP + (column.files.len() + column.aggregated.len()) as i64 * layout.row_h;
+            let row = (column.files.len() + column.aggregated.len()) as i64;
+            let y = TOP + row * layout.row_h;
             let count = format_count(column.nonproduction_unreached as u64);
+            let chip = format!("+{count} non-production unreached");
             let title =
                 format!("{count} non-production unreached files (test/bench/other) · not drawn");
             out.push_str(&format!(
                 "<g class=\"atlas-unreached-nonprod\" data-nonprod-unreached=\"{}\"\
                  ><title>{}</title><rect x=\"{}\" y=\"{y}\" width=\"{}\" height=\"{}\" rx=\"6\" \
                  fill=\"#f8fafc\" stroke=\"#94a3b8\" stroke-dasharray=\"4 3\"/>\
-                 <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"6.2\" \
-                 font-weight=\"700\" fill=\"#475569\">+{count} non-production unreached</text></g>",
+                 <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.2\" \
+                 font-weight=\"700\" fill=\"#475569\"{}>{}</text></g>",
                 column.nonproduction_unreached,
                 escape_xml(&title),
                 column_layout.node_x,
                 column_layout.node_w,
                 layout.node_h,
                 column_layout.node_x + column_layout.node_w / 2,
-                y + layout.node_h / 2 + 2
+                y + layout.node_h / 2 + 2,
+                fit_attrs(&chip, 8.2, column_layout.node_w - 8),
+                escape_xml(&chip)
             ));
         }
         out.push_str("</g>");
@@ -673,7 +953,7 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
     let mut edge_paths = String::new();
     let mut edge_labels = String::new();
     for (index, edge) in ordered_edges(view, &layout.rows).iter().enumerate() {
-        let Some(shape) = edge_shape(edge, &layout.rows) else {
+        let Some(shape) = edge_shape(edge, layout) else {
             continue;
         };
         let (class, stroke, dasharray, marker) = if edge.back {
@@ -707,11 +987,18 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
             escape_xml(&title)
         ));
         edge_labels.push_str(&format!(
-            "<text class=\"atlas-edge-label\" x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"6.5\" \
-             fill=\"#334155\" stroke=\"#ffffff\" stroke-width=\"2.5\" paint-order=\"stroke\">{}</text>",
+            "<g class=\"atlas-edge-label\"><title>{}</title>\
+             <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"12\" rx=\"3\" fill=\"#ffffff\" \
+             stroke=\"#cbd5e1\" stroke-width=\"1\"/>\
+             <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.2\" \
+             fill=\"#334155\">{}</text></g>",
+            escape_xml(&format_distinct_edges(edge.count)),
+            shape.label_x - edge_label_width(edge.count) / 2,
+            shape.label_y - 6,
+            edge_label_width(edge.count),
             shape.label_x,
-            shape.label_y - 2,
-            escape_xml(&format_distinct_edges(edge.count))
+            shape.label_y + 3,
+            escape_xml(&edge_label_text(edge.count))
         ));
     }
 
@@ -723,7 +1010,7 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
             .edges
             .iter()
             .find(|edge| &edge.from == from && &edge.to == to)
-            && let Some(shape) = edge_shape(edge, &layout.rows)
+            && let Some(shape) = edge_shape(edge, layout)
         {
             let step = index + 1;
             let title = format!("{PATH_CAPTION} · step {step} of {}", view.path.len());
@@ -760,6 +1047,19 @@ pub fn render_canvas_svg(view: &AtlasView) -> String {
     )
 }
 
+/// View-level cost-scale tag for the first-screen units vocabulary:
+/// all-v2 documents report `v2`, pre-I2 (all-v1) documents report `v1`, and a
+/// document that mixes both scales reports `v1/v2`.
+fn view_scale_tag(view: &AtlasView) -> &'static str {
+    let has_v1 = view.nodes.iter().any(|node| node.scale == CostScale::V1);
+    let has_v2 = view.nodes.iter().any(|node| node.scale == CostScale::V2);
+    match (has_v1, has_v2) {
+        (true, false) => "v1",
+        (true, true) => "v1/v2",
+        _ => "v2",
+    }
+}
+
 /// HTML fragment for `report.html#map`: header, animated SVG canvas, legend,
 /// footer. The section carries exactly one scoped `<style>` and no script.
 #[must_use]
@@ -785,17 +1085,21 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
         format_count(view.caps.aggregated_files as u64)
     );
 
-    let has_v1 = view.nodes.iter().any(|node| node.scale == CostScale::V1);
-    let unit = if has_v1 {
-        "static cost units (v2) · v1 fallback rows labelled".to_string()
+    let scale_tag = view_scale_tag(view);
+    let scale_label = format!("static cost units ({scale_tag})");
+    // Preserve the v1-fallback note whenever the view contains v1 rows (a
+    // pre-I2 document is entirely fallback rows; a mixed one is partly).
+    let unit = if scale_tag == "v2" {
+        scale_label.clone()
     } else {
-        "static cost units (v2)".to_string()
+        format!("{scale_label} · v1 fallback rows labelled")
     };
     let legend_items = [
-        unit,
+        unit.clone(),
         "depth = BFS from entry".to_string(),
         "solid = forward structural edge".to_string(),
         "dashed amber = back edge".to_string(),
+        "edge label ×N = distinct structural edges".to_string(),
         "hatch = non-production (test/bench/other)".to_string(),
         "grey = unreached".to_string(),
         "× median function = denominator".to_string(),
@@ -867,7 +1171,24 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
         "<span class=\"atlas-caps\">{}</span>\n",
         escape_html(&caps_line)
     ));
+    out.push_str(&format!(
+        "<span class=\"atlas-units\" title=\"static heuristic cost weight ({scale_tag}); relative scale only\">{} · × median function = all functions in the scan · \
+         <span class=\"atlas-structural-caption\">{}</span></span>\n",
+        escape_html(&unit),
+        escape_html(STRUCTURAL_CAPTION)
+    ));
     out.push_str("</header>\n");
+    // First-screen key: keeps the unit/edge/path vocabulary beside the canvas
+    // instead of leaving it only in the full legend below the fold.
+    out.push_str(&format!(
+        "<div class=\"atlas-keys\">\
+         <span>{scale_label} — relative scale</span> · \
+         <span>× median function = all functions in the scan</span> · \
+         <span>edge ×N = distinct structural edges</span> · \
+         <span>numbered badges = representative path</span> · \
+         <span class=\"atlas-structural-caption\">{}</span></div>\n",
+        escape_html(STRUCTURAL_CAPTION)
+    ));
     out.push_str("<div class=\"atlas-graph\">\n");
     out.push_str(&svg_open(false, layout.height));
     out.push('\n');
@@ -1070,6 +1391,77 @@ mod tests {
         assert!(html.contains("no forward path"));
         assert!(html.contains("caller1.c"));
         assert!(html.contains("caller2.c"));
+    }
+
+    fn emitted_column_header_lines(html: &str) -> Vec<String> {
+        const OPEN: &str = "<text class=\"atlas-column-header\"";
+        let mut lines = Vec::new();
+        let mut rest = html;
+        while let Some(start) = rest.find(OPEN) {
+            let after = &rest[start..];
+            let content_start = after.find('>').expect("header text open") + 1;
+            let content_end = after[content_start..]
+                .find("</text>")
+                .expect("header text close");
+            lines.push(after[content_start..content_start + content_end].to_string());
+            rest = &after[content_start + content_end + "</text>".len()..];
+        }
+        lines
+    }
+
+    #[test]
+    fn every_column_header_line_fits_its_column_width() {
+        for (name, doc) in [
+            ("application", application_fixture()),
+            ("library", library_fixture()),
+            ("all-test", all_test_fixture()),
+            ("capped", capped_fixture()),
+            ("single-file", single_file_fixture()),
+        ] {
+            let view = build_atlas_view(&doc);
+            let layout = compute_layout(&view);
+            let html = render_canvas_html(&view);
+            let lines = emitted_column_header_lines(&html);
+            assert_eq!(
+                lines.len(),
+                view.columns.len() * 2,
+                "{name}: every column must emit exactly two header lines"
+            );
+            for (index, column_layout) in layout.columns.iter().enumerate() {
+                for line in &lines[index * 2..index * 2 + 2] {
+                    let estimated = estimated_header_width(line, HEADER_FONT_SIZE);
+                    assert!(
+                        estimated <= column_layout.width as f64,
+                        "{name}: header line `{line}` is {estimated:.1}px wide but the column is {}px",
+                        column_layout.width
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn unreached_header_is_split_across_two_lines() {
+        let view = build_atlas_view(&library_fixture());
+        let unreached = view
+            .columns
+            .iter()
+            .find(|column| column.unreached)
+            .expect("library fixture has an unreached column");
+        let (line1, line2) = column_header_lines(&view, unreached);
+        assert_eq!(line1, "UNREACHED");
+        assert!(
+            line2.starts_with("no forward path"),
+            "line 2 must carry the unreached reason, got `{line2}`"
+        );
+
+        let html = render_canvas_html(&view);
+        assert!(html.contains(">UNREACHED</text>"));
+        assert!(html.contains(">no forward path"));
+        assert!(
+            !html.contains("UNREACHED · no forward path"),
+            "the unreached header must not be emitted as one long line"
+        );
     }
 
     #[test]
@@ -1289,6 +1681,92 @@ mod tests {
     }
 
     #[test]
+    fn edge_labels_are_compact_pills_with_full_metric_title() {
+        let html = render_canvas_html(&build_atlas_view(&application_fixture()));
+        assert!(
+            html.contains("class=\"atlas-edge-label\""),
+            "compact pill group missing"
+        );
+        assert!(
+            html.contains(">×1</text>"),
+            "compact visible edge label `×1` missing"
+        );
+        assert!(
+            html.contains(&format!("<title>{}</title>", format_distinct_edges(1))),
+            "full M-10 metric missing from the pill title"
+        );
+        assert!(
+            html.contains(&format_distinct_edges(1)),
+            "full M-10 metric must remain available"
+        );
+    }
+
+    #[test]
+    fn compact_edge_label_fits_the_inter_column_gap() {
+        for count in 1..=12_usize {
+            let text = edge_label_text(count);
+            assert!(
+                text.chars().count() <= 6,
+                "compact edge label `{text}` longer than 6 chars"
+            );
+            let width = edge_label_width(count);
+            assert!(
+                width <= 30,
+                "pill for {count} distinct edges is {width}px, wider than the ~30px gap"
+            );
+        }
+    }
+
+    #[test]
+    fn edge_pills_never_overlap_node_rects() {
+        for (name, doc) in [
+            ("library", library_fixture()),
+            ("application", application_fixture()),
+            ("capped", capped_fixture()),
+            ("partial-parse", partial_parse_fixture()),
+        ] {
+            let view = build_atlas_view(&doc);
+            let layout = compute_layout(&view);
+            let mut pills = 0_usize;
+            for edge in ordered_edges(&view, &layout.rows) {
+                let Some(shape) = edge_shape(edge, &layout) else {
+                    continue;
+                };
+                let width = edge_label_width(edge.count);
+                let pill = NodeRect {
+                    x: shape.label_x - width / 2,
+                    y: shape.label_y - 6,
+                    w: width,
+                    h: 12,
+                };
+                for (path, rect) in &layout.rows {
+                    let overlap = pill.x < rect.x + rect.w
+                        && rect.x < pill.x + pill.w
+                        && pill.y < rect.y + rect.h
+                        && rect.y < pill.y + pill.h;
+                    assert!(
+                        !overlap,
+                        "{name}: edge {} -> {} pill at ({}, {}) {}x{} overlaps node `{path}` \
+                         rect ({}, {}) {}x{}",
+                        edge.from,
+                        edge.to,
+                        pill.x,
+                        pill.y,
+                        pill.w,
+                        pill.h,
+                        rect.x,
+                        rect.y,
+                        rect.w,
+                        rect.h
+                    );
+                }
+                pills += 1;
+            }
+            assert!(pills > 0, "{name}: expected at least one edge pill");
+        }
+    }
+
+    #[test]
     fn footer_always_prints_parse_coverage() {
         let all_ok = render_canvas_html(&build_atlas_view(&application_fixture()));
         assert!(all_ok.contains("parse "));
@@ -1354,6 +1832,7 @@ mod tests {
             "depth = BFS from entry",
             "solid = forward structural edge",
             "dashed amber = back edge",
+            "edge label ×N = distinct structural edges",
             "hatch = non-production (test/bench/other)",
             "grey = unreached",
             "× median function = denominator",
@@ -1486,9 +1965,205 @@ mod tests {
         let view = build_atlas_view(&builder.build());
         assert_eq!(view.nodes.len(), 40);
         let html = render_canvas_html(&view);
-        assert!(html.contains("viewBox=\"0 0 1400 900\""));
+        // 32 rows in the folded depth column at the 58px floor (46px node +
+        // 12px gap): 72 + 32*58 + 16.
+        assert!(html.contains("viewBox=\"0 0 1400 1944\""));
         assert_eq!(html.matches("data-node=\"").count(), 40);
         let svg = render_canvas_svg(&view);
-        assert!(svg.contains("viewBox=\"0 0 1400 900\""));
+        assert!(svg.contains("viewBox=\"0 0 1400 1944\""));
+    }
+
+    #[test]
+    fn canvas_header_carries_units_denominator_and_structural_caption() {
+        let html = render_canvas_html(&build_atlas_view(&application_fixture()));
+        let start = html.find("class=\"atlas-head\"").expect("canvas header");
+        let end = start + html[start..].find("</header>").expect("header close");
+        let header = &html[start..end];
+        assert!(header.contains("static cost units (v2)"));
+        assert!(header.contains("× median function = all functions in the scan"));
+        assert!(header.contains(STRUCTURAL_CAPTION));
+    }
+
+    #[test]
+    fn canvas_keys_line_explains_units_edges_and_path_badges_first_screen() {
+        let html = render_canvas_html(&build_atlas_view(&application_fixture()));
+        let head_end = html.find("</header>").expect("header close");
+        let keys_start = html
+            .find("class=\"atlas-keys\"")
+            .expect("first-screen key line");
+        let graph_start = html
+            .find("class=\"atlas-graph\"")
+            .expect("atlas graph wrapper");
+        assert!(
+            head_end < keys_start && keys_start < graph_start,
+            "key line must sit between the canvas header and the SVG graph"
+        );
+        let keys_end = keys_start + html[keys_start..].find("</div>").expect("key line close");
+        let keys = &html[keys_start..keys_end];
+        for needle in [
+            "static cost units (v2) — relative scale",
+            "× median function = all functions in the scan",
+            "edge ×N = distinct structural edges",
+            "numbered badges = representative path",
+            STRUCTURAL_CAPTION,
+        ] {
+            assert!(keys.contains(needle), "key line is missing `{needle}`");
+        }
+    }
+
+    #[test]
+    fn canvas_keys_line_reports_the_v1_scale_for_pre_i2_documents() {
+        let html = render_canvas_html(&build_atlas_view(&v1_only_fixture()));
+        let keys_start = html
+            .find("class=\"atlas-keys\"")
+            .expect("first-screen key line");
+        let keys_end = keys_start + html[keys_start..].find("</div>").expect("key line close");
+        let keys = &html[keys_start..keys_end];
+        assert!(
+            keys.contains("static cost units (v1) — relative scale"),
+            "v1-only documents must not claim v2 units: {keys}"
+        );
+        let units_start = html
+            .find("class=\"atlas-units\"")
+            .expect("header units span");
+        let units_end = units_start + html[units_start..].find("</span>").expect("units close");
+        let units = &html[units_start..units_end];
+        assert!(
+            units.contains("static cost units (v1)"),
+            "v1-only header must report v1 units: {units}"
+        );
+        assert!(units.contains("cost weight (v1)"));
+    }
+
+    #[test]
+    fn compact_edge_label_clamps_counts_above_999() {
+        assert_eq!(edge_label_text(1000), "×999+");
+        assert_eq!(edge_label_text(9999), "×999+");
+        for count in [1000_usize, 9999] {
+            assert!(
+                edge_label_text(count).chars().count() <= 5,
+                "clamped edge label must stay within five visible characters"
+            );
+            assert!(
+                edge_label_width(count) <= 32,
+                "clamped edge pill for {count} is {}px, wider than the 32px bound",
+                edge_label_width(count)
+            );
+        }
+        // The full count stays available in the pill title.
+        assert!(format_distinct_edges(9999).contains("9,999"));
+    }
+
+    #[test]
+    fn hull_label_sits_at_least_ten_px_above_first_node_badge() {
+        let view = build_atlas_view(&application_fixture());
+        let layout = compute_layout(&view);
+        assert!(
+            layout.row_h - layout.node_h >= ROW_GAP,
+            "layout must always leave a full inter-row badge gap"
+        );
+        let mut groups: BTreeMap<&str, Vec<&AtlasNode>> = BTreeMap::new();
+        for node in &view.nodes {
+            groups
+                .entry(node.component.as_str())
+                .or_default()
+                .push(node);
+        }
+        let mut checked = 0_usize;
+        for members in groups.values().filter(|members| members.len() >= 2) {
+            let placed: Vec<(&AtlasNode, NodeRect)> = members
+                .iter()
+                .filter_map(|node| layout.rows.get(&node.path).map(|rect| (*node, *rect)))
+                .collect();
+            let Some(min_y) = placed.iter().map(|(_, rect)| rect.y).min() else {
+                continue;
+            };
+            let (first_node, first_rect) = placed
+                .iter()
+                .find(|(_, rect)| rect.y == min_y)
+                .expect("first hull row");
+            assert!(
+                !node_badges(first_node).is_empty(),
+                "first hull node must carry a badge for the clearance check"
+            );
+            let label_baseline = hull_label_baseline(min_y);
+            let badge_baseline = node_badge_baseline(*first_rect);
+            assert!(
+                label_baseline > HEADER_Y + 10,
+                "hull label baseline {label_baseline} must clear column header {HEADER_Y}"
+            );
+            assert!(
+                badge_baseline - label_baseline >= 10,
+                "hull label baseline {label_baseline} is only {}px above badge \
+                 baseline {badge_baseline}",
+                badge_baseline - label_baseline
+            );
+            checked += 1;
+        }
+        assert!(checked > 0, "application fixture has no multi-node hull");
+    }
+
+    #[test]
+    fn node_name_and_meta_font_sizes_meet_legibility_floor() {
+        let fixtures = [
+            application_fixture(),
+            library_fixture(),
+            capped_fixture(),
+            partial_parse_fixture(),
+            single_file_fixture(),
+        ];
+        for fixture in fixtures {
+            let html = render_canvas_html(&build_atlas_view(&fixture));
+            let mut names = 0_usize;
+            let mut metas = 0_usize;
+            for chunk in html.split("class=\"atlas-node-name\"").skip(1) {
+                let tag = &chunk[..chunk.find('>').expect("name tag close")];
+                let size = font_size_attr(tag);
+                assert!(size >= 9.0, "node name font-size {size} below 9px");
+                names += 1;
+            }
+            for chunk in html.split("class=\"atlas-node-meta").skip(1) {
+                let tag = &chunk[..chunk.find('>').expect("meta tag close")];
+                let size = font_size_attr(tag);
+                assert!(size >= 8.0, "node meta font-size {size} below 8px");
+                metas += 1;
+            }
+            assert!(names > 0, "no node name text emitted");
+            assert!(metas > 0, "no node meta text emitted");
+        }
+    }
+
+    #[test]
+    fn capped_state_node_height_stays_readable() {
+        let svg = render_canvas_svg(&build_atlas_view(&capped_fixture()));
+        let mut nodes = 0_usize;
+        for chunk in svg.split("data-node=\"").skip(1) {
+            let start = chunk.find("<rect ").expect("node rect");
+            let rect = &chunk[start..];
+            let rect = &rect[..rect.find("/>").expect("rect close")];
+            let height = rect
+                .split("height=\"")
+                .nth(1)
+                .expect("rect height")
+                .split('"')
+                .next()
+                .expect("height close")
+                .parse::<i64>()
+                .expect("height integer");
+            assert!(height >= 46, "capped node height {height} below 46px");
+            nodes += 1;
+        }
+        assert!(nodes > 0, "capped state emitted no nodes");
+    }
+
+    fn font_size_attr(tag: &str) -> f64 {
+        tag.split("font-size=\"")
+            .nth(1)
+            .expect("font-size attribute")
+            .split('"')
+            .next()
+            .expect("font-size close")
+            .parse::<f64>()
+            .expect("font-size number")
     }
 }

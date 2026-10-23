@@ -1,0 +1,84 @@
+# Atlas steps 7-8 gate transcript
+date: 2026-10-23T14:35:49Z
+== fmt
+EXIT=0
+== clippy
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+EXIT=0
+== test
+suites=55
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+EXIT=0
+== deny
+   │    ━━━ unmatched license allowance
+
+licenses ok
+EXIT=0
+== semclippy
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+EXIT=0
+== semtest
+suites=55
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+EXIT=0
+== a4
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+EXIT=0
+== a12
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.03s
+
+EXIT=0
+== a9
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.02s
+
+EXIT=0
+== a10
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.01s
+
+EXIT=0
+== schema
+EXIT=0
+== golden
+ M tests/golden/report-mixed/report.html
+ M tests/golden/report-python/report.html
+ M tests/golden/report-rust/report.html
+ M tests/golden/report/report.html
+== cargo files
+== unit counts
+src/reporter/atlas.rs 30
+src/reporter/atlas_metrics.rs 20
+src/reporter/atlas_render.rs 39
+src/reporter/atlas_brief.rs 17
+== evidence
+evidence hashes ok · 8 states · 16 A1 reads · 16 strip reads
+== reads
+{
+  "a1": {
+    "states_passed": 8,
+    "reads_passed": 16
+  },
+  "strip": {
+    "states_passed": 8,
+    "reads_passed": 16,
+    "mass_answers_named_item": 14,
+    "top_item_actions": 11,
+    "none_actions": 5
+  }
+}
+== state
+{
+  "current_phase": "Atlas steps 7-8 GREEN (2026-10-23): step-7 test lock + four regenerated report.html goldens; V8 gate 16/16 A1 + 16/16 strip reads pass; renderer legibility/collision fixes; next: steps 9-10 (founder A2 application+library, ship); A2 final.",
+  "decisions": 9,
+  "next": {
+    "id": "A-pf-118",
+    "status": "active",
+    "action": "Atlas steps 9-10 (fresh session): founder A2 on application + library with animation on (record a2.md; failure supersedes ADR-0009); then ship/docs/EOL (output contract, README, CHANGELOG, archive V7, mark atlas-build done after panel). Holdouts vaulted; do not mark map-build done; A1b open."
+  }
+}
+== a2.md
+EXIT=0

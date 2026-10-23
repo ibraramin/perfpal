@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Perfpal Report — schema 1.7</title>
+<style>
+body{font-family:monospace,monospace;max-width:90rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+#findings table{min-width:72rem}
+#findings tbody td{white-space:nowrap}
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
+figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}
+figcaption{margin-top:.5rem}
+img{max-width:100%;height:auto}
+figure.pz img{max-width:none;touch-action:none}
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
+#filter-bar{margin:.5rem 0}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
+.kv{margin:1.25rem 0 1.75rem}
+.kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
+.kv-action{margin:.15rem 0 .75rem;color:#444}
+.kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
+.kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}
+.kv-rank{font-size:1.5rem;font-weight:700;line-height:1}
+.kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}
+.kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.kv-loc{font-weight:700;color:#111;text-decoration:none}
+.kv-loc:hover{text-decoration:underline}
+.kv-title{font-weight:600}
+.kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}
+.kv-caption{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
+.kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
+.sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
+.sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}
+.sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}
+.kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}
+.kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}
+.kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}
+.kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}
+.kv-more{margin:.5rem 0 .2rem;font-weight:600}
+.kv-bars{max-width:100%}
+.kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}
+.kv-brow:last-child{border-bottom:1px solid #999}
+.kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
+.kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
+.kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
+.kv-fill.demoted{background:#a0aec0}
+.kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
+.kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
+.kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
+@media print{.kv-row,.kv-brow{break-inside:avoid}}
+         </style>
+</head>
+<body>
+<header>
+<h1>Perfpal Report</h1>
+<p class="breadcrumb"><a href="#map">Atlas</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
+<p>schema_version 1.7 · perfpal perfpal test · 0 files · 0 findings (0 hot, 0 warn, 0 info) · languages: c</p>
+</header>
+<nav>
+<ul>
+<li><a href="#map">Atlas</a></li>
+<li><a href="#explorer">Explorer</a></li>
+<li><a href="#components">Components</a></li>
+<li><a href="#files">Files</a></li>
+<li><a href="#findings">Findings</a></li>
+<li><a href="findings-detail.html">Findings detail</a></li>
+<li><a href="#appendix-a">Heuristic reference</a></li>
+</ul>
+</nav>
+<section id="map">
+<section id="atlas-canvas" class="atlas-canvas">
+<style>#atlas-canvas{position:relative;background:#ffffff;color:#0f172a;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#atlas-canvas .atlas-head{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px}
+#atlas-canvas .atlas-units{flex-basis:100%;font-size:11.5px;color:#334155}
+#atlas-canvas .atlas-keys{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
+#atlas-canvas .atlas-entry{font-weight:700}
+#atlas-canvas .atlas-hottest{color:#9a3412}
+#atlas-canvas .atlas-caps{color:#475569}
+#atlas-canvas .atlas-pause-input{position:absolute;inline-size:1px;block-size:1px;opacity:0}
+#atlas-canvas .atlas-pause{display:inline-block;margin:0 16px 8px;padding:3px 10px;border:1px solid #94a3b8;border-radius:999px;background:#f8fafc;font-size:11px;cursor:pointer}
+#atlas-canvas .atlas-graph{background:#ffffff;border-bottom:1px solid #e2e8f0}
+#atlas-canvas .atlas-svg{display:block;width:100%;height:auto}
+#atlas-canvas .atlas-svg .atlas-edge,#atlas-canvas .atlas-svg .atlas-trace{fill:none}
+#atlas-canvas .atlas-legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
+#atlas-canvas .atlas-structural-caption{font-weight:700;color:#7c2d12}
+#atlas-canvas .atlas-footer{padding:8px 16px;font-size:11px;color:#334155}
+@keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
+@keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
+ @keyframes atlas-edge-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-edge-fade{from{opacity:0}to{opacity:1}}
+ @keyframes atlas-trace-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-hottest-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+ #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
+ #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
+ #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #atlas-canvas .atlas-trace{animation:atlas-trace-draw 1.2s 4.2s both}
+#atlas-canvas .atlas-node.is-hottest{animation:atlas-hottest-pulse .8s 5.4s 2 both}
+#atlas-canvas .atlas-pause-input:checked ~ .atlas-graph *{animation-play-state:paused !important}
+#atlas-canvas .atlas-pause:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
+#atlas-canvas .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #1d4ed8;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
+@media print{#atlas-canvas{break-inside:avoid}#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#atlas-canvas .atlas-pause{display:none}}
+#atlas-canvas .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}</style>
+<input type="checkbox" id="atlas-pause" class="atlas-pause-input">
+<label for="atlas-pause" class="atlas-pause">Pause animation</label>
+<header class="atlas-head">
+<span class="atlas-entry">ENTRY · no entry · confidence UNKNOWN · 0 alternatives</span>
+<span class="atlas-hottest">HOTTEST: no file</span>
+<span class="atlas-path-summary">PATH · 0 steps · representative path (static, BFS-derived)</span>
+<span class="atlas-caps">0 of 0 reachable files shown · 0 aggregated</span>
+<span class="atlas-units" title="static heuristic cost weight (v2); relative scale only">static cost units (v2) · × median function = all functions in the scan · <span class="atlas-structural-caption">structural (LOW name-based + MEDIUM semantic), may over/under-approximate</span></span>
+</header>
+<div class="atlas-keys"><span>static cost units (v2) — relative scale</span> · <span>× median function = all functions in the scan</span> · <span>edge ×N = distinct structural edges</span> · <span>numbered badges = representative path</span> · <span class="atlas-structural-caption">structural (LOW name-based + MEDIUM semantic), may over/under-approximate</span></div>
+<div class="atlas-graph">
+<svg viewBox="0 0 1400 720" width="1400" height="720" class="atlas-svg" role="img" aria-label="Perfpal Atlas entry-flow canvas" preserveAspectRatio="xMidYMid meet">
+<defs><pattern id="atlas-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#f8fafc"/><line x1="0" y1="0" x2="0" y2="6" stroke="#cbd5e1" stroke-width="2"/></pattern><marker id="atlas-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker><marker id="atlas-arrow-back" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#b45309"/></marker></defs><g class="atlas-stub" role="note"><rect x="450" y="300" width="500" height="120" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="6 4"/><text x="700" y="352" text-anchor="middle" font-size="18" font-weight="700" fill="#334155">no source functions recorded</text></g>
+</svg>
+</div>
+<div class="atlas-legend"><span>static cost units (v2)</span> · <span>depth = BFS from entry</span> · <span>solid = forward structural edge</span> · <span>dashed amber = back edge</span> · <span>edge label ×N = distinct structural edges</span> · <span>hatch = non-production (test/bench/other)</span> · <span>grey = unreached</span> · <span>× median function = denominator</span> · <span>hulls = approximate prefix groups</span> · <span class="atlas-structural-caption">structural (LOW name-based + MEDIUM semantic), may over/under-approximate</span></div>
+<footer class="atlas-footer">no source functions recorded · 0 of 0 file pairs drawn · 0 MEDIUM / 0 LOW structural edges · 0 unreached production · 0 unreached non-production · parse 0 ok / 0 partial / 0 failed · no include edges recorded · 0 files demoted</footer>
+</section>
+<section id="atlas-brief" class="atlas-brief">
+<style>#atlas-brief,#atlas-drill-q2,#atlas-drill-weight{font-family:monospace,monospace;color:#0f172a;max-width:72rem;margin:0 auto;padding:0 1rem}#atlas-brief .atlas-block{border-top:1px solid #cbd5e1;padding:.9rem 0}#atlas-brief h3,#atlas-drill-q2 h3,#atlas-drill-weight h3{font-size:1rem;margin:.2rem 0 .5rem}#atlas-brief h4,#atlas-drill-q2 h4,#atlas-drill-weight h4{font-size:.95rem;margin:.6rem 0 .3rem}.atlas-answer-line{font-size:1.02rem;line-height:1.5}.atlas-caveat{display:block;margin-top:.35rem;color:#334155}.atlas-rank{font-weight:bold;margin-right:.4rem}.atlas-action{margin:.6rem 0}.atlas-anchor,.atlas-share,.atlas-caption,.atlas-counts,.atlas-trip,.atlas-note{color:#334155;font-size:.9rem}.atlas-badge{display:inline-block;border:1px solid #334155;border-radius:3px;padding:0 .25rem;margin-left:.25rem;font-size:.85rem}.atlas-class{display:inline-block;border:1px solid #64748b;border-radius:3px;padding:0 .25rem;font-size:.85rem}.atlas-class.nonprod{color:#7c2d12;border:1px dashed #9a3412}.atlas-action-list,.atlas-weight-list,.atlas-dependent-list,.atlas-fn-list,.atlas-drill-links{padding-left:1.2rem}.atlas-why{margin:.2rem 0}.atlas-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:.75rem}.atlas-card{border:1px solid #cbd5e1;border-radius:6px;padding:.6rem}.atlas-card h4{margin:.1rem 0 .35rem;font-size:.95rem}.atlas-nonprod{border-left:4px solid #9a3412;padding-left:.5rem}.atlas-drill{border-top:2px solid #334155;padding:.9rem 0}.atlas-table-scroll{overflow-x:auto;max-width:100%}.atlas-drill table{border-collapse:collapse;width:100%;margin:.5rem 0}.atlas-drill th,.atlas-drill td{border:1px solid #999;padding:.2rem .4rem;text-align:left;vertical-align:top}.atlas-drill th{background:#eee}@media print{.atlas-drill{display:none}}</style>
+<div class="atlas-block" data-atlas-block="answer" id="atlas-answer">
+<h3>What to open first</h3>
+<p class="atlas-answer-line"><strong>ENTRY · no entry · confidence UNKNOWN · 0 alternatives</strong>. No production main, script, or library root was found, so no entry is shown. No file with functions was recorded. no findings. <span class="atlas-caveat">Caveat: no source functions recorded — every block shows a named stub.</span></p>
+</div>
+<div class="atlas-block" data-atlas-block="actions" id="atlas-actions">
+<h3>Start here — ranked actions (production first)</h3>
+<p>no findings</p>
+<p class="atlas-more"><a href="findings-detail.html#ranked-actions">Complete ranked action list — 0 actions (production-first)</a></p>
+</div>
+<div class="atlas-block" data-atlas-block="weight" id="atlas-weight">
+<h3>Where is the mass? — share of scanned static cost</h3>
+<p class="atlas-caption">Production files first; non-production cost is counted in the labelled band, never dropped.</p>
+<p>no scanned static cost recorded</p>
+<p class="atlas-nonprod">non-production (test/bench/other) = no scanned static cost recorded (0 files)</p>
+</div>
+<div class="atlas-block" data-atlas-block="blast" id="atlas-blast">
+<h3>What breaks if I touch it? — blast radius</h3>
+<p>no entry — blast radius unavailable</p>
+<p class="atlas-caption">no include edges recorded</p>
+</div>
+<div class="atlas-block" data-atlas-block="cards" id="atlas-cards">
+<h3>File cards — what is inside the top files</h3>
+<p>no source functions recorded</p>
+</div>
+<div class="atlas-block" data-atlas-block="noise" id="atlas-noise">
+<h3>Noise and confidence</h3>
+<p>parse 0 ok / 0 partial / 0 failed</p>
+<p>no include edges recorded · 0 of 0 include edges resolved</p>
+<p>0 MEDIUM / 0 LOW structural edges</p>
+<p>0 files demoted · 0 of 0 reachable files shown · 0 aggregated · 0 of 0 file pairs drawn</p>
+<p>0 production + 0 non-production of 0 source files unreached</p>
+<p>0 of 0 scanned files have no functions · 0 source files partial or failed</p>
+<p class="atlas-caption">Structural edges are LOW name-based + MEDIUM semantic and may over/under-approximate; static cost is not ground truth.</p>
+</div>
+<div class="atlas-block" data-atlas-block="links" id="atlas-links">
+<h3>Drills</h3>
+<ul class="atlas-drill-links">
+<li><a href="findings-detail.html#ranked-actions">Complete ranked action list</a> — 0 actions (production-first)</li>
+<li><a href="profile-queue.html">Complete profile queue</a> — 0 functions ranked by static cost</li>
+<li><a href="#atlas-drill-q2">Q2 reverse drill</a> — dependents and structural callers/callees for no entry</li>
+<li><a href="#atlas-drill-weight">Weight detail</a> — 0 source files and 0 components by share</li>
+<li>Component pages: no component page emitted</li>
+<li><a href="#explorer">Explorer</a> — legacy static chart stems</li>
+</ul>
+</div>
+</section>
+<section id="atlas-drill-q2" class="atlas-drill" data-atlas-drill="q2">
+<h3>Q2 reverse drill — what breaks if I touch the focus file</h3>
+<p>no entry or file to drill</p>
+</section>
+<section id="atlas-drill-weight" class="atlas-drill" data-atlas-drill="weight">
+<h3>Weight detail — every source file and component by share</h3>
+<p>no source functions recorded</p>
+</section>
+</section>
+<section id="explorer">
+<h2>Explorer</h2>
+<p>No charts were emitted for this scan.</p>
+<p>The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
+</p>
+<p>Machine-readable graph: <a href="charts/graph.dot">graph.dot</a> — deterministic DOT export of the include/call/component graphs (same source data as the figures above).</p>
+<p>Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).</p>
+</section>
+<section id="components">
+<h2>Component index</h2>
+<p>No components recorded.</p>
+</section>
+<section id="files">
+<h2>File drill-down</h2>
+<p>No files scanned.</p>
+</section>
+<section id="findings">
+<h2>Findings</h2>
+<div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>No findings.</p>
+</section>
+<section id="appendix-a">
+<h2>Appendix A. Heuristic reference</h2>
+<p>No findings — no heuristics to reference.</p>
+</section>
+<footer>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
+</body>
+</html>
