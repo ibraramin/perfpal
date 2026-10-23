@@ -1,0 +1,47 @@
+Perfpal Track C — C1 contract gate
+run: 2026-10-23T21:01:22Z · branch feat/agent-report · HEAD 3a84a0e
+
+== 0. branch state ==
+branch=feat/agent-report head=3a84a0e main=3a84a0e
+uncommitted (expected: docs/state only):
+   M docs/tracks/agent-report.md
+  ?? docs/evidence/agent-report/
+  ?? docs/plans/agent-report.md
+  ?? docs/specs/agent-report.md
+  ?? state/tracks/
+
+== 1. deliverables exist ==
+ok   docs/specs/agent-report.md
+ok   docs/plans/agent-report.md
+ok   state/tracks/agent-report/handoff.md
+ok   docs/evidence/agent-report/README.md
+ok   docs/evidence/agent-report/sample/agent-report.sample.md
+ok   docs/evidence/agent-report/sample/agent-actions.sample.json
+ok   docs/evidence/agent-report/sample/derive_sample.py
+
+== 2. sample reproduces byte-identically ==
+actions=9 profile=4 hints=67 bytes=8889 ok
+ok   derive_sample.py
+ok   agent-report.sample.md identical
+ok   agent-actions.sample.json identical
+
+== 3. JSON contract invariants ==
+ok   jq -e fixture invariants (counts, ranks, non-null hints/functions here, profile schema, no clock)
+
+== 4. hint table: 67 rows + set equality with HEURISTIC_CATALOG_V1 ==
+spec rows=67 catalog ids=67
+ok   hint id set == catalog id set
+
+== 5. spec worked example == committed sample action 1 ==
+ok   example == sample action 1
+
+== 6. fixed MD skeleton headings (exact, in order) ==
+ok   7 headings, exact order, no extras; every ### is a ranked action block
+
+== 7. no production code / schema / dependency changes ==
+ok   clean
+
+== 8. sample size assertion (64 KB hard budget) ==
+ok   8889 <= 65536
+
+GATE_EXIT=0

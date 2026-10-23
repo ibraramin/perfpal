@@ -14,6 +14,14 @@ git worktree add ../Perfpal-agent-report -b feat/agent-report 821b984
 **Track handoff:** `state/tracks/agent-report/handoff.md` · **Spec:** `docs/specs/agent-report.md` · **Plan:** `docs/plans/agent-report.md` · **A-pf-111** in the state/handoff.
 **Role:** the full-fidelity LLM layer the simplified Atlas first page points to. Not a human dashboard; no LLM calls.
 
+**Status 2026-10-24 — C1 COMPLETE (contract only; no production code).** Contract locked as
+`contract_version 1`: artifacts `agent-report.md` (bounded, fixed seven-section skeleton, ≤64 KB) +
+`agent-actions.json` (complete action list, 100-row profile cap named in-file); KV1/KV3 rank keys
+reused verbatim; 67 curated fix hints with a completeness lock; no clock provenance; sample +
+gate transcript under `docs/evidence/agent-report/`. Founder-ratified decisions D1–D8 in spec §2.
+Uncommitted pending founder approval. **C2 is next** — and its `mod.rs`/CLI wiring still waits on
+A step 12.
+
 ## Read first
 
 1. A-pf-111 (`state/session-state.json`, `state/handoff/latest.md`).

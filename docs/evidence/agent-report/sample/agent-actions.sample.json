@@ -1,0 +1,509 @@
+{
+  "artifact": "agent-actions",
+  "contract_version": 1,
+  "schema_version": "1.7",
+  "tool": {
+    "name": "perfpal",
+    "version": "0.2.0-beta.1"
+  },
+  "scan": {
+    "root_path": "<ROOT>",
+    "languages": [
+      "c",
+      "rust"
+    ],
+    "file_count": 4,
+    "loc_total": {
+      "code": 36,
+      "comment": 47,
+      "blank": 6
+    }
+  },
+  "rank_key": {
+    "actions": [
+      "path_class:production-first",
+      "severity:hot>warn>info",
+      "confidence:HIGH>MEDIUM>LOW",
+      "function_cost_v2:desc",
+      "finding_id:asc"
+    ],
+    "profile_queue": [
+      "path_class:production-first",
+      "max_loop_depth>0:first",
+      "entry_kind:non-startup-first",
+      "cost:desc",
+      "path:asc",
+      "function_name:asc",
+      "function_id:asc"
+    ]
+  },
+  "data_quality": {
+    "parse_health": {
+      "ok": 4,
+      "partial": 0,
+      "failed": 0
+    },
+    "unresolved_includes": {
+      "unresolved": 0,
+      "total": 2
+    },
+    "structural_call_edges": {
+      "total": 1,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "non_production_files": 0,
+    "startup_functions": 0,
+    "no_loop_functions": 2,
+    "cost_scale": {
+      "v2_functions": 4,
+      "v1_functions": 0
+    },
+    "unknown_trip_functions": 2,
+    "component_findings_excluded": 0,
+    "resolver_tiers": [
+      "syntactic"
+    ],
+    "caps": {
+      "actions_detail": 25,
+      "profile_inline": 25
+    }
+  },
+  "actions": [
+    {
+      "action_id": "PERF-C-ALLOC-001:src/main.c:27:21",
+      "rank": 1,
+      "rule_id": "PERF-C-ALLOC-001",
+      "title": "Heap allocation inside loop",
+      "path": "src/main.c",
+      "symbol": "c_loop",
+      "span": {
+        "start_line": 27,
+        "start_col": 21,
+        "end_line": 27,
+        "end_col": 30
+      },
+      "severity": "hot",
+      "confidence": "HIGH",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/main.c#c_loop#23:1",
+        "name": "c_loop",
+        "path": "src/main.c",
+        "span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        },
+        "cost": 15,
+        "cost_scale": "v2",
+        "cost_anchor": "15 static cost units (v2) · 5.0× median · top 50%"
+      },
+      "why": "per-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization",
+      "evidence": {
+        "alloc_site_index": "2",
+        "callee": "malloc",
+        "loop_depth": "1"
+      },
+      "fix_hint": "Hoist the allocation out of the loop, reuse a buffer across iterations, or reserve once before the loop.",
+      "detail_anchor": "finding-PERF-C-ALLOC-001-src-main-c-27-21"
+    },
+    {
+      "action_id": "PERF-C-ALLOC-002:src/main.c:29:9",
+      "rank": 2,
+      "rule_id": "PERF-C-ALLOC-002",
+      "title": "Deallocation inside loop",
+      "path": "src/main.c",
+      "symbol": "c_loop",
+      "span": {
+        "start_line": 29,
+        "start_col": 9,
+        "end_line": 29,
+        "end_col": 17
+      },
+      "severity": "hot",
+      "confidence": "HIGH",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/main.c#c_loop#23:1",
+        "name": "c_loop",
+        "path": "src/main.c",
+        "span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        },
+        "cost": 15,
+        "cost_scale": "v2",
+        "cost_anchor": "15 static cost units (v2) · 5.0× median · top 50%"
+      },
+      "why": "deallocation via 'free' at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization",
+      "evidence": {
+        "alloc_cooccurrence": "true",
+        "callee": "free",
+        "loop_depth": "1"
+      },
+      "fix_hint": "Move the free outside the loop or reuse a single allocation per iteration instead of freeing each pass.",
+      "detail_anchor": "finding-PERF-C-ALLOC-002-src-main-c-29-9"
+    },
+    {
+      "action_id": "PERF-C-STR-001:src/main.c:28:9",
+      "rank": 3,
+      "rule_id": "PERF-C-STR-001",
+      "title": "String accumulation in loop",
+      "path": "src/main.c",
+      "symbol": "c_loop",
+      "span": {
+        "start_line": 28,
+        "start_col": 9,
+        "end_line": 28,
+        "end_col": 24
+      },
+      "severity": "hot",
+      "confidence": "HIGH",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/main.c#c_loop#23:1",
+        "name": "c_loop",
+        "path": "src/main.c",
+        "span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        },
+        "cost": 15,
+        "cost_scale": "v2",
+        "cost_anchor": "15 static cost units (v2) · 5.0× median · top 50%"
+      },
+      "why": "'strcat' accumulates into 'acc' at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization",
+      "evidence": {
+        "callee": "strcat",
+        "dest": "acc",
+        "loop_depth": "1"
+      },
+      "fix_hint": "Track the destination length and append with bounded writes instead of rescanning the string each pass.",
+      "detail_anchor": "finding-PERF-C-STR-001-src-main-c-28-9"
+    },
+    {
+      "action_id": "PERF-RS-ALLOC-003:src/lib.rs:20:9",
+      "rank": 4,
+      "rule_id": "PERF-RS-ALLOC-003",
+      "title": "Growable-buffer additive growth in loop (Rust)",
+      "path": "src/lib.rs",
+      "symbol": "build",
+      "span": {
+        "start_line": 20,
+        "start_col": 9,
+        "end_line": 20,
+        "end_col": 22
+      },
+      "severity": "hot",
+      "confidence": "MEDIUM",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/lib.rs#build#15:1",
+        "name": "build",
+        "path": "src/lib.rs",
+        "span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 1
+        },
+        "cost": 20,
+        "cost_scale": "v2",
+        "cost_anchor": "20 static cost units (v2) · 6.7× median · top 25%"
+      },
+      "why": "'out.reserve' grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization",
+      "evidence": {
+        "callee": "out.reserve",
+        "growth": "additive",
+        "loop_depth": "1"
+      },
+      "fix_hint": "Reserve capacity once before the loop, or grow it multiplicatively, instead of reserving per pass.",
+      "detail_anchor": "finding-PERF-RS-ALLOC-003-src-lib-rs-20-9"
+    },
+    {
+      "action_id": "PERF-RS-STR-002:src/lib.rs:22:17",
+      "rank": 5,
+      "rule_id": "PERF-RS-STR-002",
+      "title": "Length query recomputed in loop (Rust)",
+      "path": "src/lib.rs",
+      "symbol": "build",
+      "span": {
+        "start_line": 22,
+        "start_col": 17,
+        "end_line": 22,
+        "end_col": 23
+      },
+      "severity": "warn",
+      "confidence": "HIGH",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/lib.rs#build#15:1",
+        "name": "build",
+        "path": "src/lib.rs",
+        "span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 1
+        },
+        "cost": 20,
+        "cost_scale": "v2",
+        "cost_anchor": "20 static cost units (v2) · 6.7× median · top 25%"
+      },
+      "why": "'s.len' recomputes the length of 's' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization",
+      "evidence": {
+        "identifier": "s",
+        "loop_depth": "1"
+      },
+      "fix_hint": "Compute len, is_empty, or capacity once before the loop and reuse the value.",
+      "detail_anchor": "finding-PERF-RS-STR-002-src-lib-rs-22-17"
+    },
+    {
+      "action_id": "PERF-RS-STR-002:src/lib.rs:23:17",
+      "rank": 6,
+      "rule_id": "PERF-RS-STR-002",
+      "title": "Length query recomputed in loop (Rust)",
+      "path": "src/lib.rs",
+      "symbol": "build",
+      "span": {
+        "start_line": 23,
+        "start_col": 17,
+        "end_line": 23,
+        "end_col": 25
+      },
+      "severity": "warn",
+      "confidence": "HIGH",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/lib.rs#build#15:1",
+        "name": "build",
+        "path": "src/lib.rs",
+        "span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 1
+        },
+        "cost": 20,
+        "cost_scale": "v2",
+        "cost_anchor": "20 static cost units (v2) · 6.7× median · top 25%"
+      },
+      "why": "'tmp.len' recomputes the length of 'tmp' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization",
+      "evidence": {
+        "identifier": "tmp",
+        "loop_depth": "1"
+      },
+      "fix_hint": "Compute len, is_empty, or capacity once before the loop and reuse the value.",
+      "detail_anchor": "finding-PERF-RS-STR-002-src-lib-rs-23-17"
+    },
+    {
+      "action_id": "PERF-C-STR-003:src/main.c:28:9",
+      "rank": 7,
+      "rule_id": "PERF-C-STR-003",
+      "title": "Unbounded string operation",
+      "path": "src/main.c",
+      "symbol": "c_loop",
+      "span": {
+        "start_line": 28,
+        "start_col": 9,
+        "end_line": 28,
+        "end_col": 24
+      },
+      "severity": "warn",
+      "confidence": "HIGH",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/main.c#c_loop#23:1",
+        "name": "c_loop",
+        "path": "src/main.c",
+        "span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        },
+        "cost": 15,
+        "cost_scale": "v2",
+        "cost_anchor": "15 static cost units (v2) · 5.0× median · top 50%"
+      },
+      "why": "unbounded operation via 'strcat' — a bounded variant or explicit length tracking is a candidate optimization",
+      "evidence": {
+        "callee": "strcat"
+      },
+      "fix_hint": "Bound every copy with an explicit destination size (snprintf/strlcpy) and pre-size the buffer once.",
+      "detail_anchor": "finding-PERF-C-STR-003-src-main-c-28-9"
+    },
+    {
+      "action_id": "PERF-RS-MEM-001:src/lib.rs:25:22",
+      "rank": 8,
+      "rule_id": "PERF-RS-MEM-001",
+      "title": "size_of passed as an element count (Rust)",
+      "path": "src/lib.rs",
+      "symbol": "build",
+      "span": {
+        "start_line": 25,
+        "start_col": 22,
+        "end_line": 25,
+        "end_col": 67
+      },
+      "severity": "warn",
+      "confidence": "MEDIUM",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/lib.rs#build#15:1",
+        "name": "build",
+        "path": "src/lib.rs",
+        "span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 1
+        },
+        "cost": 20,
+        "cost_scale": "v2",
+        "cost_anchor": "20 static cost units (v2) · 6.7× median · top 25%"
+      },
+      "why": "'Vec::with_capacity' receives a `size_of` byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization",
+      "evidence": {
+        "callee": "Vec::with_capacity",
+        "misuse": "size_of_as_element_count"
+      },
+      "fix_hint": "Divide the byte count by size_of::<T>() when passing it as an element count.",
+      "detail_anchor": "finding-PERF-RS-MEM-001-src-lib-rs-25-22"
+    },
+    {
+      "action_id": "PERF-C-ARCH-003:src/main.c:32:12",
+      "rank": 9,
+      "rule_id": "PERF-C-ARCH-003",
+      "title": "Cross-file call coupling",
+      "path": "src/main.c",
+      "symbol": "c_loop",
+      "span": {
+        "start_line": 32,
+        "start_col": 12,
+        "end_line": 32,
+        "end_col": 23
+      },
+      "severity": "info",
+      "confidence": "LOW",
+      "resolver_tier": "syntactic",
+      "macro_suspect": false,
+      "error_node_overlap": false,
+      "threshold": null,
+      "path_class": "production",
+      "function": {
+        "id": "src/main.c#c_loop#23:1",
+        "name": "c_loop",
+        "path": "src/main.c",
+        "span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        },
+        "cost": 15,
+        "cost_scale": "v2",
+        "cost_anchor": "15 static cost units (v2) · 5.0× median · top 50%"
+      },
+      "why": "call to 'util_init' matches a definition in 'src/util.c' by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization",
+      "evidence": {
+        "callee_name": "util_init",
+        "matched_path": "src/util.c"
+      },
+      "fix_hint": "Confirm the coupled edge with a semantic check, then narrow the interface or pass the dependency in.",
+      "detail_anchor": "finding-PERF-C-ARCH-003-src-main-c-32-12"
+    }
+  ],
+  "complete_action_count": 9,
+  "profile_queue": [
+    {
+      "rank": 1,
+      "function_id": "src/lib.rs#build#15:1",
+      "path": "src/lib.rs",
+      "function_name": "build",
+      "path_class": "production",
+      "cost": 20,
+      "cost_scale": "v2",
+      "cost_anchor": "20 static cost units (v2) · 6.7× median · top 25%",
+      "unknown_trip_loops": 1,
+      "known_trip_value": null
+    },
+    {
+      "rank": 2,
+      "function_id": "src/main.c#c_loop#23:1",
+      "path": "src/main.c",
+      "function_name": "c_loop",
+      "path_class": "production",
+      "cost": 15,
+      "cost_scale": "v2",
+      "cost_anchor": "15 static cost units (v2) · 5.0× median · top 50%",
+      "unknown_trip_loops": 1,
+      "known_trip_value": null
+    },
+    {
+      "rank": 3,
+      "function_id": "src/util.c#util_init#6:1",
+      "path": "src/util.c",
+      "function_name": "util_init",
+      "path_class": "production",
+      "cost": 3,
+      "cost_scale": "v2",
+      "cost_anchor": "3 static cost units (v2) · 1.0× median · top 75%",
+      "unknown_trip_loops": 0,
+      "known_trip_value": null
+    },
+    {
+      "rank": 4,
+      "function_id": "src/lib.rs#rust_surface#33:1",
+      "path": "src/lib.rs",
+      "function_name": "rust_surface",
+      "path_class": "production",
+      "cost": 1,
+      "cost_scale": "v2",
+      "cost_anchor": "1 static cost units (v2) · 0.3× median · top 100%",
+      "unknown_trip_loops": 0,
+      "known_trip_value": null
+    }
+  ],
+  "profile_queue_cap": 100,
+  "complete_profile_count": 4
+}
