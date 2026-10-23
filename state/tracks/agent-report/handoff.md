@@ -18,7 +18,7 @@ JSON + arch map"). Beta remains Track A; C is a later add-on and blocked nothing
 
 - `feat/agent-report` was fast-forwarded to `main` at session start (`3a84a0e`, the docs/tracks
   checkpoint commit) per the track's "rebase on `main` at session start". `main` is unchanged.
-- **C1 commit:** `__C1_COMMIT__` (docs + evidence only). No merge, no push.
+- **C1 commit:** ``6d32e67`` (docs + evidence only). No merge, no push.
 - Working tree contains only docs/state changes (see Change set). `src/`, `Cargo.*`, `deny.toml` and
   `docs/schema/` are clean — the gate asserts it.
 
