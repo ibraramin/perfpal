@@ -290,8 +290,8 @@ fn atlas_page_orders_canvas_brief_blocks_then_explorer() {
     let html = render_html(&doc, &names);
     let map = map_section(&html);
     assert!(
-        map.starts_with("<section id=\"map\">\n<section id=\"atlas-canvas\""),
-        "the canvas must be the first block inside #map"
+        map.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
+        "the first-page chrome (masthead + key-metrics strip) must open #map"
     );
     let canvas = map.find("<section id=\"atlas-canvas\"").expect("canvas");
     let mut last = canvas;
@@ -348,7 +348,16 @@ fn atlas_brief_carries_units_anchors_and_full_rationale() {
         map.contains("This is the complete rationale for PERF-C-CALL-001"),
         "the brief must show the full finding rationale"
     );
-    assert!(!map.contains('…'), "the brief must not truncate text");
+    // The brief itself must not truncate text (the canvas may mid-ellipsise
+    // long paths, with the full path in the node title).
+    let brief = map
+        .split("id=\"atlas-brief\"")
+        .nth(1)
+        .expect("brief body")
+        .split("id=\"atlas-drill-q2\"")
+        .next()
+        .expect("brief close");
+    assert!(!brief.contains('…'), "the brief must not truncate text");
     // ARCH-002 aggregates stay out of the action list but are counted.
     let actions = map
         .split("id=\"atlas-actions\"")

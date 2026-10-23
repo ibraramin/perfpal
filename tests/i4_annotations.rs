@@ -619,8 +619,8 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         .expect("#explorer after map");
     let map_body = &html[map_start..map_start + map_end];
     assert!(
-        map_body.starts_with("<section id=\"map\">\n<section id=\"atlas-canvas\""),
-        "#map must open with the Atlas canvas"
+        map_body.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
+        "#map must open with the Atlas first-page chrome"
     );
     let canvas = map_body.find("id=\"atlas-canvas\"").expect("canvas");
     let answer = map_body.find("id=\"atlas-answer\"").expect("answer line");

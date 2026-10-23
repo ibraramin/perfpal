@@ -80,10 +80,53 @@ fn atlas_canvas_has_no_metric_panels() {
                 "{name}: forbidden canvas markup `{needle}`"
             );
         }
-        // The canvas is the graph plus its chrome, not nothing.
+        // The canvas is the graph plus its one footer, not a chrome panel.
         assert!(canvas.contains("atlas-graph"), "{name}: graph field");
-        assert!(canvas.contains("atlas-legend"), "{name}: legend");
         assert!(canvas.contains("atlas-footer"), "{name}: footer");
+        assert!(
+            !canvas.contains("atlas-legend"),
+            "{name}: the legend moved out of the canvas"
+        );
+        assert!(
+            !canvas.contains("atlas-masthead") && !canvas.contains("atlas-keymetrics"),
+            "{name}: the chrome must stay outside the canvas"
+        );
+        let map = map_body(&html);
+        assert!(map.contains("atlas-masthead"), "{name}: masthead");
+        assert!(
+            map.contains("atlas-keymetrics"),
+            "{name}: key-metrics strip"
+        );
+        assert_eq!(
+            map.matches("class=\"atlas-legend\"").count(),
+            1,
+            "{name}: exactly one legend"
+        );
+        assert_eq!(
+            map.matches("class=\"atlas-footer\"").count(),
+            1,
+            "{name}: exactly one canvas footer"
+        );
+    }
+}
+
+#[test]
+fn atlas_map_has_one_caveat_and_one_median_definition() {
+    for (name, doc) in states() {
+        let html = render_html(&doc, &[]);
+        let map = map_body(&html);
+        assert_eq!(
+            map.matches("structural (LOW name-based + MEDIUM semantic)")
+                .count(),
+            1,
+            "{name}: the structural caveat must appear exactly once"
+        );
+        assert_eq!(
+            map.matches("× median function = all functions in the scan")
+                .count(),
+            1,
+            "{name}: the median definition must appear exactly once"
+        );
     }
 }
 
@@ -125,4 +168,49 @@ fn atlas_double_render_is_byte_identical() {
         let second = render_html(&doc, &[]);
         assert_eq!(first, second, "{name}: double render diverged");
     }
+}
+
+#[test]
+fn atlas_unreached_chip_is_non_additive_and_matches_footer() {
+    let doc = states()
+        .into_iter()
+        .find(|(name, _)| *name == "library")
+        .map(|(_, doc)| doc)
+        .expect("library state");
+    let html = render_html(&doc, &[]);
+    let map = map_body(&html);
+
+    // The library state draws its unreached production callers as cards…
+    assert!(
+        map.contains("data-node=\"src/caller1.c\""),
+        "library must draw the unreached caller cards"
+    );
+    assert!(map.contains("data-node=\"src/caller2.c\""));
+
+    // …and the chip still reports the global totals with non-additive wording.
+    let chip = map
+        .split("class=\"atlas-unreached-chip\"")
+        .nth(1)
+        .expect("unreached chip")
+        .split("</g>")
+        .next()
+        .expect("chip close");
+    assert!(chip.contains("production unreached: 2"), "{chip}");
+    assert!(!chip.contains("+2 production unreached"), "{chip}");
+    assert!(chip.contains("data-prod-unreached=\"2\""), "{chip}");
+    assert!(
+        !chip.contains("non-production unreached: 0"),
+        "a zero line must be omitted: {chip}"
+    );
+
+    // The canvas footer agrees with the chip.
+    let footer = map
+        .split("class=\"atlas-footer\"")
+        .nth(1)
+        .expect("canvas footer")
+        .split("</footer>")
+        .next()
+        .expect("footer close");
+    assert!(footer.contains("unreached production: 2"), "{footer}");
+    assert!(footer.contains("non-production: 0"), "{footer}");
 }

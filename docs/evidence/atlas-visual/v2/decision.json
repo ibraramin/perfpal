@@ -1,0 +1,64 @@
+{
+  "schema": "atlas-visual-decision/v1",
+  "step": 9,
+  "date": "2026-10-23",
+  "status": "signed",
+  "recommended_option": "A",
+  "chosen_option": "A",
+  "founder": "founder",
+  "signed_at": "2026-10-23",
+  "notes": "Option A; step 10 authorized; report.html#map capture; G-style right rail (step 11); F candidate at step 12; no overrides; drop pastel module bands, keep hulls.",
+  "components": {
+    "visual_system": "A \u2014 port G: warm paper/charcoal/burnt-orange; sans chrome + mono identifiers/figures; named masthead.",
+    "first_page": "report.html#map; masthead + small key-metrics strip + main graph + one footer; #atlas-canvas bottom <=900 at 1440x900.",
+    "detail_rail": "G-style right rail (step 11): ~868px map + ~538px rail, 2-column file cards; stacks below/overlay under 1360px.",
+    "below_graph_charts": "Step 12: weight (production-first; F treemap candidate), blast radius, file detail; progressive; drills on separate pages; #map <=~5000px.",
+    "f_treemap": "Candidate at step 12; F data retained; founder chooses treemap vs designed weight visual; no text-only strip as F.",
+    "module_bands": "Drop pastel module bands; keep one light module hull outline."
+  },
+  "proposed": {
+    "visual_system": "Port G: warm paper/charcoal/burnt-orange; sans chrome + mono identifiers/figures; named masthead.",
+    "first_page": "Masthead (58px) + small key-metrics strip (<=56px: entry, hottest, path, caps, 3 actions, one caveat) + main graph + one footer (24px); #atlas-canvas bottom <=900 at 1440x900.",
+    "detail_rail": "G-style right rail (step 11): ~868px map + ~538px rail, 2-column file cards (role, cost, top functions, finding ID); stacks below/overlay under 1360px.",
+    "below_graph_charts": "Step 12: weight (production-first; F treemap candidate), blast radius, file detail; progressive; drills on separate pages; #map <=~5000px.",
+    "f_treemap": "Candidate at step 12; F data retained; founder chooses treemap vs designed weight visual; no text-only strip as F.",
+    "module_bands": "Drop pastel module bands; keep one light module hull outline."
+  },
+  "scope": {
+    "in_step_10": [
+      "first-page fit (canvas bottom <=900)",
+      "G palette/type/masthead",
+      "key-metrics strip",
+      "one unit definition / one caveat / one legend / one footer",
+      "mid-ellipsis truncation with full-path title",
+      "path/selected edge labels only; neutral back-edge",
+      "unreached production/non-production label",
+      "no clipped footer; no horizontal scroll; no page-height increase",
+      "goldens + DoD"
+    ],
+    "not_in_step_10": [
+      "detail rail (step 11)",
+      "progressive charts and F prototype (step 12)",
+      "founder visual gate / V8 rerun (step 13)",
+      "A2 (step 14)",
+      "ship (step 15)"
+    ],
+    "unchanged": [
+      "no schema change",
+      "no new script (A12)",
+      "byte-determinism (A4)",
+      "canvas purity (A9)",
+      "eight-state coverage (A10)",
+      "holdouts vaulted",
+      "map-build not done; A1b open"
+    ]
+  },
+  "evidence": {
+    "side_by_side_hyperfine": "docs/evidence/atlas-visual/v2/side-by-side-hyperfine-1440x900.png",
+    "side_by_side_cJSON": "docs/evidence/atlas-visual/v2/side-by-side-cJSON-1440x900.png",
+    "g_baseline_diff": "docs/evidence/atlas-visual/v2/G-BASELINE-DIFF.md",
+    "vision_read": "docs/evidence/atlas-visual/v2/VISION-READ.md",
+    "audit": "docs/evidence/atlas-audit/AUDIT.md",
+    "audit_geometry": "docs/evidence/atlas-audit/audit.json"
+  }
+}

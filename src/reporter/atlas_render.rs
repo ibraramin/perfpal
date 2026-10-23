@@ -22,17 +22,19 @@ use std::collections::BTreeMap;
 
 use crate::charts::escape_xml;
 use crate::reporter::atlas::{AtlasColumn, AtlasEdge, AtlasNode, AtlasView, DEPTH_COLUMN_CAP};
+use crate::reporter::atlas_brief::StartAction;
 use crate::reporter::atlas_metrics::{
     NO_ENTRY, NO_SOURCE_FUNCTIONS, format_cost, format_count, format_demoted_files, format_depth,
-    format_distinct_edges, format_edge_mix, format_entry, format_finding, format_multiple,
-    format_parse, format_reachable, format_top, format_unresolved_includes,
+    format_distinct_edges, format_edge_mix, format_finding, format_multiple, format_parse,
+    format_reachable, format_top, format_unresolved_includes,
 };
 use crate::reporter::escape_html;
 use crate::reporter::views::CostScale;
 
-/// Mandatory disclosure for the default-tier structural call graph.
-pub const STRUCTURAL_CAPTION: &str =
-    "structural (LOW name-based + MEDIUM semantic), may over/under-approximate";
+/// Mandatory disclosure for the default-tier structural call graph. This is
+/// the single full occurrence on the page (the key-metrics strip); the brief
+/// only points back to the Atlas legend.
+pub const STRUCTURAL_CAPTION: &str = "structural (LOW name-based + MEDIUM semantic)";
 /// Mandatory label for the representative path trace.
 pub const PATH_CAPTION: &str = "representative path (static, BFS-derived)";
 
@@ -66,47 +68,71 @@ const PILL_PAD: i64 = 2;
 const NODE_CLEAR_PAD: i64 = 4;
 const HULL_LABEL_OFFSET: i64 = 12;
 
-const HULL_COLORS: [&str; 8] = [
-    "#eef2ff", "#f0fdf4", "#fef3c7", "#fce7f3", "#e0f2fe", "#f5f3ff", "#ecfccb", "#ffe4e6",
-];
-
-const STATIC_CSS: &str = r#".atlas-svg{background:#ffffff}
+const STATIC_CSS: &str = r#".atlas-svg{background:#fbf9f4}
 .atlas-svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.atlas-svg .atlas-column-header,.atlas-svg .atlas-hull text{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .atlas-edge,.atlas-trace{fill:none}"#;
 
-const ANIMATION_CSS: &str = r#"#atlas-canvas{position:relative;background:#ffffff;color:#0f172a;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-#atlas-canvas .atlas-head{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px}
-#atlas-canvas .atlas-units{flex-basis:100%;font-size:11.5px;color:#334155}
-#atlas-canvas .atlas-keys{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
-#atlas-canvas .atlas-entry{font-weight:700}
-#atlas-canvas .atlas-hottest{color:#9a3412}
-#atlas-canvas .atlas-caps{color:#475569}
-#atlas-canvas .atlas-pause-input{position:absolute;inline-size:1px;block-size:1px;opacity:0}
-#atlas-canvas .atlas-pause{display:inline-block;margin:0 16px 8px;padding:3px 10px;border:1px solid #94a3b8;border-radius:999px;background:#f8fafc;font-size:11px;cursor:pointer}
-#atlas-canvas .atlas-graph{background:#ffffff;border-bottom:1px solid #e2e8f0}
-#atlas-canvas .atlas-svg{display:block;width:100%;height:auto}
-#atlas-canvas .atlas-svg .atlas-edge,#atlas-canvas .atlas-svg .atlas-trace{fill:none}
-#atlas-canvas .atlas-legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#334155}
-#atlas-canvas .atlas-structural-caption{font-weight:700;color:#7c2d12}
-#atlas-canvas .atlas-footer{padding:8px 16px;font-size:11px;color:#334155}
+/// First-page chrome + graph CSS. Every selector is scoped to `#map` so the
+/// warm band never touches the white global report; the brief keeps its own
+/// scoped styles. Sans chrome, mono identifiers/figures.
+const ANIMATION_CSS: &str = r#"#map{background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0 -1rem;padding:8px 1rem;border-radius:0}
+#map .atlas-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#map .atlas-masthead{height:58px;box-sizing:border-box;display:flex;align-items:center;gap:14px;border-bottom:1px solid #d6d0c4}
+#map .atlas-brand{flex:0 0 244px;min-width:0}
+#map .atlas-kicker{font-size:8px;font-weight:800;letter-spacing:.16em;color:#6f6a61;text-transform:uppercase}
+#map .atlas-wordmark{font-size:21px;font-weight:800;letter-spacing:-.015em;line-height:1.05;color:#202b35;white-space:nowrap}
+#map .atlas-subline{display:block;font-size:9px;font-weight:600;color:#6f6a61;letter-spacing:.02em;line-height:1.05;margin-top:1px;white-space:normal}
+#map .atlas-masthead-spacer{flex:1;min-width:0}
+#map .atlas-masthead-actions{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+#map .atlas-pause-input{position:absolute;inline-size:1px;block-size:1px;opacity:0}
+#map .atlas-pause{display:inline-block;border:1px solid #9d9588;background:#fffdf8;color:#3c4650;padding:6px 10px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;user-select:none}
+#map .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #c2410c;outline-offset:2px}
+#map #atlas-pause:checked + .atlas-pause{background:#ece8df;border-color:#c2410c}
+#map .atlas-explorer{display:inline-block;background:#1f2d3a;color:#fff;text-decoration:none;padding:7px 10px;border-radius:4px;font-size:9px;font-weight:750}
+#map .atlas-keymetrics{border-bottom:1px solid #d6d0c4;padding:2px 0;font-size:9px;line-height:1.15;color:#6f6a61}
+#map .atlas-keymetrics-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 4px}
+#map .atlas-keymetrics b{color:#202b35;font-weight:700}
+#map .atlas-hot{color:#c2410c;font-weight:700}
+#map .atlas-chip{display:inline-block;color:#202b35;text-decoration:none;border:1px solid #b8b2a7;border-radius:3px;background:#fffdf8;padding:0 4px;font-size:9.5px;font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34rem;vertical-align:bottom}
+#map .atlas-chip:hover{border-color:#c2410c}
+#map .atlas-chip .atlas-mono{font-size:9.5px}
+#map .atlas-chip--stub{color:#6f6a61;border-style:dashed}
+#map .atlas-entry-value{font-size:10px;font-weight:600}
+#map .atlas-legend{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 9px}
+#map .atlas-sw{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:3px}
+#map .atlas-sw-prod{background:#fdfbf6;border:1px solid #8b8173}
+#map .atlas-sw-test{background:#eef2f7;border:1px dashed #7f93aa}
+#map .atlas-sw-unreached{background:#e8e5df;border:1px solid #b8b2a7}
+#map .atlas-sw-forward{border-top:2px solid #8d8577;width:12px;height:0;border-radius:0;background:none}
+#map .atlas-sw-back{border-top:2px dashed #8d8577;width:12px;height:0;border-radius:0;background:none}
+#map .atlas-sw-path{border-top:2.3px solid #c2410c;width:12px;height:0;border-radius:0;background:none}
+#map .atlas-unit{color:#6f6a61}
+#map .atlas-structural-caption{font-weight:700;color:#7c2d12}
+#map #atlas-canvas{position:relative;background:transparent;color:#202b35}
+#map .atlas-graph{background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;overflow:hidden}
+#map .atlas-svg{display:block;width:100%;height:auto;background:#fbf9f4}
+#map .atlas-svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#map .atlas-svg .atlas-column-header,#map .atlas-svg .atlas-hull text{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+#map .atlas-svg .atlas-edge,#map .atlas-svg .atlas-trace{fill:none}
+#map .atlas-footer{padding:5px 8px 2px;font-size:9px;line-height:1.35;color:#6f6a61;font-variant-numeric:tabular-nums}
+#map .atlas-footer .atlas-mono{color:#202b35}
 @keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
 @keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
  @keyframes atlas-edge-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
  @keyframes atlas-edge-fade{from{opacity:0}to{opacity:1}}
  @keyframes atlas-trace-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
  @keyframes atlas-hottest-pulse{0%,100%{opacity:1}50%{opacity:.5}}
- #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
- #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
- #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
- #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
- #atlas-canvas .atlas-trace{animation:atlas-trace-draw 1.2s 4.2s both}
-#atlas-canvas .atlas-node.is-hottest{animation:atlas-hottest-pulse .8s 5.4s 2 both}
-#atlas-canvas .atlas-pause-input:checked ~ .atlas-graph *{animation-play-state:paused !important}
-#atlas-canvas .atlas-pause:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
-#atlas-canvas .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #1d4ed8;outline-offset:2px}
-@media (prefers-reduced-motion: reduce){#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
-@media print{#atlas-canvas{break-inside:avoid}#atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#atlas-canvas .atlas-pause{display:none}}
-#atlas-canvas .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}"#;
+ #map #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
+ #map #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
+ #map #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #map #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #map #atlas-canvas .atlas-trace{animation:atlas-trace-draw 1.2s 4.2s both}
+#map #atlas-canvas .atlas-node.is-hottest{animation:atlas-hottest-pulse .8s 5.4s 2 both}
+#map:has(#atlas-pause:checked) #atlas-canvas .atlas-graph *{animation-play-state:paused !important}
+@media (prefers-reduced-motion: reduce){#map #atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
+@media print{#map{background:#fff}#map #atlas-canvas{break-inside:avoid}#map #atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#map .atlas-pause,#map .atlas-masthead-actions{display:none}}
+#map .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}"#;
 
 // ---------------------------------------------------------------------------
 // Geometry
@@ -143,7 +169,11 @@ fn compute_layout(view: &AtlasView) -> Layout {
         .map(|column| {
             column.files.len()
                 + column.aggregated.len()
-                + usize::from(column.unreached && column.nonproduction_unreached > 0)
+                + usize::from(
+                    column.unreached
+                        && (view.coverage.unreached_production > 0
+                            || view.coverage.unreached_nonproduction > 0),
+                )
         })
         .max()
         .unwrap_or(1)
@@ -352,17 +382,26 @@ fn edge_shape(edge: &AtlasEdge, layout: &Layout) -> Option<EdgeShape> {
 // Small text helpers
 // ---------------------------------------------------------------------------
 
-fn tail_keep(text: &str, max_chars: usize) -> String {
+/// Mid-ellipsis: keep the first ~half and the last ~half of `text` so a
+/// truncated path still starts with its real first segment and never begins
+/// with a dot/ellipsis (the F6 audit defect was leading-dot truncation). The
+/// full path always stays available in the `<title>`.
+fn mid_ellipsis(text: &str, max_chars: usize) -> String {
     let count = text.chars().count();
     if count <= max_chars {
         return text.to_string();
     }
-    if max_chars <= 1 {
+    if max_chars <= 3 {
         return text.chars().take(max_chars).collect();
     }
-    let skip = count - (max_chars - 1);
-    let mut out = String::from("…");
-    out.extend(text.chars().skip(skip));
+    let keep = max_chars - 1;
+    let front = keep.div_ceil(2);
+    let back = keep - front;
+    let mut out: String = text.chars().take(front).collect();
+    out.push('…');
+    if back > 0 {
+        out.extend(text.chars().skip(count - back));
+    }
     out
 }
 
@@ -402,11 +441,12 @@ fn edge_label_text(count: usize) -> String {
 
 /// Estimated pill width: monospace advance (~0.62em) plus horizontal padding,
 /// so the label fits the ~30px inter-column gap. Five-character labels (the
-/// `×999+` clamp) use 6.5px padding to stay inside the 32px preflight bound.
+/// `×999+` clamp) use 5.5px padding to stay inside the 32px preflight bound at
+/// the 8.5px visible floor.
 fn edge_label_width(count: usize) -> i64 {
     let text = edge_label_text(count);
-    let padding = if text.chars().count() >= 5 { 6.5 } else { 8.0 };
-    let advance = text.chars().count() as f64 * 8.2 * 0.62;
+    let padding = if text.chars().count() >= 5 { 5.5 } else { 8.0 };
+    let advance = text.chars().count() as f64 * 8.5 * 0.62;
     (advance + padding).ceil() as i64
 }
 
@@ -503,13 +543,13 @@ fn estimated_header_width(text: &str, size: f64) -> f64 {
     text.chars().count() as f64 * size * HEADER_CHAR_EM
 }
 
-/// Tail-keep `line` so its estimated width stays within `max_w`.
+/// Mid-ellipsis `line` so its estimated width stays within `max_w`.
 fn fit_header_line(line: &str, max_w: i64) -> String {
     if estimated_header_width(line, HEADER_FONT_SIZE) <= max_w as f64 {
         return line.to_string();
     }
     let max_chars = (max_w as f64 / (HEADER_FONT_SIZE * HEADER_CHAR_EM)).floor() as usize;
-    tail_keep(line, max_chars.max(1))
+    mid_ellipsis(line, max_chars.max(1))
 }
 
 /// Two-line column header. Line 1 names the depth/entry (or `UNREACHED`);
@@ -520,10 +560,9 @@ fn column_header_lines(view: &AtlasView, column: &AtlasColumn) -> (String, Strin
         count.push_str(&format!(" · {} aggregated", column.aggregated.len()));
     }
     if column.unreached {
-        (
-            "UNREACHED".to_string(),
-            format!("no forward path · {count}"),
-        )
+        // Global unreached totals live in the footer and the combined chip;
+        // the header only names the reason (F9: no ambiguous "N shown").
+        ("UNREACHED".to_string(), "no forward path".to_string())
     } else if column.folded {
         (format!("depth {DEPTH_COLUMN_CAP}+"), count)
     } else if column.depth == 0 && view.entry.point.is_some() {
@@ -553,15 +592,14 @@ fn svg_open(standalone: bool, height: i64) -> String {
 fn render_defs() -> String {
     concat!(
         "<defs>",
-        "<pattern id=\"atlas-hatch\" width=\"6\" height=\"6\" patternUnits=\"userSpaceOnUse\" patternTransform=\"rotate(45)\">",
-        "<rect width=\"6\" height=\"6\" fill=\"#f8fafc\"/>",
-        "<line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"6\" stroke=\"#cbd5e1\" stroke-width=\"2\"/>",
-        "</pattern>",
         "<marker id=\"atlas-arrow\" viewBox=\"0 0 8 8\" refX=\"7\" refY=\"4\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\">",
-        "<path d=\"M0,0 L8,4 L0,8 Z\" fill=\"#6b7280\"/>",
+        "<path d=\"M0,0 L8,4 L0,8 Z\" fill=\"#8d8577\"/>",
         "</marker>",
         "<marker id=\"atlas-arrow-back\" viewBox=\"0 0 8 8\" refX=\"7\" refY=\"4\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\">",
-        "<path d=\"M0,0 L8,4 L0,8 Z\" fill=\"#b45309\"/>",
+        "<path d=\"M0,0 L8,4 L0,8 Z\" fill=\"#8d8577\"/>",
+        "</marker>",
+        "<marker id=\"atlas-arrow-path\" viewBox=\"0 0 8 8\" refX=\"7\" refY=\"4\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\">",
+        "<path d=\"M0,0 L8,4 L0,8 Z\" fill=\"#c2410c\"/>",
         "</marker>",
         "</defs>",
     )
@@ -579,17 +617,17 @@ fn render_stub(view: &AtlasView) -> String {
     };
     let mut out = String::from("<g class=\"atlas-stub\" role=\"note\">");
     out.push_str(
-        "<rect x=\"450\" y=\"300\" width=\"500\" height=\"120\" rx=\"12\" fill=\"#f8fafc\" \
-         stroke=\"#94a3b8\" stroke-dasharray=\"6 4\"/>",
+        "<rect x=\"450\" y=\"300\" width=\"500\" height=\"120\" rx=\"12\" fill=\"#fbf9f4\" \
+         stroke=\"#b8b2a7\" stroke-dasharray=\"6 4\"/>",
     );
     out.push_str(&format!(
         "<text x=\"700\" y=\"352\" text-anchor=\"middle\" font-size=\"18\" font-weight=\"700\" \
-         fill=\"#334155\">{}</text>",
+         fill=\"#202b35\">{}</text>",
         escape_xml(&message)
     ));
     if !detail.is_empty() {
         out.push_str(&format!(
-            "<text x=\"700\" y=\"376\" text-anchor=\"middle\" font-size=\"13.5\" fill=\"#64748b\">{}</text>",
+            "<text x=\"700\" y=\"376\" text-anchor=\"middle\" font-size=\"13.5\" fill=\"#6f6a61\">{}</text>",
             escape_xml(&detail)
         ));
     }
@@ -619,7 +657,6 @@ fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
             .push(node);
     }
     let mut out = String::new();
-    let mut palette_index = 0_usize;
     for (prefix, members) in &groups {
         if members.len() < 2 {
             continue;
@@ -643,13 +680,11 @@ fn render_hulls(view: &AtlasView, rows: &BTreeMap<String, NodeRect>) -> String {
         let y = (min_y - HULL_TOP_MARGIN).max(0);
         let width = (max_x + 8 - x).max(20);
         let height = (max_y + 8 - y).max(20);
-        let color = HULL_COLORS[palette_index % HULL_COLORS.len()];
-        palette_index += 1;
         out.push_str(&format!(
             "<g class=\"atlas-hull\"><title>approximate prefix group; not a canonical component id</title>\
-             <rect x=\"{x}\" y=\"{y}\" width=\"{width}\" height=\"{height}\" rx=\"10\" fill=\"{color}\" \
-             fill-opacity=\".55\" stroke=\"#cbd5e1\" stroke-width=\"1\"/>\
-             <text x=\"{}\" y=\"{}\" font-size=\"9.2\" font-weight=\"700\" fill=\"#475569\">{}</text></g>",
+             <rect x=\"{x}\" y=\"{y}\" width=\"{width}\" height=\"{height}\" rx=\"10\" fill=\"none\" \
+             stroke=\"#d6d0c4\" stroke-width=\"1\" stroke-dasharray=\"5 3\"/>\
+             <text x=\"{}\" y=\"{}\" font-size=\"9.2\" font-weight=\"700\" fill=\"#6f6a61\">{}</text></g>",
             x + 8,
             hull_label_baseline(min_y),
             escape_xml(&format!("{prefix} · {}", members.len()))
@@ -684,10 +719,10 @@ fn render_aggregate(aggregate: &crate::reporter::atlas::AtlasAggregate, rect: No
     );
     format!(
         "<g class=\"atlas-aggregate\" data-aggregate=\"depth-{}\"><title>{}</title>\
-         <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" \
+         <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" rx=\"6\" fill=\"#f0ede6\" stroke=\"#b8b2a7\" \
          stroke-dasharray=\"5 4\"/>\
-         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"9.1\" font-weight=\"700\" fill=\"#334155\">+{} more</text>\
-         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.6\" fill=\"#475569\">{} calls in</text></g>",
+         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"9.1\" font-weight=\"700\" fill=\"#3c4650\">+{} more</text>\
+         <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.6\" fill=\"#6f6a61\">{} calls in</text></g>",
         aggregate.depth,
         escape_xml(&title),
         rect.x,
@@ -720,7 +755,7 @@ fn render_node(
     let max_chars = ((name_max_w.max(20) as f64) / (name_size * 0.62))
         .floor()
         .max(4.0) as usize;
-    let name = tail_keep(&node.path, max_chars);
+    let name = mid_ellipsis(&node.path, max_chars);
     let (multiple, top) = node_rank_lines(node);
     let cost = format_cost(node.cost, node.scale);
 
@@ -734,20 +769,31 @@ fn render_node(
     let multiple_y = cost_y + gap.round() as i64;
     let top_y = multiple_y + gap.round() as i64;
 
-    let text_fill = if node.entry { "#ffffff" } else { "#1e293b" };
-    let (fill, mut stroke, mut stroke_width) = if node.entry {
-        ("#1f2937", "#111827", 2)
+    let text_fill = if node.entry { "#ffffff" } else { "#23303a" };
+    // Opaque G fills for non-production nodes (no hatch-through-text); bench
+    // keeps its own lilac fill. Entry/unreached/production stay solid.
+    let (fill, mut stroke, mut stroke_width, dash) = if node.entry {
+        ("#1f2d3a", "#1f2d3a", 2, "")
     } else if node.unreached {
-        ("#d1d5db", "#6b7280", 1)
+        ("#e8e5df", "#b8b2a7", 1, "")
     } else if !node.production {
-        ("url(#atlas-hatch)", "#64748b", 1)
+        if node.path_class == "bench" {
+            ("#f7f0f7", "#8a6f9e", 1, "3 2")
+        } else {
+            ("#eef2f7", "#7f93aa", 1, "3 2")
+        }
     } else {
-        ("#f8fafc", "#475569", 1)
+        ("#fdfbf6", "#8b8173", 1, "")
     };
     if node.hottest {
-        stroke = "#d97706";
+        stroke = "#c2410c";
         stroke_width = 2;
     }
+    let dash_attr = if dash.is_empty() {
+        String::new()
+    } else {
+        format!(" stroke-dasharray=\"{dash}\"")
+    };
 
     let mut classes = String::from("atlas-node");
     if node.entry {
@@ -775,7 +821,7 @@ fn render_node(
     out.push_str(&format!("<title>{}</title>", escape_xml(&node_title(node))));
     out.push_str(&format!(
         "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" rx=\"7\" fill=\"{fill}\" stroke=\"{stroke}\" \
-         stroke-width=\"{stroke_width}\"/>",
+         stroke-width=\"{stroke_width}\"{dash_attr}/>",
         rect.x, rect.y, rect.w, rect.h
     ));
     let badges = node_badges(node);
@@ -785,10 +831,10 @@ fn render_node(
         let (badge_x, badge_y) = (rect.x + rect.w - 2, node_badge_baseline(rect));
         out.push_str(&format!(
             "<text class=\"atlas-node-badge\" x=\"{}\" y=\"{}\" text-anchor=\"end\" \
-             font-size=\"8\" fill=\"#475569\"{}>{}</text>",
+             font-size=\"8.5\" fill=\"#6f6a61\"{}>{}</text>",
             badge_x,
             badge_y,
-            fit_attrs(&badges, 8.0, rect.w - 4),
+            fit_attrs(&badges, 8.5, rect.w - 4),
             escape_xml(&badges)
         ));
     }
@@ -829,7 +875,7 @@ fn render_node(
         let title = format!("{PATH_CAPTION} · step {step} of {total_steps}");
         out.push_str(&format!(
             "<g class=\"atlas-path-badge\"><title>{}</title>\
-             <circle cx=\"{cx}\" cy=\"{cy}\" r=\"8\" fill=\"#ea580c\" stroke=\"#ffffff\" stroke-width=\"1\"/>\
+             <circle cx=\"{cx}\" cy=\"{cy}\" r=\"8\" fill=\"#c2410c\" stroke=\"#ffffff\" stroke-width=\"1\"/>\
              <text x=\"{cx}\" y=\"{}\" text-anchor=\"middle\" font-size=\"9.5\" font-weight=\"700\" \
              fill=\"#ffffff\">{step}</text></g>",
             escape_xml(&title),
@@ -871,9 +917,9 @@ fn render_nodes(
         out.push_str(&format!(
             "<g class=\"atlas-column-header-group\">{title}\
              <text class=\"atlas-column-header\" x=\"{center_x}\" y=\"{HEADER_Y}\" text-anchor=\"middle\" \
-             font-size=\"{HEADER_FONT_SIZE}\" font-weight=\"700\" fill=\"#334155\">{}</text>\
+             font-size=\"{HEADER_FONT_SIZE}\" font-weight=\"700\" fill=\"#202b35\">{}</text>\
              <text class=\"atlas-column-header\" x=\"{center_x}\" y=\"{HEADER_LINE2_Y}\" text-anchor=\"middle\" \
-             font-size=\"{HEADER_FONT_SIZE}\" fill=\"#475569\">{}</text></g>",
+             font-size=\"{HEADER_FONT_SIZE}\" fill=\"#6f6a61\">{}</text></g>",
             escape_xml(&fitted1),
             escape_xml(&fitted2)
         ));
@@ -900,28 +946,61 @@ fn render_nodes(
                 },
             ));
         }
-        if column.unreached && column.nonproduction_unreached > 0 {
+        // The chip reports the same global unreached totals as the footer,
+        // never a not-drawn subset (so the two always agree).
+        let prod_unreached = view.coverage.unreached_production;
+        let nonprod_unreached = view.coverage.unreached_nonproduction;
+        if column.unreached && (prod_unreached > 0 || nonprod_unreached > 0) {
             let row = (column.files.len() + column.aggregated.len()) as i64;
             let y = TOP + row * layout.row_h;
-            let count = format_count(column.nonproduction_unreached as u64);
-            let chip = format!("+{count} non-production unreached");
-            let title =
-                format!("{count} non-production unreached files (test/bench/other) · not drawn");
+            let mut lines = Vec::new();
+            if prod_unreached > 0 {
+                lines.push(format!(
+                    "production unreached: {}",
+                    format_count(prod_unreached as u64)
+                ));
+            }
+            if nonprod_unreached > 0 {
+                lines.push(format!(
+                    "non-production unreached: {}",
+                    format_count(nonprod_unreached as u64)
+                ));
+            }
+            let title = format!(
+                "{} production unreached · {} non-production unreached · no estimated reachability",
+                format_count(prod_unreached as u64),
+                format_count(nonprod_unreached as u64)
+            );
+            let center_x = column_layout.node_x + column_layout.node_w / 2;
+            let mut text = String::new();
+            if lines.len() == 1 {
+                text.push_str(&format!(
+                    "<text x=\"{center_x}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.5\" \
+                     font-weight=\"700\" fill=\"#6f6a61\"{}>{}</text>",
+                    y + layout.node_h / 2 + 3,
+                    fit_attrs(&lines[0], 8.5, column_layout.node_w - 8),
+                    escape_xml(&lines[0])
+                ));
+            } else {
+                for (index, line) in lines.iter().enumerate() {
+                    let baseline = y + layout.node_h / 2 - 2 + index as i64 * 11;
+                    text.push_str(&format!(
+                        "<text x=\"{center_x}\" y=\"{baseline}\" text-anchor=\"middle\" \
+                         font-size=\"8.5\" font-weight=\"700\" fill=\"#6f6a61\"{}>{}</text>",
+                        fit_attrs(line, 8.5, column_layout.node_w - 8),
+                        escape_xml(line)
+                    ));
+                }
+            }
             out.push_str(&format!(
-                "<g class=\"atlas-unreached-nonprod\" data-nonprod-unreached=\"{}\"\
-                 ><title>{}</title><rect x=\"{}\" y=\"{y}\" width=\"{}\" height=\"{}\" rx=\"6\" \
-                 fill=\"#f8fafc\" stroke=\"#94a3b8\" stroke-dasharray=\"4 3\"/>\
-                 <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.2\" \
-                 font-weight=\"700\" fill=\"#475569\"{}>{}</text></g>",
-                column.nonproduction_unreached,
+                "<g class=\"atlas-unreached-chip\" data-prod-unreached=\"{prod_unreached}\" \
+                 data-nonprod-unreached=\"{nonprod_unreached}\"><title>{}</title>\
+                 <rect x=\"{}\" y=\"{y}\" width=\"{}\" height=\"{}\" rx=\"6\" \
+                 fill=\"#efede8\" stroke=\"#b8b2a7\" stroke-dasharray=\"4 3\"/>{text}</g>",
                 escape_xml(&title),
                 column_layout.node_x,
                 column_layout.node_w,
                 layout.node_h,
-                column_layout.node_x + column_layout.node_w / 2,
-                y + layout.node_h / 2 + 2,
-                fit_attrs(&chip, 8.2, column_layout.node_w - 8),
-                escape_xml(&chip)
             ));
         }
         out.push_str("</g>");
@@ -956,18 +1035,18 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
         let Some(shape) = edge_shape(edge, layout) else {
             continue;
         };
-        let (class, stroke, dasharray, marker) = if edge.back {
+        let (class, dasharray, opacity, marker) = if edge.back {
             (
                 "atlas-edge atlas-edge--back",
-                "#b45309",
-                "6 4",
+                "4 3",
+                "0.45",
                 "url(#atlas-arrow-back)",
             )
         } else {
             (
                 "atlas-edge atlas-edge--forward",
-                "#6b7280",
                 "1",
+                "0.34",
                 "url(#atlas-arrow)",
             )
         };
@@ -979,27 +1058,31 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
             format_distinct_edges(edge.count)
         );
         edge_paths.push_str(&format!(
-            "<path class=\"{class}\" data-edge=\"{}\" d=\"{}\" fill=\"none\" stroke=\"{stroke}\" stroke-width=\"2\" \
-             stroke-dasharray=\"{dasharray}\" stroke-dashoffset=\"0\" marker-end=\"{marker}\"{path_length} \
+            "<path class=\"{class}\" data-edge=\"{}\" d=\"{}\" fill=\"none\" stroke=\"#8d8577\" stroke-width=\"2\" \
+             stroke-opacity=\"{opacity}\" stroke-dasharray=\"{dasharray}\" stroke-dashoffset=\"0\" marker-end=\"{marker}\"{path_length} \
              style=\"--atlas-edge:{index}\"><title>{}</title></path>",
             escape_xml(&format!("{}->{}", edge.from, edge.to)),
             shape.path,
             escape_xml(&title)
         ));
-        edge_labels.push_str(&format!(
-            "<g class=\"atlas-edge-label\"><title>{}</title>\
-             <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"12\" rx=\"3\" fill=\"#ffffff\" \
-             stroke=\"#cbd5e1\" stroke-width=\"1\"/>\
-             <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.2\" \
-             fill=\"#334155\">{}</text></g>",
-            escape_xml(&format_distinct_edges(edge.count)),
-            shape.label_x - edge_label_width(edge.count) / 2,
-            shape.label_y - 6,
-            edge_label_width(edge.count),
-            shape.label_x,
-            shape.label_y + 3,
-            escape_xml(&edge_label_text(edge.count))
-        ));
+        // Visible `×N` pill only on the representative path; every edge keeps
+        // its full distinct-edge count in the path `<title>` above (F7).
+        if edge.on_path {
+            edge_labels.push_str(&format!(
+                "<g class=\"atlas-edge-label\"><title>{}</title>\
+                 <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"12\" rx=\"3\" fill=\"#fffdf8\" \
+                 stroke=\"#c2410c\" stroke-width=\"1\"/>\
+                 <text x=\"{}\" y=\"{}\" text-anchor=\"middle\" font-size=\"8.5\" \
+                 fill=\"#c2410c\">{}</text></g>",
+                escape_xml(&format_distinct_edges(edge.count)),
+                shape.label_x - edge_label_width(edge.count) / 2,
+                shape.label_y - 6,
+                edge_label_width(edge.count),
+                shape.label_x,
+                shape.label_y + 3,
+                escape_xml(&edge_label_text(edge.count))
+            ));
+        }
     }
 
     let mut traces = String::new();
@@ -1015,8 +1098,9 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
             let step = index + 1;
             let title = format!("{PATH_CAPTION} · step {step} of {}", view.path.len());
             traces.push_str(&format!(
-                "<path class=\"atlas-trace\" d=\"{}\" fill=\"none\" stroke=\"#ea580c\" stroke-width=\"3\" \
+                "<path class=\"atlas-trace\" d=\"{}\" fill=\"none\" stroke=\"#c2410c\" stroke-width=\"2.3\" \
                  stroke-dasharray=\"1\" stroke-dashoffset=\"0\" pathLength=\"1\" \
+                 marker-end=\"url(#atlas-arrow-path)\" \
                  style=\"--atlas-trace:{index}\"><title>{}</title></path>",
                 shape.path,
                 escape_xml(&title)
@@ -1060,20 +1144,154 @@ fn view_scale_tag(view: &AtlasView) -> &'static str {
     }
 }
 
-/// HTML fragment for `report.html#map`: header, animated SVG canvas, legend,
-/// footer. The section carries exactly one scoped `<style>` and no script.
-#[must_use]
-pub fn render_canvas_html(view: &AtlasView) -> String {
-    let entry_label = format_entry(
-        view.entry.policy.label(),
-        &view.entry.confidence,
-        view.entry.alternatives.len(),
+/// Entry description for the key-metrics strip (policy, `path:line function`,
+/// confidence, alternatives) — no repo name / root_path provenance.
+fn strip_entry_line(view: &AtlasView) -> String {
+    let confidence = {
+        let trimmed = view.entry.confidence.trim();
+        if trimmed.is_empty() {
+            "UNKNOWN".to_string()
+        } else {
+            trimmed.to_ascii_uppercase()
+        }
+    };
+    let noun = if view.entry.alternatives.len() == 1 {
+        "alternative"
+    } else {
+        "alternatives"
+    };
+    let mut line = view.entry.policy.label().to_string();
+    if let Some(point) = &view.entry.point {
+        line.push_str(&format!(" · {}:{} {}", point.path, point.line, point.name));
+    }
+    line.push_str(&format!(
+        " · confidence {confidence} · {} {noun}",
+        format_count(view.entry.alternatives.len() as u64)
+    ));
+    line
+}
+
+/// The three inline KV1 action chips (visible `path:line — rule`, full title).
+fn render_start_chips(actions: &[StartAction]) -> String {
+    if actions.is_empty() {
+        return "<span class=\"atlas-chip atlas-chip--stub\">no ranked action recorded</span>"
+            .to_string();
+    }
+    actions
+        .iter()
+        .map(|action| {
+            format!(
+                "<a class=\"atlas-chip\" href=\"{}\" title=\"{}\"><span class=\"atlas-mono\">{}</span> — {}</a>",
+                escape_html(&action.href),
+                escape_html(&action.title()),
+                escape_html(&action.location),
+                escape_html(&action.rule),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// First-page chrome: masthead + key-metrics strip. It sits **before**
+/// `#atlas-canvas` so the graph panel itself stays free of tables, cards and
+/// metric panels (A9); the strip is the first answer-bearing block.
+fn render_page_chrome(
+    entry_line: &str,
+    hottest_line: &str,
+    path_line: &str,
+    caps_line: &str,
+    unit_line: &str,
+    start_chips: &str,
+) -> String {
+    let mut out = String::new();
+    out.push_str("<div class=\"atlas-page-chrome\">\n");
+    out.push_str(&format!("<style>{ANIMATION_CSS}</style>\n"));
+    out.push_str("<header class=\"atlas-masthead\">\n");
+    out.push_str("<div class=\"atlas-brand\">\n");
+    out.push_str("<div class=\"atlas-kicker\">PERFPAL · ATLAS</div>\n");
+    out.push_str("<div class=\"atlas-wordmark\">Atlas</div>\n");
+    out.push_str(
+        "<div class=\"atlas-subline\">entry-flow map · static, profile to confirm</div>\n",
     );
+    out.push_str("</div>\n");
+    out.push_str("<div class=\"atlas-masthead-spacer\"></div>\n");
+    out.push_str("<div class=\"atlas-masthead-actions\">\n");
+    out.push_str("<input type=\"checkbox\" id=\"atlas-pause\" class=\"atlas-pause-input\" aria-label=\"Pause the animation\">\n");
+    out.push_str("<label for=\"atlas-pause\" class=\"atlas-pause\">Pause</label>\n");
+    out.push_str("<a class=\"atlas-explorer\" href=\"#explorer\">Explorer →</a>\n");
+    out.push_str("</div>\n</header>\n");
+    out.push_str("<div class=\"atlas-keymetrics\">\n");
+    out.push_str("<div class=\"atlas-keymetrics-line\">\n");
+    out.push_str(&format!(
+        "<span><b>ENTRY</b> <span class=\"atlas-mono atlas-entry-value\">{}</span></span>\n",
+        escape_html(entry_line)
+    ));
+    out.push_str(&format!(
+        "<span class=\"atlas-hot\">HOTTEST: <span class=\"atlas-mono\">{}</span></span>\n",
+        escape_html(hottest_line)
+    ));
+    out.push_str(&format!(
+        "<span class=\"atlas-mono\">{}</span>\n",
+        escape_html(path_line)
+    ));
+    out.push_str(&format!(
+        "<span class=\"atlas-mono\">{}</span>\n",
+        escape_html(caps_line)
+    ));
+    out.push_str("</div>\n");
+    out.push_str("<div class=\"atlas-keymetrics-line\">\n");
+    out.push_str("<b>START</b>\n");
+    out.push_str(start_chips);
+    out.push_str("\n</div>\n");
+    out.push_str("<div class=\"atlas-keymetrics-line\">\n");
+    out.push_str("<span class=\"atlas-legend\">");
+    for (class, label) in [
+        ("atlas-sw-prod", "production"),
+        ("atlas-sw-test", "test/bench"),
+        ("atlas-sw-unreached", "unreached"),
+        ("atlas-sw-forward", "forward"),
+        ("atlas-sw-back", "back"),
+        ("atlas-sw-path", "path"),
+    ] {
+        out.push_str(&format!(
+            "<span><span class=\"atlas-sw {class}\"></span>{label}</span>"
+        ));
+    }
+    out.push_str("</span>\n");
+    out.push_str(&format!(
+        "<span class=\"atlas-unit\">{}</span>\n",
+        escape_html(unit_line)
+    ));
+    out.push_str(&format!(
+        "<span class=\"atlas-structural-caption\">{}</span>\n",
+        escape_html(STRUCTURAL_CAPTION)
+    ));
+    out.push_str("</div>\n");
+    out.push_str("</div>\n");
+    out.push_str("</div>\n");
+    out
+}
+
+/// HTML fragment for `report.html#map`: first-page chrome (masthead +
+/// key-metrics strip), then the animated SVG canvas and its one footer. The
+/// chrome carries exactly one scoped `<style>` and no script; the brief is a
+/// sibling rendered after this fragment.
+#[must_use]
+pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartAction]) -> String {
+    let entry_line = strip_entry_line(view);
     let hottest_line = view
         .hottest_node
         .as_ref()
-        .map(|node| format!("HOTTEST: {} · {}", node.path, node_anchor_text(node)))
-        .unwrap_or_else(|| "HOTTEST: no file".to_string());
+        .map(|node| {
+            // Path, cost and the `× median` anchor (the `top N%` rank stays in
+            // the node title / brief; the strip stays on one compact line).
+            let mut parts = vec![node.path.clone(), format_cost(node.cost, node.scale)];
+            if let Some(ratio) = node.ratio {
+                parts.push(format!("{} median function", format_multiple(ratio)));
+            }
+            parts.join(" · ")
+        })
+        .unwrap_or_else(|| "no file".to_string());
     let path_line = format!(
         "PATH · {} steps · {PATH_CAPTION}",
         format_count(view.path.len() as u64)
@@ -1089,27 +1307,14 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
     let scale_label = format!("static cost units ({scale_tag})");
     // Preserve the v1-fallback note whenever the view contains v1 rows (a
     // pre-I2 document is entirely fallback rows; a mixed one is partly).
-    let unit = if scale_tag == "v2" {
-        scale_label.clone()
+    let unit_line = if scale_tag == "v2" {
+        format!("{scale_label} — relative scale · × median function = all functions in the scan")
     } else {
-        format!("{scale_label} · v1 fallback rows labelled")
+        format!(
+            "{scale_label} — relative scale · v1 fallback rows labelled · × median function = all functions in the scan"
+        )
     };
-    let legend_items = [
-        unit.clone(),
-        "depth = BFS from entry".to_string(),
-        "solid = forward structural edge".to_string(),
-        "dashed amber = back edge".to_string(),
-        "edge label ×N = distinct structural edges".to_string(),
-        "hatch = non-production (test/bench/other)".to_string(),
-        "grey = unreached".to_string(),
-        "× median function = denominator".to_string(),
-        "hulls = approximate prefix groups".to_string(),
-    ];
-    let legend_items = legend_items
-        .iter()
-        .map(|item| format!("<span>{}</span>", escape_html(item)))
-        .collect::<Vec<_>>()
-        .join(" · ");
+    let start_chips = render_start_chips(start_actions);
 
     let reachable = format_reachable(
         view.reachability.reachable_files,
@@ -1121,8 +1326,9 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
         format_count(view.caps.edge_pairs_total as u64)
     );
     let mix = format_edge_mix(view.edge_mix.medium, view.edge_mix.low, view.edge_mix.high);
+    // F9: one unambiguous unreached label — production and non-production.
     let unreached = format!(
-        "{} unreached production · {} unreached non-production",
+        "unreached production: {} · non-production: {}",
         format_count(view.coverage.unreached_production as u64),
         format_count(view.coverage.unreached_nonproduction as u64)
     );
@@ -1150,54 +1356,20 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
 
     let layout = compute_layout(view);
     let mut out = String::new();
+    out.push_str(&render_page_chrome(
+        &entry_line,
+        &hottest_line,
+        &path_line,
+        &caps_line,
+        &unit_line,
+        &start_chips,
+    ));
     out.push_str("<section id=\"atlas-canvas\" class=\"atlas-canvas\">\n");
-    out.push_str(&format!("<style>{ANIMATION_CSS}</style>\n"));
-    out.push_str("<input type=\"checkbox\" id=\"atlas-pause\" class=\"atlas-pause-input\">\n");
-    out.push_str("<label for=\"atlas-pause\" class=\"atlas-pause\">Pause animation</label>\n");
-    out.push_str("<header class=\"atlas-head\">\n");
-    out.push_str(&format!(
-        "<span class=\"atlas-entry\">{}</span>\n",
-        escape_html(&entry_label)
-    ));
-    out.push_str(&format!(
-        "<span class=\"atlas-hottest\">{}</span>\n",
-        escape_html(&hottest_line)
-    ));
-    out.push_str(&format!(
-        "<span class=\"atlas-path-summary\">{}</span>\n",
-        escape_html(&path_line)
-    ));
-    out.push_str(&format!(
-        "<span class=\"atlas-caps\">{}</span>\n",
-        escape_html(&caps_line)
-    ));
-    out.push_str(&format!(
-        "<span class=\"atlas-units\" title=\"static heuristic cost weight ({scale_tag}); relative scale only\">{} · × median function = all functions in the scan · \
-         <span class=\"atlas-structural-caption\">{}</span></span>\n",
-        escape_html(&unit),
-        escape_html(STRUCTURAL_CAPTION)
-    ));
-    out.push_str("</header>\n");
-    // First-screen key: keeps the unit/edge/path vocabulary beside the canvas
-    // instead of leaving it only in the full legend below the fold.
-    out.push_str(&format!(
-        "<div class=\"atlas-keys\">\
-         <span>{scale_label} — relative scale</span> · \
-         <span>× median function = all functions in the scan</span> · \
-         <span>edge ×N = distinct structural edges</span> · \
-         <span>numbered badges = representative path</span> · \
-         <span class=\"atlas-structural-caption\">{}</span></div>\n",
-        escape_html(STRUCTURAL_CAPTION)
-    ));
     out.push_str("<div class=\"atlas-graph\">\n");
     out.push_str(&svg_open(false, layout.height));
     out.push('\n');
     out.push_str(&render_graph_inner(view, &layout));
     out.push_str("\n</svg>\n</div>\n");
-    out.push_str(&format!(
-        "<div class=\"atlas-legend\">{legend_items} · <span class=\"atlas-structural-caption\">{}</span></div>\n",
-        escape_html(STRUCTURAL_CAPTION)
-    ));
     out.push_str(&format!(
         "<footer class=\"atlas-footer\">{footer}</footer>\n"
     ));
@@ -1205,7 +1377,14 @@ pub fn render_canvas_html(view: &AtlasView) -> String {
     out
 }
 
-/// Minimal standalone HTML document wrapping [`render_canvas_html`]; no scripts.
+/// Standalone/test wrapper: the same shell with the named zero-action stub.
+#[must_use]
+pub fn render_canvas_html(view: &AtlasView) -> String {
+    render_canvas_html_with_actions(view, &[])
+}
+
+/// Minimal standalone HTML document wrapping [`render_canvas_html`] in the
+/// `#map` scope (so the scoped chrome/graph CSS applies); no scripts.
 #[must_use]
 pub fn render_canvas_page(view: &AtlasView) -> String {
     format!(
@@ -1213,7 +1392,7 @@ pub fn render_canvas_page(view: &AtlasView) -> String {
          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
          <title>Perfpal Atlas canvas</title>\n\
          <style>html,body{{margin:0;padding:0;background:#fff;color:#0f172a}}body{{padding:24px}}</style>\n\
-         </head>\n<body>\n{}\n</body>\n</html>\n",
+         </head>\n<body>\n<section id=\"map\">\n{}\n</section>\n</body>\n</html>\n",
         render_canvas_html(view)
     )
 }
@@ -1334,8 +1513,11 @@ mod tests {
     #[test]
     fn canvas_carries_entry_hottest_path_and_caps() {
         let html = render_canvas_html(&build_atlas_view(&application_fixture()));
-        assert!(html.contains("ENTRY · production main · confidence HIGH · 0 alternatives"));
-        assert!(html.contains("HOTTEST: src/c.c"));
+        assert!(html.contains("production main"));
+        assert!(html.contains("confidence HIGH"));
+        assert!(html.contains("0 alternatives"));
+        assert!(html.contains("HOTTEST:"));
+        assert!(html.contains("src/c.c"));
         assert!(html.contains("PATH · 3 steps"));
         assert!(html.contains("reachable files shown"));
         assert!(html.contains("aggregated"));
@@ -1363,6 +1545,8 @@ mod tests {
         assert!(html.contains("atlas-path-badge"));
         assert!(html.contains("atlas-edge--forward"));
         assert!(html.contains("atlas-edge--back"));
+        assert!(html.contains("atlas-arrow-path"));
+        assert!(html.contains("marker-end=\"url(#atlas-arrow-path)\""));
         assert!(html.contains(PATH_CAPTION));
     }
 
@@ -1375,8 +1559,12 @@ mod tests {
         let end = start + html[start..].find("</path>").expect("edge close");
         let back = &html[start..end];
         assert!(
-            back.contains("stroke-dasharray=\"6 4\""),
+            back.contains("stroke-dasharray=\"4 3\""),
             "back edge must keep its visible dash pattern"
+        );
+        assert!(
+            back.contains("stroke-opacity=\"0.45\""),
+            "back edge must stay recessive (neutral, not amber)"
         );
         assert!(
             !back.contains("pathLength"),
@@ -1450,9 +1638,13 @@ mod tests {
             .expect("library fixture has an unreached column");
         let (line1, line2) = column_header_lines(&view, unreached);
         assert_eq!(line1, "UNREACHED");
+        assert_eq!(
+            line2, "no forward path",
+            "line 2 must carry only the unreached reason (no ambiguous `N shown`)"
+        );
         assert!(
-            line2.starts_with("no forward path"),
-            "line 2 must carry the unreached reason, got `{line2}`"
+            !line2.contains("shown"),
+            "the drawn-subset count belongs in the chip, not the header"
         );
 
         let html = render_canvas_html(&view);
@@ -1468,7 +1660,8 @@ mod tests {
     fn canvas_renders_no_entry_and_empty_stubs() {
         let no_entry = render_canvas_html(&build_atlas_view(&no_entry_fixture()));
         assert!(no_entry.contains("NO ENTRY"));
-        assert!(no_entry.contains("HOTTEST: src/handler.c"));
+        assert!(no_entry.contains("HOTTEST:"));
+        assert!(no_entry.contains("src/handler.c"));
         assert!(no_entry.contains("PATH · 0 steps"));
         assert!(
             !no_entry.contains("data-node=\"src/handler.c\""),
@@ -1478,7 +1671,8 @@ mod tests {
 
         let empty = render_canvas_html(&build_atlas_view(&empty_fixture()));
         assert!(empty.contains("no source functions recorded"));
-        assert!(empty.contains("HOTTEST: no file"));
+        assert!(empty.contains("HOTTEST:"));
+        assert!(empty.contains("no file"));
         assert!(
             !empty.contains("data-node="),
             "no fake node group in empty state"
@@ -1534,12 +1728,16 @@ mod tests {
     #[test]
     fn canvas_has_pause_reduced_motion_and_print_rules() {
         let html = render_canvas_html(&build_atlas_view(&application_fixture()));
-        assert!(html.contains(":checked ~ .atlas-graph *"));
+        // CSS-only pause in the masthead, keyed through `#map:has(...)`.
+        assert!(html.contains("#map:has(#atlas-pause:checked) #atlas-canvas .atlas-graph *"));
         assert!(html.contains("animation-play-state:paused"));
         assert!(html.contains("prefers-reduced-motion: reduce"));
         assert!(html.contains("@media print"));
         assert!(html.contains("break-inside:avoid"));
-        assert!(html.contains("Pause animation"));
+        assert!(html.contains(">Pause</label>"));
+        assert!(html.contains("atlas-pause-input:focus-visible + .atlas-pause"));
+        assert!(html.contains("#atlas-pause:checked + .atlas-pause"));
+        assert!(html.contains("background:#ece8df"));
         assert!(html.contains("opacity:0!important"));
         assert!(html.contains("inline-size:1px!important"));
         assert!(html.contains("var(--atlas-col) * .12s"));
@@ -1628,13 +1826,35 @@ mod tests {
         for fixture in fixtures {
             let html = render_canvas_html(&build_atlas_view(&fixture));
             for needle in [
+                "class=\"atlas-page-chrome\"",
+                "class=\"atlas-masthead\"",
+                "class=\"atlas-keymetrics\"",
+                "class=\"atlas-legend\"",
                 "id=\"atlas-canvas\"",
                 "<svg",
-                "class=\"atlas-legend\"",
                 "class=\"atlas-footer\"",
-                "class=\"atlas-head\"",
             ] {
                 assert!(html.contains(needle), "missing `{needle}`");
+            }
+            // The chrome is before the canvas; the graph panel is clean.
+            let chrome = html.find("class=\"atlas-page-chrome\"").expect("chrome");
+            let canvas = html.find("id=\"atlas-canvas\"").expect("canvas");
+            assert!(chrome < canvas, "chrome must precede the canvas");
+            let canvas_body = html
+                .split("id=\"atlas-canvas\"")
+                .nth(1)
+                .expect("canvas body");
+            for forbidden in [
+                "class=\"atlas-masthead\"",
+                "class=\"atlas-keymetrics\"",
+                "class=\"atlas-legend\"",
+                "class=\"atlas-head\"",
+                "class=\"atlas-keys\"",
+            ] {
+                assert!(
+                    !canvas_body.contains(forbidden),
+                    "canvas must not carry chrome `{forbidden}`"
+                );
             }
         }
     }
@@ -1690,6 +1910,10 @@ mod tests {
         assert!(
             html.contains(">×1</text>"),
             "compact visible edge label `×1` missing"
+        );
+        assert!(
+            html.contains("font-size=\"8.5\" fill=\"#c2410c\""),
+            "visible edge pill must use the 8.5px floor"
         );
         assert!(
             html.contains(&format!("<title>{}</title>", format_distinct_edges(1))),
@@ -1828,18 +2052,32 @@ mod tests {
     #[test]
     fn legend_lists_every_unit_and_style_key() {
         let html = render_canvas_html(&build_atlas_view(&application_fixture()));
+        // Exactly one swatch legend, inside the strip (not the canvas).
+        assert_eq!(html.matches("class=\"atlas-legend\"").count(), 1);
         for item in [
-            "depth = BFS from entry",
-            "solid = forward structural edge",
-            "dashed amber = back edge",
-            "edge label ×N = distinct structural edges",
-            "hatch = non-production (test/bench/other)",
-            "grey = unreached",
-            "× median function = denominator",
-            "hulls = approximate prefix groups",
+            "atlas-sw-prod",
+            "atlas-sw-test",
+            "atlas-sw-unreached",
+            "atlas-sw-forward",
+            "atlas-sw-back",
+            "atlas-sw-path",
+            "production",
+            "test/bench",
+            "unreached",
+            "forward",
+            "back",
+            "path",
         ] {
             assert!(html.contains(item), "missing legend item `{item}`");
         }
+        let legend_start = html.find("class=\"atlas-legend\"").expect("legend");
+        let legend = &html[legend_start..];
+        assert!(
+            legend.contains("static cost units (v2) — relative scale")
+                && legend.contains("× median function = all functions in the scan"),
+            "the strip must carry the one unit definition"
+        );
+        assert!(legend.contains(STRUCTURAL_CAPTION));
     }
 
     #[test]
@@ -1924,12 +2162,73 @@ mod tests {
         );
         let html = render_canvas_html(&view);
         assert!(html.contains("UNREACHED"));
-        assert!(html.contains("+1 non-production unreached"));
-        assert!(html.contains("non-production unreached files (test/bench/other) · not drawn"));
+        assert!(html.contains("non-production unreached: 1"));
+        assert!(!html.contains("+1 non-production unreached"));
+        assert!(html.contains("data-prod-unreached=\"0\""));
+        assert!(html.contains("data-nonprod-unreached=\"1\""));
+        assert!(html.contains(
+            "0 production unreached · 1 non-production unreached · no estimated reachability"
+        ));
         assert!(
             !html.contains("data-node=\"tests/t.c\""),
             "non-production unreached must not be a drawn node"
         );
+    }
+
+    #[test]
+    fn unreached_chip_reports_production_and_nonproduction_counts() {
+        let mut builder = DocBuilder::new()
+            .file(file("src/main.c", "production", 1))
+            .function(function(
+                "src/main.c",
+                "main",
+                1,
+                Some(9000),
+                0,
+                Some("main"),
+            ));
+        let mut edges = Vec::new();
+        for index in 0..19_u64 {
+            let path = format!("src/f{index}.c");
+            builder = builder
+                .file(file(&path, "production", 1))
+                .function(function(
+                    &path,
+                    &format!("f{index}"),
+                    1,
+                    Some(100 - index),
+                    0,
+                    None,
+                ));
+            edges.push(call_edge(
+                "src/main.c#main#1:1",
+                &format!("f{index}"),
+                "src/main.c",
+                Some(&path),
+                Confidence::Low,
+            ));
+        }
+        builder = builder
+            .file(file("src/cold.c", "production", 1))
+            .function(function("src/cold.c", "cold", 1, Some(10), 0, None))
+            .file(file("tests/t.c", "test", 1))
+            .function(function("tests/t.c", "test_fn", 1, Some(40), 0, None));
+        for edge in edges {
+            builder = builder.call_edge(edge);
+        }
+        let view = build_atlas_view(&builder.build());
+        assert_eq!(view.coverage.unreached_production, 1);
+        assert_eq!(view.coverage.unreached_nonproduction, 1);
+        let html = render_canvas_html(&view);
+        assert!(html.contains("data-prod-unreached=\"1\""));
+        assert!(html.contains("data-nonprod-unreached=\"1\""));
+        assert!(html.contains("production unreached: 1"));
+        assert!(html.contains("non-production unreached: 1"));
+        assert!(!html.contains("+1 production unreached"));
+        assert!(!html.contains("+1 non-production unreached"));
+        assert!(html.contains(
+            "1 production unreached · 1 non-production unreached · no estimated reachability"
+        ));
     }
 
     #[test]
@@ -1976,63 +2275,71 @@ mod tests {
     #[test]
     fn canvas_header_carries_units_denominator_and_structural_caption() {
         let html = render_canvas_html(&build_atlas_view(&application_fixture()));
-        let start = html.find("class=\"atlas-head\"").expect("canvas header");
-        let end = start + html[start..].find("</header>").expect("header close");
-        let header = &html[start..end];
-        assert!(header.contains("static cost units (v2)"));
-        assert!(header.contains("× median function = all functions in the scan"));
-        assert!(header.contains(STRUCTURAL_CAPTION));
+        let strip_start = html
+            .find("class=\"atlas-keymetrics\"")
+            .expect("key-metrics strip");
+        let canvas = html.find("id=\"atlas-canvas\"").expect("canvas");
+        assert!(strip_start < canvas, "strip must precede the canvas");
+        let strip = &html[strip_start..canvas];
+        assert!(strip.contains("static cost units (v2)"));
+        assert!(strip.contains("× median function = all functions in the scan"));
+        assert!(strip.contains(STRUCTURAL_CAPTION));
     }
 
     #[test]
     fn canvas_keys_line_explains_units_edges_and_path_badges_first_screen() {
         let html = render_canvas_html(&build_atlas_view(&application_fixture()));
-        let head_end = html.find("</header>").expect("header close");
-        let keys_start = html
-            .find("class=\"atlas-keys\"")
-            .expect("first-screen key line");
-        let graph_start = html
-            .find("class=\"atlas-graph\"")
-            .expect("atlas graph wrapper");
+        let masthead_end = html.find("</header>").expect("masthead close");
+        let strip_start = html
+            .find("class=\"atlas-keymetrics\"")
+            .expect("key-metrics strip");
+        let canvas_start = html.find("id=\"atlas-canvas\"").expect("atlas canvas");
         assert!(
-            head_end < keys_start && keys_start < graph_start,
-            "key line must sit between the canvas header and the SVG graph"
+            masthead_end < strip_start && strip_start < canvas_start,
+            "the key-metrics strip must sit between the masthead and the canvas"
         );
-        let keys_end = keys_start + html[keys_start..].find("</div>").expect("key line close");
-        let keys = &html[keys_start..keys_end];
+        let strip = &html[strip_start..canvas_start];
         for needle in [
             "static cost units (v2) — relative scale",
             "× median function = all functions in the scan",
-            "edge ×N = distinct structural edges",
-            "numbered badges = representative path",
             STRUCTURAL_CAPTION,
         ] {
-            assert!(keys.contains(needle), "key line is missing `{needle}`");
+            assert!(strip.contains(needle), "key strip is missing `{needle}`");
         }
+        // Action chips are inline `<a>` elements, not a list/table/card grid.
+        assert!(strip.contains("atlas-chip"));
+        for forbidden in ["<table", "<ul", "<li", "<select", "class=\"card"] {
+            assert!(
+                !strip.contains(forbidden),
+                "key strip must not contain `{forbidden}`"
+            );
+        }
+        // One unit definition and one structural caveat for the whole page.
+        assert_eq!(
+            html.matches("× median function = all functions in the scan")
+                .count(),
+            1
+        );
+        assert_eq!(html.matches(STRUCTURAL_CAPTION).count(), 1);
     }
 
     #[test]
     fn canvas_keys_line_reports_the_v1_scale_for_pre_i2_documents() {
         let html = render_canvas_html(&build_atlas_view(&v1_only_fixture()));
-        let keys_start = html
-            .find("class=\"atlas-keys\"")
-            .expect("first-screen key line");
-        let keys_end = keys_start + html[keys_start..].find("</div>").expect("key line close");
-        let keys = &html[keys_start..keys_end];
+        let unit_start = html
+            .find("class=\"atlas-unit\"")
+            .expect("key strip unit span");
+        let unit_end = unit_start + html[unit_start..].find("</span>").expect("unit close");
+        let unit = &html[unit_start..unit_end];
         assert!(
-            keys.contains("static cost units (v1) — relative scale"),
-            "v1-only documents must not claim v2 units: {keys}"
+            unit.contains("static cost units (v1) — relative scale"),
+            "v1-only documents must not claim v2 units: {unit}"
         );
-        let units_start = html
-            .find("class=\"atlas-units\"")
-            .expect("header units span");
-        let units_end = units_start + html[units_start..].find("</span>").expect("units close");
-        let units = &html[units_start..units_end];
         assert!(
-            units.contains("static cost units (v1)"),
-            "v1-only header must report v1 units: {units}"
+            unit.contains("v1 fallback rows labelled"),
+            "v1-only documents must carry the fallback note: {unit}"
         );
-        assert!(units.contains("cost weight (v1)"));
+        assert!(!unit.contains("static cost units (v2)"));
     }
 
     #[test]
@@ -2154,6 +2461,107 @@ mod tests {
             nodes += 1;
         }
         assert!(nodes > 0, "capped state emitted no nodes");
+    }
+
+    #[test]
+    fn mid_ellipsis_keeps_first_segment_and_full_path_stays_in_title() {
+        let long = "src/very/deep/module/statistics.rs";
+        let shortened = mid_ellipsis(long, 20);
+        assert!(
+            shortened.starts_with("src/"),
+            "truncated path must keep its first segment: {shortened}"
+        );
+        assert!(
+            !shortened.starts_with('…') && !shortened.starts_with(".."),
+            "leading-dot truncation is forbidden: {shortened}"
+        );
+        assert!(shortened.contains('…'));
+        assert!(shortened.chars().count() <= 20);
+        assert_eq!(mid_ellipsis("src/a.c", 20), "src/a.c");
+
+        let doc = DocBuilder::new()
+            .file(file(long, "production", 1))
+            .function(function(long, "main", 1, Some(100), 0, Some("main")))
+            .build();
+        let html = render_canvas_html(&build_atlas_view(&doc));
+        let name_start = html
+            .find("class=\"atlas-node-name\"")
+            .expect("node name text");
+        let text_start = name_start + html[name_start..].find('>').expect("name open") + 1;
+        let text_end = text_start + html[text_start..].find("</text>").expect("name close");
+        let label = &html[text_start..text_end];
+        assert!(
+            label.starts_with("src/"),
+            "visible label must keep the first segment: {label}"
+        );
+        assert!(
+            !label.starts_with('…') && !label.starts_with(".."),
+            "leading-dot truncation is forbidden: {label}"
+        );
+        assert!(label.contains('…'), "long paths must be mid-ellipsised");
+        assert!(
+            html.contains(&format!("<title>{long} · ")),
+            "the full path must stay in the node title"
+        );
+    }
+
+    #[test]
+    fn edge_labels_render_only_on_path_and_every_edge_has_title() {
+        let view = build_atlas_view(&application_fixture());
+        let html = render_canvas_html(&view);
+        let on_path = view.edges.iter().filter(|edge| edge.on_path).count();
+        assert!(on_path > 0, "fixture must carry a representative path");
+        assert!(
+            on_path < view.edges.len(),
+            "fixture must carry a non-path edge for the path-only assertion"
+        );
+        assert_eq!(
+            html.matches("class=\"atlas-edge-label\"").count(),
+            on_path,
+            "only on-path edges may render a visible ×N pill"
+        );
+        for edge in &view.edges {
+            let marker = format!(
+                "data-edge=\"{}\"",
+                escape_xml(&format!("{}->{}", edge.from, edge.to))
+            );
+            let start = html
+                .find(&marker)
+                .unwrap_or_else(|| panic!("missing edge {marker}"));
+            let end = start + html[start..].find("</path>").expect("edge close");
+            assert!(
+                html[start..end].contains("<title>"),
+                "every edge keeps its full-count title: {} -> {}",
+                edge.from,
+                edge.to
+            );
+        }
+    }
+
+    #[test]
+    fn footer_reports_explicit_unreached_production_and_nonproduction() {
+        let html = render_canvas_html(&build_atlas_view(&library_fixture()));
+        assert!(
+            html.contains("unreached production:"),
+            "the footer must name unreached production explicitly"
+        );
+        assert!(
+            html.contains("non-production:"),
+            "the footer must name unreached non-production explicitly"
+        );
+        assert!(
+            !html.contains("unreached production ·"),
+            "the ambiguous footer wording must be gone"
+        );
+        assert_eq!(html.matches("class=\"atlas-footer\"").count(), 1);
+    }
+
+    #[test]
+    fn standalone_canvas_page_is_map_scoped() {
+        let page = render_canvas_page(&build_atlas_view(&application_fixture()));
+        assert!(page.contains("<section id=\"map\">"));
+        assert!(page.contains("class=\"atlas-masthead\""));
+        assert!(page.contains("class=\"atlas-graph\""));
     }
 
     fn font_size_attr(tag: &str) -> f64 {

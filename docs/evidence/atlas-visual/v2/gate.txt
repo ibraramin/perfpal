@@ -1,0 +1,61 @@
+Atlas v2 step 10 — DoD transcript
+================================
+
+Date:     2026-10-24 (session 4; decision/render date 2026-10-23)
+Repo:     /home/shafin/Opencode/Perfpal
+HEAD:     8e5fa0c "docs(atlas): v2 visual rework plan + post-V8 audit (A2 blocked)"
+Worktree: uncommitted at gate time; founder approved the step-10 first page and the commit after
+this transcript (2026-10-24). Step-13 final composition/V8 gate remains pending.
+Runner:   orchestrator, final tree (after the panel fixes).
+
+Note: an earlier targeted-test loop used a malformed zsh invocation (the whole
+"<suite> <test>" string was passed as the --test argument) and exited 101 as a
+usage error. The explicit commands below are the valid transcript; the full
+`cargo test --locked` also contains these tests.
+
+Commands and exits
+------------------
+cargo fmt --all -- --check                                                   -> 0
+cargo clippy --locked --all-targets -- -D warnings                           -> 0
+cargo test --locked                                                          -> 0  (55 suites ok)
+cargo deny check licenses                                                    -> 0  (licenses ok)
+cargo clippy --locked --all-targets --features semantic-clang -- -D warnings -> 0
+PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang       -> 0  (55 suites ok)
+cargo test --locked --test atlas_render atlas_double_render_is_byte_identical -> 0  (1 passed)
+cargo test --locked --test atlas_render atlas_adds_no_new_script              -> 0  (1 passed)
+cargo test --locked --test atlas_render atlas_canvas_has_no_metric_panels     -> 0  (1 passed)
+cargo test --locked --test atlas_states atlas_states_render_same_stack        -> 0  (1 passed)
+test -z "$(git status --short src/schema/ docs/schema/)"                     -> 0
+python3 docs/evidence/atlas-visual/v2/render_step10.py                       -> 0
+
+The two `error: unexpected argument '--definitely-not-a-flag'` / `'--bogus-flag'`
+lines inside the `cargo test` output are fixture tests that assert the CLI's
+usage-error exit; they are not suite failures.
+
+Artifact hashes (sha256, verified against step10.json)
+------------------------------------------------------
+hyperfine report.html  bd0b20553023f8ebbd3dc4866a489cb70588cc76e4fe7e8b8d1ca0e811f79e2b
+hyperfine final.png    19b2227fe4006fd90b0740925fb1f1587f349f25ea8b1fa4e09098d584019752
+hyperfine full.png     f06bdb5edfbfd984864dc484be624bbbf10f772ce3ca015d9a8f574ecf9c4e52
+cJSON report.html      373e8087872c6d9344b43074e7ab2d5a29d9c9bcade73c9331dcc40712979161
+cJSON final.png        4aeb54e711b0d61d326a4f15b1fefe37b6190d1947c9d3f62ee24cc46834e16c
+cJSON full.png         fa8834912d13b8f4606d69c970ce33e11e13d76607834e6863bdf23aa37a2e53
+
+Both final PNGs are 1440x900. The evidence script fails closed on any false
+acceptance boolean and asserts the chip/footer text checks.
+
+Acceptance (step10.json, both repos)
+------------------------------------
+canvas bottom 862 <= 900; brief top 862 >= canvas bottom; body scrollWidth
+1440 <= 1440; #map height 8,887 / 14,591 <= audit 8,982 / 14,685;
+noClippedChrome true; 1280x800 scrollWidth 1280 = clientWidth 1280, canvas
+bottom 780. Counts: 1 legend, 1 footer, 1 structural caveat, 1 median
+definition, 0 leading-dot truncations, 0 canvas panels, 1 REPORT_SCRIPT.
+Visible edge labels: 2/49 hyperfine, 1/5 cJSON (on-path only).
+Unreached: hyperfine chip/footer 21/11; cJSON chip/footer 4/75.
+
+Open gates
+----------
+Step-10 founder check APPROVED 2026-10-24; step-13 final composition/V8 gate PENDING.
+Capped/deep states exceed 900 by design (V8-disclosed) and are deferred to step 13/A2.
+Commit authorized (2026-10-24).

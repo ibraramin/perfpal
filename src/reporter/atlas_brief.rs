@@ -32,6 +32,78 @@ struct ComponentPage {
     href: String,
 }
 
+/// One compact start-here chip for the Atlas key-metrics strip. The ranking
+/// comes from the shipped [`views::kv1`] view (never re-derived here).
+#[derive(Debug, Clone, PartialEq)]
+pub struct StartAction {
+    /// `path:line` visible label.
+    pub location: String,
+    /// Sanitized rule title (visible label).
+    pub rule: String,
+    pub function: Option<String>,
+    /// `severity · confidence` badge text.
+    pub severity_confidence: String,
+    pub path_class: String,
+    pub production: bool,
+    /// Rendered cost anchor (M-05) when a containing function exists.
+    pub cost_anchor: Option<String>,
+    /// Existing `findings-detail.html#...` anchor target.
+    pub href: String,
+}
+
+impl StartAction {
+    /// Full tooltip: path/function/rule/severity/confidence/cost anchor.
+    #[must_use]
+    pub fn title(&self) -> String {
+        let mut parts = vec![self.location.clone()];
+        if let Some(function) = &self.function {
+            parts.push(function.clone());
+        }
+        parts.push(self.rule.clone());
+        parts.push(self.severity_confidence.clone());
+        parts.push(if self.production {
+            "production".to_string()
+        } else {
+            format!("non-production ({})", self.path_class)
+        });
+        if let Some(anchor) = &self.cost_anchor {
+            parts.push(anchor.clone());
+        }
+        parts.join(" · ")
+    }
+}
+
+/// Top three KV1 actions for the first-page strip. Reuses the shipped
+/// deterministic ranking and the existing finding-anchor/location formatting.
+#[must_use]
+pub fn start_actions(doc: &MetricsDocument) -> Vec<StartAction> {
+    let (_, finding_anchors) = finding_anchor_assignments(doc);
+    let kv1 = views::kv1(doc);
+    kv1.rows
+        .iter()
+        .take(3)
+        .map(|row| {
+            let finding = &doc.findings[row.finding_index];
+            StartAction {
+                location: location(finding),
+                rule: sanitize_atlas_text(&finding.title),
+                function: row.function.clone(),
+                severity_confidence: format_severity_confidence(
+                    finding.severity,
+                    finding.confidence,
+                ),
+                path_class: row.path_class.clone(),
+                production: row.production,
+                cost_anchor: row.cost_anchor.clone(),
+                href: format!(
+                    "findings-detail.html#{}",
+                    finding_anchors[row.finding_index]
+                ),
+            }
+        })
+        .collect()
+}
+
 /// Render the fixed seven-block brief plus its two drill sections.
 ///
 /// Returns `#atlas-brief` followed by `#atlas-drill-q2` and
@@ -358,7 +430,7 @@ fn render_blast(out: &mut String, view: &AtlasView) {
                 "<p><a href=\"#atlas-drill-q2\">Full dependent list and Q2 reverse drill</a></p>\n",
             );
             out.push_str(
-                "<p class=\"atlas-caption\">Callers and callees are structural (LOW name-based + MEDIUM semantic) and may over/under-approximate.</p>\n",
+                "<p class=\"atlas-caption\">Callers and callees are structural; see the Atlas legend for edge confidence.</p>\n",
             );
         }
         None => {
@@ -512,7 +584,7 @@ fn render_noise(out: &mut String, view: &AtlasView) {
         format_count(coverage.partial_parse_files as u64),
     ));
     out.push_str(
-        "<p class=\"atlas-caption\">Structural edges are LOW name-based + MEDIUM semantic and may over/under-approximate; static cost is not ground truth.</p>\n",
+        "<p class=\"atlas-caption\">Edge confidence and the cost unit are defined once, in the Atlas legend; static cost is not ground truth.</p>\n",
     );
     out.push_str("</div>\n");
 }
@@ -649,7 +721,7 @@ fn render_q2_drill(out: &mut String, view: &AtlasView, doc: &MetricsDocument) {
         }
     ));
     out.push_str(
-        "<p class=\"atlas-caption\">Callers and callees are structural (LOW name-based + MEDIUM semantic) and may over/under-approximate.</p>\n</section>\n",
+        "<p class=\"atlas-caption\">Callers and callees are structural; see the Atlas legend for edge confidence.</p>\n</section>\n",
     );
 }
 
@@ -845,7 +917,7 @@ fn caveat(view: &AtlasView) -> String {
             format_count(view.caps.aggregated_files as u64)
         );
     }
-    "the drawn edges are structural (LOW name-based + MEDIUM semantic) and may over/under-approximate."
+    "the drawn edges are structural; see the Atlas legend for units and edge confidence."
         .to_string()
 }
 

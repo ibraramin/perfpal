@@ -1,0 +1,279 @@
+{
+  "_comment": "Atlas v2 step 10 first-page fit + chrome hygiene; report.html#map, 1440x900 + 1280x800, reduced motion.",
+  "repos": {
+    "cJSON": {
+      "audit_baseline_map_height": 14685,
+      "booleans": {
+        "briefTop_ge_canvasBottom": true,
+        "canvasBottom_le_900": true,
+        "mapHeight_le_auditBaseline": true,
+        "noClippedChrome": true,
+        "noHorizontalScroll": true,
+        "noHorizontalScroll_1280": true,
+        "textFloors_ok": true
+      },
+      "dom": {
+        "body": {
+          "clientWidth": 1440,
+          "scrollHeight": 34800,
+          "scrollWidth": 1440
+        },
+        "brief": {
+          "bottom": 4080,
+          "h": 3219,
+          "w": 1184,
+          "x": 128,
+          "y": 862
+        },
+        "canvas": {
+          "bottom": 862,
+          "h": 742,
+          "w": 1408,
+          "x": 16,
+          "y": 120
+        },
+        "chrome": {
+          "bottom": 120,
+          "h": 111,
+          "w": 1408,
+          "x": 16,
+          "y": 8
+        },
+        "counts": {
+          "canvasPanels": 0,
+          "edges": 5,
+          "footer": 1,
+          "leadingDotTruncation": 0,
+          "legend": 1,
+          "medianDefinition": 1,
+          "nodes": 7,
+          "reportScript": 1,
+          "structuralCaveat": 1,
+          "visibleEdgeLabels": 1
+        },
+        "firstScreen": {
+          "briefTop": 862,
+          "canvasBottom": 862,
+          "fold": 900
+        },
+        "footer": {
+          "bottom": 862,
+          "h": 19,
+          "w": 1408,
+          "x": 16,
+          "y": 843
+        },
+        "footerText": "2 of 81 source files reachable (2.5%) \u00b7 5 of 5 file pairs drawn \u00b7 0 MEDIUM / 587 LOW structural edges \u00b7 unreached production: 4 \u00b7 non-production: 75 \u00b7 parse 63 ok / 38 partial / 0 failed \u00b7 133/229 unresolved includes \u00b7 75 files demoted",
+        "graph": {
+          "bottom": 843,
+          "h": 723,
+          "w": 1408,
+          "x": 16,
+          "y": 120
+        },
+        "keymetrics": {
+          "bottom": 120,
+          "h": 53,
+          "w": 1408,
+          "x": 16,
+          "y": 66
+        },
+        "map": {
+          "bottom": 14591,
+          "h": 14591,
+          "w": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "masthead": {
+          "bottom": 66,
+          "h": 58,
+          "w": 1408,
+          "x": 16,
+          "y": 8
+        },
+        "noClippedChrome": {
+          "chipTitles": true,
+          "footer": true,
+          "keymetrics": true
+        },
+        "sublineText": "entry-flow map \u00b7 static, profile to confirm",
+        "svg": {
+          "bottom": 842,
+          "h": 721,
+          "w": 1406,
+          "x": 17,
+          "y": 121
+        },
+        "textFloors": {
+          "chip": 9.5,
+          "columnHeader": 10.5,
+          "edgePill": 8.5,
+          "entryValue": 10,
+          "nodeBadge": 8.5,
+          "nodeMeta": 9,
+          "nodeName": 11.5,
+          "strip": 9
+        },
+        "unreachedChipText": "4 production unreached \u00b7 75 non-production unreached \u00b7 no estimated reachabilityproduction unreached: 4non-production unreached: 75"
+      },
+      "final_png": "atlas-v2-cJSON-final.png",
+      "final_png_sha256": "4aeb54e711b0d61d326a4f15b1fefe37b6190d1947c9d3f62ee24cc46834e16c",
+      "full_png": "atlas-v2-cJSON-full.png",
+      "full_png_sha256": "fa8834912d13b8f4606d69c970ce33e11e13d76607834e6863bdf23aa37a2e53",
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-cJSON/report.html",
+      "report_sha256": "373e8087872c6d9344b43074e7ab2d5a29d9c9bcade73c9331dcc40712979161",
+      "text_checks": {
+        "chip contains non-production unreached: 75": true,
+        "chip contains production unreached: 4": true,
+        "footer contains non-production: 75": true,
+        "footer contains unreached production: 4": true
+      },
+      "viewport_1280": {
+        "canvasBottom": 780,
+        "clientWidth": 1280,
+        "noHorizontalScroll": true,
+        "scrollWidth": 1280
+      }
+    },
+    "hyperfine": {
+      "audit_baseline_map_height": 8982,
+      "booleans": {
+        "briefTop_ge_canvasBottom": true,
+        "canvasBottom_le_900": true,
+        "mapHeight_le_auditBaseline": true,
+        "noClippedChrome": true,
+        "noHorizontalScroll": true,
+        "noHorizontalScroll_1280": true,
+        "textFloors_ok": true
+      },
+      "dom": {
+        "body": {
+          "clientWidth": 1440,
+          "scrollHeight": 22911,
+          "scrollWidth": 1440
+        },
+        "brief": {
+          "bottom": 4229,
+          "h": 3367,
+          "w": 1184,
+          "x": 128,
+          "y": 862
+        },
+        "canvas": {
+          "bottom": 862,
+          "h": 742,
+          "w": 1408,
+          "x": 16,
+          "y": 120
+        },
+        "chrome": {
+          "bottom": 120,
+          "h": 111,
+          "w": 1408,
+          "x": 16,
+          "y": 8
+        },
+        "counts": {
+          "canvasPanels": 0,
+          "edges": 49,
+          "footer": 1,
+          "leadingDotTruncation": 0,
+          "legend": 1,
+          "medianDefinition": 1,
+          "nodes": 19,
+          "reportScript": 1,
+          "structuralCaveat": 1,
+          "visibleEdgeLabels": 2
+        },
+        "firstScreen": {
+          "briefTop": 862,
+          "canvasBottom": 862,
+          "fold": 900
+        },
+        "footer": {
+          "bottom": 862,
+          "h": 19,
+          "w": 1408,
+          "x": 16,
+          "y": 843
+        },
+        "footerText": "19 of 51 source files reachable (37%) \u00b7 49 of 49 file pairs drawn \u00b7 0 MEDIUM / 297 LOW structural edges \u00b7 unreached production: 21 \u00b7 non-production: 11 \u00b7 parse 53 ok / 0 partial / 0 failed \u00b7 33/238 unresolved includes \u00b7 16 files demoted",
+        "graph": {
+          "bottom": 843,
+          "h": 723,
+          "w": 1408,
+          "x": 16,
+          "y": 120
+        },
+        "keymetrics": {
+          "bottom": 120,
+          "h": 53,
+          "w": 1408,
+          "x": 16,
+          "y": 66
+        },
+        "map": {
+          "bottom": 8888,
+          "h": 8887,
+          "w": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "masthead": {
+          "bottom": 66,
+          "h": 58,
+          "w": 1408,
+          "x": 16,
+          "y": 8
+        },
+        "noClippedChrome": {
+          "chipTitles": true,
+          "footer": true,
+          "keymetrics": true
+        },
+        "sublineText": "entry-flow map \u00b7 static, profile to confirm",
+        "svg": {
+          "bottom": 842,
+          "h": 721,
+          "w": 1406,
+          "x": 17,
+          "y": 121
+        },
+        "textFloors": {
+          "chip": 9.5,
+          "columnHeader": 10.5,
+          "edgePill": 8.5,
+          "entryValue": 10,
+          "nodeBadge": 8.5,
+          "nodeMeta": 9,
+          "nodeName": 11.5,
+          "strip": 9
+        },
+        "unreachedChipText": "21 production unreached \u00b7 11 non-production unreached \u00b7 no estimated reachabilityproduction unreached: 21non-production unreached: 11"
+      },
+      "final_png": "atlas-v2-hyperfine-final.png",
+      "final_png_sha256": "19b2227fe4006fd90b0740925fb1f1587f349f25ea8b1fa4e09098d584019752",
+      "full_png": "atlas-v2-hyperfine-full.png",
+      "full_png_sha256": "f06bdb5edfbfd984864dc484be624bbbf10f772ce3ca015d9a8f574ecf9c4e52",
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-hyperfine/report.html",
+      "report_sha256": "bd0b20553023f8ebbd3dc4866a489cb70588cc76e4fe7e8b8d1ca0e811f79e2b",
+      "text_checks": {
+        "chip contains non-production unreached: 11": true,
+        "chip contains production unreached: 21": true,
+        "footer contains non-production: 11": true,
+        "footer contains unreached production: 21": true
+      },
+      "viewport_1280": {
+        "canvasBottom": 780,
+        "clientWidth": 1280,
+        "noHorizontalScroll": true,
+        "scrollWidth": 1280
+      }
+    }
+  },
+  "viewport": {
+    "height": 900,
+    "width": 1440
+  }
+}

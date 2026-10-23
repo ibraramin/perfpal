@@ -1891,8 +1891,12 @@ fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
 /// and the complete lists stay in `findings-detail.html` / `profile-queue.html`.
 fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
     let view = atlas::build_atlas_view(doc);
+    let start_actions = atlas_brief::start_actions(doc);
     out.push_str("<section id=\"map\">\n");
-    out.push_str(&atlas_render::render_canvas_html(&view));
+    out.push_str(&atlas_render::render_canvas_html_with_actions(
+        &view,
+        &start_actions,
+    ));
     out.push_str(&atlas_brief::render_brief(&view, doc, emitted_charts));
     out.push_str("</section>\n");
 }

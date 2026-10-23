@@ -56,8 +56,8 @@ fn atlas_states_render_same_stack() {
         let html = render_html(&doc, &[]);
         let map = map_body(&html);
         assert!(
-            map.starts_with("<section id=\"map\">\n<section id=\"atlas-canvas\""),
-            "{name}: #map must open with the canvas"
+            map.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
+            "{name}: #map must open with the first-page chrome"
         );
         assert_eq!(block_order(map), expected, "{name}: brief block stack");
         for marker in [
@@ -91,6 +91,35 @@ fn atlas_first_screen_canvas_then_answer_line() {
             canvas < first_block && map[first_block..].starts_with("data-atlas-block=\"answer\""),
             "{name}: the answer line must be the first answer-bearing block"
         );
+        // The key-metrics strip is the first answer-bearing block above the
+        // canvas (the founder's 2026-10-23 v2 amendment).
+        let chrome_start = map
+            .find("<div class=\"atlas-page-chrome\"")
+            .expect("page chrome");
+        let chrome = &map[chrome_start..canvas];
+        assert!(
+            map.find("class=\"atlas-keymetrics\"")
+                .is_some_and(|strip| chrome_start < strip && strip < canvas),
+            "{name}: the key-metrics strip must sit above the canvas"
+        );
+        assert!(
+            chrome.contains("atlas-masthead"),
+            "{name}: the masthead is part of the first-page chrome"
+        );
+        // A8 (v2): the answer-bearing strip carries entry, HOTTEST and path.
+        assert!(
+            chrome.contains("production") || chrome.contains("no entry"),
+            "{name}: the strip must carry the entry badge"
+        );
+        assert!(
+            chrome.contains("HOTTEST:"),
+            "{name}: the strip must carry the HOTTEST label"
+        );
+        assert!(
+            chrome.contains("PATH ·"),
+            "{name}: the strip must carry the path summary"
+        );
+        // The canvas itself still carries the graph, not the chrome.
         let canvas_body = map
             .split("id=\"atlas-canvas\"")
             .nth(1)
@@ -98,18 +127,13 @@ fn atlas_first_screen_canvas_then_answer_line() {
             .split("id=\"atlas-brief\"")
             .next()
             .expect("canvas close");
-        // A8: the canvas itself carries the entry, HOTTEST and the path.
         assert!(
-            canvas_body.contains("ENTRY ·"),
-            "{name}: canvas must carry the entry badge"
+            canvas_body.contains("atlas-graph") && canvas_body.contains("atlas-footer"),
+            "{name}: the canvas must carry the graph and its one footer"
         );
         assert!(
-            canvas_body.contains("HOTTEST:"),
-            "{name}: canvas must carry the HOTTEST label"
-        );
-        assert!(
-            canvas_body.contains("PATH ·"),
-            "{name}: canvas must carry the path summary"
+            !canvas_body.contains("atlas-keymetrics") && !canvas_body.contains("atlas-masthead"),
+            "{name}: the chrome must not live inside the canvas"
         );
         let answer = answer_block(map);
         assert!(
