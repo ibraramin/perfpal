@@ -1,0 +1,171 @@
+{
+  "_comment": "Atlas visual-regression audit of the real report.html#map; 1440x900, reduced motion.",
+  "repos": {
+    "cJSON": {
+      "dom": {
+        "body": {
+          "clientH": 900,
+          "clientW": 1440,
+          "scrollH": 34831,
+          "scrollW": 1440
+        },
+        "bodyStyle": {
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(17, 17, 17)",
+          "fontFamily": "monospace, monospace",
+          "fontSize": "16px"
+        },
+        "brief": {
+          "bottom": 4199,
+          "h": 3219,
+          "w": 1184,
+          "x": 128,
+          "y": 981
+        },
+        "canvas": {
+          "bottom": 981,
+          "h": 980,
+          "w": 1408,
+          "x": 16,
+          "y": 0
+        },
+        "canvasStyle": {
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(15, 23, 42)",
+          "fontFamily": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "fontSize": "16px"
+        },
+        "columns": 3,
+        "edgeLabels": 5,
+        "edges": 5,
+        "firstScreen": {
+          "briefTop": 981,
+          "canvasBottom": 981,
+          "fold": 900
+        },
+        "header": {
+          "bottom": -54,
+          "h": 124,
+          "w": 1408,
+          "x": 16,
+          "y": -178
+        },
+        "map": {
+          "bottom": 14686,
+          "h": 14685,
+          "w": 1408,
+          "x": 16,
+          "y": 0
+        },
+        "nav": {
+          "bottom": -16,
+          "h": 22,
+          "w": 1408,
+          "x": 16,
+          "y": -38
+        },
+        "nodes": 7,
+        "nodesInFirstFold": 7,
+        "smallCanvasTextElements": 38,
+        "svg": {
+          "rect": {
+            "h": 722,
+            "w": 1408
+          },
+          "viewBox": "0 0 1400 718"
+        }
+      },
+      "first_png": "atlas-cJSON-final.png",
+      "first_png_sha256": "659bdf239326c1f31e369b966468cca2d47a27577bad2dae25e08c166ed72b4e",
+      "full_png": "atlas-cJSON-full.png",
+      "full_png_sha256": "b88780ce65b0c773a429599034b887beb70dbddc360eeda35047b0633aee4e21",
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-cJSON/report.html",
+      "report_sha256": "f68065af16361db458b4f641e77e309048e8afd118c6bf9c93e8ef0e4fbc7038"
+    },
+    "hyperfine": {
+      "dom": {
+        "body": {
+          "clientH": 900,
+          "clientW": 1440,
+          "scrollH": 22942,
+          "scrollW": 1440
+        },
+        "bodyStyle": {
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(17, 17, 17)",
+          "fontFamily": "monospace, monospace",
+          "fontSize": "16px"
+        },
+        "brief": {
+          "bottom": 4348,
+          "h": 3367,
+          "w": 1184,
+          "x": 128,
+          "y": 981
+        },
+        "canvas": {
+          "bottom": 981,
+          "h": 980,
+          "w": 1408,
+          "x": 16,
+          "y": 0
+        },
+        "canvasStyle": {
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(15, 23, 42)",
+          "fontFamily": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          "fontSize": "16px"
+        },
+        "columns": 6,
+        "edgeLabels": 49,
+        "edges": 49,
+        "firstScreen": {
+          "briefTop": 981,
+          "canvasBottom": 981,
+          "fold": 900
+        },
+        "header": {
+          "bottom": -54,
+          "h": 124,
+          "w": 1408,
+          "x": 16,
+          "y": -178
+        },
+        "map": {
+          "bottom": 8983,
+          "h": 8982,
+          "w": 1408,
+          "x": 16,
+          "y": 0
+        },
+        "nav": {
+          "bottom": -16,
+          "h": 22,
+          "w": 1408,
+          "x": 16,
+          "y": -38
+        },
+        "nodes": 19,
+        "nodesInFirstFold": 19,
+        "smallCanvasTextElements": 132,
+        "svg": {
+          "rect": {
+            "h": 722,
+            "w": 1408
+          },
+          "viewBox": "0 0 1400 718"
+        }
+      },
+      "first_png": "atlas-hyperfine-final.png",
+      "first_png_sha256": "b1614dd4f4f5c6d67a7ab0fb32c533979972ca36e6dc07780064e42180cb4bdc",
+      "full_png": "atlas-hyperfine-full.png",
+      "full_png_sha256": "0674d32bca433899a8559de5444543fbec287780a6dac9450a73db56472cef8a",
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-hyperfine/report.html",
+      "report_sha256": "1225beb25aea70d6b517c21f4d300da08e0dea879380e7a38a7d0cd775ad48fd"
+    }
+  },
+  "viewport": {
+    "height": 900,
+    "width": 1440
+  }
+}

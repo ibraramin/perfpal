@@ -1,14 +1,17 @@
 # Handoff — Atlas build session 3 (steps 7–8 + V8 vision)
 
 **North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. This session closed
-**step 7** (test/golden lock) and **step 8** (V8 vision gate) of `atlas-build`; the graph page is now
-visually legible across all eight scan states and the evidence is committed with this session's evidence commit. **No drift.**
+**step 7** (test/golden lock) and **step 8** (V8 vision gate) of `atlas-build`; the V8 evidence is
+committed. The post-step-8 visual audit then found the composition is **not A2-ready** (`R-pf-109`),
+so the plan is reordered around a v2 visual rework. **No drift.**
 
-**Phase:** Atlas **steps 7–8 GREEN (2026-10-23)**. Next session: **steps 9–10 only** — founder A2
-(application + library, animation on) → ship/docs/EOL. Founder A2 remains the final gate.
+**Phase:** Atlas **steps 7–8 GREEN; v2 visual rework planned (2026-10-23)**. Next session: **v2 visual
+rework steps 9–10** (G baseline/composition + first-page fit), **not A2**. A2/ship moved to steps
+14–15 and are blocked until the founder visual gate.
 
-**Commits:** `0021cd1` (step 7/8 code + V8 evidence); this docs/state commit follows. Prior:
-`9a0e592` (steps 5–6 handoff), `d31f283`/`a2a4c99`/`672e4b6` (steps 5–6).
+**Commits:** `0021cd1` (step 7/8 code + V8 evidence); `996fb35` (steps 7–8 docs/state); this
+audit/v2-plan commit follows. Prior: `9a0e592` (steps 5–6 handoff),
+`d31f283`/`a2a4c99`/`672e4b6` (steps 5–6).
 
 ## This session — steps 7–8
 
@@ -70,16 +73,56 @@ visually legible across all eight scan states and the evidence is committed with
 - **Treemap deferred** (Explorer unchanged); weight detail links to `#explorer`.
 - **Do not mark `map-build` done; A1b stays open.** Holdouts vaulted. M5 needs B-pf-001 + B-pf-002.
 
+## Audit addendum — 2026-10-23 (BLOCKER; A2/ship moved to steps 14–15)
+
+The real `report.html#map` (hyperfine/cJSON, current release) was audited after the founder's
+"looks like shit" signal. **Atlas is not A2-ready.** Evidence:
+`docs/evidence/atlas-audit/AUDIT.md`, `audit.json`, `atlas-{hyperfine,cJSON}-{final,full}.png`;
+comparative blind vision read of G vs Atlas.
+
+- **First screen clips the canvas:** `#atlas-canvas` 980px tall (bottom 981); fold 900; legend/footer
+  cut; the answer line/brief starts at 981. G fit 1440x900.
+- **Visual language replaced:** G warm cream/charcoal/burnt-orange + sans chrome/mono data + masthead
+  + right-rail file cards → Atlas white/slate all-monospace + six raw header lines + no rail.
+- **Detail rail lost:** the canvas shows only `INFO ×N`/`WARN ×N`; per-file functions/finding IDs
+  moved into a 3,367/3,219px below-graph brief. Page 22,942/34,831px; `#map` 8,982/14,685; the Q2 and
+  weight drills are inline in `#map`.
+- **Hygiene:** structural caveat 6×, median definition 2×, footer legend clipped, leading-dot
+  truncation (`..tity/statistics.rs`), 49 edge labels with a path/back-edge hue collision, unreached
+  label ambiguity (footer 21 production + 11 non-production; column reads 11).
+- **F treemap is Explorer-only;** the page's weight strip is text.
+- **Gate blind spot:** V8 16/16 A1 + 16/16 strip passed; A1 tests comprehension, not composition. No
+  founder visual gate, no G baseline, no canvas-bottom/clipping/duplication/page-height assertions.
+
+**A2/ship (steps 14–15) are BLOCKED.** Next: the v2 visual rework (steps 9–13) against the G
+baseline + founder visual gate; re-run V8; then A2. Holdouts stay vaulted; `map-build` NOT done; A1b open.
+
+**New agents: read `docs/atlas/AGENT-BRIEF.md` first.** Founder model (2026-10-23): first page =
+main graph + some key metrics; below, more key charts slowly; restore G's warm/sans/masthead visual
+language; F stays undecided (keep the treemap/components as candidates).
+
+## Session design — v2 visual rework (2026-10-23)
+
+The plan is reordered: **steps 9–13 = visual rework; A2/ship = steps 14–15.** Steps 1–8 remain green.
+The guiding rule is **easy to understand beats exhaustive metrics**: first page = main graph + a
+small key-metrics strip; below = a few designed charts revealed progressively; detail rail; no
+3,000px brief. Restore G's visual language; founder sign-off before pixel work; founder visual gate
++ G-baseline diff before A2.
+
+- **Session 4 (next) — steps 9–10:** G/Atlas side-by-side, founder composition decision; first-page
+  fit + palette/type/masthead + one-definition/chrome hygiene. DoD: 1440×900 canvas bottom ≤ 900; no
+  clipping/duplicates/leading-dot truncation; key-metrics strip; founder sign-off on the visual
+  system; G-baseline diff recorded.
+- **Session 5 — steps 11–13:** detail rail; progressive weight/blast/file charts (+ F treemap
+  candidate); founder visual gate; V8 A1 + strip rerun.
+- **Session 6 — steps 14–15:** A2 (holdouts) + ship/docs/EOL.
+
 ## Next actions — new-session signposts
 
-1. **`/new` → atlas-build session 4: steps 9–10 only.**
-2. Step 9: founder A2 on the application class (django/postgres) and the library class (memchr
-   crate payload at `bd6068c3`, `src/`+Cargo.toml+license/readme only; exclude `benchmarks/`/`fuzz/`);
-   animation on; record `docs/evidence/map-vision/v8/a2.md`; 3 actions < 10 min; verify pause,
-   reduced-motion and print.
-3. Step 10: ship/docs/EOL — output contract + README + CHANGELOG + archive V7 prototypes; panel;
-   mark `atlas-build` done only then.
-4. Keep holdouts vaulted; do not mark `map-build` done; A1b open.
+1. **`/new` → Atlas v2 visual rework Session 4: plan steps 9–10 only.**
+2. Read `docs/atlas/AGENT-BRIEF.md` → `docs/evidence/atlas-audit/AUDIT.md` → V7 G prototype.
+3. Step 9 founder composition sign-off; step 10 first-page fit + visual language + chrome hygiene.
+4. Do **not** run A2 (step 14) or ship (15); holdouts vaulted; `map-build` not done; A1b open.
 
 ## Change set (this session)
 
@@ -88,6 +131,6 @@ visually legible across all eight scan states and the evidence is committed with
 - **Modified:** `src/reporter/atlas_render.rs` (typography/layout/headers/pills/keys/hull clearance),
   `src/reporter/mod.rs` (report body width), four `tests/golden/*/report.html`,
   `docs/plans/atlas-build.md` (steps 7–8 DONE + golden reconciliation), `CHANGELOG.md`,
-  `docs/activeContext.md`, `state/session-state.json` (D-pf-246; A-pf-117 done; A-pf-118 next), and
-  this handoff.
+  `docs/activeContext.md`, `state/session-state.json` (D-pf-246/247; A-pf-118 blocked; A-pf-119 next),
+  this handoff, `docs/atlas/AGENT-BRIEF.md`, and `docs/evidence/atlas-audit/`.
 - **No schema/CLI/metrics.json change; no new dependency; no new Atlas script.**
