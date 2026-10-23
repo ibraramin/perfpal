@@ -25,10 +25,10 @@ use crate::reporter::views::{self, CostScale, ScaleOrdering, scale_of};
 use crate::reporter::{escape_html, file_anchor_map, finding_anchor_assignments};
 use crate::schema::{FindingEntry, FunctionStats, MetricsDocument};
 
-/// One component-page link resolved against `emitted_charts`.
-struct ComponentLink<'a> {
-    prefix: &'a str,
-    share: String,
+/// One schema-component page link resolved against `emitted_charts`.
+struct ComponentPage {
+    prefix: String,
+    rank: u32,
     href: String,
 }
 
@@ -42,7 +42,7 @@ pub fn render_brief(view: &AtlasView, doc: &MetricsDocument, emitted_charts: &[S
     let file_anchors = file_anchor_map(doc);
     let kv1 = views::kv1(doc);
     let function_anchors = FunctionAnchors::new(doc);
-    let component_links = component_links(view, doc, emitted_charts);
+    let component_pages = component_pages(doc, emitted_charts);
 
     let mut out = String::new();
     out.push_str("<section id=\"atlas-brief\" class=\"atlas-brief\">\n");
@@ -50,12 +50,19 @@ pub fn render_brief(view: &AtlasView, doc: &MetricsDocument, emitted_charts: &[S
     out.push_str(BRIEF_CSS);
     out.push_str("</style>\n");
     render_answer(&mut out, view, doc, &kv1, &finding_anchors);
-    render_actions(&mut out, doc, &kv1, &finding_anchors, &function_anchors);
+    render_actions(
+        &mut out,
+        doc,
+        &kv1,
+        &finding_anchors,
+        &function_anchors,
+        view.coverage.demoted_files,
+    );
     render_weight(&mut out, view);
     render_blast(&mut out, view);
-    render_cards(&mut out, view, &file_anchors, &function_anchors);
+    render_cards(&mut out, view, &file_anchors);
     render_noise(&mut out, view);
-    render_links(&mut out, view, &component_links, kv1.total_actions);
+    render_links(&mut out, view, &component_pages, kv1.total_actions);
     out.push_str("</section>\n");
     render_q2_drill(&mut out, view, doc);
     render_weight_drill(&mut out, view, &file_anchors);
@@ -108,7 +115,7 @@ fn render_answer(
         }
         out.push_str(&format!(
             " — {} ({}).",
-            escape_html(&finding.title),
+            escape_html(&sanitize_atlas_text(&finding.title)),
             escape_html(&format_severity_confidence(
                 finding.severity,
                 finding.confidence
@@ -134,6 +141,7 @@ fn render_actions(
     kv1: &views::Kv1View,
     finding_anchors: &[String],
     function_anchors: &FunctionAnchors,
+    demoted_files: usize,
 ) {
     out.push_str("<div class=\"atlas-block\" data-atlas-block=\"actions\" id=\"atlas-actions\">\n");
     out.push_str("<h3>Start here — ranked actions (production first)</h3>\n");
@@ -164,7 +172,7 @@ fn render_actions(
                 " <span class=\"atlas-rule\">{}</span>\
                  <span class=\"atlas-badge\">{}</span>\
                  <span class=\"atlas-class{}\">{}</span>",
-                escape_html(&finding.title),
+                escape_html(&sanitize_atlas_text(&finding.title)),
                 escape_html(&format_severity_confidence(
                     finding.severity,
                     finding.confidence
@@ -200,16 +208,16 @@ fn render_actions(
             }
             out.push_str(&format!(
                 "<div class=\"atlas-why\">{}</div></li>\n",
-                escape_html(&sanitize_rationale(&finding.message))
+                escape_html(&sanitize_atlas_text(&finding.message))
             ));
         }
         out.push_str("</ol>\n");
         out.push_str(&format!(
             "<p class=\"atlas-counts\">{} · {} in the full list</p>\n",
-            escape_html(&if kv1.nonprod_file_count == 1 {
-                format!("{} non-production file demoted", kv1.nonprod_file_count)
+            escape_html(&if demoted_files == 1 {
+                format!("{demoted_files} non-production file demoted")
             } else {
-                format!("{} non-production files demoted", kv1.nonprod_file_count)
+                format!("{demoted_files} non-production files demoted")
             }),
             escape_html(&views::plural(
                 kv1.component_findings,
@@ -231,6 +239,21 @@ fn render_weight(out: &mut String, view: &AtlasView) {
         "<p class=\"atlas-caption\">Production files first; non-production cost is counted in the labelled band, never dropped.</p>\n",
     );
     let total = view.totals.total_cost;
+    let production_cost = view
+        .files
+        .iter()
+        .filter(|file| file.production)
+        .map(|file| file.cost)
+        .fold(0_u64, u64::saturating_add);
+    let nonproduction_cost = total.saturating_sub(production_cost);
+    let band = format_nonproduction(nonproduction_cost, total, view.coverage.demoted_files);
+    // Layout §5: an all-test strip leads with the non-production band.
+    if view.state.all_test {
+        out.push_str(&format!(
+            "<p class=\"atlas-nonprod\">{}</p>\n",
+            escape_html(&band)
+        ));
+    }
     if total == 0 {
         out.push_str(&format!("<p>{NO_SCANNED_COST}</p>\n"));
     } else {
@@ -277,24 +300,15 @@ fn render_weight(out: &mut String, view: &AtlasView) {
             out.push_str("</ul>\n");
         }
         out.push_str(
-            "<p class=\"atlas-caption\">Component shares include every member file; component groups are approximate prefix groups.</p>\n",
+            "<p class=\"atlas-caption\">Component shares include every member file (including non-production members); component groups are approximate prefix groups.</p>\n",
         );
     }
-    let production_cost = view
-        .files
-        .iter()
-        .filter(|file| file.production)
-        .map(|file| file.cost)
-        .fold(0_u64, u64::saturating_add);
-    let nonproduction_cost = total.saturating_sub(production_cost);
-    out.push_str(&format!(
-        "<p class=\"atlas-nonprod\">{}</p>\n",
-        escape_html(&format_nonproduction(
-            nonproduction_cost,
-            total,
-            view.coverage.demoted_files
-        ))
-    ));
+    if !view.state.all_test {
+        out.push_str(&format!(
+            "<p class=\"atlas-nonprod\">{}</p>\n",
+            escape_html(&band)
+        ));
+    }
     out.push_str("</div>\n");
 }
 
@@ -361,19 +375,30 @@ fn render_blast(out: &mut String, view: &AtlasView) {
     out.push_str("</div>\n");
 }
 
-fn render_cards(
-    out: &mut String,
-    view: &AtlasView,
-    file_anchors: &BTreeMap<String, String>,
-    function_anchors: &FunctionAnchors,
-) {
+/// File cards: production-first top files; a capped canvas shows only the
+/// drawn set (layout §5) while an uncapped scan cards the cost-ranked set.
+fn card_files(view: &AtlasView) -> Vec<&AtlasFile> {
+    if view.state.capped {
+        let drawn: BTreeSet<&str> = view.nodes.iter().map(|node| node.path.as_str()).collect();
+        view.files
+            .iter()
+            .filter(|file| drawn.contains(file.path.as_str()))
+            .take(6)
+            .collect()
+    } else {
+        view.files.iter().take(6).collect()
+    }
+}
+
+fn render_cards(out: &mut String, view: &AtlasView, file_anchors: &BTreeMap<String, String>) {
     out.push_str("<div class=\"atlas-block\" data-atlas-block=\"cards\" id=\"atlas-cards\">\n");
     out.push_str("<h3>File cards — what is inside the top files</h3>\n");
-    if view.files.is_empty() {
+    let cards = card_files(view);
+    if cards.is_empty() {
         out.push_str(&format!("<p>{NO_SOURCE_FUNCTIONS}</p>\n"));
     } else {
         out.push_str("<div class=\"atlas-cards\">\n");
-        for file in view.files.iter().take(6) {
+        for file in cards {
             out.push_str("<article class=\"atlas-card\">\n<h4>");
             out.push_str(&format!(
                 "<span class=\"atlas-path\">{}</span> <span class=\"atlas-class{}\">{}</span>",
@@ -395,7 +420,7 @@ fn render_cards(
                     "<p class=\"atlas-dominant\">Dominant finding: <code>{}</code> {} — {}</p>\n",
                     escape_html(&finding.rule_id),
                     escape_html(&format_finding(finding.severity, finding.count)),
-                    escape_html(&finding.title),
+                    escape_html(&sanitize_atlas_text(&finding.title)),
                 )),
                 None => out.push_str("<p class=\"atlas-dominant\">no findings on this file</p>\n"),
             }
@@ -409,7 +434,7 @@ fn render_cards(
                         escape_html(&file.path),
                         function.line,
                         escape_html(&function.name),
-                        escape_html(&function_anchor_for(function, function_anchors)),
+                        escape_html(&function_anchor_for(function)),
                     ));
                 }
                 out.push_str("</ol>\n");
@@ -417,7 +442,7 @@ fn render_cards(
             let anchor = file_anchors
                 .get(&file.path)
                 .cloned()
-                .unwrap_or_else(|| format!("file-{}", slug(&file.path)));
+                .unwrap_or_else(|| format!("file-{}", super::slugify(&file.path)));
             out.push_str(&format!(
                 "<p><a href=\"#atlas-{anchor}\">Weight detail for this file</a> · <a href=\"findings-detail.html#ranked-actions\">complete action list</a></p>\n",
                 anchor = escape_html(&anchor),
@@ -427,7 +452,7 @@ fn render_cards(
         out.push_str("</div>\n");
         out.push_str(&format!(
             "<p class=\"atlas-counts\">showing top {} of {} source files (production-first)</p>\n",
-            view.files.len().min(6),
+            card_files(view).len(),
             format_count(view.files.len() as u64),
         ));
     }
@@ -495,7 +520,7 @@ fn render_noise(out: &mut String, view: &AtlasView) {
 fn render_links(
     out: &mut String,
     view: &AtlasView,
-    components: &[ComponentLink<'_>],
+    components: &[ComponentPage],
     total_actions: usize,
 ) {
     out.push_str("<div class=\"atlas-block\" data-atlas-block=\"links\" id=\"atlas-links\">\n");
@@ -520,16 +545,16 @@ fn render_links(
     if components.is_empty() {
         out.push_str("<li>Component pages: no component page emitted</li>\n");
     } else {
-        out.push_str("<li>Component pages: ");
+        out.push_str("<li>Component pages (schema component index): ");
         for (index, component) in components.iter().enumerate() {
             if index > 0 {
                 out.push_str(" · ");
             }
             out.push_str(&format!(
-                "<a href=\"{}\">{}</a> ({})",
+                "<a href=\"{}\">{}</a> (#{})",
                 escape_html(&component.href),
-                escape_html(component.prefix),
-                escape_html(&component.share),
+                escape_html(&component.prefix),
+                component.rank,
             ));
         }
         out.push_str("</li>\n");
@@ -651,13 +676,14 @@ fn render_weight_drill(
         let anchor = file_anchors
             .get(&file.path)
             .cloned()
-            .unwrap_or_else(|| format!("file-{}", slug(&file.path)));
+            .unwrap_or_else(|| format!("file-{}", super::slugify(&file.path)));
         out.push_str(&format!(
             "<tr id=\"atlas-{anchor}\"><td><span class=\"atlas-path\">{}</span></td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
             escape_html(&file.path),
             escape_html(&file.path_class),
             escape_html(&file_cost_anchor(file)),
             escape_html(&format_share(file.cost, total)),
+            anchor = escape_html(&anchor),
         ));
     }
     out.push_str("</tbody>\n</table>\n</div>\n");
@@ -722,7 +748,7 @@ impl FunctionAnchors {
     }
 }
 
-fn function_anchor_for(function: &AtlasFunction, _anchors: &FunctionAnchors) -> String {
+fn function_anchor_for(function: &AtlasFunction) -> String {
     format_function_cost(
         function.cost,
         function.scale,
@@ -780,10 +806,6 @@ fn caveat(view: &AtlasView) -> String {
     if view.state.empty {
         return "no source functions recorded — every block shows a named stub.".to_string();
     }
-    if view.state.no_entry {
-        return "no entry was elected; the cost ranking and the action list still stand."
-            .to_string();
-    }
     if coverage.parse_failed > 0 {
         return format!(
             "{} files failed to parse, so their cost and edges are missing.",
@@ -796,12 +818,18 @@ fn caveat(view: &AtlasView) -> String {
             format_count(coverage.parse_partial as u64)
         );
     }
-    if view.state.library {
-        return "there is no forward path from the library root; callers are listed in the Q2 drill."
-            .to_string();
-    }
     if view.state.all_test {
         return "all source cost is non-production (test/bench/other); production rankings are empty."
+            .to_string();
+    }
+    if view.state.library {
+        // A library root may call helpers; only claim "no forward path" when
+        // the canvas truly has no forward edge (every drawn edge is a back edge).
+        if view.edges.iter().all(|edge| edge.back) {
+            return "there is no forward path from the library root; callers are listed in the Q2 drill."
+                .to_string();
+        }
+        return "the library root has forward calls; callers are listed in the Q2 drill."
             .to_string();
     }
     if view.state.no_entry {
@@ -833,54 +861,44 @@ fn location(finding: &FindingEntry) -> String {
     format!("{}:{}", finding.path, finding.span.start_line)
 }
 
-fn slug(path: &str) -> String {
-    path.chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() {
-                c.to_ascii_lowercase()
-            } else {
-                '-'
-            }
-        })
-        .collect()
-}
-
-fn component_links<'a>(
-    view: &'a AtlasView,
-    doc: &MetricsDocument,
-    emitted_charts: &[String],
-) -> Vec<ComponentLink<'a>> {
+fn component_pages(doc: &MetricsDocument, emitted_charts: &[String]) -> Vec<ComponentPage> {
     let emitted: BTreeSet<&str> = emitted_charts
         .iter()
         .map(|name| name.strip_suffix(".svg").unwrap_or(name))
         .collect();
-    let total = view.totals.total_cost;
-    view.components
+    let mut sorted: Vec<&crate::schema::ComponentEntry> = doc.components.iter().flatten().collect();
+    sorted.sort_by(|a, b| {
+        a.rank
+            .cmp(&b.rank)
+            .then_with(|| a.path_prefix.cmp(&b.path_prefix))
+    });
+    let rendered: BTreeSet<&str> = sorted
         .iter()
-        .filter(|component| component.production_file_count > 0)
+        .take(10)
+        .map(|entry| entry.path_prefix.as_str())
+        .collect();
+    sorted
+        .into_iter()
         .take(3)
-        .map(|component| {
-            let href = doc
-                .components
-                .iter()
-                .flatten()
-                .find(|entry| entry.path_prefix == component.prefix)
-                .map(|entry| {
-                    let filename = crate::charts::component::component_filename(
-                        entry.rank,
-                        &entry.path_prefix,
-                    );
-                    let stem = filename.strip_suffix(".svg").unwrap_or(&filename);
-                    if emitted.contains(stem) {
-                        format!("charts/{filename}")
-                    } else {
-                        "#components".to_string()
-                    }
-                })
-                .unwrap_or_else(|| "#components".to_string());
-            ComponentLink {
-                prefix: &component.prefix,
-                share: format_component_share(component.cost, total, component.file_count),
+        .map(|entry| {
+            let filename =
+                crate::charts::component::component_filename(entry.rank, &entry.path_prefix);
+            let stem = filename.strip_suffix(".svg").unwrap_or(&filename);
+            let href = if emitted.contains(stem) {
+                format!("charts/{filename}")
+            } else if rendered.contains(entry.path_prefix.as_str()) {
+                // The component index row carries this exact id.
+                format!("#{stem}")
+            } else {
+                "#components".to_string()
+            };
+            ComponentPage {
+                prefix: if entry.path_prefix == "." {
+                    "repository root (.)".to_string()
+                } else {
+                    entry.path_prefix.clone()
+                },
+                rank: entry.rank,
                 href,
             }
         })
@@ -967,18 +985,26 @@ fn call_degree(doc: &MetricsDocument, focus: &str) -> CallDegree {
     }
 }
 
-/// Rule messages are analyzer-authored and can contain words the Atlas
-/// contract forbids as claims (`runtime`, `latency`, …). The Atlas surface
-/// substitutes neutral static wording for those whole words so the emitted
-/// page never makes a time claim; every other byte is preserved verbatim.
-fn sanitize_rationale(message: &str) -> String {
+/// Rule messages and titles are analyzer-authored and can contain words the
+/// Atlas contract forbids as claims (`runtime`, `hot paths`, …). The Atlas
+/// surface substitutes neutral static wording for those whole words so the
+/// emitted page never makes a time claim. Identifiers are preserved: `_` is a
+/// word character, so `calc_ms` / `runtime_cost` are left untouched.
+fn sanitize_atlas_text(message: &str) -> String {
     let mut text = message.to_string();
     for (needle, replacement) in [
-        ("runtime", "static cost"),
-        ("latency", "static cost"),
-        ("throughput", "static cost"),
-        ("speedup", "static improvement"),
+        ("hot paths", "hot functions"),
+        ("hot-paths", "hot-functions"),
         ("hot path", "hot function"),
+        ("hot-path", "hot-function"),
+        ("runtimes", "static costs"),
+        ("runtime", "static cost"),
+        ("latencies", "static costs"),
+        ("latency", "static cost"),
+        ("throughputs", "static costs"),
+        ("throughput", "static cost"),
+        ("speedups", "static improvements"),
+        ("speedup", "static improvement"),
         ("ms", "static cost units"),
         ("µs", "static cost units"),
     ] {
@@ -996,8 +1022,8 @@ fn replace_whole_word(text: &str, needle: &str, replacement: &str) -> String {
     while let Some(offset) = lower[search..].find(needle) {
         let start = search + offset;
         let end = start + needle.len();
-        let before_ok = start == 0 || !bytes[start - 1].is_ascii_alphanumeric();
-        let after_ok = end == bytes.len() || !bytes[end].is_ascii_alphanumeric();
+        let before_ok = start == 0 || !is_word_byte(bytes[start - 1]);
+        let after_ok = end == bytes.len() || !is_word_byte(bytes[end]);
         if before_ok && after_ok {
             out.push_str(&text[cursor..start]);
             out.push_str(replacement);
@@ -1009,6 +1035,10 @@ fn replace_whole_word(text: &str, needle: &str, replacement: &str) -> String {
     }
     out.push_str(&text[cursor..]);
     out
+}
+
+fn is_word_byte(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || byte == b'_'
 }
 
 // ---------------------------------------------------------------------------
@@ -1065,8 +1095,9 @@ mod tests {
             let index = start + offset;
             let before = index.checked_sub(1).map(|i| bytes[i]);
             let after = bytes.get(index + needle.len()).copied();
-            let boundary =
-                |byte: Option<u8>| byte.is_none_or(|value| !value.is_ascii_alphanumeric());
+            let boundary = |byte: Option<u8>| {
+                byte.is_none_or(|value| !value.is_ascii_alphanumeric() && value != b'_')
+            };
             if boundary(before) && boundary(after) {
                 return true;
             }
@@ -1376,11 +1407,10 @@ mod tests {
             "src/a.c",
             3,
             Severity::Hot,
-            "Loop with a large trip count",
+            "Hot paths in runtime",
         );
-        f.message =
-            "allocator churn dominates runtime; latency and throughput; speedup 2×; 12 ms; 3 µs; hot path"
-                .to_string();
+        f.message = "allocator churn dominates runtime; latency and throughput; speedup 2×; 12 ms; 3 µs; hot paths; calc_ms and runtime_cost stay"
+            .to_string();
         let doc = DocBuilder::new()
             .file(file("src/a.c", "production", 1))
             .function(function("src/a.c", "work", 1, Some(10), 0, None))
@@ -1395,10 +1425,93 @@ mod tests {
             "latency",
             "throughput",
             "hot path",
+            "hot paths",
         ] {
             assert!(!contains_word(&html, token), "forbidden token {token}");
         }
         assert!(html.contains("static cost"));
+        assert!(html.contains("hot functions"));
+        // Identifiers are preserved verbatim.
+        assert!(html.contains("calc_ms"));
+        assert!(html.contains("runtime_cost"));
+    }
+
+    #[test]
+    fn library_caveat_only_claims_no_forward_path_when_true() {
+        let html = render(&library_fixture());
+        assert!(html.contains("no forward path from the library root"));
+
+        let doc = DocBuilder::new()
+            .file(file("src/lib.c", "production", 1))
+            .file(file("src/helper.c", "production", 1))
+            .function(function(
+                "src/lib.c",
+                "lib_root",
+                1,
+                Some(100),
+                10,
+                Some("lib-root"),
+            ))
+            .function(function("src/helper.c", "helper", 1, Some(50), 0, None))
+            .call_edge(call_edge(
+                "src/lib.c#lib_root#1:1",
+                "helper",
+                "src/lib.c",
+                Some("src/helper.c"),
+                Confidence::Low,
+            ))
+            .build();
+        let html = render(&doc);
+        assert!(!html.contains("no forward path"));
+        assert!(html.contains("the library root has forward calls"));
+    }
+
+    #[test]
+    fn component_pages_follow_the_schema_component_index() {
+        let mut doc = application_fixture();
+        doc.components = Some(vec![component("src")]);
+        let html = render_brief(
+            &build_atlas_view(&doc),
+            &doc,
+            &["component-01-src.svg".to_string()],
+        );
+        assert!(html.contains("charts/component-01-src.svg"));
+        assert!(html.contains("Component pages (schema component index)"));
+    }
+
+    #[test]
+    fn capped_cards_use_the_drawn_set() {
+        let doc = capped_fixture();
+        let view = build_atlas_view(&doc);
+        let cards = card_files(&view);
+        assert!(!cards.is_empty());
+        let drawn: BTreeSet<&str> = view.nodes.iter().map(|node| node.path.as_str()).collect();
+        assert!(cards.iter().all(|file| drawn.contains(file.path.as_str())));
+    }
+
+    #[test]
+    fn all_test_weight_strip_leads_with_the_band() {
+        let html = render(&all_test_fixture());
+        let weight = html
+            .split("id=\"atlas-weight\"")
+            .nth(1)
+            .expect("weight block")
+            .split("id=\"atlas-blast\"")
+            .next()
+            .expect("weight close");
+        let band = weight
+            .find("non-production (test/bench/other)")
+            .expect("non-production band");
+        let stub = weight.find(NO_PRODUCTION_COST).expect("production stub");
+        assert!(band < stub, "all-test must lead with the band");
+        let answer = html
+            .split("id=\"atlas-answer\"")
+            .nth(1)
+            .expect("answer")
+            .split("</div>")
+            .next()
+            .expect("answer close");
+        assert!(answer.contains("all source cost is non-production"));
     }
 
     #[test]

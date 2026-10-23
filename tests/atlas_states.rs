@@ -91,6 +91,26 @@ fn atlas_first_screen_canvas_then_answer_line() {
             canvas < first_block && map[first_block..].starts_with("data-atlas-block=\"answer\""),
             "{name}: the answer line must be the first answer-bearing block"
         );
+        let canvas_body = map
+            .split("id=\"atlas-canvas\"")
+            .nth(1)
+            .expect("canvas body")
+            .split("id=\"atlas-brief\"")
+            .next()
+            .expect("canvas close");
+        // A8: the canvas itself carries the entry, HOTTEST and the path.
+        assert!(
+            canvas_body.contains("ENTRY ·"),
+            "{name}: canvas must carry the entry badge"
+        );
+        assert!(
+            canvas_body.contains("HOTTEST:"),
+            "{name}: canvas must carry the HOTTEST label"
+        );
+        assert!(
+            canvas_body.contains("PATH ·"),
+            "{name}: canvas must carry the path summary"
+        );
         let answer = answer_block(map);
         assert!(
             answer.contains("ENTRY ·"),

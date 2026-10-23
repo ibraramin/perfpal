@@ -360,7 +360,11 @@ pub(crate) fn domain_of(path: &str) -> String {
     }
     let file = final_segment(path);
     let stem = file.rsplit_once('.').map_or(file, |(stem, _)| stem);
-    stem.split(['-', '_']).next().unwrap_or(stem).to_string()
+    // A leading `_`/`-` (e.g. `_private.py`) must not yield an empty prefix.
+    stem.split(['-', '_'])
+        .find(|part| !part.is_empty())
+        .unwrap_or(stem)
+        .to_string()
 }
 
 /// `max(1, round(100·rank/n))`, capped at 100 — identical to
@@ -2839,6 +2843,14 @@ mod tests {
     }
 
     // -- components --------------------------------------------------------
+
+    #[test]
+    fn domain_of_skips_empty_leading_segments() {
+        assert_eq!(domain_of("_private.py"), "private");
+        assert_eq!(domain_of("-dash.c"), "dash");
+        assert_eq!(domain_of("src/a/b.c"), "src/a");
+        assert_eq!(domain_of("pkg/mod.py"), "pkg");
+    }
 
     #[test]
     fn components_group_by_prefix_and_track_production_cost() {

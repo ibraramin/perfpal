@@ -14,10 +14,11 @@ fn map_body(html: &str) -> &str {
 }
 
 fn canvas_body(html: &str) -> &str {
+    // The brief is the canvas boundary (the canvas nests its own `</section>`).
     html.split("<section id=\"atlas-canvas\"")
         .nth(1)
         .expect("atlas canvas")
-        .split("</section>")
+        .split("id=\"atlas-brief\"")
         .next()
         .expect("canvas close")
 }
@@ -70,6 +71,9 @@ fn atlas_canvas_has_no_metric_panels() {
             "data-chart=",
             "charts/",
             "data-atlas-block=",
+            "class=\"bar\"",
+            "class=\"card\"",
+            "role=\"table\"",
         ] {
             assert!(
                 !canvas.contains(needle),
@@ -88,7 +92,7 @@ fn atlas_adds_no_new_script() {
     for (name, doc) in states() {
         let html = render_html(&doc, &[]);
         assert_eq!(
-            html.matches("<script>").count(),
+            html.to_ascii_lowercase().matches("<script").count(),
             1,
             "{name}: report.html must keep exactly one script block"
         );
