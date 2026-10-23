@@ -1,41 +1,40 @@
-# Handoff — Atlas build session 2 (steps 5–6 + review fixes)
+# Handoff — Atlas build session 3 (steps 7–8 + V8 vision)
 
-**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. This session shipped the
-ratified Atlas **steps 5–6**: the fixed seven-block below-graph brief + Q2/weight drills
-(`src/reporter/atlas_brief.rs`) and the `report.html#map` wiring (canvas → brief → drills). No schema
-change, no new JS/dependency, no holdout reads. **No drift.**
+**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. This session closed
+**step 7** (test/golden lock) and **step 8** (V8 vision gate) of `atlas-build`; the graph page is now
+visually legible across all eight scan states and the evidence is committed with this session's evidence commit. **No drift.**
 
-**Phase:** Atlas **steps 5–6 GREEN (2026-10-23)** after review round 1 fixes. Next session:
-**steps 7–8 only** (remaining integration/goldens, V8 vision). Founder A2 remains the final gate.
+**Phase:** Atlas **steps 7–8 GREEN (2026-10-23)**. Next session: **steps 9–10 only** — founder A2
+(application + library, animation on) → ship/docs/EOL. Founder A2 remains the final gate.
 
-**Commits:** `672e4b6` (steps 5–6), `a2a4c99` (review round 1 fixes), `d31f283` (weight-detail
-`#explorer` link + drill caption); this docs/state commit follows.
+**Commits:** `0021cd1` (step 7/8 code + V8 evidence); this docs/state commit follows. Prior:
+`9a0e592` (steps 5–6 handoff), `d31f283`/`a2a4c99`/`672e4b6` (steps 5–6).
 
-## This session — steps 5–6
+## This session — steps 7–8
 
-- **`src/reporter/atlas_brief.rs`:** the fixed seven blocks in every state — answer line (entry +
-  why + largest static cost + first `path:line` + the dominant caveat), KV1 actions (M-05 anchors,
-  trip provenance, full rationale, same-location note, complete-list link), weight strip
-  (production-first top files/components + labelled non-production band), blast radius (M-08 uses
-  `blast.dependent_top_pct` verbatim), file cards (top functions + dominant finding; capped scans
-  card the drawn set), noise/confidence footer, drill links. Adds `#atlas-drill-q2` (complete 1-hop
-  include dependents, component DSM including headers, structural callers/callees, include
-  coverage) and `#atlas-drill-weight` (complete file/component share detail), plus schema-component
-  page links to `charts/component-*.svg` / the component index. Rule messages/titles are sanitized
-  of forbidden time claims (plurals included) while identifiers are preserved.
-- **View model (additive, no schema):** `AtlasFile` (all source files, production-first ordering),
-  `AtlasFunction.{rank,population,median}`, `FileInfo.median`, `AtlasView.files`; `domain_of` skips
-  empty leading segments; `views::Kv1Row.function_index`.
-- **Wiring:** `html_map` = `<section id="map">` → canvas → brief → drills; nav/breadcrumb labelled
-  **Atlas**; V4 list-first markup removed; Explorer + the single fixed `REPORT_SCRIPT` unchanged.
-- **Tests:** 17 `atlas_brief` unit tests; `tests/atlas_render.rs` (A9 canvas purity, A12 one-script,
-  double render); `tests/atlas_states.rs` (A10 eight-state stack, A8 canvas → answer first screen
-  incl. entry/HOTTEST/PATH on the canvas); V4 `#map` tests migrated in `key_views.rs` /
-  `i4_annotations.rs`; four `report.html` goldens regenerated (only report.html changed).
-- **Review round 1:** R1/R2/Q1 requested changes; all fixed in `a2a4c99` — plural `hot paths` +
-  identifier-safe sanitizer, library caveat only when there is no forward edge, schema-component
-  page links (Python root/pkg resolve), demoted-count consistency, all-test band first, stale
-  plan/state/docs. Q2 independently reproduced every gate command on `672e4b6`.
+- **Step 7 (test/golden lock).** The full plan list is covered: entry election ×4, structural
+  reachability/BFS (pre-cap), caps/aggregation, path trace, M-01…M-18 anchors/formatting, zero-state
+  stubs, MEDIUM/LOW confidence mix, noise footer, M-18 annotations — **106 Atlas unit tests + 5
+  integration locks** (`tests/atlas_render.rs`, `tests/atlas_states.rs`) + the 8-state fixture matrix
+  + double-render determinism + A9/A12/A4. `tests/atlas_vision.rs` (ignored) renders the eight full
+  report pages on demand for the V8 matrix. The four committed `report.html` goldens are current
+  (`PERFPAL_REGEN_GOLDEN=1 ... regenerate_goldens` is a no-op). **Reconciliation:** no
+  cJSON/hyperfine/tmux `report.html` goldens exist in the repo — those repos are V7 prototype HTML
+  only; the committed golden set is the four fixture trees, all regenerated.
+- **Step 8 (V8 vision).** Eight states rendered at **1440×900** final frames (`prefers-reduced-motion`
+  + `animations=disabled`; HTML + PNG + `manifest.json` under `docs/evidence/map-vision/v8/`).
+  **16/16 A1 reads pass** (2 fresh blind `@vision` reads per state, one image per task) and
+  **16/16 strip-specific reads pass** (2 per state on the `#atlas-weight` crop). The weight-strip
+  inclusion rule holds: every read answers N4; 11/16 name a top file/component in the `action`
+  field and 14/16 name a top item/band in `mass_answer`; the five `none` actions are the correct
+  empty/all-test/capped-tie answers; no share-vs-multiple or time confusion. Evidence: `reads.json` (image hashes + every read) + `NOTES.md`.
+- **Gate-found fixes (real defects).** Report body width 72rem→90rem (the SVG had scaled to 0.83×,
+  text 5–8px); SVG text floors (name ≥10px, meta ≥8.5px, badges ≥8px, headers ≥10.5px), four-line
+  nodes with a 46px minimum and 12px row gap; two-line column headers (the `UNREACHED` header had
+  collided with depth-0); compact `×N` edge pills with the full M-10 text in `<title>` and a legend
+  key; deterministic pill/node avoidance (the library back edge covered `src/caller1.c`); hull-label
+  clearance; a first-screen `.atlas-keys` line (units/× median/edge/path/caption); tooltip-free
+  capture (mouse parked at 1,1). Only the four `report.html` goldens changed.
 
 ## Verification
 
@@ -43,61 +42,52 @@ change, no new JS/dependency, no holdout reads. **No drift.**
 |---|---|---|
 | Format | `cargo fmt --all -- --check` | exit 0 |
 | Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| Tests | `cargo test --locked` | 54 suites, exit 0 |
+| Tests | `cargo test --locked` | 55 suites, exit 0 |
 | Licenses | `cargo deny check licenses` | `licenses ok`, exit 0 |
 | Semantic lint | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | exit 0 |
-| Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 54 suites, exit 0 |
+| Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 55 suites, exit 0 |
+| A4/A12/A9/A10 | targeted `atlas_render`/`atlas_states` tests | 4/4 pass |
 | No schema | `git status --short src/schema/ docs/schema/` | empty |
-| Goldens | `git diff --name-only a64d070..HEAD -- tests/golden` | only the four `report.html` |
-| Brief unit tests | `cargo test --locked --lib reporter::atlas_brief` | 17 pass |
-| A9/A12/A4 | `cargo test --locked --test atlas_render` | 3 pass |
-| A10/A8 | `cargo test --locked --test atlas_states` | 2 pass |
-| Review panel | R1/R2/Q1 round 1 + Q2 evidence | blockers fixed in `a2a4c99`/`d31f283`; **R1/R2/Q1/Q2 APPROVED** (R2 final check on `d31f283`); zero unresolved blocking |
-
-## Review panel — round 2
-
-- **R1 (correctness): APPROVED.** Sanitizer plurals + identifier preservation verified; library
-  caveat branch verified; A8/A9/A12 assertions verified; no remaining blocking findings.
-- **Q1 (scope): APPROVED.** Plan/state/CHANGELOG/activeContext updated; treemap deferral recorded;
-  per-component links resolve; steps 7–10 not claimed; map-build/A1b preserved.
-- **Q2 (evidence): APPROVED.** Independently re-ran fmt/clippy/tests (54 suites)/deny/semantic;
-  schema diff empty; only the four report.html goldens; M-08/A8/A9/A10/A12 reproduced.
-- **R2 (contract): APPROVED.** Round-1 blockers fixed (sanitizer, component links); the last item —
-  the recorded weight-detail `#explorer` link — landed in `d31f283` and was verified in the code and
-  all four goldens. Zero unresolved blocking findings across the panel.
+| Goldens | `git status --short tests/golden` | only the four `report.html` |
+| Step 7 golden regen | `PERFPAL_REGEN_GOLDEN=1 cargo test --test p6_hardening regenerate_goldens` | no-op |
+| V8 A1 | `docs/evidence/map-vision/v8/reads.json` | 8/8 states, 16/16 reads PASS |
+| V8 strip | same | 8/8 states, 16/16 reads PASS |
+| Vision preflight | `render_v8.py` DOM gate | pass (rendered name ≥9.9px, meta ≥8.4px, badge ≥7.9px, column ≥10.4px, aggregate ≥8.4px, hull ≥9.0px; containment; no pill >32px; no tooltip; first row above fold) |
+| Gate transcript | `docs/evidence/map-vision/v8/gate.txt` | commands + exits + evidence hashes |
 
 ## Risks / open
 
-- **Treemap deferred:** the `weight-treemap` Explorer stem is not implemented (Explorer kept
-  unchanged this session); the weight-detail section and the drills block both link to `#explorer`.
-  Recorded in the plan/CHANGELOG.
-- **Page size:** the complete weight/Q2 tables grow report.html (~1.5–1.9× on the golden trees);
-  print hides `.atlas-drill`; A2/vision must judge large-repo usability.
-- **Step-7 remaining:** the full state-matrix/semantic goldens and any additional suites; step 8 V8
-  vision (all eight states incl. library/capped + strip reads); dynamic canvas height vs 1440×900/
-  print/A1; pause-at-t0. M-17 (functions in the page header) and M-02 (answer-line reachability)
-  are a doc-reconciliation follow-up; the forbidden-claim scan is scoped to the Atlas surfaces.
-- **R-pf-108:** founder A2 (application + library) is decisive; structural LOW/MEDIUM edges remain
-  the main honesty risk (option A reversal trigger live).
-- **Do not mark `map-build` done; A1b stays open.** Holdouts vaulted. M5 publish needs B-pf-001 +
-  B-pf-002.
+- **A2 (R-pf-108):** founder timed test on application **and** library classes with animation on is
+  the decisive gate; a failure supersedes ADR-0009, never silent tuning. The structural LOW/MEDIUM
+  edges remain the main honesty risk.
+- **Capped framing:** the depth-1 column is taller than the 1440×900 first screen (canvas viewBox
+  1248, rendered 1255px; 20 of 26 shown, 6 aggregated, printed). The first screen carries entry,
+  HOTTEST and PATH; A2 must judge large-repo usability.
+- **Component label:** `src` was read as `SIC` in 3/16 strip reads; values/shares/actions were
+  correct. Watch in A2.
+- **M-17/M-02:** functions-in-header and answer-line reachability remain doc-reconciliation
+  follow-ups. The forbidden-claim scan stays scoped to the Atlas surfaces.
+- **Treemap deferred** (Explorer unchanged); weight detail links to `#explorer`.
+- **Do not mark `map-build` done; A1b stays open.** Holdouts vaulted. M5 needs B-pf-001 + B-pf-002.
 
 ## Next actions — new-session signposts
 
-1. **`/new` → atlas-build session 3: steps 7–8 only.** Read `docs/plans/atlas-build.md`,
-   `atlas-metrics.md`, `atlas-layout.md`, ADR-0009/0010, and the four modules.
-2. Keep the holdouts vaulted; do not mark `map-build` done; A1b open.
-3. A2 (application + library, animation on) is the final gate; a failure supersedes the ADR.
+1. **`/new` → atlas-build session 4: steps 9–10 only.**
+2. Step 9: founder A2 on the application class (django/postgres) and the library class (memchr
+   crate payload at `bd6068c3`, `src/`+Cargo.toml+license/readme only; exclude `benchmarks/`/`fuzz/`);
+   animation on; record `docs/evidence/map-vision/v8/a2.md`; 3 actions < 10 min; verify pause,
+   reduced-motion and print.
+3. Step 10: ship/docs/EOL — output contract + README + CHANGELOG + archive V7 prototypes; panel;
+   mark `atlas-build` done only then.
+4. Keep holdouts vaulted; do not mark `map-build` done; A1b open.
 
-## Change set (this EOL commit)
+## Change set (this session)
 
-- **New:** `src/reporter/atlas_brief.rs`, `tests/atlas_fixtures/mod.rs`, `tests/atlas_render.rs`,
-  `tests/atlas_states.rs`.
-- **Modified:** `src/reporter/atlas.rs` (additive view fields + `domain_of` fix), `src/reporter/views.rs`
-  (`Kv1Row.function_index`), `src/reporter/mod.rs` (wiring/nav/breadcrumb), `tests/key_views.rs`,
-  `tests/i4_annotations.rs`, `tests/report_html.rs`, four `tests/golden/report*/report.html`;
-  `d31f283` adds the weight-detail Explorer link + caption fix.
-- **Docs/state:** `docs/plans/atlas-build.md` (steps 5–6 DONE + deviation), `CHANGELOG.md`,
-  `docs/activeContext.md`, `state/session-state.json` (D-pf-245; A-pf-115 done; A-pf-117 next), and
+- **New:** `tests/atlas_vision.rs`, `docs/evidence/map-vision/v8/render_v8.py`,
+  `docs/evidence/map-vision/v8/{html/*.html,*-final.png,*-weight-strip.png,manifest.json,reads.json,NOTES.md,gate.txt,verify_evidence.py}`.
+- **Modified:** `src/reporter/atlas_render.rs` (typography/layout/headers/pills/keys/hull clearance),
+  `src/reporter/mod.rs` (report body width), four `tests/golden/*/report.html`,
+  `docs/plans/atlas-build.md` (steps 7–8 DONE + golden reconciliation), `CHANGELOG.md`,
+  `docs/activeContext.md`, `state/session-state.json` (D-pf-246; A-pf-117 done; A-pf-118 next), and
   this handoff.
-- **No schema/CLI/metrics.json change; no new dependency; no new script.**
+- **No schema/CLI/metrics.json change; no new dependency; no new Atlas script.**

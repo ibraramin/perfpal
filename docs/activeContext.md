@@ -1,28 +1,22 @@
 # Active Context
 
 ## Current Task
-**Atlas steps 5–6 GREEN (2026-10-23).** `src/reporter/atlas_brief.rs` now renders the fixed
-seven-block below-graph brief + the Q2 reverse drill + complete weight detail + schema-component
-page links, and `report.html#map` is wired as **canvas → brief → drills** (commits `672e4b6`,
-review fixes `a2a4c99`). The Explorer section and the single fixed `REPORT_SCRIPT` are unchanged;
-no schema, no new JS/dependency, no holdout reads.
-- **Review round 1:** R2/Q1 blockers were real and are fixed — plural `hot paths` sanitization,
-  identifier preservation, the library-only "no forward path" claim, schema-component page links
-  (Python root/pkg now resolve), stale plan/state, and the A8 canvas (entry/HOTTEST/path) and A9
-  integration assertions. Q2 independently reproduced every gate command on `672e4b6`.
-- **Gate:** fmt / clippy / `cargo test --locked` (54 suites) / `cargo deny check licenses` /
-  semantic-clang clippy+test all exit 0; schema diff empty; only the four `report.html` goldens moved.
-- **Deferred (recorded):** the `weight-treemap` Explorer stem (Explorer kept unchanged this
-  session; the weight detail links to `#explorer`); step-7 remaining suites/goldens; step-8 V8
-  vision; dynamic canvas height vs 1440×900/print/A2; pause-at-t0.
-- **Structural edges (D-pf-241):** ADR-0009 option A — LOW name-based + MEDIUM semantic, labelled
-  structural, `N MEDIUM / M LOW` mix printed, never `resolved`/`reachable_from_entry`.
-- **A8 amendment (D-pf-242):** first block = canvas carrying **entry + HOTTEST + path**; the one
-  `path:line` action is in the first scroll (answer line + KV1).
-- **A12 (D-pf-243):** exactly one fixed existing `REPORT_SCRIPT` (unchanged); Atlas canvas/SVG/
-  animation add zero scripts, zero handlers, zero network.
+**Atlas steps 7–8 GREEN (2026-10-23).** Step 7's full test list is covered by 106 Atlas unit tests
++ 5 integration locks + the 8-state fixtures + the four regenerated `report.html` goldens;
+`tests/atlas_vision.rs` renders the matrix on demand. Step 8's V8 gate rendered all eight states at
+1440×900 and ran **16/16 blind A1 reads + 16/16 strip-specific reads** (all pass); evidence is in
+`docs/evidence/map-vision/v8/`.
+- The gate found and fixed real legibility/collision defects: 72rem→90rem body width (canonical
+  1440 canvas), SVG text floors, four-line nodes/46px minimum, two-line column headers, compact
+  `×N` edge pills with deterministic node avoidance, hull-label clearance, a first-screen key
+  line, and tooltip-free capture. Only the four `report.html` goldens changed.
+- Gate: fmt / clippy / `cargo test --locked` (55 suites) / deny / semantic clippy+test all exit 0;
+  schema diff empty; A4/A9/A10/A12 pass.
+- No schema/JS/dependency change; holdouts vaulted; treemap deferred. A2 is step 9.
 
 ## Recent Decisions
+- **D-pf-246 (live, 2026-10-23):** Atlas steps 7–8 implemented and green; V8 A1 16/16 +
+  strip 16/16; renderer legibility/collision fixes; steps 9–10 queued; no schema; holdouts vaulted.
 - **D-pf-245 (live, 2026-10-23):** Atlas steps 5–6 implemented and green (brief/drills + `#map`
   wiring; A8/A9/A10/A12 integration tests; four report.html goldens; commits `672e4b6`/`a2a4c99`);
   review round 1 fixes applied; treemap deferred by session constraint; steps 7–10 queued; no
@@ -38,24 +32,17 @@ no schema, no new JS/dependency, no holdout reads.
 - **D-pf-237/236 (cold):** entry-flow direction + prototypes; consolidation (demoted to ledger).
 
 ## In Progress
-- **Nothing active in the hot tree.** Steps 5–6 are green; the plan is still active.
-- **`atlas-build` steps 7–10 remain queued:** remaining integration suites/goldens, V8 vision
-  gate (all eight states incl. library/capped + strip-specific reads), founder A2 (application +
-  library), ship/EOL. The weight-treemap stays deferred.
+- **Nothing active in the hot tree.** Steps 7–8 are green; the plan is still active.
+- **`atlas-build` steps 9–10 remain queued:** founder A2 (application + library, animation on) and
+  ship/docs/EOL. The weight-treemap stays deferred; A1b stays open; `map-build` is NOT done.
 
 ## Next
-- **`/new` → atlas-build session 3: steps 7–8 only** (remaining integration/goldens + V8 vision).
-  - Step 7: extend the unit/integration suites and the state-matrix fixtures; regenerate any
-    remaining goldens; keep the schema/no-new-JS/determinism locks.
-  - Step 8: render the full state matrix at 1440×900 final frames; two fresh blind `@vision`
-    reads per state (one image per task), including strip-specific reads; fix blockers and
-    re-run until A1 passes for every state.
-- **Then steps 9–10:** founder A2 (application + library, animation on) → ship/docs/EOL.
-- **Read first:** `docs/plans/atlas-build.md`, `atlas-metrics.md`, `atlas-layout.md`,
-  ADR-0009/0010, and the four modules (`atlas`, `atlas_metrics`, `atlas_render`, `atlas_brief`).
-- **Keep holdouts vaulted:** django/postgres + the `memchr` crate payload until A2; no scan/render/
-  agent reads (dev `benchmarks/`/`fuzz/` excluded).
-- **Agent report track** remains queued (A-pf-111).
+- **`/new` → atlas-build session 4: steps 9–10 only** (founder A2 → ship/docs/EOL).
+  - Run A2 on the application and library classes with animation on; record `a2.md`; a failure
+    supersedes ADR-0009.
+  - Then ship/docs/EOL: output contract, README, CHANGELOG, archive V7 prototypes, mark the plan
+    done after the panel.
+- **Keep holdouts vaulted** until A2; no scan/render/agent reads.
 - **Do not mark `map-build` done.** A1b stays open. M5 needs B-pf-001 + B-pf-002.
 
 ## Blockers
