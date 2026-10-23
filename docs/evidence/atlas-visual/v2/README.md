@@ -1,14 +1,15 @@
-# Atlas v2 — visual rework evidence (steps 9–10)
+# Atlas v2 — visual rework evidence (steps 9–11)
 
-**Status: STEP 9 SIGNED 2026-10-23; STEP 10 IMPLEMENTED AND STEP-10 FOUNDER-APPROVED 2026-10-24.**
+**Status: STEP 9 SIGNED 2026-10-23; STEP 10 IMPLEMENTED AND STEP-10 FOUNDER-APPROVED 2026-10-24;
+STEP 11 (DETAIL RAIL) IMPLEMENTED 2026-10-24 — STEP-13 FOUNDER GATE PENDING.**
 Option A (port G) was signed and step 10 was executed; the founder approved the step-10 first page
 and authorized the commit. The **step-13 final composition/V8 gate is still pending**. This directory
 holds the signed decision, the G-baseline comparison, the step-10 1440×900 render evidence, the DoD
 transcript and the vision records.
 
-**Scope guard:** steps 9–10 only. The detail rail (step 11), progressive charts + F prototype
-(step 12), the founder visual gate/V8 rerun (step 13), A2 (step 14) and ship (step 15) are **not**
-started here. Holdouts stay vaulted; `map-build` is not done; A1b stays open.
+**Scope guard:** steps 9–11 only. Progressive charts + F prototype (step 12), the founder visual
+gate/V8 rerun (step 13), A2 (step 14) and ship (step 15) are **not** started here. Holdouts stay
+vaulted; `map-build` is not done; A1b stays open.
 
 ## Files
 
@@ -25,6 +26,14 @@ started here. Holdouts stay vaulted; `map-build` is not done; A1b stays open.
 | `step10.json` | Reproduced 1440×900 DOM geometry, hashes, text floors, unreached chip/footer checks. |
 | `render_step10.py` | Reproducer for the step-10 render/evidence (fails closed on acceptance). |
 | `gate.txt` | Command + exit + artifact-hash transcript for the step-10 DoD. |
+| `STEP11.md` | Step-11 detail rail: selection/roles/links, measured stage geometry, residuals. |
+| `step11.json` | Reproduced 1440×900 + 1280×800 DOM geometry, rail completeness, link resolution, text floors, hashes. |
+| `render_step11.py` | Reproducer for the step-11 render/evidence (fails closed on acceptance). |
+| `gate-step11.txt` | Full step-11 DoD transcript (every suite line, exits, mtimes, artifact hashes). |
+| `VISION-STEP11.md` | `@vision` step-11 read (PASS; two reads + a targeted collision-label re-check). |
+| `atlas-v2-step11-{hyperfine,cJSON}-final.png` | Step-11 1440×900 first viewports (`#map`, reduced motion). |
+| `atlas-v2-step11-{hyperfine,cJSON}-full.png` | Full-page step-11 renders. |
+| `atlas-v2-step11-{hyperfine,cJSON}-1280x800.png` | Step-11 1280×800 stacked-rail renders. |
 | `atlas-v2-hyperfine-final.png` / `atlas-v2-cJSON-final.png` | Step-10 1440×900 first viewports (`#map`, reduced motion). |
 | `atlas-v2-hyperfine-full.png` / `atlas-v2-cJSON-full.png` | Full-page step-10 renders. |
 

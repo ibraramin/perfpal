@@ -19,6 +19,20 @@ supporting elements only if justified (`docs/research/atlas-developer-needs.md` 
 > path, caps, 3 actions, one caveat, one legend/unit definition) live **outside** `#atlas-canvas`;
 > the canvas is the graph + one footer. The detail rail is step 11; the progressive charts/F
 > candidate are step 12. See `docs/evidence/atlas-visual/v2/DECISION.md`.
+>
+> **Step-11 amendment (2026-10-24, implemented):** the first page is a two-column stage —
+> `#atlas-canvas` (868px graph + one footer) and a right-hand **detail rail** (`#atlas-rail`, 530px,
+> DOM sibling outside the canvas; A9 unchanged) — inside `#map`. The rail is the first-page per-file
+> detail layer: up to 12 cards (entry first, then the shipped production-first file order), each with
+> a role (`ENTRY` > `UNREACHED` > path class `TEST`/`BENCH`/… > `PRODUCTION`), the M-04 file cost
+> anchor, the top-3 functions (`name:line`; `(anonymous)` for an empty name), and the dominant
+> finding rule. File names link to their weight-drill row; function rows link to their exact
+> `profile-queue.html#fn-…` row; finding rows link to their exact
+> `findings-detail.html#finding-…` occurrence. At <1360px the rail stacks below the graph; print
+> stacks. Canvas node labels are the **file name** (spec §3.2) with a parent segment when drawn
+> basenames collide (`export/mod.rs`); the node `<title>` and the rail carry the full path. The
+> below-graph file cards remain the complete brief block; the rail is detail, not a metric panel.
+> Evidence: `docs/evidence/atlas-visual/v2/STEP11.md`, `step11.json`, `VISION-STEP11.md`.
 
 ## 1. Purpose
 
@@ -123,7 +137,8 @@ Every block renders in every state; a zero-state stub replaces missing content.
    dependent files; include coverage line; full-list drill. The LOW/structural label is mandatory.
 5. **File cards.** For the top selected files (cap 5–8): file cost + anchor (M-04); top 3 functions
    by cost with `top P%` (M-05); dominant finding rule + severity; production class; drill link.
-   This is where the V7 G right-rail cards live.
+   This is the complete below-graph block; the first-page rail (step 11) is the compact G-style
+   detail layer above it.
 6. **Noise & confidence footer.** M-13: parse `ok/partial/failed`; unresolved imports/includes;
    `MEDIUM/LOW` edge counts; demoted files; caps; unreached production/non-production. One compact
    block, not a table of every file.

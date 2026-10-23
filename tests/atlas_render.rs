@@ -14,11 +14,12 @@ fn map_body(html: &str) -> &str {
 }
 
 fn canvas_body(html: &str) -> &str {
-    // The brief is the canvas boundary (the canvas nests its own `</section>`).
+    // The canvas closes before the detail rail/brief; the canvas itself has no
+    // nested `<section>`, so the first close tag is its boundary.
     html.split("<section id=\"atlas-canvas\"")
         .nth(1)
         .expect("atlas canvas")
-        .split("id=\"atlas-brief\"")
+        .split("</section>")
         .next()
         .expect("canvas close")
 }

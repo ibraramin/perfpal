@@ -1,0 +1,658 @@
+{
+  "_comment": "Atlas v2 step 11 per-file detail rail; report.html#map, 1440x900 + 1280x800, reduced motion.",
+  "repos": {
+    "cJSON": {
+      "booleans": {
+        "briefTop_ge_canvasBottom": true,
+        "briefTop_ge_railBottom": true,
+        "canvasBottom_le_900": true,
+        "canvas_purity": true,
+        "chrome_counts": true,
+        "mapHeight_le_step10_plus_footer_wrap": true,
+        "noClippedChrome": true,
+        "noHorizontalScroll": true,
+        "noHorizontalScroll_1280": true,
+        "pageHeight_le_step10_plus_footer_wrap": true,
+        "railBottom_le_900": true,
+        "rail_beside_canvas": true,
+        "rail_cards_complete": true,
+        "rail_cards_le_cap": true,
+        "rail_findings_links_resolve": true,
+        "rail_noEventHandlers": true,
+        "rail_one_aside": true,
+        "rail_profileQueue_links_resolve": true,
+        "rail_samePage_links_resolve": true,
+        "rail_stacks_below_1280": true,
+        "reportScript_unchanged": true,
+        "textFloors_ok": true
+      },
+      "cross_page": {
+        "findingsDetailLinks": 12,
+        "missingFindingsAnchors": [],
+        "missingProfileAnchors": [],
+        "profileQueueLinks": 31
+      },
+      "dom": {
+        "body": {
+          "clientWidth": 1440,
+          "scrollHeight": 34808,
+          "scrollWidth": 1440
+        },
+        "brief": {
+          "bottom": 4088,
+          "h": 3219,
+          "w": 1184,
+          "x": 128,
+          "y": 869
+        },
+        "canvas": {
+          "bottom": 869,
+          "h": 750,
+          "w": 868,
+          "x": 16,
+          "y": 120
+        },
+        "cardChecks": [
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "ENTRY"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "PRODUCTION"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          }
+        ],
+        "chrome": {
+          "bottom": 120,
+          "h": 111,
+          "w": 1408,
+          "x": 16,
+          "y": 8
+        },
+        "counts": {
+          "canvasPanels": 0,
+          "footer": 1,
+          "leadingDotTruncation": 0,
+          "legend": 1,
+          "medianDefinition": 1,
+          "nodes": 7,
+          "railAsides": 1,
+          "reportScript": 1,
+          "structuralCaveat": 1
+        },
+        "firstScreen": {
+          "briefTop": 869,
+          "canvasBottom": 869,
+          "fold": 900,
+          "railBottom": 818
+        },
+        "footer": {
+          "bottom": 869,
+          "h": 31,
+          "w": 868,
+          "x": 16,
+          "y": 838
+        },
+        "graph": {
+          "bottom": 838,
+          "h": 718,
+          "w": 868,
+          "x": 16,
+          "y": 120
+        },
+        "keymetrics": {
+          "bottom": 120,
+          "h": 53,
+          "w": 1408,
+          "x": 16,
+          "y": 66
+        },
+        "map": {
+          "bottom": 14599,
+          "h": 14598,
+          "w": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "noClippedChrome": {
+          "footer": true,
+          "keymetrics": true,
+          "rail": true
+        },
+        "noEventHandlers": true,
+        "rail": {
+          "bottom": 818,
+          "h": 698,
+          "w": 530,
+          "x": 894,
+          "y": 120
+        },
+        "railCards": 12,
+        "railFirstCard": "\nfuzzing/afl.cENTRY\nfile total 81 static cost units (v2) \u00b7 41\u00d7 median function \u00b7 top 17% of files\nmain:85\nread_file:29\nFIND PERF-C-ARCH-003 \u00b7 INFO \u00d75\n",
+        "railLinks": {
+          "deadSamePage": [],
+          "findingsDetail": [
+            "findings-detail.html#finding-PERF-C-ARCH-003-fuzzing-afl-c-116-12",
+            "findings-detail.html#finding-PERF-C-CALL-002-cJSON-c-703-1",
+            "findings-detail.html#finding-PERF-C-ARCH-003-cJSON-Utils-c-72-29",
+            "findings-detail.html#finding-PERF-C-ARCH-003-test-c-53-11",
+            "findings-detail.html#finding-PERF-C-ARCH-003-fuzzing-cjson-read-fuzzer-c-34-12",
+            "findings-detail.html#finding-PERF-C-ARCH-003-fuzzing-fuzz-main-c-48-11",
+            "findings-detail.html#finding-PERF-C-STR-003-tests-unity-test-tests-testunity-c-4535-5",
+            "findings-detail.html#finding-PERF-C-LOOP-002-tests-parse-hex4-c-39-42",
+            "findings-detail.html#finding-PERF-C-CALL-002-tests-unity-src-unity-c-266-1",
+            "findings-detail.html#finding-PERF-C-ARCH-003-tests-unity-extras-fixture-src-unity-fixture-c-25-5",
+            "findings-detail.html#finding-PERF-C-ARCH-003-tests-misc-tests-c-72-12",
+            "findings-detail.html#finding-PERF-C-ARCH-003-tests-old-utils-tests-c-69-12"
+          ],
+          "profileQueue": [
+            "profile-queue.html#fn-fuzzing-afl-c-main-85-1",
+            "profile-queue.html#fn-fuzzing-afl-c-read-file-29-1",
+            "profile-queue.html#fn-cJSON-c-cJSON-Delete-253-1",
+            "profile-queue.html#fn-cJSON-c-cJSON-Compare-3072-1",
+            "profile-queue.html#fn-cJSON-c-print-object-1780-1",
+            "profile-queue.html#fn-cJSON-Utils-c-apply-patch-807-1",
+            "profile-queue.html#fn-cJSON-Utils-c-create-patches-1141-1",
+            "profile-queue.html#fn-cJSON-Utils-c-compare-json-604-1",
+            "profile-queue.html#fn-test-c-create-objects-109-1",
+            "profile-queue.html#fn-test-c-print-preallocated-43-1",
+            "profile-queue.html#fn-test-c-259-17",
+            "profile-queue.html#fn-fuzzing-cjson-read-fuzzer-c-LLVMFuzzerTestOneInput-13-1",
+            "profile-queue.html#fn-fuzzing-fuzz-main-c-main-9-1",
+            "profile-queue.html#fn-tests-unity-test-tests-testunity-c-testFloatPrintingRandomSamples-4557-1",
+            "profile-queue.html#fn-tests-unity-test-tests-testunity-c-printFloatValue-4525-1",
+            "profile-queue.html#fn-tests-unity-test-tests-testunity-c-tearDown-66-1",
+            "profile-queue.html#fn-tests-parse-hex4-c-parse-hex4-should-parse-all-combinations-31-1",
+            "profile-queue.html#fn-tests-parse-hex4-c-parse-hex4-should-parse-mixed-case-47-1",
+            "profile-queue.html#fn-tests-parse-hex4-c-67-17",
+            "profile-queue.html#fn-tests-unity-src-unity-c-UnityPrintFloat-266-1",
+            "profile-queue.html#fn-tests-unity-src-unity-c-UnityPrint-70-1",
+            "profile-queue.html#fn-tests-unity-src-unity-c-UnityStringArgumentMatches-1500-1",
+            "profile-queue.html#fn-tests-unity-extras-fixture-src-unity-fixture-c-UnityGetCommandLineOptions-347-1",
+            "profile-queue.html#fn-tests-unity-extras-fixture-src-unity-fixture-c-UnityTestRunner-68-1",
+            "profile-queue.html#fn-tests-unity-extras-fixture-src-unity-fixture-c-UnityMain-32-1",
+            "profile-queue.html#fn-tests-misc-tests-c-cjson-functions-should-not-crash-with-null-pointers-384-1",
+            "profile-queue.html#fn-tests-misc-tests-c-cjson-array-foreach-should-loop-over-arrays-32-1",
+            "profile-queue.html#fn-tests-misc-tests-c-cjson-detach-item-via-pointer-should-detach-items-261-1",
+            "profile-queue.html#fn-tests-old-utils-tests-c-sort-tests-138-1",
+            "profile-queue.html#fn-tests-old-utils-tests-c-generate-merge-tests-225-1",
+            "profile-queue.html#fn-tests-old-utils-tests-c-merge-tests-168-1"
+          ],
+          "samePage": [
+            "atlas-file-fuzzing-afl-c",
+            "atlas-file-cJSON-c",
+            "atlas-file-cJSON-Utils-c",
+            "atlas-file-test-c",
+            "atlas-file-fuzzing-cjson-read-fuzzer-c",
+            "atlas-file-fuzzing-fuzz-main-c",
+            "atlas-file-tests-unity-test-tests-testunity-c",
+            "atlas-file-tests-parse-hex4-c",
+            "atlas-file-tests-unity-src-unity-c",
+            "atlas-file-tests-unity-extras-fixture-src-unity-fixture-c",
+            "atlas-file-tests-misc-tests-c",
+            "atlas-file-tests-old-utils-tests-c",
+            "atlas-drill-weight"
+          ],
+          "total": 56
+        },
+        "railTitle": "File detailtop 12 of 81 source files \u00b7 production first",
+        "stage": {
+          "bottom": 869,
+          "h": 750,
+          "w": 1408,
+          "x": 16,
+          "y": 120
+        },
+        "svg": {
+          "bottom": 837,
+          "h": 716,
+          "w": 866,
+          "x": 17,
+          "y": 121
+        },
+        "textFloors": {
+          "chip": 9.5,
+          "columnHeader": 10.5,
+          "edgePill": 8.5,
+          "entryValue": 10,
+          "nodeBadge": 8.5,
+          "nodeMeta": 9,
+          "nodeName": 11.5,
+          "railAnchor": 8.5,
+          "railFind": 8.5,
+          "railFn": 8.5,
+          "railName": 10,
+          "railRole": 8.5,
+          "railTitle": 8.5,
+          "strip": 9
+        }
+      },
+      "final_png": "atlas-v2-step11-cJSON-final.png",
+      "final_png_sha256": "d5981577cb53bf53f618a5acdf350ba7db0a2b27809aa3eb1c5ec42efd9245a4",
+      "full_png": "atlas-v2-step11-cJSON-full.png",
+      "full_png_sha256": "6b971068b36d99d5f852af3bd84e878e99a2d32808371d5afac513ac891e48bf",
+      "profile_queue_sha256": "f84ed4a438bf4e2166469e4802e931803ce95593f6dc179bf389870752efc65d",
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-cJSON/report.html",
+      "report_sha256": "cd48f7004c6595a00b01950c8073e6ddcd5b66d5301552ca48b3aa650c3bdc75",
+      "shot_1280": "atlas-v2-step11-cJSON-1280x800.png",
+      "shot_1280_sha256": "fdb08af937e27c512d0e4e7332fdf88f5a749e7d00ed3404b3f64ce38fb2bf21",
+      "step10_baseline": {
+        "map": 14591,
+        "page": 34800
+      },
+      "viewport_1280": {
+        "canvasBottom": 869,
+        "clientWidth": 1280,
+        "railBottom": 1489,
+        "railTop": 879,
+        "scrollWidth": 1280,
+        "stacked": true
+      }
+    },
+    "hyperfine": {
+      "booleans": {
+        "briefTop_ge_canvasBottom": true,
+        "briefTop_ge_railBottom": true,
+        "canvasBottom_le_900": true,
+        "canvas_purity": true,
+        "chrome_counts": true,
+        "mapHeight_le_step10_plus_footer_wrap": true,
+        "noClippedChrome": true,
+        "noHorizontalScroll": true,
+        "noHorizontalScroll_1280": true,
+        "pageHeight_le_step10_plus_footer_wrap": true,
+        "railBottom_le_900": true,
+        "rail_beside_canvas": true,
+        "rail_cards_complete": true,
+        "rail_cards_le_cap": true,
+        "rail_findings_links_resolve": true,
+        "rail_noEventHandlers": true,
+        "rail_one_aside": true,
+        "rail_profileQueue_links_resolve": true,
+        "rail_samePage_links_resolve": true,
+        "rail_stacks_below_1280": true,
+        "reportScript_unchanged": true,
+        "textFloors_ok": true
+      },
+      "cross_page": {
+        "findingsDetailLinks": 11,
+        "missingFindingsAnchors": [],
+        "missingProfileAnchors": [],
+        "profileQueueLinks": 33
+      },
+      "dom": {
+        "body": {
+          "clientWidth": 1440,
+          "scrollHeight": 22918,
+          "scrollWidth": 1440
+        },
+        "brief": {
+          "bottom": 4236,
+          "h": 3367,
+          "w": 1184,
+          "x": 128,
+          "y": 869
+        },
+        "canvas": {
+          "bottom": 869,
+          "h": 750,
+          "w": 868,
+          "x": 16,
+          "y": 120
+        },
+        "cardChecks": [
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "ENTRY"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "PRODUCTION"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "PRODUCTION"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "PRODUCTION"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "PRODUCTION"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "PRODUCTION"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "PRODUCTION"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": false,
+            "hasFindingStub": true,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          },
+          {
+            "hasCostAnchor": true,
+            "hasFindingLink": true,
+            "hasFindingStub": false,
+            "hasFunctionLink": true,
+            "role": "UNREACHED"
+          }
+        ],
+        "chrome": {
+          "bottom": 120,
+          "h": 111,
+          "w": 1408,
+          "x": 16,
+          "y": 8
+        },
+        "counts": {
+          "canvasPanels": 0,
+          "footer": 1,
+          "leadingDotTruncation": 0,
+          "legend": 1,
+          "medianDefinition": 1,
+          "nodes": 19,
+          "railAsides": 1,
+          "reportScript": 1,
+          "structuralCaveat": 1
+        },
+        "firstScreen": {
+          "briefTop": 869,
+          "canvasBottom": 869,
+          "fold": 900,
+          "railBottom": 834
+        },
+        "footer": {
+          "bottom": 869,
+          "h": 31,
+          "w": 868,
+          "x": 16,
+          "y": 838
+        },
+        "graph": {
+          "bottom": 838,
+          "h": 718,
+          "w": 868,
+          "x": 16,
+          "y": 120
+        },
+        "keymetrics": {
+          "bottom": 120,
+          "h": 53,
+          "w": 1408,
+          "x": 16,
+          "y": 66
+        },
+        "map": {
+          "bottom": 8895,
+          "h": 8895,
+          "w": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "noClippedChrome": {
+          "footer": true,
+          "keymetrics": true,
+          "rail": true
+        },
+        "noEventHandlers": true,
+        "rail": {
+          "bottom": 834,
+          "h": 714,
+          "w": 530,
+          "x": 894,
+          "y": 120
+        },
+        "railCards": 12,
+        "railFirstCard": "\nsrc/main.rsENTRY\nfile total 58 static cost units (v2) \u00b7 8.3\u00d7 median function \u00b7 top 39% of files\nrun:34\nmain:88\ncaused_by_broken_console_pipe:82\nFIND PERF-RS-ARCH-003 \u00b7 INFO \u00d78\n",
+        "railLinks": {
+          "deadSamePage": [],
+          "findingsDetail": [
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-main-rs-39-25",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-command-rs-67-42",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-metric-rs-158-22",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-options-rs-51-12",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-output-report-rs-32-25",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-shell-syntax-rs-36-9",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-quantity-statistics-rs-56-15",
+            "findings-detail.html#finding-PERF-RS-ARCH-001-src-export-mod-rs-13-1",
+            "findings-detail.html#finding-PERF-RS-ARCH-001-src-export-tests-rs-4-1",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-export-csv-rs-19-31",
+            "findings-detail.html#finding-PERF-RS-ARCH-003-src-export-markup-rs-20-24"
+          ],
+          "profileQueue": [
+            "profile-queue.html#fn-src-main-rs-run-34-1",
+            "profile-queue.html#fn-src-main-rs-main-88-1",
+            "profile-queue.html#fn-src-main-rs-caused-by-broken-console-pipe-82-1",
+            "profile-queue.html#fn-src-command-rs-build-from-cli-arguments-226-5",
+            "profile-queue.html#fn-src-command-rs-build-parameter-scan-commands-362-5",
+            "profile-queue.html#fn-src-command-rs-replace-parameters-in-145-5",
+            "profile-queue.html#fn-src-metric-rs-format-273-5",
+            "profile-queue.html#fn-src-metric-rs-parse-list-196-5",
+            "profile-queue.html#fn-src-metric-rs-format-factor-from-350-5",
+            "profile-queue.html#fn-src-options-rs-from-cli-arguments-254-5",
+            "profile-queue.html#fn-src-options-rs-validate-against-command-list-455-5",
+            "profile-queue.html#fn-src-options-rs-get-stdout-stderr-159-5",
+            "profile-queue.html#fn-src-output-report-rs-print-19-1",
+            "profile-queue.html#fn-src-shell-syntax-rs-next-71-5",
+            "profile-queue.html#fn-src-shell-syntax-rs-tokenizer-preserves-words-quotes-and-escapes-143-5",
+            "profile-queue.html#fn-src-shell-syntax-rs-handles-empty-and-malformed-commands-without-panicking-247-5",
+            "profile-queue.html#fn-src-quantity-statistics-rs-mean-28-1",
+            "profile-queue.html#fn-src-quantity-statistics-rs-modified-zscores-f64-130-1",
+            "profile-queue.html#fn-src-quantity-statistics-rs-median-44-1",
+            "profile-queue.html#fn-src-export-mod-rs-write-results-125-5",
+            "profile-queue.html#fn-src-export-mod-rs-add-exporter-96-5",
+            "profile-queue.html#fn-src-export-mod-rs-from-cli-arguments-74-5",
+            "profile-queue.html#fn-src-export-tests-rs-test-markup-export-auto-ms-35-1",
+            "profile-queue.html#fn-src-export-tests-rs-test-markup-export-auto-s-149-1",
+            "profile-queue.html#fn-src-export-tests-rs-test-markup-export-manual-ms-263-1",
+            "profile-queue.html#fn-src-parameter-range-step-rs-new-41-5",
+            "profile-queue.html#fn-src-parameter-range-step-rs-test-negative-decimal-step-141-5",
+            "profile-queue.html#fn-src-parameter-range-step-rs-test-negative-integer-step-128-5",
+            "profile-queue.html#fn-src-export-csv-rs-serialize-13-5",
+            "profile-queue.html#fn-src-export-csv-rs-test-csv-82-1",
+            "profile-queue.html#fn-src-export-markup-rs-table-results-13-5",
+            "profile-queue.html#fn-src-export-markup-rs-serialize-80-5",
+            "profile-queue.html#fn-src-export-markup-rs-table-footer-72-5"
+          ],
+          "samePage": [
+            "atlas-file-src-main-rs",
+            "atlas-file-src-command-rs",
+            "atlas-file-src-metric-rs",
+            "atlas-file-src-options-rs",
+            "atlas-file-src-output-report-rs",
+            "atlas-file-src-shell-syntax-rs",
+            "atlas-file-src-quantity-statistics-rs",
+            "atlas-file-src-export-mod-rs",
+            "atlas-file-src-export-tests-rs",
+            "atlas-file-src-parameter-range-step-rs",
+            "atlas-file-src-export-csv-rs",
+            "atlas-file-src-export-markup-rs",
+            "atlas-drill-weight"
+          ],
+          "total": 57
+        },
+        "railTitle": "File detailtop 12 of 51 source files \u00b7 production first",
+        "stage": {
+          "bottom": 869,
+          "h": 750,
+          "w": 1408,
+          "x": 16,
+          "y": 120
+        },
+        "svg": {
+          "bottom": 837,
+          "h": 716,
+          "w": 866,
+          "x": 17,
+          "y": 121
+        },
+        "textFloors": {
+          "chip": 9.5,
+          "columnHeader": 10.5,
+          "edgePill": 8.5,
+          "entryValue": 10,
+          "nodeBadge": 8.5,
+          "nodeMeta": 9,
+          "nodeName": 11.5,
+          "railAnchor": 8.5,
+          "railFind": 8.5,
+          "railFn": 8.5,
+          "railName": 10,
+          "railRole": 8.5,
+          "railTitle": 8.5,
+          "strip": 9
+        }
+      },
+      "final_png": "atlas-v2-step11-hyperfine-final.png",
+      "final_png_sha256": "d48261131bdf37b9f026c327bdc4f10923a78efd9ca5409edb1ee8fda0479229",
+      "full_png": "atlas-v2-step11-hyperfine-full.png",
+      "full_png_sha256": "4920171af38b380e7fe843ec44881a77bd0d761616feb8d88d9363c2ae08759c",
+      "profile_queue_sha256": "bcd3db1c873239c53dfdabd6df7e4536738bec766c1f73ced75f8607d1567bfd",
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-hyperfine/report.html",
+      "report_sha256": "895b762869119be9b6b3d0eda5dba56da091e85702c0135ff91c166c97846d60",
+      "shot_1280": "atlas-v2-step11-hyperfine-1280x800.png",
+      "shot_1280_sha256": "b79a4b5bd3bd1b346aace9c421390708778f1e3029dbec50b4f2f27357344e6f",
+      "step10_baseline": {
+        "map": 8887,
+        "page": 22911
+      },
+      "viewport_1280": {
+        "canvasBottom": 869,
+        "clientWidth": 1280,
+        "railBottom": 1518,
+        "railTop": 879,
+        "scrollWidth": 1280,
+        "stacked": true
+      }
+    }
+  },
+  "viewport": {
+    "height": 900,
+    "width": 1440
+  }
+}

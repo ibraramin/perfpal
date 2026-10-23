@@ -21,9 +21,15 @@ use crate::reporter::atlas_metrics::{
     format_finding, format_function_cost, format_nonproduction, format_parse,
     format_severity_confidence, format_share, format_trip_provenance, format_unresolved_includes,
 };
+use crate::reporter::atlas_render::mid_ellipsis;
 use crate::reporter::views::{self, CostScale, ScaleOrdering, scale_of};
-use crate::reporter::{escape_html, file_anchor_map, finding_anchor_assignments};
+use crate::reporter::{
+    escape_html, file_anchor_map, finding_anchor_assignments, function_anchor_map,
+};
 use crate::schema::{FindingEntry, FunctionStats, MetricsDocument};
+
+/// Maximum number of file cards shown in the first-page detail rail.
+pub const RAIL_FILE_CAP: usize = 12;
 
 /// One schema-component page link resolved against `emitted_charts`.
 struct ComponentPage {
@@ -102,6 +108,198 @@ pub fn start_actions(doc: &MetricsDocument) -> Vec<StartAction> {
             }
         })
         .collect()
+}
+
+/// Render the first-page per-file detail rail (`#atlas-rail`).
+///
+/// Selection: the elected entry file first, then `view.files` in shipped
+/// (production-first) order, deduplicated by path and capped at
+/// [`RAIL_FILE_CAP`]. File names link to the weight-drill row; function rows
+/// link to their exact profile-queue row and finding rows to their exact
+/// findings-detail occurrence, so no link is dead. Emits exactly one `<aside>`
+/// in every state, including the empty one (a named stub, no cards).
+#[must_use]
+pub fn render_rail(view: &AtlasView, doc: &MetricsDocument) -> String {
+    let file_anchors = file_anchor_map(doc);
+    let function_anchors = function_anchor_map(doc);
+    let (_, finding_anchors) = finding_anchor_assignments(doc);
+    let unreached: BTreeSet<&str> = view
+        .unreachable_production
+        .iter()
+        .chain(view.unreachable_nonproduction.iter())
+        .map(String::as_str)
+        .collect();
+
+    let entry_path = view.entry.point.as_ref().map(|point| point.path.as_str());
+    let mut selected: Vec<&AtlasFile> = Vec::new();
+    let mut seen: BTreeSet<&str> = BTreeSet::new();
+    if let Some(path) = entry_path
+        && let Some(file) = view.files.iter().find(|file| file.path == path)
+    {
+        selected.push(file);
+        seen.insert(file.path.as_str());
+    }
+    for file in &view.files {
+        if selected.len() >= RAIL_FILE_CAP {
+            break;
+        }
+        if seen.insert(file.path.as_str()) {
+            selected.push(file);
+        }
+    }
+
+    let mut out = String::new();
+    out.push_str("<aside id=\"atlas-rail\" class=\"atlas-rail\" aria-label=\"File detail\">\n");
+    out.push_str(&format!(
+        "<div class=\"atlas-rail-title\">File detail<span>top {} of {} source files · production first</span></div>\n",
+        selected.len(),
+        format_count(view.files.len() as u64),
+    ));
+    if selected.is_empty() {
+        out.push_str(&format!(
+            "<p class=\"atlas-rail-stub\">{NO_SOURCE_FUNCTIONS}</p>\n"
+        ));
+        out.push_str("</aside>\n");
+        return out;
+    }
+
+    out.push_str("<div class=\"atlas-rail-cards\">\n");
+    for file in &selected {
+        let is_entry = entry_path == Some(file.path.as_str());
+        let role = rail_role(file, is_entry, unreached.contains(file.path.as_str()));
+        let mut classes = String::from("atlas-rail-card");
+        if is_entry {
+            classes.push_str(" is-entry");
+        }
+        if unreached.contains(file.path.as_str()) {
+            classes.push_str(" is-unreached");
+        }
+        if file.path_class == "test" {
+            classes.push_str(" is-test");
+        }
+        if file.path_class == "bench" {
+            classes.push_str(" is-bench");
+        }
+        if file.production {
+            classes.push_str(" is-production");
+        }
+        if view.hottest.as_deref() == Some(file.path.as_str()) {
+            classes.push_str(" is-hot");
+        }
+
+        let file_anchor = file_anchors
+            .get(&file.path)
+            .cloned()
+            .unwrap_or_else(|| format!("file-{}", super::slugify(&file.path)));
+        let mut card = String::new();
+        card.push_str(&format!("<article class=\"{classes}\">\n"));
+        // The rail is the identity layer: show the path (mid-ellipsis, never
+        // leading-dot) so same-named files stay distinguishable; the graph
+        // node carries the short file name.
+        let path_label = mid_ellipsis(&file.path, 28);
+        card.push_str(&format!(
+            "<div class=\"atlas-rail-head\"><a class=\"atlas-rail-name atlas-mono\" href=\"#atlas-{anchor}\" title=\"{path}\">{name}</a><span class=\"atlas-rail-role\">{role}</span></div>\n",
+            anchor = escape_html(&file_anchor),
+            path = escape_html(&file.path),
+            name = escape_html(&path_label),
+            role = escape_html(&role),
+        ));
+        card.push_str(&format!(
+            "<div class=\"atlas-rail-anchor\">{}</div>\n",
+            escape_html(&file_cost_anchor(file)),
+        ));
+        if file.top_functions.is_empty() {
+            card.push_str("<div class=\"atlas-rail-fn\">no functions recorded</div>\n");
+        } else {
+            for function in file.top_functions.iter().take(3) {
+                let anchor = function_anchors
+                    .get(&function.id)
+                    .cloned()
+                    .unwrap_or_else(|| format!("fn-{}", super::slugify(&function.id)));
+                let name = function_display_name(&function.name);
+                card.push_str(&format!(
+                    "<div class=\"atlas-rail-fn\"><a class=\"atlas-mono\" href=\"profile-queue.html#{anchor}\" title=\"{path}:{line} {name}\">{name}:{line}</a></div>\n",
+                    anchor = escape_html(&anchor),
+                    path = escape_html(&file.path),
+                    line = function.line,
+                    name = escape_html(&name),
+                ));
+            }
+        }
+        match &file.finding {
+            Some(dominant) => {
+                // Prefer the occurrence with the same rule AND severity (the
+                // dominant finding is severity-ranked); fall back to the first
+                // rule occurrence, then the ranked-actions anchor.
+                let finding_anchor = doc
+                    .findings
+                    .iter()
+                    .position(|finding| {
+                        finding.path == file.path
+                            && finding.rule_id == dominant.rule_id
+                            && finding.severity == dominant.severity
+                    })
+                    .or_else(|| {
+                        doc.findings.iter().position(|finding| {
+                            finding.path == file.path && finding.rule_id == dominant.rule_id
+                        })
+                    })
+                    .map(|index| finding_anchors[index].clone())
+                    .unwrap_or_else(|| "ranked-actions".to_string());
+                card.push_str(&format!(
+                    "<div class=\"atlas-rail-find\">FIND <a class=\"atlas-mono\" href=\"findings-detail.html#{anchor}\">{rule}</a> · {finding}</div>\n",
+                    anchor = escape_html(&finding_anchor),
+                    rule = escape_html(&dominant.rule_id),
+                    finding = escape_html(&format_finding(dominant.severity, dominant.count)),
+                ));
+            }
+            None => {
+                card.push_str("<div class=\"atlas-rail-find\">no findings on this file</div>\n");
+            }
+        }
+        card.push_str("</article>\n");
+        out.push_str(&card);
+    }
+    out.push_str("</div>\n");
+    let hidden = view.files.len().saturating_sub(selected.len());
+    if hidden > 0 {
+        out.push_str(&format!(
+            "<p class=\"atlas-rail-more\"><a href=\"#atlas-drill-weight\">+{} more {} in the weight detail below</a></p>\n",
+            format_count(hidden as u64),
+            views::plural_word(hidden, "source file", "source files"),
+        ));
+    }
+    out.push_str("</aside>\n");
+    out
+}
+
+/// Visible function name; anonymous functions (an empty schema name) get a
+/// named stub instead of a bare `:line` label.
+fn function_display_name(name: &str) -> String {
+    if name.trim().is_empty() {
+        "(anonymous)".to_string()
+    } else {
+        name.to_string()
+    }
+}
+
+/// Rail role label; entry and unreached take precedence over path class.
+fn rail_role(file: &AtlasFile, is_entry: bool, unreached: bool) -> String {
+    if is_entry {
+        return "ENTRY".to_string();
+    }
+    if unreached {
+        return "UNREACHED".to_string();
+    }
+    if !file.production {
+        let class = file.path_class.to_ascii_uppercase();
+        return if class.is_empty() {
+            "OTHER".to_string()
+        } else {
+            class
+        };
+    }
+    "PRODUCTION".to_string()
 }
 
 /// Render the fixed seven-block brief plus its two drill sections.
@@ -505,7 +703,7 @@ fn render_cards(out: &mut String, view: &AtlasView, file_anchors: &BTreeMap<Stri
                         "<li><code>{}:{}</code> <span class=\"atlas-fn\">{}</span> <span class=\"atlas-anchor\">{}</span></li>\n",
                         escape_html(&file.path),
                         function.line,
-                        escape_html(&function.name),
+                        escape_html(&function_display_name(&function.name)),
                         escape_html(&function_anchor_for(function)),
                     ));
                 }
@@ -1592,5 +1790,30 @@ mod tests {
     #[test]
     fn no_bare_ellipsis_is_emitted() {
         assert!(!render(&application_fixture()).contains('…'));
+    }
+
+    #[test]
+    fn rail_finding_link_prefers_the_dominant_severity_occurrence() {
+        let doc = document(
+            vec![file("src/a.c", "production", 1)],
+            vec![function("src/a.c", "main", 1, Some(100), 0, Some("main"))],
+            vec![
+                finding("PERF-C-X", "src/a.c", 3, Severity::Info, "info occurrence"),
+                finding("PERF-C-X", "src/a.c", 9, Severity::Hot, "hot occurrence"),
+            ],
+            Vec::new(),
+            Vec::new(),
+        );
+        let (_, anchors) = finding_anchor_assignments(&doc);
+        let hot_anchor = anchors[1].clone();
+        let html = render_rail(&build_atlas_view(&doc), &doc);
+        assert!(
+            html.contains(&format!("findings-detail.html#{hot_anchor}")),
+            "the dominant HOT occurrence must be linked: {html}"
+        );
+        assert!(
+            !html.contains(&format!("findings-detail.html#{}", anchors[0])),
+            "the INFO occurrence must not be linked as the dominant finding: {html}"
+        );
     }
 }

@@ -756,12 +756,17 @@ pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
     if rows.is_empty() {
         out.push_str("<p>No functions recorded.</p>\n");
     } else {
+        let function_anchors = function_anchor_map(doc);
         out.push_str(
             "<div class=\"table-scroll\">\n<table>\n<thead><tr><th>rank</th><th>function</th>\
              <th>location</th><th>path class</th><th>cost</th><th>notes</th></tr></thead>\n<tbody>\n",
         );
         for row in &rows {
             let function = &doc.stats.functions[row.function_index];
+            let anchor = function_anchors
+                .get(&function.id)
+                .cloned()
+                .unwrap_or_else(|| format!("fn-{}", slugify(&function.id)));
             let location = format!("{}:{}", row.path, function.span.start_line);
             let mut notes: Vec<String> = Vec::new();
             if let Some(label) = row.demotion_label() {
@@ -788,9 +793,10 @@ pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
                 notes.join(" ")
             };
             out.push_str(&format!(
-                "<tr><td>{rank}</td><td class=\"wrap\">{function}</td>\
+                "<tr id=\"{anchor}\"><td>{rank}</td><td class=\"wrap\">{function}</td>\
                  <td class=\"wrap\">{location}</td><td>{class}</td>\
                  <td class=\"wrap\">{cost}</td><td class=\"wrap\">{notes}</td></tr>\n",
+                anchor = escape_html(&anchor),
                 rank = row.rank,
                 function = escape_html(&row.function),
                 location = escape_html(&location),
@@ -1892,10 +1898,12 @@ fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
 fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
     let view = atlas::build_atlas_view(doc);
     let start_actions = atlas_brief::start_actions(doc);
+    let rail = atlas_brief::render_rail(&view, doc);
     out.push_str("<section id=\"map\">\n");
-    out.push_str(&atlas_render::render_canvas_html_with_actions(
+    out.push_str(&atlas_render::render_canvas_html_with_actions_and_rail(
         &view,
         &start_actions,
+        &rail,
     ));
     out.push_str(&atlas_brief::render_brief(&view, doc, emitted_charts));
     out.push_str("</section>\n");
@@ -2503,6 +2511,23 @@ fn file_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, 
         .collect();
     let unique = disambiguate_sorted_bases(&bases);
     paths.into_iter().zip(unique).collect()
+}
+
+/// Per-function profile-queue anchors keyed by function id. Bases are built
+/// over the SORTED deduplicated id set so slug collisions disambiguate
+/// deterministically (`fn-a-b-c`, `fn-a-b-c-2`) independent of render order.
+fn function_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, String> {
+    let mut ids: Vec<String> = doc
+        .stats
+        .functions
+        .iter()
+        .map(|function| function.id.clone())
+        .collect();
+    ids.sort();
+    ids.dedup();
+    let bases: Vec<String> = ids.iter().map(|id| format!("fn-{}", slugify(id))).collect();
+    let unique = disambiguate_sorted_bases(&bases);
+    ids.into_iter().zip(unique).collect()
 }
 
 /// Per-occurrence finding anchors (FIX 1, corrected): pre-assigned ONCE over

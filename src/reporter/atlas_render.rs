@@ -39,6 +39,10 @@ pub const STRUCTURAL_CAPTION: &str = "structural (LOW name-based + MEDIUM semant
 pub const PATH_CAPTION: &str = "representative path (static, BFS-derived)";
 
 const SVG_W: i64 = 1400;
+/// Graph width used by the embedded `report.html#map` page (the canvas shares
+/// the row with the per-file detail rail). The standalone SVG artifact keeps
+/// [`SVG_W`].
+const PAGE_GRAPH_W: i64 = 868;
 const SVG_H: i64 = 720;
 const MARGIN_X: i64 = 20;
 /// First-row top. Leaves room above the first node for the component-hull
@@ -117,6 +121,39 @@ const ANIMATION_CSS: &str = r#"#map{background:#f4f1ea;color:#202b35;font-family
 #map .atlas-svg .atlas-edge,#map .atlas-svg .atlas-trace{fill:none}
 #map .atlas-footer{padding:5px 8px 2px;font-size:9px;line-height:1.35;color:#6f6a61;font-variant-numeric:tabular-nums}
 #map .atlas-footer .atlas-mono{color:#202b35}
+#map .atlas-footer-part{white-space:nowrap}
+#map .atlas-stage{display:flex;gap:10px;align-items:flex-start;justify-content:center}
+#map #atlas-canvas{flex:0 0 868px;max-width:868px;min-width:0}
+#map .atlas-rail{flex:1 1 0;min-width:0;max-width:530px;color:#202b35}
+#map .atlas-rail-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 1px 5px;border-bottom:1px solid #d6d0c4;font-size:8.5px;font-weight:800;letter-spacing:.11em;color:#6f6a61;text-transform:uppercase}
+#map .atlas-rail-title span{font-weight:600;letter-spacing:0;text-transform:none;color:#6f6a61}
+#map .atlas-rail-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
+#map .atlas-rail-card{min-width:0;overflow:hidden;border:1px solid #d8d2c6;border-left:3px solid #8b8173;border-radius:4px;background:#fffdf8;padding:4px 6px 5px}
+#map .atlas-rail-card.is-entry{border-left-color:#1f2d3a;background:#f3f1eb}
+#map .atlas-rail-card.is-hot{border-left-color:#c2410c}
+#map .atlas-rail-card.is-test{border-left-color:#5c7391;background:#f4f6f9}
+#map .atlas-rail-card.is-bench{border-left-color:#7a4f7d;background:#f8f3f8}
+#map .atlas-rail-card.is-unreached{border-left-color:#b3aca1;background:#efede8}
+#map .atlas-rail-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+#map .atlas-rail-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:700;color:#202b35;text-decoration:none}
+#map .atlas-rail-name:hover{text-decoration:underline}
+#map .atlas-rail-role{flex:0 0 auto;font-size:8.5px;font-weight:800;letter-spacing:.08em;color:#3c4650}
+#map .atlas-rail-card.is-production .atlas-rail-role{color:#3f6d6a}
+#map .atlas-rail-card.is-entry .atlas-rail-role{color:#1f2d3a}
+#map .atlas-rail-card.is-test .atlas-rail-role{color:#546a86}
+#map .atlas-rail-card.is-bench .atlas-rail-role{color:#7a4f7d}
+#map .atlas-rail-card.is-unreached .atlas-rail-role{color:#5f584f}
+#map .atlas-rail-anchor{margin-top:2px;font-size:8.5px;line-height:1.25;color:#6f6a61;overflow-wrap:anywhere}
+#map .atlas-rail-fn{margin-top:2px;font-size:8.5px;line-height:1.3;color:#3f4952;overflow-wrap:anywhere}
+#map .atlas-rail-fn a{color:#202b35;text-decoration:none}
+#map .atlas-rail-fn a:hover{text-decoration:underline}
+#map .atlas-rail-find{margin-top:3px;font-size:8.5px;line-height:1.25;color:#8a5a2b;font-weight:650;overflow-wrap:anywhere}
+#map .atlas-rail-find a{color:#7c2d12}
+#map .atlas-rail-stub{margin:6px 0 0;padding:6px 8px;border:1px dashed #b8b2a7;border-radius:4px;font-size:9px;color:#6f6a61}
+#map .atlas-rail-more{margin:6px 0 0;font-size:8.5px;color:#6f6a61}
+@media (max-width:1359px){#map .atlas-stage{flex-direction:column;align-items:center}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:868px;max-width:100%}}
+@media (min-width:1360px) and (max-width:1439px){#map .atlas-rail-name{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}}
+@media print{#map .atlas-stage{display:block}#map .atlas-rail{width:auto;max-width:none;margin-top:8px}}
 @keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
 @keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
  @keyframes atlas-edge-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
@@ -155,6 +192,7 @@ struct ColumnLayout {
 }
 
 struct Layout {
+    width: i64,
     row_h: i64,
     node_h: i64,
     height: i64,
@@ -162,7 +200,7 @@ struct Layout {
     rows: BTreeMap<String, NodeRect>,
 }
 
-fn compute_layout(view: &AtlasView) -> Layout {
+fn compute_layout(view: &AtlasView, width: i64) -> Layout {
     let max_items = view
         .columns
         .iter()
@@ -192,12 +230,14 @@ fn compute_layout(view: &AtlasView) -> Layout {
     let count = view.columns.len();
     let mut columns = Vec::with_capacity(count);
     if count > 0 {
-        let column_w = ((SVG_W - 2 * MARGIN_X) / count as i64).min(MAX_COL_W);
+        let column_w = ((width - 2 * MARGIN_X) / count as i64).min(MAX_COL_W);
         let grid_w = column_w * count as i64;
-        let start_x = (SVG_W - grid_w) / 2;
+        let start_x = (width - grid_w) / 2;
         for index in 0..count {
             let x = start_x + index as i64 * column_w;
-            let node_w = (column_w - 16).clamp(MIN_NODE_W, MAX_NODE_W);
+            let node_w = (column_w - 16)
+                .clamp(MIN_NODE_W, MAX_NODE_W)
+                .min(column_w - 8);
             let node_x = x + (column_w - node_w) / 2;
             columns.push(ColumnLayout {
                 x,
@@ -226,6 +266,7 @@ fn compute_layout(view: &AtlasView) -> Layout {
     }
 
     Layout {
+        width,
         row_h,
         node_h,
         height,
@@ -277,7 +318,7 @@ fn pill_is_clear(pill: NodeRect, layout: &Layout) -> bool {
 
 fn pill_in_bounds(pill: NodeRect, layout: &Layout) -> bool {
     pill.x >= MARGIN_X
-        && pill.x + pill.w <= SVG_W - MARGIN_X
+        && pill.x + pill.w <= layout.width - MARGIN_X
         && pill.y >= 0
         && pill.y + pill.h <= layout.height
 }
@@ -386,7 +427,7 @@ fn edge_shape(edge: &AtlasEdge, layout: &Layout) -> Option<EdgeShape> {
 /// truncated path still starts with its real first segment and never begins
 /// with a dot/ellipsis (the F6 audit defect was leading-dot truncation). The
 /// full path always stays available in the `<title>`.
-fn mid_ellipsis(text: &str, max_chars: usize) -> String {
+pub(crate) fn mid_ellipsis(text: &str, max_chars: usize) -> String {
     let count = text.chars().count();
     if count <= max_chars {
         return text.to_string();
@@ -576,14 +617,14 @@ fn column_header_lines(view: &AtlasView, column: &AtlasColumn) -> (String, Strin
 // SVG fragments
 // ---------------------------------------------------------------------------
 
-fn svg_open(standalone: bool, height: i64) -> String {
+fn svg_open(standalone: bool, width: i64, height: i64) -> String {
     let xmlns = if standalone {
         " xmlns=\"http://www.w3.org/2000/svg\""
     } else {
         ""
     };
     format!(
-        "<svg{xmlns} viewBox=\"0 0 {SVG_W} {height}\" width=\"{SVG_W}\" height=\"{height}\" \
+        "<svg{xmlns} viewBox=\"0 0 {width} {height}\" width=\"{width}\" height=\"{height}\" \
          class=\"atlas-svg\" role=\"img\" aria-label=\"Perfpal Atlas entry-flow canvas\" \
          preserveAspectRatio=\"xMidYMid meet\">"
     )
@@ -606,7 +647,7 @@ fn render_defs() -> String {
     .to_string()
 }
 
-fn render_stub(view: &AtlasView) -> String {
+fn render_stub(view: &AtlasView, width: i64) -> String {
     let (message, detail) = if view.state.empty {
         (NO_SOURCE_FUNCTIONS.to_string(), String::new())
     } else {
@@ -615,19 +656,21 @@ fn render_stub(view: &AtlasView) -> String {
             "no electable production entry".to_string(),
         )
     };
+    let center = width / 2;
     let mut out = String::from("<g class=\"atlas-stub\" role=\"note\">");
-    out.push_str(
-        "<rect x=\"450\" y=\"300\" width=\"500\" height=\"120\" rx=\"12\" fill=\"#fbf9f4\" \
-         stroke=\"#b8b2a7\" stroke-dasharray=\"6 4\"/>",
-    );
     out.push_str(&format!(
-        "<text x=\"700\" y=\"352\" text-anchor=\"middle\" font-size=\"18\" font-weight=\"700\" \
+        "<rect x=\"{}\" y=\"300\" width=\"500\" height=\"120\" rx=\"12\" fill=\"#fbf9f4\" \
+         stroke=\"#b8b2a7\" stroke-dasharray=\"6 4\"/>",
+        center - 250
+    ));
+    out.push_str(&format!(
+        "<text x=\"{center}\" y=\"352\" text-anchor=\"middle\" font-size=\"18\" font-weight=\"700\" \
          fill=\"#202b35\">{}</text>",
         escape_xml(&message)
     ));
     if !detail.is_empty() {
         out.push_str(&format!(
-            "<text x=\"700\" y=\"376\" text-anchor=\"middle\" font-size=\"13.5\" fill=\"#6f6a61\">{}</text>",
+            "<text x=\"{center}\" y=\"376\" text-anchor=\"middle\" font-size=\"13.5\" fill=\"#6f6a61\">{}</text>",
             escape_xml(&detail)
         ));
     }
@@ -743,6 +786,7 @@ fn render_node(
     rect: NodeRect,
     path_step: Option<usize>,
     total_steps: usize,
+    label_source: &str,
 ) -> String {
     // Tall nodes get a slightly larger name; every node keeps the four-line
     // block (name, cost, multiple, top) at >=10px / >=8.5px.
@@ -755,7 +799,10 @@ fn render_node(
     let max_chars = ((name_max_w.max(20) as f64) / (name_size * 0.62))
         .floor()
         .max(4.0) as usize;
-    let name = mid_ellipsis(&node.path, max_chars);
+    // The canvas label is the file name (spec §3.2), with a parent segment
+    // when drawn files share a name; the full path stays in the node
+    // `<title>` and on the rail card.
+    let name = mid_ellipsis(label_source, max_chars);
     let (multiple, top) = node_rank_lines(node);
     let cost = format_cost(node.cost, node.scale);
 
@@ -886,12 +933,60 @@ fn render_node(
     out
 }
 
+/// Collision-aware canvas labels. The file name is the default; when two drawn
+/// files share a name, add the parent directory (`time/mod.rs`); if that still
+/// collides, fall back to the full path. The full path always stays in the
+/// node `<title>`, and the rail carries the path for every top file.
+fn node_labels<'a>(nodes: &BTreeMap<&'a str, &'a AtlasNode>) -> BTreeMap<&'a str, String> {
+    let mut name_counts: BTreeMap<&str, usize> = BTreeMap::new();
+    for node in nodes.values() {
+        *name_counts.entry(node.file_name.as_str()).or_insert(0) += 1;
+    }
+    let mut candidates: Vec<(&'a str, String)> = Vec::with_capacity(nodes.len());
+    for (path, node) in nodes {
+        let label = if name_counts
+            .get(node.file_name.as_str())
+            .copied()
+            .unwrap_or(0)
+            > 1
+        {
+            match std::path::Path::new(path)
+                .parent()
+                .and_then(|parent| parent.file_name())
+                .and_then(|parent| parent.to_str())
+            {
+                Some(parent) => format!("{parent}/{}", node.file_name),
+                None => node.file_name.clone(),
+            }
+        } else {
+            node.file_name.clone()
+        };
+        candidates.push((*path, label));
+    }
+    let mut candidate_counts: BTreeMap<String, usize> = BTreeMap::new();
+    for (_, label) in &candidates {
+        *candidate_counts.entry(label.clone()).or_insert(0) += 1;
+    }
+    candidates
+        .into_iter()
+        .map(|(path, label)| {
+            let final_label = if candidate_counts.get(&label).copied().unwrap_or(0) > 1 {
+                path.to_string()
+            } else {
+                label
+            };
+            (path, final_label)
+        })
+        .collect()
+}
+
 fn render_nodes(
     view: &AtlasView,
     layout: &Layout,
     nodes: &BTreeMap<&str, &AtlasNode>,
     path_steps: &BTreeMap<&str, usize>,
 ) -> String {
+    let labels = node_labels(nodes);
     let mut out = String::new();
     for (index, column) in view.columns.iter().enumerate() {
         let column_layout = &layout.columns[index];
@@ -931,7 +1026,11 @@ fn render_nodes(
                 continue;
             };
             let step = path_steps.get(path.as_str()).copied();
-            out.push_str(&render_node(node, rect, step, view.path.len()));
+            let label = labels
+                .get(path.as_str())
+                .map(String::as_str)
+                .unwrap_or(node.file_name.as_str());
+            out.push_str(&render_node(node, rect, step, view.path.len(), label));
         }
         for (aggregate_index, aggregate) in column.aggregated.iter().enumerate() {
             let row = (column.files.len() + aggregate_index) as i64;
@@ -1012,7 +1111,7 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
     let mut out = String::new();
     out.push_str(&render_defs());
     if view.columns.is_empty() {
-        out.push_str(&render_stub(view));
+        out.push_str(&render_stub(view, layout.width));
         return out;
     }
 
@@ -1123,10 +1222,10 @@ fn render_graph_inner(view: &AtlasView, layout: &Layout) -> String {
 /// footer — those are HTML chrome in [`render_canvas_html`]).
 #[must_use]
 pub fn render_canvas_svg(view: &AtlasView) -> String {
-    let layout = compute_layout(view);
+    let layout = compute_layout(view, SVG_W);
     format!(
         "{}\n<style>{STATIC_CSS}</style>\n{}\n</svg>",
-        svg_open(true, layout.height),
+        svg_open(true, SVG_W, layout.height),
         render_graph_inner(view, &layout)
     )
 }
@@ -1278,6 +1377,18 @@ fn render_page_chrome(
 /// sibling rendered after this fragment.
 #[must_use]
 pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartAction]) -> String {
+    render_canvas_html_with_actions_and_rail(view, start_actions, "")
+}
+
+/// Same first-page shell with an optional per-file detail rail appended inside
+/// the `atlas-stage` row, after the canvas section. The rail is empty in the
+/// standalone/test wrappers.
+#[must_use]
+pub fn render_canvas_html_with_actions_and_rail(
+    view: &AtlasView,
+    start_actions: &[StartAction],
+    rail_html: &str,
+) -> String {
     let entry_line = strip_entry_line(view);
     let hottest_line = view
         .hottest_node
@@ -1348,13 +1459,20 @@ pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartA
         ),
         format_demoted_files(view.coverage.demoted_files),
     ];
+    // Each metric phrase stays on one line when the narrower canvas wraps the
+    // footer to two lines (`33/238` must not separate from `unresolved includes`).
     let footer = footer_parts
         .iter()
-        .map(|part| escape_html(part))
+        .map(|part| {
+            format!(
+                "<span class=\"atlas-footer-part\">{}</span>",
+                escape_html(part)
+            )
+        })
         .collect::<Vec<_>>()
         .join(" · ");
 
-    let layout = compute_layout(view);
+    let layout = compute_layout(view, PAGE_GRAPH_W);
     let mut out = String::new();
     out.push_str(&render_page_chrome(
         &entry_line,
@@ -1364,9 +1482,10 @@ pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartA
         &unit_line,
         &start_chips,
     ));
+    out.push_str("<div class=\"atlas-stage\">\n");
     out.push_str("<section id=\"atlas-canvas\" class=\"atlas-canvas\">\n");
     out.push_str("<div class=\"atlas-graph\">\n");
-    out.push_str(&svg_open(false, layout.height));
+    out.push_str(&svg_open(false, PAGE_GRAPH_W, layout.height));
     out.push('\n');
     out.push_str(&render_graph_inner(view, &layout));
     out.push_str("\n</svg>\n</div>\n");
@@ -1374,6 +1493,13 @@ pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartA
         "<footer class=\"atlas-footer\">{footer}</footer>\n"
     ));
     out.push_str("</section>\n");
+    if !rail_html.is_empty() {
+        out.push_str(rail_html);
+        if !rail_html.ends_with('\n') {
+            out.push('\n');
+        }
+    }
+    out.push_str("</div>\n");
     out
 }
 
@@ -1607,7 +1733,7 @@ mod tests {
             ("single-file", single_file_fixture()),
         ] {
             let view = build_atlas_view(&doc);
-            let layout = compute_layout(&view);
+            let layout = compute_layout(&view, PAGE_GRAPH_W);
             let html = render_canvas_html(&view);
             let lines = emitted_column_header_lines(&html);
             assert_eq!(
@@ -1950,7 +2076,7 @@ mod tests {
             ("partial-parse", partial_parse_fixture()),
         ] {
             let view = build_atlas_view(&doc);
-            let layout = compute_layout(&view);
+            let layout = compute_layout(&view, PAGE_GRAPH_W);
             let mut pills = 0_usize;
             for edge in ordered_edges(&view, &layout.rows) {
                 let Some(shape) = edge_shape(edge, &layout) else {
@@ -2046,7 +2172,56 @@ mod tests {
     fn node_title_carries_file_total_anchor_and_full_path_label() {
         let html = render_canvas_html(&build_atlas_view(&application_fixture()));
         assert!(html.contains("file total "));
-        assert!(html.contains(">src/main.c</text>"));
+        // Canvas label = file name; the full path stays in the node title.
+        assert!(html.contains(">main.c</text>"));
+        assert!(html.contains("<title>src/main.c · "));
+    }
+
+    #[test]
+    fn duplicate_file_names_get_a_parent_segment_in_the_canvas_label() {
+        let doc = DocBuilder::new()
+            .file(file("src/a/mod.rs", "production", 1))
+            .file(file("src/b/mod.rs", "production", 1))
+            .function(function(
+                "src/a/mod.rs",
+                "a",
+                1,
+                Some(100),
+                1,
+                Some("lib-root"),
+            ))
+            .function(function("src/b/mod.rs", "b", 1, Some(50), 0, None))
+            .build();
+        let html = render_canvas_html(&build_atlas_view(&doc));
+        assert!(
+            html.contains(">a/mod.rs</text>"),
+            "colliding basenames must add the parent segment"
+        );
+        assert!(
+            html.contains(">b/mod.rs</text>"),
+            "both colliding nodes must be distinguishable"
+        );
+        assert!(
+            !html.contains(">mod.rs</text>"),
+            "no bare duplicate basename may remain on the canvas"
+        );
+    }
+
+    #[test]
+    fn rail_role_colour_rules_keep_entry_and_unreached_above_production() {
+        let production = ANIMATION_CSS
+            .find(".is-production .atlas-rail-role")
+            .expect("production role rule");
+        let entry = ANIMATION_CSS
+            .find(".is-entry .atlas-rail-role")
+            .expect("entry role rule");
+        let unreached = ANIMATION_CSS
+            .find(".is-unreached .atlas-rail-role")
+            .expect("unreached role rule");
+        assert!(
+            production < entry && production < unreached,
+            "the production rule must stay before the kind-specific role rules"
+        );
     }
 
     #[test]
@@ -2265,8 +2440,9 @@ mod tests {
         assert_eq!(view.nodes.len(), 40);
         let html = render_canvas_html(&view);
         // 32 rows in the folded depth column at the 58px floor (46px node +
-        // 12px gap): 72 + 32*58 + 16.
-        assert!(html.contains("viewBox=\"0 0 1400 1944\""));
+        // 12px gap): 72 + 32*58 + 16. The page canvas is the narrower
+        // `PAGE_GRAPH_W`; the standalone artifact keeps `SVG_W`.
+        assert!(html.contains("viewBox=\"0 0 868 1944\""));
         assert_eq!(html.matches("data-node=\"").count(), 40);
         let svg = render_canvas_svg(&view);
         assert!(svg.contains("viewBox=\"0 0 1400 1944\""));
@@ -2364,7 +2540,7 @@ mod tests {
     #[test]
     fn hull_label_sits_at_least_ten_px_above_first_node_badge() {
         let view = build_atlas_view(&application_fixture());
-        let layout = compute_layout(&view);
+        let layout = compute_layout(&view, PAGE_GRAPH_W);
         assert!(
             layout.row_h - layout.node_h >= ROW_GAP,
             "layout must always leave a full inter-row badge gap"
@@ -2464,8 +2640,9 @@ mod tests {
     }
 
     #[test]
-    fn mid_ellipsis_keeps_first_segment_and_full_path_stays_in_title() {
+    fn node_label_is_the_file_name_and_title_keeps_the_full_path() {
         let long = "src/very/deep/module/statistics.rs";
+        // The helper still keeps mid-ellipsis semantics for headers/rail paths.
         let shortened = mid_ellipsis(long, 20);
         assert!(
             shortened.starts_with("src/"),
@@ -2490,15 +2667,14 @@ mod tests {
         let text_start = name_start + html[name_start..].find('>').expect("name open") + 1;
         let text_end = text_start + html[text_start..].find("</text>").expect("name close");
         let label = &html[text_start..text_end];
-        assert!(
-            label.starts_with("src/"),
-            "visible label must keep the first segment: {label}"
+        assert_eq!(
+            label, "statistics.rs",
+            "the canvas label is the file name (spec §3.2), not the path"
         );
         assert!(
             !label.starts_with('…') && !label.starts_with(".."),
             "leading-dot truncation is forbidden: {label}"
         );
-        assert!(label.contains('…'), "long paths must be mid-ellipsised");
         assert!(
             html.contains(&format!("<title>{long} · ")),
             "the full path must stay in the node title"

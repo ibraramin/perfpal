@@ -44,6 +44,13 @@ Build and ship Perfpal Atlas: the entry-flow core graph (G) as a full-bleed 100%
     exceed 900px by design (V8-disclosed) and are deferred to step 13/A2. Committed 2026-10-24
     (`468d772` + docs/state); no push.
 - **Step 11 — Detail rail / reachable detail.** Restore a per-file detail layer (rail, overlay, or a designed below-chart) so functions and finding IDs are reachable without leaving the page. The canvas alone is not enough; the current 3,367/3,219px brief is not the answer. Keep the canvas graph-only; the rail carries related easy-to-read detail.
+  - **Step 11 — DONE 2026-10-24 (Session A1):** G-style right rail (`#atlas-rail`, 530px) beside
+    the 868px canvas; 12 cards (entry first, production-first), role, M-04 cost anchor, top-3
+    functions, dominant finding; file → weight drill, function → exact `profile-queue.html#fn-…`,
+    finding → exact `findings-detail.html#finding-…`; eight-state rail test; canvas bottom 869 ≤900;
+    1280×800 stacks with no horizontal scroll; `#map` +8/+7px (footer wrap; the ~5k cut is step 12).
+    Evidence `docs/evidence/atlas-visual/v2/{STEP11.md,step11.json,gate-step11.txt,VISION-STEP11.md}`.
+    Committed only after founder approval; no schema/JS/deps; A2/ship still blocked.
 - **Step 12 — Progressive key charts.** Below the graph, add a few **designed charts** (not text tables), revealed progressively: weight (production-first share; F candidate), blast radius, file detail; evaluate the F treemap candidate. Move Q2/weight drills to separate pages. Budget `#map` at ~4–5k px (down from 8,982/14,685) and keep the page focused. Do not delete F data; F remains undecided.
 - **Step 13 — Founder visual gate + G-baseline diff + V8 rerun.** Render 1440×900; the founder signs off the composition. Add DOM/render assertions: canvas bottom ≤ 900 including header/legend/footer; no clipped text; no duplicate definitions; `#map` height ≤ ~5,000px; no leading-dot truncation; no horizontal scroll. Re-run the V8 A1 + strip reads on the reworked page. Only then A2.
 - **Step 14 — Founder A2 (blocked until step 13):** pre-register the library-shaped holdout repo (A-pf-116; single-file C lib or Rust lib crate with no bin) alongside the vaulted django/postgres holdout; the registered holdout is the **published `memchr` crate payload** at `bd6068c3` (dev `benchmarks/` + `fuzz/` excluded; see `docs/evidence/map-vision/v8/PREREGISTRATION.md`); run the timed test with animation enabled (3 actions in under 10 minutes, understandable, pause/reduced-motion/print work), record the transcript and the verdict in docs/evidence/map-vision/v8/. If A2 fails on both application and library classes, stop and escalate a superseding ADR instead of tuning.

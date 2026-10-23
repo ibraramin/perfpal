@@ -433,6 +433,54 @@ pub fn single_file() -> MetricsDocument {
     )
 }
 
+/// Every rail role in one page: entry, production, test, bench, unreached.
+/// Only `atlas_rail` consumes this fixture; the other test crates include this
+/// module wholesale.
+#[allow(dead_code)]
+pub fn roles_demo() -> MetricsDocument {
+    document(
+        vec![
+            file("src/main.c", "production", 1),
+            file("src/util.c", "production", 1),
+            file("tests/t.c", "test", 1),
+            file("benches/b.c", "bench", 1),
+            file("src/dead.c", "production", 1),
+        ],
+        vec![
+            function("src/main.c", "main", 1, Some(100), 0, Some("main")),
+            function("src/util.c", "util", 1, Some(40), 1, None),
+            function("tests/t.c", "t_helper", 1, Some(30), 1, None),
+            function("benches/b.c", "b_helper", 1, Some(20), 1, None),
+            function("src/dead.c", "dead", 1, Some(10), 0, None),
+        ],
+        Vec::new(),
+        vec![
+            call_edge(
+                "src/main.c#main#1:1",
+                "util",
+                "src/main.c",
+                Some("src/util.c"),
+                Confidence::Low,
+            ),
+            call_edge(
+                "src/main.c#main#1:1",
+                "t_helper",
+                "src/main.c",
+                Some("tests/t.c"),
+                Confidence::Low,
+            ),
+            call_edge(
+                "src/main.c#main#1:1",
+                "b_helper",
+                "src/main.c",
+                Some("benches/b.c"),
+                Confidence::Low,
+            ),
+        ],
+        Vec::new(),
+    )
+}
+
 /// The eight-state A10 matrix.
 pub fn states() -> Vec<(&'static str, MetricsDocument)> {
     vec![

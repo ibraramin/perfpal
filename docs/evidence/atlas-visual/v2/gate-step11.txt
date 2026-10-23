@@ -1,0 +1,316 @@
+Atlas v2 step 11 — DoD transcript
+=================================
+tree: 3a84a0e9990511cfac62a9d34e886d6c5c609c76 + uncommitted step-11 work
+date: 2026-10-23T21:25Z
+
+$ cargo fmt --all -- --check
+exit=0
+
+$ cargo clippy --locked --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+exit=0
+
+$ cargo test --locked   (every suite line)
+     Running unittests src/lib.rs (target/debug/deps/perfpal-5e728d3dcfa0db5d)
+test result: ok. 383 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running unittests src/main.rs (target/debug/deps/perfpal-78326fc5df5c12ef)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/alloc001_fixtures.rs (target/debug/deps/alloc001_fixtures-a86362e6bfef2f93)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/analyzer_registry.rs (target/debug/deps/analyzer_registry-d3cfa404b17f0451)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/arch_fixtures.rs (target/debug/deps/arch_fixtures-95f446cd02c88733)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/atlas_rail.rs (target/debug/deps/atlas_rail-71f90ceb53420880)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests/atlas_render.rs (target/debug/deps/atlas_render-bf27ed4e29eaef2f)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/atlas_states.rs (target/debug/deps/atlas_states-7c8ddc2e208dbbe7)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests/atlas_vision.rs (target/debug/deps/atlas_vision-41c1db258461d166)
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/benchmark.rs (target/debug/deps/benchmark-3239fa38fc4b3bfa)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.09s
+     Running tests/charts_render.rs (target/debug/deps/charts_render-1f5f861f32ec9dcb)
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/determinism_guard.rs (target/debug/deps/determinism_guard-2cbe9eea34cbd52b)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/examples_python_coverage.rs (target/debug/deps/examples_python_coverage-bec8a7da60ca911e)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests/examples_rust_coverage.rs (target/debug/deps/examples_rust_coverage-deb1596a44b82886)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests/exit_code_matrix.rs (target/debug/deps/exit_code_matrix-d152dc8ecf0711b7)
+error: unexpected argument '--definitely-not-a-flag' found
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/findings_detail_split.rs (target/debug/deps/findings_detail_split-683d06d8248317ca)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/guarded_content.rs (target/debug/deps/guarded_content-7abffd9d319033bf)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/harness_smoke.rs (target/debug/deps/harness_smoke-d9c6e4f6ea5b4d19)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/i1a_entry_c.rs (target/debug/deps/i1a_entry_c-58b3d2db1e7d2a51)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/i1b_entry_rust.rs (target/debug/deps/i1b_entry_rust-010c56a27cc64182)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/i1c_entry_python.rs (target/debug/deps/i1c_entry_python-ab4a347d27e5716b)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/i2_cost_v2.rs (target/debug/deps/i2_cost_v2-7b1749707ae6ffeb)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+     Running tests/i2b_trip_rust.rs (target/debug/deps/i2b_trip_rust-96ed3d8a1ef1807b)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/i2c_trip_python.rs (target/debug/deps/i2c_trip_python-947b9997f140c684)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/i3_map_layer.rs (target/debug/deps/i3_map_layer-eb5a739e169f957f)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/i4_annotations.rs (target/debug/deps/i4_annotations-33b5e3a5e40685cb)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/key_views.rs (target/debug/deps/key_views-af9b8b8ff25b7110)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/mixed_language_e2e.rs (target/debug/deps/mixed_language_e2e-f2928a983a9a0f7e)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests/p4_determinism.rs (target/debug/deps/p4_determinism-e4b0577c21c1730e)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/p6_hardening.rs (target/debug/deps/p6_hardening-dc2e2384d436e525)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+     Running tests/pipeline_e2e.rs (target/debug/deps/pipeline_e2e-f42da64c9e574f03)
+error: unexpected argument '--bogus-flag' found
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/precision_kpi.rs (target/debug/deps/precision_kpi-71f261dec7324166)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+     Running tests/python_backend.rs (target/debug/deps/python_backend-3a53c8d3e3cabd69)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/python_grammar_link.rs (target/debug/deps/python_grammar_link-3c2deb68c8e8fae9)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/python_negative_fixtures.rs (target/debug/deps/python_negative_fixtures-844929c697114c98)
+test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/report_html.rs (target/debug/deps/report_html-7dba15ecce933361)
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/reporter_render.rs (target/debug/deps/reporter_render-bd47261b285126a1)
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/reporter_rust.rs (target/debug/deps/reporter_rust-77f0d76923747fe1)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/resolver_health.rs (target/debug/deps/resolver_health-ecb3e3953e101700)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests/rust_backend.rs (target/debug/deps/rust_backend-e097931647067461)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_backend_r3.rs (target/debug/deps/rust_backend_r3-0c18fd8df29c5c5b)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_grammar_link.rs (target/debug/deps/rust_grammar_link-d50aaf27b398c64d)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_module_graph.rs (target/debug/deps/rust_module_graph-9cd0bdc318194c4c)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/rust_negative_fixtures.rs (target/debug/deps/rust_negative_fixtures-cfb7d80c19691414)
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_wave_c1.rs (target/debug/deps/rust_wave_c1-7c889d2135b3fccc)
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_wave_c2.rs (target/debug/deps/rust_wave_c2-d16b3afc1c1934d4)
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/scanner_pipeline.rs (target/debug/deps/scanner_pipeline-48698412220d6166)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/schema_1_4.rs (target/debug/deps/schema_1_4-c7bbc632c4a3cd24)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/schema_1_7.rs (target/debug/deps/schema_1_7-60eedc52a0956366)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/semantic_b2.rs (target/debug/deps/semantic_b2-0dbaf9f8fc0bffd7)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/v14_step2.rs (target/debug/deps/v14_step2-86d2d166daca21d9)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests/wave_a_fixtures.rs (target/debug/deps/wave_a_fixtures-898901772cc75663)
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/wave_b_fixtures.rs (target/debug/deps/wave_b_fixtures-b28ae081bd733850)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/wave_c_fixtures.rs (target/debug/deps/wave_c_fixtures-179b3931455c95b7)
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/writer_concurrency.rs (target/debug/deps/writer_concurrency-fb56781878aac280)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests perfpal
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+pipeline_exit=0
+
+$ cargo deny check licenses
+
+licenses ok
+exit=0
+
+$ cargo clippy --locked --all-targets --features semantic-clang -- -D warnings
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.77s
+exit=0
+
+$ PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang   (every suite line)
+     Running unittests src/lib.rs (target/debug/deps/perfpal-9f589fc08b771856)
+test result: ok. 383 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running unittests src/main.rs (target/debug/deps/perfpal-0cd9d34b32179db5)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/alloc001_fixtures.rs (target/debug/deps/alloc001_fixtures-18aad2ae9f490491)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/analyzer_registry.rs (target/debug/deps/analyzer_registry-f6fbf06fd13aebce)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/arch_fixtures.rs (target/debug/deps/arch_fixtures-0cabde8aef86f1d9)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/atlas_rail.rs (target/debug/deps/atlas_rail-26a2b69855fde043)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/atlas_render.rs (target/debug/deps/atlas_render-9c5addc4fdf44c0d)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/atlas_states.rs (target/debug/deps/atlas_states-816e4c4c3f31ff06)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests/atlas_vision.rs (target/debug/deps/atlas_vision-d21f1915f126ec80)
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/benchmark.rs (target/debug/deps/benchmark-c3cbb77cd79206c9)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.06s
+     Running tests/charts_render.rs (target/debug/deps/charts_render-d6ee11cdfeff4480)
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/determinism_guard.rs (target/debug/deps/determinism_guard-ece2d9ae39020434)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/examples_python_coverage.rs (target/debug/deps/examples_python_coverage-bb5e1054f7099c47)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.88s
+     Running tests/examples_rust_coverage.rs (target/debug/deps/examples_rust_coverage-74feb154bc279309)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.87s
+     Running tests/exit_code_matrix.rs (target/debug/deps/exit_code_matrix-9df92b884c0ebb87)
+error: unexpected argument '--definitely-not-a-flag' found
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.82s
+     Running tests/findings_detail_split.rs (target/debug/deps/findings_detail_split-50cf2eae5587b085)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.67s
+     Running tests/guarded_content.rs (target/debug/deps/guarded_content-7ba0d7139d33d49f)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/harness_smoke.rs (target/debug/deps/harness_smoke-313fd55489d7f01a)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/i1a_entry_c.rs (target/debug/deps/i1a_entry_c-69b84ff955086c2c)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.64s
+     Running tests/i1b_entry_rust.rs (target/debug/deps/i1b_entry_rust-e902bf4cc744b704)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.60s
+     Running tests/i1c_entry_python.rs (target/debug/deps/i1c_entry_python-df68071c5b1cc727)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s
+     Running tests/i2_cost_v2.rs (target/debug/deps/i2_cost_v2-bdf3990a8372d800)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.54s
+     Running tests/i2b_trip_rust.rs (target/debug/deps/i2b_trip_rust-8a13664ce057a2d8)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.54s
+     Running tests/i2c_trip_python.rs (target/debug/deps/i2c_trip_python-ed24bb9ebfda7ea3)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s
+     Running tests/i3_map_layer.rs (target/debug/deps/i3_map_layer-34168b131b789020)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/i4_annotations.rs (target/debug/deps/i4_annotations-1563a2af9f403268)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/key_views.rs (target/debug/deps/key_views-08117bb1da1f2776)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/mixed_language_e2e.rs (target/debug/deps/mixed_language_e2e-c5545112033945ea)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.59s
+     Running tests/p4_determinism.rs (target/debug/deps/p4_determinism-dbf4d6f470d0006f)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.58s
+     Running tests/p6_hardening.rs (target/debug/deps/p6_hardening-2c6f2a8c332f4d8b)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.80s
+     Running tests/pipeline_e2e.rs (target/debug/deps/pipeline_e2e-70398f692ac8ac50)
+error: unexpected argument '--bogus-flag' found
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.48s
+     Running tests/precision_kpi.rs (target/debug/deps/precision_kpi-292ea2d5f0336759)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.88s
+     Running tests/python_backend.rs (target/debug/deps/python_backend-b1ef4073a0869558)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.79s
+     Running tests/python_grammar_link.rs (target/debug/deps/python_grammar_link-287d3bde70fee9ea)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/python_negative_fixtures.rs (target/debug/deps/python_negative_fixtures-54a6bce3658a539c)
+test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/report_html.rs (target/debug/deps/report_html-b148946d108f3bc5)
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.62s
+     Running tests/reporter_render.rs (target/debug/deps/reporter_render-48a5b82ac0423719)
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/reporter_rust.rs (target/debug/deps/reporter_rust-64bf9c9ae1d554f7)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/resolver_health.rs (target/debug/deps/resolver_health-2bee18434d0b4a2f)
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.62s
+     Running tests/rust_backend.rs (target/debug/deps/rust_backend-41d438e50c9767c0)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_backend_r3.rs (target/debug/deps/rust_backend_r3-d0eada9b1eb21bc0)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_grammar_link.rs (target/debug/deps/rust_grammar_link-e826e0a5c8ab1d87)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_module_graph.rs (target/debug/deps/rust_module_graph-773c2a76d2e6f3dd)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_negative_fixtures.rs (target/debug/deps/rust_negative_fixtures-a6fabb91e6025b9d)
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_wave_c1.rs (target/debug/deps/rust_wave_c1-064f67e27234ee9b)
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/rust_wave_c2.rs (target/debug/deps/rust_wave_c2-fec08dba65f5603c)
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/scanner_pipeline.rs (target/debug/deps/scanner_pipeline-854046bc259567a4)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/schema_1_4.rs (target/debug/deps/schema_1_4-4bc8437ea21bc65c)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.95s
+     Running tests/schema_1_7.rs (target/debug/deps/schema_1_7-fac92e152b4772c7)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.80s
+     Running tests/semantic_b2.rs (target/debug/deps/semantic_b2-9253a82ff8f0cadd)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/v14_step2.rs (target/debug/deps/v14_step2-4f5e3df9f77798c7)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.70s
+     Running tests/wave_a_fixtures.rs (target/debug/deps/wave_a_fixtures-bbed537dc82b55bb)
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/wave_b_fixtures.rs (target/debug/deps/wave_b_fixtures-816b0955363b9081)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/wave_c_fixtures.rs (target/debug/deps/wave_c_fixtures-42c0800c5ea580fa)
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/writer_concurrency.rs (target/debug/deps/writer_concurrency-288105c257e83cdb)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests perfpal
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+pipeline_exit=0
+
+$ cargo test --locked --test atlas_rail
+running 9 tests
+test rail_empty_state_renders_named_stub ... ok
+test rail_function_and_finding_links_target_their_own_row ... ok
+test rail_roles_cover_entry_production_test_bench_unreached ... ok
+test rail_application_entry_first_deterministic_and_script_free ... ok
+test rail_order_is_entry_first_then_shipped_production_first ... ok
+test rail_capped_state_shows_exactly_the_cap_and_the_remainder ... ok
+test rail_cards_carry_roles_anchors_and_links ... ok
+test rail_sits_between_canvas_and_brief_in_every_state ... ok
+test rail_links_resolve_on_every_page ... ok
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+exit=0
+
+$ cargo test --locked --test atlas_render
+running 5 tests
+test atlas_unreached_chip_is_non_additive_and_matches_footer ... ok
+test atlas_map_has_one_caveat_and_one_median_definition ... ok
+test atlas_double_render_is_byte_identical ... ok
+test atlas_canvas_has_no_metric_panels ... ok
+test atlas_adds_no_new_script ... ok
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+exit=0
+
+$ cargo test --locked --test atlas_states
+running 2 tests
+test atlas_first_screen_canvas_then_answer_line ... ok
+test atlas_states_render_same_stack ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+exit=0
+
+$ test -z "$(git status --short src/schema/ docs/schema/)"
+exit=0
+
+$ grep -n preserve_order Cargo.lock
+exit=1 (1 = absent, as required)
+
+$ python3 docs/evidence/atlas-visual/v2/render_step11.py
+exit=0
+
+# evidence freshness (local +0600)
+2026-10-24 03:28:06.426537874 +0600  docs/evidence/atlas-visual/v2/step11.json
+2026-10-24 03:24:44.787690808 +0600  docs/evidence/atlas-visual/v2/STEP11.md
+2026-10-24 03:28:06.459874351 +0600  docs/evidence/atlas-visual/v2/gate-step11.txt
+2026-10-24 03:24:44.781730132 +0600  src/reporter/atlas_brief.rs
+2026-10-24 03:24:44.785796610 +0600  src/reporter/atlas_render.rs
+2026-10-24 02:55:35.910912801 +0600  tests/atlas_rail.rs
+2026-10-24 02:58:18.647817600 +0600  tests/atlas_fixtures/mod.rs
+
+# artifact hashes
+sha256sum /home/shafin/Opencode/perfpal-test/out-atlas-v2-hyperfine/profile-queue.html /home/shafin/Opencode/perfpal-test/out-atlas-v2-cJSON/profile-queue.html | sed 's|/home/shafin/Opencode/||'
+7133ad178a93d3c579b8bfddfb8398169a7969fc932367d075c7aa1fc323f860  docs/evidence/atlas-visual/v2/step11.json
+fdb08af937e27c512d0e4e7332fdf88f5a749e7d00ed3404b3f64ce38fb2bf21  docs/evidence/atlas-visual/v2/atlas-v2-step11-cJSON-1280x800.png
+d5981577cb53bf53f618a5acdf350ba7db0a2b27809aa3eb1c5ec42efd9245a4  docs/evidence/atlas-visual/v2/atlas-v2-step11-cJSON-final.png
+6b971068b36d99d5f852af3bd84e878e99a2d32808371d5afac513ac891e48bf  docs/evidence/atlas-visual/v2/atlas-v2-step11-cJSON-full.png
+b79a4b5bd3bd1b346aace9c421390708778f1e3029dbec50b4f2f27357344e6f  docs/evidence/atlas-visual/v2/atlas-v2-step11-hyperfine-1280x800.png
+d48261131bdf37b9f026c327bdc4f10923a78efd9ca5409edb1ee8fda0479229  docs/evidence/atlas-visual/v2/atlas-v2-step11-hyperfine-final.png
+4920171af38b380e7fe843ec44881a77bd0d761616feb8d88d9363c2ae08759c  docs/evidence/atlas-visual/v2/atlas-v2-step11-hyperfine-full.png
+895b762869119be9b6b3d0eda5dba56da091e85702c0135ff91c166c97846d60  perfpal-test/out-atlas-v2-hyperfine/report.html
+cd48f7004c6595a00b01950c8073e6ddcd5b66d5301552ca48b3aa650c3bdc75  perfpal-test/out-atlas-v2-cJSON/report.html

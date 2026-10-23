@@ -1,7 +1,8 @@
 # Atlas — new-agent brief (read this first)
 
-**Status:** Atlas steps 1–8 implemented; **A2/steps 9–10 BLOCKED** by the 2026-10-23 visual
-regression audit (`R-pf-109`). Do **not** run A2, ship, or mark the plan done.
+**Status:** Atlas steps 1–11 implemented (v2 rework: 9–10 founder-approved; **step 11 detail rail
+implemented 2026-10-24, uncommitted pending founder commit approval**). **Step 13 founder visual gate
+PENDING; A2/ship (steps 14–15) BLOCKED** by `R-pf-109`. Do **not** run A2, ship, or mark the plan done.
 **Owner:** orchestrator. **Audience:** every agent touching `src/reporter/atlas_*`, the Atlas specs,
 the V8 evidence, or the Atlas plan.
 
@@ -93,14 +94,16 @@ the founder's eye. The data/model are fine.
 
 ## 5. Current status and next step
 
-- `R-pf-109` (high) is open; `A-pf-118` (steps 9–10) is **blocked**.
-- Next session is **visual rework**, not A2:
-  1. Side-by-side G vs Atlas; agree the first-page composition with the founder.
-  2. Fix the objective defects: fold fit, duplicate chrome, clipped footer, truncation, edge
-     labels/path contrast, unreached label, page height.
-  3. Restore G's palette/typography/masthead; decide the rail/detail layer.
-  4. Prototype the "more key charts" below (weight/blast radius/file detail; F treemap candidate).
-  5. Add the founder visual gate + G diff; re-run V8; only then A2.
+- `R-pf-109` (high) is open; `A-pf-118` (A2/ship) is **blocked**.
+- **Done:** steps 9–10 (signed G system, first-page fit, key-metrics strip, chrome hygiene;
+  founder-approved 2026-10-24) and **step 11** (right detail rail: 12 cards, roles, cost anchor,
+  top functions, dominant finding, exact function/finding links; eight-state lock; canvas 869 ≤ 900;
+  1280 stacks; evidence `docs/evidence/atlas-visual/v2/{STEP11.md,step11.json,gate-step11.txt,
+  VISION-STEP11.md}`). Uncommitted pending founder approval.
+- **Next session = step 12, not A2:** progressive designed weight/blast/file charts + the F treemap
+  candidate; retire the seven-block text wall; `#map` ≤ ~5k; no schema/JS. Then step 13 (founder
+  visual gate + G-baseline diff + V8 A1/strip rerun); only then A2.
+- Do not start A2/ship; holdouts stay vaulted; `map-build` is not done; A1b stays open.
 
 ## 6. Reading order
 

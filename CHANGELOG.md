@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Atlas v2 step 11 — first-page per-file detail rail (2026-10-24).** `report.html#map` is now a
+  two-column stage: the 868px graph canvas (`#atlas-canvas`, still graph-only) plus a 530px
+  G-style **detail rail** (`#atlas-rail`, a DOM sibling, so A9 is unchanged). The rail carries up to
+  12 cards — elected entry first, then the shipped production-first file order — each with a role
+  (`ENTRY` / `PRODUCTION` / `TEST` / `BENCH` / other path class / `UNREACHED`), the M-04 file cost
+  anchor (`× median function` + `top P% of files`), the top-3 functions, and the dominant finding
+  rule. File names link to their weight-drill row, function rows to their exact
+  `profile-queue.html#fn-…` row (deterministic per-function ids added to the profile queue), and
+  finding rows to the exact `findings-detail.html#finding-…` occurrence. Every link resolves; the
+  rail renders in all eight scan states (a named stub in the empty state); `+N more source files`
+  links to the weight detail. At <1360px the rail stacks below the graph; print stacks too.
+  Canvas node labels now use the file name (spec §3.2) with a parent segment when drawn basenames
+  collide (`export/mod.rs`), full path in the node `<title>`; the footer wraps into complete
+  `nowrap` phrases; rail text floors are 8.5px (name 10px). Measured at 1440×900: **canvas bottom
+  869 ≤ 900**, rail bottom 834/818, no horizontal scroll; 1280×800 stacks with no horizontal
+  scroll; `#map` +8/+7px (footer wrap; the ~5k cut is step 12). No schema, no new JS, no
+  dependency. Evidence: `docs/evidence/atlas-visual/v2/`
+  (`STEP11.md`, `step11.json`, `gate-step11.txt`, `VISION-STEP11.md`, renders). Four `report.html`
+  and four `profile-queue.html` goldens regenerated. Step-13 founder visual gate pending; A2/ship
+  (steps 14–15) still blocked; holdouts vaulted; `map-build` not done; A1b open.
+
+### Changed
 - **Atlas v2 steps 9–10 — signed G visual system + first-page fit (2026-10-23).** Step 9 produced the
   1440×900 G-vs-Atlas side-by-sides (`hyperfine` + `cJSON`), the G-baseline token/type/composition
   diff, and the signed founder decision (Option A: port G; `report.html#map` capture; G-style right
