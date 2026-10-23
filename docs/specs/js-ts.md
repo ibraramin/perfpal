@@ -4,7 +4,7 @@ Scope: feature
 
 # Spec: js-ts
 
-**Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** B1 planning (no production code).
+**Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** B2-W0 complete (pins, link tests, canary freeze); no backend/analyzer code yet.
 **Owners:** Track B owns this spec, `docs/plans/js-ts.md`, the JS/TS ADR, the grammar pins, the JS/TS
 fixtures/goldens, and the `src/schema` language values. Track A owns `views.rs`/`mod.rs` wiring until A step 12.
 
@@ -110,40 +110,48 @@ regeneration instead of two).
 
 **Shared family rule.** JS and TS/TSX share one analyzer family, `PERF-JS-*`, because the runtime
 mechanism is identical (V8 / Node). `RuleLanguage::Js` matches `js|ts|tsx`. `PERF-TS-*` is reserved for
-constructs that exist only in TypeScript; v1 ships **zero** `PERF-TS-*` rules unless the B2 canary proves
-one. This avoids duplicating ~12 implementations and two diverging catalogs. `RuleLanguage` therefore gains
+constructs that exist only in TypeScript; the B2 canary proved none, so v1 ships **zero** `PERF-TS-*`
+rules. This avoids duplicating ~12 implementations and two diverging catalogs. `RuleLanguage` therefore gains
 `Js` and `Ts`; the analyzer partition maps `js`/`ts`/`tsx` to `Js` (+ `Ts` for `ts`/`tsx`). Unknown
 languages stay dropped by the analyzer's `_ => {}` arm.
 
-**Catalog discipline.** The 12-rule candidate set below is **not frozen**. B2 runs a **W0 canary** over
-pinned real-world JS repos (frequency × plausibility, silent controls, and a Perflint/Ruff-analogue
-baseline) and freezes the catalog with a documented disposition per candidate. Every rule message must
-cite the engine mechanism (V8/Node), the fix, and its accepted FP class. The M1 lesson governs: 5 rules
-once produced 89% of self-scan noise, so precision beats breadth.
+**Catalog discipline (frozen by the B2-W0 canary).** The 12-rule candidate set below was frozen by a
+**W0 canary** over three pinned repos — express `v5.1.0`, execa `v9.6.1`, gemini-cli `v0.65.0`
+(1,525 production files / 321.1 kLOC) — using frequency × plausibility, explicit silent controls, and a
+Perflint/Ruff-analogue baseline; evidence: `docs/evidence/js-canary.md` and
+`docs/evidence/js-canary/canary_results.json`, reproducible via `docs/evidence/js-canary/run.sh`.
+**11 rules ship; `PERF-JS-LOOP-003` is cut for v1** — all 24 production `for...in` hits iterate
+identifiers, with zero array-literal RHS, so the candidate is not statically identifiable without type
+information. `ALLOC-001` ships **reframed** behind a mandatory loop-invariance gate (Info-first),
+`CALL-001` is guard-gated (only 6/108 production self-calls are unguarded), and `ASYNC-002` is
+async-function-gated and test-skewed. Every rule message must cite the engine mechanism (V8/Node), the
+fix, and its accepted FP class. The M1 lesson governs: 5 rules once produced 89% of self-scan noise, so
+precision beats breadth.
 
 **Catalog wiring is A-owned until A step 12.** `src/reporter/mod.rs` holds `HEURISTIC_CATALOG_V1` (`:82`),
-the 67-entry/count/equality assertions (`:2927-2980`), and panics on any uncatalogued `rule_id` at
-`:1450-1453` and `:2373-2376`. B2 cannot ship a rule without a catalog entry. Track B must either receive
+the 67-entry/count/equality assertions (`:2980-3002`), and panics on any uncatalogued `rule_id` at
+`:1456` and `:2381` (line numbers re-read on the rebased tree, 2026-10-24; they move with A's edits).
+B2 cannot ship a rule without a catalog entry. Track B must either receive
 the entries from Track A before B2, or obtain explicit founder approval to edit **only** the catalog block
 in that file. Recorded as blocker `B-tb-003`; the count assertions move by exactly the number of shipped
-JS rules. **Atomic landing:** because `catalog == registry` is asserted (`src/reporter/mod.rs:2974-2979`), a
+JS rules. **Atomic landing:** because `catalog == registry` is asserted (`src/reporter/mod.rs:2999-3004`), a
 catalog-only landing ahead of B2 fails the count/equality tests immediately — A's entries and B2's registry
 block must land in the same change, or the founder-approved catalog-only B edit happens inside B2-W2.
 
-| Candidate id | Mechanism (why it costs) | Disposition |
+| Candidate id | Mechanism (why it costs) | Frozen disposition (B2-W0) |
 |---|---|---|
-| `PERF-JS-ALLOC-001` | Object/array literal constructed per iteration inside a hot loop → young-gen churn; escape analysis rarely removes it | candidate |
-| `PERF-JS-ALLOC-003` | `concat`/spread/`slice` accumulation in a loop copies n elements per iteration → quadratic | candidate |
-| `PERF-JS-STR-001` | `+=` string accumulation in a loop → cons-string flattening cost at first use (MEDIUM; V8 ropes mitigate) | candidate, honest MEDIUM |
-| `PERF-JS-LOOP-001` | Nested loop depth ≥ 2 → superlinear iteration with no early exit | candidate |
-| `PERF-JS-LOOP-002` | Synchronous blocking I/O in a loop (`readFileSync`, `execSync`, `spawnSync`, sync `crypto`) | candidate |
-| `PERF-JS-LOOP-003` | `for...in` over an array → enumerates enumerable string keys incl. the prototype chain | candidate |
-| `PERF-JS-LOOP-007` | Linear membership/index scan (`indexOf`/`includes`/`find`) inside a loop → O(n²) | candidate, flagship |
-| `PERF-JS-ASYNC-001` | Sequential `await` inside a loop over independent work → latency serialization; fix = `Promise.all` | candidate, flagship |
-| `PERF-JS-ASYNC-002` | Synchronous blocking call inside an `async` function → event-loop stall | candidate, flagship |
-| `PERF-JS-CALL-001` | Direct recursion (self-call) with no visible base-case guard | candidate |
-| `PERF-JS-ARCH-001` | Import cycle between modules | candidate |
-| `PERF-JS-TYPE-001` | `delete obj.prop` → hidden-class/dictionary-mode transition | candidate |
+| `PERF-JS-ALLOC-001` | Object/array literal constructed per iteration inside a hot loop → young-gen churn; escape analysis rarely removes it | **KEEP — reframed** (loop-invariance gate mandatory, Info-first) |
+| `PERF-JS-ALLOC-003` | `concat`/spread/`slice` accumulation in a loop copies n elements per iteration → quadratic | **KEEP (Info)** |
+| `PERF-JS-STR-001` | `+=` string accumulation in a loop → cons-string flattening cost at first use (MEDIUM; V8 ropes mitigate) | **KEEP (MEDIUM)** — honest V8-rope caveat |
+| `PERF-JS-LOOP-001` | Nested loop depth ≥ 2 → superlinear iteration with no early exit | **KEEP (Info)** |
+| `PERF-JS-LOOP-002` | Synchronous blocking I/O in a loop (`readFileSync`, `execSync`, `spawnSync`, sync `crypto`) | **KEEP (MEDIUM)** |
+| `PERF-JS-LOOP-003` | `for...in` over an array → enumerates enumerable string keys incl. the prototype chain | **CUT (v1)** — zero array-literal RHS; identifier RHS is unidentifiable without types |
+| `PERF-JS-LOOP-007` | Linear membership/index scan (`indexOf`/`includes`/`find`) inside a loop → O(n²) | **KEEP — flagship** |
+| `PERF-JS-ASYNC-001` | Sequential `await` inside a loop over independent work → latency serialization; fix = `Promise.all` | **KEEP — flagship** |
+| `PERF-JS-ASYNC-002` | Synchronous blocking call inside an `async` function → event-loop stall | **KEEP — flagship** (async-function gate mandatory; test-skewed) |
+| `PERF-JS-CALL-001` | Direct recursion (self-call) with no visible base-case guard | **KEEP (Info) — guard-gated** |
+| `PERF-JS-ARCH-001` | Import cycle between modules | **KEEP (Info)** — relative-only graph limitation published |
+| `PERF-JS-TYPE-001` | `delete obj.prop` → hidden-class/dictionary-mode transition | **KEEP (Info)** |
 
 **Explicitly cut or deferred (with reason):** `arr.length` hoisting (V8 does not re-read it cost-wise —
 folklore); `new RegExp(literal)` in a loop (V8 keeps a regexp compilation cache — the Python `re.compile`
@@ -212,8 +220,9 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
   `tests/exit_code_matrix.rs:75,90-93`; `tests/i1a_entry_c.rs:406`; `tests/i1b_entry_rust.rs:498`;
   `tests/i1c_entry_python.rs:582`; `tests/atlas_fixtures/mod.rs:155`; `tests/key_views.rs:203`.
   `GOLDEN_ARTIFACTS` and the regenerator's `provenance_free` list take the v1.8 filename (same 17 entries).
-- **Reporter catalog:** `HEURISTIC_CATALOG_V1` gains one entry per shipped JS rule; the count, catalog==registry
-  and Appendix-A panic tests move by exactly that number (see §6 and blocker `B-tb-003`).
+- **Reporter catalog:** `HEURISTIC_CATALOG_V1` gains one entry per shipped JS rule — **11 entries** after
+  the W0 cut — and the count, catalog==registry and Appendix-A panic tests move by exactly 11 (see §6 and
+  blocker `B-tb-003`).
 - **Determinism:** masked double-run byte equality on the JS and TS corpora via dedicated suites —
   `tests/determinism_js.rs` (B2) and `tests/determinism_ts.rs` (B3), both reusing the repo's provenance
   maskers. Each suite compares the full artifact set: `metrics.json` (provenance masked), `report.md`,
