@@ -1,0 +1,64 @@
+{
+"schema_version": 2,
+"track": "B",
+"track_slug": "js-ts",
+"branch": "feat/js-ts",
+"base": "821b984",
+"goal": "Add JavaScript, then TypeScript/TSX, as first-class backends in the existing Rust core (scanner backend + IR emission + PERF-JS rules + additive schema language values + fixtures/goldens), without rewriting the analyzer or reporter.",
+"current_phase": "B1 Phase 0 planning DONE (spec, plan, ADR-0011, Phase 0 inventory, track handoff); no production code. B2 (JS backend) is next.",
+"stage": "planning",
+"north_star_ref": "docs/NORTH-STAR.md",
+"sessions_since_alignment_audit": 0,
+"last_alignment_audit": "2026-10-24",
+"decisions": [
+{"id":"D-tb-001","status":"live","title":"PARSER: tree-sitter-javascript =0.25.0 (ABI 15, MIT, JSX) + tree-sitter-typescript =0.23.2 (ABI 14, MIT, LANGUAGE_TYPESCRIPT + LANGUAGE_TSX) on tree-sitter =0.26.13 (window 13-15); C11 only. oxc rejected (MSRV 1.97 > floor 1.92); swc rejected (MSRV unverified, churn). ADR-0011."},
+{"id":"D-tb-002","status":"live","title":"LANGUAGE TOKENS: js / ts / tsx follow the grammar boundary. .jsx -> js; .ts/.mts/.cts -> ts; .tsx -> tsx; .d.ts/.d.mts/.d.cts skipped. Longest-suffix-first detection."},
+{"id":"D-tb-003","status":"live","title":"SCHEMA: ONE minor bump v1.7 -> v1.8 in B2, all three tokens up front. No required list grows; no field change. Artifact re-emitted in src/schema + byte-identical docs copy; v1.7 retained; CLI VERSION_SUFFIX -> 1.8; $id/title/description/const/enum descriptions rewritten; four goldens regenerate once."},
+{"id":"D-tb-004","status":"live","title":"ANALYZER FAMILY: JS and TS/TSX share PERF-JS-* (same V8/Node mechanism); RuleLanguage::Js matches js|ts|tsx; RuleLanguage::Ts reserved for TS-only constructs (none in v1 unless canary proves one)."},
+{"id":"D-tb-005","status":"live","title":"RULE CATALOG: 12-rule JS candidate set (ALLOC-001/003, STR-001, LOOP-001/002/003/007, ASYNC-001/002, CALL-001, ARCH-001, TYPE-001) is NOT frozen; B2-W0 canary freezes it with mechanism/fix/accepted-FP-class per rule. Cut list recorded."},
+{"id":"D-tb-006","status":"live","title":"DISCOVERY: skip vendored/minified JS; 2 MiB cap (corrected by D-tb-009). No skip counters in v1.8."},
+{"id":"D-tb-007","status":"live","title":"TIER: syntactic only. No semantic resolver claim, no libclang, no semantic-clang feature change. Reachability stays resolved-edge-only."},
+{"id":"D-tb-008","status":"live","title":"B1 SCOPE: planning only; no production code, no dependency added, no schema change, no main-state/Atlas edits."},
+{"id":"D-tb-009","status":"live","title":"DISCOVERY CORRECTION: directory skips are GLOBAL (node_modules, bower_components, dist, build, out, coverage); file-level skips (*.min.*, *.bundle.js, >2 MiB) are JS/TS-only. vendor not skipped. Existing corpora contain none; goldens do not move."},
+{"id":"D-tb-010","status":"live","title":"STAGED FALLBACK (B1 panel): SUPPORTED_LANGUAGES = [c,js,python,rust] in B2 and adds ts/tsx in B3, so the zero-file fallback never advertises a backend that does not exist. The v1.8 schema enum admits all six from the start."},
+{"id":"D-tb-011","status":"live","title":"REPORTER CATALOG (blocker B-tb-003): HEURISTIC_CATALOG_V1 (A-owned src/reporter/mod.rs) has 67-count/equality assertions + panics; catalog + B2 registry must land in the same change; A supplies, or founder approves a catalog-only B edit inside B2-W2."}
+],
+"open_risks": [
+{"id":"R-tb-001","status":"open","severity":"medium","title":"Neither grammar crate declares rust-version. B2-W0 must compile both on 1.92; fallback pin tree-sitter-javascript =0.23.1."},
+{"id":"R-tb-002","status":"open","severity":"medium","title":"TS grammar is ABI 14 (JS 15) - inside the window but one generation behind; exact pin + node-types diff on upgrade (ADR-0001 G5)."},
+{"id":"R-tb-003","status":"open","severity":"medium","title":"TS/TSX node names drift across grammar releases; pin + in-repo queries + parser snapshot tests."},
+{"id":"R-tb-004","status":"open","severity":"high","title":"Vendored/minified JS would dominate findings and stall scans; mitigated by global directory skips + JS/TS-only file/size cap."},
+{"id":"R-tb-005","status":"open","severity":"high","title":"Precision ratchet 1.0/1.0 is hard for JS idioms; mitigated by the canary, a 12-rule ceiling, and mechanism-cited messages."},
+{"id":"R-tb-006","status":"open","severity":"low","title":"No type information -> type-aware rules impossible; syntactic tier stated honestly and limitations published."},
+{"id":"R-tb-007","status":"open","severity":"low","title":"Build time/binary size grows by two C parsers; accepted, no feature gate."},
+{"id":"R-tb-008","status":"open","severity":"medium","title":"Global directory skips change C/Rust/Python discovery where those dirs exist; corpora contain none; documented, criterion 6 restated."},
+{"id":"R-tb-009","status":"open","severity":"high","title":"Reporter HEURISTIC_CATALOG_V1 is A-owned but required (67-count/panic tests); blocker B-tb-003."},
+{"id":"R-tb-010","status":"open","severity":"medium","title":"TSX vs generic-arrow ambiguity (<T,>) degrades parse health; record degradation honestly, do not score unparsed regions, add .tsx snapshot tests."},
+{"id":"R-tb-011","status":"open","severity":"medium","title":"CJS/ESM kind not inferred; entry detection mixes require.main/import.meta; documented; candidates sorted/deduped."},
+{"id":"R-tb-012","status":"open","severity":"low","title":".d.ts skip hides type-only modules (imports become unresolved-internal data-only); unlabeled minified <2 MiB still parsed; extensions case-sensitive."},
+{"id":"R-tb-013","status":"open","severity":"medium","title":"Malformed/unreadable package.json must be per-file data (ignore + fall back to scan root), never a panic/exit 3."}
+],
+"blocked_by": [
+{"id":"B-tb-001","status":"open","title":"views.rs / reporter mod.rs language wiring is A-owned until A step 12; B rebases and wires only after."},
+{"id":"B-tb-002","status":"open","title":"Merge to main requires A step 12 + explicit founder approval; beta is Track A and must not be delayed."},
+{"id":"B-tb-003","status":"open","title":"HEURISTIC_CATALOG_V1 entries (src/reporter/mod.rs) must be landed by Track A before B2, or the founder must approve a catalog-only B edit; B2 cannot ship a rule without them."}
+],
+"next_actions": [
+{"id":"A-tb-001","status":"next","title":"B2-W0: add exact grammar pins, compile on 1.92, cargo deny check licenses, add JS + TS grammar-link tests, run the pinned-repo canary, freeze the 12-rule catalog with dispositions in docs/architecture/js-ts.md."},
+{"id":"A-tb-002","status":"pending","title":"B2-W1: JS backend module + LanguageKind/language_of/extract_unit/language token/failed_unit/SUPPORTED_LANGUAGES (four in B2) wiring + global directory skips + JS/TS-only file/size guard + relative import resolver + entry detection + instrument arms + function_cost_v2 loop/trip extraction."},
+{"id":"A-tb-003","status":"pending","title":"B2-W2: reporter catalog entries (B-tb-003), PERF-JS-* rules + schema v1.8 ($id/title/description/const/enums + both copies + drift test + version-pin sweep) + IR fixtures + examples-js + report-js golden (GOLDEN_TREES 5) + coverage/precision/benchmark."},
+{"id":"A-tb-004","status":"pending","title":"B3: TS/TSX backend (LANGUAGE_TYPESCRIPT + LANGUAGE_TSX), SUPPORTED_LANGUAGES six, examples-ts, report-ts golden (GOLDEN_TREES 6), TS type-only + <T,> negatives, coverage test; no schema bump."},
+{"id":"A-tb-005","status":"pending","title":"B4: docs/contract updates (modules.md 4.2/5.2 + §1 supported set, metrics-json-v1 v1.7->v1.8 entry, output-contract labels, README/roadmap, Cargo.toml description), CHANGELOG note in handoff for A, semver note."},
+{"id":"A-tb-006","status":"pending","title":"Gate: rebase on main after A step 12, plan Definition of Done (all exit 0), musl/Windows check, parallel review panel, founder merge approval."}
+],
+"artifacts": [
+"docs/specs/js-ts.md",
+"docs/plans/js-ts.md",
+"docs/adr/ADR-0011-js-ts-backend.md",
+"docs/architecture/js-ts.md",
+"state/tracks/js-ts/session-state.json",
+"state/tracks/js-ts/handoff.md",
+"docs/tracks/js-ts.md"
+],
+"last_updated": "2026-10-24"
+}
