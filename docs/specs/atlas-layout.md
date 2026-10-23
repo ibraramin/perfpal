@@ -14,6 +14,12 @@ supporting elements only if justified (`docs/research/atlas-developer-needs.md` 
 `docs/specs/atlas-metrics.md`; `docs/specs/map-animation.md`;
 `docs/evidence/map-vision/v7/{g,f}/reads.json`, `COMPARISON.md`, `NOTES.md`.
 
+> **v2 amendment (2026-10-23, signed):** the founder's 2026-10-23 model supersedes the
+> canvas-internal header/legend wording below. The masthead + key-metrics strip (entry, hottest,
+> path, caps, 3 actions, one caveat, one legend/unit definition) live **outside** `#atlas-canvas`;
+> the canvas is the graph + one footer. The detail rail is step 11; the progressive charts/F
+> candidate are step 12. See `docs/evidence/atlas-visual/v2/DECISION.md`.
+
 ## 1. Purpose
 
 One full-page composition for Perfpal Atlas: the entry-flow canvas first, a fixed seven-block brief
@@ -86,7 +92,7 @@ identical for every scan; only content and labels change.
 - **Caps:** when the node cap is hit, draw the top-cost files per depth and an aggregated box
   `+N more · <calls in>`; never silently drop.
 
-### 3.3 Canvas legend (units)
+### 3.3 Canvas legend (units) — v2: the one legend lives in the page strip
 
 One compact legend row: cost unit `static cost units (v2)`; depth = BFS from entry; edge styles
 (forward / back / aggregated) + structural caption (`LOW name-based + MEDIUM semantic`);

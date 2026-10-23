@@ -1,68 +1,46 @@
 # Active Context
 
 ## Current Task
-**Atlas steps 7–8 are green, but the visual regression audit (2026-10-23) found the shipped page is
-not A2-ready. A2/ship (now steps 14–15) are BLOCKED (R-pf-109); the visual rework is steps 9–13.**
-- **Verdict:** the model/data are fine; the visual layer and the gate went wrong. G was a designed
-  page; Atlas is an instrument panel. V8's 16/16 A1 + 16/16 strip reads passed because they measure
-  comprehension, not composition.
-- **Objective defects:** first screen clips the canvas (980px > 900 fold; answer line at 981); page
-  22,942/34,831px (#map 8,982/14,685); brief 3,367/3,219; duplicate chrome (structural caveat 6×,
-  median def 2×); leading-dot truncation; 49 edge labels with a path/back-edge hue collision; F
-  treemap Explorer-only.
-- **Visual drift:** G's warm cream/charcoal/burnt-orange + sans chrome + masthead + right-rail file
-  cards became Atlas's white/slate all-monospace + six-line header + no rail.
-- **Evidence:** `docs/evidence/atlas-audit/AUDIT.md`, `audit.json`,
-  `atlas-{hyperfine,cJSON}-{final,full}.png`; comparative vision read (G vs Atlas) recorded in the
-  audit.
-- **New agents:** read **`docs/atlas/AGENT-BRIEF.md`** first — the issues, the founder's 2026-10-23
-  model (first page = main graph + key metrics; more key charts below; restore G's visual language;
-  F undecided), and the non-negotiable rules.
-- **No code changes in this audit; holdouts vaulted; `map-build` NOT done; A1b open.**
+**Atlas v2 steps 9–10 are implemented (2026-10-23/24) and the step-10 first page is founder-approved
+(2026-10-24); the step-13 final gate is PENDING. Step 11 (G-style detail rail) is next.**
+- **Step 9:** side-by-side G vs Atlas at 1440×900 (hyperfine + cJSON), the G-baseline diff and the
+  signed founder decision (Option A: port G; `report.html#map` capture; detail rail step 11; F
+  candidate step 12) under `docs/evidence/atlas-visual/v2/`.
+- **Step 10:** first-page fit (**canvas bottom 862 ≤ 900**), G warm paper/charcoal/burnt-orange +
+  sans chrome/mono data, 58px masthead, **53px key-metrics strip outside the canvas** (entry,
+  hottest, path, caps, top-3 KV1 actions, one legend/unit definition/caveat), one footer inside the
+  canvas, mid-ellipsis + full-path titles, path-only edge labels, opaque test/bench fills, explicit
+  unreached totals (21/11 hyperfine, 4/75 cJSON). Evidence: `step10.json`, `STEP10.md`, `gate.txt`,
+  `atlas-v2-*-final.png`.
+- **Panel:** R1/R2/Q1/Q2 + a fresh confirmation lane all **APPROVED**; zero blocking findings. The
+  chip `+` wording, evidence transcript/vision record, README/state, fit disclosures and fail-closed
+  reproducer were fixed.
+- **Committed 2026-10-24 (`468d772` + this docs/state commit); no push; no schema/JS/deps; holdouts
+  vaulted; `map-build` NOT done; A1b open; A2/ship (steps 14–15) blocked by R-pf-109.**
 
 ## Recent Decisions
-- **D-pf-247 (live, 2026-10-23):** plan reordered — steps 9–13 = v2 visual rework
-  (G baseline/composition, first-page fit + G visual language, detail rail, progressive charts,
-  founder visual gate + V8 rerun); A2/ship = 14–15, blocked. Easy-to-understand composition;
-  main graph + small key-metrics strip; no 3,000px brief; F treemap candidate; no schema.
-- **R-pf-109 (new, high):** Atlas visual regression; A2/ship (steps 14–15) blocked.
-- **D-pf-246 (live):** Atlas steps 7–8 green (V8 16/16 + 16/16); renderer legibility fixes.
-- **D-pf-245 (live):** Atlas steps 5–6 green (brief/drills + #map wiring).
-- **D-pf-244 (live):** Atlas steps 2–4 green (view model/metrics/canvas).
-- **D-pf-238 (live):** Perfpal Atlas; G core, F components supporting (not fallback); graph page
-  100% graph; metrics below.
+- **D-pf-248 (live, 2026-10-23/24):** Atlas v2 steps 9–10 implemented; Option A signed; step 10
+  first-page fit/G visual language/key-metrics strip/chrome hygiene; panel R1/R2/Q1/Q2 + fresh R3
+  APPROVED; step-10 founder check approved 2026-10-24; step-13 final gate pending; steps 11–12 not started.
+- **D-pf-247 (live):** plan reordered — steps 9–13 = v2 visual rework; A2/ship 14–15 blocked.
+- **R-pf-109 (open, high):** Atlas visual regression; A2/ship blocked until the step-13 gate.
+- **D-pf-246/245/244** moved to the cold ledger (historical session status); **A-pf-119** settled.
 
 ## In Progress
-- **Blocked:** A2/ship. Do not run the founder timed test on the current page.
-- **Next work:** visual rework against the G baseline + a founder visual gate; then re-run the V8
-  gate; then A2.
-- **Decision needed:** restore G's right rail/palette (the audit's recommendation) or keep the
-  full-width canvas and fix the composition; F treemap on-page vs weight strip. Founder side-by-side.
+- Step 10 implementation + evidence are green; the panel is green; the founder approved the first page.
+- **Committed 2026-10-24 (`468d772` + this docs/state commit); no push.**
+- Next: step 11 detail rail.
 
 ## Next
-- **`/new` → Atlas v2 visual rework Session 4: plan steps 9–10 only.**
-  Read `docs/atlas/AGENT-BRIEF.md` → `docs/evidence/atlas-audit/AUDIT.md` → V7 G
-  (`docs/evidence/map-vision/v7/g/g-hyperfine-final.png`, `g-hyperfine.html`) → `atlas-layout.md`.
-  - **Step 9 (design first):** side-by-side G vs Atlas; the founder agrees the visual system (warm
-    paper/charcoal/burnt-orange, sans chrome + mono data, masthead, detail rail) and the first-page
-    composition (main graph + a **small** key-metrics strip; no full brief). Record the decision +
-    G-baseline diff under `docs/evidence/atlas-visual/v2/`.
-  - **Step 10:** implement first-page fit (`#atlas-canvas` bottom ≤ 900 incl. header/legend/footer),
-    G palette/type/masthead, one definition each, the key-metrics strip, and the chrome fixes.
-  - **Guiding rule:** easy to understand beats exhaustive metrics. Show the graph + a few related,
-    plain-language numbers/charts; no metric wall, no 3,000px brief.
-  - Do **not** start steps 11–12 (detail rail/charts), A2 (14) or ship (15).
-- **Then Session 5:** steps 11–13 (detail rail, progressive charts, founder visual gate + V8 rerun).
-- **Then Session 6:** steps 14–15 (A2 + ship).
-- **Keep holdouts vaulted; no `map-build` done; A1b open.**
+- **Step 10 approved and committed;** `/new` → **Session 5: steps 11–13** (G-style
+  detail rail; progressive weight/blast/file charts + F treemap candidate; founder visual gate +
+  G-baseline diff + V8 A1/strip rerun).
+- Do **not** start A2 (step 14) or ship (step 15); holdouts vaulted; `map-build` not done; A1b open.
 
 ## Blockers
-- **Atlas A2:** R-pf-108 — the decisive gate is the founder timed test on application **and**
-  library classes (animation on); structural LOW/MEDIUM edges on the hero canvas remain the main
-  honesty risk (option A reversal trigger recorded).
-- **Map legibility:** R-pf-104/R-pf-105/R-pf-106 — views validated (A1), ranking recall (A1b)
-  open; the brief carries KV1 with the complete-list guarantee; the rank-key/call-weighted
-  question moves into the build.
+- **Atlas A2 (R-pf-108):** founder timed test on application + library classes; blocked until step 13.
+- **Atlas visual gate:** step-10 first page APPROVED 2026-10-24; step-13 final composition remains.
+- **Map legibility:** R-pf-104/R-pf-105/R-pf-106; ranking recall A1b open.
 - **M5 publish:** B-pf-001 (contact) + B-pf-002 (secrets) — founder-owned.
 - **Paper track:** prereg + scans + stats + Zenodo PENDING (PARKED behind the map).
 
@@ -86,3 +64,10 @@ not A2-ready. A2/ship (now steps 14–15) are BLOCKED (R-pf-109); the visual rew
 - **Atlas build session 1 (2026-10-23):** steps 2–4 implemented + unit tests (`fe58299`/`f76a63b`/
   `3fa7c07`, review fixes `5e6b45e`/`6c0f0f3`); full gate green; panel R1/R2/Q1/Q2 APPROVED. No
   schema/`#map` wiring/holdout reads.
+- **Atlas build sessions 2–3 (2026-10-23):** steps 5–8 green (view model/metrics/canvas, brief/
+  drills/#map wiring, test/golden lock, V8 16/16 A1 + 16/16 strip); post-V8 visual audit found the
+  composition regression (`R-pf-109`); v2 rework planned (steps 9–13), A2/ship moved to 14–15.
+- **Atlas v2 Session 4 (2026-10-23/24):** steps 9–10; signed Option A; G-baseline diff + 1440×900
+  side-by-sides; first-page fit 862 ≤ 900; warm/sans/mono system; key-metrics strip; chrome hygiene;
+  evidence under `docs/evidence/atlas-visual/v2/`. Step-10 founder check approved 2026-10-24; committed
+  (`468d772` + docs/state); step-13 final gate pending.
