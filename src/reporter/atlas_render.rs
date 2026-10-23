@@ -554,8 +554,9 @@ fn fit_header_line(line: &str, max_w: i64) -> String {
 }
 
 /// Two-line column header. Line 1 names the depth/entry (or `UNREACHED`);
-/// line 2 carries the file count and aggregation note.
-fn column_header_lines(view: &AtlasView, column: &AtlasColumn) -> (String, String) {
+/// line 2 carries the file count and aggregation note. Shared with the JSON
+/// projection so the sim draws exactly the header text the SVG draws.
+pub(crate) fn column_header_lines(view: &AtlasView, column: &AtlasColumn) -> (String, String) {
     let mut count = files_label(column.file_count);
     if !column.aggregated.is_empty() {
         count.push_str(&format!(" · {} aggregated", column.aggregated.len()));

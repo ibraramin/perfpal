@@ -1,6 +1,6 @@
 # Spec — Atlas Story (temporal + data-flow showcase)
 
-- **Status:** DRAFT for founder seal (2026-10-24). Supersedes the D1 framing in
+- **Status:** **SEALED** (founder, 2026-10-24). Supersedes the D1 framing in
   `docs/research/atlas-run.md` §1–§3 where they conflict; D1's honesty contract (§4) and D3
   appendix (§6) still apply.
 - **Track:** Atlas Run · **Worktree:** `Perfpal-atlas-sim` (`feat/atlas-sim`)
@@ -49,8 +49,9 @@ define what an action is (`docs/specs/map-intelligibility.md:93-95`).
 ## 4. Data contract (Perfpal core owns it)
 
 All story data comes from the Perfpal scan. The story renders from core-emitted JSON:
-`metrics.json` (existing `AtlasView`) + a new optional `flow` block + `atlas-layout.json` (geometry).
-`sim/extract.py`'s HTML scraping is deleted.
+`metrics.json` (existing `AtlasView`), **`atlas-layout.json`** (geometry, derived `stages`, KV1 actions,
+drawn/scan findings counts — `--story` only) and, from S2, an optional **`flow`** block for data
+movement. `sim/extract.py`'s HTML scraping is deleted.
 
 ```
 "flow": {
@@ -58,8 +59,7 @@ All story data comes from the Perfpal scan. The story renders from core-emitted 
   "fidelity": "syntactic",                  // never "runtime"
   "calls":   [ {from, to, callee, line, args:[{expr, type, dir, named}], unresolved:bool} ],
   "io":      [ {file, line, callee, op:"read"|"write", target:"file"|"env"|"net"|"stdio", literal} ],
-  "signatures": [ {id, params:[{name, type, dir}], ret, unresolved:[...]} ],
-  "stages":  [ {order, label, files:[...], depth} ]
+  "signatures": [ {id, params:[{name, type, dir}], ret, unresolved:[...]} ]
 }
 ```
 
@@ -120,8 +120,8 @@ DoD gate: `cargo fmt --all -- --check` && `cargo clippy --locked --all-targets -
 
 ## 9. Build slices
 
-- **S1 — pipeline truth.** P4 (stages) + P5 (layout JSON); story consumes core JSON; delete
-  `extract.py`. No visuals change. *Proves Atlas reads Perfpal, not HTML.*
+- **S1 — pipeline truth (done 2026-10-24).** P4 (stages) + P5 (layout JSON); story consumes core
+  JSON; `extract.py` deleted. No visuals change. *Proves Atlas reads Perfpal, not HTML.*
 - **S2 — data on edges.** P3 (signatures) + P1 (call payloads) → edge labels + inspector; grey
   unresolved. First slice that answers "what moves".
 - **S3 — effects.** P2 (I/O read/write with literal targets) → data stores on scenes; trust line.
@@ -140,10 +140,11 @@ Each slice = one commit per probe + evidence + probe-registry row status flip.
 | "Film" tempts a runtime claim | high | honesty table in §5 is a gate (F4) |
 | Story scope creep into the static report | medium | companion first; report only after S2 proves value (ADR + A12 if interactive) |
 
-## 11. Open decisions (founder)
+## 11. Decisions (founder, 2026-10-24)
 
-1. `flow` block: emit only for story output (**recommended**, keeps existing scans byte-identical) vs
-   always on.
-2. Slice order: S1 pipeline-first (**recommended**) vs S2 data-first on the existing HTML-scrape path.
-3. Companion vs in-report: deferred until S2 evidence; if in-report with controls → new ADR + A12
+1. **`flow` emission: story-mode only.** Existing scans stay byte-identical (§4).
+2. **Slice order: pipeline first.** S1 (P4 stages + P5 layout) shipped before data movement (S2/S3).
+3. **Companion vs in-report: deferred to after S2.** If in-report with controls → new ADR + A12
    amendment (A12 already permits CSS/SMIL, not a second script).
+4. **CLI shape:** S1 ships `--story` on the existing command; the target entry point remains
+   `perfpal story <repo>` (S4). Recorded as a deviation in `docs/atlas/core-probes.md`.

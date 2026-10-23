@@ -17,9 +17,9 @@ use crate::reporter::atlas::{AtlasNode, AtlasView};
 use crate::reporter::atlas_brief::StartAction;
 use crate::reporter::atlas_metrics::format_cost;
 use crate::reporter::atlas_render::{
-    EdgeShape, NodeRect, SVG_W, aggregate_rect, cap_chip_rect, caps_line, compute_layout,
-    edge_shape, footer_text, hottest_line, hull_boxes, node_badges, node_rank_lines, node_style,
-    path_line, strip_entry_line,
+    EdgeShape, NodeRect, SVG_W, aggregate_rect, cap_chip_rect, caps_line, column_header_lines,
+    compute_layout, edge_shape, footer_text, hottest_line, hull_boxes, node_badges,
+    node_rank_lines, node_style, path_line, strip_entry_line,
 };
 
 /// Serialize the Atlas story geometry as pretty JSON.
@@ -193,9 +193,14 @@ pub fn to_json(
         .iter()
         .enumerate()
         .map(|(index, column)| {
+            let column_layout = &layout.columns[index];
+            let (label, count_text) = column_header_lines(view, column);
             json!({
                 "depth": column.depth,
-                "x": layout.columns[index].x,
+                "x": column_layout.x + column_layout.width / 2,
+                "width": column_layout.width,
+                "label": label,
+                "count_text": count_text,
                 "unreached": column.unreached,
                 "folded": column.folded,
                 "file_count": column.file_count,
@@ -218,7 +223,7 @@ pub fn to_json(
         })
         .collect();
 
-    let hottest_text = view.hottest.as_ref().map(|_| hottest_line(view));
+    let hottest_text = hottest_line(view);
 
     let value = json!({
         "layout_version": 1,

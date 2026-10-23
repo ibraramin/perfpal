@@ -5,7 +5,8 @@ Serves `sim/` on 127.0.0.1:8768, drives the prototype with Playwright, asserts
 the D1 contract (data fidelity, controls, honesty, determinism, no network),
 writes 1440x900 keyframes plus `checks.json`, and exits non-zero on any failure.
 
-No source changes; evidence only.
+Validates core-fed sim data (from `atlas-layout.json` + `metrics.json`); it
+makes no source changes and captures evidence only.
 """
 
 from __future__ import annotations

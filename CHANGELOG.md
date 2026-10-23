@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an inspector, reset; keyboard; `prefers-reduced-motion` shows the final frame. Persistent honesty
   label (`STATIC, INFERRED · not a runtime trace · profile to confirm`), no time units, unknown trips
   weight ×1. Data is extracted from a reproducible step-10 render (`sim/make-source.sh` +
-  `sim/extract.py`, fail-closed) and includes three labelled synthetic state demos with no fabricated
+  `sim/extract.py`, fail-closed — **superseded by S1 below: the data now comes from `atlas-layout.json`
+  + `metrics.json` through `sim/from-layout.py`**) and includes three labelled synthetic state demos with no fabricated
   nodes or numbers. Evidence: `docs/evidence/atlas-sim/` (eleven 1440×900 frames, `checks.json` 101/101,
   `NOTES.md`, `VISION.md` PASS); vision, D2 review criteria and the D3 runtime-trace proposal are in
   `docs/research/atlas-run.md`. Committed `7093c77`; D2 (founder review) is next.

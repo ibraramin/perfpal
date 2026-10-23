@@ -7,8 +7,8 @@ Inputs, both emitted by the Perfpal scan itself (never scraped from HTML):
     source/out-<case>/metrics.json        findings (the machine source of truth)
 
 Output: ``sim/data-<case>.json`` in the sim's internal shape, plus a
-``source`` block carrying the layout artifact's SHA-256 so the provenance can
-be re-checked.
+``source`` block carrying the SHA-256 of both input buffers (the exact bytes
+that were parsed) so the provenance can be re-checked.
 
 Deterministic: identical inputs produce byte-identical output (sorted keys,
 sorted arrays, no timestamps).
@@ -25,27 +25,8 @@ from pathlib import Path
 CASES = (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson"))
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def column_label(column: dict) -> str:
-    if column["unreached"]:
-        return "UNREACHED"
-    if column["depth"] == 0:
-        return "depth 0 · ENTRY"
-    return f"depth {column['depth']}"
-
-
-def column_count(column: dict) -> str:
-    if column["unreached"]:
-        return "no forward path"
-    count = column["file_count"]
-    return f"{count} file" if count == 1 else f"{count} files"
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
 def function_row(function: dict) -> dict:
@@ -134,8 +115,10 @@ def findings_for(layout: dict, metrics: dict) -> list[dict]:
 def build(case: str, out_dir: Path) -> dict:
     layout_path = out_dir / "atlas-layout.json"
     metrics_path = out_dir / "metrics.json"
-    layout = json.loads(layout_path.read_text())
-    metrics = json.loads(metrics_path.read_text())
+    layout_bytes = layout_path.read_bytes()
+    metrics_bytes = metrics_path.read_bytes()
+    layout = json.loads(layout_bytes)
+    metrics = json.loads(metrics_bytes)
 
     if layout.get("layout_version") != 1:
         raise SystemExit(f"{layout_path}: unsupported layout_version {layout.get('layout_version')!r}")
@@ -144,6 +127,11 @@ def build(case: str, out_dir: Path) -> dict:
 
     state = layout["state"]
     meta = layout["meta"]
+    if meta["findings_total"] != len(metrics["findings"]):
+        raise SystemExit(
+            f"{case}: meta.findings_total {meta['findings_total']} != "
+            f"metrics.findings {len(metrics['findings'])}"
+        )
     findings = findings_for(layout, metrics)
     included = meta["findings_included"]
     if len(findings) != included:
@@ -158,7 +146,8 @@ def build(case: str, out_dir: Path) -> dict:
         "source": {
             "artifact": "atlas-layout.json",
             "layoutVersion": layout["layout_version"],
-            "sha256": sha256(layout_path),
+            "sha256": sha256(layout_bytes),
+            "metricsSha256": sha256(metrics_bytes),
         },
         "meta": {
             "entry": meta["entry_text"],
@@ -188,8 +177,8 @@ def build(case: str, out_dir: Path) -> dict:
                 "x": column["x"],
                 "order": index,
                 "unreached": column["unreached"],
-                "label": column_label(column),
-                "countText": column_count(column),
+                "label": column["label"],
+                "countText": column["count_text"],
             }
             for index, column in enumerate(layout["columns"])
         ],

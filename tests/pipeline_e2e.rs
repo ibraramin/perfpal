@@ -533,6 +533,86 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
     let raw = fs::read_to_string(story.join("atlas-layout.json")).expect("layout JSON");
     let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
     assert_eq!(layout["layout_version"], 1);
+
+    let canvas_w = layout["canvas"]["w"].as_i64().expect("canvas width");
+    let included = layout["meta"]["findings_included"]
+        .as_u64()
+        .expect("findings_included");
+    let total = layout["meta"]["findings_total"]
+        .as_u64()
+        .expect("findings_total");
+    assert!(included <= total, "included findings exceed the scan total");
+
+    let nodes = layout["nodes"].as_array().expect("nodes array");
+    let drawn: u64 = nodes
+        .iter()
+        .map(|node| {
+            node["findings"]["hot"].as_u64().unwrap()
+                + node["findings"]["warn"].as_u64().unwrap()
+                + node["findings"]["info"].as_u64().unwrap()
+        })
+        .sum();
+    assert_eq!(
+        included, drawn,
+        "findings_included != sum of drawn-node counts"
+    );
+
+    let columns = layout["columns"].as_array().expect("columns array");
+    assert!(!columns.is_empty(), "layout must have columns");
+    for column in columns {
+        assert!(
+            column["label"]
+                .as_str()
+                .is_some_and(|value| !value.is_empty()),
+            "column label missing: {column}"
+        );
+        assert!(
+            column["count_text"].as_str().is_some(),
+            "column count_text missing: {column}"
+        );
+        assert!(
+            column["width"].as_i64().is_some(),
+            "column width missing: {column}"
+        );
+        let x = column["x"].as_i64().expect("column x");
+        assert!(
+            (0..=canvas_w).contains(&x),
+            "column x outside [0, canvas.w]: {column}"
+        );
+    }
+
+    for node in nodes {
+        assert!(node["cost"].as_i64().is_some(), "node cost missing: {node}");
+        let column = node["column"].as_u64().expect("node column");
+        assert!(
+            (column as usize) < columns.len(),
+            "node column out of range: {node}"
+        );
+    }
+}
+
+/// `atlas-layout.json` must be byte-identical across two independent scans.
+#[test]
+fn atlas_layout_json_is_byte_identical_on_double_scan() {
+    let first = temp_dir("story-double-a").join("perfpal-report");
+    let second = temp_dir("story-double-b").join("perfpal-report");
+    for out in [&first, &second] {
+        let code = run_with(argv(&[
+            "--output",
+            out.to_string_lossy().as_ref(),
+            "--story",
+            "--force",
+            fixture_root().to_string_lossy().as_ref(),
+        ]));
+        assert_eq!(code, 0);
+    }
+
+    let bytes_a = fs::read(first.join("atlas-layout.json")).expect("first layout");
+    let bytes_b = fs::read(second.join("atlas-layout.json")).expect("second layout");
+    assert_eq!(
+        bytes_a, bytes_b,
+        "atlas-layout.json not byte-stable across scans"
+    );
 }
 
 /// Slice `text` from the END of the `start` marker up to the `end` marker.

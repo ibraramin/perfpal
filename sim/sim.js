@@ -1,7 +1,8 @@
 /* Atlas run-story prototype (Track D, Session D1).
  *
- * Replays the shipped Atlas entry-flow map from extracted geometry
- * (`data-<case>.json`) as a deterministic, scrubbable, static-inferred story.
+ * Replays the shipped Atlas entry-flow map from Perfpal's atlas-layout.json
+ * projection (`data-<case>.json`) as a deterministic, scrubbable,
+ * static-inferred story.
  * No randomness, no wall-clock input beyond the animation clock, no network.
  */
 (() => {
@@ -353,11 +354,10 @@
     // The renderer emits an UNREACHED lane even when no unreached file is drawn
     // (hyperfine's unreached production files are capped out). Draw the header only
     // when nodes actually sit in that lane.
-    const hasNodes = (column) => !column.unreached || data.nodes.some(
-      (node) => Math.abs(node.x + node.w / 2 - column.x) < 90,
-    );
-    for (const column of data.columns) {
-      if (!hasNodes(column)) continue;
+    const hasNodes = (index, column) =>
+      !column.unreached || data.nodes.some((node) => node.column === index);
+    for (const [index, column] of data.columns.entries()) {
+      if (!hasNodes(index, column)) continue;
       const group = svg('g', { class: 'column' });
       group.append(svg('text', {
         class: 'col-label', x: column.x, y: 22, 'text-anchor': 'middle',

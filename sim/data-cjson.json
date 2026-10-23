@@ -7,7 +7,7 @@
    "label": "depth 0 \u00b7 ENTRY",
    "order": 0,
    "unreached": false,
-   "x": 430
+   "x": 520
   },
   {
    "countText": "1 file",
@@ -15,7 +15,7 @@
    "label": "depth 1",
    "order": 1,
    "unreached": false,
-   "x": 610
+   "x": 700
   },
   {
    "countText": "no forward path",
@@ -23,7 +23,7 @@
    "label": "UNREACHED",
    "order": 2,
    "unreached": true,
-   "x": 790
+   "x": 880
   }
  ],
  "edges": [
@@ -1764,7 +1764,8 @@
  "source": {
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
-  "sha256": "6fe7c32b66e0ad686ca934806d9bde90c2f7df073a0cf7459f24d2543ff32acb"
+  "metricsSha256": "d27adba66dbcc29ce375f921921676591b92351810d656b0375797b9cfd49512",
+  "sha256": "74f3674d063e6292f6328416f0bfead64205eafb29fb38e7869d3b15687ad07b"
  },
  "stage": {
   "h": 718,

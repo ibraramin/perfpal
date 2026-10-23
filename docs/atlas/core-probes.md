@@ -95,25 +95,40 @@
 
 ## S1 record (2026-10-24) — P4 + P5, status `prototype`
 
-- **Emitted by:** `perfpal <repo> -o <dir> --story` → `atlas-layout.json` (story-only; no other artifact changes).
-- **Files touched:** `src/cli/mod.rs` (+9), `src/reporter/atlas.rs` (+49/−6: `loop_depth`, `trip_source`,
-  `unknown_trip_loops`, `fan_out`, `recursive`, per-node severity counts), `src/reporter/atlas_render.rs`
-  (+328/−124: `Layout`/`EdgeShape`/`NodeRect` made `pub(crate)`; aggregate/cap/hull rect math extracted
-  into shared helpers; `strip_entry_line`, `hottest_line`, `path_line`, `caps_line`, `footer_text` exposed),
-  `src/reporter/atlas_layout.rs` (new), `src/reporter/mod.rs` (+20: `atlas_layout_json`),
-  `tests/pipeline_e2e.rs` (+49).
-- **Additive proof:** `report.html` byte-identical for hyperfine
-  (`bd0b20553023f8ebbd3dc4866a489cb70588cc76e4fe7e8b8d1ca0e811f79e2b`) and cJSON
-  (`373e8087872c6d9344b43074e7ab2d5a29d9c9bcade73c9331dcc40712979161`); `metrics.json` differs only in
-  `scan.duration_ms` / `scan.started_at`.
+- **Commits:** `5faacb7` (core), `deb2cc2` (sim + docs), plus the post-panel geometry fix
+  (`git log --grep 'panel blockers'`). P4 and P5 share one emitter and ship together — a **recorded
+  deviation** from the one-probe-per-commit rule; neither is independently useful.
+- **Emitted by:** `perfpal <repo> -o <dir> --story` → `atlas-layout.json` (story-only; no other
+  artifact changes). The target entry point `perfpal story <repo>` is S4; until then the flag is the
+  shipped interface (recorded deviation).
+- **Fields:** `canvas`; `columns[]` (depth, **x = the SVG header centre**, width, label, count_text,
+  unreached, folded, file_count, nonproduction_unreached); `hulls[]`; `nodes[]` (rect, column, depth,
+  drawn_depth, entry/hottest/unreached/production, path_step, partial_parse,
+  fill/stroke/stroke_width/dash, badge, cost, cost_text, ratio_text, top_text,
+  findings{hot,warn,info}, functions[] with
+  loop_depth/trip_source/unknown_trip_loops/fan_in/fan_out/recursive); `edges[]` (from, to, **d = the
+  SVG path**, count, back, on_path); `aggregates[]`; `cap_chips[]`; `stages[]` (order, label, depth,
+  files, leaf); `actions[]` (KV1); `meta` (entry/hottest/path/caps/footer text, findings counts);
+  `state` (the seven flags).
+- **Shared layout math:** `compute_layout`, `edge_shape`, `hull_boxes`, `aggregate_rect`,
+  `cap_chip_rect`, `node_style`, `node_rank_lines`, `node_badges`, `column_header_lines` live in
+  `atlas_render.rs` and are used by both the SVG and the JSON. No geometry is recomputed.
+- **Additive proof (`docs/evidence/atlas-sim/GATE.txt`):** `report.html` byte-identical with/without
+  `--story` on hyperfine and cJSON; `metrics.json` content-equal after removing
+  `scan.duration_ms`/`scan.started_at`.
 - **Output:** canvas 1400×718; hyperfine 19 nodes / 49 edges / 3 stages, findings 148/348; cJSON
   7 nodes / 5 edges / 2 stages, findings 153/837.
-- **Definitions pinned:** `findings_included` = sum of severity counts on drawn nodes (agrees with
-  `sim/data-*.json`); stages = one per `view.path` step, first labelled `ENTRY`, last `leaf`.
-- **Sim consumer:** `sim/from-layout.py` maps `atlas-layout.json` + `metrics.json` → `sim/data-<case>.json`
-  and embeds the layout artifact's SHA-256 in `source.sha256`. `sim/extract.py` is deleted; no HTML is read.
-- **Follow-ups:** `--story` builds the view twice (single-pass artifact assembly later); S1 emits no
-  data-movement fields (P1–P3 are S2/S3).
+- **Definitions pinned:** `findings_included` = sum of severity counts on drawn nodes (the converter
+  asserts it); `stages` = one per `view.path` step, first `ENTRY`, last `leaf`.
+- **Post-panel fix:** the first cut emitted `columns[].x` as the column's left edge while the SVG draws
+  the header at its centre (90 px drift; caught by review lane R1). Columns now carry the header centre
+  plus width and the renderer's own label/count-text helper. **Follow-up:** add a DOM-vs-JSON geometry
+  parity test so this class of drift cannot recur silently.
+- **Real implementation must do:** P5 = keep one layout function with two outputs (never fork into the
+  story); P4 = extend stages to multi-entry/scene order in S4; both stay story-only until the `flow`
+  block graduates.
+- **Known limits:** `--story` builds the view twice (single-pass later); no data-movement fields yet
+  (P1–P3 = S2/S3); `aggregates`/`cap_chips` have no fixture with a capped/aggregated column.
 
 ## Status legend
 

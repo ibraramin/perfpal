@@ -29,14 +29,8 @@ mkdir -p "$OUT"
 "$BIN" "$FIXTURES/cJSON" -o "$OUT/out-cjson" --story
 
 for case in hyperfine cjson; do
-  report="$OUT/out-$case/report.html"
   layout="$OUT/out-$case/atlas-layout.json"
-  [[ -f "$report" ]] || { echo "missing $report" >&2; exit 1; }
   [[ -f "$layout" ]] || { echo "missing $layout" >&2; exit 1; }
-  if ! grep -q 'viewBox="0 0 1400 718"' "$report"; then
-    echo "$report: unexpected layout (expected the 1400x718 full-bleed canvas)" >&2
-    exit 1
-  fi
 done
 
 python3 "$ROOT/sim/from-layout.py" --source "$OUT" --sim "$ROOT/sim"

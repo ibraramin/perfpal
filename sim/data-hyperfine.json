@@ -7,7 +7,7 @@
    "label": "depth 0 \u00b7 ENTRY",
    "order": 0,
    "unreached": false,
-   "x": 160
+   "x": 250
   },
   {
    "countText": "5 files",
@@ -15,7 +15,7 @@
    "label": "depth 1",
    "order": 1,
    "unreached": false,
-   "x": 340
+   "x": 430
   },
   {
    "countText": "6 files",
@@ -23,7 +23,7 @@
    "label": "depth 2",
    "order": 2,
    "unreached": false,
-   "x": 520
+   "x": 610
   },
   {
    "countText": "5 files",
@@ -31,7 +31,7 @@
    "label": "depth 3",
    "order": 3,
    "unreached": false,
-   "x": 700
+   "x": 790
   },
   {
    "countText": "2 files",
@@ -39,7 +39,7 @@
    "label": "depth 4",
    "order": 4,
    "unreached": false,
-   "x": 880
+   "x": 970
   },
   {
    "countText": "no forward path",
@@ -47,7 +47,7 @@
    "label": "UNREACHED",
    "order": 5,
    "unreached": true,
-   "x": 1060
+   "x": 1150
   }
  ],
  "edges": [
@@ -3037,7 +3037,8 @@
  "source": {
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
-  "sha256": "2b3d933e65375a2a0bd1f26c518eaa2be6287c0c4d375b8344fb5fc50b23a4ca"
+  "metricsSha256": "0436e6f20bdf2cd099f90a68d78e4a03a0360e8316143409a48ff4c8d9b7f8d3",
+  "sha256": "44bf4eec2b6e422fbacee3f6b16a4b5b7309e483ba3e6fc0654c54324ec9c5ae"
  },
  "stage": {
   "h": 718,

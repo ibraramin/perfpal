@@ -87,6 +87,15 @@ The directory inherits the [metrics.json versioning policy](../schema/metrics-js
 - **Consumption entry points:** humans start at `report.md` (bounded groups + links; full rows one click away in `findings-detail.md` / `findings-detail.html`); LLMs/tooling start at `metrics.json` (raw), using `report.md` as a guided tour. Both paths must lead to consistent conclusions because of Principle 2.
 - **Bounded-human rule (C-split):** `report.md` and `report.html` carry ZERO per-finding rows at any scale — one group row per firing rule plus links into the detail artifacts. **Exception (V4 key views):** a fixed ≤5 key-view rows per question (KV1 brief, KV2 bars, KV3 bars) is explicitly allowed — a bounded answer-first block, not a per-finding dump; uncapped per-finding rows remain forbidden. `-ARCH-002` hot-component aggregates are suppressed from KV1's action ranking and counted as "component-level finding(s) in Explorer" (`ARCH-001`/`ARCH-003` are file-level actions and stay ranked). The two remaining unbounded human-report sections are capped the same way (C-full-split follow-up, same `take(10)` precedent as the §3 top-files table and the `#files` drill-down): the §5 component table / Component index shows the top 10 in rank order with an honest `showing top <S> of <M> components` header/note, and each file drill-down row links at most the top 10 findings by severity-rank → `finding_id` with an honest `…+N more` marker. Full component and finding data stays in `metrics.json` (machine source of truth) and the uncapped `findings-detail.*` artifacts. The artifact SET per scan is therefore the 8 fixed files (`metrics.json`, bundled schema, `report.md`, `report.html`, `findings-detail.md`, `findings-detail.html`, `profile-queue.md`, `profile-queue.html`) plus `charts/graph.dot` and the chart set (3 v1 overviews + 5 layered/map overviews + one `component-<rank>-<slug>.svg` page per capped component).
 
+**Opt-in story artifact.** `perfpal <repo> --story` additionally writes **`atlas-layout.json`**
+(`layout_version: 1`): the exact Atlas canvas geometry the report's SVG draws (canvas, columns with
+header centres, node rects, edge paths, hulls, aggregate boxes, cap chips), the node presentation
+strings the SVG renders, derived run-story `stages`, the KV1 start actions, and the drawn-slice/scan
+findings counts. It is **absent unless `--story` is passed**, so the fixed set above is unchanged by
+default. Consumers must treat it as optional, pin `layout_version`, and never use it as a substitute
+for `metrics.json` (still the machine source of truth). Minor additions are backward-compatible; the
+geometry is a projection of the same layout function the SVG renderer uses, not a second layout.
+
 ## 5. `report.md` template outline
 
 The report is generated from `metrics.json` plus the reporter's built-in heuristic catalog (frozen for v1; the catalog supplies only the Appendix A descriptions). Section order is fixed; every number and finding is traceable to a `metrics.json` field — the report never invents or aggregates beyond what is stated here.
