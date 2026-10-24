@@ -21,7 +21,7 @@ implemented properly and merged later. Existing scan outputs must stay byte-iden
 
 ## Recent Decisions
 - **D-pf-252 (live):** Atlas Story spec `docs/specs/atlas-story.md` sealed; S1 committed
-  (`5faacb7`…`43a0841`, not pushed); P4/P5 status `prototype`; next is S2 (P3 signatures + P1 call
+  (`5faacb7`…`7170cad`, not pushed, gate PASS); P4/P5 status `prototype`; next is S2 (P3 signatures + P1 call
   payloads).
 - **D-pf-251 (live, 2026-10-24):** D2 founder verdict — D1 presentation/animation accepted, information
   not insightful; Atlas is Perfpal's #1 priority; Atlas consumes Perfpal core data; core additions are

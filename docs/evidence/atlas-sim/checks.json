@@ -267,7 +267,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "130543 bytes",
+      "detail": "130478 bytes",
       "ok": true
     },
     {
@@ -332,17 +332,17 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "131943 bytes",
+      "detail": "131970 bytes",
       "ok": true
     },
     {
       "check": "cjson: mid keyframe",
-      "detail": "132124 bytes",
+      "detail": "132116 bytes",
       "ok": true
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "135722 bytes",
+      "detail": "135749 bytes",
       "ok": true
     },
     {
@@ -382,7 +382,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "67083 bytes",
+      "detail": "67058 bytes",
       "ok": true
     },
     {
@@ -442,7 +442,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "71290 bytes",
+      "detail": "71265 bytes",
       "ok": true
     },
     {

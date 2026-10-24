@@ -76,6 +76,8 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
 - `996d47e` — `fix(story): panel blockers — column geometry, provenance, gate`
 - `462f4f4` — `fix(sim): stable metrics content hash across scans`
 - `43a0841` — `fix(story): close re-review — canvas height, record, stale docs`
+- `0461f75` — `fix(story): path-independent provenance, reproducible gate, record`
+- `7170cad` — `fix(gate): exclude the transcript from the dirty count, record the verdict`
 - evidence commits follow (`f9d0b93`, `aac7e8f`, …): transcripts only; **not pushed**.
 
 ## Next
