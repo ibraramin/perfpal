@@ -234,6 +234,11 @@
   longer masquerade as a drawn `read`; AST walks are capped at depth 256.
 - **Effect:** hyperfine resolved calls 43 → 22 (more conservative); edge labels unchanged
   (44 `unresolved`, 4 `type-only`, 1 `literal-observed`). 853 tests pass.
+- **Follow-up fix:** `eef9d99` `fix(flow): function-pointer parameter list` — a function
+  returning a function pointer (`int (*f(void))(int)`) now reports its **own** `(void)`
+  parameter list, not the returned function's `(int)` list; the test asserts
+  `factory.params == []`. Found by the R1 re-review (round 2); this is the only blocking
+  residual after `ee74206`.
 - **Not changed:** `out` still unused; `unresolved` still means "callee unresolved or every
   argument untyped" (documented in the module).
 
