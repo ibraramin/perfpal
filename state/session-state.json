@@ -1,17 +1,12 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "Atlas v2 steps 9-13 done; step-13 APPROVED 2026-10-24 on merged main c73d6ff (delegated, evidence-based; step13/FOUNDER-GATE.md); A2 (14) may be scheduled; ship (15) blocked; R-pf-109/A-pf-118 open; F undecided; holdouts vaulted; map-build not done; A1b open.",
+  "current_phase": "Atlas v2 steps 9-13 done; step-13 gate COMMITTED 86c0537; A2 (14) may be scheduled; ship (15) blocked; R-pf-109/A-pf-118 open; F undecided; holdouts vaulted; map-build not done; A1b open.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 1,
   "last_alignment_audit": "2026-10-16",
   "decisions": [
-    {
-      "id": "D-pf-249",
-      "status": "live",
-      "title": "ATLAS v2 STEP 11 IMPLEMENTED (2026-10-24, uncommitted pending founder commit approval): first-page per-file detail rail. 868px canvas + 530px #atlas-rail (DOM sibling, A9 unchanged); 12 cards entry-first then production-first; role, M-04 cost anchor, top-3 functions, dominant finding; file -> weight drill, function -> exact profile-queue.html#fn-..., finding -> exact findings-detail.html#finding-... (same-severity exemplar); rail in all eight states; canvas bottom 869 <= 900; 1280 stacks, no horizontal scroll; #map +8/+7px (footer wrap; step-12 cut). Canvas node labels = file name + parent segment on basename collision (full path in title/rail). No schema/JS/deps. Evidence docs/evidence/atlas-visual/v2/{STEP11.md,step11.json,gate-step11.txt,VISION-STEP11.md}; vision PASS; panel R1/Q1/R2/Q2/R3 APPROVED; step-13 gate PENDING; A2/ship blocked; holdouts vaulted; map-build not done; A1b open."
-    },
     {
       "id": "D-pf-250",
       "status": "live",
@@ -31,6 +26,11 @@
       "id": "D-pf-253",
       "status": "live",
       "title": "ATLAS v2 STEP 13 APPROVED 2026-10-24 (delegated evidence-based; founder's eye not applied): merged-tree gate PASS (scan==served, canvas 869<=900, #map 1,848, A1/strip 16/16); A2 may follow; no ship."
+    },
+    {
+      "id": "D-pf-254",
+      "status": "live",
+      "title": "ATLAS v2 STEP 13 EVIDENCE COMMITTED 2026-10-24: commit 86c0537 (docs(atlas): v2 step 13 visual gate evidence + sign-off) on parent c73d6ff; 54 files, evidence/docs/state only; no src/schema/JS/deps; no push. A2 (step 14) may be scheduled; ship (step 15) and plan-done untouched."
     }
   ],
   "open_risks": [

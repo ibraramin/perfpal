@@ -54,7 +54,7 @@ be scheduled; ship (step 15) stays blocked.**
 
 ## In Progress
 - Step 13 is **APPROVED 2026-10-24** (D-pf-253; `step13/FOUNDER-GATE.md`). Evidence/state/docs are
-  written; the index is staged by the parallel session, but **nothing is committed**.
+  committed as **`86c0537`** (54 files); **no push**. Track C's two files are untouched.
 - A2 (step 14) may be scheduled as a separate session; ship (step 15) remains blocked.
 
 ## Next

@@ -11,9 +11,8 @@ was not applied; provenance recorded in `step13/FOUNDER-GATE.md`). **A2 (step 14
 (step 15) still blocked; `R-pf-109`/`A-pf-118` remain open records; F undecided (`D-pf-251`); holdouts
 vaulted; `map-build` NOT done; A1b open.
 
-**Commits:** **none for step 13 yet.** HEAD is `c73d6ff` (Track C4 fast-forward). The step-13
-evidence/docs/state are **staged** (`git add`) but **not committed**; a commit needs the founder's
-explicit approval. **No push.**
+**Commits:** `86c0537` — `docs(atlas): v2 step 13 visual gate evidence + sign-off` (54 files:
+evidence, renders, state/docs; parent `c73d6ff`). **No push.**
 
 ## This session — step 13 evidence
 
