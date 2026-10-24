@@ -26,7 +26,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
   echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
   echo "Commit at run: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
   echo "Git tree: $(git rev-parse HEAD^{tree})"
-  echo "Dirty paths at run: $(git status --porcelain | wc -l)"
+  echo "Dirty paths at run (excluding this transcript): $(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)"
   echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence."
   echo "Fixtures: hyperfine $(git -C "$FIXTURES/hyperfine" rev-parse --short HEAD 2>/dev/null || echo '?') · cJSON $(git -C "$FIXTURES/cJSON" rev-parse --short HEAD 2>/dev/null || echo '?')"
   echo
@@ -161,7 +161,9 @@ PY
 } > "$EVIDENCE/GATE.txt" 2>&1
 
 if grep -qE 'exit=[1-9]|assert=FAIL|assert_exit=[1-9]' "$EVIDENCE/GATE.txt"; then
+  echo "verdict=FAIL" >> "$EVIDENCE/GATE.txt"
   echo "FAIL — see $EVIDENCE/GATE.txt"
   exit 1
 fi
+echo "verdict=PASS" >> "$EVIDENCE/GATE.txt"
 echo "PASS — wrote $EVIDENCE/GATE.txt"
