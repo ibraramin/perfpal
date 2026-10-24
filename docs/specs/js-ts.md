@@ -4,9 +4,24 @@ Scope: feature
 
 # Spec: js-ts
 
-**Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** B2-W0 complete (pins, link tests, canary freeze); no backend/analyzer code yet.
+**Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** **B2-W0 complete** (pins, link tests, canary
+freeze) and **B2-W1 implemented; full DoD green; panel APPROVED; commit pending** (JS tree-sitter backend + scanner
+wiring + discovery/resolver/entry/instrument); B2-W2 next (11 `PERF-JS-*` rules + schema v1.8 +
+fixtures/goldens).
 **Owners:** Track B owns this spec, `docs/plans/js-ts.md`, the JS/TS ADR, the grammar pins, the JS/TS
 fixtures/goldens, and the `src/schema` language values. Track A owns `views.rs`/`mod.rs` wiring until A step 12.
+
+**B2-W1 additive IR-internal facts (no schema/DTO change).** The backend now emits
+`FunctionUnit.allocations: Vec<AllocEvent>` (`new`/`object`/`array` + `referenced_names`),
+`FunctionUnit.unaries: Vec<UnaryEvent>` (`delete obj.prop`), and `FunctionRecord.entry_declared:
+Option<bool>` (`package.json` `main`/`bin` or an in-source `require.main === module` / `import.meta.url`
+guard). All three are serde-defaulted IR fields; they are **not** mirrored in `metrics.json`.
+
+**Disclosure — `js` precedes v1.8.** A B2-W1 tree emits `files[].language == "js"` and
+`scan.languages == ["js"]` while the bundled schema artifact is still v1.7 (whose language enum lists only
+`c`/`rust`/`python`) and the repo has no in-repo document validator. This is deliberate staging, **not a
+shippable point**: the single v1.8 bump with all six tokens lands in B2-W2 before any release
+(`R-tb-015`).
 
 ## 1. Purpose
 
@@ -64,7 +79,7 @@ Extension map (longest suffix first; unknown extensions still dropped silently a
 | `.js`, `.jsx`, `.mjs`, `.cjs` | `js` |
 
 **Discovery policy.** Directory skips are **global** — discovery is language-blind at directory level
-(`src/scanner/mod.rs:221-259` walks directories, then filters file names). Skip directories named
+(`src/scanner/mod.rs:314-354` walks directories, then filters file names). Skip directories named
 `node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage`. Dot-directories are already skipped
 today, so `.next`, `.nuxt`, `.svelte-kit`, `.cache` need no entries. File-level skips apply to **JS/TS files
 only**: `*.min.js`, `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, and files larger than **2 MiB** (minified
@@ -195,6 +210,9 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
 
 ## 9. Tests, fixtures, goldens
 
+- **W1 test inventory:** `tests/javascript_backend.rs` (20 integration tests over the real grammar,
+  scanner, aggregator and CLI) + the backend unit tests in
+  `src/scanner/backends/tree_sitter_javascript/tests.rs` (grammar node kinds, loop context, params, events).
 - **Grammar link tests:** `tests/javascript_grammar_link.rs` and `tests/typescript_grammar_link.rs` —
   assert the grammar ABI is inside the runtime's accepted window, `set_language` succeeds, a representative
   source parses with zero `ERROR`/missing nodes, and a malformed source is non-vacuously degraded.
@@ -231,10 +249,11 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
 
 ## 10. CLI behavior
 
-- No new flags. Auto-detection by extension is the only entry path; a single-file target with a JS/TS
-  extension is scanned normally.
-- The single-file "unknown extension defaults to C" fallback stays as-is (only reachable for unknown
-  extensions).
+- No new flags. Auto-detection by extension is the only entry path. A single-file target with a JS suffix
+  is scanned normally **except** the JS skip names (`*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`),
+  which are skipped silently. A single-file target with an unsupported TypeScript/declaration suffix
+  (`.ts`, `.mts`, `.cts`, `.tsx`, `.d.ts`, `.d.mts`, `.d.cts`) is skipped silently too — never parsed as C.
+  A genuinely unknown extension keeps the documented C fallback.
 - `--version` suffix moves to `(metrics schema 1.8)` with the schema bump; the `about` line widens from
   "C/Rust codebase" to name JS/TS. These string changes are forced by the schema bump (precedent:
   `python-backend` W3).
@@ -268,4 +287,8 @@ language-specific limits: **CJS/ESM module kind is not inferred** (no `package.j
 **TSX vs generic-arrow ambiguity** can degrade parse health for `<T,>` constructs; **`.d.ts` skipping** makes
 type-only modules invisible, so imports that only resolve through them become unresolved-internal data-only;
 a **minified file under 2 MiB** that is not named `*.min.*`/`*.bundle.js` is still parsed and can fire rules;
-**extension matching is case-sensitive**, so `.JS`/`.TS` are silently dropped.
+**extension matching is case-sensitive**, so `.JS`/`.TS` are silently dropped. **Single-file targets follow
+the discovery skip policy:** `*.min.*`/`.bundle.js` and unsupported TS/declaration suffixes are skipped
+silently, while a genuinely unknown extension keeps the C fallback. **Class bodies are not event owners:**
+methods and arrow-function fields are their own records, but non-arrow field-initializer expressions and
+`class_static_block` bodies are not event-scanned at all.

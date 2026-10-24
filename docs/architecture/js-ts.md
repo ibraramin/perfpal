@@ -1,9 +1,13 @@
 # Perfpal — JS/TS backend (Track B — inventory and freeze record)
 
-**Status:** B1 planning complete; **B2-W0 complete** (exact pins, grammar-link tests, canary freeze).
-No backend/analyzer/schema code exists yet. Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`,
-`docs/specs/js-ts.md`, `docs/plans/js-ts.md`. **Branch:** `feat/js-ts`, rebased on `main` @ `189df91`
-(B1 commits `3adf115` + `3e414e3`); implementation base `821b984`.
+**Status:** B1 planning complete; **B2-W0 complete** (exact pins, grammar-link tests, canary freeze);
+**B2-W1 implemented; full DoD green; panel APPROVED; commit pending** — the JS tree-sitter backend, scanner wiring,
+discovery skips, relative import resolver, `package.json`/in-source entry declarations, aggregator JS entry
+lane, and instrument JS arms are in the tree and green. **B2-W2 next** (11 `PERF-JS-*` rules + schema v1.8 +
+fixtures/goldens). Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`, `docs/specs/js-ts.md`,
+`docs/plans/js-ts.md`.
+**Branch:** `feat/js-ts`, rebased on `main` @ `189df91` (B1 commits `3adf115` + `3e414e3`); implementation
+base `821b984`.
 
 ## 1. Purpose
 
@@ -50,7 +54,7 @@ Line numbers are current-tree (`821b984`) and are evidence; re-read before editi
 | 5 | `src/scanner/mod.rs:322-330` | `failed_unit` language token arm | add three arms |
 | 6 | `src/scanner/mod.rs:107` | `SUPPORTED_LANGUAGES = ["c","python","rust"]` | B2 `["c","js","python","rust"]`; B3 adds `"ts"`/`"tsx"` (staged — never advertise a backend that does not exist) |
 | 7 | `src/scanner/mod.rs:188-213` | per-language whole-scan passes | add JS/TS import-resolution pass |
-| 8 | `src/scanner/mod.rs:166` | single-file unknown extension → `C` | unchanged (known JS/TS extensions take the new path) |
+| 8 | `src/scanner/mod.rs:166` | single-file unknown extension → `C` | unknown extensions keep `C`; single-file JS skip names and unsupported TS/declaration suffixes are skipped silently |
 | 9 | `src/scanner/backends/mod.rs:16-18` | three `pub mod` declarations | add JS + TS modules |
 
 ### 4.2 Backend contract
@@ -59,20 +63,39 @@ Line numbers are current-tree (`821b984`) and are evidence; re-read before editi
 - Per-language entry point: `pub fn extract(path: &str, source: &[u8]) -> Extraction` + `pub fn language() -> Language`.
 - Grammar binding pattern: `tree_sitter_python::LANGUAGE.into()` (`tree_sitter_python/mod.rs:156-158`).
 - Parser construction + failure handling pattern: `Parser::new()` → `set_language` → `parse`; any failure yields `ParseStatus::Failed`, never a panic (`tree_sitter_python/mod.rs:54-65`).
-- **New modules to create:** `src/scanner/backends/tree_sitter_javascript/{mod.rs,scan.rs,infer.rs,tests.rs}` and `src/scanner/backends/tree_sitter_typescript/…`, mirroring the Python layout.
+- **Implemented (B2-W1):** `src/scanner/backends/tree_sitter_javascript/{mod.rs,scan.rs,infer.rs,tests.rs}`
+  exists and mirrors the Python layout; `extract` returns the shared `Extraction` and `language()` returns
+  the pinned `tree_sitter_javascript::LANGUAGE`. There is still no trait/registry: the dispatch is the
+  `LanguageKind::Js` arm in `src/scanner/mod.rs`.
 
 ### 4.3 Discovery / ignore policy (new risk found in B1)
 
-- `src/scanner/mod.rs:221-259` — discovery admits only known extensions, skips dot-directories, does not follow symlinks, has a canonical-path cycle guard.
-- **There is no `.gitignore` support, no generic skip list, no file-size limit, and no binary guard.** `discover_packages` (`:594-627`) skips `node_modules` only for **Cargo** package discovery, not for source scanning.
-- Without a JS/TS policy, `node_modules/**/*.js`, `dist/`, and minified bundles would be scanned and would dominate findings. **B2 must add the global directory skip set plus the JS/TS-only file-name/size guard** (§7). C/Rust/Python discovery changes only beneath the skipped directory names (the existing corpora contain none).
+- `src/scanner/mod.rs:314-354` — discovery admits only known extensions, skips dot-directories, does not follow symlinks, has a canonical-path cycle guard.
+- **There is no `.gitignore` support and no binary guard.** The W1 JS/TS policy adds the global directory
+  skip set and a JS-only file-size cap (§7); `discover_packages` skips `node_modules` only for **Cargo**
+  package discovery, not for source scanning.
+- Without a JS/TS policy, `node_modules/**/*.js`, `dist/`, and minified bundles would be scanned and would
+  dominate findings. **Implemented in B2-W1:** the global directory skip set plus the JS/TS-only
+  file-name/size guard (§7). C/Rust/Python discovery changes only beneath the skipped directory names (the
+  existing corpora contain none).
 
 ### 4.4 Resolver
 
-- Python: real whole-scan import pass `resolve_python_edges` (`src/scanner/mod.rs:410`), dotted-module map (`:415-425`), `top_level` set (`:425-430`), relative-import normalisation (`:443-467`), external bucket (`:479-481`).
-- Rust: Cargo-aware module graph (`discover_packages:594`, `RustModuleMap::build:647`, `resolve_use:721`, `resolve_rust_mod_edges:787`, `resolve_rust_use_edges:828`).
+- Python: real whole-scan import pass `resolve_python_edges` (`src/scanner/mod.rs:537`), with the
+  dotted-module helper `python_dotted_module` (`:617`) and the same normalization/external-bucket split.
+- Rust: Cargo-aware module graph (`discover_packages:980`, `RustModuleMap::build:1037`,
+  `resolve_rust_mod_edges:1177`, `resolve_rust_use_edges:1218`).
 - JS/TS v1 mirrors the Python shape at lower ambition: relative specifiers only (§9).
-- Reachability: resolved edges only; name-based edges are LOW confidence and excluded (`src/aggregator/mod.rs:695-698, 897-905`). Python's reachable set is honestly empty (`:1084-1090`).
+  **Implemented (B2-W1):** the backend emits raw specifier text with `Quoted` for `./`/`../` and `Angle`
+  for bare/absolute/URL/`node:` specifiers; `resolve_js_edges` probes the scanned-path set (exact path,
+  then `.ts/.tsx/.js/.jsx/.mjs/.cjs/.mts/.cts`, then `<dir>/index.<ext>`) and normalizes an internal miss
+  to `to_path: null`. `mark_js_entry_declarations` reads `package.json` `main`/`bin` into the IR-internal
+  `entry_declared` fact.
+- Reachability: resolved edges only; name-based edges are LOW confidence and excluded (the exclusion is
+  documented on `resolved_c_edges` / `rust_reachable` in `src/aggregator/mod.rs`). Python's reachable set
+  is honestly empty (`python_reachable:1150`).
+  **JS (B2-W1):** `resolved_js_edges` (`:1258`) is also honestly empty (the backend emits file-level
+  imports, not function call facts), so JS reachability is entries-only by construction.
 
 ### 4.5 Analyzer / rules
 
@@ -97,9 +120,9 @@ Rule counts today: **C 23, Python 22, Rust 22**. Naming: `PERF-<LANG>-<FAMILY>-<
 |---|---|---|---|
 | 1 | `src/ir/mod.rs:164-174` | `FileRecord.language: String` (free-form) | no shape change; emit `js`/`ts`/`tsx` |
 | 2 | `src/ir/mod.rs:583-599` | `FunctionRecord` entry/reachability fields | no change |
-| 3 | `src/aggregator/mod.rs:130-145` | three language lanes in `assemble` | add JS lane |
-| 4 | `src/aggregator/mod.rs:229-238` | stats gate `c|rust|python` | widen to the six tokens |
-| 5 | `src/aggregator/mod.rs:628-1151` | `detect_*_entries` / `resolved_*_edges` / `*_reachable` (Python: `:1084`, `:1146`) | add `detect_js_entries`, `resolved_js_edges`, `js_reachable` |
+| 3 | `src/aggregator/mod.rs:130-145` | three language lanes in `assemble` | **implemented (B2-W1):** JS lane + `js_reachable` over the honestly empty resolved-edge set |
+| 4 | `src/aggregator/mod.rs:229-238` | stats gate `c|rust|python` | widened to include `js` in B2-W1 |
+| 5 | `src/aggregator/mod.rs:1174-1270` | `detect_*_entries` / `resolved_*_edges` / `*_reachable` (JS: `detect_js_entries:1174`, `resolved_js_edges:1258`, `js_reachable:1265`; Python: `:999`, `:1088`, `:1150`) | **implemented (B2-W1):** `detect_js_entries`, `resolved_js_edges`, `js_reachable` |
 | 6 | `src/aggregator/mod.rs:205-216` | `scan_languages` sorted-unique + fallback | inherits the new const |
 
 ### 4.7 Schema / output
@@ -190,21 +213,43 @@ candidate construct). The pinned TS grammar cannot parse `f<typeof import("x")>(
 the canary's 229 gemini-cli parse failures); this is accepted degradation under `R-tb-014`,
 not a reason to bump the pin without an ADR-0001 G5 review.
 
+**Additive IR-internal facts emitted in B2-W1 (no schema/DTO change).** The backend adds three
+serde-defaulted IR fields that carry the JS evidence the analyzer consumes in B2-W2; none is mirrored in
+`metrics.json`, so the wire schema stays v1.7-shaped until the v1.8 bump:
+
+- `FunctionUnit.allocations: Vec<AllocEvent>` — `kind` is `new` | `object` | `array`; each event carries
+  the shared `EventMeta` (span, loop depth, innermost) and sorted/deduped `referenced_names` for the
+  future loop-invariance gate.
+- `FunctionUnit.unaries: Vec<UnaryEvent>` — v1's only emitter is `delete obj.prop` (`op == "delete"`);
+  the operand is a `Shape`.
+- `FunctionRecord.entry_declared: Option<bool>` — `Some(true)` on a synthetic `<module>` record proven to
+  be an entry by a `package.json` `main`/`bin` target or an in-source `require.main === module` /
+  `import.meta.url` guard; `Some(false)` on other JS module records; `None` on real functions and every
+  non-JS backend.
+
+The public wire surface for this evidence remains the existing `stats.functions[]` entry/reachability,
+`alloc_site_count`, `alloc_family`, `error_path`, `idiom_hash`, and `function_cost_v2` fields.
+
 ## 7. Discovery policy
 
-Discovery is language-blind at directory level (`src/scanner/mod.rs:221-259`), so the two scopes are
-different:
+Discovery is language-blind at directory level (`src/scanner/mod.rs:314-354`), so the two scopes are
+different. **Implemented in B2-W1:**
 
-- **Directory skips are global:** `node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage`.
-  Dot-directories (`.next`, `.nuxt`, `.svelte-kit`, `.cache`, …) are already skipped by the existing rule, so
-  they need no entries.
-- **File-level skips are JS/TS-only:** `*.min.js`, `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, and JS/TS files
-  larger than **2 MiB**.
+- **Directory skips are global** (`SKIP_DIRS`): `node_modules`, `bower_components`, `dist`, `build`, `out`,
+  `coverage`. Dot-directories (`.next`, `.nuxt`, `.svelte-kit`, `.cache`, …) were already skipped by the
+  existing rule, so they have no entries.
+- **File-level skips are JS/TS-only** (`JS_SKIP_FILE_SUFFIXES` + `JS_MAX_FILE_BYTES`): `*.min.js`,
+  `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, and JS/TS files larger than **2 MiB** (the cap is checked with
+  `fs::metadata` before reading, so oversized bundles are never parsed). The bounded `package.json` walk
+  (`src/scanner/mod.rs:847-884`) filters **directories only** (dot-dirs, the global skip set, symlinks); it
+  does not apply the file-name/size filter.
 - All skips are path/metadata-based and deterministic; no content sniffing; no skip counters in v1.8.
 - Existing symlink policy and canonical-path cycle guard are reused.
 - **Consequence:** C/Rust/Python files beneath a global-skip directory are no longer scanned. `vendor` is
   deliberately **not** skipped (too generic; `path_class` already labels it). The existing corpora contain
-  none of these directories, so their finding sets and goldens do not move.
+  none of these directories, so their finding sets and goldens do not move. The B2-W1 integration suite
+  locks the surviving set (a `vendor/` JS file is scanned; the six skipped directories are not; oversized
+  JS is dropped while oversized C still scans).
 
 ## 8. Rule disposition table (FROZEN by the B2-W0 canary)
 
@@ -247,20 +292,33 @@ counter twice and `cmp`s the output).
 
 - Resolve **relative specifiers only** (`./`, `../`): probe `.ts/.tsx/.js/.jsx/.mjs/.cjs/.mts/.cts`, then
   `<dir>/index.<ext>`. Bare specifiers, absolute `/…`, `node:` and URLs → **external** (unresolved).
-- `package.json` is located by walking up to the scan root (reporting/package root only).
+  **Implemented in B2-W1** (`resolve_js_edges` / `resolve_js_specifier`); root-escaping `../` is treated
+  as unresolved-internal.
+- `package.json` is located by a bounded, deterministic walk to the scan root (reporting/package root
+  only). The scanner reads `main` (string) and `bin` (string | object | array) and marks the matching
+  module record with `entry_declared = Some(true)`. Malformed/unreadable manifests are per-file data:
+  ignored, scan continues, never exit 3.
 - Unresolved internal imports are **data-only** (no finding), mirroring the Rust N1 decision.
-- Out of scope: `tsconfig` `paths`, `node_modules`, `exports` maps, re-export tracing, dynamic `require`.
-- Entry ladder (mirrors Python): `package.json` `main`/`bin` → conventional `index.*`/`main.*`/`server.*`/
-  `app.*` → `require.main === module` / `import.meta.url` guard → `unknown-entry` stub. Confidence
-  HIGH/MEDIUM/MEDIUM/LOW.
+- Out of scope: `tsconfig` `paths`, `node_modules`, `exports` maps, re-export tracing, dynamic `require`,
+  and `package.json` `"type"` analysis (CJS/ESM kind is **not** inferred).
+- **Entry ladder (implemented in the aggregator, `detect_js_entries`):**
+  1. declared module entry (`entry_declared == Some(true)` — a `package.json` target or an in-source
+     `require.main === module` / `import.meta.url` guard) → `script` / **HIGH**;
+  2. conventional module root (`index.*`, `main.*`, `server.*`, `app.*`) → `script` / **MEDIUM**;
+  3. real non-underscore function in a file with no module entry → `lib-root` / **MEDIUM**;
+  4. no candidate anywhere → `unknown-entry` / **LOW** on every JS function.
+  Candidates are sorted/deduped; the `unknown-entry` stub keeps reachability total instead of empty.
 
 ## 10. Cost model
 
 - Reuse `function_cost_v2` unchanged (`metrics.schema.v1.7.json:153`).
 - Loop forms: C-style `for`, `for...of`, `for...in`, `while`, `do...while`; `await` does not alter shape.
-- Literal trip counts v1: only `for (let i = 0; i < N; i++)` / `<=` with an integer literal `N` (clamped to
-  1_000_000). `for...of` over an array literal is **not** literal in v1 (deferred).
-- `alloc_site_count`: `new` expressions + object literals + array literals.
+- **Implemented in B2-W1:** literal trip counts only for `for (let i = 0; i < N; i++)` / `<=` with an
+  integer literal `N` (clamped to 1_000_000); `<=` adds one (`i <= 3` ⇒ 4). `for...of`, non-zero starts,
+  non-`i++` increments, variable bounds and multi-declarator initializers report `None` (honest unknown;
+  `for...of` over an array literal is deferred).
+- `alloc_site_count`: `new` expressions + object literals + array literals (the same events populate the
+  additive `AllocEvent` stream).
 - `trip_count_source` = literal/partial/unknown; omitted when no loops. Saturating u64 arithmetic.
 - No new metric fields; no new schema field.
 
@@ -278,7 +336,7 @@ counter twice and `cmp`s the output).
 | `R-tb-001` | Grammar MSRV undeclared (both crates) | compile on 1.92 in B2-W0; fallback pin `tree-sitter-javascript 0.23.1` |
 | `R-tb-002` | TS grammar is ABI 14, one generation behind JS 15 | exact pin + node-types diff on upgrade (ADR-0001 G5) |
 | `R-tb-003` | TS/TSX node names drift across grammar releases | pin, vendor any queries in-repo, parser snapshot tests |
-| `R-tb-004` | `node_modules`/minified noise if discovery is naive | global directory skips + JS/TS-only size/name cap |
+| `R-tb-004` | `node_modules`/minified noise if discovery is naive | **mitigated (B2-W1):** global directory skips + JS/TS-only name/size cap, locked by the integration discovery test |
 | `R-tb-005` | Rule precision ratchet (1.0/1.0) is hard for JS idioms | canary before freeze; 11-rule frozen set; honest FP class per rule |
 | `R-tb-006` | No type info → type-aware rules impossible | `syntactic` tier stated in every finding; limitations published |
 | `R-tb-007` | Build time/binary size +2 C parsers | accepted; no feature gate |
@@ -287,8 +345,19 @@ counter twice and `cmp`s the output).
 | `R-tb-010` | TSX vs generic-arrow ambiguity (`<T,>`) degrades parse health | record parse-health degradation honestly; do not score unparsed regions; `.tsx` snapshot tests |
 | `R-tb-011` | CJS/ESM module kind is not inferred; entry detection mixes `require.main` and `import.meta.url` | document as a limitation; entry candidates are sorted/deduped/first-match; no `package.json` `"type"` claim |
 | `R-tb-012` | `.d.ts` skip makes type-only modules invisible (imports become unresolved-internal data-only); an unlabeled minified file < 2 MiB is still parsed; extension matching is case-sensitive | documented limitations; no finding emitted for unresolved-internal; size cap bounds the worst case |
-| `R-tb-013` | Malformed/unreadable `package.json` could escalate a per-file problem to exit 3 | spec requires ignore-and-fallback to the scan root; per-file data only, never a panic |
+| `R-tb-013` | Malformed/unreadable `package.json` could escalate a per-file problem to exit 3 | **mitigated (B2-W1):** malformed/unreadable manifests are ignored, the conventional/in-source ladder still runs, and the scan exits 0 (locked by the integration test) |
 | `R-tb-014` | Pinned TS grammar `0.23.2` cannot parse `f<typeof import("x")>()` (220 of 229 gemini-cli parse failures in the canary) | degrade honestly (partial parse); upgrade only via the ADR-0001 G5 node-types review; B3 snapshot tests |
+| `R-tb-015` | **Schema staging (two surfaces):** B2-W1 emits `files[].language == "js"` AND an empty-scan `scan.languages` fallback of `["c","js","python","rust"]`; the bundled v1.7 artifact's enums list only `c`/`rust`/`python`, and there is no in-repo validator | deliberate staging, not a shippable point: v1.8 lands in B2-W2 (enums hold all six tokens) before any release; do not publish a W1 build as schema-valid |
+
+**Accepted limitations added by B2-W1:**
+
+- **Class bodies are `StructDef` scope boundaries, not event owners.** Methods and arrow-function fields are
+  their own function records; a non-arrow field-initializer expression and a `class_static_block` body belong
+  to no record and are not event-scanned at all (so their calls/allocs never reach `stats.functions[]`).
+- **Single-file targets follow the same JS/TS skip policy as discovery.** `*.min.js`/`*.min.mjs`/`*.min.cjs`/
+  `*.bundle.js` and every unsupported TypeScript/declaration suffix (`.ts`, `.mts`, `.cts`, `.tsx`, `.d.ts`,
+  `.d.mts`, `.d.cts`) are skipped silently instead of being parsed as C; a genuinely unknown extension keeps
+  the documented C fallback.
 
 **Accepted limitations (publish in report/docs):** no type checking; no path aliases/`node_modules`; `.d.ts`
 and minified bundles skipped; no framework semantics; JSX parsed structurally only; computed

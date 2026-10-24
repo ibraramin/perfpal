@@ -233,6 +233,7 @@ pub(crate) mod test_support {
                 entry_kind: None,
                 entry_confidence: None,
                 reachable_from_entry: None,
+                entry_declared: None,
             },
             calls,
             assignments,
@@ -242,6 +243,8 @@ pub(crate) mod test_support {
             loops,
             awaits,
             try_blocks: Vec::new(),
+            allocations: Vec::new(),
+            unaries: Vec::new(),
         }
     }
 

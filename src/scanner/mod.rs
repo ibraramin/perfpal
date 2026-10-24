@@ -88,6 +88,17 @@ pub struct FunctionUnit {
     /// W3; additive v1 field with `#[serde(default)]`, empty for C/Rust).
     #[serde(default)]
     pub try_blocks: Vec<crate::ir::TryEvent>,
+    /// Allocation-site occurrences in the function body (plan `js-ts`;
+    /// additive v1 field with `#[serde(default)]`, so documents written before
+    /// it deserialize unchanged as an empty stream). Only the JavaScript
+    /// backend emits these today.
+    #[serde(default)]
+    pub allocations: Vec<crate::ir::AllocEvent>,
+    /// Unary-operator occurrences in the function body (plan `js-ts`;
+    /// additive v1 field with `#[serde(default)]`, empty for every non-JS
+    /// backend). v1 carries `delete obj.prop`.
+    #[serde(default)]
+    pub unaries: Vec<crate::ir::UnaryEvent>,
 }
 
 /// Scanner failure that is a USAGE error rather than scan data (modules.md
@@ -104,18 +115,68 @@ pub enum ScanError {
 /// `scan.languages` fallback (aggregator). Per-file language tokens are
 /// emitted by each backend (and `failed_unit`); a new language must update
 /// those backends AND this const — nothing enforces that in lockstep.
-pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "python", "rust"];
+pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "js", "python", "rust"];
 // "python" landed with the 1.3 schema bump (W3); .py files emit "python" via FileRecord.
+// "js" landed with the `js-ts` wiring wave (B2-W1); .js/.jsx/.mjs/.cjs emit "js".
 
-/// Source language selected by extension (plan `rust-backend` R1).
+/// Source language selected by extension (plan `rust-backend` R1; JS added by
+/// plan `js-ts` B3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum LanguageKind {
     C,
     Rust,
     Python,
+    Js,
 }
 
-/// Scan a target path (directory or single `.c`/`.h`/`.rs`/`.py`/`.pyi` file) into the IR stream.
+/// Global directory names skipped during discovery, for EVERY language
+/// (plan `js-ts` §4). Deliberately excluded: `vendor` (C/Rust corpora keep
+/// their vendored sources).
+const SKIP_DIRS: [&str; 6] = [
+    "node_modules",
+    "bower_components",
+    "dist",
+    "build",
+    "out",
+    "coverage",
+];
+
+/// JS/TS-only file-name patterns skipped during discovery (minified/bundled
+/// output). Applied only when [`language_of`] already selected JS.
+const JS_SKIP_FILE_SUFFIXES: [&str; 4] = [".min.js", ".min.mjs", ".min.cjs", ".bundle.js"];
+
+/// TypeScript/declaration suffixes this wave deliberately does not parse
+/// (B3 owns the TS backend). A single-file target with one of these names is
+/// skipped silently instead of falling through to the C parser.
+const UNSUPPORTED_TS_SUFFIXES: [&str; 7] =
+    [".ts", ".mts", ".cts", ".tsx", ".d.ts", ".d.mts", ".d.cts"];
+
+/// Whether a file name is a JS skip pattern (minified/bundled output).
+fn has_js_skip_suffix(name: &str) -> bool {
+    JS_SKIP_FILE_SUFFIXES
+        .iter()
+        .any(|suffix| name.ends_with(suffix))
+}
+
+/// Whether a file name carries an unsupported TypeScript/declaration suffix.
+fn has_unsupported_ts_suffix(name: &str) -> bool {
+    UNSUPPORTED_TS_SUFFIXES
+        .iter()
+        .any(|suffix| name.ends_with(suffix))
+}
+
+/// JS-only per-file size cap: 2 MiB of source. Larger files are minified
+/// bundles; they are skipped silently (plan `js-ts` §4).
+const JS_MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
+
+/// Scan a target path (directory or single `.c`/`.h`/`.rs`/`.py`/`.pyi`/JS file)
+/// into the IR stream.
+///
+/// Single-file policy: a JS/TS-named target that discovery would skip is skipped
+/// here too — `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`, and every
+/// unsupported TypeScript/declaration suffix (`.ts`, `.mts`, `.cts`, `.tsx`,
+/// `.d.ts`, `.d.mts`, `.d.cts`). A genuinely unknown extension keeps the
+/// documented C fallback.
 ///
 /// Determinism (modules.md §1): discovered files are emitted in lexicographic
 /// order of their repo-relative POSIX paths; dot-prefixed directories are
@@ -124,11 +185,12 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
     let root = target
         .canonicalize()
         .map_err(|_| ScanError::UnreadableTarget(target.into()))?;
+    let single_file = root.is_file();
     // (repo-relative POSIX path, absolute path) pairs, sorted by rel path
     // (modules.md §1 row 1). A single-file target keeps its own file name as
     // the rel path — joining it onto itself would produce a trailing-slash
     // path that fs::read rejects with ENOTDIR.
-    let mut entries: Vec<(String, PathBuf)> = if root.is_file() {
+    let mut entries: Vec<(String, PathBuf)> = if single_file {
         let name = root
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
@@ -152,7 +214,7 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
 
     // Include resolution anchors at the repo root; for a single-file target
     // that root is the file's parent directory.
-    let include_root = if root.is_file() {
+    let include_root = if single_file {
         root.parent().unwrap_or(&root).to_path_buf()
     } else {
         root.clone()
@@ -161,9 +223,29 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
     let mut units = Vec::with_capacity(entries.len());
     for (rel, abs) in &entries {
         // Directory discovery admits only known extensions, so `language_of`
-        // is always `Some` there. A single-file target is taken as-is, and an
-        // unknown extension keeps the pre-R1 default of C.
-        let lang = language_of(rel).unwrap_or(LanguageKind::C);
+        // is always `Some` there. A single-file target is taken as-is, except
+        // for the JS/TS suffix policy above; a genuinely unknown extension
+        // keeps the pre-R1 default of C.
+        let lang = if single_file {
+            if has_unsupported_ts_suffix(rel) {
+                continue;
+            }
+            let lang = language_of(rel).unwrap_or(LanguageKind::C);
+            if lang == LanguageKind::Js && has_js_skip_suffix(rel) {
+                continue;
+            }
+            lang
+        } else {
+            language_of(rel).unwrap_or(LanguageKind::C)
+        };
+        // JS-only 2 MiB cap: minified bundles are skipped silently. Metadata
+        // is consulted only for JS; C/Rust/Python read paths are unchanged.
+        if lang == LanguageKind::Js
+            && let Ok(metadata) = fs::metadata(abs)
+            && metadata.len() > JS_MAX_FILE_BYTES
+        {
+            continue;
+        }
         let unit = match fs::read(abs) {
             Ok(source) => {
                 let mut unit = extract_unit(rel, &source, lang);
@@ -211,6 +293,17 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
     if units.iter().any(|u| u.file.language == "python") {
         resolve_python_edges(&mut units);
     }
+
+    // JavaScript import resolution + package.json entry declarations (plan
+    // `js-ts` §8) run over the WHOLE unit set after extraction, in the same
+    // pipeline position as the Python pass. Relative-specifier edges are
+    // resolved against the scanned-path set; bare/absolute/URL specifiers were
+    // already classified `Angle` by the backend. Data only — no findings are
+    // emitted here.
+    if units.iter().any(|u| u.file.language == "js") {
+        resolve_js_edges(&mut units);
+        mark_js_entry_declarations(&mut units, &root);
+    }
     Ok(units)
 }
 
@@ -247,10 +340,17 @@ fn discover(root: &Path) -> Vec<PathBuf> {
             let Some(name) = name.to_str() else { continue };
             let path = entry.path();
             if file_type.is_dir() {
-                if !name.starts_with('.') {
+                // Dot-directories stay skipped; the global skip set silences
+                // JS-ecosystem/build output for every language (plan `js-ts` §4).
+                if !name.starts_with('.') && !SKIP_DIRS.contains(&name) {
                     stack.push(path);
                 }
-            } else if language_of(name).is_some() {
+            } else if let Some(lang) = language_of(name) {
+                // Minified/bundled JS is noise: skip by file name only (never
+                // content sniffing), and only for JS-selected files.
+                if lang == LanguageKind::Js && has_js_skip_suffix(name) {
+                    continue;
+                }
                 out.push(path);
             }
         }
@@ -258,9 +358,33 @@ fn discover(root: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Language detection by extension: `.c`/`.h` are C, `.rs` is Rust,
-/// `.py`/`.pyi` are Python.
+/// Language detection by file NAME, longest suffix first. `.c`/`.h` are C,
+/// `.rs` is Rust, `.py`/`.pyi` are Python, and `.js`/`.jsx`/`.mjs`/`.cjs` are
+/// JS. Declaration-only TypeScript (`.d.ts`/`.d.mts`/`.d.cts`) is skipped, and
+/// every other TS suffix (`.ts`/`.mts`/`.cts`/`.tsx`) stays `None` in this wave
+/// (B2-W1; the TS backend is B3). Matching is case-sensitive.
 fn language_of(file_name: &str) -> Option<LanguageKind> {
+    // Declaration-only files carry no runtime code.
+    if file_name.ends_with(".d.ts")
+        || file_name.ends_with(".d.mts")
+        || file_name.ends_with(".d.cts")
+    {
+        return None;
+    }
+    if file_name.ends_with(".js")
+        || file_name.ends_with(".jsx")
+        || file_name.ends_with(".mjs")
+        || file_name.ends_with(".cjs")
+    {
+        return Some(LanguageKind::Js);
+    }
+    if file_name.ends_with(".ts")
+        || file_name.ends_with(".mts")
+        || file_name.ends_with(".cts")
+        || file_name.ends_with(".tsx")
+    {
+        return None;
+    }
     let ext = Path::new(file_name).extension()?;
     if ext == "rs" {
         Some(LanguageKind::Rust)
@@ -289,6 +413,7 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
         LanguageKind::C => backends::tree_sitter_c::extract(rel_path, source),
         LanguageKind::Rust => backends::tree_sitter_rust::extract(rel_path, source),
         LanguageKind::Python => backends::tree_sitter_python::extract(rel_path, source),
+        LanguageKind::Js => backends::tree_sitter_javascript::extract(rel_path, source),
     };
     let mut unit = FileUnit {
         file: ex.file,
@@ -308,6 +433,7 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
         LanguageKind::C => "c",
         LanguageKind::Rust => "rust",
         LanguageKind::Python => "python",
+        LanguageKind::Js => "js",
     };
     for func in &mut unit.functions {
         let body = instrument::body_text(source, &func.record.span);
@@ -327,6 +453,7 @@ fn failed_unit(rel_path: &str, lang: LanguageKind) -> FileUnit {
                 LanguageKind::C => "c".to_string(),
                 LanguageKind::Rust => "rust".to_string(),
                 LanguageKind::Python => "python".to_string(),
+                LanguageKind::Js => "js".to_string(),
             },
             loc: Default::default(),
             function_count: 0,
@@ -517,6 +644,269 @@ fn python_package(path: &str) -> String {
                 .map(|(package, _)| package.to_string())
         })
         .unwrap_or_default()
+}
+
+/// JS probe extensions in deterministic order (plan `js-ts` §8). This is the
+/// documented v1 order; TypeScript suffixes are listed first but only JS
+/// targets exist in the scanned set this wave (B3 makes the TS entries
+/// resolvable).
+const JS_RESOLVE_EXTS: [&str; 8] = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"];
+
+/// Resolve JavaScript relative-specifier imports over the whole unit set (plan
+/// `js-ts` §8). The backend emits RAW specifier text in `to_path`,
+/// [`IncludeForm::Quoted`] for `./`/`../` and `Angle` for bare/absolute/URL/
+/// `node:` specifiers. This pass handles `Quoted` edges only:
+///
+/// - normalize the specifier against the includer's directory (POSIX join; an
+///   escape above the scan root is treated as unresolved);
+/// - probe the scanned-path set deterministically: exact path, then each
+///   [`JS_RESOLVE_EXTS`] extension, then `<path>/index.<ext>`;
+/// - a hit sets `to_path`/`resolved=true`; a miss normalizes to
+///   `to_path=None`/`resolved=false` (unresolved-internal, data only).
+///
+/// `Angle` edges are never touched, and no findings are created here.
+/// Determinism: `BTreeSet` path set, source-order edge iteration, fixed probe
+/// order.
+fn resolve_js_edges(units: &mut [FileUnit]) {
+    let scanned: BTreeSet<String> = units
+        .iter()
+        .filter(|u| u.file.language == "js")
+        .map(|u| u.file.path.clone())
+        .collect();
+
+    for unit in units.iter_mut().filter(|u| u.file.language == "js") {
+        let includer = includer_dir(&unit.file.path);
+        for edge in &mut unit.includes {
+            if edge.form != IncludeForm::Quoted {
+                continue;
+            }
+            let Some(raw) = edge.to_path.clone() else {
+                continue;
+            };
+            match resolve_js_specifier(&includer, &raw, &scanned) {
+                Some(path) => {
+                    edge.to_path = Some(path);
+                    edge.resolved = true;
+                }
+                None => {
+                    // Unresolved relative import is internal data, not error.
+                    edge.to_path = None;
+                    edge.resolved = false;
+                }
+            }
+        }
+    }
+}
+
+/// Resolve one relative JS specifier against the scanned-path set. Returns
+/// `None` for non-relative specifiers, root escapes, and misses.
+fn resolve_js_specifier(
+    includer_dir: &str,
+    raw: &str,
+    scanned: &BTreeSet<String>,
+) -> Option<String> {
+    if !(raw.starts_with("./") || raw.starts_with("../")) {
+        return None;
+    }
+    let base = join_within_root(includer_dir, raw)?;
+    if scanned.contains(&base) {
+        return Some(base);
+    }
+    for ext in JS_RESOLVE_EXTS {
+        let candidate = format!("{base}{ext}");
+        if scanned.contains(&candidate) {
+            return Some(candidate);
+        }
+    }
+    for ext in JS_RESOLVE_EXTS {
+        let candidate = join_dir(&base, &format!("index{ext}"));
+        if scanned.contains(&candidate) {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+/// Join a JS specifier onto a base directory and lexically normalize it,
+/// returning `None` when a `..` component would escape the scan root. This is
+/// the JS resolver's guard on top of [`join_normalized`] (whose C/Rust callers
+/// deliberately clamp instead).
+fn join_within_root(base_dir: &str, target: &str) -> Option<String> {
+    if target.starts_with('/') {
+        return None;
+    }
+    let joined = if base_dir.is_empty() {
+        target.to_string()
+    } else {
+        format!("{base_dir}/{target}")
+    };
+    let mut depth: i32 = 0;
+    for component in Path::new(&joined).components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                depth -= 1;
+                if depth < 0 {
+                    return None;
+                }
+            }
+            Component::Normal(_) => depth += 1,
+            Component::RootDir | Component::Prefix(_) => return None,
+        }
+    }
+    Some(join_normalized(base_dir, target))
+}
+
+/// Max directory depth probed for `package.json` (bounded walk).
+const PACKAGE_JSON_WALK_MAX_DEPTH: usize = 24;
+
+/// Mark the synthetic `<module>` record of every JS file named by a
+/// `package.json` `main`/`bin` field (`entry_declared = Some(true)`), plan
+/// `js-ts` §8.
+///
+/// A deterministic bounded walk finds `package.json` files, skipping dot-dirs,
+/// the global [`SKIP_DIRS`], and symlinks; unreadable/empty dirs and malformed
+/// manifests are per-file data (ignored, scan continues — never panic/exit 3).
+/// `main` (string), `bin` (string | object of strings | array of strings) are
+/// normalised by stripping a leading `./`, joining with the manifest's
+/// directory, and probing the exact path, `.js/.jsx/.mjs/.cjs` (plus
+/// `.ts/.tsx`), then `<dir>/index.*`.
+///
+/// Accepted limitations: `exports` maps, `"type"`, and `tsconfig` `paths` are
+/// NOT consulted.
+fn mark_js_entry_declarations(units: &mut [FileUnit], root: &Path) {
+    let scanned: BTreeSet<String> = units
+        .iter()
+        .filter(|u| u.file.language == "js")
+        .map(|u| u.file.path.clone())
+        .collect();
+    if scanned.is_empty() {
+        return;
+    }
+
+    let search = if root.is_file() {
+        root.parent().unwrap_or(root)
+    } else {
+        root
+    };
+    let mut entry_paths: BTreeSet<String> = BTreeSet::new();
+    for manifest in discover_package_json(search) {
+        let absolute = search.join(manifest.replace('/', std::path::MAIN_SEPARATOR_STR));
+        let Ok(bytes) = fs::read(&absolute) else {
+            continue; // unreadable manifest: per-file data, keep scanning
+        };
+        let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
+            continue; // malformed manifest: ignored, never panic/exit 3
+        };
+        let package_dir = includer_dir(&manifest);
+        let mut raw_entries: Vec<String> = Vec::new();
+        if let Some(main) = value.get("main").and_then(|v| v.as_str()) {
+            raw_entries.push(main.to_string());
+        }
+        match value.get("bin") {
+            Some(serde_json::Value::String(bin)) => raw_entries.push(bin.clone()),
+            Some(serde_json::Value::Array(items)) => {
+                for item in items {
+                    if let Some(bin) = item.as_str() {
+                        raw_entries.push(bin.to_string());
+                    }
+                }
+            }
+            Some(serde_json::Value::Object(map)) => {
+                for bin in map.values() {
+                    if let Some(bin) = bin.as_str() {
+                        raw_entries.push(bin.to_string());
+                    }
+                }
+            }
+            _ => {}
+        }
+        for raw in raw_entries {
+            for candidate in js_entry_candidates(&package_dir, &raw) {
+                if scanned.contains(&candidate) {
+                    entry_paths.insert(candidate);
+                }
+            }
+        }
+    }
+
+    if entry_paths.is_empty() {
+        return;
+    }
+    for unit in units.iter_mut().filter(|u| u.file.language == "js") {
+        if !entry_paths.contains(&unit.file.path) {
+            continue;
+        }
+        if let Some(module) = unit.functions.iter_mut().find(|f| f.record.is_module_scope) {
+            module.record.entry_declared = Some(true);
+        }
+    }
+}
+
+/// Deterministic bounded walk collecting repo-relative `package.json` paths
+/// under `root`. Skips dot-dirs, the global [`SKIP_DIRS`], and symlinks; a
+/// canonical-path visited set guards junctions. Output is sorted/deduped.
+fn discover_package_json(root: &Path) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut stack = vec![(root.to_path_buf(), 0usize)];
+    let mut visited: BTreeSet<PathBuf> = BTreeSet::new();
+    while let Some((dir, depth)) = stack.pop() {
+        let real = dir.canonicalize().unwrap_or_else(|_| dir.clone());
+        if !visited.insert(real) {
+            continue;
+        }
+        let manifest = dir.join("package.json");
+        if manifest.is_file() {
+            out.push(rel_posix(root, &manifest));
+        }
+        if depth >= PACKAGE_JSON_WALK_MAX_DEPTH {
+            continue;
+        }
+        let Ok(entries) = fs::read_dir(&dir) else {
+            continue; // unreadable dir: skip silently
+        };
+        for entry in entries.flatten() {
+            let Ok(file_type) = entry.file_type() else {
+                continue;
+            };
+            if file_type.is_symlink() || !file_type.is_dir() {
+                continue;
+            }
+            let name = entry.file_name();
+            let Some(name) = name.to_str() else { continue };
+            if name.starts_with('.') || SKIP_DIRS.contains(&name) {
+                continue;
+            }
+            stack.push((entry.path(), depth + 1));
+        }
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// Deterministic candidate paths for one `package.json` `main`/`bin` value:
+/// the exact normalized path, extension probes, then `<dir>/index.*`.
+///
+/// A value that escapes the SCAN ROOT (`"../../outside.js"` from a root-level
+/// package) yields NO candidates: [`join_within_root`] is the same guard the
+/// resolver uses. It is scan-root confinement, not package-directory
+/// confinement — a nested `packages/a` manifest may point at `../shared.js`
+/// when the result remains in-tree.
+fn js_entry_candidates(package_dir: &str, raw: &str) -> Vec<String> {
+    let trimmed = raw.strip_prefix("./").unwrap_or(raw);
+    let Some(base) = join_within_root(package_dir, trimmed) else {
+        return Vec::new();
+    };
+    let mut candidates: BTreeSet<String> = BTreeSet::new();
+    candidates.insert(base.clone());
+    for ext in [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"] {
+        candidates.insert(format!("{base}{ext}"));
+    }
+    for ext in [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"] {
+        candidates.insert(join_dir(&base, &format!("index{ext}")));
+    }
+    candidates.into_iter().collect()
 }
 
 /// Discovered Cargo package layout for Rust module resolution (R3 workstream

@@ -75,6 +75,12 @@ impl AllocFamily {
 ///   `str` ⇒ [`AllocFamily::EmptyCtor`] iff zero args else
 ///   [`AllocFamily::Serialize`]; `open`/`DataFrame`/`Series`/`array`/
 ///   `ndarray` ⇒ [`AllocFamily::RealAlloc`].
+/// - JavaScript: qualified `Buffer.alloc`/`Buffer.from`/`Array.from`/
+///   `Object.assign` and bare `structuredClone` ⇒ [`AllocFamily::RealAlloc`];
+///   bare `Array`/`Object`/`Map`/`Set`/`WeakMap`/`WeakSet` ⇒
+///   [`AllocFamily::EmptyCtor`] iff zero args else
+///   [`AllocFamily::RealAlloc`]; `JSON.stringify`/`JSON.parse`, `String` with
+///   args, and methods `toString`/`toJSON` ⇒ [`AllocFamily::Serialize`].
 ///
 /// Non-`Direct` calls (indirect/unknown — the callee name is a variable, not
 /// a target) never classify. Unknown languages return `None`.
@@ -162,6 +168,42 @@ pub(crate) fn classify_alloc_call(
                         Some(AllocFamily::RealAlloc)
                     }
                 }
+            }
+        }
+        "js" => {
+            if is_macro {
+                return None;
+            }
+            // Qualified call paths carry the namespace (the JS backend sets
+            // `callee_path` for member calls). `Buffer.alloc`/`Buffer.from`
+            // are explicit copies; `Array.from`/`Object.assign` allocate a
+            // new result; `JSON.*` are parse/serialize-shaped.
+            if let Some(path) = callee_path {
+                match path {
+                    "Buffer.alloc" | "Buffer.from" | "Array.from" | "Object.assign" => {
+                        return Some(AllocFamily::RealAlloc);
+                    }
+                    "JSON.stringify" | "JSON.parse" => {
+                        return Some(AllocFamily::Serialize);
+                    }
+                    _ => {}
+                }
+            }
+            match callee_name {
+                "structuredClone" => Some(AllocFamily::RealAlloc),
+                // Bare container constructors: allocation family depends on
+                // arity, mirroring the Python/`str` split.
+                "Array" | "Object" | "Map" | "Set" | "WeakMap" | "WeakSet" => {
+                    if arg_count == 0 {
+                        Some(AllocFamily::EmptyCtor)
+                    } else {
+                        Some(AllocFamily::RealAlloc)
+                    }
+                }
+                // `String(x)` formats; zero-arg `String()` is not a site.
+                "String" => (arg_count > 0).then_some(AllocFamily::Serialize),
+                "toString" | "toJSON" => Some(AllocFamily::Serialize),
+                _ => None,
             }
         }
         _ => None,
@@ -278,7 +320,9 @@ pub(crate) fn idiom_hash(body: &str, language: &str) -> String {
 ///   `err`, `fail`, `cleanup`, `stderr` — substring match, so `errno`/
 ///   `perror`/`stderr` all hit; case-sensitive by C convention);
 /// - Python: `raise ` / `raise(` (explicit raise; `except` is covered by
-///   `try_blocks`).
+///   `try_blocks`);
+/// - JavaScript: `throw ` / `throw(` (explicit throw; `try`/`catch` is
+///   covered by `try_blocks`).
 ///
 /// Heuristic limits (documented, NOT branch-sensitive): the checks are
 /// textual over the normalized body — a `?` in dead code still flags, and
@@ -320,6 +364,7 @@ pub(crate) fn detect_error_path(
                     .any(|token| collapsed_body.contains(token))
         }
         "python" => collapsed_body.contains("raise ") || collapsed_body.contains("raise("),
+        "js" => collapsed_body.contains("throw ") || collapsed_body.contains("throw("),
         _ => false,
     }
 }
@@ -531,6 +576,125 @@ mod tests {
             classify_alloc_call("python", None, "print", direct, false, 1, ""),
             None
         );
+    }
+
+    #[test]
+    fn js_alloc_classifies_qualified_and_container_forms() {
+        let direct = CalleeKind::Direct;
+        // Qualified real allocations.
+        for (path, name) in [
+            ("Buffer.alloc", "alloc"),
+            ("Buffer.from", "from"),
+            ("Array.from", "from"),
+            ("Object.assign", "assign"),
+        ] {
+            assert_eq!(
+                classify_alloc_call("js", Some(path), name, direct, false, 1, ""),
+                Some(AllocFamily::RealAlloc),
+                "{path}"
+            );
+        }
+        assert_eq!(
+            classify_alloc_call("js", None, "structuredClone", direct, false, 1, ""),
+            Some(AllocFamily::RealAlloc)
+        );
+        // Bare container constructors: arity decides.
+        for name in ["Array", "Object", "Map", "Set", "WeakMap", "WeakSet"] {
+            assert_eq!(
+                classify_alloc_call("js", None, name, direct, false, 0, ""),
+                Some(AllocFamily::EmptyCtor),
+                "{name}()"
+            );
+            assert_eq!(
+                classify_alloc_call("js", None, name, direct, false, 1, ""),
+                Some(AllocFamily::RealAlloc),
+                "{name}(1)"
+            );
+        }
+        // Serialize-shaped.
+        for path in ["JSON.stringify", "JSON.parse"] {
+            let name = path.rsplit('.').next().unwrap_or("");
+            assert_eq!(
+                classify_alloc_call("js", Some(path), name, direct, false, 1, ""),
+                Some(AllocFamily::Serialize),
+                "{path}"
+            );
+        }
+        assert_eq!(
+            classify_alloc_call("js", None, "String", direct, false, 1, ""),
+            Some(AllocFamily::Serialize)
+        );
+        assert_eq!(
+            classify_alloc_call("js", None, "String", direct, false, 0, ""),
+            None,
+            "zero-arg String() is not an allocation site"
+        );
+        for name in ["toString", "toJSON"] {
+            assert_eq!(
+                classify_alloc_call("js", None, name, direct, false, 0, ""),
+                Some(AllocFamily::Serialize),
+                "{name}"
+            );
+        }
+        // Non-sites.
+        assert_eq!(
+            classify_alloc_call("js", None, "parseInt", direct, false, 1, ""),
+            None
+        );
+        assert_eq!(
+            classify_alloc_call("js", None, "Buffer", CalleeKind::Indirect, false, 1, ""),
+            None,
+            "indirect calls never classify"
+        );
+    }
+
+    #[test]
+    fn js_private_fields_survive_normalization() {
+        let body = "class C {\n  #cache = new Map(); // drop this\n  #count = 0; /* drop block */\n  read() { return this.#cache.get(this.#count); }\n}";
+        let normalized = normalize_idiom(body, "js");
+        assert!(
+            normalized.contains("#cache"),
+            "JS private field must survive"
+        );
+        assert!(
+            normalized.contains("#count"),
+            "JS private field must survive"
+        );
+        assert!(!normalized.contains("drop this"), "// comment stripped");
+        assert!(!normalized.contains("drop block"), "/* */ comment stripped");
+    }
+
+    #[test]
+    fn js_error_path_flags_explicit_throw() {
+        assert!(detect_error_path(
+            "js",
+            "function f() { throw new Error('x'); }",
+            0,
+            false,
+            false
+        ));
+        assert!(detect_error_path(
+            "js",
+            "throw(new Error('x'))",
+            0,
+            false,
+            false
+        ));
+        assert!(!detect_error_path(
+            "js",
+            "const x = 1; return x;",
+            0,
+            false,
+            false
+        ));
+        // try/catch is covered independently by `try_blocks`.
+        assert!(detect_error_path(
+            "js",
+            "try { f(); } catch (e) {}",
+            1,
+            false,
+            false
+        ));
     }
 
     #[test]

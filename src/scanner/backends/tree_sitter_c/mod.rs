@@ -745,6 +745,9 @@ fn function_unit(
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
+        // Plan `js-ts`: module-entry declaration is JS-only; other backends
+        // leave it `None`.
+        entry_declared: None,
     };
     FunctionUnit {
         record,
@@ -756,6 +759,8 @@ fn function_unit(
         loops: scan.loops,
         awaits: Vec::new(),
         try_blocks: Vec::new(),
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 

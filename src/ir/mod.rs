@@ -3,8 +3,8 @@
 //! File-level records ([`FileRecord`], [`ParseHealth`], [`IncludeEdge`],
 //! [`GlobalVar`], [`StructDef`], [`MacroEvent`]), [`FunctionRecord`], and typed
 //! events ([`CallEvent`], [`AssignmentEvent`], [`BinaryOpEvent`],
-//! [`ComparisonEvent`], [`AccessChainEvent`], [`LoopNode`], [`AwaitEvent`])
-//! sharing the [`Shape`] descriptor.
+//! [`ComparisonEvent`], [`AccessChainEvent`], [`LoopNode`], [`AwaitEvent`],
+//! [`AllocEvent`], [`UnaryEvent`]) sharing the [`Shape`] descriptor.
 //!
 //! Conventions (ir-v1.md §2): spans are 1-based lines and byte-columns with
 //! INCLUSIVE ends; engine-native conversion (+1/−1) happens only at the
@@ -597,6 +597,17 @@ pub struct FunctionRecord {
     /// pattern as [`FunctionRecord::entry_kind`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reachable_from_entry: Option<bool>,
+    /// ADDITIVE JS module-entry declaration fact (plan `js-ts`, additive v1
+    /// field with `#[serde(default, skip_serializing_if)]`): `Some(true)` on a
+    /// synthetic `<module>` record when the module is a proven JavaScript entry
+    /// declaration — a `package.json` `main`/`bin` target (aggregator-owned;
+    /// not computed by this field's writer), the `require.main === module`
+    /// idiom, or an `import.meta.url` guard. `Some(false)` on guard- and
+    /// declaration-less JS module records; `None` (omitted) for every other
+    /// record and all non-JS backends. IR-internal — the schema DTO does NOT
+    /// mirror it; the wire surface is entry/reachability.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_declared: Option<bool>,
 }
 
 /// Resolver tier tag carried by every event (ir-v1.md §2). v1 emits only
@@ -722,6 +733,55 @@ pub struct AwaitEvent {
 pub struct TryEvent {
     #[serde(flatten)]
     pub meta: EventMeta,
+}
+
+/// Allocation site kind (plan `js-ts`, additive IR-only type).
+///
+/// - `new` — a JavaScript `new` expression;
+/// - `object` — an object literal `{ ... }`;
+/// - `array` — an array literal `[ ... ]`.
+///
+/// IR-internal (like `param_types`): the schema DTO does not mirror it; only
+/// the JavaScript backend emits these events today.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AllocKind {
+    New,
+    Object,
+    Array,
+}
+
+/// One allocation-site occurrence inside a function body (plan `js-ts`,
+/// additive, JS-only in v1).
+///
+/// Carries the shared event meta (span, loop depth, innermost, resolver tier,
+/// macro origin) so parser-free heuristics can reason about allocation sites
+/// without engine node kinds crossing the seam. `referenced_names` records the
+/// identifiers referenced inside the literal/argument set, sorted and deduped —
+/// it feeds the future loop-invariance gate (whether an allocation's contents
+/// change across iterations).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AllocEvent {
+    #[serde(flatten)]
+    pub meta: EventMeta,
+    pub kind: AllocKind,
+    /// Identifiers referenced inside the literal/argument set, sorted and
+    /// deduped (BTreeSet order). Omitted from the wire when empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub referenced_names: Vec<String>,
+}
+
+/// One operand of a `UnaryEvent` (plan `js-ts`, additive, JS-only in v1).
+///
+/// v1's only consumer is `delete obj.prop` (`op == "delete"`); other unary
+/// operators are not emitted.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UnaryEvent {
+    #[serde(flatten)]
+    pub meta: EventMeta,
+    /// Operator text exactly as written (`"delete"` in v1).
+    pub op: String,
+    pub operand: Shape,
 }
 
 /// Call event (ir-v1.md §3.3).

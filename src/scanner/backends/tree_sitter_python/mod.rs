@@ -700,6 +700,9 @@ fn module_unit(
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
+        // Plan `js-ts`: module-entry declaration is JS-only; other backends
+        // leave it `None`.
+        entry_declared: None,
     };
     FunctionUnit {
         record,
@@ -711,6 +714,8 @@ fn module_unit(
         loops: result.loops,
         awaits: result.awaits,
         try_blocks: result.try_blocks,
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 
@@ -777,6 +782,9 @@ fn function_unit(
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
+        // Plan `js-ts`: module-entry declaration is JS-only; other backends
+        // leave it `None`.
+        entry_declared: None,
     };
     FunctionUnit {
         record,
@@ -788,6 +796,8 @@ fn function_unit(
         loops: result.loops,
         awaits: result.awaits,
         try_blocks: result.try_blocks,
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 

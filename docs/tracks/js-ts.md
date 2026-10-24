@@ -2,7 +2,7 @@
 
 **Start this tab:** open `/home/shafin/Opencode/Perfpal-js-ts` (`feat/js-ts`), first message:
 
-> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B2-W1.`
+> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B2-W2.`
 
 **Track handoff:** `state/tracks/js-ts/handoff.md` · **Spec:** `docs/specs/js-ts.md` · **Plan:** `docs/plans/js-ts.md` · **ADR:** `docs/adr/ADR-0011-js-ts-backend.md` · **Inventory:** `docs/architecture/js-ts.md` · **Canary evidence:** `docs/evidence/js-canary.md` · **Base:** `821b984` (rebased on `main` @ `189df91`).
 **Scope:** add JS, then TS/TSX, as first-class backends in the existing Rust core — like C/Rust/Python. **Not a rewrite.** A later release; not beta-blocking.
@@ -52,6 +52,27 @@ cut**: `PERF-JS-LOOP-003` cut (zero array-literal RHS), `ALLOC-001` reframed beh
 gate, `CALL-001` guard-gated, `ASYNC-002` async-gated. Evidence `docs/evidence/js-canary.md`;
 dispositions `docs/architecture/js-ts.md` §8. Next: **B2-W1** (JS backend). Blockers `B-tb-003`
 (reporter catalog, W2) and `B-tb-001` (views wiring, A step 12) remain open and were not touched.
+
+## Session B2-W1 — JS backend + wiring — **implemented; full DoD green; panel APPROVED; commit pending** (2026-10-24)
+
+**Goal:** implement the JavaScript tree-sitter backend and every wiring point from the plan, with no rules
+or schema bump yet.
+
+**Close-out:** added `src/scanner/backends/tree_sitter_javascript/` (extraction, module record, imports,
+loops/trips, alloc/unary/await/try events, entry guards); wired `LanguageKind::Js` + longest-suffix
+`language_of` + `extract_unit`/`failed_unit`/`SUPPORTED_LANGUAGES` (`["c","js","python","rust"]`); implemented
+global directory skips (`node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage`) plus the
+JS-only `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js` and >2 MiB file guards; added the relative-specifier
+resolver (`.ts/.tsx/.js/.jsx/.mjs/.cjs/.mts/.cts` + `index.*`, bare = external, internal miss = `to: null`)
+and `package.json` `main`/`bin` entry declarations (`entry_declared`, IR-internal) with in-source
+`require.main === module` / `import.meta.url` guards; added the aggregator JS entry ladder (`script` HIGH /
+conventional `script` MEDIUM / `lib-root` MEDIUM / `unknown-entry` LOW) and the JS instrument arms (alloc
+family + `throw` error path; `#private` survives normalization). Added `tests/javascript_backend.rs`
+(20 tests: detection/tokens, skips, parse health, entry ladder incl. all `bin` forms + malformed manifest,
+loops/cost provenance, alloc/error/idiom facts, exact include-graph edges, zero W1 findings, double-run
+determinism). **No `src/reporter`/Atlas edits, no schema bump, no main state.** Verification:
+`state/tracks/js-ts/handoff.md`. Next: **B2-W2** (rules + schema v1.8 + fixtures/goldens; `B-tb-003`).
+
 
 ## Sessions B2–B4 (signposts)
 

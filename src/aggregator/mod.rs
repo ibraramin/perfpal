@@ -126,22 +126,26 @@ pub fn assemble(
 
     let shape = call_shape(units);
     // v1.5 I1a+I1b+I1c (plan `map-build`): C + Rust + Python entry +
-    // reachability passes (per-language gates inside).
+    // reachability passes (per-language gates inside); plan `js-ts` adds JS.
     let c_entries = detect_c_entries(units);
     let rust_entries = detect_rust_entries(units);
     let python_entries = detect_python_entries(units);
+    let js_entries = detect_js_entries(units);
     let mut entries = c_entries.clone();
     entries.extend(rust_entries.clone());
     entries.extend(python_entries.clone());
+    entries.extend(js_entries.clone());
     let c_edges = resolved_c_edges(units);
     let rust_edges = resolved_rust_edges(units);
     let python_edges = resolved_python_edges(units);
+    let js_edges = resolved_js_edges(units);
     // Union of the per-language BFS closures == the combined BFS: edge
     // sets are language-disjoint (each resolver gates both ends to its own
     // language ids), so no cross-language path exists to merge.
     let mut reachable = c_reachable(&c_entries, &c_edges);
     reachable.extend(rust_reachable(&rust_entries, &rust_edges));
     reachable.extend(python_reachable(&python_entries, &python_edges));
+    reachable.extend(js_reachable(&js_entries, &js_edges));
     let functions = function_stats(units, &shape, &entries, &reachable);
     let distributions = distributions(&functions);
     let graphs = GraphsSection {
@@ -223,9 +227,9 @@ fn scan_languages(units: &[FileUnit]) -> Vec<String> {
 /// verbatim from the scanner post-pass (`None`/omitted for parser-free or
 /// pre-step-2 inputs). The v1.5 entry/reachability fields come from the
 /// whole-program [`detect_c_entries`] + [`detect_rust_entries`] +
-/// [`detect_python_entries`] and [`c_reachable`] + [`rust_reachable`] +
-/// [`python_reachable`] passes — `Some` for every C, Rust and Python
-/// function.
+/// [`detect_python_entries`] + [`detect_js_entries`] and [`c_reachable`] +
+/// [`rust_reachable`] + [`python_reachable`] + [`js_reachable`] passes —
+/// `Some` for every C, Rust, Python and JS function.
 fn function_stats(
     units: &[FileUnit],
     shape: &BTreeMap<String, CallShape>,
@@ -235,7 +239,7 @@ fn function_stats(
     let mut records: Vec<(bool, &FunctionUnit)> = units
         .iter()
         .flat_map(|u| {
-            let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python");
+            let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python" | "js");
             u.functions.iter().map(move |f| (entry_scoped, f))
         })
         .collect();
@@ -1150,6 +1154,121 @@ fn python_reachable(
     entry_reachable(entries, edges)
 }
 
+/// JavaScript entry-point detection (plan `js-ts` §8).
+///
+/// Mirrors [`detect_python_entries`] with the JS module split:
+/// 1. declared module entries — a synthetic `<module>` record carrying
+///    `entry_declared == Some(true)` (the backend's in-source
+///    `require.main === module` / `import.meta.url` guard, or a `package.json`
+///    `main`/`bin` hit resolved by the scanner): `(script, HIGH)`;
+/// 2. conventional module roots — an unclaimed `<module>` record in a file
+///    whose stem is `index`/`main`/`server`/`app`: `(script, MEDIUM)`;
+/// 3. lib-roots — real JS functions (never the synthetic `<module>`) with no
+///    leading underscore, in a file with no declared/conventional entry:
+///    `(lib-root, MEDIUM)`;
+/// 4. honest `unknown-entry` stub — when steps 1–3 yield ZERO entries but JS
+///    functions exist, EVERY JS function becomes `(unknown-entry, LOW)` so
+///    reachability stays total instead of silently empty.
+///
+/// JS non-entries are ABSENT from the map (`None`/omitted on the wire).
+fn detect_js_entries(units: &[FileUnit]) -> BTreeMap<String, (String, String)> {
+    let mut js_functions: Vec<&FunctionRecord> = units
+        .iter()
+        .filter(|u| u.file.language.as_str() == "js")
+        .flat_map(|u| u.functions.iter().map(|f| &f.record))
+        .collect();
+    // Defensive input sort (matching the other detectors): deterministic
+    // precedence and stub insertion order regardless of unit order.
+    js_functions.sort_by(|a, b| a.id.cmp(&b.id));
+
+    let mut entries: BTreeMap<String, (String, String)> = BTreeMap::new();
+    let mut entry_paths: BTreeSet<&str> = BTreeSet::new();
+
+    // 1. Proven module entries (package.json main/bin or in-source guard).
+    for record in &js_functions {
+        if record.is_module_scope && record.entry_declared == Some(true) {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_SCRIPT.to_string(), ENTRY_HIGH.to_string()),
+            );
+            entry_paths.insert(record.path.as_str());
+        }
+    }
+    // 2. Conventional module roots, unless already claimed.
+    for record in &js_functions {
+        if !record.is_module_scope || entries.contains_key(&record.id) {
+            continue;
+        }
+        if matches!(
+            js_file_stem(&record.path),
+            "index" | "main" | "server" | "app"
+        ) {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_SCRIPT.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+            entry_paths.insert(record.path.as_str());
+        }
+    }
+    // 3. Lib-roots in files with no module-level entry.
+    for record in &js_functions {
+        if entries.contains_key(&record.id) {
+            continue;
+        }
+        if !record.is_module_scope
+            && !record.name.starts_with('_')
+            && !entry_paths.contains(record.path.as_str())
+        {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_LIB_ROOT.to_string(), ENTRY_MEDIUM.to_string()),
+            );
+        }
+    }
+    // 4. Honest stub: no heuristic fired anywhere in the JS corpus.
+    if entries.is_empty() && !js_functions.is_empty() {
+        for record in &js_functions {
+            entries.insert(
+                record.id.clone(),
+                (ENTRY_UNKNOWN.to_string(), ENTRY_LOW.to_string()),
+            );
+        }
+    }
+    entries
+}
+
+/// Basename of a repo-relative POSIX path minus its final extension. Used for
+/// the conventional JS module-root ladder (`index`/`main`/`server`/`app`).
+fn js_file_stem(path: &str) -> &str {
+    let file = path.rsplit_once('/').map_or(path, |(_, file)| file);
+    match file.rsplit_once('.') {
+        Some((stem, _)) if !stem.is_empty() => stem,
+        _ => file,
+    }
+}
+
+/// RESOLVED JavaScript call edges as `(caller id, callee id)` (plan `js-ts`
+/// §8).
+///
+/// Honestly EMPTY in v1: the JS backend emits module-level import edges
+/// (file→file), not function-to-function call facts, so there is no semantic
+/// call graph to walk. Reachability is therefore entries-only BY CONSTRUCTION,
+/// mirroring Python's honest empty (`resolved_python_edges`), never a fallback
+/// to name-based edges.
+fn resolved_js_edges(_units: &[FileUnit]) -> BTreeSet<(String, String)> {
+    BTreeSet::new()
+}
+
+/// Reachability BFS from JS entries over RESOLVED edges only (plan `js-ts`
+/// §8). Mirrors [`python_reachable`] via the shared [`entry_reachable`] core;
+/// the edge set is honestly empty, so the result is entries at distance 0.
+fn js_reachable(
+    entries: &BTreeMap<String, (String, String)>,
+    edges: &BTreeSet<(String, String)>,
+) -> BTreeSet<String> {
+    entry_reachable(entries, edges)
+}
+
 /// `graphs.include_graph`: nodes = every scanned file (sorted by path); edges
 /// sorted `(from, to)` ascending. Admission (m6): resolved internal edges
 /// (quoted or angle-in-repo) PLUS unresolved QUOTED edges (`to: null` — data,
@@ -1519,6 +1638,21 @@ mod tests {
         }
     }
 
+    /// A JS file unit (the default helper is C).
+    fn js_unit(path: &str) -> FileUnit {
+        let mut u = unit(path);
+        u.file.language = "js".to_string();
+        u
+    }
+
+    /// The synthetic `<module>` record the JS backend emits first.
+    fn module_func(path: &str, entry_declared: Option<bool>) -> FunctionUnit {
+        let mut f = func(path, "<module>", 1, 1);
+        f.record.is_module_scope = true;
+        f.record.entry_declared = entry_declared;
+        f
+    }
+
     /// EXACT v2 formula pin (plan `map-build` I2): the base terms mirror the
     /// v1 `charts::function_cost` pin (24.0), then known/unknown per-iteration
     /// weights are added. If any coefficient drifts, this test names the
@@ -1816,7 +1950,7 @@ mod tests {
     #[test]
     fn zero_file_scan_yields_valid_empty_document() {
         let doc = assemble(&[], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c", "python", "rust"]);
+        assert_eq!(doc.scan.languages, ["c", "js", "python", "rust"]);
         assert_eq!(doc.scan.file_count, 0);
         assert!(doc.files.is_empty());
         assert!(doc.findings.is_empty());
@@ -1884,7 +2018,7 @@ mod tests {
     #[test]
     fn scan_languages_empty_scan_uses_supported_set() {
         let doc = assemble(&[], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c", "python", "rust"]);
+        assert_eq!(doc.scan.languages, ["c", "js", "python", "rust"]);
     }
 
     /// call_graph assembly: a genuine cross-file Direct call maps field-for-
@@ -2276,6 +2410,83 @@ mod tests {
         // Counts travel with their buckets.
         assert_eq!(entries[0].count, 5);
         assert_eq!(entries[3].count, 3);
+    }
+
+    /// Plan `js-ts` §8: JS entry ladder — declared module (HIGH),
+    /// conventional root (MEDIUM), lib-root (MEDIUM); underscore-prefixed
+    /// functions never become lib-roots.
+    #[test]
+    fn detect_js_entries_follows_the_ladder() {
+        let mut declared = js_unit("src/cli.js");
+        declared.functions = vec![module_func("src/cli.js", Some(true))];
+
+        let mut conventional = js_unit("src/index.js");
+        conventional.functions = vec![module_func("src/index.js", Some(false))];
+
+        let mut utility = js_unit("src/util.js");
+        utility.functions = vec![
+            module_func("src/util.js", Some(false)),
+            func("src/util.js", "helper", 3, 1),
+            func("src/util.js", "_private", 9, 1),
+        ];
+
+        let entries = detect_js_entries(&[declared, conventional, utility]);
+        assert_eq!(
+            entries.get("src/cli.js#<module>#1:1"),
+            Some(&("script".to_string(), "HIGH".to_string()))
+        );
+        assert_eq!(
+            entries.get("src/index.js#<module>#1:1"),
+            Some(&("script".to_string(), "MEDIUM".to_string()))
+        );
+        assert_eq!(
+            entries.get("src/util.js#helper#3:1"),
+            Some(&("lib-root".to_string(), "MEDIUM".to_string()))
+        );
+        assert!(
+            !entries.contains_key("src/util.js#_private#9:1"),
+            "_private is excluded from lib-roots"
+        );
+        assert!(
+            !entries.contains_key("src/util.js#<module>#1:1"),
+            "unclaimed module record is not an entry"
+        );
+    }
+
+    /// Plan `js-ts` §8 rung 4: JS functions exist but no rung fired ⇒ the
+    /// honest unknown-entry stub keeps reachability total.
+    #[test]
+    fn detect_js_entries_falls_back_to_unknown_stub() {
+        let mut only_module = js_unit("lib/data.js");
+        only_module.functions = vec![module_func("lib/data.js", Some(false))];
+
+        let entries = detect_js_entries(&[only_module]);
+        assert_eq!(
+            entries.get("lib/data.js#<module>#1:1"),
+            Some(&("unknown-entry".to_string(), "LOW".to_string()))
+        );
+        assert_eq!(entries.len(), 1);
+    }
+
+    /// Plan `js-ts` §8: the JS edge set is honestly empty (no function-level
+    /// call facts), so reachability is entries at distance 0 only; the map is
+    /// deterministic under shuffled unit input.
+    #[test]
+    fn js_entries_are_deterministic_and_reachability_is_entries_only() {
+        let mut a = js_unit("a.js");
+        a.functions = vec![module_func("a.js", Some(false)), func("a.js", "run", 4, 1)];
+        let mut b = js_unit("b.js");
+        b.functions = vec![module_func("b.js", Some(true))];
+
+        let fwd = detect_js_entries(&[a.clone(), b.clone()]);
+        let rev = detect_js_entries(&[b, a.clone()]);
+        assert_eq!(fwd, rev);
+
+        let units = vec![a];
+        let edges = resolved_js_edges(&units);
+        assert!(edges.is_empty(), "JS has no semantic call edges in v1");
+        let expected: BTreeSet<String> = fwd.keys().cloned().collect();
+        assert_eq!(js_reachable(&fwd, &edges), expected);
     }
 
     fn prov() -> Provenance {

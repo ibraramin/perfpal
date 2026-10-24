@@ -14,6 +14,7 @@
 //! [`crate::scanner::FileUnit`].
 
 pub mod tree_sitter_c;
+pub mod tree_sitter_javascript;
 pub mod tree_sitter_python;
 pub mod tree_sitter_rust;
 

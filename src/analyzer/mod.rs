@@ -769,6 +769,8 @@ mod tests {
                 loops: Vec::new(),
                 awaits: Vec::new(),
                 try_blocks: Vec::new(),
+                allocations: Vec::new(),
+                unaries: Vec::new(),
             }],
         }
     }

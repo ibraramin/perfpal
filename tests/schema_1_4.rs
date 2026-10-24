@@ -85,7 +85,8 @@ fn rust_only_tree_derives_rust_language() {
 
 /// (3) Empty dir → exit 0 with the supported-set fallback (`minItems: 1`
 /// preserved; semantics = "languages scanned for"). Since the 1.3 bump the
-/// supported set is `["c","python","rust"]` (the `SUPPORTED_LANGUAGES` order);
+/// supported set is `["c","js","python","rust"]` (the `SUPPORTED_LANGUAGES`
+/// order; `js` admitted by the `js-ts` wiring wave);
 // v1.4 retains it unchanged.
 #[test]
 fn empty_dir_scan_falls_back_to_supported_set() {
@@ -93,7 +94,7 @@ fn empty_dir_scan_falls_back_to_supported_set() {
     let doc = run_pipeline_and_parse("empty", &root);
     assert_eq!(
         doc["scan"]["languages"],
-        serde_json::json!(["c", "python", "rust"])
+        serde_json::json!(["c", "js", "python", "rust"])
     );
     assert_eq!(doc["scan"]["file_count"], 0);
 }

@@ -762,6 +762,7 @@ fn func(
             entry_kind: None,
             entry_confidence: None,
             reachable_from_entry: None,
+            entry_declared: None,
         },
         calls,
         assignments: Vec::new(),
@@ -771,6 +772,8 @@ fn func(
         loops,
         awaits: Vec::new(),
         try_blocks: Vec::new(),
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 
