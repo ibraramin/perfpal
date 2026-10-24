@@ -15,7 +15,10 @@
     loop: 2600,
     branch: 1800,
     hottest: 2000,
+    profile: 2400,
+    'start-here': 2600,
     stop: 2000,
+    trust: 2600,
     summary: 3000,
   };
   const SEVERITY = { hot: 0, warn: 1, info: 2 };
@@ -39,7 +42,7 @@
     appliedSelected: null,
   };
 
-  const dom = { nodes: new Map(), edges: [], nodeTop: new Map() };
+  const dom = { nodes: new Map(), edges: [], edgeLabels: [], nodeTop: new Map() };
   let frame = null;
   let lastTick = 0;
 
@@ -148,6 +151,38 @@
     return `${data.meta.path} · ${data.meta.caps} · ${findings}. Static cost units, not time; profile to confirm.`;
   }
 
+  function profileText(data) {
+    const rows = (data.profile || []).slice(0, 5);
+    if (rows.length === 0) return 'No non-test static candidates recorded for this data slice.';
+    return `${rows
+      .map((fn) => `${fn.name} (${base(fn.path)} L${fn.line}) · ${fmt(fn.cost)} units`)
+      .join(' · ')}. Static candidates ranked by cost; profile to verify.`;
+  }
+
+  function anchorPath(anchor) {
+    return String(anchor).replace(/:\d+$/, '');
+  }
+
+  function startHereText(data) {
+    const actions = (data.meta.actions || []).slice(0, 3);
+    if (actions.length === 0) return 'No ranked actions recorded for this scan.';
+    return `${actions
+      .map((action) => `${action.anchor} — ${action.title} (${action.onCanvas ? 'on-canvas' : 'off-canvas'})`)
+      .join(' · ')}.`;
+  }
+
+  function trustText(data) {
+    const trust = data.trust;
+    if (!trust) return 'Trust: cap, parse and coverage accounting is not present in this data slice.';
+    return [
+      `caps: ${trust.caps}`,
+      `partial parse: ${trust.partialParse ? 'yes' : 'no'}`,
+      `non-production share: ${fmt(trust.nonProductionNodes)}/${fmt(trust.drawnNodes)} drawn files (test/bench)`,
+      `unknown-trip functions: ${fmt(trust.unknownTripFunctions)} (estimate incomplete)`,
+      `findings included: ${fmt(trust.findingsIncluded)}/${fmt(trust.findingsTotal)}`,
+    ].join(' · ') + '.';
+  }
+
   function buildBeats(data) {
     const beats = [];
     const outgoing = new Map();
@@ -244,15 +279,39 @@
     const hottest = data.nodes.find((node) => node.hottest);
     if (hottest) {
       const finding = topFinding(data, hottest.id);
+      const hottestFn = (hottest.functions || [])[0] || null;
       beats.push({
         kind: 'hottest',
         title: `Hottest · ${base(hottest.name)}`,
-        narration: `${hottest.costText} · ${hottest.ratioText} · ${hottest.topText}.${finding ? ` Top annotation: ${finding.severity.toUpperCase()} ${finding.ruleId} — ${finding.title} (line ${finding.line}).` : ''}`,
+        narration: `${hottest.costText} · ${hottest.ratioText} · ${hottest.topText}.${hottestFn ? ` Hottest function: ${hottestFn.name} (L${hottestFn.line}) · ${fmt(hottestFn.cost)} units.` : ''}${finding ? ` Top annotation: ${finding.severity.toUpperCase()} ${finding.ruleId} — ${finding.title} (line ${finding.line}).` : ''}`,
         chips: ['inferred', 'rank 1 by cost'],
         step: trace.length,
-        focus: { node: hottest.id },
+        focus: { node: hottest.id, fn: hottestFn ? hottestFn.id : null },
       });
     }
+
+    const profile = (data.profile || []).slice(0, 5);
+    beats.push({
+      kind: 'profile',
+      title: profile.length > 0 ? `Profile queue · top ${profile.length} functions` : 'Profile queue',
+      narration: profileText(data),
+      chips: ['static candidate', 'verify'],
+      step: trace.length,
+      focus: profile.length > 0 ? { node: profile[0].path, fn: profile[0].id } : {},
+    });
+
+    const actions = (data.meta.actions || []).slice(0, 3);
+    const onCanvasAction = actions.find(
+      (action) => action.onCanvas && byId.has(anchorPath(action.anchor)),
+    );
+    beats.push({
+      kind: 'start-here',
+      title: `Start here · ${actions.length} action${actions.length === 1 ? '' : 's'}`,
+      narration: startHereText(data),
+      chips: ['ranked action', 'on/off canvas'],
+      step: trace.length,
+      focus: onCanvasAction ? { node: anchorPath(onCanvasAction.anchor) } : {},
+    });
 
     beats.push({
       kind: 'stop',
@@ -261,6 +320,14 @@
       chips: ['inferred', stateChip(data)],
       step: trace.length,
       focus: { node: previous },
+    });
+    beats.push({
+      kind: 'trust',
+      title: 'Trust · what this slice covers',
+      narration: trustText(data),
+      chips: ['caps', 'coverage'],
+      step: trace.length,
+      focus: {},
     });
     beats.push({
       kind: 'summary',
@@ -283,8 +350,16 @@
 
   function midpoint(pathData) {
     const numbers = String(pathData).match(/-?\d+(?:\.\d+)?/g) || [];
-    if (numbers.length < 4) return { x: 0, y: 0 };
     const values = numbers.map(Number);
+    // The layout emits `M x0 y0 C x1 y1 x2 y2 x3 y3`; take the true curve
+    // midpoint so labels sit on the drawn path (not on a node edge).
+    if (values.length === 8) {
+      return {
+        x: (values[0] + 3 * values[2] + 3 * values[4] + values[6]) / 8,
+        y: (values[1] + 3 * values[3] + 3 * values[5] + values[7]) / 8,
+      };
+    }
+    if (values.length < 4) return { x: 0, y: 0 };
     return {
       x: (values[0] + values[values.length - 2]) / 2,
       y: (values[1] + values[values.length - 1]) / 2,
@@ -330,6 +405,7 @@
     stage.replaceChildren();
     dom.nodes.clear();
     dom.edges = [];
+    dom.edgeLabels = [];
     dom.nodeTop.clear();
     if (data.nodes.length === 0) return;
 
@@ -380,26 +456,29 @@
     }
 
     for (const edge of data.edges) {
+      const unresolved = edge.label === 'unresolved' || edge.labelClass === 'unresolved';
+      const label = edge.label || 'inferred';
       const path = svg('path', {
-        class: `edge${edge.back ? ' back' : ''}${edge.onPath ? ' onpath' : ''}`,
+        class: `edge${edge.back ? ' back' : ''}${edge.onPath ? ' onpath' : ''}${unresolved ? ' edge-unresolved' : ''}`,
         d: edge.d,
         'data-edge': `${edge.from}->${edge.to}`,
-        'marker-end': `url(#sim-arrow${edge.onPath ? '-path' : ''})`,
+        'marker-end': `url(#sim-arrow${edge.onPath && !unresolved ? '-path' : ''})`,
       });
-      path.append(svg('title', {}, `${edge.from} → ${edge.to} · ${edge.count} distinct structural edge${edge.count === 1 ? '' : 's'}`));
+      const title = [
+        `${edge.from} → ${edge.to}`,
+        label,
+        edge.payload || 'no payload',
+        `×${edge.count}`,
+      ];
+      const top = (edge.topCalls || [])[0];
+      if (top) title.push(`${top.callee} L${top.line}`);
+      path.append(svg('title', {}, title.join(' · ')));
       stage.append(path);
       dom.edges.push({
         el: path,
         data: edge,
         step: stepIndex.get(edge.from) ?? Number.POSITIVE_INFINITY,
       });
-    }
-
-    for (const edge of data.edges.filter((candidate) => candidate.onPath)) {
-      const point = midpoint(edge.d);
-      stage.append(svg('text', {
-        class: 'edge-label', x: point.x, y: point.y - 4, 'text-anchor': 'middle',
-      }, `×${edge.count}`));
     }
 
     for (const node of data.nodes) {
@@ -430,10 +509,19 @@
         'stroke-width': node.strokeWidth,
         'stroke-dasharray': node.dash,
       }));
-      group.append(svg('title', {}, node.title));
+      group.append(svg('title', {}, node.badge ? `${node.title} · ${node.badge}` : node.title));
       if (node.badge) {
+        // Inside the node's top-right, with a fill-matched halo so a lane
+        // boundary never strikes through the text (the cJSON overprint).
+        // Long badges condense to the node width instead of bleeding into a
+        // neighbouring lane; the untruncated text stays in the node title.
         group.append(svg('text', {
-          class: 'node-badge', x: node.x + node.w - 7, y: node.y - 4, 'text-anchor': 'end',
+          class: 'node-badge',
+          x: node.x + node.w - 6,
+          y: node.y + 11,
+          'text-anchor': 'end',
+          stroke: node.fill,
+          ...fitted(node.badge, 4.3, node.w - 16),
         }, node.badge));
       }
       const name = midEllipsis(node.name, 24);
@@ -455,11 +543,11 @@
       group.append(top);
       dom.nodeTop.set(node.id, { el: top, text: node.topText });
       group.append(svg('circle', {
-        class: 'path-dot', cx: node.x + node.w - 9, cy: node.y + 9, r: 7.5,
+        class: 'path-dot', cx: node.x + 9, cy: node.y + 9, r: 7.5,
       }));
       if (node.pathStep) {
         group.append(svg('text', {
-          class: 'path-num', x: node.x + node.w - 9, y: node.y + 12,
+          class: 'path-num', x: node.x + 9, y: node.y + 12,
         }, String(node.pathStep)));
       }
 
@@ -472,6 +560,34 @@
       });
       stage.append(group);
       dom.nodes.set(node.id, group);
+    }
+
+    // Every drawn edge carries its inferred payload class. Labels are painted
+    // last so no node box hides a label in the complete final frame; off-path
+    // labels get a small deterministic offset so adjacent gutters do not
+    // stack, while on-path labels stay on the exact curve midpoint.
+    for (const [index, edge] of data.edges.entries()) {
+      const unresolved = edge.label === 'unresolved' || edge.labelClass === 'unresolved';
+      const label = edge.label || 'inferred';
+      const text = edge.payload ? `${edge.payload} · ${label}` : label;
+      const point = midpoint(edge.d);
+      const dx = edge.onPath ? 0 : ((index * 11) % 3 - 1) * 10;
+      const dy = edge.onPath ? -5 : -5 + ((index * 7) % 3 - 1) * 8;
+      const el = svg('text', {
+        class: `edge-label${edge.onPath ? ' is-onpath' : ''}${unresolved ? ' edge-label-unresolved' : ''}`,
+        x: point.x + dx,
+        y: point.y + dy,
+        'text-anchor': 'middle',
+        'data-edge': `${edge.from}->${edge.to}`,
+        'data-label': label,
+        ...fitted(text, 4.4, 150),
+      }, text);
+      stage.append(el);
+      dom.edgeLabels.push({
+        el,
+        data: edge,
+        step: stepIndex.get(edge.from) ?? Number.POSITIVE_INFINITY,
+      });
     }
   }
 
@@ -491,7 +607,7 @@
 
     const beat = beats[index];
     const focus = beat.focus || {};
-    const full = ['boot', 'hottest', 'stop', 'summary'].includes(beat.kind);
+    const full = ['boot', 'hottest', 'profile', 'start-here', 'stop', 'trust', 'summary'].includes(beat.kind);
     const step = beat.step || 0;
 
     if (!changed) {
@@ -518,6 +634,15 @@
       const reached = edge.onPath && entry.step <= step;
       const pendingPath = edge.onPath && !reached;
       entry.el.classList.toggle('is-current', edge.onPath && entry.step === step && beat.kind === 'enter');
+      entry.el.classList.toggle('is-dim', !full && !edge.onPath && !incident);
+      entry.el.style.opacity = pendingPath ? '0.22' : '';
+    }
+
+    for (const entry of dom.edgeLabels) {
+      const edge = entry.data;
+      const incident = focus.node && (edge.from === focus.node || edge.to === focus.node);
+      const reached = edge.onPath && entry.step <= step;
+      const pendingPath = edge.onPath && !reached;
       entry.el.classList.toggle('is-dim', !full && !edge.onPath && !incident);
       entry.el.style.opacity = pendingPath ? '0.22' : '';
     }

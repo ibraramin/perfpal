@@ -24,6 +24,9 @@ from pathlib import Path
 
 CASES = (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson"))
 
+# S2 edge classification is computed by Perfpal core; the sim only projects it.
+EDGE_LABELS = ("type-only", "literal-observed", "unresolved")
+
 
 def content_sha256(value: object) -> str:
     """Hash canonical JSON with scan provenance removed.
@@ -92,7 +95,47 @@ def node_row(node: dict) -> dict:
     }
 
 
-def edge_row(edge: dict, order: int) -> dict:
+def first_typed_arg(call: dict) -> dict | None:
+    """The first written argument that carries a type or a resolved name."""
+    for arg in call["args"]:
+        if arg.get("type") is None and arg.get("named") is None:
+            continue
+        return {
+            "expr": arg["expr"],
+            "type": arg["type"],
+            "named": arg["named"],
+            "dir": arg["dir"],
+            "literal": arg["literal"],
+        }
+    return None
+
+
+def calls_by_pair(calls: list[dict]) -> dict[tuple[str, str], list[dict]]:
+    """Resolved calls grouped by their drawn ``(from, to)`` file pair."""
+    grouped: dict[tuple[str, str], list[dict]] = {}
+    for call in calls:
+        to = call.get("to")
+        if call.get("unresolved") or not to:
+            continue
+        grouped.setdefault((call["from"], to), []).append(call)
+    for rows in grouped.values():
+        rows.sort(key=lambda call: (call["line"], call["callee"], call["caller"]))
+    return grouped
+
+
+def edge_row(edge: dict, order: int, calls: dict[tuple[str, str], list[dict]]) -> dict:
+    label = edge.get("label")
+    payload = edge.get("payload")
+    pair = (edge["from"], edge["to"])
+    top_calls = [
+        {
+            "callee": call["callee"],
+            "caller": call["caller"],
+            "line": call["line"],
+            "arg": first_typed_arg(call),
+        }
+        for call in calls.get(pair, [])[:2]
+    ]
     return {
         "from": edge["from"],
         "to": edge["to"],
@@ -100,9 +143,57 @@ def edge_row(edge: dict, order: int) -> dict:
         "count": edge["count"],
         "back": edge["back"],
         "onPath": edge["on_path"],
+        "label": label,
+        "payload": payload,
+        "labelClass": "unresolved" if label == "unresolved" else "resolved",
+        "topCalls": top_calls,
         "className": "back" if edge["back"] else "forward",
         "order": order,
     }
+
+
+def is_test_function(path: str, name: str) -> bool:
+    """Test/bench rows are excluded from the profile queue."""
+    return "tests" in Path(path).parts or name.startswith("test")
+
+
+def profile_rows(nodes: list[dict]) -> list[dict]:
+    """Top 8 drawn functions by static cost, non-test only, deduplicated by id."""
+    rows: dict[str, dict] = {}
+    for node in nodes:
+        for function in node["functions"]:
+            if is_test_function(node["path"], function["name"]):
+                continue
+            rows[function["id"]] = {
+                "id": function["id"],
+                "name": function["name"],
+                "path": node["path"],
+                "line": function["line"],
+                "cost": function["cost"],
+                "fanIn": function["fan_in"],
+                "fanOut": function["fan_out"],
+                "loopDepth": function["loop_depth"],
+                "tripSource": function["trip_source"],
+                "unknownTripLoops": function["unknown_trip_loops"],
+                "recursive": function["recursive"],
+            }
+    ordered = sorted(rows.values(), key=lambda row: (-row["cost"], row["line"], row["name"]))
+    return ordered[:8]
+
+
+def unknown_trip_functions(nodes: list[dict]) -> int:
+    """Drawn functions whose loop trip count is unknown (the estimate floor)."""
+    seen: dict[str, dict] = {}
+    for node in nodes:
+        for function in node["functions"]:
+            seen[function["id"]] = function
+    return sum(1 for function in seen.values() if function["unknown_trip_loops"] > 0)
+
+
+def anchor_path(anchor: str) -> str:
+    """``path:line`` -> ``path`` (locations are rendered with a trailing line)."""
+    head, separator, tail = anchor.rpartition(":")
+    return head if separator and tail.isdigit() else anchor
 
 
 def findings_for(layout: dict, metrics: dict) -> list[dict]:
@@ -177,6 +268,23 @@ def build(case: str, out_dir: Path) -> dict:
             f"{case}: drawn findings {len(findings)} != meta.findings_included {included}"
         )
 
+    flow = layout.get("flow") or {}
+    calls = calls_by_pair(flow.get("calls") or [])
+    for edge in layout["edges"]:
+        label = edge.get("label")
+        if label not in EDGE_LABELS:
+            raise SystemExit(
+                f"{case}: edge {edge['from']} -> {edge['to']} has no S2 label "
+                f"(got {label!r}; allowed: {', '.join(EDGE_LABELS)})"
+            )
+        if label != "unresolved" and not (isinstance(edge.get("payload"), str) and edge["payload"].strip()):
+            raise SystemExit(
+                f"{case}: edge {edge['from']} -> {edge['to']} is {label} without a payload"
+            )
+
+    drawn = {node["path"] for node in layout["nodes"]}
+    unknown_trips = unknown_trip_functions(layout["nodes"])
+
     return {
         "case": case,
         "synthetic": False,
@@ -196,10 +304,24 @@ def build(case: str, out_dir: Path) -> dict:
             "findingsIncluded": meta["findings_included"],
             "findingsTotal": meta["findings_total"],
             "actions": [
-                {"anchor": action["location"], "title": action["rule"]}
+                {
+                    "anchor": action["location"],
+                    "title": action["rule"],
+                    "onCanvas": anchor_path(action["location"]) in drawn,
+                }
                 for action in layout["actions"]
             ],
         },
+        "trust": {
+            "caps": meta["caps_text"],
+            "partialParse": state["partial_parse"],
+            "nonProductionNodes": sum(1 for node in layout["nodes"] if not node["production"]),
+            "drawnNodes": len(layout["nodes"]),
+            "unknownTripFunctions": unknown_trips,
+            "findingsIncluded": meta["findings_included"],
+            "findingsTotal": meta["findings_total"],
+        },
+        "profile": profile_rows(layout["nodes"]),
         "state": {
             "empty": state["empty"],
             "noEntry": state["no_entry"],
@@ -225,7 +347,7 @@ def build(case: str, out_dir: Path) -> dict:
             for hull in layout["hulls"]
         ],
         "nodes": [node_row(node) for node in layout["nodes"]],
-        "edges": [edge_row(edge, order) for order, edge in enumerate(layout["edges"])],
+        "edges": [edge_row(edge, order, calls) for order, edge in enumerate(layout["edges"])],
         "trace": [
             {"path": stage["files"][0], "step": stage["order"] + 1}
             for stage in layout["stages"]

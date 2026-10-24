@@ -57,9 +57,13 @@
    "count": 4,
    "d": "M 685 322 C 729 322 729 427 685 427",
    "from": "src/benchmark/executor.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 0,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -67,9 +71,13 @@
    "count": 4,
    "d": "M 685 322 C 729 322 549 112 505 112",
    "from": "src/benchmark/executor.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 1,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -77,9 +85,20 @@
    "count": 3,
    "d": "M 685 322 C 725 322 725 112 685 112",
    "from": "src/benchmark/executor.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 2,
-   "to": "src/metric.rs"
+   "payload": null,
+   "to": "src/metric.rs",
+   "topCalls": [
+    {
+     "arg": null,
+     "callee": "randomized_environment_offset::value",
+     "caller": "src/benchmark/executor.rs#run_command_and_measure_common#71:1",
+     "line": 86
+    }
+   ]
   },
   {
    "back": true,
@@ -87,9 +106,20 @@
    "count": 3,
    "d": "M 685 322 C 725 322 545 217 505 217",
    "from": "src/benchmark/executor.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 3,
-   "to": "src/options.rs"
+   "payload": null,
+   "to": "src/options.rs",
+   "topCalls": [
+    {
+     "arg": null,
+     "callee": "Shell::platform_default",
+     "caller": "src/benchmark/executor.rs#run_intermediate_command_and_measure#171:5",
+     "line": 179
+    }
+   ]
   },
   {
    "back": false,
@@ -97,9 +127,26 @@
    "count": 1,
    "d": "M 685 322 C 705 322 695 217 715 217",
    "from": "src/benchmark/executor.rs",
+   "label": "literal-observed",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 4,
-   "to": "src/output/progress_bar.rs"
+   "payload": "\"Measuring shell spawni\"",
+   "to": "src/output/progress_bar.rs",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "\"Measuring shell spawning time\"",
+      "literal": true,
+      "named": null,
+      "type": "str"
+     },
+     "callee": "get_progress_bar",
+     "caller": "src/benchmark/executor.rs#calibrate#262:5",
+     "line": 265
+    }
+   ]
   },
   {
    "back": false,
@@ -107,9 +154,26 @@
    "count": 1,
    "d": "M 685 322 C 705 322 695 322 715 322",
    "from": "src/benchmark/executor.rs",
+   "label": "type-only",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 5,
-   "to": "src/timer/mod.rs"
+   "payload": "bool",
+   "to": "src/timer/mod.rs",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "command",
+      "literal": false,
+      "named": "command",
+      "type": "std::process::Command"
+     },
+     "callee": "execute_and_measure",
+     "caller": "src/benchmark/executor.rs#run_command_and_measure_common#71:1",
+     "line": 93
+    }
+   ]
   },
   {
    "back": false,
@@ -117,9 +181,13 @@
    "count": 1,
    "d": "M 685 322 C 705 322 695 532 715 532",
    "from": "src/benchmark/executor.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 6,
-   "to": "src/util/exit_code.rs"
+   "payload": null,
+   "to": "src/util/exit_code.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -127,9 +195,13 @@
    "count": 1,
    "d": "M 685 322 C 717 322 717 217 685 217",
    "from": "src/benchmark/executor.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 7,
-   "to": "tests/execution_order_tests.rs"
+   "payload": null,
+   "to": "tests/execution_order_tests.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -137,9 +209,13 @@
    "count": 5,
    "d": "M 685 427 C 733 427 553 112 505 112",
    "from": "src/benchmark/measurement.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 8,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -147,9 +223,26 @@
    "count": 1,
    "d": "M 685 427 C 705 427 695 427 715 427",
    "from": "src/benchmark/measurement.rs",
+   "label": "type-only",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 9,
-   "to": "src/quantity/mod.rs"
+   "payload": "Option<Information>",
+   "to": "src/quantity/mod.rs",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "value",
+      "literal": false,
+      "named": "value",
+      "type": "Option<Information>"
+     },
+     "callee": "serialize_information",
+     "caller": "src/benchmark/measurement.rs#serialize_optional_information#20:1",
+     "line": 28
+    }
+   ]
   },
   {
    "back": true,
@@ -157,9 +250,26 @@
    "count": 4,
    "d": "M 685 427 C 729 427 729 532 685 532",
    "from": "src/benchmark/measurement.rs",
+   "label": "type-only",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 10,
-   "to": "src/quantity/statistics.rs"
+   "payload": "Vec<_>",
+   "to": "src/quantity/statistics.rs",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "&values",
+      "literal": false,
+      "named": null,
+      "type": "Vec<_>"
+     },
+     "callee": "modified_zscores_f64",
+     "caller": "src/benchmark/measurement.rs#modified_zscores#140:5",
+     "line": 146
+    }
+   ]
   },
   {
    "back": false,
@@ -167,9 +277,13 @@
    "count": 1,
    "d": "M 685 427 C 705 427 695 532 715 532",
    "from": "src/benchmark/measurement.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 11,
-   "to": "src/util/exit_code.rs"
+   "payload": null,
+   "to": "src/util/exit_code.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -177,9 +291,13 @@
    "count": 1,
    "d": "M 505 427 C 525 427 515 322 535 322",
    "from": "src/benchmark/scheduler.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 12,
-   "to": "src/benchmark/executor.rs"
+   "payload": null,
+   "to": "src/benchmark/executor.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -187,9 +305,13 @@
    "count": 1,
    "d": "M 505 427 C 525 427 515 427 535 427",
    "from": "src/benchmark/scheduler.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 13,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -197,9 +319,26 @@
    "count": 1,
    "d": "M 505 427 C 537 427 537 532 505 532",
    "from": "src/benchmark/scheduler.rs",
+   "label": "type-only",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 14,
-   "to": "src/cli.rs"
+   "payload": "[&'static str]",
+   "to": "src/cli.rs",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "args",
+      "literal": false,
+      "named": "args",
+      "type": "[&'static str]"
+     },
+     "callee": "get_cli_arguments",
+     "caller": "src/benchmark/scheduler.rs#generate_results#60:1",
+     "line": 66
+    }
+   ]
   },
   {
    "back": true,
@@ -207,9 +346,13 @@
    "count": 2,
    "d": "M 505 427 C 541 427 541 112 505 112",
    "from": "src/benchmark/scheduler.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 15,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -217,9 +360,13 @@
    "count": 2,
    "d": "M 505 427 C 525 427 515 637 535 637",
    "from": "src/benchmark/scheduler.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 16,
-   "to": "src/export/mod.rs"
+   "payload": null,
+   "to": "src/export/mod.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -227,9 +374,13 @@
    "count": 1,
    "d": "M 505 427 C 537 427 537 217 505 217",
    "from": "src/benchmark/scheduler.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 17,
-   "to": "src/options.rs"
+   "payload": null,
+   "to": "src/options.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -237,9 +388,13 @@
    "count": 1,
    "d": "M 505 532 C 525 532 515 217 535 217",
    "from": "src/cli.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 18,
-   "to": "tests/execution_order_tests.rs"
+   "payload": null,
+   "to": "tests/execution_order_tests.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -247,9 +402,13 @@
    "count": 12,
    "d": "M 505 112 C 525 112 515 427 535 427",
    "from": "src/command.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 19,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -257,9 +416,13 @@
    "count": 4,
    "d": "M 505 112 C 549 112 549 532 505 532",
    "from": "src/command.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 20,
-   "to": "src/cli.rs"
+   "payload": null,
+   "to": "src/cli.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -267,9 +430,13 @@
    "count": 6,
    "d": "M 505 112 C 525 112 515 112 535 112",
    "from": "src/command.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": true,
    "order": 21,
-   "to": "src/metric.rs"
+   "payload": null,
+   "to": "src/metric.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -277,9 +444,13 @@
    "count": 1,
    "d": "M 685 637 C 717 637 717 427 685 427",
    "from": "src/export/mod.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 22,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -287,9 +458,13 @@
    "count": 2,
    "d": "M 685 637 C 721 637 721 112 685 112",
    "from": "src/export/mod.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 23,
-   "to": "src/metric.rs"
+   "payload": null,
+   "to": "src/metric.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -297,9 +472,13 @@
    "count": 2,
    "d": "M 325 112 C 345 112 335 427 355 427",
    "from": "src/main.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 24,
-   "to": "src/benchmark/scheduler.rs"
+   "payload": null,
+   "to": "src/benchmark/scheduler.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -307,9 +486,13 @@
    "count": 1,
    "d": "M 325 112 C 345 112 335 532 355 532",
    "from": "src/main.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 25,
-   "to": "src/cli.rs"
+   "payload": null,
+   "to": "src/cli.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -317,9 +500,13 @@
    "count": 2,
    "d": "M 325 112 C 345 112 335 112 355 112",
    "from": "src/main.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": true,
    "order": 26,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -327,9 +514,13 @@
    "count": 1,
    "d": "M 325 112 C 345 112 335 217 355 217",
    "from": "src/main.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 27,
-   "to": "src/options.rs"
+   "payload": null,
+   "to": "src/options.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -337,9 +528,13 @@
    "count": 2,
    "d": "M 325 112 C 345 112 335 322 355 322",
    "from": "src/main.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 28,
-   "to": "src/shell_syntax.rs"
+   "payload": null,
+   "to": "src/shell_syntax.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -347,9 +542,13 @@
    "count": 4,
    "d": "M 685 112 C 729 112 729 427 685 427",
    "from": "src/metric.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 29,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -357,9 +556,13 @@
    "count": 4,
    "d": "M 685 112 C 729 112 549 112 505 112",
    "from": "src/metric.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 30,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -367,9 +570,13 @@
    "count": 5,
    "d": "M 685 112 C 733 112 733 532 685 532",
    "from": "src/metric.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 31,
-   "to": "src/quantity/statistics.rs"
+   "payload": null,
+   "to": "src/quantity/statistics.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -377,9 +584,13 @@
    "count": 4,
    "d": "M 505 217 C 525 217 515 427 535 427",
    "from": "src/options.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 32,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -387,9 +598,13 @@
    "count": 2,
    "d": "M 505 217 C 541 217 541 112 505 112",
    "from": "src/options.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 33,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -397,9 +612,13 @@
    "count": 6,
    "d": "M 505 217 C 525 217 515 112 535 112",
    "from": "src/options.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 34,
-   "to": "src/metric.rs"
+   "payload": null,
+   "to": "src/metric.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -407,9 +626,13 @@
    "count": 1,
    "d": "M 505 217 C 525 217 515 532 535 532",
    "from": "src/options.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 35,
-   "to": "src/quantity/statistics.rs"
+   "payload": null,
+   "to": "src/quantity/statistics.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -417,9 +640,13 @@
    "count": 1,
    "d": "M 865 217 C 897 217 717 427 685 427",
    "from": "src/output/progress_bar.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 36,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -427,9 +654,13 @@
    "count": 1,
    "d": "M 865 217 C 897 217 717 112 685 112",
    "from": "src/output/progress_bar.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 37,
-   "to": "src/metric.rs"
+   "payload": null,
+   "to": "src/metric.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -437,9 +668,13 @@
    "count": 1,
    "d": "M 685 532 C 717 532 717 427 685 427",
    "from": "src/quantity/statistics.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 38,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -447,9 +682,13 @@
    "count": 2,
    "d": "M 685 532 C 721 532 541 112 505 112",
    "from": "src/quantity/statistics.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 39,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -457,9 +696,13 @@
    "count": 1,
    "d": "M 505 322 C 537 322 537 112 505 112",
    "from": "src/shell_syntax.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 40,
-   "to": "src/command.rs"
+   "payload": null,
+   "to": "src/command.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -467,9 +710,13 @@
    "count": 1,
    "d": "M 505 322 C 525 322 515 112 535 112",
    "from": "src/shell_syntax.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 41,
-   "to": "src/metric.rs"
+   "payload": null,
+   "to": "src/metric.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -477,9 +724,13 @@
    "count": 1,
    "d": "M 1045 112 C 1077 112 1077 217 1045 217",
    "from": "src/timer/macos_counters.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 42,
-   "to": "src/timer/windows_timer.rs"
+   "payload": null,
+   "to": "src/timer/windows_timer.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -487,9 +738,13 @@
    "count": 1,
    "d": "M 865 322 C 885 322 875 112 895 112",
    "from": "src/timer/mod.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 43,
-   "to": "src/timer/macos_counters.rs"
+   "payload": null,
+   "to": "src/timer/macos_counters.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -497,9 +752,13 @@
    "count": 1,
    "d": "M 865 322 C 885 322 875 217 895 217",
    "from": "src/timer/mod.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 44,
-   "to": "src/timer/windows_timer.rs"
+   "payload": null,
+   "to": "src/timer/windows_timer.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -507,9 +766,13 @@
    "count": 1,
    "d": "M 1045 217 C 1077 217 1077 112 1045 112",
    "from": "src/timer/windows_timer.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 45,
-   "to": "src/timer/macos_counters.rs"
+   "payload": null,
+   "to": "src/timer/macos_counters.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -517,9 +780,13 @@
    "count": 1,
    "d": "M 685 217 C 717 217 717 427 685 427",
    "from": "tests/execution_order_tests.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 46,
-   "to": "src/benchmark/measurement.rs"
+   "payload": null,
+   "to": "src/benchmark/measurement.rs",
+   "topCalls": []
   },
   {
    "back": true,
@@ -527,9 +794,13 @@
    "count": 1,
    "d": "M 685 217 C 717 217 717 112 685 112",
    "from": "tests/execution_order_tests.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 47,
-   "to": "src/metric.rs"
+   "payload": null,
+   "to": "src/metric.rs",
+   "topCalls": []
   },
   {
    "back": false,
@@ -537,9 +808,20 @@
    "count": 1,
    "d": "M 685 217 C 705 217 695 112 715 112",
    "from": "tests/execution_order_tests.rs",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 48,
-   "to": "tests/common.rs"
+   "payload": null,
+   "to": "tests/common.rs",
+   "topCalls": [
+    {
+     "arg": null,
+     "callee": "hyperfine",
+     "caller": "tests/execution_order_tests.rs#new#17:5",
+     "line": 20
+    }
+   ]
   }
  ],
  "findings": [
@@ -1769,14 +2051,17 @@
   "actions": [
    {
     "anchor": "src/output/report.rs:144",
+    "onCanvas": false,
     "title": "Heap allocation inside loop (Rust)"
    },
    {
     "anchor": "src/output/report.rs:49",
+    "onCanvas": false,
     "title": "Heap allocation inside loop (Rust)"
    },
    {
     "anchor": "src/options.rs:304",
+    "onCanvas": true,
     "title": "Heap allocation inside loop (Rust)"
    }
   ],
@@ -3034,11 +3319,117 @@
    "y": 177
   }
  ],
+ "profile": [
+  {
+   "cost": 165,
+   "fanIn": 0,
+   "fanOut": 8,
+   "id": "src/options.rs#from_cli_arguments#254:5",
+   "line": 254,
+   "loopDepth": 1,
+   "name": "from_cli_arguments",
+   "path": "src/options.rs",
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 1
+  },
+  {
+   "cost": 109,
+   "fanIn": 1,
+   "fanOut": 8,
+   "id": "src/command.rs#build_from_cli_arguments#226:5",
+   "line": 226,
+   "loopDepth": 2,
+   "name": "build_from_cli_arguments",
+   "path": "src/command.rs",
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 3
+  },
+  {
+   "cost": 71,
+   "fanIn": 2,
+   "fanOut": 5,
+   "id": "src/benchmark/executor.rs#run_command_and_measure_common#71:1",
+   "line": 71,
+   "loopDepth": 0,
+   "name": "run_command_and_measure_common",
+   "path": "src/benchmark/executor.rs",
+   "recursive": false,
+   "tripSource": "",
+   "unknownTripLoops": 0
+  },
+  {
+   "cost": 57,
+   "fanIn": 2,
+   "fanOut": 1,
+   "id": "src/shell_syntax.rs#next#71:5",
+   "line": 71,
+   "loopDepth": 2,
+   "name": "next",
+   "path": "src/shell_syntax.rs",
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 3
+  },
+  {
+   "cost": 56,
+   "fanIn": 40,
+   "fanOut": 2,
+   "id": "src/metric.rs#format#273:5",
+   "line": 273,
+   "loopDepth": 0,
+   "name": "format",
+   "path": "src/metric.rs",
+   "recursive": true,
+   "tripSource": "",
+   "unknownTripLoops": 0
+  },
+  {
+   "cost": 45,
+   "fanIn": 1,
+   "fanOut": 8,
+   "id": "src/main.rs#run#34:1",
+   "line": 34,
+   "loopDepth": 1,
+   "name": "run",
+   "path": "src/main.rs",
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 1
+  },
+  {
+   "cost": 44,
+   "fanIn": 5,
+   "fanOut": 5,
+   "id": "src/metric.rs#parse_list#196:5",
+   "line": 196,
+   "loopDepth": 1,
+   "name": "parse_list",
+   "path": "src/metric.rs",
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 1
+  },
+  {
+   "cost": 43,
+   "fanIn": 3,
+   "fanOut": 4,
+   "id": "src/command.rs#replace_parameters_in#145:5",
+   "line": 145,
+   "loopDepth": 2,
+   "name": "replace_parameters_in",
+   "path": "src/command.rs",
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 3
+  }
+ ],
  "source": {
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
   "metricsContentSha256": "b512f5a726a6be72692d85df2669ce5d0b106b07f77d5bff0e7d3deaf336f6ea",
-  "sha256": "44bf4eec2b6e422fbacee3f6b16a4b5b7309e483ba3e6fc0654c54324ec9c5ae"
+  "sha256": "c6940bbd2edeec9becad838949ad481974fa20e6991607154023c45e8341994f"
  },
  "stage": {
   "h": 718,
@@ -3067,5 +3458,14 @@
    "path": "src/metric.rs",
    "step": 3
   }
- ]
+ ],
+ "trust": {
+  "caps": "19 of 19 reachable files shown \u00b7 0 aggregated",
+  "drawnNodes": 19,
+  "findingsIncluded": 148,
+  "findingsTotal": 348,
+  "nonProductionNodes": 5,
+  "partialParse": false,
+  "unknownTripFunctions": 16
+ }
 }

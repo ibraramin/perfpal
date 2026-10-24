@@ -31,6 +31,19 @@ PORT = int(os.environ.get("SIM_PORT", "8768"))
 BASE = f"http://127.0.0.1:{PORT}/"
 PINNED_CHROME = Path("/home/shafin/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome")
 REAL_CASES = ["hyperfine", "cjson"]
+EDGE_LABELS = {"type-only", "literal-observed", "unresolved"}
+PAYLOAD_LABELS = {"type-only", "literal-observed"}
+# F4: claims the static inference may never make (S2 data + final frame).
+FORBIDDEN_CLAIMS = [
+    r"speedup",
+    r"call stack",
+    r"execution order",
+    r"runs \d+ times",
+    r"% of traffic",
+]
+TIME_UNITS = r"\b\d+(?:\.\d+)?\s?(?:ms|µs|μs|milliseconds?|seconds?)\b"
+# "runtime" is allowed only inside the honesty strip's negation.
+NEGATED_RUNTIME = re.compile(r"(?<!not a )runtime", re.I)
 
 CHECKS: list[dict[str, object]] = []
 
@@ -105,6 +118,50 @@ def main() -> int:
         check(f"{case_id}: no absolute paths in data",
               "/home/" not in (SIM / cases[case_id]["file"]).read_text())
 
+    # ---- F2: every drawn edge carries a core-classified label ----------
+    for case_id, payload in payloads.items():
+        edges = payload["edges"]
+        check(f"{case_id}: F2 every edge has an allowed label",
+              all(edge.get("label") in EDGE_LABELS for edge in edges),
+              str(sorted({edge.get("label") for edge in edges if edge.get("label") not in EDGE_LABELS})))
+        check(f"{case_id}: F2 typed/literal labels carry a payload",
+              all(edge.get("payload") for edge in edges if edge.get("label") in PAYLOAD_LABELS))
+        unresolved_ok = all(
+            edge.get("payload") is None
+            for edge in edges
+            if edge.get("label") == "unresolved"
+        )
+        check(f"{case_id}: F2 unresolved labels are never guessed", unresolved_ok)
+        check(f"{case_id}: F2 label class matches the label",
+              all(edge.get("labelClass") == ("unresolved" if edge["label"] == "unresolved" else "resolved")
+                  for edge in edges))
+        check(f"{case_id}: F2 projected top calls are resolved",
+              all(call.get("unresolved") is not True
+                  for edge in edges for call in edge.get("topCalls", [])))
+
+    # ---- F4: no forbidden claim in the story data ----------------------
+    story_text = "\n".join(
+        (SIM / entry["file"]).read_text() for entry in index["cases"]
+    )
+    hits = [pattern for pattern in FORBIDDEN_CLAIMS if re.search(pattern, story_text, re.I)]
+    check("F4 no forbidden claim in sim/data-*.json", not hits, ", ".join(hits))
+    check("F4 no time units in sim/data-*.json", not re.search(TIME_UNITS, story_text, re.I))
+    check("F4 runtime only appears negated in sim/data-*.json",
+          not NEGATED_RUNTIME.search(story_text))
+
+    # ---- the core artifact must declare syntactic fidelity -------------
+    for case, directory in (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson")):
+        artifact = SIM / "source" / directory / "atlas-layout.json"
+        if not artifact.is_file():
+            check(f"{case}: core flow fidelity is syntactic", False,
+                  f"missing {artifact}; run bash sim/make-source.sh first")
+            continue
+        layout = json.loads(artifact.read_text())
+        flow = layout.get("flow") or {}
+        check(f"{case}: core flow fidelity is syntactic",
+              flow.get("fidelity") == "syntactic",
+              f'{layout.get("layout_version")} · {flow.get("fidelity")!r}')
+
     if not port_free():
         check(f"port {PORT} is free", False, "another process is listening; stop it and rerun")
         return finish()
@@ -157,6 +214,37 @@ def main() -> int:
                 check(f"{case_id}: every node rendered", rendered == len(expected["nodes"]),
                       f"{rendered}/{len(expected['nodes'])}")
 
+                # ---- F2: DOM label coverage -----------------------------
+                dom_counts = page.evaluate(
+                    """() => {
+                        const labels = [...document.querySelectorAll('#stage text.edge-label')];
+                        const unresolved = document.querySelectorAll('#stage path.edge.edge-unresolved').length;
+                        return {
+                            paths: document.querySelectorAll('#stage path.edge').length,
+                            labels: labels.length,
+                            unresolved,
+                            unresolvedLabels: labels.filter(
+                                el => el.getAttribute('data-label') === 'unresolved').length,
+                            badLabel: labels.filter(
+                                el => !['type-only', 'literal-observed', 'unresolved']
+                                    .includes(el.getAttribute('data-label'))).length,
+                            badEdge: labels.filter(el => !el.getAttribute('data-edge')).length,
+                        };
+                    }"""
+                )
+                edge_total = len(expected["edges"])
+                unresolved_total = sum(1 for edge in expected["edges"] if edge["label"] == "unresolved")
+                check(f"{case_id}: F2 DOM labels every drawn edge",
+                      dom_counts["paths"] == edge_total and dom_counts["labels"] == edge_total,
+                      str(dom_counts))
+                check(f"{case_id}: F2 DOM labels use the allowed set",
+                      dom_counts["badLabel"] == 0 and dom_counts["badEdge"] == 0,
+                      str(dom_counts))
+                check(f"{case_id}: F2 unresolved edges stay visibly distinct",
+                      dom_counts["unresolved"] == unresolved_total
+                      and dom_counts["unresolvedLabels"] == unresolved_total,
+                      str(dom_counts))
+
                 footer = page.inner_text("#canvas-footer")
                 check(f"{case_id}: footer matches the render", footer.strip() == expected["meta"]["footer"].strip())
 
@@ -173,6 +261,27 @@ def main() -> int:
                 kinds = page.evaluate("() => window.__sim.state().kinds")
                 check(f"{case_id}: beats include loop and summary",
                       "loop" in kinds and "summary" in kinds, ",".join(sorted(set(kinds))))
+                payoff = {"hottest", "profile", "start-here", "trust", "summary"}
+                check(f"{case_id}: payoff beats present in order",
+                      payoff <= set(kinds)
+                      and kinds.index("hottest") < kinds.index("profile")
+                      < kinds.index("start-here") < kinds.index("trust")
+                      < kinds.index("summary"),
+                      ",".join(kinds))
+                for kind in ("profile", "start-here", "trust"):
+                    page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index(kind))
+                    page.wait_for_timeout(50)
+                    body = page.inner_text("#narration-body").strip()
+                    check(f"{case_id}: {kind} narration is non-empty", len(body) > 12, body[:90])
+                actions = expected["meta"]["actions"][:3]
+                page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("start-here"))
+                page.wait_for_timeout(50)
+                start_text = page.inner_text("#narration-body")
+                check(f"{case_id}: start-here names up to 3 actions",
+                      bool(actions)
+                      and all(action["anchor"] in start_text for action in actions)
+                      and ("on-canvas" in start_text or "off-canvas" in start_text),
+                      start_text[:140])
                 loop_index = kinds.index("loop")
                 page.evaluate("(i) => window.__sim.seekIndex(i)", loop_index)
                 page.wait_for_timeout(80)
@@ -200,6 +309,13 @@ def main() -> int:
                     r"\b\d+(?:\.\d+)?\s?(?:ms|µs|μs|milliseconds?|seconds?)\b", final_text, re.I)
                 check(f"{case_id}: no time units at the final beat", final_claim is None,
                       final_claim.group(0) if final_claim else "none")
+                final_hits = [pattern for pattern in FORBIDDEN_CLAIMS
+                              if re.search(pattern, final_text, re.I)]
+                check(f"{case_id}: F4 no forbidden claim at the final frame",
+                      not final_hits, ", ".join(final_hits))
+                runtime_hits = [match.group(0) for match in NEGATED_RUNTIME.finditer(final_text)]
+                check(f"{case_id}: F4 runtime only appears negated",
+                      not runtime_hits, str(runtime_hits[:3]))
                 if case_id == "cjson":
                     meta = expected["meta"]
                     check("cjson: findings cap disclosed",

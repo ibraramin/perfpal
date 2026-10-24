@@ -33,9 +33,38 @@
    "count": 56,
    "d": "M 955 217 C 1015 217 835 112 775 112",
    "from": "cJSON_Utils.c",
+   "label": "literal-observed",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 0,
-   "to": "cJSON.c"
+   "payload": "\"op\"",
+   "to": "cJSON.c",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "length",
+      "literal": false,
+      "named": "length",
+      "type": "size_t"
+     },
+     "callee": "cJSON_malloc",
+     "caller": "cJSON_Utils.c#cJSONUtils_strdup#66:1",
+     "line": 72
+    },
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "object",
+      "literal": false,
+      "named": "object",
+      "type": "const cJSON * const"
+     },
+     "callee": "cJSON_IsArray",
+     "caller": "cJSON_Utils.c#cJSONUtils_FindPointerFromObjectTo#198:1",
+     "line": 221
+    }
+   ]
   },
   {
    "back": false,
@@ -43,9 +72,38 @@
    "count": 5,
    "d": "M 595 112 C 615 112 605 112 625 112",
    "from": "fuzzing/afl.c",
+   "label": "type-only",
+   "labelClass": "resolved",
    "onPath": true,
    "order": 1,
-   "to": "cJSON.c"
+   "payload": "cJSON *",
+   "to": "cJSON.c",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "inout",
+      "expr": "item",
+      "literal": false,
+      "named": "item",
+      "type": "cJSON *"
+     },
+     "callee": "cJSON_PrintBuffered",
+     "caller": "fuzzing/afl.c#main#85:1",
+     "line": 133
+    },
+    {
+     "arg": {
+      "dir": "inout",
+      "expr": "item",
+      "literal": false,
+      "named": "item",
+      "type": "cJSON *"
+     },
+     "callee": "cJSON_Print",
+     "caller": "fuzzing/afl.c#main#85:1",
+     "line": 140
+    }
+   ]
   },
   {
    "back": true,
@@ -53,9 +111,38 @@
    "count": 6,
    "d": "M 955 427 C 1007 427 827 112 775 112",
    "from": "fuzzing/cjson_read_fuzzer.c",
+   "label": "type-only",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 2,
-   "to": "cJSON.c"
+   "payload": "cJSON *",
+   "to": "cJSON.c",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "in",
+      "expr": "require_termination",
+      "literal": false,
+      "named": "require_termination",
+      "type": "int"
+     },
+     "callee": "cJSON_ParseWithOpts",
+     "caller": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+     "line": 34
+    },
+    {
+     "arg": {
+      "dir": "inout",
+      "expr": "json",
+      "literal": false,
+      "named": "json",
+      "type": "cJSON *"
+     },
+     "callee": "cJSON_PrintBuffered",
+     "caller": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+     "line": 40
+    }
+   ]
   },
   {
    "back": true,
@@ -63,9 +150,13 @@
    "count": 1,
    "d": "M 955 532 C 987 532 987 427 955 427",
    "from": "fuzzing/fuzz_main.c",
+   "label": "unresolved",
+   "labelClass": "unresolved",
    "onPath": false,
    "order": 3,
-   "to": "fuzzing/cjson_read_fuzzer.c"
+   "payload": null,
+   "to": "fuzzing/cjson_read_fuzzer.c",
+   "topCalls": []
   },
   {
    "back": true,
@@ -73,9 +164,38 @@
    "count": 14,
    "d": "M 955 322 C 1015 322 835 112 775 112",
    "from": "test.c",
+   "label": "literal-observed",
+   "labelClass": "resolved",
    "onPath": false,
    "order": 4,
-   "to": "cJSON.c"
+   "payload": "\"name\"",
+   "to": "cJSON.c",
+   "topCalls": [
+    {
+     "arg": {
+      "dir": "inout",
+      "expr": "root",
+      "literal": false,
+      "named": "root",
+      "type": "cJSON *"
+     },
+     "callee": "cJSON_Print",
+     "caller": "test.c#print_preallocated#43:1",
+     "line": 53
+    },
+    {
+     "arg": {
+      "dir": "inout",
+      "expr": "root",
+      "literal": false,
+      "named": "root",
+      "type": "cJSON *"
+     },
+     "callee": "cJSON_PrintPreallocated",
+     "caller": "test.c#print_preallocated#43:1",
+     "line": 75
+    }
+   ]
   }
  ],
  "findings": [
@@ -1324,14 +1444,17 @@
   "actions": [
    {
     "anchor": "cJSON_Utils.c:1188",
+    "onCanvas": true,
     "title": "Expensive setup or I/O call inside loop"
    },
    {
     "anchor": "cJSON_Utils.c:1203",
+    "onCanvas": true,
     "title": "Expensive setup or I/O call inside loop"
    },
    {
     "anchor": "cJSON_Utils.c:807",
+    "onCanvas": true,
     "title": "High cyclomatic complexity"
    }
   ],
@@ -1761,11 +1884,117 @@
    "y": 492
   }
  ],
+ "profile": [
+  {
+   "cost": 137,
+   "fanIn": 105,
+   "fanOut": 1,
+   "id": "cJSON.c#cJSON_Delete#253:1",
+   "line": 253,
+   "loopDepth": 1,
+   "name": "cJSON_Delete",
+   "path": "cJSON.c",
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 1
+  },
+  {
+   "cost": 131,
+   "fanIn": 2,
+   "fanOut": 20,
+   "id": "cJSON_Utils.c#apply_patch#807:1",
+   "line": 807,
+   "loopDepth": 0,
+   "name": "apply_patch",
+   "path": "cJSON_Utils.c",
+   "recursive": false,
+   "tripSource": "",
+   "unknownTripLoops": 0
+  },
+  {
+   "cost": 101,
+   "fanIn": 10,
+   "fanOut": 3,
+   "id": "cJSON.c#cJSON_Compare#3072:1",
+   "line": 3072,
+   "loopDepth": 1,
+   "name": "cJSON_Compare",
+   "path": "cJSON.c",
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 1
+  },
+  {
+   "cost": 94,
+   "fanIn": 3,
+   "fanOut": 9,
+   "id": "cJSON_Utils.c#create_patches#1141:1",
+   "line": 1141,
+   "loopDepth": 1,
+   "name": "create_patches",
+   "path": "cJSON_Utils.c",
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 4
+  },
+  {
+   "cost": 84,
+   "fanIn": 2,
+   "fanOut": 4,
+   "id": "cJSON.c#print_object#1780:1",
+   "line": 1780,
+   "loopDepth": 2,
+   "name": "print_object",
+   "path": "cJSON.c",
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 3
+  },
+  {
+   "cost": 76,
+   "fanIn": 3,
+   "fanOut": 4,
+   "id": "cJSON_Utils.c#compare_json#604:1",
+   "line": 604,
+   "loopDepth": 1,
+   "name": "compare_json",
+   "path": "cJSON_Utils.c",
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 2
+  },
+  {
+   "cost": 59,
+   "fanIn": 0,
+   "fanOut": 6,
+   "id": "fuzzing/afl.c#main#85:1",
+   "line": 85,
+   "loopDepth": 1,
+   "name": "main",
+   "path": "fuzzing/afl.c",
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 1
+  },
+  {
+   "cost": 55,
+   "fanIn": 1,
+   "fanOut": 6,
+   "id": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+   "line": 13,
+   "loopDepth": 0,
+   "name": "LLVMFuzzerTestOneInput",
+   "path": "fuzzing/cjson_read_fuzzer.c",
+   "recursive": false,
+   "tripSource": "",
+   "unknownTripLoops": 0
+  }
+ ],
  "source": {
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
   "metricsContentSha256": "1e8bd62a4d0417bc1e60e1ab198b6dedaf5aff6d201d0a9df3d34f8e407cee5f",
-  "sha256": "74f3674d063e6292f6328416f0bfead64205eafb29fb38e7869d3b15687ad07b"
+  "sha256": "c1af6a671c529ecaf9571c5d617c6f44d4d85618ea629091989455c76ed1ee01"
  },
  "stage": {
   "h": 718,
@@ -1790,5 +2019,14 @@
    "path": "cJSON.c",
    "step": 2
   }
- ]
+ ],
+ "trust": {
+  "caps": "2 of 2 reachable files shown \u00b7 0 aggregated",
+  "drawnNodes": 7,
+  "findingsIncluded": 153,
+  "findingsTotal": 837,
+  "nonProductionNodes": 1,
+  "partialParse": true,
+  "unknownTripFunctions": 6
+ }
 }

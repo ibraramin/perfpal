@@ -367,10 +367,21 @@ button,select,input{font:inherit;color:inherit}
   stroke-opacity:.45;
   stroke-dasharray:4 3;
 }
+.edge.edge-unresolved{
+  stroke:#a9a29a;
+  stroke-opacity:.8;
+  stroke-dasharray:5 3;
+}
 .edge.onpath{
   stroke:var(--hot);
   stroke-opacity:1;
   stroke-width:2.6;
+}
+.edge.onpath.edge-unresolved{
+  stroke:#a9a29a;
+  stroke-opacity:.95;
+  stroke-width:2.6;
+  stroke-dasharray:5 3;
 }
 .edge.is-current{stroke-width:3.1}
 .edge.is-dim{opacity:.18}
@@ -381,9 +392,22 @@ button,select,input{font:inherit;color:inherit}
   fill:#8a4a20;
   paint-order:stroke;
   stroke:var(--canvas);
-  stroke-width:2.5px;
+  stroke-width:3px;
   pointer-events:none;
 }
+.edge-label.is-onpath{
+  fill:var(--hot);
+  font-weight:800;
+}
+.edge-label.edge-label-unresolved{
+  fill:#8b8a86;
+  font-weight:600;
+}
+.edge-label.edge-label-unresolved.is-onpath{
+  fill:#6f6a61;
+  font-weight:750;
+}
+.edge-label.is-dim{opacity:.18}
 .edge-note{
   font-family:var(--mono);
   font-size:8.5px;
@@ -458,6 +482,9 @@ button,select,input{font:inherit;color:inherit}
   font-weight:750;
   fill:var(--muted);
   letter-spacing:.01em;
+  paint-order:stroke;
+  stroke-width:2.6px;
+  stroke-linejoin:round;
   pointer-events:none;
 }
 .node.is-entry .node-name,
