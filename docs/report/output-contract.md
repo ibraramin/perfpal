@@ -30,7 +30,7 @@ perfpal-report/
 ├── profile-queue.html        # complete cost-ranked function list (KV3 drill companion)
 ├── atlas-weight.html         # weight drill page (Atlas step 12)
 ├── atlas-q2.html             # blast-radius drill page (Atlas step 12)
-├── agent-report.md           # bounded LLM-facing triage report (contract_version 1, seven fixed sections, ≤80 KB)
+├── agent-report.md           # bounded LLM-facing triage report (contract_version 1, seven fixed sections, ≤80 KB on the §12 envelope)
 ├── agent-actions.json        # complete machine action list (contract_version 1, 100-row profile cap named in-file)
 └── charts/                   # static visualizations (set defined by ADR-0002)
     ├── <chart-name>.svg      # e.g. include-graph.svg — naming rules in §3

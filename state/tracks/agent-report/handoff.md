@@ -2,7 +2,7 @@
 
 **Track:** C (LLM depth layer) · **Branch:** `feat/agent-report` · **Worktree:** `/home/shafin/Opencode/Perfpal-agent-report`
 **Session:** C2 wiring + C3 (integration suite) · **Date:** 2026-10-24 · **Plan:** `docs/plans/agent-report.md` · **Spec:** `docs/specs/agent-report.md`
-**Status:** **C2 WIRING + C3 COMPLETE — awaiting founder merge approval.** Rebased onto `main` `9a94905`; code commit `7e5b921` on `feat/agent-report`. Both artifacts are emitted by the CLI; 24 unit + 9 integration tests; DoD 7–20 green (see the evidence table below). C1 COMPLETE (`6d32e67`, hash `e730d01`). **No merge, no push.** The §13 downstream eval is deferred by the founder (recorded verbatim below).
+**Status:** **C2 WIRING + C3 COMPLETE — all four review families APPROVED; awaiting founder merge approval.** Rebased onto `main` `9a94905`; code commits `7e5b921` (wiring) and `1bc65d6` (hardening + this handoff) on `feat/agent-report`. Both artifacts are emitted by the CLI; 24 unit + 9 integration tests; DoD 7–20 green (see the evidence table below). C1 COMPLETE (`6d32e67`, hash `e730d01`). **No merge, no push.** The §13 downstream eval is deferred by the founder (recorded verbatim below).
 
 ## Objective and phase
 
@@ -15,6 +15,10 @@ with explicit, quantified signals") and the proposed agent-loop metric ("downstr
 JSON + arch map"). Beta remains Track A; C is a later add-on and blocked nothing.
 
 ## Branch state
+
+> **Historical — superseded by “C2 wiring + C3 (2026-10-24)” below.** The C2 blocks in this file describe the
+> pre-wiring state; the wiring, the A-link, the integration suite and the DoD evidence are recorded in the
+> later section. Kept verbatim as session history.
 
 - `feat/agent-report` was fast-forwarded to `main` at session start (`3a84a0e`, the docs/tracks
   checkpoint commit) per the track's "rebase on `main` at session start". `main` is unchanged.
@@ -37,8 +41,8 @@ JSON + arch map"). Beta remains Track A; C is a later add-on and blocked nothing
 **Founder decision at C2 kickoff (2026-10-24):** the §12 budget was raised **64 KB → 80 KB** because the
 literal 200 B envelope (worst-case widths) measures **76,416 B**; the bound change keeps the width honest
 instead of shrinking the fixture. `contract_version` stays 1.
-**Deferred (not done here):** CLI emission, artifact-set assertions, `tests/agent_report.rs` integration
-suite, sample regeneration gate, downstream eval, and A's step-12 link — all C3/wiring.
+**Deferred at C2 (all landed in C3 — see below):** CLI emission, artifact-set assertions,
+`tests/agent_report.rs` integration suite, sample regeneration gate, downstream eval, and A's step-12 link.
 
 ## Verification (C2)
 
@@ -275,7 +279,7 @@ PATH="$HOME/.cargo/bin:$PATH"`).
 | 16 | `agent_report_human_page_links_to_agent_report` | pass — `report.html` carries `href="agent-report.md"` and `href="agent-actions.json"`, and both files exist in the same directory |
 | 17 | eval recorded **or** deferral | **deferral recorded below** |
 | 18 | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | exit 0 |
-| 19 | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | exit 0 (the sample-parity test is `cfg(not(semantic-clang))`, matching the committed-golden precedent; every wiring test still runs) |
+| 19 | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | exit 0 (the sample-parity test is `cfg(not(semantic-clang))`, matching the committed-golden precedent; the other eight wiring tests still run) |
 | 20 | `git status --short src/schema/ docs/schema/ Cargo.toml Cargo.lock deny.toml` | empty |
 
 Test-to-requirement map: double-run byte equality → `agent_report_double_run_bytes_identical`; completeness
@@ -300,13 +304,16 @@ artifact is the ranked triage queue until that eval reports.
 | R2 contract/security | APPROVE | none |
 | Q1 verbatim scope | CHANGES_REQUESTED | the deferral + C3 handoff were not yet written (sequenced after the panel) |
 | Q2 acceptance/evidence | CHANGES_REQUESTED | same; also asked for in-tree gate evidence |
+| R1–R2 round 2 | **APPROVE** (fresh confirmation lane) | none — verified the hardening assertions, the doc scoping, and every checkable handoff claim (24 + 9 tests, 879/58 arithmetic, no merge, no CHANGELOG/dep/schema move) |
+| Q1 round 2 | **APPROVED** | none — the deferral phrase, the base record, the panel table and the merge request are all in-tree and accurate |
+| Q2 round 2 | **APPROVED** | none — DoD 17 resolves from the committed handoff; no DoD 7–20 command fails by construction on a clean checkout |
 
 Round-1 non-blocking items actioned before commit: Windows-safe sample token (+ exactly-once assertions),
 partial-parse row asserts real counts, capped row asserts the 25-heading cap, v1 row can no longer pass
 vacuously, the budget constant is the shipped `MD_SIZE_BUDGET`, the ≤80 KB contract claim is scoped to the
 §12 envelope, and the directory tree names the two Atlas drill pages. Not actioned (deliberate): pruning
 the agent artifacts in `regenerate_goldens` — see the follow-up note below. Round 2 (Q1 + Q2 re-run +
-one fresh confirmation lane) is appended in the follow-up commit.
+one fresh confirmation lane) returned **APPROVED** on all three lanes; the verdicts are in the table above.
 
 ### Carry-forward non-blockers (unchanged)
 
@@ -320,8 +327,9 @@ either mask them and add them to `GOLDEN_ARTIFACTS`, or delete them in the regen
 
 ### Merge gate
 
-Founder approval to merge `feat/agent-report` into `main` is **requested, not assumed**. No merge, no push,
-no CHANGELOG entry from this session.
+All four review families have at least one APPROVE (R1, R2, Q1, Q2) plus the fresh confirmation lane, with zero
+unresolved blocking findings. Founder approval to merge `feat/agent-report` into `main` is **requested, not
+assumed**. No merge, no push, no CHANGELOG entry from this session.
 
 ## Next sessions — signposts
 
