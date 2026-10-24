@@ -4,12 +4,13 @@ plan description: Ship the Atlas map page
 plan status: active
 ---
 
-> **BLOCKED 2026-10-23 — visual regression audit (`R-pf-109`).** Steps 14–15 (A2/ship) are blocked until the visual rework (steps 9–13) passes the founder visual gate.
+> **STATUS 2026-10-24 — steps 9–13 complete; step 13 APPROVED (D-pf-253).** A2 (step 14) may be
+> scheduled; ship (step 15) stays blocked. `R-pf-109` remains open as a record.
 > **New agents: read `docs/atlas/AGENT-BRIEF.md` first.** The founder's 2026-10-23 model supersedes
 > the "100%-graph canvas" wording in this plan: the first page is the **main graph + some key
 > metrics**; below it, reveal more key charts slowly; restore G's visual language (warm palette,
-> sans chrome + mono data, masthead); F stays undecided. Do not run A2 until the founder visual gate
-> passes.
+> sans chrome + mono data, masthead); F stays undecided. A2 may run now that step 13 is approved;
+> do not ship or mark the plan done.
 >
 > **v2 composition amendment (2026-10-23):** the founder's model supersedes the v1 composition
 > clauses (the "100%-graph canvas" + fixed seven-block brief wording in the Idea). The data,

@@ -13,8 +13,10 @@ vaulted; `map-build` NOT done; A1b open.
 
 **Commits:** `c73d6ff` (Track C4, merged before the gate commit) → `86c0537`
 `docs(atlas): v2 step 13 visual gate evidence + sign-off` (54 files: evidence, renders, state/docs) →
-`a00fd0b` (state records that commit) → **the panel fix-up commit** (stale-PENDING and false
-panel/commit claims corrected; hash in `git log -1`). **No push.**
+`a00fd0b` (state records that commit) → `5b59065` (panel record + CHANGELOG status) →
+`7098a15` (first fix-up: stale-PENDING sweep + panel record) → **this second fix-up** (evidence
+README, both CHANGELOG tails, STEP13 status/scope, agent brief, plan banner, `A-pf-118`; hash in
+`git log -1`). **No push.**
 
 ## This session — step 13 evidence
 
@@ -116,7 +118,7 @@ yet true).
 
 | Finding (lane) | Resolution |
 |---|---|
-| R1/Q1/Q2: `VISION-STEP13.md`, `handoff:72`, `activeContext`, `plans/atlas-build.md` (heading + step-10 tail), `CHANGELOG` (step-11 tail), `DECISION.md` still said PENDING | All updated to **APPROVED 2026-10-24 (D-pf-253)**; D-pf-252 marked `superseded` |
+| R1/Q1/Q2: `VISION-STEP13.md`, `handoff:72`, `activeContext`, `plans/atlas-build.md` (banner + step-13 heading + step-10 tail), `CHANGELOG` (step-11 **and** step-12 tails), `DECISION.md`, the evidence `README.md` banner, `STEP13.md` status/scope, `AGENT-BRIEF.md`, `A-pf-118` | All updated to **APPROVED 2026-10-24 (D-pf-253)**; D-pf-252 `superseded`; A2 schedulable, ship blocked |
 | R1/Q2: handoff asserted 4-lane panel APPROVED before it ran | Replaced with the real round-1 verdicts above |
 | Q2: "committed this session" with no hash | Commits line now names `c73d6ff` → `86c0537` → `a00fd0b` → this fix-up |
 | Q2 M1: no record of what `:8769` serves | `FOUNDER-GATE.md` now names both bindings (`:8769` private scan, `:8767` shared) and states both serve `a4fade03…` |
@@ -140,6 +142,7 @@ entry; the session-private scan's binary hash is not recorded in `step13.json`.
 | `python3 -c 'json.load(state/session-state.json)'` + `wc -c` | valid, `schema_version 2`, **7,699 B** |
 | append-only check vs `86c0537` | 6 pruned decisions found and restored as a ledger-backed pointer (above) |
 | `cargo build --release --locked` + binary mtime | no-op; **08:17** > merge **08:07:45**; scan → `a4fade03…` + both agent artifacts |
+| `git diff --name-only c73d6ff 7098a15 \| grep -E '^(src/\|tests/\|Cargo\.\|deny\.toml\|docs/schema/)'` | **no output** (full range to the first fix-up) |
 | push check | `origin/main` still `e0928b8`; **no push** |
 
 ## Change set

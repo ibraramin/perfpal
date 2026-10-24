@@ -4,7 +4,8 @@
 committed `189df91`; step 12 progressive charts committed `9a94905`). **Step 13 gate evidence is
 complete and the founder composition sign-off is APPROVED 2026-10-24 (all DOM/render assertions pass;
 V8 A1 16/16 + strip 16/16; G-baseline diff recorded). A2 (step 14) may be scheduled; ship (step 15)
-remains blocked and the plan is not done.** Do **not** run A2, ship, or mark the plan done.
+remains blocked and the plan is not done.** Do **not** ship (step 15) or mark the plan done; A2
+(step 14) may be scheduled.
 **Owner:** orchestrator. **Audience:** every agent touching `src/reporter/atlas_*`, the Atlas specs,
 the V8 evidence, or the Atlas plan.
 

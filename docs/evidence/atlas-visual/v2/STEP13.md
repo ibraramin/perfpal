@@ -1,9 +1,10 @@
 # Step 13 — founder visual gate, G-baseline diff, V8 rerun
 
 **Status: gate evidence complete; founder composition sign-off APPROVED 2026-10-24.** This session did **not**
-change code, schema, scripts or dependencies. A2/ship (steps 14–15) remain blocked by `R-pf-109`
-until the founder signs the 1440×900 composition. If the founder rejects it, the gate **fails** and
-a superseding decision is escalated — no tuning in this session.
+change code, schema, scripts or dependencies. **A2 (step 14) may be scheduled; ship (step 15) remains
+blocked.** `R-pf-109` stays open as a record. The 1440×900 composition was APPROVED 2026-10-24
+(D-pf-253; delegated, evidence-based). A rejection would have failed the gate and escalated a
+superseding decision — no tuning in this session.
 
 **Date:** 2026-10-24 · **Viewport:** 1440×900 canonical (+1280×800) · **Capture:** `report.html#map`
 scrolled to the viewport top, `prefers-reduced-motion` + animations disabled · **Source:** a
@@ -165,7 +166,8 @@ Full transcript: `gate-step13.txt`.
 
 ## 8. Scope guard
 
-This session made no `src/`, schema, JS, dependency or golden change, and made no commit or push.
+This session made no `src/`, schema, JS, dependency or golden change, and made no commit or push
+**during the gate session**; the evidence was committed afterwards as `86c0537` (see the handoff).
 The tree advanced during the session via **Track C's fast-forward merge into `main` (`c73d6ff`)**;
 the gate was re-run on that tree (see Provenance). `step13/` holds the state frames, manifest and the
 F-independent gate package; F remains undecided (`D-pf-251`) and the Explorer treemap is untouched.

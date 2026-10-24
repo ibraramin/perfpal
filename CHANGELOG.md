@@ -51,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   horizontal scroll; 1280×800 stacks the rail with no horizontal scroll. The F treemap was
   prototyped as a candidate under `docs/evidence/atlas-visual/v2/step12/` (F remains undecided,
   Explorer treemap untouched). No schema, no new JS, no dependency. Four `report.html` goldens
-  regenerated. Step-13 founder gate pending; A2/ship still blocked; holdouts vaulted.
+  regenerated. Step-13 founder gate was pending at the time and is now **APPROVED 2026-10-24**
+  (D-pf-253); A2 (step 14) may be scheduled, ship (step 15) still blocked; holdouts vaulted.
 - **Atlas v2 step 11 — first-page per-file detail rail (2026-10-24).** `report.html#map` is now a
   two-column stage: the 868px graph canvas (`#atlas-canvas`, still graph-only) plus a 530px
   G-style **detail rail** (`#atlas-rail`, a DOM sibling, so A9 is unchanged). The rail carries up to
@@ -70,8 +71,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scroll; `#map` +8/+7px (footer wrap; the ~5k cut is step 12). No schema, no new JS, no
   dependency. Evidence: `docs/evidence/atlas-visual/v2/`
   (`STEP11.md`, `step11.json`, `gate-step11.txt`, `VISION-STEP11.md`, renders). Four `report.html`
-  and four `profile-queue.html` goldens regenerated. Step-13 founder visual gate pending; A2/ship
-  (steps 14–15) still blocked; holdouts vaulted; `map-build` not done; A1b open.
+  and four `profile-queue.html` goldens regenerated. Step-13 founder visual gate was pending at the time
+  and is now **APPROVED 2026-10-24** (D-pf-253); A2 (step 14) may be scheduled, ship (step 15) still
+  blocked; holdouts vaulted; `map-build` not done; A1b open.
 
 ### Changed
 - **Atlas v2 steps 9–10 — signed G visual system + first-page fit (2026-10-23).** Step 9 produced the

@@ -2,9 +2,12 @@
 
 **Status: STEP 9 SIGNED 2026-10-23; STEP 10 IMPLEMENTED AND STEP-10 FOUNDER-APPROVED 2026-10-24;
 STEP 11 (DETAIL RAIL) COMMITTED `189df91`; STEP 12 (PROGRESSIVE CHARTS) COMMITTED `9a94905`;
-STEP 13 EVIDENCE COMPLETE 2026-10-24 — FOUNDER COMPOSITION SIGN-OFF PENDING.**
-Option A (port G) was signed and steps 10–12 were executed; the founder approved the step-10 first
-page and the step-12 commit. **The step-13 founder visual gate is the remaining blocker for A2/ship.**
+STEP 13 APPROVED 2026-10-24 (D-pf-253, delegated evidence-based sign-off; the founder's own eye was
+not applied).**
+Option A (port G) was signed and steps 10–13 were executed; the founder approved the step-10 first
+page and the step-12 commit. **A2 (step 14) may be scheduled; ship (step 15) remains blocked.**
+*(Per-step status lines further down — `STEP10/11/12.md`, `VISION-STEP10/12.md`, `gate*.txt` — are
+historical snapshots of the session that wrote them; this banner is the current status.)*
 This directory holds the signed decision, the G-baseline comparison, the 1440×900 render evidence,
 the gate transcripts and the vision records.
 

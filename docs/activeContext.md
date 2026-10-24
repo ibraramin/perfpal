@@ -49,7 +49,8 @@ be scheduled; ship (step 15) stays blocked.**
 - **D-pf-249 (live, 2026-10-24):** Atlas v2 step 11 detail rail implemented (committed `189df91`).
 - **D-pf-247/248** archived to `state/archive/ledger.jsonl` (plan reorder, steps 9–10; preserved in the
   plan, brief and ledger).
-- **R-pf-109 (open, high):** Atlas visual regression; A2/ship blocked until the step-13 founder gate.
+- **R-pf-109 (open, high):** Atlas visual regression record; the step-13 gate was APPROVED
+  2026-10-24 (D-pf-253), so A2 may be scheduled; ship remains blocked.
 
 ## In Progress
 - Step 13 is **APPROVED 2026-10-24** (D-pf-253; `step13/FOUNDER-GATE.md`). Evidence/state/docs are
