@@ -113,14 +113,20 @@ pub(crate) fn to_json(
     let edges: Vec<Value> = edge_rows
         .iter()
         .map(|(edge, shape)| {
-            json!({
+            let mut value = json!({
                 "from": edge.from,
                 "to": edge.to,
                 "d": shape.path,
                 "count": edge.count,
                 "back": edge.back,
                 "on_path": edge.on_path,
-            })
+            });
+            if let Some(flow) = flow {
+                let label = flow.edge_label(&edge.from, &edge.to);
+                value["payload"] = json!(label.payload);
+                value["label"] = json!(label.label);
+            }
+            value
         })
         .collect();
 

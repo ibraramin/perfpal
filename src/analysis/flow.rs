@@ -1,8 +1,10 @@
-//! P3 — signature summaries (`docs/atlas/core-probes.md` P3, Atlas Story S2).
+//! P3 signatures + P1 call payloads (`docs/atlas/core-probes.md`, Atlas Story
+//! S2).
 //!
 //! Story-only probe: for every drawn file the scan already rendered, parse the
-//! file once more and emit the function signatures **as written**, so the
-//! story can join `flow.signatures[].id` to `metrics.json`
+//! file once more and emit function signatures **as written** plus call sites
+//! with their written arguments, so the story can join
+//! `flow.signatures[].id` / `flow.calls[].caller` to `metrics.json`
 //! `stats.functions[].id` (the canonical IR identity `path#name#line:col`).
 //!
 //! Known limits (deliberate, part of the probe contract):
@@ -13,15 +15,24 @@
 //!   rather than guessed.
 //! - `dir` only distinguishes by-value / const-pointer (`in`) from mutable
 //!   pointers (`inout`). `out` is never inferred in S2.
-//! - This is static inference: a signature says what the source *writes*, not
+//! - A callee resolves only when it is a direct name (identifier or Rust
+//!   scoped identifier's final segment) defined exactly once across the parsed
+//!   drawn functions. Methods, function pointers, dynamic dispatch, macros,
+//!   ambiguous names and unknown names stay unresolved — never guessed.
+//! - Argument types come from the caller's same-function local table only
+//!   (parameters plus explicit Rust `let x: T` / C `T x` declarations), with
+//!   no cross-file inference. C decimal integer constants are `int` by the
+//!   language. Rust reference/pointer types expose their pointee.
+//! - This is static inference: the flow says what the source *writes*, not
 //!   what the program does at runtime.
 //!
 //! Determinism: only the caller-supplied drawn paths are parsed (C/Rust
-//! extensions), and the result is sorted `(path, line, name, id)` with
-//! `BTreeSet`-backed `unresolved` lists. Unreadable or unparsable files are
-//! skipped silently; their call edges stay unresolved in later slices.
+//! extensions), and output is sorted `(path, line, name, id)` for signatures
+//! and `(from, line, callee, to, caller)` for calls, with `BTreeSet`-backed
+//! `unresolved` lists and `BTreeMap`-backed edge classification. Unreadable or
+//! unparsable files are skipped silently.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
 
@@ -37,6 +48,58 @@ pub(crate) struct Flow {
     pub(crate) flow_version: u8,
     pub(crate) fidelity: &'static str,
     pub(crate) signatures: Vec<Signature>,
+    pub(crate) calls: Vec<Call>,
+}
+
+/// One call site in a drawn file, with resolved target only when the callee is
+/// a direct name that is unique across the parsed drawn functions.
+#[derive(Debug, Serialize)]
+pub(crate) struct Call {
+    pub(crate) from: String,
+    pub(crate) to: Option<String>,
+    pub(crate) to_id: Option<String>,
+    pub(crate) caller: String,
+    pub(crate) callee: String,
+    pub(crate) line: u32,
+    pub(crate) args: Vec<CallArg>,
+    pub(crate) unresolved: bool,
+}
+
+/// One written argument expression, typed only from the caller's local table.
+#[derive(Debug, Serialize)]
+pub(crate) struct CallArg {
+    pub(crate) expr: String,
+    #[serde(rename = "type")]
+    pub(crate) type_text: Option<String>,
+    /// `in` or `inout`; `out` is unused in S2.
+    pub(crate) dir: &'static str,
+    /// Bare identifier (or root of a field access) only when it resolves.
+    pub(crate) named: Option<String>,
+    /// True only for string literals (path/URL observability).
+    pub(crate) literal: bool,
+}
+
+/// Edge label derived from the calls that cross the edge.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct EdgeLabel {
+    pub(crate) payload: Option<String>,
+    pub(crate) label: &'static str,
+}
+
+/// A call before whole-set name resolution.
+struct RawCall {
+    from: String,
+    caller: String,
+    callee: String,
+    direct_name: Option<String>,
+    line: u32,
+    args: Vec<CallArg>,
+}
+
+/// Declared local/parameter type used for argument typing (never inferred).
+struct LocalType {
+    type_text: String,
+    dir: &'static str,
 }
 
 /// One function signature, keyed by the canonical IR function id.
@@ -61,7 +124,8 @@ pub(crate) struct Param {
     pub(crate) dir: &'static str,
 }
 
-/// Build the signature list for the drawn files under `root`.
+/// Build the story-only call/signature projection for the drawn files under
+/// `root`.
 ///
 /// `root` is the scan root verbatim (`MetricsDocument::scan.root_path`): a
 /// directory joins it with each drawn repo-relative path; a single-file scan
@@ -69,6 +133,7 @@ pub(crate) struct Param {
 #[must_use]
 pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flow {
     let mut signatures = Vec::new();
+    let mut raw_calls = Vec::new();
     let mut seen = BTreeSet::new();
     for path in drawn {
         if !seen.insert(path.clone()) {
@@ -88,10 +153,58 @@ pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flo
         let Some(tree) = parse(language, &source) else {
             continue;
         };
-        let mut found = Vec::new();
-        collect_functions(tree.root_node(), language, &path, &source, &mut found);
-        signatures.extend(found);
+        let mut macro_names = BTreeSet::new();
+        collect_macro_names(tree.root_node(), language, &source, &mut macro_names);
+        collect_functions(
+            tree.root_node(),
+            language,
+            &path,
+            &source,
+            &macro_names,
+            &mut signatures,
+            &mut raw_calls,
+        );
     }
+
+    // Direct-name resolution is whole-set only: a name is resolvable when
+    // exactly one parsed drawn function defines it. Everything else stays
+    // unresolved (never guessed).
+    let mut by_name: BTreeMap<String, Vec<(String, String)>> = BTreeMap::new();
+    for signature in &signatures {
+        by_name
+            .entry(signature.name.clone())
+            .or_default()
+            .push((signature.id.clone(), signature.path.clone()));
+    }
+    let mut calls = Vec::with_capacity(raw_calls.len());
+    for raw in raw_calls {
+        let resolved = raw
+            .direct_name
+            .as_ref()
+            .and_then(|name| by_name.get(name))
+            .and_then(|entries| (entries.len() == 1).then(|| entries[0].clone()));
+        let (to, to_id) = match resolved {
+            Some((id, path)) => (Some(path), Some(id)),
+            None => (None, None),
+        };
+        let unresolved = to_id.is_none()
+            || (!raw.args.is_empty()
+                && !raw
+                    .args
+                    .iter()
+                    .any(|arg| arg.type_text.is_some() || arg.literal));
+        calls.push(Call {
+            from: raw.from,
+            to,
+            to_id,
+            caller: raw.caller,
+            callee: raw.callee,
+            line: raw.line,
+            args: raw.args,
+            unresolved,
+        });
+    }
+
     signatures.sort_by(|a, b| {
         a.path
             .cmp(&b.path)
@@ -99,10 +212,64 @@ pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flo
             .then(a.name.cmp(&b.name))
             .then(a.id.cmp(&b.id))
     });
+    calls.sort_by(|a, b| {
+        a.from
+            .cmp(&b.from)
+            .then(a.line.cmp(&b.line))
+            .then(a.callee.cmp(&b.callee))
+            .then(a.to.cmp(&b.to))
+            .then(a.caller.cmp(&b.caller))
+    });
     Flow {
         flow_version: FLOW_VERSION,
         fidelity: "syntactic",
         signatures,
+        calls,
+    }
+}
+
+impl Flow {
+    /// Classify an edge `(from, to)` from its matching calls.
+    ///
+    /// Any string-literal argument wins (`literal-observed`); otherwise the
+    /// most frequent written type (`type-only`, ties lexicographically
+    /// smallest); otherwise `unresolved`. No matching call is unresolved.
+    #[must_use]
+    pub(crate) fn edge_label(&self, from: &str, to: &str) -> EdgeLabel {
+        let mut matching = self
+            .calls
+            .iter()
+            .filter(|call| call.from == from && call.to.as_deref() == Some(to));
+        let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
+        for call in matching.by_ref() {
+            for arg in &call.args {
+                if arg.literal {
+                    return EdgeLabel {
+                        payload: Some(literal_payload(&arg.expr)),
+                        label: "literal-observed",
+                    };
+                }
+                if let Some(type_text) = arg.type_text.as_deref() {
+                    *counts.entry(type_text).or_insert(0) += 1;
+                }
+            }
+        }
+        let mut best: Option<(&str, usize)> = None;
+        for (type_text, count) in counts {
+            if best.is_none_or(|(_, best_count)| count > best_count) {
+                best = Some((type_text, count));
+            }
+        }
+        if let Some((type_text, _)) = best {
+            return EdgeLabel {
+                payload: Some(type_text.to_string()),
+                label: "type-only",
+            };
+        }
+        EdgeLabel {
+            payload: None,
+            label: "unresolved",
+        }
     }
 }
 
@@ -139,7 +306,9 @@ fn collect_functions(
     language: Language,
     path: &str,
     source: &[u8],
-    out: &mut Vec<Signature>,
+    macro_names: &BTreeSet<String>,
+    signatures: &mut Vec<Signature>,
+    calls: &mut Vec<RawCall>,
 ) {
     let function_kind = match language {
         Language::C => "function_definition",
@@ -147,13 +316,388 @@ fn collect_functions(
     };
     if node.kind() == function_kind {
         if let Some(signature) = signature(node, language, path, source) {
-            out.push(signature);
+            let mut table = BTreeMap::new();
+            for param in &signature.params {
+                if let Some(name) = &param.name {
+                    table.insert(
+                        name.clone(),
+                        LocalType {
+                            type_text: param.type_text.clone(),
+                            dir: param.dir,
+                        },
+                    );
+                }
+            }
+            if let Some(body) = node.child_by_field_name("body") {
+                match language {
+                    Language::C => collect_c_locals(body, source, &mut table),
+                    Language::Rust => collect_rust_locals(body, source, &mut table),
+                }
+                let context = CallContext {
+                    language,
+                    source,
+                    table: &table,
+                    macro_names,
+                    from: path,
+                    caller: &signature.id,
+                };
+                collect_calls(body, &context, calls);
+            }
+            signatures.push(signature);
         }
         return;
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        collect_functions(child, language, path, source, out);
+        collect_functions(
+            child,
+            language,
+            path,
+            source,
+            macro_names,
+            signatures,
+            calls,
+        );
+    }
+}
+
+/// Macro names are excluded from direct resolution: a C function-like macro
+/// invocation is syntactically a `call_expression`, and must never become a
+/// resolved function call. Rust macro invocations are a distinct node kind and
+/// are simply not walked as calls.
+fn collect_macro_names(
+    node: Node<'_>,
+    language: Language,
+    source: &[u8],
+    out: &mut BTreeSet<String>,
+) {
+    if language == Language::C
+        && matches!(node.kind(), "preproc_def" | "preproc_function_def")
+        && let Some(name) = node.child_by_field_name("name")
+    {
+        out.insert(text(name, source).to_string());
+    }
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        collect_macro_names(child, language, source, out);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Call sites
+// ---------------------------------------------------------------------------
+
+struct CallContext<'a> {
+    language: Language,
+    source: &'a [u8],
+    table: &'a BTreeMap<String, LocalType>,
+    macro_names: &'a BTreeSet<String>,
+    from: &'a str,
+    caller: &'a str,
+}
+
+fn collect_calls(node: Node<'_>, context: &CallContext<'_>, out: &mut Vec<RawCall>) {
+    let function_kind = match context.language {
+        Language::C => "function_definition",
+        Language::Rust => "function_item",
+    };
+    if node.kind() == function_kind {
+        return;
+    }
+    if node.kind() == "call_expression"
+        && let Some(call) = build_call(node, context)
+    {
+        out.push(call);
+    }
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        collect_calls(child, context, out);
+    }
+}
+
+fn build_call(node: Node<'_>, context: &CallContext<'_>) -> Option<RawCall> {
+    let function = node.child_by_field_name("function")?;
+    let arguments = node.child_by_field_name("arguments")?;
+    let (callee, direct_name) = callee_of(function, context);
+    let mut args = Vec::new();
+    let mut cursor = arguments.walk();
+    for child in arguments.named_children(&mut cursor) {
+        args.push(build_arg(child, context));
+    }
+    let line = u32::try_from(node.start_position().row + 1).ok()?;
+    Some(RawCall {
+        from: context.from.to_string(),
+        caller: context.caller.to_string(),
+        callee,
+        direct_name,
+        line,
+        args,
+    })
+}
+
+/// `callee` is the call target as written; `direct_name` is `Some` only for a
+/// plain identifier or a Rust scoped identifier's final segment, and only when
+/// the target is not a macro and not a local function-pointer value.
+fn callee_of(function: Node<'_>, context: &CallContext<'_>) -> (String, Option<String>) {
+    let written = collapse(text(function, context.source));
+    match (context.language, function.kind()) {
+        (_, "identifier") => {
+            let name = text(function, context.source).to_string();
+            let function_pointer = context
+                .table
+                .get(&name)
+                .is_some_and(|local| is_function_pointer(&local.type_text));
+            if context.macro_names.contains(&name) || function_pointer {
+                (written, None)
+            } else {
+                (written, Some(name))
+            }
+        }
+        (Language::Rust, "scoped_identifier") => {
+            let name = function
+                .child_by_field_name("name")
+                .map(|node| text(node, context.source).to_string());
+            (written, name)
+        }
+        _ => (written, None),
+    }
+}
+
+fn is_function_pointer(type_text: &str) -> bool {
+    type_text.contains("(*")
+        || type_text.contains("fn(")
+        || type_text.contains("dyn Fn")
+        || type_text.contains("impl Fn")
+}
+
+fn build_arg(arg: Node<'_>, context: &CallContext<'_>) -> CallArg {
+    let source = context.source;
+    let raw_expr = collapse(text(arg, source));
+    let lookup = expression_identifier(arg, context.language).and_then(|node| {
+        context
+            .table
+            .get(text(node, source))
+            .map(|local| (node, local))
+    });
+    let literal = matches!(
+        arg.kind(),
+        "string_literal" | "raw_string_literal" | "concatenated_string"
+    );
+    let type_text = if literal {
+        Some(
+            match context.language {
+                Language::C => "char*",
+                Language::Rust => "str",
+            }
+            .to_string(),
+        )
+    } else if let Some((_, local)) = lookup {
+        match context.language {
+            Language::C => Some(local.type_text.clone()),
+            Language::Rust => Some(rust_pointee(&local.type_text)),
+        }
+    } else if context.language == Language::C && is_c_integer_literal(arg, source) {
+        // A C decimal integer constant is `int` by the language, not a guess.
+        Some("int".to_string())
+    } else {
+        None
+    };
+    let named = if matches!(arg.kind(), "identifier" | "field_expression") {
+        lookup.map(|(node, _)| text(node, source).to_string())
+    } else {
+        None
+    };
+    let dir = match context.language {
+        Language::Rust if raw_expr.contains("&mut") || raw_expr.contains("*mut") => "inout",
+        Language::C
+            if arg.kind() == "identifier"
+                && lookup.is_some_and(|(_, local)| local.dir == "inout") =>
+        {
+            "inout"
+        }
+        _ => "in",
+    };
+    CallArg {
+        expr: truncate(&raw_expr, 48),
+        type_text,
+        dir,
+        named,
+        literal,
+    }
+}
+
+/// Root identifier of an expression: bare identifier, through `&`/`*` wrappers,
+/// or the base of a field access. Anything else has no local identity.
+fn expression_identifier(node: Node<'_>, language: Language) -> Option<Node<'_>> {
+    match node.kind() {
+        "identifier" => Some(node),
+        "reference_expression"
+        | "unary_expression"
+        | "pointer_expression"
+        | "parenthesized_expression" => node
+            .named_child(0)
+            .and_then(|child| expression_identifier(child, language)),
+        "field_expression" => {
+            let base = match language {
+                Language::C => node.child_by_field_name("argument"),
+                Language::Rust => node.child_by_field_name("value"),
+            };
+            base.and_then(|child| expression_identifier(child, language))
+        }
+        "scoped_identifier" => node
+            .child_by_field_name("name")
+            .and_then(|child| expression_identifier(child, language)),
+        _ => None,
+    }
+}
+
+/// Rust references/pointers expose their pointee for argument typing.
+fn rust_pointee(type_text: &str) -> String {
+    let mut value = type_text.trim();
+    if let Some(rest) = value.strip_prefix('&') {
+        value = rest.trim_start();
+        if value.starts_with('\'') {
+            value = value
+                .split_once(char::is_whitespace)
+                .map_or(value, |(_, rest)| rest.trim_start());
+        }
+        if let Some(rest) = value.strip_prefix("mut ") {
+            value = rest.trim_start();
+        }
+    } else if let Some(rest) = value
+        .strip_prefix("*const ")
+        .or_else(|| value.strip_prefix("*mut "))
+    {
+        value = rest.trim_start();
+    }
+    collapse(value)
+}
+
+fn is_c_integer_literal(node: Node<'_>, source: &[u8]) -> bool {
+    node.kind() == "number_literal"
+        && text(node, source).chars().all(|character| {
+            character.is_ascii_digit() || matches!(character, 'u' | 'U' | 'l' | 'L')
+        })
+}
+
+fn truncate(value: &str, limit: usize) -> String {
+    if value.chars().count() <= limit {
+        value.to_string()
+    } else {
+        let mut truncated: String = value.chars().take(limit).collect();
+        truncated.push_str("...");
+        truncated
+    }
+}
+
+/// Edge payload for a string literal: the source text, kept quoted and capped
+/// at 24 characters (the closing quote is preserved when truncating).
+fn literal_payload(value: &str) -> String {
+    const LIMIT: usize = 24;
+    let characters: Vec<char> = value.chars().collect();
+    if characters.len() <= LIMIT {
+        return value.to_string();
+    }
+    match characters.iter().position(|character| *character == '"') {
+        Some(start) => {
+            let inner = LIMIT.saturating_sub(start + 2);
+            let mut payload: String = characters[..=start].iter().collect();
+            payload.extend(characters[start + 1..].iter().take(inner));
+            payload.push('"');
+            payload
+        }
+        None => characters[..LIMIT].iter().collect(),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Local declarations (narrow, same-file only)
+// ---------------------------------------------------------------------------
+
+fn collect_c_locals(node: Node<'_>, source: &[u8], table: &mut BTreeMap<String, LocalType>) {
+    if node.kind() == "function_definition" {
+        return;
+    }
+    if node.kind() == "declaration" {
+        collect_c_declaration(node, source, table);
+    }
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        collect_c_locals(child, source, table);
+    }
+}
+
+fn collect_c_declaration(
+    declaration: Node<'_>,
+    source: &[u8],
+    table: &mut BTreeMap<String, LocalType>,
+) {
+    let mut declarators = Vec::new();
+    let mut first_start = None;
+    let mut cursor = declaration.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            let field_declarator = cursor.field_name() == Some("declarator");
+            if field_declarator || child.kind() == "init_declarator" {
+                let declarator = match child.kind() {
+                    "init_declarator" => child.child_by_field_name("declarator"),
+                    _ => Some(child),
+                };
+                if let Some(declarator) = declarator {
+                    first_start.get_or_insert(declarator.start_byte());
+                    declarators.push(declarator);
+                }
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    let Some(prefix_start) = first_start else {
+        return;
+    };
+    let prefix =
+        String::from_utf8_lossy(&source[declaration.start_byte()..prefix_start]).into_owned();
+    for declarator in declarators {
+        let Some(name) = leftmost_identifier(declarator) else {
+            continue;
+        };
+        let decoration = splice_without(declarator, name, source);
+        let type_text = collapse(&format!("{prefix}{decoration}"));
+        let is_pointer = contains_kind(declarator, "pointer_declarator");
+        let dir = if is_pointer && !c_is_const_qualified(&type_text) {
+            "inout"
+        } else {
+            "in"
+        };
+        table.insert(text(name, source).to_string(), LocalType { type_text, dir });
+    }
+}
+
+fn collect_rust_locals(node: Node<'_>, source: &[u8], table: &mut BTreeMap<String, LocalType>) {
+    if node.kind() == "function_item" {
+        return;
+    }
+    if node.kind() == "let_declaration"
+        && let (Some(pattern), Some(type_node)) = (
+            node.child_by_field_name("pattern"),
+            node.child_by_field_name("type"),
+        )
+        && let Some(name) = leftmost_identifier(pattern)
+    {
+        let type_text = collapse(text(type_node, source));
+        table.insert(
+            text(name, source).to_string(),
+            LocalType {
+                dir: rust_dir(&type_text),
+                type_text,
+            },
+        );
+    }
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        collect_rust_locals(child, source, table);
     }
 }
 
@@ -558,6 +1102,138 @@ mod tests {
         let flow = build(&file, ["solo.c".to_string()]);
         assert_eq!(flow.signatures.len(), 1);
         assert_eq!(flow.signatures[0].id, "solo.c#compute#1:1");
+        let _ = fs::remove_dir_all(&dir);
+    }
+    #[test]
+    fn c_calls_carry_local_types_and_a_literal_edge_label() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-call-c-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(
+            &dir,
+            "callee.c",
+            "int parse(Config *cfg, const char *path, int flags) { return 0; }\n",
+        );
+        write(
+            &dir,
+            "caller.c",
+            "int caller(void) {\n    Config cfg;\n    return parse(&cfg, \"config.toml\", 1);\n}\n",
+        );
+
+        let flow = flow_for(&dir, &["callee.c", "caller.c"]);
+        assert_eq!(flow.calls.len(), 1);
+        let call = &flow.calls[0];
+        assert_eq!(call.from, "caller.c");
+        assert_eq!(call.to.as_deref(), Some("callee.c"));
+        assert_eq!(call.to_id.as_deref(), Some("callee.c#parse#1:1"));
+        assert_eq!(call.caller, "caller.c#caller#1:1");
+        assert_eq!(call.callee, "parse");
+        assert_eq!(call.line, 3);
+        assert!(!call.unresolved);
+
+        let types: Vec<Option<&str>> = call
+            .args
+            .iter()
+            .map(|arg| arg.type_text.as_deref())
+            .collect();
+        assert_eq!(types, vec![Some("Config"), Some("char*"), Some("int")]);
+        let literals: Vec<bool> = call.args.iter().map(|arg| arg.literal).collect();
+        assert_eq!(literals, vec![false, true, false]);
+        assert!(call.args.iter().all(|arg| arg.dir == "in"));
+
+        let label = flow.edge_label("caller.c", "callee.c");
+        assert_eq!(label.label, "literal-observed");
+        assert_eq!(label.payload.as_deref(), Some("\"config.toml\""));
+        assert_eq!(flow.edge_label("caller.c", "callee.c"), label);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn rust_calls_type_only_and_opaque_calls_stay_unresolved() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-call-r-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(
+            &dir,
+            "a.rs",
+            "struct Config;\n\
+             struct Thing;\n\
+             fn run(cfg: &Config) { let _ = cfg; }\n\
+             fn ping() {}\n\
+             fn caller(cfg: Config) {\n\
+                 let local: Config = cfg;\n\
+                 run(&local);\n\
+                 ping();\n\
+             }\n\
+             fn pointer_call(f: fn(&Config), cfg: Config) { f(&cfg); }\n\
+             fn method_call(obj: Thing) { obj.method(); }\n\
+             fn call_parse() { parse(); }\n",
+        );
+        write(&dir, "parse_a.rs", "fn parse() {}\n");
+        write(&dir, "parse_b.rs", "fn parse() {}\n");
+
+        let flow = flow_for(&dir, &["a.rs", "parse_a.rs", "parse_b.rs"]);
+        assert_eq!(flow.calls.len(), 5);
+
+        let run = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "run")
+            .expect("run call");
+        assert_eq!(run.to.as_deref(), Some("a.rs"));
+        assert_eq!(run.to_id.as_deref(), Some("a.rs#run#3:1"));
+        assert!(!run.unresolved);
+        assert_eq!(run.args[0].type_text.as_deref(), Some("Config"));
+        assert!(!run.args[0].literal);
+
+        let ping = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "ping")
+            .expect("ping call");
+        assert!(!ping.unresolved, "zero-arg resolved calls are resolved");
+        assert!(ping.args.is_empty());
+
+        let function_pointer = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "f")
+            .expect("function pointer call");
+        assert!(function_pointer.unresolved);
+        assert!(function_pointer.to.is_none());
+
+        let method = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "obj.method")
+            .expect("method call");
+        assert!(method.unresolved);
+        assert!(method.to.is_none());
+
+        let ambiguous = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "parse")
+            .expect("ambiguous call");
+        assert!(
+            ambiguous.unresolved,
+            "duplicate definition names are ambiguous"
+        );
+        assert!(ambiguous.to.is_none());
+
+        let label = flow.edge_label("a.rs", "a.rs");
+        assert_eq!(label.label, "type-only");
+        assert_eq!(label.payload.as_deref(), Some("Config"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn edge_without_matching_calls_is_unresolved() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-call-e-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(&dir, "a.c", "int a(void) { return 0; }\n");
+        let flow = flow_for(&dir, &["a.c"]);
+        let label = flow.edge_label("a.c", "b.c");
+        assert_eq!(label.label, "unresolved");
+        assert!(label.payload.is_none());
         let _ = fs::remove_dir_all(&dir);
     }
 }

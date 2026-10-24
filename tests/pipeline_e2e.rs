@@ -658,10 +658,7 @@ fn story_flow_signatures_join_metrics_function_ids() {
     let flow = &layout["flow"];
     assert_eq!(flow["flow_version"], 1);
     assert_eq!(flow["fidelity"], "syntactic");
-    assert!(
-        flow.get("calls").is_none(),
-        "P1 calls are not part of S2/P3"
-    );
+    assert!(flow["calls"].is_array(), "P1 calls array missing");
     assert!(flow.get("io").is_none(), "P2 io is not part of S2/P3");
 
     let signatures = flow["signatures"]
@@ -705,6 +702,92 @@ fn story_flow_signatures_join_metrics_function_ids() {
             "flow signature id {id} is not a metrics function id"
         );
     }
+}
+
+/// S2/P1: call payloads and per-edge labels ride on the story-only flow block.
+#[test]
+fn story_flow_calls_and_edge_labels_are_story_only() {
+    let root = temp_dir("flow-calls-src");
+    fs::write(
+        root.join("main.c"),
+        "int helper(int x);\n\
+         int main(void) {\n\
+             int value = 1;\n\
+             return helper(value);\n\
+         }\n",
+    )
+    .expect("write main.c");
+    fs::write(root.join("util.c"), "int helper(int x) { return x; }\n").expect("write util.c");
+
+    let out = temp_dir("flow-calls-out").join("perfpal-report");
+    let code = run_with(argv(&[
+        "--output",
+        out.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(code, 0);
+
+    let raw = fs::read_to_string(out.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    let drawn: Vec<&str> = layout["nodes"]
+        .as_array()
+        .expect("nodes array")
+        .iter()
+        .filter_map(|node| node["path"].as_str())
+        .collect();
+
+    let calls = layout["flow"]["calls"]
+        .as_array()
+        .expect("flow calls array");
+    assert!(!calls.is_empty(), "drawn call sites must be recorded");
+    for call in calls {
+        let from = call["from"].as_str().expect("call from");
+        assert!(
+            drawn.contains(&from),
+            "call from is not a drawn path: {call}"
+        );
+        match call["to"].as_str() {
+            Some(to) => assert!(drawn.contains(&to), "call to is not a drawn path: {call}"),
+            None => assert!(call["to_id"].is_null(), "to_id set without to: {call}"),
+        }
+        assert!(
+            call["unresolved"].is_boolean(),
+            "unresolved must be a boolean: {call}"
+        );
+        for arg in call["args"].as_array().expect("args array") {
+            assert!(arg["expr"].is_string(), "arg expr missing: {arg}");
+            assert!(arg["literal"].is_boolean(), "arg literal missing: {arg}");
+            assert!(
+                matches!(arg["dir"].as_str(), Some("in" | "inout")),
+                "arg dir outside in/inout: {arg}"
+            );
+        }
+    }
+
+    let allowed = ["type-only", "literal-observed", "unresolved"];
+    let edges = layout["edges"].as_array().expect("edges array");
+    assert!(
+        !edges.is_empty(),
+        "a two-file fixture must draw at least one edge"
+    );
+    for edge in edges {
+        let label = edge["label"].as_str().expect("edge label");
+        assert!(
+            allowed.contains(&label),
+            "edge label outside the contract: {edge}"
+        );
+        assert!(
+            edge.get("payload").is_some(),
+            "edge payload key missing: {edge}"
+        );
+    }
+    let edge = edges
+        .iter()
+        .find(|edge| edge["from"] == "main.c" && edge["to"] == "util.c")
+        .expect("main.c → util.c edge");
+    assert_eq!(edge["label"], "type-only");
+    assert_eq!(edge["payload"], "int");
 }
 
 /// Slice `text` from the END of the `start` marker up to the `end` marker.
