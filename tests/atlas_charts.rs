@@ -244,16 +244,14 @@ fn coverage_block_links_the_artifacts() {
             "atlas-q2.html",
             "findings-detail.html#ranked-actions",
             "profile-queue.html",
+            "agent-report.md",
+            "agent-actions.json",
         ] {
             assert!(
                 coverage.contains(&format!("href=\"{href}\"")),
                 "{name}: missing {href}"
             );
         }
-        assert!(
-            !coverage.contains("agent-report.md"),
-            "{name}: agent-report must wait for track C"
-        );
     }
 }
 

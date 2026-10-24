@@ -258,6 +258,13 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // warm-paper pages (pure functions of `document`, no provenance).
     let atlas_weight_html = crate::reporter::render_atlas_weight_html(&document);
     let atlas_q2_html = crate::reporter::render_atlas_q2_html(&document);
+    // Track C: the LLM-facing depth layer — a bounded Markdown triage report
+    // (`agent-report.md`, fixed seven-section skeleton, ≤ 80 KB) and the
+    // complete machine action list (`agent-actions.json`, contract_version 1).
+    // Both are pure functions of `document` and deliberately render no clock
+    // provenance, so repeated runs of the same command are byte-identical.
+    let agent_md = crate::reporter::agent_report::render_markdown(&document);
+    let agent_json = crate::reporter::agent_report::render_actions_json(&document);
     let dot = crate::charts::dot::render_dot(&document);
 
     // writer: atomic directory swap (all writer failures are output errors).
@@ -276,6 +283,8 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         Artifact::text("profile-queue.html", profile_html),
         Artifact::text("atlas-weight.html", atlas_weight_html),
         Artifact::text("atlas-q2.html", atlas_q2_html),
+        Artifact::text("agent-report.md", agent_md),
+        Artifact::text("agent-actions.json", agent_json),
         Artifact::text("charts/graph.dot", dot),
     ];
     for (name, bytes) in &charts {

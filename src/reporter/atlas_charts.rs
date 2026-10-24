@@ -430,6 +430,8 @@ fn render_coverage(out: &mut String) {
         ("atlas-q2.html", "blast drill"),
         ("findings-detail.html#ranked-actions", "complete actions"),
         ("profile-queue.html", "profile queue"),
+        ("agent-report.md", "agent report"),
+        ("agent-actions.json", "agent actions"),
     ] {
         out.push_str(&format!(
             "<a href=\"{}\">{}</a>\n",
