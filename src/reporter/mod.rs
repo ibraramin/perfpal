@@ -1918,7 +1918,19 @@ pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
         .map(|node| node.findings.hot + node.findings.warn + node.findings.info)
         .sum();
     let findings_total = doc.findings.len();
-    atlas_layout::to_json(&view, &start_actions, findings_included, findings_total)
+    // Story-only P3 probe: parse just the drawn files for signatures. Normal
+    // scans never reach this function, so they pay nothing.
+    let flow = crate::analysis::flow::build(
+        std::path::Path::new(&doc.scan.root_path),
+        view.nodes.iter().map(|node| node.path.clone()),
+    );
+    atlas_layout::to_json(
+        &view,
+        &start_actions,
+        findings_included,
+        findings_total,
+        Some(&flow),
+    )
 }
 
 /// Component index: rank, prefix, metrics + link to the

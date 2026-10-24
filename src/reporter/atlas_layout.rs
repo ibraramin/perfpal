@@ -13,6 +13,7 @@ use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
 
+use crate::analysis::flow::Flow;
 use crate::reporter::atlas::{AtlasNode, AtlasView};
 use crate::reporter::atlas_brief::StartAction;
 use crate::reporter::atlas_metrics::format_cost;
@@ -26,13 +27,15 @@ use crate::reporter::atlas_render::{
 ///
 /// `findings_included`/`findings_total` are supplied by the caller (the same
 /// numbers the report header prints) so this module stays a pure projection of
-/// the view plus the already-ranked start actions.
+/// the view plus the already-ranked start actions. `flow` is the story-only
+/// P3 signature block; `None` on every non-story path.
 #[must_use]
-pub fn to_json(
+pub(crate) fn to_json(
     view: &AtlasView,
     actions: &[StartAction],
     findings_included: usize,
     findings_total: usize,
+    flow: Option<&Flow>,
 ) -> String {
     let layout = compute_layout(view);
 
@@ -225,7 +228,7 @@ pub fn to_json(
 
     let hottest_text = hottest_line(view);
 
-    let value = json!({
+    let mut value = json!({
         "layout_version": 1,
         "canvas": {"w": SVG_W, "h": layout.height},
         "meta": {
@@ -256,6 +259,13 @@ pub fn to_json(
         "stages": stages_json(view),
         "actions": actions,
     });
+
+    if let Some(flow) = flow
+        && let Ok(flow_value) = serde_json::to_value(flow)
+        && let serde_json::Value::Object(ref mut object) = value
+    {
+        object.insert("flow".to_string(), flow_value);
+    }
 
     serde_json::to_string_pretty(&value)
         .expect("atlas layout JSON is built from serializable primitives")
@@ -352,7 +362,7 @@ mod tests {
             .iter()
             .map(|node| node.findings.hot + node.findings.warn + node.findings.info)
             .sum();
-        to_json(&view, &actions, included, doc.findings.len())
+        to_json(&view, &actions, included, doc.findings.len(), None)
     }
 
     #[test]

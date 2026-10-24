@@ -633,6 +633,80 @@ fn atlas_layout_json_is_byte_identical_on_double_scan() {
     );
 }
 
+/// S2/P3: `--story` emits a syntactic signature block whose `id`s join the
+/// metrics function table exactly (canonical IR identity).
+#[test]
+fn story_flow_signatures_join_metrics_function_ids() {
+    let root = temp_dir("flow-src");
+    fs::write(
+        root.join("main.c"),
+        "int parse(Config *cfg, const char *path) { return cfg != 0 && path != 0; }\n\
+         int main(void) { return parse(0, 0); }\n",
+    )
+    .expect("write fixture");
+    let out = temp_dir("flow-out").join("perfpal-report");
+    let code = run_with(argv(&[
+        "--output",
+        out.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(code, 0);
+
+    let raw = fs::read_to_string(out.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    let flow = &layout["flow"];
+    assert_eq!(flow["flow_version"], 1);
+    assert_eq!(flow["fidelity"], "syntactic");
+    assert!(
+        flow.get("calls").is_none(),
+        "P1 calls are not part of S2/P3"
+    );
+    assert!(flow.get("io").is_none(), "P2 io is not part of S2/P3");
+
+    let signatures = flow["signatures"]
+        .as_array()
+        .expect("flow signatures array");
+    assert!(!signatures.is_empty(), "signatures must not be empty");
+    assert!(
+        signatures
+            .iter()
+            .any(|signature| signature["id"] == "main.c#parse#1:1"),
+        "canonical IR id missing: {signatures:?}"
+    );
+    for signature in signatures {
+        assert!(
+            signature["params"].is_array(),
+            "params missing: {signature}"
+        );
+        assert!(
+            signature["unresolved"].is_array(),
+            "unresolved missing: {signature}"
+        );
+        assert!(
+            signature["ret"].is_string() || signature["ret"].is_null(),
+            "ret must be a string or null: {signature}"
+        );
+    }
+
+    let metrics_raw = fs::read_to_string(out.join("metrics.json")).expect("metrics JSON");
+    let metrics: serde_json::Value =
+        serde_json::from_str(&metrics_raw).expect("metrics JSON parses");
+    let ids: Vec<&str> = metrics["stats"]["functions"]
+        .as_array()
+        .expect("stats.functions array")
+        .iter()
+        .filter_map(|function| function["id"].as_str())
+        .collect();
+    for signature in signatures {
+        let id = signature["id"].as_str().expect("signature id");
+        assert!(
+            ids.contains(&id),
+            "flow signature id {id} is not a metrics function id"
+        );
+    }
+}
+
 /// Slice `text` from the END of the `start` marker up to the `end` marker.
 fn section<'a>(text: &'a str, start: &str, end: &str) -> &'a str {
     let s = text.find(start).expect("section start marker") + start.len();

@@ -6,6 +6,7 @@
 //! Pipeline order: cli → scanner → analyzer → aggregator → reporter/charts → writer.
 
 pub mod aggregator;
+mod analysis;
 pub mod analyzer;
 pub mod charts;
 pub mod cli;
