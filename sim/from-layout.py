@@ -152,18 +152,19 @@ def edge_row(edge: dict, order: int, calls: dict[tuple[str, str], list[dict]]) -
     }
 
 
-def is_test_function(path: str, name: str) -> bool:
-    """Test/bench rows are excluded from the profile queue."""
-    return "tests" in Path(path).parts or name.startswith("test")
+def projected_functions(nodes: list[dict], production_only: bool) -> list[dict]:
+    """Drawn-node functions in the canonical cost rank.
 
-
-def profile_rows(nodes: list[dict]) -> list[dict]:
-    """Top 8 drawn functions by static cost, non-test only, deduplicated by id."""
+    The core emits up to three candidates per drawn file. ``production_only``
+    keeps the queue honest: the profile is a drawn-slice view, not a
+    whole-repo KV3 ranking. Rows carry the projected ``production`` flag.
+    """
     rows: dict[str, dict] = {}
     for node in nodes:
+        production = bool(node["production"])
+        if production_only and not production:
+            continue
         for function in node["functions"]:
-            if is_test_function(node["path"], function["name"]):
-                continue
             rows[function["id"]] = {
                 "id": function["id"],
                 "name": function["name"],
@@ -176,9 +177,20 @@ def profile_rows(nodes: list[dict]) -> list[dict]:
                 "tripSource": function["trip_source"],
                 "unknownTripLoops": function["unknown_trip_loops"],
                 "recursive": function["recursive"],
+                "production": production,
             }
-    ordered = sorted(rows.values(), key=lambda row: (-row["cost"], row["line"], row["name"]))
-    return ordered[:8]
+    return sorted(rows.values(), key=lambda row: (-row["cost"], row["line"], row["name"]))
+
+
+def profile_rows(nodes: list[dict]) -> list[dict]:
+    """Top 8 production candidates from the per-file top-3 slice."""
+    return projected_functions(nodes, production_only=True)[:8]
+
+
+def hottest_function(nodes: list[dict]) -> dict | None:
+    """Globally highest-cost drawn function (test/bench rows included)."""
+    rows = projected_functions(nodes, production_only=False)
+    return rows[0] if rows else None
 
 
 def unknown_trip_functions(nodes: list[dict]) -> int:
@@ -322,6 +334,7 @@ def build(case: str, out_dir: Path) -> dict:
             "findingsTotal": meta["findings_total"],
         },
         "profile": profile_rows(layout["nodes"]),
+        "hottestFunction": hottest_function(layout["nodes"]),
         "state": {
             "empty": state["empty"],
             "noEntry": state["no_entry"],

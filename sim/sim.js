@@ -153,10 +153,10 @@
 
   function profileText(data) {
     const rows = (data.profile || []).slice(0, 5);
-    if (rows.length === 0) return 'No non-test static candidates recorded for this data slice.';
-    return `${rows
+    if (rows.length === 0) return 'No drawn-slice static candidates recorded for this data slice.';
+    return `Top 3 per file shown; static candidates, verify: ${rows
       .map((fn) => `${fn.name} (${base(fn.path)} L${fn.line}) · ${fmt(fn.cost)} units`)
-      .join(' · ')}. Static candidates ranked by cost; profile to verify.`;
+      .join(' · ')}. Drawn-slice queue, not a whole-repo ranking.`;
   }
 
   function anchorPath(anchor) {
@@ -279,21 +279,37 @@
     const hottest = data.nodes.find((node) => node.hottest);
     if (hottest) {
       const finding = topFinding(data, hottest.id);
-      const hottestFn = (hottest.functions || [])[0] || null;
+      const hottestFunction = data.hottestFunction || (hottest.functions || [])[0] || null;
+      const fileParts = [hottest.costText || 'cost unavailable'];
+      if (hottest.ratioText) fileParts.push(hottest.ratioText);
+      if (hottest.topText) fileParts.push(hottest.topText);
+      const narration = [`Hottest file: ${base(hottest.name)} · ${fileParts.join(' · ')}.`];
+      if (hottestFunction) {
+        narration.push(
+          `Hottest function: ${hottestFunction.name} (L${hottestFunction.line}, ${hottestFunction.path}) · ${fmt(hottestFunction.cost)} units.`,
+        );
+      }
+      if (finding) {
+        narration.push(
+          `Top annotation: ${finding.severity.toUpperCase()} ${finding.ruleId} — ${finding.title} (line ${finding.line}).`,
+        );
+      }
       beats.push({
         kind: 'hottest',
         title: `Hottest · ${base(hottest.name)}`,
-        narration: `${hottest.costText} · ${hottest.ratioText} · ${hottest.topText}.${hottestFn ? ` Hottest function: ${hottestFn.name} (L${hottestFn.line}) · ${fmt(hottestFn.cost)} units.` : ''}${finding ? ` Top annotation: ${finding.severity.toUpperCase()} ${finding.ruleId} — ${finding.title} (line ${finding.line}).` : ''}`,
+        narration: narration.join(' '),
         chips: ['inferred', 'rank 1 by cost'],
         step: trace.length,
-        focus: { node: hottest.id, fn: hottestFn ? hottestFn.id : null },
+        focus: hottestFunction
+          ? { node: hottestFunction.path, fn: hottestFunction.id }
+          : { node: hottest.id },
       });
     }
 
     const profile = (data.profile || []).slice(0, 5);
     beats.push({
       kind: 'profile',
-      title: profile.length > 0 ? `Profile queue · top ${profile.length} functions` : 'Profile queue',
+      title: profile.length > 0 ? 'Profile queue · drawn-slice candidates' : 'Profile queue',
       narration: profileText(data),
       chips: ['static candidate', 'verify'],
       step: trace.length,
@@ -348,23 +364,213 @@
 
   /* --------------------------------------------------------------- render */
 
-  function midpoint(pathData) {
+  function pathValues(pathData) {
     const numbers = String(pathData).match(/-?\d+(?:\.\d+)?/g) || [];
-    const values = numbers.map(Number);
-    // The layout emits `M x0 y0 C x1 y1 x2 y2 x3 y3`; take the true curve
-    // midpoint so labels sit on the drawn path (not on a node edge).
+    return numbers.map(Number);
+  }
+
+  function cubicAt(values, t) {
     if (values.length === 8) {
+      const [x0, y0, x1, y1, x2, y2, x3, y3] = values;
+      const u = 1 - t;
       return {
-        x: (values[0] + 3 * values[2] + 3 * values[4] + values[6]) / 8,
-        y: (values[1] + 3 * values[3] + 3 * values[5] + values[7]) / 8,
+        x: u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3,
+        y: u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3,
       };
     }
-    if (values.length < 4) return { x: 0, y: 0 };
+    if (values.length >= 4) {
+      const x0 = values[0];
+      const y0 = values[1];
+      const x1 = values[values.length - 2];
+      const y1 = values[values.length - 1];
+      return { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t };
+    }
+    return { x: 0, y: 0 };
+  }
+
+  function cubicTangent(values, t) {
+    if (values.length === 8) {
+      const [x0, y0, x1, y1, x2, y2, x3, y3] = values;
+      const u = 1 - t;
+      return {
+        x: 3 * u * u * (x1 - x0) + 6 * u * t * (x2 - x1) + 3 * t * t * (x3 - x2),
+        y: 3 * u * u * (y1 - y0) + 6 * u * t * (y2 - y1) + 3 * t * t * (y3 - y2),
+      };
+    }
+    if (values.length >= 4) {
+      return { x: values[values.length - 2] - values[0], y: values[values.length - 1] - values[1] };
+    }
+    return { x: 0, y: 1 };
+  }
+
+  /* ---------------------------------------------------- edge label layout */
+
+  const LABEL_TS = [0.5, 0.38, 0.62, 0.28, 0.72];
+  const LABEL_OFFSETS = [0, -8, 8, -14, 14];
+  const LABEL_CHAR_W = 4.4;
+  const LABEL_MAX_W = 150;
+
+  const rect = (x1, y1, x2, y2) => ({ x1, y1, x2, y2 });
+  const inflateRect = (box, pad) =>
+    rect(box.x1 - pad, box.y1 - pad, box.x2 + pad, box.y2 + pad);
+  const nodeRect = (node, pad = 0) =>
+    rect(node.x - pad, node.y - pad, node.x + node.w + pad, node.y + node.h + pad);
+
+  function overlapArea(a, b) {
+    const w = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1);
+    const h = Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1);
+    return w > 0 && h > 0 ? w * h : 0;
+  }
+
+  function pointInRect(x, y, box) {
+    return x >= box.x1 && x <= box.x2 && y >= box.y1 && y <= box.y2;
+  }
+
+  function isDarkFill(fill) {
+    const match = /^#([0-9a-f]{6})$/i.exec(fill || '');
+    if (!match) return false;
+    const value = parseInt(match[1], 16);
+    const red = (value >> 16) & 255;
+    const green = (value >> 8) & 255;
+    const blue = value & 255;
+    return (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255 < 0.42;
+  }
+
+  function nodeTextRect(node) {
+    return rect(node.x + 10, node.y + 14, node.x + node.w - 10, node.y + node.h - 8);
+  }
+
+  function nodeBadgeRect(node) {
+    if (!node.badge) return null;
+    const width = Math.min(node.badge.length * 4.3, node.w - 16);
+    return rect(node.x + node.w - 6 - width, node.y + 2, node.x + node.w - 6, node.y + 12);
+  }
+
+  function hullLabelRect(hull) {
+    const width = hull.label.length * 5.4;
+    return rect(hull.x + 8, hull.y + 2, hull.x + 8 + width, hull.y + 14);
+  }
+
+  function labelWidth(text) {
+    return Math.min(String(text).length * LABEL_CHAR_W, LABEL_MAX_W);
+  }
+
+  function labelRect(x, y, text, anchor = 'middle') {
+    const width = labelWidth(text);
+    let x1;
+    if (anchor === 'start') x1 = x;
+    else if (anchor === 'end') x1 = x - width;
+    else x1 = x - width / 2;
+    return rect(x1, y - 8, x1 + width, y + 2);
+  }
+
+  function pathLabelCandidates(values) {
+    const candidates = [];
+    for (const t of LABEL_TS) {
+      const point = cubicAt(values, t);
+      const tangent = cubicTangent(values, t);
+      const length = Math.hypot(tangent.x, tangent.y) || 1;
+      const nx = -tangent.y / length;
+      const ny = tangent.x / length;
+      for (const offset of LABEL_OFFSETS) {
+        candidates.push({ x: point.x + nx * offset, y: point.y + ny * offset, anchor: 'middle', source: 'path' });
+      }
+    }
+    return candidates;
+  }
+
+  function gridLabelCandidates(origin) {
+    const candidates = [];
+    for (const dy of [0, 10, -10, 20, -20, 30, -30, 40, -40, 50, -50, 60, -60, 70, -70,
+      80, -80, 90, -90, 100, -100, 110, -110, 120, -120]) {
+      for (let dx = -320; dx <= 320; dx += 8) {
+        candidates.push({ x: origin.x + dx, y: origin.y + dy, anchor: 'middle', source: 'grid' });
+      }
+    }
+    candidates.sort((a, b) =>
+      (Math.hypot(a.x - origin.x, a.y - origin.y) - Math.hypot(b.x - origin.x, b.y - origin.y))
+      || (a.y - b.y) || (a.x - b.x));
+    return candidates;
+  }
+
+  function marginLabelCandidates(origin, text, stage) {
+    const half = labelWidth(text) / 2 + 6;
+    const candidates = [];
+    for (const y of [stage.h - 6, 58]) {
+      for (let x = half; x <= stage.w - half; x += 12) {
+        candidates.push({ x, y, anchor: 'middle', source: 'margin' });
+      }
+    }
+    candidates.sort((a, b) =>
+      (Math.abs(a.x - origin.x) - Math.abs(b.x - origin.x)) || (a.y - b.y));
+    return candidates;
+  }
+
+  function scoreLabel(candidate, text, nodes, hullLabels, placed) {
+    const box = labelRect(candidate.x, candidate.y, text, candidate.anchor);
+    let nodeOverlap = 0;
+    let textOverlap = 0;
+    let hullOverlap = 0;
+    let labelOverlap = 0;
+    let anchorInside = false;
+    let darkOverlap = false;
+    for (const node of nodes) {
+      if (pointInRect(candidate.x, candidate.y, nodeRect(node, 1))) anchorInside = true;
+      const cardOverlap = overlapArea(box, nodeRect(node, 4));
+      if (cardOverlap > 0) {
+        nodeOverlap += cardOverlap;
+        if (isDarkFill(node.fill)) darkOverlap = true;
+      }
+      textOverlap += overlapArea(box, nodeTextRect(node));
+      const badge = nodeBadgeRect(node);
+      if (badge) textOverlap += overlapArea(box, badge);
+    }
+    for (const hull of hullLabels) hullOverlap += overlapArea(box, hull);
+    for (const other of placed) labelOverlap += overlapArea(box, other);
     return {
-      x: (values[0] + values[values.length - 2]) / 2,
-      y: (values[1] + values[values.length - 1]) / 2,
+      score: nodeOverlap + textOverlap * 8 + hullOverlap * 8 + labelOverlap * 12,
+      nodeOverlap,
+      textOverlap,
+      hullOverlap,
+      labelOverlap,
+      clean: !anchorInside && !darkOverlap && nodeOverlap === 0
+        && textOverlap === 0 && hullOverlap === 0 && labelOverlap === 0,
+      hard: anchorInside || darkOverlap,
+      box,
     };
   }
+
+  function placeEdgeLabel(edge, label, context, placed) {
+    const values = pathValues(edge.d);
+    const origin = cubicAt(values, 0.5);
+    const fullText = edge.payload ? `${edge.payload} · ${label}` : label;
+    const attempts = [
+      { text: fullText, dropped: false, list: pathLabelCandidates(values) },
+      { text: label, dropped: Boolean(edge.payload), list: pathLabelCandidates(values) },
+      { text: fullText, dropped: false, list: gridLabelCandidates(origin) },
+      { text: label, dropped: Boolean(edge.payload), list: gridLabelCandidates(origin) },
+      { text: fullText, dropped: false, list: marginLabelCandidates(origin, fullText, context.stage) },
+      { text: label, dropped: Boolean(edge.payload), list: marginLabelCandidates(origin, label, context.stage) },
+    ];
+    const scored = [];
+    for (const attempt of attempts) {
+      for (const candidate of attempt.list) {
+        const result = scoreLabel(candidate, attempt.text, context.nodes, context.hullLabels, placed);
+        scored.push({ ...candidate, text: attempt.text, dropped: attempt.dropped, ...result });
+      }
+    }
+    const byScore = (a, b) => a.score - b.score;
+    const clean = scored.find((candidate) => candidate.clean);
+    if (clean) return clean;
+    const safeClass = scored.filter(
+      (candidate) => candidate.dropped && !candidate.hard && candidate.nodeOverlap === 0,
+    ).sort(byScore)[0];
+    if (safeClass) return safeClass;
+    const safe = scored.find((candidate) => !candidate.hard && candidate.nodeOverlap === 0);
+    if (safe) return { ...safe, text: label, dropped: Boolean(edge.payload) };
+    return scored.filter((candidate) => candidate.dropped).sort(byScore)[0] || scored[0];
+  }
+
 
   function renderMeta() {
     const meta = state.data.meta;
@@ -372,8 +578,11 @@
     setText('#key-caps', meta.caps);
     const hottest = (state.data.nodes || []).find((node) => node.hottest);
     if (hottest) {
-      const ratio = String(hottest.ratioText).match(/^([\d,]+)/);
-      const ratioValue = ratio ? `${compact(Number(ratio[1].replace(/,/g, '')))}× median` : hottest.ratioText;
+      const ratioText = hottest.ratioText || '';
+      const ratio = ratioText.match(/^([\d,]+(?:\.\d+)?)/);
+      const ratioValue = ratio
+        ? `${compact(Number(ratio[1].replace(/,/g, '')))}× median`
+        : (ratioText || 'ratio unavailable');
       setText('#key-hottest-path', midEllipsis(hottest.name, 30));
       setText('#key-hottest-meta', `· ${compact(hottest.cost)} cost · ${ratioValue}`);
       $('#key-hottest').title = meta.hottest;
@@ -563,25 +772,33 @@
     }
 
     // Every drawn edge carries its inferred payload class. Labels are painted
-    // last so no node box hides a label in the complete final frame; off-path
-    // labels get a small deterministic offset so adjacent gutters do not
-    // stack, while on-path labels stay on the exact curve midpoint.
-    for (const [index, edge] of data.edges.entries()) {
+    // last (above nodes) and placed by deterministic candidate scoring:
+    // midpoints at t=0.5/0.38/0.62/0.28/0.72 with perpendicular offsets
+    // 0/±8/±14, then a nearby grid only when the path candidates are blocked.
+    // A collision-free candidate keeps the payload half; otherwise the label
+    // drops to the class token. On-path labels are placed first so they keep
+    // the most legible spots.
+    const labelContext = { nodes: data.nodes, hullLabels: data.hulls.map(hullLabelRect), stage: data.stage };
+    const placed = [];
+    const orderedForLabels = [...data.edges].sort(
+      (a, b) => (Number(Boolean(b.onPath)) - Number(Boolean(a.onPath))) || (a.order - b.order),
+    );
+    for (const edge of orderedForLabels) {
       const unresolved = edge.label === 'unresolved' || edge.labelClass === 'unresolved';
       const label = edge.label || 'inferred';
-      const text = edge.payload ? `${edge.payload} · ${label}` : label;
-      const point = midpoint(edge.d);
-      const dx = edge.onPath ? 0 : ((index * 11) % 3 - 1) * 10;
-      const dy = edge.onPath ? -5 : -5 + ((index * 7) % 3 - 1) * 8;
+      const chosen = placeEdgeLabel(edge, label, labelContext, placed);
+      placed.push(inflateRect(chosen.box, 2));
       const el = svg('text', {
         class: `edge-label${edge.onPath ? ' is-onpath' : ''}${unresolved ? ' edge-label-unresolved' : ''}`,
-        x: point.x + dx,
-        y: point.y + dy,
-        'text-anchor': 'middle',
+        x: chosen.x,
+        y: chosen.y,
+        'text-anchor': chosen.anchor,
         'data-edge': `${edge.from}->${edge.to}`,
         'data-label': label,
-        ...fitted(text, 4.4, 150),
-      }, text);
+        'data-source': chosen.source,
+        'data-dropped': chosen.dropped ? 'payload' : 'none',
+        ...fitted(chosen.text, LABEL_CHAR_W, LABEL_MAX_W),
+      }, chosen.text);
       stage.append(el);
       dom.edgeLabels.push({
         el,

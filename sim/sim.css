@@ -296,6 +296,11 @@ button,select,input{font:inherit;color:inherit}
 .sw-forward{width:14px;height:0;border:0;border-top:2px solid #8d8577;border-radius:0}
 .sw-back{width:14px;height:0;border:0;border-top:2px dashed #8d8577;border-radius:0}
 .sw-path{width:14px;height:0;border:0;border-top:2.6px solid var(--hot);border-radius:0}
+.legend-labels{gap:5px}
+.legend-sub{font-size:7.2px;font-weight:800;letter-spacing:.05em;color:var(--muted)}
+.lg{font-family:var(--mono);font-size:7.4px;font-weight:700;letter-spacing:0}
+.lg-type,.lg-literal{color:#8a4a20}
+.lg-unresolved{color:#666}
 .key-defs{
   flex:1 1 auto;
   display:flex;
@@ -368,9 +373,9 @@ button,select,input{font:inherit;color:inherit}
   stroke-dasharray:4 3;
 }
 .edge.edge-unresolved{
-  stroke:#a9a29a;
-  stroke-opacity:.8;
-  stroke-dasharray:5 3;
+  stroke:#7a7873;
+  stroke-opacity:.9;
+  stroke-dasharray:6 3;
 }
 .edge.onpath{
   stroke:var(--hot);
@@ -378,10 +383,10 @@ button,select,input{font:inherit;color:inherit}
   stroke-width:2.6;
 }
 .edge.onpath.edge-unresolved{
-  stroke:#a9a29a;
-  stroke-opacity:.95;
+  stroke:#7a7873;
+  stroke-opacity:1;
   stroke-width:2.6;
-  stroke-dasharray:5 3;
+  stroke-dasharray:6 3;
 }
 .edge.is-current{stroke-width:3.1}
 .edge.is-dim{opacity:.18}
@@ -400,11 +405,11 @@ button,select,input{font:inherit;color:inherit}
   font-weight:800;
 }
 .edge-label.edge-label-unresolved{
-  fill:#8b8a86;
-  font-weight:600;
+  fill:#666;
+  font-weight:650;
 }
 .edge-label.edge-label-unresolved.is-onpath{
-  fill:#6f6a61;
+  fill:#595959;
   font-weight:750;
 }
 .edge-label.is-dim{opacity:.18}

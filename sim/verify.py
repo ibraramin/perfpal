@@ -44,6 +44,60 @@ FORBIDDEN_CLAIMS = [
 TIME_UNITS = r"\b\d+(?:\.\d+)?\s?(?:ms|µs|μs|milliseconds?|seconds?)\b"
 # "runtime" is allowed only inside the honesty strip's negation.
 NEGATED_RUNTIME = re.compile(r"(?<!not a )runtime", re.I)
+# Bare execution/iteration claims are banned unless the same clause negates it.
+NEGATABLE_CLAIMS = [r"\bexecution\b", r"\bexecuted\b", r"\biterations\b"]
+NEGATION = re.compile(
+    r"\b(?:not|no|nothing|never|without|none|isn't|aren't|doesn't|don't|cannot|can't)\b",
+    re.I,
+)
+
+
+def unnegated_hits(text: str, patterns: list[str]) -> list[str]:
+    """Matches not preceded by a negation in the same clause.
+
+    ``execution_order_tests.rs`` is an identifier, so the word-boundary patterns
+    do not match it. "nothing is executed" and "not measured iterations" pass.
+    """
+    hits = []
+    for pattern in patterns:
+        for match in re.finditer(pattern, text, re.I):
+            window = text[max(0, match.start() - 40):match.start()]
+            if NEGATION.search(window):
+                continue
+            hits.append(match.group(0))
+    return hits
+
+
+def compact_number(value: float) -> str:
+    """Mirror sim.js compact() for the key-strip ratio assertion."""
+    if value >= 1e6:
+        return f"{value / 1e6:.1f}M"
+    if value >= 1e4:
+        return f"{value / 1e3:.0f}k"
+    if value >= 1e3:
+        return f"{value / 1e3:.1f}k"
+    return f"{value:g}"
+
+
+def stage_dom(page) -> str:
+    """Canonical #stage DOM: geometry attributes plus leaf text."""
+    return page.evaluate(
+        """() => {
+            const stage = document.querySelector('#stage');
+            if (!stage) return '';
+            const parts = [];
+            for (const el of [stage, ...stage.querySelectorAll('*')]) {
+                const attrs = [...el.attributes]
+                    .map((attr) => `${attr.name}=${attr.value}`)
+                    .sort()
+                    .join(';');
+                const text = el.children.length === 0 ? el.textContent : '';
+                parts.push(`${el.tagName}|${attrs}|${text}`);
+            }
+            return parts.join('\\n');
+        }"""
+    )
+
 
 CHECKS: list[dict[str, object]] = []
 
@@ -135,9 +189,51 @@ def main() -> int:
         check(f"{case_id}: F2 label class matches the label",
               all(edge.get("labelClass") == ("unresolved" if edge["label"] == "unresolved" else "resolved")
                   for edge in edges))
-        check(f"{case_id}: F2 projected top calls are resolved",
-              all(call.get("unresolved") is not True
-                  for edge in edges for call in edge.get("topCalls", [])))
+        top_rows = [call for edge in edges for call in edge.get("topCalls", [])]
+        check(f"{case_id}: F2 topCalls rows carry callee and line",
+              all(isinstance(call.get("callee"), str) and call.get("callee")
+                  and isinstance(call.get("line"), int)
+                  for call in top_rows),
+              f"{len(top_rows)} rows")
+        resolved_edges = [edge for edge in edges if edge.get("label") in PAYLOAD_LABELS]
+        with_calls = [edge for edge in resolved_edges if edge.get("topCalls")]
+        if with_calls:
+            check(f"{case_id}: F2 resolved-label edges carry top calls", True,
+                  f"{len(with_calls)}/{len(resolved_edges)} resolved-label edges")
+        else:
+            check(f"{case_id}: F2 topCalls projection shape only", True,
+                  f"no resolved-label edge had a top call in this data ({len(resolved_edges)} edges)")
+
+    # ---- hottest function and profile rank ----------------------------
+    def function_rows(payload: dict) -> list[dict]:
+        rows = []
+        for node in payload["nodes"]:
+            for function in node["functions"]:
+                rows.append({**function, "path": node["id"],
+                             "production": not node["nonproduction"]})
+        return sorted(rows, key=lambda row: (-row["cost"], row["line"], row["name"]))
+
+    for case_id, payload in payloads.items():
+        rows = function_rows(payload)
+        hottest = payload.get("hottestFunction") or {}
+        check(f"{case_id}: hottestFunction is the global cost leader",
+              bool(rows) and hottest.get("id") == rows[0]["id"]
+              and hottest.get("cost") == rows[0]["cost"],
+              f'{hottest.get("id")} @ {hottest.get("cost")} vs {rows[0]["id"]} @ {rows[0]["cost"]}')
+        check(f"{case_id}: hottestFunction carries identity",
+              all(hottest.get(key) not in (None, "") for key in ("id", "name", "path", "line", "cost")),
+              str({key: hottest.get(key) for key in ("id", "name", "path", "line", "cost")}))
+        production = [row for row in rows if row["production"]]
+        profile = payload.get("profile") or []
+        check(f"{case_id}: profile rows are production",
+              bool(profile) and all(row.get("production") is True for row in profile),
+              f'{sum(1 for row in profile if row.get("production"))}/{len(profile)}')
+        check(f"{case_id}: profile ranks the production candidate set",
+              bool(profile) and bool(production) and profile[0]["id"] == production[0]["id"],
+              f'{profile[0]["id"] if profile else None} vs {production[0]["id"] if production else None}')
+        check(f"{case_id}: profile does not outrank the global hottest",
+              bool(profile) and bool(hottest) and profile[0]["cost"] <= hottest["cost"],
+              f'{profile[0]["cost"] if profile else None} <= {hottest.get("cost")}')
 
     # ---- F4: no forbidden claim in the story data ----------------------
     story_text = "\n".join(
@@ -148,6 +244,9 @@ def main() -> int:
     check("F4 no time units in sim/data-*.json", not re.search(TIME_UNITS, story_text, re.I))
     check("F4 runtime only appears negated in sim/data-*.json",
           not NEGATED_RUNTIME.search(story_text))
+    bare_claims = unnegated_hits(story_text, NEGATABLE_CLAIMS)
+    check("F4 no bare execution/iteration claim in sim/data-*.json",
+          not bare_claims, ", ".join(sorted(set(bare_claims))[:5]))
 
     # ---- the core artifact must declare syntactic fidelity -------------
     for case, directory in (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson")):
@@ -253,6 +352,18 @@ def main() -> int:
                       "static, inferred" in honesty and "not a runtime trace" in honesty
                       and "profile to confirm" in honesty)
 
+                hottest_node = next(
+                    (node for node in expected["nodes"] if node["hottest"]), None)
+                if hottest_node:
+                    ratio_match = re.match(
+                        r"^([\d,]+(?:\.\d+)?)", hottest_node.get("ratioText") or "")
+                    if ratio_match:
+                        expected_ratio = (
+                            f'{compact_number(float(ratio_match.group(1).replace(",", "")))}× median')
+                        key_meta = page.inner_text("#key-hottest-meta")
+                        check(f"{case_id}: hottest ratio keeps its precision",
+                              expected_ratio in key_meta, f"{expected_ratio} · {key_meta}")
+
                 text = page.inner_text("body")
                 time_claim = re.search(r"\b\d+(?:\.\d+)?\s?(?:ms|µs|μs|milliseconds?|seconds?)\b", text, re.I)
                 check(f"{case_id}: no time units rendered", time_claim is None,
@@ -273,6 +384,36 @@ def main() -> int:
                     page.wait_for_timeout(50)
                     body = page.inner_text("#narration-body").strip()
                     check(f"{case_id}: {kind} narration is non-empty", len(body) > 12, body[:90])
+
+                page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("hottest"))
+                page.wait_for_timeout(50)
+                hot_text = page.inner_text("#narration-body")
+                hot_fn = expected.get("hottestFunction") or {}
+                hot_node = next(
+                    (node for node in expected["nodes"] if node["hottest"]), None)
+                check(f"{case_id}: hottest beat names the global function",
+                      bool(hot_fn)
+                      and hot_fn.get("name", "") in hot_text
+                      and f'(L{hot_fn.get("line")}, {hot_fn.get("path")})' in hot_text
+                      and hot_fn.get("cost") is not None
+                      and f'{hot_fn.get("cost"):,} units' in hot_text,
+                      hot_text[:180])
+                check(f"{case_id}: hottest beat keeps the file separate",
+                      hot_node is not None
+                      and f'Hottest file: {hot_node["name"]}' in hot_text,
+                      hot_text[:90])
+                old_fn = ((hot_node or {}).get("functions") or [{}])[0].get("name")
+                if old_fn and old_fn != hot_fn.get("name"):
+                    check(f"{case_id}: hottest beat drops the file-local function",
+                          old_fn not in hot_text, old_fn)
+
+                page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("profile"))
+                page.wait_for_timeout(50)
+                profile_text = page.inner_text("#narration-body").lower()
+                check(f"{case_id}: profile labels the drawn-slice basis",
+                      "top 3 per file" in profile_text
+                      and "static candidates, verify" in profile_text,
+                      profile_text[:180])
                 actions = expected["meta"]["actions"][:3]
                 page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("start-here"))
                 page.wait_for_timeout(50)
@@ -316,6 +457,9 @@ def main() -> int:
                 runtime_hits = [match.group(0) for match in NEGATED_RUNTIME.finditer(final_text)]
                 check(f"{case_id}: F4 runtime only appears negated",
                       not runtime_hits, str(runtime_hits[:3]))
+                final_bare = unnegated_hits(final_text, NEGATABLE_CLAIMS)
+                check(f"{case_id}: F4 no bare execution claim at the final frame",
+                      not final_bare, ", ".join(sorted(set(final_bare))[:5]))
                 if case_id == "cjson":
                     meta = expected["meta"]
                     check("cjson: findings cap disclosed",
@@ -411,6 +555,27 @@ def main() -> int:
                 check(f"{case_id}: final frame shows every node", visible)
                 check(f"{case_id}: final frame keeps the honesty label",
                       "STATIC, INFERRED" in page.inner_text("#honesty"))
+
+            # ---- F5: final-frame DOM determinism -----------------------
+            for case_id in REAL_CASES:
+                hashes = []
+                for _ in range(2):
+                    det_page = context.new_page()
+                    det_page.goto(BASE, wait_until="networkidle")
+                    det_page.wait_for_function(
+                        "() => window.__sim && window.__sim.state().beats > 0")
+                    det_page.select_option("#case-select", value=case_id)
+                    det_page.wait_for_function(
+                        "id => window.__sim.state().caseId === id", arg=case_id)
+                    det_page.evaluate("() => window.__sim.applyFinal()")
+                    det_page.wait_for_timeout(150)
+                    hashes.append(hashlib.sha256(stage_dom(det_page).encode()).hexdigest())
+                    det_page.close()
+                check(f"{case_id}: F5 final frame DOM is deterministic across loads",
+                      hashes[0] == hashes[1],
+                      f"{hashes[0][:16]} == {hashes[1][:16]}; data byte-identical "
+                      "across scans + DOM identical across loads ⇒ frame deterministic; "
+                      "PNGs are rasterization-dependent")
 
             # ---- synthetic state demos ----------------------------------
             for case_id in ("no-forward-path", "empty", "capped"):

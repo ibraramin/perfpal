@@ -1424,6 +1424,20 @@
    "title": "Direct recursion"
   }
  ],
+ "hottestFunction": {
+  "cost": 2000008,
+  "fanIn": 0,
+  "fanOut": 1,
+  "id": "tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1",
+  "line": 4557,
+  "loopDepth": 1,
+  "name": "testFloatPrintingRandomSamples",
+  "path": "tests/unity/test/tests/testunity.c",
+  "production": false,
+  "recursive": false,
+  "tripSource": "literal",
+  "unknownTripLoops": 0
+ },
  "hulls": [
   {
    "h": 221,
@@ -1894,6 +1908,7 @@
    "loopDepth": 1,
    "name": "cJSON_Delete",
    "path": "cJSON.c",
+   "production": true,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 1
@@ -1907,6 +1922,7 @@
    "loopDepth": 0,
    "name": "apply_patch",
    "path": "cJSON_Utils.c",
+   "production": true,
    "recursive": false,
    "tripSource": "",
    "unknownTripLoops": 0
@@ -1920,6 +1936,7 @@
    "loopDepth": 1,
    "name": "cJSON_Compare",
    "path": "cJSON.c",
+   "production": true,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 1
@@ -1933,6 +1950,7 @@
    "loopDepth": 1,
    "name": "create_patches",
    "path": "cJSON_Utils.c",
+   "production": true,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 4
@@ -1946,6 +1964,7 @@
    "loopDepth": 2,
    "name": "print_object",
    "path": "cJSON.c",
+   "production": true,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 3
@@ -1959,6 +1978,7 @@
    "loopDepth": 1,
    "name": "compare_json",
    "path": "cJSON_Utils.c",
+   "production": true,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 2
@@ -1972,6 +1992,7 @@
    "loopDepth": 1,
    "name": "main",
    "path": "fuzzing/afl.c",
+   "production": true,
    "recursive": false,
    "tripSource": "unknown",
    "unknownTripLoops": 1
@@ -1985,6 +2006,7 @@
    "loopDepth": 0,
    "name": "LLVMFuzzerTestOneInput",
    "path": "fuzzing/cjson_read_fuzzer.c",
+   "production": true,
    "recursive": false,
    "tripSource": "",
    "unknownTripLoops": 0
@@ -1994,7 +2016,7 @@
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
   "metricsContentSha256": "1e8bd62a4d0417bc1e60e1ab198b6dedaf5aff6d201d0a9df3d34f8e407cee5f",
-  "sha256": "c1af6a671c529ecaf9571c5d617c6f44d4d85618ea629091989455c76ed1ee01"
+  "sha256": "fecbcd8eac10638c1439922d3ba499dbe27905225408a338fe1223ae3c93580f"
  },
  "stage": {
   "h": 718,
