@@ -1,14 +1,15 @@
-# Atlas v2 — visual rework evidence (steps 9–11)
+# Atlas v2 — visual rework evidence (steps 9–12)
 
 **Status: STEP 9 SIGNED 2026-10-23; STEP 10 IMPLEMENTED AND STEP-10 FOUNDER-APPROVED 2026-10-24;
-STEP 11 (DETAIL RAIL) IMPLEMENTED 2026-10-24 — STEP-13 FOUNDER GATE PENDING.**
+STEP 11 (DETAIL RAIL) COMMITTED `189df91`; STEP 12 (PROGRESSIVE CHARTS) IMPLEMENTED 2026-10-24 —
+STEP-13 FOUNDER GATE PENDING.**
 Option A (port G) was signed and step 10 was executed; the founder approved the step-10 first page
 and authorized the commit. The **step-13 final composition/V8 gate is still pending**. This directory
 holds the signed decision, the G-baseline comparison, the step-10 1440×900 render evidence, the DoD
 transcript and the vision records.
 
-**Scope guard:** steps 9–11 only. Progressive charts + F prototype (step 12), the founder visual
-gate/V8 rerun (step 13), A2 (step 14) and ship (step 15) are **not** started here. Holdouts stay
+**Scope guard:** steps 9–12 only. The founder visual gate/V8 rerun (step 13), A2 (step 14) and ship
+(step 15) are **not** started here. The F treemap is a candidate prototype; F remains undecided. Holdouts stay
 vaulted; `map-build` is not done; A1b stays open.
 
 ## Files
@@ -34,6 +35,19 @@ vaulted; `map-build` is not done; A1b stays open.
 | `atlas-v2-step11-{hyperfine,cJSON}-final.png` | Step-11 1440×900 first viewports (`#map`, reduced motion). |
 | `atlas-v2-step11-{hyperfine,cJSON}-full.png` | Full-page step-11 renders. |
 | `atlas-v2-step11-{hyperfine,cJSON}-1280x800.png` | Step-11 1280×800 stacked-rail renders. |
+| `STEP12.md` | Step-12 progressive charts: the four blocks, the retired wall, A8 re-baseline, measured geometry, verification. |
+| `step12.json` | Reproduced canonical `#map` geometry, chart heights, text floor, links, hashes, booleans. |
+| `render_step12.py` | Reproducer for the step-12 evidence (fails closed on acceptance). |
+| `gate-step12.txt` | Full step-12 DoD transcript (every command, exit, suite line). |
+| `VISION-STEP12.md` | `@vision` step-12 read (PASS on final crops; step-13 proxy, not the founder gate). |
+| `atlas-v2-step12-{hyperfine,cJSON}-final.png` | Step-12 1440×900 canonical `#map` first viewports. |
+| `atlas-v2-step12-{hyperfine,cJSON}-full.png` | Full-page step-12 renders. |
+| `atlas-v2-step12-{hyperfine,cJSON}-charts.png` | Step-12 below-graph charts at true panel width. |
+| `atlas-v2-step12-{hyperfine,cJSON}-1280x800.png` | Step-12 1280×800 stacked-rail renders. |
+| `step12/F-CANDIDATE.md` | F treemap candidate decision brief (not shipped; F undecided). |
+| `step12/f-treemap-{hyperfine,cJSON}.{html,png}` | F candidate panels at the weight slot. |
+| `step12/f-render.py` | Deterministic F prototype renderer (refuses the holdout). |
+| `step12/W1-vs-F-{hyperfine,cJSON}.png` | Shipped weight panel vs F treemap side-by-side. |
 | `atlas-v2-hyperfine-final.png` / `atlas-v2-cJSON-final.png` | Step-10 1440×900 first viewports (`#map`, reduced motion). |
 | `atlas-v2-hyperfine-full.png` / `atlas-v2-cJSON-full.png` | Full-page step-10 renders. |
 

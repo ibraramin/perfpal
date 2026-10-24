@@ -1,8 +1,9 @@
 # Atlas — new-agent brief (read this first)
 
-**Status:** Atlas steps 1–11 implemented (v2 rework: 9–10 founder-approved; **step 11 detail rail
-implemented 2026-10-24, uncommitted pending founder commit approval**). **Step 13 founder visual gate
-PENDING; A2/ship (steps 14–15) BLOCKED** by `R-pf-109`. Do **not** run A2, ship, or mark the plan done.
+**Status:** Atlas steps 1–12 implemented (v2 rework: 9–10 founder-approved; step 11 detail rail
+committed `189df91`; **step 12 progressive charts implemented 2026-10-24**). **Step 13 founder visual
+gate PENDING; A2/ship (steps 14–15) BLOCKED** by `R-pf-109`. Do **not** run A2, ship, or mark the plan
+done.
 **Owner:** orchestrator. **Audience:** every agent touching `src/reporter/atlas_*`, the Atlas specs,
 the V8 evidence, or the Atlas plan.
 
@@ -96,13 +97,13 @@ the founder's eye. The data/model are fine.
 
 - `R-pf-109` (high) is open; `A-pf-118` (A2/ship) is **blocked**.
 - **Done:** steps 9–10 (signed G system, first-page fit, key-metrics strip, chrome hygiene;
-  founder-approved 2026-10-24) and **step 11** (right detail rail: 12 cards, roles, cost anchor,
-  top functions, dominant finding, exact function/finding links; eight-state lock; canvas 869 ≤ 900;
-  1280 stacks; evidence `docs/evidence/atlas-visual/v2/{STEP11.md,step11.json,gate-step11.txt,
-  VISION-STEP11.md}`). Uncommitted pending founder approval.
-- **Next session = step 12, not A2:** progressive designed weight/blast/file charts + the F treemap
-  candidate; retire the seven-block text wall; `#map` ≤ ~5k; no schema/JS. Then step 13 (founder
-  visual gate + G-baseline diff + V8 A1/strip rerun); only then A2.
+  founder-approved 2026-10-24), **step 11** (right detail rail, committed `189df91`) and **step 12**
+  (weight/blast/file/coverage charts; drills on `atlas-weight.html`/`atlas-q2.html`; `#map`
+  1,848px; A8 re-baselined; evidence `docs/evidence/atlas-visual/v2/{STEP12.md,step12.json,
+  gate-step12.txt,VISION-STEP12.md}`).
+- **Next session = step 13, not A2:** the founder visual gate + G-baseline diff + V8 A1/strip
+  rerun on the reworked page. F remains undecided; do not ship the F treemap without a founder
+  decision.
 - Do not start A2/ship; holdouts stay vaulted; `map-build` is not done; A1b stays open.
 
 ## 6. Reading order

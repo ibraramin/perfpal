@@ -22,7 +22,8 @@ use perfpal::analyzer::{Confidence, Severity};
 use perfpal::cli::run_with;
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
 use perfpal::reporter::{
-    render_findings_detail, render_findings_detail_html, render_html, render_report,
+    render_atlas_q2_html, render_atlas_weight_html, render_findings_detail,
+    render_findings_detail_html, render_html, render_report,
 };
 use perfpal::schema::{
     FileEntry, FindingEntry, MetricsDocument, ParseHealthEntry, ParseHealthSummary, ScanInfo,
@@ -281,6 +282,16 @@ fn every_human_link_resolves_to_a_detail_anchor() {
     let report_ids = collect_ids(&html);
     let detail_ids = collect_ids(&detail);
 
+    let pages: BTreeMap<&str, Vec<String>> = [
+        ("findings-detail.html", detail_ids.clone()),
+        (
+            "atlas-weight.html",
+            collect_ids(&render_atlas_weight_html(&doc)),
+        ),
+        ("atlas-q2.html", collect_ids(&render_atlas_q2_html(&doc))),
+    ]
+    .into_iter()
+    .collect();
     for href in collect_hrefs(&html) {
         if let Some(target) = href.strip_prefix('#') {
             assert!(
@@ -290,13 +301,12 @@ fn every_human_link_resolves_to_a_detail_anchor() {
         } else if let Some(hash) = href.find('#') {
             let (page, target) = href.split_at(hash);
             let target = &target[1..];
-            assert_eq!(
-                page, "findings-detail.html",
-                "unexpected cross-page link {href}"
-            );
+            let page_ids = pages
+                .get(page)
+                .unwrap_or_else(|| panic!("unexpected cross-page link {href}"));
             assert!(
-                detail_ids.iter().any(|id| id == target),
-                "link {href} has no matching id anchor in findings-detail.html"
+                page_ids.iter().any(|id| id == target),
+                "link {href} has no matching id anchor on {page}"
             );
         }
     }

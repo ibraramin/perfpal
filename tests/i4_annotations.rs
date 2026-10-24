@@ -623,16 +623,18 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         "#map must open with the Atlas first-page chrome"
     );
     let canvas = map_body.find("id=\"atlas-canvas\"").expect("canvas");
-    let answer = map_body.find("id=\"atlas-answer\"").expect("answer line");
-    assert!(canvas < answer, "answer line must follow the canvas");
-    for block in [
-        "answer", "actions", "weight", "blast", "cards", "noise", "links",
-    ] {
+    let charts = map_body.find("id=\"atlas-charts\"").expect("charts");
+    assert!(canvas < charts, "charts must follow the canvas");
+    for block in ["weight-chart", "blast-chart", "file-chart", "coverage"] {
         assert!(
             map_body.contains(&format!("data-atlas-block=\"{block}\"")),
-            "missing Atlas block {block}"
+            "missing Atlas chart {block}"
         );
     }
+    assert!(
+        !map_body.contains("id=\"atlas-answer\""),
+        "the retired answer block must not return"
+    );
     assert!(!map_body.contains("data-chart=\"layer-workspace\""));
     assert!(!map_body.contains(FINDING_LEGEND));
 

@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Atlas v2 step 12 — progressive below-graph charts (2026-10-24).** `report.html#map` is now the
+  two-layer contract: the approved first page (masthead + key-metrics strip + 868px canvas + 530px
+  detail rail) followed by **four designed charts** — weight (production/non-production share
+  ribbon + top production-class file/component bars), blast radius (dependents, include coverage,
+  top dependents, structural caller/callee counts), file detail (top-6 cost ladder with exact file
+  cost, median anchor, functions and dominant finding), and one coverage/links line. The
+  seven-block text wall is retired; the Q2 and weight drills moved to standalone
+  `atlas-q2.html` / `atlas-weight.html` pages (warm Atlas tokens, no script). Rail file links now
+  target the weight page. A8 is re-baselined: the strip above the canvas is the first
+  answer-bearing surface; the first below-canvas block is the weight chart. Measured at 1440×900:
+  `#map` **1,848px** on hyperfine and cJSON (from 8,895/14,598), canvas bottom 869 ≤ 900, no
+  horizontal scroll; 1280×800 stacks the rail with no horizontal scroll. The F treemap was
+  prototyped as a candidate under `docs/evidence/atlas-visual/v2/step12/` (F remains undecided,
+  Explorer treemap untouched). No schema, no new JS, no dependency. Four `report.html` goldens
+  regenerated. Step-13 founder gate pending; A2/ship still blocked; holdouts vaulted.
 - **Atlas v2 step 11 — first-page per-file detail rail (2026-10-24).** `report.html#map` is now a
   two-column stage: the 868px graph canvas (`#atlas-canvas`, still graph-only) plus a 530px
   G-style **detail rail** (`#atlas-rail`, a DOM sibling, so A9 is unchanged). The rail carries up to

@@ -393,7 +393,9 @@ loop-I/O findings stay in KV1 as heuristics.
 - **A9 (canvas purity):** the canvas element contains no `<table>`, bar/card list or metric
   selector. Evidence: DOM assertion.
 - **A10 (state-unconditional):** application, library, no-entry, empty, all-test, capped,
-  partial-parse and single-file fixtures render the same canvas + seven blocks. Evidence: render matrix.
+  partial-parse and single-file fixtures render the same canvas + chart stack. Evidence: render matrix.
+  (Step 12 replaced the seven-block brief with the four below-graph charts; the stack is unchanged
+  across states.)
 - **A11 (denominators):** every visible `×`/`%` names its denominator; a blind read must state it
   and must not mistake `× median function` for time. Evidence: `atlas-metrics.md` §10.
 - A1/A2/A4/A7 are unchanged and apply to the Atlas page; A2 runs with animation enabled and

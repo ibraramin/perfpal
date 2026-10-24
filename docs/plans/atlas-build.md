@@ -52,6 +52,14 @@ Build and ship Perfpal Atlas: the entry-flow core graph (G) as a full-bleed 100%
     Evidence `docs/evidence/atlas-visual/v2/{STEP11.md,step11.json,gate-step11.txt,VISION-STEP11.md}`.
     Committed only after founder approval; no schema/JS/deps; A2/ship still blocked.
 - **Step 12 — Progressive key charts.** Below the graph, add a few **designed charts** (not text tables), revealed progressively: weight (production-first share; F candidate), blast radius, file detail; evaluate the F treemap candidate. Move Q2/weight drills to separate pages. Budget `#map` at ~4–5k px (down from 8,982/14,685) and keep the page focused. Do not delete F data; F remains undecided.
+  - **Step 12 — DONE 2026-10-24 (Session A2):** four designed below-graph charts (weight,
+    blast, file detail, coverage/links) replace the seven-block text wall; Q2/weight drills moved
+    to `atlas-q2.html` / `atlas-weight.html`; `#map` 1,848px on hyperfine and cJSON (from
+    8,895/14,598); canvas bottom 869 ≤ 900; 1280×800 stacks with no horizontal scroll; A8
+    re-baselined to the strip as the first answer surface. F treemap candidate prototyped under
+    `docs/evidence/atlas-visual/v2/step12/` — **F remains undecided**; Explorer treemap untouched.
+    Evidence `docs/evidence/atlas-visual/v2/{STEP12.md,step12.json,gate-step12.txt,VISION-STEP12.md}`.
+    No schema/JS/deps; A2/ship still blocked.
 - **Step 13 — Founder visual gate + G-baseline diff + V8 rerun.** Render 1440×900; the founder signs off the composition. Add DOM/render assertions: canvas bottom ≤ 900 including header/legend/footer; no clipped text; no duplicate definitions; `#map` height ≤ ~5,000px; no leading-dot truncation; no horizontal scroll. Re-run the V8 A1 + strip reads on the reworked page. Only then A2.
 - **Step 14 — Founder A2 (blocked until step 13):** pre-register the library-shaped holdout repo (A-pf-116; single-file C lib or Rust lib crate with no bin) alongside the vaulted django/postgres holdout; the registered holdout is the **published `memchr` crate payload** at `bd6068c3` (dev `benchmarks/` + `fuzz/` excluded; see `docs/evidence/map-vision/v8/PREREGISTRATION.md`); run the timed test with animation enabled (3 actions in under 10 minutes, understandable, pause/reduced-motion/print work), record the transcript and the verdict in docs/evidence/map-vision/v8/. If A2 fails on both application and library classes, stop and escalate a superseding ADR instead of tuning.
 - **Step 15 — Ship/docs/EOL (blocked until step 14):** update the output contract and README for the Atlas page, add the CHANGELOG entry, archive the V7 prototypes' role, run the Definition of Done below, run @reviewer + @requirements-reviewer on the final tree, mark the plan done, update state/session-state.json + state/handoff/latest.md + docs/activeContext.md, and commit.
@@ -69,7 +77,7 @@ All commands run from the repo root. **Every command must exit 0** (the task is 
 7. `cargo test --locked --test atlas_render atlas_double_render_is_byte_identical` — exit 0 (double scan → byte-identical HTML/SVG, modulo run provenance).
 8. `cargo test --locked --test atlas_render atlas_adds_no_new_script` — exit 0 (report.html has exactly one existing `REPORT_SCRIPT` block; the canvas/SVG/animation artifacts have zero; no event-handler attributes).
 9. `cargo test --locked --test atlas_render atlas_canvas_has_no_metric_panels` — exit 0 (A9: no table/bar/card list/metric selector inside the canvas element).
-10. `cargo test --locked --test atlas_states atlas_states_render_same_stack` — exit 0 (A10: all eight states render the same canvas + seven blocks).
+10. `cargo test --locked --test atlas_states atlas_states_render_same_stack` — exit 0 (A10: all eight states render the same canvas + chart stack; step 12 retired the seven-block brief).
 11. `test -z "$(git status --short src/schema/ docs/schema/)"` — exit 0 (no schema change).
 12. `test -f docs/evidence/map-vision/v8/reads.json && test -f docs/evidence/map-vision/v8/a2.md` — exit 0 (vision + A2 evidence committed).
 13. `@reviewer` and `@requirements-reviewer` both APPROVED on the final tree.

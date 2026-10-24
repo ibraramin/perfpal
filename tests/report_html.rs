@@ -17,7 +17,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use perfpal::analyzer::{Confidence, Severity};
 use perfpal::cli::run_with;
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
-use perfpal::reporter::{escape_html, render_findings_detail_html, render_html, report_script};
+use perfpal::reporter::{
+    escape_html, render_atlas_q2_html, render_atlas_weight_html, render_findings_detail_html,
+    render_html, render_profile_queue_html, report_script,
+};
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, FunctionStats, MetricsDocument,
     ParseHealthEntry, ParseHealthSummary, ScanInfo, StatsSection, Threshold, ThresholdValue,
@@ -214,11 +217,11 @@ fn hostile_path_and_message_are_fully_escaped() {
         assert!(page.ends_with('\n'), "trailing newline missing in {name}");
         assert!(!page.ends_with("\n\n"), "double trailing newline in {name}");
     }
-    // V4: the KV1 brief renders the full rationale in report.html too —
-    // escaped in BOTH artifacts (never raw; the raw-leak checks above hold).
+    // C-split: the human page carries the path but not the finding message;
+    // the full rationale lives in the detail artifact only.
     assert!(
-        html.contains("&lt;script&gt;"),
-        "escaped key-view rationale missing from report.html"
+        !html.contains("&lt;script&gt;"),
+        "the finding message is drill-only after the step-12 restructure"
     );
     assert!(
         detail.contains("&lt;script&gt;"),
@@ -409,9 +412,9 @@ fn findings_sorted_and_all_anchors_resolve() {
     );
 
     // Every internal href="#..." target exists as an id="..." in the SAME
-    // page; every findings-detail.html#... target exists in the detail page.
+    // page; every cross-page target exists on its rendered page.
     let ids = collect_ids(&html);
-    let detail_ids = collect_ids(&detail);
+    let pages = cross_page_ids(&doc);
     for href in collect_hrefs(&html) {
         // External/relative file links (charts/..., *.html) are not anchors.
         if let Some(target) = href.strip_prefix('#') {
@@ -422,16 +425,16 @@ fn findings_sorted_and_all_anchors_resolve() {
         } else if let Some(hash) = href.find('#') {
             let (page, target) = href.split_at(hash);
             let target = &target[1..];
-            assert_eq!(
-                page, "findings-detail.html",
-                "unexpected cross-page link {href}"
-            );
+            let page_ids = pages
+                .get(page)
+                .unwrap_or_else(|| panic!("unexpected cross-page link {href}"));
             assert!(
-                detail_ids.iter().any(|id| id == target),
-                "detail link {href} has no matching id anchor in findings-detail.html"
+                page_ids.iter().any(|id| id == target),
+                "link {href} has no matching id anchor on {page}"
             );
         }
     }
+    let detail_ids = collect_ids(&detail);
     for href in collect_hrefs(&detail) {
         if let Some(target) = href.strip_prefix('#') {
             assert!(
@@ -501,6 +504,28 @@ fn collect_ids(html: &str) -> Vec<String> {
         }
     }
     ids
+}
+
+/// IDs on every cross-page artifact the Atlas page links to.
+fn cross_page_ids(doc: &MetricsDocument) -> BTreeMap<String, Vec<String>> {
+    let mut pages = BTreeMap::new();
+    pages.insert(
+        "findings-detail.html".to_string(),
+        collect_ids(&render_findings_detail_html(doc)),
+    );
+    pages.insert(
+        "atlas-weight.html".to_string(),
+        collect_ids(&render_atlas_weight_html(doc)),
+    );
+    pages.insert(
+        "atlas-q2.html".to_string(),
+        collect_ids(&render_atlas_q2_html(doc)),
+    );
+    pages.insert(
+        "profile-queue.html".to_string(),
+        collect_ids(&render_profile_queue_html(doc)),
+    );
+    pages
 }
 
 /// Collect every `href="..."` value in document order.
@@ -573,8 +598,8 @@ fn colliding_slugs_yield_unique_anchors_and_all_hrefs_resolve() {
     );
     assert_ne!(finding_ids[0], finding_ids[1]);
 
-    // Every href="#…" resolves in-page; every findings-detail.html#…
-    // resolves in the detail page.
+    // Every href="#…" resolves in-page; every cross-page target resolves.
+    let pages = cross_page_ids(&doc);
     for href in collect_hrefs(&html) {
         if let Some(target) = href.strip_prefix('#') {
             assert!(
@@ -582,10 +607,14 @@ fn colliding_slugs_yield_unique_anchors_and_all_hrefs_resolve() {
                 "drill-down link #{target} has no matching id anchor"
             );
         } else if let Some(hash) = href.find('#') {
-            let target = &href[hash + 1..];
+            let (page, target) = href.split_at(hash);
+            let target = &target[1..];
+            let page_ids = pages
+                .get(page)
+                .unwrap_or_else(|| panic!("unexpected cross-page link {href}"));
             assert!(
-                detail_ids.iter().any(|id| id == target),
-                "detail link {href} has no matching id anchor"
+                page_ids.iter().any(|id| id == target),
+                "link {href} has no matching id anchor on {page}"
             );
         }
     }
@@ -1389,9 +1418,8 @@ fn findings_fold_into_per_rule_details_with_honest_summary() {
         summary.contains("findings-detail.html#rule-PERF-C-ALLOC-001"),
         "group detail link missing:\n{summary}"
     );
-    // …and every cross-page href resolves to a rendered detail id
-    // (`#…` in-page nav anchors resolve in report.html itself).
-    let detail_ids = collect_ids(&detail);
+    // …and every cross-page href resolves to a rendered id.
+    let pages = cross_page_ids(&doc);
     let report_ids = collect_ids(&html);
     for href in collect_hrefs(&html) {
         if let Some(target) = href.strip_prefix('#') {
@@ -1402,13 +1430,12 @@ fn findings_fold_into_per_rule_details_with_honest_summary() {
         } else if let Some(hash) = href.find('#') {
             let (page, target) = href.split_at(hash);
             let target = &target[1..];
-            assert_eq!(
-                page, "findings-detail.html",
-                "unexpected cross-page link {href}"
-            );
+            let page_ids = pages
+                .get(page)
+                .unwrap_or_else(|| panic!("unexpected cross-page link {href}"));
             assert!(
-                detail_ids.iter().any(|id| id == target),
-                "link {href} has no matching id anchor in findings-detail.html"
+                page_ids.iter().any(|id| id == target),
+                "link {href} has no matching id anchor on {page}"
             );
         }
     }

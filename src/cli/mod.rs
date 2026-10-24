@@ -254,6 +254,10 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // companion to KV3), a pure function of `document` with no provenance.
     let profile_md = crate::reporter::render_profile_queue(&document);
     let profile_html = crate::reporter::render_profile_queue_html(&document);
+    // Atlas step 12: the Q2/weight drills moved off `#map` into standalone
+    // warm-paper pages (pure functions of `document`, no provenance).
+    let atlas_weight_html = crate::reporter::render_atlas_weight_html(&document);
+    let atlas_q2_html = crate::reporter::render_atlas_q2_html(&document);
     let dot = crate::charts::dot::render_dot(&document);
 
     // writer: atomic directory swap (all writer failures are output errors).
@@ -270,6 +274,8 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         Artifact::text("findings-detail.html", detail_html),
         Artifact::text("profile-queue.md", profile_md),
         Artifact::text("profile-queue.html", profile_html),
+        Artifact::text("atlas-weight.html", atlas_weight_html),
+        Artifact::text("atlas-q2.html", atlas_q2_html),
         Artifact::text("charts/graph.dot", dot),
     ];
     for (name, bytes) in &charts {

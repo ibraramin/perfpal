@@ -34,6 +34,24 @@ supporting elements only if justified (`docs/research/atlas-developer-needs.md` 
 > below-graph file cards remain the complete brief block; the rail is detail, not a metric panel.
 > Evidence: `docs/evidence/atlas-visual/v2/STEP11.md`, `step11.json`, `VISION-STEP11.md`.
 
+> **Step-12 amendment (2026-10-24, implemented):** the fixed seven-block below-graph brief is
+> **retired**. `#map` is now two layers: (1) the approved first page — masthead + key-metrics strip
+> (entry / HOTTEST / path / caps / three START actions / one structural caveat / one legend) and the
+> 868px canvas + 530px detail rail — and (2) exactly four designed below-graph blocks:
+> **weight** (100% production/non-production ribbon; top-5 production-class file bars; top-3
+> production component bars; labelled non-production band), **blast radius** (target, dependents
+> anchor, include-coverage bar, top dependents, caller/callee counts), **file detail** (top-6
+> production-first cost ladder with exact file cost + median anchor + top functions + dominant
+> finding), and **coverage/links** (one line + links to `report.md`, `metrics.json`,
+> `atlas-weight.html`, `atlas-q2.html`, `findings-detail.html#ranked-actions`, `profile-queue.html`).
+> The Q2 and weight drills moved to standalone warm-paper pages (`atlas-q2.html`,
+> `atlas-weight.html`); the rail's file links target the weight page. A8 is re-baselined: the
+> **strip above the canvas** is the first answer-bearing surface; the first block below the canvas
+> is the weight chart (no duplicate answer line). The canvas/rail visuals, the no-schema/no-JS
+> contract and the eight-state page shape are unchanged. Evidence:
+> `docs/evidence/atlas-visual/v2/{STEP12.md,step12.json,gate-step12.txt,VISION-STEP12.md}`;
+> F treemap candidate under `docs/evidence/atlas-visual/v2/step12/` (F remains undecided).
+
 ## 1. Purpose
 
 One full-page composition for Perfpal Atlas: the entry-flow canvas first, a fixed seven-block brief
@@ -41,6 +59,10 @@ below it, drills for depth, and the legacy stems + F treemap in Explorer. The pa
 identical for every scan; only content and labels change.
 
 ## 2. Page map
+
+> **Superseded by the step-12 amendment.** The diagram and the seven-block list below are the v1
+> record; the shipped page is the step-12 two-layer composition (strip + canvas/rail, then four
+> charts). Kept for history and for the v1 output contract.
 
 ```
 ┌ header ─────────────────────────────────────────────────────────────┐
@@ -119,7 +141,11 @@ production vs test/bench hatch; unreached;
 structural edges · <U> unreached production · <V> unreached non-production`. Counts with
 denominators; no anchors.
 
-## 4. The seven-block brief (below the graph)
+## 4. The seven-block brief (below the graph) — RETIRED BY STEP 12
+
+> **Retired by the step-12 amendment.** The four charts replace this section; the block list is the
+> v1 contract record. The current below-graph contract is in the step-12 amendment at the top of
+> this file and in `docs/evidence/atlas-visual/v2/STEP12.md`.
 
 Every block renders in every state; a zero-state stub replaces missing content.
 
@@ -209,7 +235,8 @@ Per `map-animation` (mandatory) and the pending ADR-0010:
   below; the canvas itself carries entry + HOTTEST + path.
 - **A9 (canvas purity):** DOM assertion: no table, bar list, card list or metric selector inside
   the canvas element; only nodes/edges/labels/legend/caps.
-- **A10 (state-unconditional):** all §5 states render the same canvas + seven blocks.
+- **A10 (state-unconditional):** all §5 states render the same canvas + chart stack (step 12; the
+  v1 seven blocks are retired).
 - **A12 (no new JS):** the Atlas canvas and animation blocks contain no `<script>` and no event
   handlers; the report's existing single fixed enhancement script (`REPORT_SCRIPT`, fixed source,
   no interpolated data, no network) is unchanged and inventoried. `grep` asserts exactly one block

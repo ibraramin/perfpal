@@ -1,11 +1,13 @@
-//! Atlas below-graph brief and drills (plan `atlas-build` step 5).
+//! Atlas below-graph charts, standalone drills and the first-page detail rail
+//! (plan `atlas-build` steps 5/11/12).
 //!
-//! The fixed seven-block brief — answer line, KV1 actions, weight strip,
-//! blast radius, file cards, noise/confidence footer, drill links — plus the
-//! Q2 reverse drill and the weight detail. Every block renders in every state
-//! (A10); a named stub replaces absent content. No schema field is added or
-//! changed, and the module emits **no** script, event handler or network
-//! reference: the canvas/brief bytes are static.
+//! Step 12 retired the fixed seven-block text wall: the first page now ends at
+//! the four designed blocks in [`crate::reporter::atlas_charts`] (weight,
+//! blast radius, file detail, coverage/links). This module keeps the rail and
+//! emits the two standalone drill pages (Q2 reverse + complete weight detail).
+//! Every state renders the same chart stack (A10); a named stub replaces
+//! absent content. No schema field is added or changed, and the module emits
+//! **no** script, event handler or network reference.
 //!
 //! Metric contract: every measured number carries its unit/anchor via
 //! [`crate::reporter::atlas_metrics`]; M-08's percentile is
@@ -13,13 +15,11 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::reporter::atlas::{AtlasFile, AtlasFunction, AtlasView, EntryPolicy, function_cost_u64};
+use crate::reporter::atlas::{AtlasFile, AtlasFinding, AtlasView, function_cost_u64};
 use crate::reporter::atlas_metrics::{
-    NO_FINDINGS, NO_INCLUDE_EDGES, NO_PRODUCTION_COST, NO_RESOLVED_DEPENDENTS, NO_SCANNED_COST,
-    NO_SOURCE_FUNCTIONS, format_call_degree, format_caps, format_component_share, format_count,
-    format_demoted_files, format_dependents, format_edge_mix, format_entry, format_file_cost,
-    format_finding, format_function_cost, format_nonproduction, format_parse,
-    format_severity_confidence, format_share, format_trip_provenance, format_unresolved_includes,
+    NO_INCLUDE_EDGES, NO_RESOLVED_DEPENDENTS, NO_SOURCE_FUNCTIONS, format_call_degree,
+    format_component_share, format_count, format_file_cost, format_finding, format_function_cost,
+    format_severity_confidence, format_share,
 };
 use crate::reporter::atlas_render::mid_ellipsis;
 use crate::reporter::views::{self, CostScale, ScaleOrdering, scale_of};
@@ -30,13 +30,6 @@ use crate::schema::{FindingEntry, FunctionStats, MetricsDocument};
 
 /// Maximum number of file cards shown in the first-page detail rail.
 pub const RAIL_FILE_CAP: usize = 12;
-
-/// One schema-component page link resolved against `emitted_charts`.
-struct ComponentPage {
-    prefix: String,
-    rank: u32,
-    href: String,
-}
 
 /// One compact start-here chip for the Atlas key-metrics strip. The ranking
 /// comes from the shipped [`views::kv1`] view (never re-derived here).
@@ -187,10 +180,7 @@ pub fn render_rail(view: &AtlasView, doc: &MetricsDocument) -> String {
             classes.push_str(" is-hot");
         }
 
-        let file_anchor = file_anchors
-            .get(&file.path)
-            .cloned()
-            .unwrap_or_else(|| format!("file-{}", super::slugify(&file.path)));
+        let file_anchor = file_link_anchor(&file_anchors, &file.path);
         let mut card = String::new();
         card.push_str(&format!("<article class=\"{classes}\">\n"));
         // The rail is the identity layer: show the path (mid-ellipsis, never
@@ -198,7 +188,7 @@ pub fn render_rail(view: &AtlasView, doc: &MetricsDocument) -> String {
         // node carries the short file name.
         let path_label = mid_ellipsis(&file.path, 28);
         card.push_str(&format!(
-            "<div class=\"atlas-rail-head\"><a class=\"atlas-rail-name atlas-mono\" href=\"#atlas-{anchor}\" title=\"{path}\">{name}</a><span class=\"atlas-rail-role\">{role}</span></div>\n",
+            "<div class=\"atlas-rail-head\"><a class=\"atlas-rail-name atlas-mono\" href=\"atlas-weight.html#atlas-{anchor}\" title=\"{path}\">{name}</a><span class=\"atlas-rail-role\">{role}</span></div>\n",
             anchor = escape_html(&file_anchor),
             path = escape_html(&file.path),
             name = escape_html(&path_label),
@@ -231,21 +221,7 @@ pub fn render_rail(view: &AtlasView, doc: &MetricsDocument) -> String {
                 // Prefer the occurrence with the same rule AND severity (the
                 // dominant finding is severity-ranked); fall back to the first
                 // rule occurrence, then the ranked-actions anchor.
-                let finding_anchor = doc
-                    .findings
-                    .iter()
-                    .position(|finding| {
-                        finding.path == file.path
-                            && finding.rule_id == dominant.rule_id
-                            && finding.severity == dominant.severity
-                    })
-                    .or_else(|| {
-                        doc.findings.iter().position(|finding| {
-                            finding.path == file.path && finding.rule_id == dominant.rule_id
-                        })
-                    })
-                    .map(|index| finding_anchors[index].clone())
-                    .unwrap_or_else(|| "ranked-actions".to_string());
+                let finding_anchor = dominant_finding_anchor(doc, file, dominant, &finding_anchors);
                 card.push_str(&format!(
                     "<div class=\"atlas-rail-find\">FIND <a class=\"atlas-mono\" href=\"findings-detail.html#{anchor}\">{rule}</a> · {finding}</div>\n",
                     anchor = escape_html(&finding_anchor),
@@ -264,7 +240,7 @@ pub fn render_rail(view: &AtlasView, doc: &MetricsDocument) -> String {
     let hidden = view.files.len().saturating_sub(selected.len());
     if hidden > 0 {
         out.push_str(&format!(
-            "<p class=\"atlas-rail-more\"><a href=\"#atlas-drill-weight\">+{} more {} in the weight detail below</a></p>\n",
+            "<p class=\"atlas-rail-more\"><a href=\"atlas-weight.html\">+{} more {} in the weight detail</a></p>\n",
             format_count(hidden as u64),
             views::plural_word(hidden, "source file", "source files"),
         ));
@@ -275,7 +251,7 @@ pub fn render_rail(view: &AtlasView, doc: &MetricsDocument) -> String {
 
 /// Visible function name; anonymous functions (an empty schema name) get a
 /// named stub instead of a bare `:line` label.
-fn function_display_name(name: &str) -> String {
+pub(crate) fn function_display_name(name: &str) -> String {
     if name.trim().is_empty() {
         "(anonymous)".to_string()
     } else {
@@ -302,535 +278,15 @@ fn rail_role(file: &AtlasFile, is_entry: bool, unreached: bool) -> String {
     "PRODUCTION".to_string()
 }
 
-/// Render the fixed seven-block brief plus its two drill sections.
+/// Render `#atlas-brief` — the four progressive below-graph charts.
 ///
-/// Returns `#atlas-brief` followed by `#atlas-drill-q2` and
-/// `#atlas-drill-weight`; `#map` places the canvas before this fragment.
+/// Thin compatibility wrapper around
+/// [`crate::reporter::atlas_charts::render_charts`]; the emitted page no
+/// longer carries the retired seven-block text wall or the inline Q2/weight
+/// drills (those are standalone artifacts now).
 #[must_use]
-pub fn render_brief(view: &AtlasView, doc: &MetricsDocument, emitted_charts: &[String]) -> String {
-    let (_, finding_anchors) = finding_anchor_assignments(doc);
-    let file_anchors = file_anchor_map(doc);
-    let kv1 = views::kv1(doc);
-    let function_anchors = FunctionAnchors::new(doc);
-    let component_pages = component_pages(doc, emitted_charts);
-
-    let mut out = String::new();
-    out.push_str("<section id=\"atlas-brief\" class=\"atlas-brief\">\n");
-    out.push_str("<style>");
-    out.push_str(BRIEF_CSS);
-    out.push_str("</style>\n");
-    render_answer(&mut out, view, doc, &kv1, &finding_anchors);
-    render_actions(
-        &mut out,
-        doc,
-        &kv1,
-        &finding_anchors,
-        &function_anchors,
-        view.coverage.demoted_files,
-    );
-    render_weight(&mut out, view);
-    render_blast(&mut out, view);
-    render_cards(&mut out, view, &file_anchors);
-    render_noise(&mut out, view);
-    render_links(&mut out, view, &component_pages, kv1.total_actions);
-    out.push_str("</section>\n");
-    render_q2_drill(&mut out, view, doc);
-    render_weight_drill(&mut out, view, &file_anchors);
-    out
-}
-
-// ---------------------------------------------------------------------------
-// Seven-block brief
-// ---------------------------------------------------------------------------
-
-fn render_answer(
-    out: &mut String,
-    view: &AtlasView,
-    doc: &MetricsDocument,
-    kv1: &views::Kv1View,
-    finding_anchors: &[String],
-) {
-    out.push_str("<div class=\"atlas-block\" data-atlas-block=\"answer\" id=\"atlas-answer\">\n");
-    out.push_str("<h3>What to open first</h3>\n<p class=\"atlas-answer-line\">");
-    out.push_str(&format!(
-        "<strong>{}</strong>. {}",
-        escape_html(&format_entry(
-            view.entry.policy.label(),
-            &view.entry.confidence,
-            view.entry.alternatives.len(),
-        )),
-        escape_html(entry_why(view.entry.policy)),
-    ));
-    out.push(' ');
-    match hottest_file(view) {
-        Some(file) => out.push_str(&format!(
-            "The largest static cost is {} ({}).",
-            escape_html(&file.path),
-            escape_html(&file_cost_anchor(file)),
-        )),
-        None => out.push_str(&escape_html("No file with functions was recorded.")),
-    }
-    out.push(' ');
-    if let Some(row) = kv1.rows.first() {
-        let finding = &doc.findings[row.finding_index];
-        out.push_str("Open first: <a href=\"findings-detail.html#");
-        out.push_str(&escape_html(&finding_anchors[row.finding_index]));
-        out.push_str("\"><code>");
-        out.push_str(&escape_html(&location(finding)));
-        out.push_str("</code></a>");
-        if let Some(function) = &row.function {
-            out.push_str(" <span class=\"atlas-fn\">");
-            out.push_str(&escape_html(function));
-            out.push_str("</span>");
-        }
-        out.push_str(&format!(
-            " — {} ({}).",
-            escape_html(&sanitize_atlas_text(&finding.title)),
-            escape_html(&format_severity_confidence(
-                finding.severity,
-                finding.confidence
-            )),
-        ));
-    } else {
-        let text = no_action_text(kv1);
-        out.push_str(&escape_html(&text));
-        if !text.ends_with('.') {
-            out.push('.');
-        }
-    }
-    out.push_str(&format!(
-        " <span class=\"atlas-caveat\">Caveat: {}</span>",
-        escape_html(&caveat(view))
-    ));
-    out.push_str("</p>\n</div>\n");
-}
-
-fn render_actions(
-    out: &mut String,
-    doc: &MetricsDocument,
-    kv1: &views::Kv1View,
-    finding_anchors: &[String],
-    function_anchors: &FunctionAnchors,
-    demoted_files: usize,
-) {
-    out.push_str("<div class=\"atlas-block\" data-atlas-block=\"actions\" id=\"atlas-actions\">\n");
-    out.push_str("<h3>Start here — ranked actions (production first)</h3>\n");
-    if kv1.rows.is_empty() {
-        out.push_str(&format!("<p>{}</p>\n", escape_html(&no_action_text(kv1))));
-    } else {
-        out.push_str("<ol class=\"atlas-action-list\">\n");
-        let mut seen_locations: BTreeMap<(String, u32), usize> = BTreeMap::new();
-        for row in &kv1.rows {
-            let finding = &doc.findings[row.finding_index];
-            let same_as = seen_locations
-                .get(&(finding.path.clone(), finding.span.start_line))
-                .copied();
-            out.push_str(&format!(
-                "<li class=\"atlas-action\"><span class=\"atlas-rank\">#{rank}</span>\
-                 <a class=\"atlas-loc\" href=\"findings-detail.html#{anchor}\"><code>{location}</code></a>",
-                rank = row.rank,
-                anchor = escape_html(&finding_anchors[row.finding_index]),
-                location = escape_html(&location(finding)),
-            ));
-            if let Some(function) = &row.function {
-                out.push_str(&format!(
-                    " <span class=\"atlas-fn\">{}</span>",
-                    escape_html(function)
-                ));
-            }
-            out.push_str(&format!(
-                " <span class=\"atlas-rule\">{}</span>\
-                 <span class=\"atlas-badge\">{}</span>\
-                 <span class=\"atlas-class{}\">{}</span>",
-                escape_html(&sanitize_atlas_text(&finding.title)),
-                escape_html(&format_severity_confidence(
-                    finding.severity,
-                    finding.confidence
-                )),
-                if row.production { "" } else { " nonprod" },
-                escape_html(&row.path_class),
-            ));
-            if let Some(prior) = same_as {
-                out.push_str(&format!(
-                    " <span class=\"atlas-note\">same location as #{prior}</span>"
-                ));
-            }
-            seen_locations
-                .entry((finding.path.clone(), finding.span.start_line))
-                .or_insert(row.rank);
-            out.push_str(&format!(
-                "<div class=\"atlas-anchor\">{}</div>\n",
-                escape_html(&match row.function_index {
-                    Some(index) => function_anchors.format(&doc.stats.functions[index]),
-                    None => "no enclosing function recorded".to_string(),
-                })
-            ));
-            if let Some(index) = row.function_index {
-                let function = &doc.stats.functions[index];
-                if let Some(trip) =
-                    format_trip_provenance(function.known_trip_value, function.unknown_trip_loops)
-                {
-                    out.push_str(&format!(
-                        "<div class=\"atlas-trip\">{}</div>\n",
-                        escape_html(&trip)
-                    ));
-                }
-            }
-            out.push_str(&format!(
-                "<div class=\"atlas-why\">{}</div></li>\n",
-                escape_html(&sanitize_atlas_text(&finding.message))
-            ));
-        }
-        out.push_str("</ol>\n");
-        out.push_str(&format!(
-            "<p class=\"atlas-counts\">{} · {} in the full list</p>\n",
-            escape_html(&if demoted_files == 1 {
-                format!("{demoted_files} non-production file demoted")
-            } else {
-                format!("{demoted_files} non-production files demoted")
-            }),
-            escape_html(&views::plural(
-                kv1.component_findings,
-                "component-level finding"
-            )),
-        ));
-    }
-    out.push_str(&format!(
-        "<p class=\"atlas-more\"><a href=\"findings-detail.html#ranked-actions\">Complete ranked action list — {} (production-first)</a></p>\n",
-        escape_html(&views::plural(kv1.total_actions, "action")),
-    ));
-    out.push_str("</div>\n");
-}
-
-fn render_weight(out: &mut String, view: &AtlasView) {
-    out.push_str("<div class=\"atlas-block\" data-atlas-block=\"weight\" id=\"atlas-weight\">\n");
-    out.push_str("<h3>Where is the mass? — share of scanned static cost</h3>\n");
-    out.push_str(
-        "<p class=\"atlas-caption\">Production files first; non-production cost is counted in the labelled band, never dropped.</p>\n",
-    );
-    let total = view.totals.total_cost;
-    let production_cost = view
-        .files
-        .iter()
-        .filter(|file| file.production)
-        .map(|file| file.cost)
-        .fold(0_u64, u64::saturating_add);
-    let nonproduction_cost = total.saturating_sub(production_cost);
-    let band = format_nonproduction(nonproduction_cost, total, view.coverage.demoted_files);
-    // Layout §5: an all-test strip leads with the non-production band.
-    if view.state.all_test {
-        out.push_str(&format!(
-            "<p class=\"atlas-nonprod\">{}</p>\n",
-            escape_html(&band)
-        ));
-    }
-    if total == 0 {
-        out.push_str(&format!("<p>{NO_SCANNED_COST}</p>\n"));
-    } else {
-        let production: Vec<&AtlasFile> = view
-            .files
-            .iter()
-            .filter(|file| file.production)
-            .take(5)
-            .collect();
-        if production.is_empty() {
-            out.push_str(&format!("<p>{NO_PRODUCTION_COST}</p>\n"));
-        } else {
-            out.push_str("<ol class=\"atlas-weight-list\">\n");
-            for file in production {
-                out.push_str(&format!(
-                    "<li><span class=\"atlas-path\">{}</span> <span class=\"atlas-share\">{}</span></li>\n",
-                    escape_html(&file.path),
-                    escape_html(&format_share(file.cost, total)),
-                ));
-            }
-            out.push_str("</ol>\n");
-        }
-        let production_components: Vec<_> = view
-            .components
-            .iter()
-            .filter(|component| component.production_file_count > 0)
-            .take(3)
-            .collect();
-        if production_components.is_empty() {
-            out.push_str("<p>no production component recorded</p>\n");
-        } else {
-            out.push_str("<ul class=\"atlas-weight-list\">\n");
-            for component in production_components {
-                out.push_str(&format!(
-                    "<li><span class=\"atlas-path\">{}</span> <span class=\"atlas-share\">{}</span></li>\n",
-                    escape_html(&component.prefix),
-                    escape_html(&format_component_share(
-                        component.cost,
-                        total,
-                        component.file_count
-                    )),
-                ));
-            }
-            out.push_str("</ul>\n");
-        }
-        out.push_str(
-            "<p class=\"atlas-caption\">Component shares include every member file (including non-production members); component groups are approximate prefix groups.</p>\n",
-        );
-    }
-    if !view.state.all_test {
-        out.push_str(&format!(
-            "<p class=\"atlas-nonprod\">{}</p>\n",
-            escape_html(&band)
-        ));
-    }
-    out.push_str("</div>\n");
-}
-
-fn render_blast(out: &mut String, view: &AtlasView) {
-    out.push_str("<div class=\"atlas-block\" data-atlas-block=\"blast\" id=\"atlas-blast\">\n");
-    out.push_str("<h3>What breaks if I touch it? — blast radius</h3>\n");
-    let blast = &view.blast_radius;
-    match &blast.target {
-        Some(target) => {
-            out.push_str(&format!(
-                "<p class=\"atlas-blast-line\">{} · target <span class=\"atlas-path\">{}</span></p>\n",
-                escape_html(&format_dependents(
-                    blast.dependents,
-                    view.reachability.source_files,
-                    blast.dependent_multiple,
-                    // M-08 contract: the brief prints the view's percentile
-                    // verbatim instead of recomputing it.
-                    blast.dependent_top_pct,
-                )),
-                escape_html(target),
-            ));
-            out.push_str(&format!(
-                "<p>{}</p>\n",
-                escape_html(&format_call_degree(blast.caller_files, blast.callee_files))
-            ));
-            out.push_str(&format!(
-                "<p class=\"atlas-caption\">{} of {} include edges resolved · {}</p>\n",
-                format_count(blast.include_edges_resolved as u64),
-                format_count(blast.include_edges_total as u64),
-                escape_html(&format_unresolved_includes(
-                    view.coverage.unresolved_includes,
-                    blast.include_edges_total,
-                )),
-            ));
-            if !blast.top_dependents.is_empty() {
-                out.push_str("<ul class=\"atlas-dependent-list\">\n");
-                for (path, edges) in &blast.top_dependents {
-                    out.push_str(&format!(
-                        "<li><span class=\"atlas-path\">{}</span> · {} include edges</li>\n",
-                        escape_html(path),
-                        format_count(*edges as u64),
-                    ));
-                }
-                out.push_str("</ul>\n");
-            }
-            out.push_str(
-                "<p><a href=\"#atlas-drill-q2\">Full dependent list and Q2 reverse drill</a></p>\n",
-            );
-            out.push_str(
-                "<p class=\"atlas-caption\">Callers and callees are structural; see the Atlas legend for edge confidence.</p>\n",
-            );
-        }
-        None => {
-            out.push_str("<p>no entry — blast radius unavailable</p>\n");
-            out.push_str(&format!(
-                "<p class=\"atlas-caption\">{}</p>\n",
-                escape_html(&format_unresolved_includes(
-                    view.coverage.unresolved_includes,
-                    blast.include_edges_total,
-                ))
-            ));
-        }
-    }
-    out.push_str("</div>\n");
-}
-
-/// File cards: production-first top files; a capped canvas shows only the
-/// drawn set (layout §5) while an uncapped scan cards the cost-ranked set.
-fn card_files(view: &AtlasView) -> Vec<&AtlasFile> {
-    if view.state.capped {
-        let drawn: BTreeSet<&str> = view.nodes.iter().map(|node| node.path.as_str()).collect();
-        view.files
-            .iter()
-            .filter(|file| drawn.contains(file.path.as_str()))
-            .take(6)
-            .collect()
-    } else {
-        view.files.iter().take(6).collect()
-    }
-}
-
-fn render_cards(out: &mut String, view: &AtlasView, file_anchors: &BTreeMap<String, String>) {
-    out.push_str("<div class=\"atlas-block\" data-atlas-block=\"cards\" id=\"atlas-cards\">\n");
-    out.push_str("<h3>File cards — what is inside the top files</h3>\n");
-    let cards = card_files(view);
-    if cards.is_empty() {
-        out.push_str(&format!("<p>{NO_SOURCE_FUNCTIONS}</p>\n"));
-    } else {
-        out.push_str("<div class=\"atlas-cards\">\n");
-        for file in cards {
-            out.push_str("<article class=\"atlas-card\">\n<h4>");
-            out.push_str(&format!(
-                "<span class=\"atlas-path\">{}</span> <span class=\"atlas-class{}\">{}</span>",
-                escape_html(&file.path),
-                if file.production { "" } else { " nonprod" },
-                escape_html(&file.path_class),
-            ));
-            out.push_str("</h4>\n");
-            out.push_str(&format!(
-                "<p class=\"atlas-anchor\">{}</p>\n",
-                escape_html(&file_cost_anchor(file))
-            ));
-            out.push_str(&format!(
-                "<p class=\"atlas-share\">{}</p>\n",
-                escape_html(&format_share(file.cost, view.totals.total_cost))
-            ));
-            match &file.finding {
-                Some(finding) => out.push_str(&format!(
-                    "<p class=\"atlas-dominant\">Dominant finding: <code>{}</code> {} — {}</p>\n",
-                    escape_html(&finding.rule_id),
-                    escape_html(&format_finding(finding.severity, finding.count)),
-                    escape_html(&sanitize_atlas_text(&finding.title)),
-                )),
-                None => out.push_str("<p class=\"atlas-dominant\">no findings on this file</p>\n"),
-            }
-            if file.top_functions.is_empty() {
-                out.push_str("<p>no functions recorded</p>\n");
-            } else {
-                out.push_str("<ol class=\"atlas-fn-list\">\n");
-                for function in &file.top_functions {
-                    out.push_str(&format!(
-                        "<li><code>{}:{}</code> <span class=\"atlas-fn\">{}</span> <span class=\"atlas-anchor\">{}</span></li>\n",
-                        escape_html(&file.path),
-                        function.line,
-                        escape_html(&function_display_name(&function.name)),
-                        escape_html(&function_anchor_for(function)),
-                    ));
-                }
-                out.push_str("</ol>\n");
-            }
-            let anchor = file_anchors
-                .get(&file.path)
-                .cloned()
-                .unwrap_or_else(|| format!("file-{}", super::slugify(&file.path)));
-            out.push_str(&format!(
-                "<p><a href=\"#atlas-{anchor}\">Weight detail for this file</a> · <a href=\"findings-detail.html#ranked-actions\">complete action list</a></p>\n",
-                anchor = escape_html(&anchor),
-            ));
-            out.push_str("</article>\n");
-        }
-        out.push_str("</div>\n");
-        out.push_str(&format!(
-            "<p class=\"atlas-counts\">showing top {} of {} source files (production-first)</p>\n",
-            card_files(view).len(),
-            format_count(view.files.len() as u64),
-        ));
-    }
-    out.push_str("</div>\n");
-}
-
-fn render_noise(out: &mut String, view: &AtlasView) {
-    out.push_str("<div class=\"atlas-block\" data-atlas-block=\"noise\" id=\"atlas-noise\">\n");
-    out.push_str("<h3>Noise and confidence</h3>\n");
-    let coverage = &view.coverage;
-    out.push_str(&format!(
-        "<p>{}</p>\n",
-        escape_html(&format_parse(
-            coverage.parse_ok,
-            coverage.parse_partial,
-            coverage.parse_failed,
-        ))
-    ));
-    out.push_str(&format!(
-        "<p>{} · {} of {} include edges resolved</p>\n",
-        escape_html(&format_unresolved_includes(
-            coverage.unresolved_includes,
-            view.blast_radius.include_edges_total,
-        )),
-        format_count(view.blast_radius.include_edges_resolved as u64),
-        format_count(view.blast_radius.include_edges_total as u64),
-    ));
-    out.push_str(&format!(
-        "<p>{}</p>\n",
-        escape_html(&format_edge_mix(
-            view.edge_mix.medium,
-            view.edge_mix.low,
-            view.edge_mix.high,
-        ))
-    ));
-    out.push_str(&format!(
-        "<p>{} · {}</p>\n",
-        escape_html(&format_demoted_files(coverage.demoted_files)),
-        escape_html(&format_caps(
-            view.caps.reachable_shown,
-            view.caps.reachable_files,
-            view.caps.aggregated_files,
-            view.caps.edges_drawn,
-            view.caps.edge_pairs_total,
-        )),
-    ));
-    out.push_str(&format!(
-        "<p>{} production + {} non-production of {} source files unreached</p>\n",
-        format_count(coverage.unreached_production as u64),
-        format_count(coverage.unreached_nonproduction as u64),
-        format_count(view.reachability.source_files as u64),
-    ));
-    out.push_str(&format!(
-        "<p>{} of {} scanned files have no functions · {} source files partial or failed</p>\n",
-        format_count(coverage.files_without_functions as u64),
-        format_count(view.totals.file_count as u64),
-        format_count(coverage.partial_parse_files as u64),
-    ));
-    out.push_str(
-        "<p class=\"atlas-caption\">Edge confidence and the cost unit are defined once, in the Atlas legend; static cost is not ground truth.</p>\n",
-    );
-    out.push_str("</div>\n");
-}
-
-fn render_links(
-    out: &mut String,
-    view: &AtlasView,
-    components: &[ComponentPage],
-    total_actions: usize,
-) {
-    out.push_str("<div class=\"atlas-block\" data-atlas-block=\"links\" id=\"atlas-links\">\n");
-    out.push_str("<h3>Drills</h3>\n<ul class=\"atlas-drill-links\">\n");
-    out.push_str(&format!(
-        "<li><a href=\"findings-detail.html#ranked-actions\">Complete ranked action list</a> — {} (production-first)</li>\n",
-        escape_html(&views::plural(total_actions, "action")),
-    ));
-    out.push_str(&format!(
-        "<li><a href=\"profile-queue.html\">Complete profile queue</a> — {} ranked by static cost</li>\n",
-        escape_html(&views::plural(view.totals.function_count, "function")),
-    ));
-    out.push_str(&format!(
-        "<li><a href=\"#atlas-drill-q2\">Q2 reverse drill</a> — dependents and structural callers/callees for {}</li>\n",
-        escape_html(focus_path(view).unwrap_or("no entry")),
-    ));
-    out.push_str(&format!(
-        "<li><a href=\"#atlas-drill-weight\">Weight detail</a> — {} and {} by share</li>\n",
-        escape_html(&views::plural(view.files.len(), "source file")),
-        escape_html(&views::plural(view.components.len(), "component")),
-    ));
-    if components.is_empty() {
-        out.push_str("<li>Component pages: no component page emitted</li>\n");
-    } else {
-        out.push_str("<li>Component pages (schema component index): ");
-        for (index, component) in components.iter().enumerate() {
-            if index > 0 {
-                out.push_str(" · ");
-            }
-            out.push_str(&format!(
-                "<a href=\"{}\">{}</a> (#{})",
-                escape_html(&component.href),
-                escape_html(&component.prefix),
-                component.rank,
-            ));
-        }
-        out.push_str("</li>\n");
-    }
-    out.push_str("<li><a href=\"#explorer\">Explorer</a> — legacy static chart stems</li>\n");
-    out.push_str("</ul>\n</div>\n");
+pub fn render_brief(view: &AtlasView, doc: &MetricsDocument, _emitted_charts: &[String]) -> String {
+    crate::reporter::atlas_charts::render_charts(view, doc)
 }
 
 // ---------------------------------------------------------------------------
@@ -943,10 +399,7 @@ fn render_weight_drill(
     ));
     out.push_str("<div class=\"atlas-table-scroll\"><table>\n<thead><tr><th>file</th><th>class</th><th>cost</th><th>share</th></tr></thead>\n<tbody>\n");
     for file in &view.files {
-        let anchor = file_anchors
-            .get(&file.path)
-            .cloned()
-            .unwrap_or_else(|| format!("file-{}", super::slugify(&file.path)));
+        let anchor = file_link_anchor(file_anchors, &file.path);
         out.push_str(&format!(
             "<tr id=\"atlas-{anchor}\"><td><span class=\"atlas-path\">{}</span></td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
             escape_html(&file.path),
@@ -981,7 +434,7 @@ fn render_weight_drill(
         "<p class=\"atlas-caption\">Component rows are approximate prefix groups; each share includes every member file, including non-production members.</p>\n",
     );
     out.push_str(
-        "<p><a href=\"#explorer\">Explorer — legacy static chart stems</a> (the deferred treemap would live here).</p>\n",
+        "<p><a href=\"report.html#explorer\">Explorer — legacy static chart stems</a> (the deferred treemap would live here).</p>\n",
     );
     out.push_str("</section>\n");
 }
@@ -991,20 +444,20 @@ fn render_weight_drill(
 // ---------------------------------------------------------------------------
 
 /// Per-scale function anchors (M-05): unit + `× median function` + `top P%`.
-struct FunctionAnchors {
+pub(crate) struct FunctionAnchors {
     v2: ScaleOrdering,
     v1: ScaleOrdering,
 }
 
 impl FunctionAnchors {
-    fn new(doc: &MetricsDocument) -> Self {
+    pub(crate) fn new(doc: &MetricsDocument) -> Self {
         Self {
             v2: ScaleOrdering::build(&doc.stats.functions, CostScale::V2),
             v1: ScaleOrdering::build(&doc.stats.functions, CostScale::V1),
         }
     }
 
-    fn format(&self, function: &FunctionStats) -> String {
+    pub(crate) fn format(&self, function: &FunctionStats) -> String {
         let scale = scale_of(function);
         let ordering = match scale {
             CostScale::V2 => &self.v2,
@@ -1021,22 +474,12 @@ impl FunctionAnchors {
     }
 }
 
-fn function_anchor_for(function: &AtlasFunction) -> String {
-    format_function_cost(
-        function.cost,
-        function.scale,
-        positive_median(function.cost, function.median),
-        function.rank,
-        function.population,
-    )
-}
-
 /// A zero-cost row must not print `0×` (metrics spec §5 missing values).
 fn positive_median(cost: u64, median: Option<f64>) -> Option<f64> {
     if cost == 0 { None } else { median }
 }
 
-fn file_cost_anchor(file: &AtlasFile) -> String {
+pub(crate) fn file_cost_anchor(file: &AtlasFile) -> String {
     format_file_cost(
         file.cost,
         file.scale,
@@ -1046,9 +489,47 @@ fn file_cost_anchor(file: &AtlasFile) -> String {
     )
 }
 
-fn hottest_file(view: &AtlasView) -> Option<&AtlasFile> {
-    let path = view.hottest.as_deref()?;
-    view.files.iter().find(|file| file.path == path)
+/// Deterministic weight-drill anchor for a file, shared by the rail and the
+/// file chart so both link to the exact same row.
+pub(crate) fn file_link_anchor(anchors: &BTreeMap<String, String>, path: &str) -> String {
+    anchors
+        .get(path)
+        .cloned()
+        .unwrap_or_else(|| format!("file-{}", super::slugify(path)))
+}
+
+/// Deterministic profile-queue anchor for a function, shared by the rail and
+/// the file chart.
+pub(crate) fn function_link_anchor(anchors: &BTreeMap<String, String>, id: &str) -> String {
+    anchors
+        .get(id)
+        .cloned()
+        .unwrap_or_else(|| format!("fn-{}", super::slugify(id)))
+}
+
+/// Dominant-finding link target: prefer the occurrence with the same rule AND
+/// severity, fall back to the first rule occurrence, then the ranked-actions
+/// anchor. Shared by the rail and the file chart.
+pub(crate) fn dominant_finding_anchor(
+    doc: &MetricsDocument,
+    file: &AtlasFile,
+    dominant: &AtlasFinding,
+    finding_anchors: &[String],
+) -> String {
+    doc.findings
+        .iter()
+        .position(|finding| {
+            finding.path == file.path
+                && finding.rule_id == dominant.rule_id
+                && finding.severity == dominant.severity
+        })
+        .or_else(|| {
+            doc.findings.iter().position(|finding| {
+                finding.path == file.path && finding.rule_id == dominant.rule_id
+            })
+        })
+        .map(|index| finding_anchors[index].clone())
+        .unwrap_or_else(|| "ranked-actions".to_string())
 }
 
 fn focus_path(view: &AtlasView) -> Option<&str> {
@@ -1059,123 +540,8 @@ fn focus_path(view: &AtlasView) -> Option<&str> {
         .or(view.hottest.as_deref())
 }
 
-fn entry_why(policy: EntryPolicy) -> &'static str {
-    match policy {
-        EntryPolicy::ProductionMain => "Elected because the scan found a production main.",
-        EntryPolicy::ProductionScript => {
-            "Elected because the scan found a production script entry (Python __main__)."
-        }
-        EntryPolicy::LibraryRoot => {
-            "Elected as the highest fan-in production library root; this scan has no production main."
-        }
-        EntryPolicy::NoEntry => {
-            "No production main, script, or library root was found, so no entry is shown."
-        }
-    }
-}
-
-fn caveat(view: &AtlasView) -> String {
-    let coverage = &view.coverage;
-    if view.state.empty {
-        return "no source functions recorded — every block shows a named stub.".to_string();
-    }
-    if coverage.parse_failed > 0 {
-        return format!(
-            "{} files failed to parse, so their cost and edges are missing.",
-            format_count(coverage.parse_failed as u64)
-        );
-    }
-    if coverage.parse_partial > 0 {
-        return format!(
-            "{} files parsed partially, so their cost and edges are under-counted.",
-            format_count(coverage.parse_partial as u64)
-        );
-    }
-    if view.state.all_test {
-        return "all source cost is non-production (test/bench/other); production rankings are empty."
-            .to_string();
-    }
-    if view.state.library {
-        // A library root may call helpers; only claim "no forward path" when
-        // the canvas truly has no forward edge (every drawn edge is a back edge).
-        if view.edges.iter().all(|edge| edge.back) {
-            return "there is no forward path from the library root; callers are listed in the Q2 drill."
-                .to_string();
-        }
-        return "the library root has forward calls; callers are listed in the Q2 drill."
-            .to_string();
-    }
-    if view.state.no_entry {
-        return "no entry was elected; the cost ranking and the action list still stand."
-            .to_string();
-    }
-    if view.state.capped {
-        return format!(
-            "{} reachable files are aggregated, so the canvas shows a capped set.",
-            format_count(view.caps.aggregated_files as u64)
-        );
-    }
-    "the drawn edges are structural; see the Atlas legend for units and edge confidence."
-        .to_string()
-}
-
-fn no_action_text(kv1: &views::Kv1View) -> String {
-    if kv1.component_findings > 0 {
-        format!(
-            "No function-level action was recorded; {} component-level findings are in the full list.",
-            format_count(kv1.component_findings as u64)
-        )
-    } else {
-        NO_FINDINGS.to_string()
-    }
-}
-
 fn location(finding: &FindingEntry) -> String {
     format!("{}:{}", finding.path, finding.span.start_line)
-}
-
-fn component_pages(doc: &MetricsDocument, emitted_charts: &[String]) -> Vec<ComponentPage> {
-    let emitted: BTreeSet<&str> = emitted_charts
-        .iter()
-        .map(|name| name.strip_suffix(".svg").unwrap_or(name))
-        .collect();
-    let mut sorted: Vec<&crate::schema::ComponentEntry> = doc.components.iter().flatten().collect();
-    sorted.sort_by(|a, b| {
-        a.rank
-            .cmp(&b.rank)
-            .then_with(|| a.path_prefix.cmp(&b.path_prefix))
-    });
-    let rendered: BTreeSet<&str> = sorted
-        .iter()
-        .take(10)
-        .map(|entry| entry.path_prefix.as_str())
-        .collect();
-    sorted
-        .into_iter()
-        .take(3)
-        .map(|entry| {
-            let filename =
-                crate::charts::component::component_filename(entry.rank, &entry.path_prefix);
-            let stem = filename.strip_suffix(".svg").unwrap_or(&filename);
-            let href = if emitted.contains(stem) {
-                format!("charts/{filename}")
-            } else if rendered.contains(entry.path_prefix.as_str()) {
-                // The component index row carries this exact id.
-                format!("#{stem}")
-            } else {
-                "#components".to_string()
-            };
-            ComponentPage {
-                prefix: if entry.path_prefix == "." {
-                    "repository root (.)".to_string()
-                } else {
-                    entry.path_prefix.clone()
-                },
-                rank: entry.rank,
-                href,
-            }
-        })
-        .collect()
 }
 
 struct IncludeReverse {
@@ -1263,7 +629,7 @@ fn call_degree(doc: &MetricsDocument, focus: &str) -> CallDegree {
 /// surface substitutes neutral static wording for those whole words so the
 /// emitted page never makes a time claim. Identifiers are preserved: `_` is a
 /// word character, so `calc_ms` / `runtime_cost` are left untouched.
-fn sanitize_atlas_text(message: &str) -> String {
+pub(crate) fn sanitize_atlas_text(message: &str) -> String {
     let mut text = message.to_string();
     for (needle, replacement) in [
         ("hot paths", "hot functions"),
@@ -1315,34 +681,71 @@ fn is_word_byte(byte: u8) -> bool {
 }
 
 // ---------------------------------------------------------------------------
-// CSS (scoped, deterministic, print-safe; no script, no network)
+// Standalone drill pages (weight detail / Q2 reverse)
 // ---------------------------------------------------------------------------
 
-const BRIEF_CSS: &str = "\
-#atlas-brief,#atlas-drill-q2,#atlas-drill-weight{font-family:monospace,monospace;color:#0f172a;max-width:72rem;margin:0 auto;padding:0 1rem}\
-#atlas-brief .atlas-block{border-top:1px solid #cbd5e1;padding:.9rem 0}\
-#atlas-brief h3,#atlas-drill-q2 h3,#atlas-drill-weight h3{font-size:1rem;margin:.2rem 0 .5rem}\
-#atlas-brief h4,#atlas-drill-q2 h4,#atlas-drill-weight h4{font-size:.95rem;margin:.6rem 0 .3rem}\
-.atlas-answer-line{font-size:1.02rem;line-height:1.5}\
-.atlas-caveat{display:block;margin-top:.35rem;color:#334155}\
-.atlas-rank{font-weight:bold;margin-right:.4rem}\
-.atlas-action{margin:.6rem 0}\
-.atlas-anchor,.atlas-share,.atlas-caption,.atlas-counts,.atlas-trip,.atlas-note{color:#334155;font-size:.9rem}\
-.atlas-badge{display:inline-block;border:1px solid #334155;border-radius:3px;padding:0 .25rem;margin-left:.25rem;font-size:.85rem}\
-.atlas-class{display:inline-block;border:1px solid #64748b;border-radius:3px;padding:0 .25rem;font-size:.85rem}\
-.atlas-class.nonprod{color:#7c2d12;border:1px dashed #9a3412}\
-.atlas-action-list,.atlas-weight-list,.atlas-dependent-list,.atlas-fn-list,.atlas-drill-links{padding-left:1.2rem}\
-.atlas-why{margin:.2rem 0}\
-.atlas-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:.75rem}\
-.atlas-card{border:1px solid #cbd5e1;border-radius:6px;padding:.6rem}\
-.atlas-card h4{margin:.1rem 0 .35rem;font-size:.95rem}\
-.atlas-nonprod{border-left:4px solid #9a3412;padding-left:.5rem}\
-.atlas-drill{border-top:2px solid #334155;padding:.9rem 0}\
+/// Standalone `atlas-weight.html`: the complete weight detail with a warm
+/// Atlas shell and a breadcrumb back to `report.html#map`.
+#[must_use]
+pub fn render_atlas_weight_html(doc: &MetricsDocument) -> String {
+    let view = crate::reporter::atlas::build_atlas_view(doc);
+    let mut body = String::new();
+    render_weight_drill(&mut body, &view, &file_anchor_map(doc));
+    drill_page("Perfpal Atlas — weight detail", "Weight detail", &body)
+}
+
+/// Standalone `atlas-q2.html`: the Q2 reverse drill (dependents, DSM,
+/// structural callers/callees) with the same warm Atlas shell.
+#[must_use]
+pub fn render_atlas_q2_html(doc: &MetricsDocument) -> String {
+    let view = crate::reporter::atlas::build_atlas_view(doc);
+    let mut body = String::new();
+    render_q2_drill(&mut body, &view, doc);
+    drill_page("Perfpal Atlas — Q2 reverse drill", "Blast drill", &body)
+}
+
+fn drill_page(title: &str, crumb: &str, body: &str) -> String {
+    let mut out = String::new();
+    out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
+    out.push_str("<meta charset=\"utf-8\">\n");
+    out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
+    out.push_str(&format!("<title>{}</title>\n", escape_html(title)));
+    out.push_str("<style>");
+    out.push_str(DRILL_PAGE_CSS);
+    out.push_str("</style>\n</head>\n<body>\n");
+    out.push_str("<nav class=\"atlas-breadcrumb\" aria-label=\"Breadcrumb\">");
+    out.push_str("<a href=\"report.html#map\">Atlas map</a>");
+    out.push_str("<span aria-hidden=\"true\"> / </span>");
+    out.push_str(&format!("<span>{}</span></nav>\n", escape_html(crumb)));
+    out.push_str("<main class=\"atlas-drill-page\">\n");
+    out.push_str(body);
+    out.push_str("</main>\n</body>\n</html>\n");
+    out
+}
+
+// ---------------------------------------------------------------------------
+// Drill CSS (warm Atlas tokens; deterministic, print-safe; no script/network)
+// ---------------------------------------------------------------------------
+
+const DRILL_PAGE_CSS: &str = "\
+*{box-sizing:border-box}\
+body{margin:0;background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;font-size:10px;line-height:1.45}\
+a{color:#7c2d12}\
+.atlas-breadcrumb{padding:10px 16px;border-bottom:1px solid #d6d0c4;font-size:9px;font-weight:650;color:#6f6a61}\
+.atlas-breadcrumb a{color:#202b35;text-decoration:none}\
+.atlas-breadcrumb a:hover{text-decoration:underline}\
+.atlas-drill-page{max-width:72rem;margin:0 auto;padding:12px 16px 28px}\
+.atlas-drill{border-top:1px solid #d6d0c4;padding:10px 0 4px}\
+.atlas-drill h3{font-size:14px;font-weight:800;margin:0 0 6px}\
+.atlas-drill h4{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6f6a61;margin:12px 0 4px}\
+.atlas-mono,.atlas-path,.atlas-drill code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}\
+.atlas-caption{color:#6f6a61;font-size:9px}\
 .atlas-table-scroll{overflow-x:auto;max-width:100%}\
-.atlas-drill table{border-collapse:collapse;width:100%;margin:.5rem 0}\
-.atlas-drill th,.atlas-drill td{border:1px solid #999;padding:.2rem .4rem;text-align:left;vertical-align:top}\
-.atlas-drill th{background:#eee}\
-@media print{.atlas-drill{display:none}}\
+.atlas-drill table{border-collapse:collapse;width:100%;margin:6px 0;font-size:9px}\
+.atlas-drill th,.atlas-drill td{border:1px solid #d6d0c4;padding:3px 6px;text-align:left;vertical-align:top}\
+.atlas-drill th{background:#ece8df;font-size:9px;font-weight:800}\
+.atlas-drill tbody tr:nth-child(even){background:#fbf9f4}\
+.atlas-drill p{margin:4px 0}\
 ";
 
 // ---------------------------------------------------------------------------
@@ -1355,6 +758,7 @@ mod tests {
     use crate::analyzer::{Confidence, Severity};
     use crate::reporter::atlas::build_atlas_view;
     use crate::reporter::atlas::test_support::*;
+    use crate::reporter::atlas_metrics::{NO_PRODUCTION_COST, NO_SCANNED_COST, format_dependents};
 
     fn render(doc: &MetricsDocument) -> String {
         render_brief(&build_atlas_view(doc), doc, &[])
@@ -1421,12 +825,10 @@ mod tests {
         positions
     }
 
-    const BLOCKS: [&str; 7] = [
-        "answer", "actions", "weight", "blast", "cards", "noise", "links",
-    ];
+    const BLOCKS: [&str; 4] = ["weight-chart", "blast-chart", "file-chart", "coverage"];
 
     #[test]
-    fn every_state_renders_the_same_seven_blocks() {
+    fn every_state_renders_the_same_chart_stack() {
         for doc in [
             application_fixture(),
             library_fixture(),
@@ -1439,90 +841,29 @@ mod tests {
         ] {
             let html = render(&doc);
             assert_eq!(block_positions(&html), BLOCKS);
-            assert!(html.contains("id=\"atlas-drill-q2\""));
-            assert!(html.contains("id=\"atlas-drill-weight\""));
-            assert!(html.contains("id=\"atlas-answer\""));
+            assert_eq!(html.matches("id=\"atlas-charts\"").count(), 1);
+            assert!(!html.contains("id=\"atlas-answer\""));
+            assert!(!html.contains("id=\"atlas-drill-"));
+            assert!(!html.contains("<table"));
         }
     }
 
     #[test]
-    fn answer_line_names_entry_hottest_and_one_action() {
-        let builder = DocBuilder::new()
-            .file(file("src/main.c", "production", 1))
-            .file(file("src/a.c", "production", 1))
-            .function(function(
-                "src/main.c",
-                "main",
-                1,
-                Some(100),
-                0,
-                Some("main"),
-            ))
-            .function(function("src/a.c", "work", 10, Some(900), 1, None))
-            .include_edge(include_edge("src/a.c", Some("src/main.c"), true))
-            .finding(finding(
-                "PERF-C-LOOP-001",
-                "src/a.c",
-                12,
-                Severity::Hot,
-                "Loop with a large trip count",
-            ));
-        let doc = builder.build();
-        let html = render(&doc);
-        let answer = html
-            .split("id=\"atlas-answer\"")
-            .nth(1)
-            .expect("answer block")
-            .split("</div>")
-            .next()
-            .expect("answer close");
-        assert!(answer.contains("ENTRY · production main"));
-        assert!(answer.contains("The largest static cost is src/a.c"));
-        assert!(answer.contains("Open first:"));
-        assert!(answer.contains("<code>src/a.c:12</code>"));
-        assert!(answer.contains("HOT · HIGH"));
-        assert!(answer.contains("Caveat:"));
-        assert_eq!(answer.matches("<code>").count(), 1);
-    }
-
-    #[test]
-    fn empty_state_uses_named_stubs_in_every_block() {
+    fn empty_state_uses_named_stubs_in_every_chart() {
         let html = render(&empty_fixture());
-        for stub in [NO_SOURCE_FUNCTIONS, NO_FINDINGS, NO_ENTRY_TOKEN] {
+        for stub in [
+            NO_SOURCE_FUNCTIONS,
+            NO_SCANNED_COST,
+            "no entry — blast radius unavailable",
+        ] {
             assert!(html.contains(stub), "missing stub {stub}");
         }
         let all_test = render(&all_test_fixture());
         assert!(all_test.contains(NO_PRODUCTION_COST));
     }
 
-    const NO_ENTRY_TOKEN: &str = "no entry";
-
     #[test]
-    fn kv1_actions_print_m05_anchor_and_trip_provenance() {
-        let mut function = function("src/a.c", "work", 10, Some(900), 1, None);
-        function.known_trip_value = Some(10);
-        function.unknown_trip_loops = 1;
-        let doc = DocBuilder::new()
-            .file(file("src/a.c", "production", 1))
-            .function(function)
-            .finding(finding(
-                "PERF-C-LOOP-001",
-                "src/a.c",
-                12,
-                Severity::Hot,
-                "Loop with a large trip count",
-            ))
-            .build();
-        let html = render(&doc);
-        assert!(html.contains("× median function"));
-        assert!(html.contains("of functions"));
-        assert!(html.contains("known trip ×10 — verify it actually runs"));
-        assert!(html.contains("unknown-trip ×1 — estimate incomplete"));
-        assert!(html.contains(">production<"));
-    }
-
-    #[test]
-    fn weight_strip_is_production_first_with_labelled_nonproduction_band() {
+    fn weight_chart_is_production_first_with_labelled_nonproduction_band() {
         let doc = DocBuilder::new()
             .file(file("src/a.c", "production", 1))
             .file(file("tests/t.c", "test", 1))
@@ -1531,10 +872,10 @@ mod tests {
             .build();
         let html = render(&doc);
         let weight = html
-            .split("id=\"atlas-weight\"")
+            .split("data-atlas-block=\"weight-chart\"")
             .nth(1)
-            .expect("weight block")
-            .split("id=\"atlas-blast\"")
+            .expect("weight chart")
+            .split("data-atlas-block=\"blast-chart\"")
             .next()
             .expect("weight close");
         assert!(weight.contains("src/a.c"));
@@ -1544,10 +885,11 @@ mod tests {
         );
         assert!(weight.contains("non-production (test/bench/other) = 90% of scanned static cost"));
         assert!(weight.contains("% of scanned static cost"));
+        assert!(weight.contains("production first"));
     }
 
     #[test]
-    fn blast_radius_uses_dependent_top_pct_verbatim() {
+    fn blast_chart_uses_dependent_top_pct_verbatim() {
         let doc = DocBuilder::new()
             .file(file("src/main.c", "production", 1))
             .file(file("src/a.c", "production", 1))
@@ -1604,17 +946,14 @@ mod tests {
                 Confidence::Low,
             ))
             .build();
-        let html = render(&doc);
-        let drill = html
-            .split("id=\"atlas-drill-q2\"")
-            .nth(1)
-            .expect("q2 drill");
-        assert!(drill.contains("<code>src/main.c</code>"));
-        assert!(drill.contains("src/a.c"));
-        assert!(drill.contains("src/b.c"));
-        assert!(drill.contains("Component DSM"));
-        assert!(drill.contains("<td>src</td><td>src</td>"));
-        assert!(drill.contains("1 caller files · 0 callee files (structural)"));
+        let html = render_atlas_q2_html(&doc);
+        assert!(html.contains("<code>src/main.c</code>"));
+        assert!(html.contains("src/a.c"));
+        assert!(html.contains("src/b.c"));
+        assert!(html.contains("Component DSM"));
+        assert!(html.contains("<td>src</td><td>src</td>"));
+        assert!(html.contains("1 caller files · 0 callee files (structural)"));
+        assert!(html.contains("href=\"report.html#map\""));
     }
 
     #[test]
@@ -1625,19 +964,16 @@ mod tests {
             .function(function("src/a.c", "work", 1, Some(100), 0, None))
             .function(function("tests/t.c", "test_work", 1, Some(900), 0, None))
             .build();
-        let html = render(&doc);
-        let drill = html
-            .split("id=\"atlas-drill-weight\"")
-            .nth(1)
-            .expect("weight drill");
-        assert!(drill.contains("src/a.c"));
-        assert!(drill.contains("tests/t.c"));
-        assert!(drill.contains("% of scanned static cost"));
-        assert!(drill.contains("<td>src</td>"));
+        let html = render_atlas_weight_html(&doc);
+        assert!(html.contains("src/a.c"));
+        assert!(html.contains("tests/t.c"));
+        assert!(html.contains("% of scanned static cost"));
+        assert!(html.contains("<td>src</td>"));
+        assert!(html.contains("href=\"report.html#map\""));
     }
 
     #[test]
-    fn brief_adds_no_script_handler_or_network() {
+    fn charts_add_no_script_handler_or_network() {
         let html = render(&application_fixture());
         assert!(!html.contains("<script"));
         assert!(!has_event_handler(&html));
@@ -1649,7 +985,10 @@ mod tests {
 
     #[test]
     fn emitted_surfaces_never_claim_time_or_runtime() {
-        let html = render(&application_fixture());
+        let doc = application_fixture();
+        let mut html = render(&doc);
+        html.push_str(&render_atlas_weight_html(&doc));
+        html.push_str(&render_atlas_q2_html(&doc));
         for token in [
             "ms",
             "µs",
@@ -1671,25 +1010,18 @@ mod tests {
             render_brief(&view, &doc, &[]),
             render_brief(&view, &doc, &[])
         );
+        assert_eq!(
+            render_atlas_weight_html(&doc),
+            render_atlas_weight_html(&doc)
+        );
+        assert_eq!(render_atlas_q2_html(&doc), render_atlas_q2_html(&doc));
     }
 
     #[test]
     fn rationale_words_forbidden_as_claims_are_neutralized() {
-        let mut f = finding(
-            "PERF-C-LOOP-001",
-            "src/a.c",
-            3,
-            Severity::Hot,
-            "Hot paths in runtime",
+        let sanitized = sanitize_atlas_text(
+            "allocator churn dominates runtime; latency and throughput; speedup 2×; 12 ms; 3 µs; hot paths; calc_ms and runtime_cost stay",
         );
-        f.message = "allocator churn dominates runtime; latency and throughput; speedup 2×; 12 ms; 3 µs; hot paths; calc_ms and runtime_cost stay"
-            .to_string();
-        let doc = DocBuilder::new()
-            .file(file("src/a.c", "production", 1))
-            .function(function("src/a.c", "work", 1, Some(10), 0, None))
-            .finding(f)
-            .build();
-        let html = render(&doc);
         for token in [
             "ms",
             "µs",
@@ -1700,76 +1032,22 @@ mod tests {
             "hot path",
             "hot paths",
         ] {
-            assert!(!contains_word(&html, token), "forbidden token {token}");
+            assert!(!contains_word(&sanitized, token), "forbidden token {token}");
         }
-        assert!(html.contains("static cost"));
-        assert!(html.contains("hot functions"));
-        // Identifiers are preserved verbatim.
-        assert!(html.contains("calc_ms"));
-        assert!(html.contains("runtime_cost"));
+        assert!(sanitized.contains("static cost"));
+        assert!(sanitized.contains("hot functions"));
+        assert!(sanitized.contains("calc_ms"));
+        assert!(sanitized.contains("runtime_cost"));
     }
 
     #[test]
-    fn library_caveat_only_claims_no_forward_path_when_true() {
-        let html = render(&library_fixture());
-        assert!(html.contains("no forward path from the library root"));
-
-        let doc = DocBuilder::new()
-            .file(file("src/lib.c", "production", 1))
-            .file(file("src/helper.c", "production", 1))
-            .function(function(
-                "src/lib.c",
-                "lib_root",
-                1,
-                Some(100),
-                10,
-                Some("lib-root"),
-            ))
-            .function(function("src/helper.c", "helper", 1, Some(50), 0, None))
-            .call_edge(call_edge(
-                "src/lib.c#lib_root#1:1",
-                "helper",
-                "src/lib.c",
-                Some("src/helper.c"),
-                Confidence::Low,
-            ))
-            .build();
-        let html = render(&doc);
-        assert!(!html.contains("no forward path"));
-        assert!(html.contains("the library root has forward calls"));
-    }
-
-    #[test]
-    fn component_pages_follow_the_schema_component_index() {
-        let mut doc = application_fixture();
-        doc.components = Some(vec![component("src")]);
-        let html = render_brief(
-            &build_atlas_view(&doc),
-            &doc,
-            &["component-01-src.svg".to_string()],
-        );
-        assert!(html.contains("charts/component-01-src.svg"));
-        assert!(html.contains("Component pages (schema component index)"));
-    }
-
-    #[test]
-    fn capped_cards_use_the_drawn_set() {
-        let doc = capped_fixture();
-        let view = build_atlas_view(&doc);
-        let cards = card_files(&view);
-        assert!(!cards.is_empty());
-        let drawn: BTreeSet<&str> = view.nodes.iter().map(|node| node.path.as_str()).collect();
-        assert!(cards.iter().all(|file| drawn.contains(file.path.as_str())));
-    }
-
-    #[test]
-    fn all_test_weight_strip_leads_with_the_band() {
+    fn all_test_weight_chart_leads_with_the_band() {
         let html = render(&all_test_fixture());
         let weight = html
-            .split("id=\"atlas-weight\"")
+            .split("data-atlas-block=\"weight-chart\"")
             .nth(1)
-            .expect("weight block")
-            .split("id=\"atlas-blast\"")
+            .expect("weight chart")
+            .split("data-atlas-block=\"blast-chart\"")
             .next()
             .expect("weight close");
         let band = weight
@@ -1777,14 +1055,6 @@ mod tests {
             .expect("non-production band");
         let stub = weight.find(NO_PRODUCTION_COST).expect("production stub");
         assert!(band < stub, "all-test must lead with the band");
-        let answer = html
-            .split("id=\"atlas-answer\"")
-            .nth(1)
-            .expect("answer")
-            .split("</div>")
-            .next()
-            .expect("answer close");
-        assert!(answer.contains("all source cost is non-production"));
     }
 
     #[test]

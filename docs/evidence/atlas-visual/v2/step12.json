@@ -1,0 +1,704 @@
+{
+  "_comment": "Atlas v2 step-12 evidence: existing real outputs only, no rescan; canonical #map capture at 1440x900 + 1280x800; no founder gate claim; F remains a candidate.",
+  "all_pass": true,
+  "no_rescan": true,
+  "renderer": "docs/evidence/atlas-visual/v2/render_step12.py",
+  "repos": {
+    "cJSON": {
+      "atlas_links": {
+        "expected_missing": [],
+        "expected_present": true,
+        "hrefs": [
+          "atlas-q2.html",
+          "atlas-weight.html",
+          "findings-detail.html#ranked-actions",
+          "metrics.json",
+          "profile-queue.html",
+          "report.md"
+        ],
+        "missing_files": []
+      },
+      "booleans": {
+        "atlas_charts_once": true,
+        "atlas_links_resolve": true,
+        "brief_top_ge_canvas_bottom": true,
+        "canvas_bottom_le_900": true,
+        "chart_blocks_exact": true,
+        "chart_blocks_nonzero": true,
+        "file_chart_prints": true,
+        "final_png_1440x900": true,
+        "map_height_le_5000": true,
+        "map_scrolled_to_top": true,
+        "noHorizontalScroll_1280": true,
+        "noHorizontalScroll_1440": true,
+        "no_forbidden_map_content": true,
+        "no_table_or_script_in_charts": true,
+        "production_weight_rows_visible": true,
+        "rail_cards_present": true,
+        "rail_links_present": true,
+        "rail_links_resolve": true,
+        "rail_stacks_below_1280": true,
+        "shot_1280x800": true,
+        "structural_caption_once": true,
+        "text_floor_ok": true,
+        "unit_once": true,
+        "w1_vs_f_written": true,
+        "weight_bar_visible": true
+      },
+      "chart_heights": {
+        "blast-chart": 115,
+        "coverage": 27,
+        "file-chart": 545,
+        "weight-chart": 244
+      },
+      "comparison": {
+        "file": "W1-vs-F-cJSON.png",
+        "height": 639,
+        "sources": [
+          ".atlas-v2-step12-cJSON-weight.png",
+          "f-treemap-cJSON.png"
+        ],
+        "status": "written",
+        "width": 1480
+      },
+      "failed": [],
+      "hashes": {
+        "atlas-q2.html": "b38c38b1e2fcf79b59f7540bf2346a01587e3dfc813e9069d415e22ab4cee7c5",
+        "atlas-weight.html": "75bd7385a614890d6d7e78124a9f05dcd170efb64eb712905bcff30eb87abbf7",
+        "report.html": "3cdf47edc2c54981b699869647df8a0309fbe7a6c655a04aba14320c4cc4086d"
+      },
+      "hashes_note": "existing artifacts; no rescan",
+      "map_height": 1848,
+      "measurements": {
+        "blocks": [
+          {
+            "block": "weight-chart",
+            "height": 244,
+            "top": 879
+          },
+          {
+            "block": "blast-chart",
+            "height": 115,
+            "top": 1133
+          },
+          {
+            "block": "file-chart",
+            "height": 545,
+            "top": 1259
+          },
+          {
+            "block": "coverage",
+            "height": 27,
+            "top": 1814
+          }
+        ],
+        "brief": {
+          "bottom": 1841,
+          "h": 961,
+          "w": 1408,
+          "x": 16,
+          "y": 879
+        },
+        "canvas": {
+          "bottom": 869,
+          "h": 750,
+          "w": 868,
+          "x": 16,
+          "y": 120
+        },
+        "chart": {
+          "bottom": 1841,
+          "h": 961,
+          "w": 1408,
+          "x": 16,
+          "y": 879
+        },
+        "chartHeights": {
+          "blast-chart": 115,
+          "coverage": 27,
+          "file-chart": 545,
+          "weight-chart": 244
+        },
+        "chartTextOffenders": [],
+        "chartTotalHeight": 961,
+        "counts": {
+          "answerInMap": 0,
+          "atlasCharts": 1,
+          "atlasLinks": 1,
+          "chartScripts": 0,
+          "chartTables": 0,
+          "drillInMap": 0,
+          "forbiddenBlocksInMap": 0,
+          "railCards": 12,
+          "structuralCaptions": 1,
+          "units": 1
+        },
+        "fileChart": {
+          "hasFileTotal": true,
+          "hasUnit": true,
+          "text": "Which file carries the cost? bar = file cost relative to the largest file shown \u00b7 exact file cost and median anchor printed \u00b7 role = ENTRY / production class (PRODUCTION, TEST, BENCH, or another path class) / UNREACHED c"
+        },
+        "map": {
+          "bottom": 1849,
+          "h": 1848,
+          "w": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "mapBlocks": [
+          "weight-chart",
+          "blast-chart",
+          "file-chart",
+          "coverage"
+        ],
+        "minChartTextPx": 8.5,
+        "page": {
+          "clientWidth": 1440,
+          "scrollHeight": 22058,
+          "scrollWidth": 1440,
+          "scrollY": 210
+        },
+        "productionWeightRows": [
+          {
+            "label": "cJSON.c",
+            "width": 90
+          },
+          {
+            "label": "cJSON_Utils.c",
+            "width": 36.2
+          },
+          {
+            "label": "fuzzing/afl.c",
+            "width": 2.8
+          },
+          {
+            "label": "test.c",
+            "width": 2.4
+          },
+          {
+            "label": "fuzzing/cjson_read_fuzzer.c",
+            "width": 1.9
+          },
+          {
+            "label": "cJSON",
+            "width": 90
+          },
+          {
+            "label": "fuzzing",
+            "width": 3.8
+          },
+          {
+            "label": "test",
+            "width": 1.7
+          }
+        ],
+        "rail": {
+          "bottom": 818,
+          "h": 698,
+          "w": 530,
+          "x": 894,
+          "y": 120
+        },
+        "weightBars": {
+          "count": 8,
+          "max": 90,
+          "minPositive": 1.7,
+          "positive": 8,
+          "rows": [
+            {
+              "label": "cJSON.c",
+              "nonproduction": false,
+              "style": "width:100.0%",
+              "width": 90
+            },
+            {
+              "label": "cJSON_Utils.c",
+              "nonproduction": false,
+              "style": "width:40.2%",
+              "width": 36.2
+            },
+            {
+              "label": "fuzzing/afl.c",
+              "nonproduction": false,
+              "style": "width:3.1%",
+              "width": 2.8
+            },
+            {
+              "label": "test.c",
+              "nonproduction": false,
+              "style": "width:2.7%",
+              "width": 2.4
+            },
+            {
+              "label": "fuzzing/cjson_read_fuzzer.c",
+              "nonproduction": false,
+              "style": "width:2.1%",
+              "width": 1.9
+            },
+            {
+              "label": "cJSON",
+              "nonproduction": false,
+              "style": "width:100.0%",
+              "width": 90
+            },
+            {
+              "label": "fuzzing",
+              "nonproduction": false,
+              "style": "width:4.2%",
+              "width": 3.8
+            },
+            {
+              "label": "test",
+              "nonproduction": false,
+              "style": "width:1.9%",
+              "width": 1.7
+            }
+          ]
+        }
+      },
+      "min_chart_text_px": 8.5,
+      "page_height": 22058,
+      "rail_links": {
+        "count": 56,
+        "counts": {
+          "atlas-weight.html#atlas-": 12,
+          "findings-detail.html#finding-": 12,
+          "other": 0,
+          "profile-queue.html#fn-": 31
+        },
+        "missing": []
+      },
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-cJSON/report.html",
+      "screenshots": {
+        "1280x800": {
+          "file": "atlas-v2-step12-cJSON-1280x800.png",
+          "height": 800,
+          "sha256": "dd30e61f7145cb7d401ec8d5cde4e350248c4f1cec6a3d093bf95abb2b3ed879",
+          "width": 1280
+        },
+        "charts": {
+          "file": "atlas-v2-step12-cJSON-charts.png",
+          "height": 962,
+          "sha256": "e126e8c7f1fcbee493845709c8c4268bf89bc18f46beeb87877993f744dd873b",
+          "width": 1408
+        },
+        "final": {
+          "file": "atlas-v2-step12-cJSON-final.png",
+          "height": 900,
+          "sha256": "186e8eb6406d4afcff0025c464ca697e14797acf28d2aa8d31b476941f9f6e2e",
+          "width": 1440
+        },
+        "full": {
+          "file": "atlas-v2-step12-cJSON-full.png",
+          "height": 22058,
+          "sha256": "ed923ebd17774eab24944758590e197edbdad03c0bca4daff028c0286a884dd8",
+          "width": 1440
+        }
+      },
+      "viewport_1280": {
+        "brief": {
+          "bottom": 2461,
+          "h": 961,
+          "w": 1248,
+          "x": 16,
+          "y": 1499
+        },
+        "canvas": {
+          "bottom": 869,
+          "h": 750,
+          "w": 868,
+          "x": 206,
+          "y": 120
+        },
+        "chart": {
+          "bottom": 2461,
+          "h": 961,
+          "w": 1248,
+          "x": 16,
+          "y": 1499
+        },
+        "chartHeights": {
+          "blast-chart": 115,
+          "coverage": 27,
+          "file-chart": 545,
+          "weight-chart": 244
+        },
+        "map": {
+          "bottom": 2469,
+          "h": 2468,
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        "minChartTextPx": 8.5,
+        "page": {
+          "clientWidth": 1280,
+          "scrollHeight": 22986,
+          "scrollWidth": 1280,
+          "scrollY": 210
+        },
+        "rail": {
+          "bottom": 1489,
+          "h": 610,
+          "w": 868,
+          "x": 206,
+          "y": 879
+        },
+        "railStacked": true
+      }
+    },
+    "hyperfine": {
+      "atlas_links": {
+        "expected_missing": [],
+        "expected_present": true,
+        "hrefs": [
+          "atlas-q2.html",
+          "atlas-weight.html",
+          "findings-detail.html#ranked-actions",
+          "metrics.json",
+          "profile-queue.html",
+          "report.md"
+        ],
+        "missing_files": []
+      },
+      "booleans": {
+        "atlas_charts_once": true,
+        "atlas_links_resolve": true,
+        "brief_top_ge_canvas_bottom": true,
+        "canvas_bottom_le_900": true,
+        "chart_blocks_exact": true,
+        "chart_blocks_nonzero": true,
+        "file_chart_prints": true,
+        "final_png_1440x900": true,
+        "map_height_le_5000": true,
+        "map_scrolled_to_top": true,
+        "noHorizontalScroll_1280": true,
+        "noHorizontalScroll_1440": true,
+        "no_forbidden_map_content": true,
+        "no_table_or_script_in_charts": true,
+        "production_weight_rows_visible": true,
+        "rail_cards_present": true,
+        "rail_links_present": true,
+        "rail_links_resolve": true,
+        "rail_stacks_below_1280": true,
+        "shot_1280x800": true,
+        "structural_caption_once": true,
+        "text_floor_ok": true,
+        "unit_once": true,
+        "w1_vs_f_written": true,
+        "weight_bar_visible": true
+      },
+      "chart_heights": {
+        "blast-chart": 115,
+        "coverage": 27,
+        "file-chart": 545,
+        "weight-chart": 244
+      },
+      "comparison": {
+        "file": "W1-vs-F-hyperfine.png",
+        "height": 639,
+        "sources": [
+          ".atlas-v2-step12-hyperfine-weight.png",
+          "f-treemap-hyperfine.png"
+        ],
+        "status": "written",
+        "width": 1480
+      },
+      "failed": [],
+      "hashes": {
+        "atlas-q2.html": "a8c789bc979cdb2f4f07160e5c78187ce1f1a5b6e78f111fdc08ad02fa5beb70",
+        "atlas-weight.html": "11615f67bc981f32ced21bc4ef78c38e36e39f5b570b877d390b112ce50ab771",
+        "report.html": "a0205b6ddb0d70b4186c7f81565275603c00a9f63f5175ce2f9eb5e61f4ae84f"
+      },
+      "hashes_note": "existing artifacts; no rescan",
+      "map_height": 1848,
+      "measurements": {
+        "blocks": [
+          {
+            "block": "weight-chart",
+            "height": 244,
+            "top": 879
+          },
+          {
+            "block": "blast-chart",
+            "height": 115,
+            "top": 1133
+          },
+          {
+            "block": "file-chart",
+            "height": 545,
+            "top": 1259
+          },
+          {
+            "block": "coverage",
+            "height": 27,
+            "top": 1814
+          }
+        ],
+        "brief": {
+          "bottom": 1841,
+          "h": 961,
+          "w": 1408,
+          "x": 16,
+          "y": 879
+        },
+        "canvas": {
+          "bottom": 869,
+          "h": 750,
+          "w": 868,
+          "x": 16,
+          "y": 120
+        },
+        "chart": {
+          "bottom": 1841,
+          "h": 961,
+          "w": 1408,
+          "x": 16,
+          "y": 879
+        },
+        "chartHeights": {
+          "blast-chart": 115,
+          "coverage": 27,
+          "file-chart": 545,
+          "weight-chart": 244
+        },
+        "chartTextOffenders": [],
+        "chartTotalHeight": 961,
+        "counts": {
+          "answerInMap": 0,
+          "atlasCharts": 1,
+          "atlasLinks": 1,
+          "chartScripts": 0,
+          "chartTables": 0,
+          "drillInMap": 0,
+          "forbiddenBlocksInMap": 0,
+          "railCards": 12,
+          "structuralCaptions": 1,
+          "units": 1
+        },
+        "fileChart": {
+          "hasFileTotal": true,
+          "hasUnit": true,
+          "text": "Which file carries the cost? bar = file cost relative to the largest file shown \u00b7 exact file cost and median anchor printed \u00b7 role = ENTRY / production class (PRODUCTION, TEST, BENCH, or another path class) / UNREACHED s"
+        },
+        "map": {
+          "bottom": 1849,
+          "h": 1848,
+          "w": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "mapBlocks": [
+          "weight-chart",
+          "blast-chart",
+          "file-chart",
+          "coverage"
+        ],
+        "minChartTextPx": 8.5,
+        "page": {
+          "clientWidth": 1440,
+          "scrollHeight": 15872,
+          "scrollWidth": 1440,
+          "scrollY": 210
+        },
+        "productionWeightRows": [
+          {
+            "label": "src/command.rs",
+            "width": 90
+          },
+          {
+            "label": "src/metric.rs",
+            "width": 63.4
+          },
+          {
+            "label": "src/options.rs",
+            "width": 40.7
+          },
+          {
+            "label": "src/output/report.rs",
+            "width": 31.4
+          },
+          {
+            "label": "src/shell_syntax.rs",
+            "width": 31
+          },
+          {
+            "label": "src",
+            "width": 90
+          },
+          {
+            "label": "src/export",
+            "width": 27.5
+          },
+          {
+            "label": "src/output",
+            "width": 14.8
+          }
+        ],
+        "rail": {
+          "bottom": 834,
+          "h": 714,
+          "w": 530,
+          "x": 894,
+          "y": 120
+        },
+        "weightBars": {
+          "count": 8,
+          "max": 90,
+          "minPositive": 14.8,
+          "positive": 8,
+          "rows": [
+            {
+              "label": "src/command.rs",
+              "nonproduction": false,
+              "style": "width:100.0%",
+              "width": 90
+            },
+            {
+              "label": "src/metric.rs",
+              "nonproduction": false,
+              "style": "width:70.5%",
+              "width": 63.4
+            },
+            {
+              "label": "src/options.rs",
+              "nonproduction": false,
+              "style": "width:45.2%",
+              "width": 40.7
+            },
+            {
+              "label": "src/output/report.rs",
+              "nonproduction": false,
+              "style": "width:34.9%",
+              "width": 31.4
+            },
+            {
+              "label": "src/shell_syntax.rs",
+              "nonproduction": false,
+              "style": "width:34.4%",
+              "width": 31
+            },
+            {
+              "label": "src",
+              "nonproduction": false,
+              "style": "width:100.0%",
+              "width": 90
+            },
+            {
+              "label": "src/export",
+              "nonproduction": false,
+              "style": "width:30.6%",
+              "width": 27.5
+            },
+            {
+              "label": "src/output",
+              "nonproduction": false,
+              "style": "width:16.5%",
+              "width": 14.8
+            }
+          ]
+        }
+      },
+      "min_chart_text_px": 8.5,
+      "page_height": 15872,
+      "rail_links": {
+        "count": 57,
+        "counts": {
+          "atlas-weight.html#atlas-": 12,
+          "findings-detail.html#finding-": 11,
+          "other": 0,
+          "profile-queue.html#fn-": 33
+        },
+        "missing": []
+      },
+      "report": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-hyperfine/report.html",
+      "screenshots": {
+        "1280x800": {
+          "file": "atlas-v2-step12-hyperfine-1280x800.png",
+          "height": 800,
+          "sha256": "2ae3cafbad6ef1deecf57f239ed231ace0b108cfd1dc038a1885df4ffd31f560",
+          "width": 1280
+        },
+        "charts": {
+          "file": "atlas-v2-step12-hyperfine-charts.png",
+          "height": 962,
+          "sha256": "55f2f724504c40f4bf72543759b55533adbb1dacc3d67644e75ab90ae5ab91f6",
+          "width": 1408
+        },
+        "final": {
+          "file": "atlas-v2-step12-hyperfine-final.png",
+          "height": 900,
+          "sha256": "a5ad6ad954b5cfc31859989eb3038369a28b419b7f0ec041c449c4709b7652e5",
+          "width": 1440
+        },
+        "full": {
+          "file": "atlas-v2-step12-hyperfine-full.png",
+          "height": 15872,
+          "sha256": "b914ebe8fe91ee34821c057f1fdf594c351804275196fcd4104eda1102a63d3a",
+          "width": 1440
+        }
+      },
+      "viewport_1280": {
+        "brief": {
+          "bottom": 2489,
+          "h": 961,
+          "w": 1248,
+          "x": 16,
+          "y": 1528
+        },
+        "canvas": {
+          "bottom": 869,
+          "h": 750,
+          "w": 868,
+          "x": 206,
+          "y": 120
+        },
+        "chart": {
+          "bottom": 2489,
+          "h": 961,
+          "w": 1248,
+          "x": 16,
+          "y": 1528
+        },
+        "chartHeights": {
+          "blast-chart": 115,
+          "coverage": 27,
+          "file-chart": 545,
+          "weight-chart": 244
+        },
+        "map": {
+          "bottom": 2497,
+          "h": 2497,
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        },
+        "minChartTextPx": 8.5,
+        "page": {
+          "clientWidth": 1280,
+          "scrollHeight": 16938,
+          "scrollWidth": 1280,
+          "scrollY": 210
+        },
+        "rail": {
+          "bottom": 1518,
+          "h": 638,
+          "w": 868,
+          "x": 206,
+          "y": 879
+        },
+        "railStacked": true
+      }
+    }
+  },
+  "viewport": {
+    "1280x800": {
+      "height": 800,
+      "width": 1280
+    },
+    "1440x900": {
+      "height": 900,
+      "width": 1440
+    }
+  }
+}

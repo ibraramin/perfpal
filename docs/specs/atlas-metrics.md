@@ -83,6 +83,10 @@ invite invalid comparison.
   visible label is shortened by layout.
 - **Percent / share:** `<1%` one decimal (`0.2%`); `1–9.9%` one decimal (`6.2%`); `≥10%` integer
   (`36%`). `top P%` is always an integer. `% of source files` uses the same rule.
+- **Paired exhaustive shares (step 12):** the weight ribbon and its non-production band are one
+  paired encoding. Both print one decimal from the same integer-tenths split (`61.9% / 38.1%`,
+  `0.2% / 99.8%`) so the pair sums to exactly 100.0%. This is the sole exception to the magnitude
+  bands above; every other share uses them.
 - **Counts:** integer with thousands separators (`7,543`).
 - **Paths:** canvas labels tail-keep 32 characters with the full path in `title`/aria; below-graph
   text rows show the full `path:line`; function names are full (no 32-char cap).
@@ -153,8 +157,9 @@ invite invalid comparison.
   that mistakes `× median function` for time fails the gate.
 - **A9 (canvas purity):** DOM assertion: the canvas contains no `<table>`, no bar/card list, no
   metric selector; only graph nodes/edges/labels/legend/caps.
-- **A10 (state-unconditional):** the same seven blocks render for application, library, no-entry,
+- **A10 (state-unconditional):** the same chart stack renders for application, library, no-entry,
   empty, all-test, capped, partial-parse and single-file fixtures; only content/labels change.
+  (The step-12 amendment replaces the seven-block brief with weight/blast/file/coverage.)
 - **A4 (determinism):** double scan → byte-identical HTML/SVG; formatting has no locale input.
 - **Unit tests:** formatting (`<10×`, `≥10×`, huge multiple, thousands separators), zero median,
   zero total cost, v1 fallback, percentile ties, stub text.

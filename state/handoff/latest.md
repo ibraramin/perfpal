@@ -1,43 +1,48 @@
-# Handoff — Atlas v2 Session A1 (step 11: detail rail)
+# Handoff — Atlas v2 Session A2 (step 12: progressive charts)
 
-**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. Step 11 restores the lost
-per-file detail layer **without** turning the canvas into a dashboard: the first page is the main
-graph + a small key-metrics strip + a G-style right rail of file detail; the rail is the answer-first
-detail layer, not a second metric wall. **No drift.** Step-13 founder visual gate remains pending;
-A2/ship (steps 14–15) remain blocked by R-pf-109.
+**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. Step 12 completes the
+two-layer composition the founder asked for: the first page is the graph + key metrics + three
+actions + one caveat; below it, four designed charts reveal the rest slowly (weight, blast radius,
+file detail, coverage/links). The seven-block text wall is gone and `#map` is 1,848px, down from
+8,895/14,598. **No drift:** no schema/JS/dependency, F remains a candidate, step-13 founder gate
+and A2/ship remain pending/blocked.
 
-**Phase:** Atlas v2 **steps 9–11 implemented** (2026-10-23/24); step-10 founder check APPROVED
-2026-10-24; **step 11 implemented 2026-10-24, uncommitted — founder commit approval pending**;
-step-12 (progressive charts/F candidate) next; step-13 final gate PENDING; A2/ship BLOCKED.
+**Phase:** Atlas v2 **steps 9–12 implemented** (2026-10-23/24); step 11 committed `189df91`; **step 12
+implemented and committed 2026-10-24 with founder approval**; step-13 founder visual gate next;
+A2/ship blocked by `R-pf-109`.
 
-**Commits:** none for step 11. The track requires founder approval before commit (`atlas-beta.md:28`).
-Worktree: 15 modified/untracked source/test/evidence/doc paths; `.playwright-mcp/` is scratch and is
-not part of the change. No push.
+**Commits:** step-12 change set committed 2026-10-24 with founder approval (see `git log`); no push.
+`.playwright-mcp/` is scratch and is not part of the change.
 
-## This session — step 11
+## This session — step 12
 
-- **Rail:** `#atlas-rail` (530px) is a DOM sibling of the 868px `#atlas-canvas` inside a new
-  `.atlas-stage`; the canvas stays graph + one footer (A9). Up to **12** cards: elected entry first,
-  then the shipped production-first `AtlasView.files` order; role `ENTRY` > `UNREACHED` > path class
-  (`TEST`/`BENCH`/…) > `PRODUCTION`; M-04 cost anchor (`× median function` + `top P% of files`);
-  top-3 functions (`name:line`, `(anonymous)` for empty names); dominant finding rule.
-- **Reachable:** file → weight-drill row (`#atlas-…`), function → exact `profile-queue.html#fn-…`
-  (deterministic per-function row ids added), finding → exact `findings-detail.html#finding-…`
-  (prefers the dominant severity occurrence). All links resolve; `+N more` links to the weight detail.
-- **Responsive:** ≥1360 side-by-side (1360–1439 wraps the rail name instead of tail-truncating);
-  <1360 stacks below the graph; print stacks; 1280×800 no horizontal scroll.
-- **Canvas:** node labels are the file name (spec §3.2) with a parent segment on basename collision
-  (`export/mod.rs`, `time/mod.rs`, `quantity/mod.rs`); full path in `<title>` and rail. Standalone
-  SVG artifact keeps the 1400 viewBox.
-- **Chrome:** footer phrases are `nowrap`; rail floors 8.5px (name 10); role badges colour-coded;
-  contrast fixed for unreached/test roles.
-- **Tests:** new `tests/atlas_rail.rs` (9 tests: eight states, placement, card contents, link-target
-  identity, empty stub, entry-first/order, exact cap + remainder, all five roles, determinism/no-JS);
-  new unit guards for the severity-occurrence link and the role-colour rule order; `canvas_body`
-  slice tightened. Goldens: 4 `report.html` + 4 `profile-queue.html` regenerated.
-- **Vision:** `VISION-STEP11.md` — **PASS** (initial read + post-fix re-read + collision re-check).
-- **Panel:** round 1 R1/Q1 APPROVED, R2/Q2 BLOCKED on the evidence transcript; fixes applied. Round 2
-  R2/Q2 APPROVED + fresh R3 APPROVED; final R4 confirmation on the polished tree (see below).
+- **Charts:** `#atlas-charts` now holds four designed blocks: **weight** (production/non-production
+  share ribbon + top production-class file/component bars + labelled non-production band),
+  **blast radius** (target, M-08 anchor, include coverage, top dependents, structural caller/callee
+  counts), **file detail** (top-6 cost ladder with role, exact file cost + median anchor, top
+  functions and dominant finding), and **coverage/links** (`report.md`, `metrics.json`,
+  `atlas-weight.html`, `atlas-q2.html`, `findings-detail.html#ranked-actions`, `profile-queue.html`).
+- **Retired wall:** answer/actions/weight-text/blast-text/cards/noise-text/links blocks removed;
+  no inline `#atlas-drill-*` sections remain in `#map`.
+- **Drills:** Q2 and complete weight detail moved to standalone `atlas-q2.html` / `atlas-weight.html`
+  (warm Atlas tokens, no script/network); rail file links now target the weight page.
+- **A8 re-baseline:** the strip above the canvas is the first answer-bearing surface; the first
+  below-canvas block is the weight chart. Recorded in `docs/specs/atlas-layout.md`.
+- **Metrics:** the weight ribbon and band print the same paired values from one integer-tenths split
+  (`61.9/38.1`, `0.2/99.8`) so the pair sums to 100.0%; the paired-share exception is recorded in
+  `docs/specs/atlas-metrics.md` §5. The file chart marks the elected entry `ENTRY` and uses the
+  shared positive-median anchor (no `0.0×`).
+- **F candidate:** `docs/evidence/atlas-visual/v2/step12/{F-CANDIDATE.md,f-treemap-*.html/png,
+  f-render.py,W1-vs-F-*.png}`; **founder decision 2026-10-24: keep W1, F stays undecided**; no F code
+  shipped, Explorer treemap untouched.
+- **Tests:** new `tests/atlas_charts.rs` (10 tests); updated `atlas_states` (A8/A10 chart stack),
+  `atlas_rail` (weight-page links), `key_views`, `i4_annotations`, `report_html`,
+  `findings_detail_split`; 4 `report.html` goldens regenerated; new `atlas-q2.html` /
+  `atlas-weight.html` pages emitted.
+- **Panel:** R1 (correctness) **APPROVED**, R2 (contract) **APPROVED**, Q1 (verbatim scope)
+  **APPROVED**, Q2 (acceptance) **APPROVED**, R4 (fresh confirmation) **APPROVED**; zero unresolved
+  blocking findings. The two doc nits were fixed: `STEP12.md` 9/9→10/10 and
+  `VISION-STEP12.md` cJSON 100%→99.8%.
 
 ## Verification
 
@@ -45,61 +50,64 @@ not part of the change. No push.
 |---|---|---|
 | Format | `cargo fmt --all -- --check` | exit 0 |
 | Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| Tests | `cargo test --locked` | 56 suites, 383 lib tests, exit 0 |
+| Tests | `cargo test --locked` | all suites, exit 0 |
 | Licenses | `cargo deny check licenses` | `licenses ok`, exit 0 |
 | Semantic lint | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | exit 0 |
-| Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 56 suites, 383 lib tests, exit 0 |
-| Rail suite | `cargo test --locked --test atlas_rail` | 9/9, exit 0 |
+| Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | exit 0 |
 | A9/A12/A4 | `cargo test --locked --test atlas_render` | 5/5, exit 0 |
-| A10 stack | `cargo test --locked --test atlas_states` | 2/2, exit 0 |
+| A10/A8 | `cargo test --locked --test atlas_states` | 2/2, exit 0 |
+| Charts | `cargo test --locked --test atlas_charts` | 10/10, exit 0 |
+| Rail | `cargo test --locked --test atlas_rail` | 9/9, exit 0 |
 | No schema | `test -z "$(git status --short src/schema/ docs/schema/)"` | exit 0 |
-| No preserve_order | `grep -n preserve_order Cargo.lock` | exit 1 (absent) |
-| Evidence | `python3 docs/evidence/atlas-visual/v2/render_step11.py` | exit 0 |
-| 1440×900 fit | `step11.json` | canvas 869 ≤900; rail 834/818; 12 cards; scrollW 1440 |
-| 1280×800 | `step11.json` | 1280/1280 scrollW; rail stacks (879 ≥ 869) |
-| Text floors | `step11.json` | rail title/role/anchor/fn/find 8.5; name 10; node 11.5/9 |
-| Links | `step11.json` + `tests/atlas_rail.rs` | 0 dead same-page/profile/findings anchors |
-| Page budget | `step11.json` | `#map` 8,895/14,598 (+8/+7 footer wrap); page 22,918/34,808 |
-| Vision | `VISION-STEP11.md` | PASS (step-11 render; not the founder gate) |
-| Panel | `gate-step11.txt` + lane reports | R1/Q1/R2/Q2/R3/R4 **APPROVED**; zero blocking findings |
-| Commit | `git log` | not committed — founder approval pending |
+| No deps | `git diff --exit-code -- Cargo.toml Cargo.lock` | exit 0 |
+| Evidence | `python3 docs/evidence/atlas-visual/v2/render_step12.py` | PASS, exit 0 |
+| Map budget | `step12.json` | `#map` 1,848 hyperfine+cJSON |
+| First page | `step12.json` | canvas bottom 869 ≤900; brief top 879 |
+| Charts | `step12.json` | 4 blocks; 244/115/545/27; text floor 8.5 |
+| 1280×800 | `step12.json` | no horizontal scroll; rail stacks |
+| Links | `step12.json` + `tests/atlas_rail.rs` | 0 missing; ranked-actions/weight/Q2 anchors resolve |
+| F prototype | `step12/f-render.py` | 2 HTML + 2 PNG, exit 0 |
+| Panel | lane reports | R1/R2/Q1/Q2/R4 APPROVED; zero blocking findings |
+| Commit | `git log` | committed 2026-10-24 with founder approval; no push |
 
-The full command/exit/hash transcript is `docs/evidence/atlas-visual/v2/gate-step11.txt`; `gate.txt`
-remains the step-10 transcript. `step11.json` carries the DOM geometry, floors, link resolution and
-artifact hashes.
+Full transcript: `docs/evidence/atlas-visual/v2/gate-step12.txt`. Evidence summary:
+`STEP12.md`, `step12.json`, `VISION-STEP12.md`; F: `step12/F-CANDIDATE.md`.
 
 ## Risks / open
 
-- **Step-13 founder gate PENDING:** the final composition/V8 rerun must judge the 868+530 stage, the
-  basename labels and the rail. The `@vision` read was a proxy.
-- **Sparse-state composition:** cJSON (2 of 81 reachable) leaves a large empty graph region while the
-  rail is full; graph-first still holds but step 13 should judge it (disclosed V8 item).
-- **Residual polish:** two 16-char basenames still elide by one glyph in the graph
-  (`executor_tests.rs`, `macos_counters.rs`); some rail function rows wrap mid-identifier; edge
-  labels can touch group borders; the below-graph brief is still 3,367/3,219px (step 12's cut).
-- **Page budget:** `#map` grew +8/+7px (footer wrap on the 868px canvas); the ~4–5k cut is step 12.
+- **Step-13 founder gate PENDING:** the founder must judge the reworked 1440×900 page, the G-baseline
+  diff and the V8 A1/strip rerun. The `@vision` read is a proxy (`VISION-STEP12.md`), not the gate.
+- **F undecided:** no F data deleted; no F code shipped; Explorer treemap untouched. The founder
+  decision is requested; leave undecided if no decision.
+- **Step-11 residuals:** canvas basenames can mid-elide (`executi_.ets.rs`); one rail function row
+  (`src/shell_syntax.rs`) wraps mid-identifier and loses a line number in the visible card (full
+  value in `title`/profile queue); the UNREACHED column has empty space on sparse scans.
+- **Docs leftovers:** `atlas-feature.md`, `maintainer-map.md`, `map-animation.md` and the
+  `atlas-layout.md` purpose line still describe the v1 seven-block brief; step 15 docs pass.
+  `docs/report/output-contract.md` does not yet list `atlas-weight.html`/`atlas-q2.html` (step 15).
+- **Page height outside `#map`:** the legacy Explorer/report appendices remain; step 12 budgets
+  `#map`, not the whole page.
 - **R-pf-109 open;** A-pf-118 blocked; holdouts vaulted; `map-build` NOT done; A1b open; no schema/
-  JS/dependency; no push; **no commit yet** (founder approval required).
+  JS/dependency; no push.
 
 ## Next actions
 
-1. Founder: review the step-11 renders and **approve the commit** (track gate). On approval, commit
-   the code + tests + goldens + evidence + docs/state (exclude `.playwright-mcp/`); no push.
-2. `/new` → **Session A2: step 12** (progressive weight/blast/file charts + F treemap candidate;
-   `#map` ≤~5k; retire the seven-block text wall; no schema/JS).
-3. Do **not** start step 13/A2/ship; holdouts vaulted; `map-build` not done; A1b open.
+1. Founder decision recorded: **keep W1; F stays undecided**; commit approved 2026-10-24.
+2. `/new` → **Session A3: step 13** (founder visual gate + G-baseline diff + V8 A1/strip rerun on the
+   reworked page).
+3. Do **not** start A2/ship; holdouts vaulted; `map-build` not done; A1b open.
 
 ## Change set
 
-- **Code:** `src/reporter/atlas_render.rs` (PAGE_GRAPH_W/layout width, collision-aware node labels,
-  stage/rail CSS + responsive/print, footer phrase spans, standalone 1400 retained),
-  `atlas_brief.rs` (`render_rail`, roles, links, plural remainder, anonymous-function labels),
-  `mod.rs` (rail wiring + `function_anchor_map` + profile-queue row ids).
-- **Tests/goldens:** `tests/atlas_rail.rs` (new), `tests/atlas_render.rs`, `tests/atlas_fixtures/mod.rs`
-  (`roles_demo`), 4 `report.html` + 4 `profile-queue.html` goldens.
-- **Evidence:** `docs/evidence/atlas-visual/v2/` (`STEP11.md`, `step11.json`, `gate-step11.txt`,
-  `VISION-STEP11.md`, `render_step11.py`, 6 PNGs, `README.md`).
-- **Docs/state:** `CHANGELOG.md`, `docs/activeContext.md`, `docs/plans/atlas-build.md`,
-  `docs/specs/atlas-layout.md`, `docs/atlas/AGENT-BRIEF.md`, `state/session-state.json`,
-  `state/archive/ledger.jsonl`, this handoff.
-- **No** schema/CLI/metrics.json/dependency/script changes; no push; no commit.
+- **Code:** `src/reporter/atlas_charts.rs` (new), `atlas_brief.rs` (rail links + drill pages),
+  `atlas_render.rs` (chart CSS; no canvas/rail visual change), `mod.rs` (chart wiring/export),
+  `cli/mod.rs` (2 artifacts).
+- **Tests/goldens:** `tests/atlas_charts.rs` (new), `atlas_states.rs`, `atlas_rail.rs`,
+  `key_views.rs`, `i4_annotations.rs`, `report_html.rs`, `findings_detail_split.rs`,
+  `atlas_vision.rs`; 4 `report.html` goldens + 4 new drill-page goldens.
+- **Evidence:** `docs/evidence/atlas-visual/v2/` (`STEP12.md`, `step12.json`, `gate-step12.txt`,
+  `VISION-STEP12.md`, `render_step12.py`, 8 PNGs, `step12/` F candidate + comparison).
+- **Docs/state:** `docs/specs/atlas-layout.md`, `atlas-metrics.md`, `docs/plans/atlas-build.md`,
+  `docs/atlas/AGENT-BRIEF.md`, `docs/activeContext.md`, `CHANGELOG.md`,
+  `state/session-state.json`, this handoff.
+- **No** schema/CLI metrics/dependency/script changes; no push; no commit.

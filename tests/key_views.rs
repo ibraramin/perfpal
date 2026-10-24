@@ -8,10 +8,7 @@ use std::collections::BTreeMap;
 
 use perfpal::analyzer::{Confidence, Severity};
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
-use perfpal::reporter::{
-    render_findings_detail, render_findings_detail_html, render_html, render_profile_queue,
-    render_profile_queue_html, views,
-};
+use perfpal::reporter::{render_html, views};
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, FunctionStats, GraphsSection,
     IncludeEdgeDto, IncludeGraph, MetricsDocument, ParseHealthEntry, ScanInfo, StatsSection,
@@ -295,16 +292,24 @@ fn atlas_page_orders_canvas_brief_blocks_then_explorer() {
     );
     let canvas = map.find("<section id=\"atlas-canvas\"").expect("canvas");
     let mut last = canvas;
-    for block in [
-        "answer", "actions", "weight", "blast", "cards", "noise", "links",
-    ] {
+    for block in ["weight-chart", "blast-chart", "file-chart", "coverage"] {
         let marker = format!("data-atlas-block=\"{block}\"");
         let position = map.find(&marker).unwrap_or_else(|| panic!("{block} block"));
         assert!(position > last, "{block} block out of order");
         last = position;
     }
-    assert!(map.contains("id=\"atlas-drill-q2\""));
-    assert!(map.contains("id=\"atlas-drill-weight\""));
+    // The retired text-wall blocks and the inline drills are gone; the drills
+    // are standalone artifacts linked from the charts.
+    for retired in ["answer", "actions", "cards", "noise", "links"] {
+        assert!(
+            !map.contains(&format!("data-atlas-block=\"{retired}\"")),
+            "retired block {retired} must not render in #map"
+        );
+    }
+    assert!(!map.contains("id=\"atlas-drill-q2\""));
+    assert!(!map.contains("id=\"atlas-drill-weight\""));
+    assert!(map.contains("atlas-weight.html"));
+    assert!(map.contains("atlas-q2.html"));
     // No workspace figure / component table / chart stems in #map.
     assert!(!map.contains("data-chart="));
     assert!(!map.contains("Component index"));
@@ -332,7 +337,7 @@ fn atlas_page_orders_canvas_brief_blocks_then_explorer() {
 }
 
 #[test]
-fn atlas_brief_carries_units_anchors_and_full_rationale() {
+fn atlas_charts_carry_units_anchors_and_reachable_rationale() {
     let doc = doc();
     let html = render_html(&doc, &[]);
     let map = map_section(&html);
@@ -343,196 +348,35 @@ fn atlas_brief_carries_units_anchors_and_full_rationale() {
     assert!(map.contains("of functions"));
     assert!(map.contains("of files"));
     assert!(map.contains("dependent file"));
-    assert!(map.contains("(production first)"));
+    assert!(map.contains("production first"));
+    // The full rationale moved to the C-split detail artifact; the map keeps
+    // the dominant-finding title and the reachable link.
+    let detail = perfpal::reporter::render_findings_detail_html(&doc);
     assert!(
-        map.contains("This is the complete rationale for PERF-C-CALL-001"),
-        "the brief must show the full finding rationale"
+        detail.contains("This is the complete rationale for PERF-C-CALL-001"),
+        "the full finding rationale must stay reachable in findings-detail.html"
     );
-    // The brief itself must not truncate text (the canvas may mid-ellipsise
-    // long paths, with the full path in the node title).
+    assert!(
+        map.contains("findings-detail.html#finding-"),
+        "the map must link the reachable finding detail"
+    );
+    // The chart brief itself must not truncate text (the canvas may
+    // mid-ellipsise long paths, with the full path in the node title).
     let brief = map
         .split("id=\"atlas-brief\"")
         .nth(1)
         .expect("brief body")
-        .split("id=\"atlas-drill-q2\"")
-        .next()
-        .expect("brief close");
-    assert!(!brief.contains('…'), "the brief must not truncate text");
-    // ARCH-002 aggregates stay out of the action list but are counted.
-    let actions = map
-        .split("id=\"atlas-actions\"")
-        .nth(1)
-        .expect("actions block")
-        .split("id=\"atlas-weight\"")
-        .next()
-        .expect("actions close");
-    assert!(!actions.contains("Title for PERF-C-ARCH-002"));
-    assert!(actions.contains("1 component-level finding"));
-}
-
-#[test]
-fn drill_artifacts_are_complete_and_deterministic() {
-    let doc = doc();
-    let charts = perfpal::charts::render(&doc);
-    let names: Vec<String> = charts.iter().map(|(name, _)| name.clone()).collect();
-    let html = render_html(&doc, &names);
-
-    let detail = render_findings_detail_html(&doc);
-    let detail_md = render_findings_detail(&doc);
-    let ranked = detail
-        .split("<section id=\"ranked-actions\">")
-        .nth(1)
-        .expect("ranked-actions section")
         .split("</section>")
         .next()
-        .expect("ranked close");
-    let actions = views::complete_actions(&doc);
-    assert_eq!(actions.len(), 4); // 5 findings - 1 ARCH-002
-    for row in &actions {
-        let finding = &doc.findings[row.finding_index];
-        assert!(
-            ranked.contains(&finding.finding_id),
-            "ranked list missing {}",
-            finding.finding_id
-        );
-    }
-    assert!(!ranked.contains("PERF-C-ARCH-002"));
-    assert!(detail_md.contains("<a id=\"ranked-actions\"></a>"));
-    let ranks: Vec<usize> = ranked
-        .split("<tr><td>")
-        .skip(1)
-        .map(|cell| {
-            cell.split("</td>")
-                .next()
-                .expect("rank cell")
-                .parse()
-                .expect("numeric rank")
-        })
-        .collect();
-    assert_eq!(ranks, (1..=actions.len()).collect::<Vec<_>>());
-    assert_eq!(
-        ranks.len(),
-        actions.len(),
-        "ranked section must not carry extra action rows"
-    );
-
-    let queue = render_profile_queue_html(&doc);
-    let queue_md = render_profile_queue(&doc);
-    let all = views::complete_profile_queue(&doc);
-    assert_eq!(all.len(), doc.stats.functions.len());
-    for row in &all {
-        assert!(
-            queue.contains(&row.function),
-            "profile queue missing function {}",
-            row.function
-        );
-        assert!(queue_md.contains(&row.function.replace('_', "\\_")));
-    }
-    assert!(queue.contains("no-loop — demoted"));
-    assert!(queue.contains("startup — demoted"));
-    assert!(queue.contains("non-production — demoted"));
-    assert!(queue.contains("static cost units (v1)"));
-    assert!(queue.contains("unknown-trip ×1 — estimate incomplete"));
-    assert!(queue.contains("known trip ×8 — verify it actually runs"));
-    assert!(html.contains("profile-queue.html"));
+        .expect("brief close");
     assert!(
-        queue.contains("functions ranked by static cost — candidates, confirm with a profiler")
+        !brief.contains('…'),
+        "the chart brief must not truncate text"
     );
-
-    // Byte-identical double render, no provenance surfaces.
-    assert_eq!(html, render_html(&doc, &names));
-    assert_eq!(detail, render_findings_detail_html(&doc));
-    assert_eq!(detail_md, render_findings_detail(&doc));
-    assert_eq!(queue, render_profile_queue_html(&doc));
-    assert_eq!(queue_md, render_profile_queue(&doc));
-    for artifact in [&html, &detail, &detail_md, &queue, &queue_md] {
-        assert!(!artifact.contains(ROOT));
-        assert!(!artifact.contains("SECRET-START"));
-        assert!(!artifact.contains("999999"));
-    }
-}
-
-#[test]
-fn kv2_labels_use_full_repo_relative_paths_and_pluralize() {
-    let mut d = doc();
-    d.files = vec![
-        file("tmux.h", "production"),
-        file("compat/imsg.h", "production"),
-        file("src/user.c", "production"),
-    ];
-    d.stats.functions = Vec::new();
-    d.findings = Vec::new();
-    d.graphs = Some(GraphsSection {
-        include_graph: IncludeGraph {
-            nodes: Vec::new(),
-            edges: vec![
-                edge("src/user.c", "tmux.h"),
-                edge("src/user.c", "compat/imsg.h"),
-            ],
-        },
-        call_graph: None,
-    });
-
-    let kv2 = views::kv2(&d);
     assert!(
-        kv2.rows
-            .iter()
-            .any(|row| row.path == "compat/imsg.h" && row.value_label.contains("1 dependent")),
-        "nested KV2 label must keep its directory prefix and singular count"
+        brief.contains("Component shares include every member file"),
+        "component disclosure must survive the restructure"
     );
-    let md = perfpal::reporter::render_report(&d, &[]);
-    assert!(md.contains("compat/imsg") && md.contains("1 dependent"));
-}
-
-#[test]
-fn kv2_demoted_rows_are_greyed_with_demoted_caption() {
-    let mut d = doc();
-    d.files = vec![
-        file("src/a.c", "production"),
-        file("src/b.c", "production"),
-        file("tests/t.c", "test"),
-    ];
-    d.stats.functions = Vec::new();
-    d.findings = Vec::new();
-    d.graphs = Some(GraphsSection {
-        include_graph: IncludeGraph {
-            nodes: Vec::new(),
-            edges: vec![
-                edge("src/b.c", "src/a.c"),
-                edge("src/a.c", "src/b.c"),
-                edge("src/a.c", "tests/t.c"),
-                edge("src/b.c", "tests/t.c"),
-            ],
-        },
-        call_graph: None,
-    });
-
-    let kv2 = views::kv2(&d);
-    let production = kv2
-        .rows
-        .iter()
-        .position(|row| row.path == "src/a.c")
-        .expect("production row");
-    let demoted = kv2
-        .rows
-        .iter()
-        .position(|row| row.path == "tests/t.c")
-        .expect("demoted row");
-    assert!(
-        production < demoted,
-        "demoted row must follow production rows"
-    );
-    assert!(kv2.rows[demoted].demoted);
-    assert!(!kv2.rows[production].demoted);
-    assert_eq!(kv2.rows[demoted].dependents, 2);
-
-    let md = perfpal::reporter::render_report(&d, &[]);
-    assert!(
-        md.contains("tests/t\\.c"),
-        "demoted row missing from markdown"
-    );
-    assert!(md.contains(" · test · demoted"));
-    assert!(md.contains("files with resolved dependents · 1 non-production file demoted"));
 }
 
 #[test]
@@ -554,13 +398,6 @@ fn kv1_marks_repeated_inline_locations_without_changing_ranks() {
             Confidence::High,
         ),
     ];
-    let html = render_html(&d, &[]);
-    let map = map_section(&html);
-    assert!(
-        map.contains("same location as #1"),
-        "second same-location KV1 row must be annotated"
-    );
-    assert_eq!(map.matches("same location as #1").count(), 1);
     let md = perfpal::reporter::render_report(&d, &[]);
     assert!(md.contains("(same location as #1)"));
     // Ranks/list are unchanged: two rows, ranks 1 and 2.

@@ -248,14 +248,14 @@ fn rail_capped_state_shows_exactly_the_cap_and_the_remainder() {
     );
     assert!(
         rail.contains(&format!(
-            "+{} more source files in the weight detail below",
+            "+{} more source files in the weight detail",
             doc.files.len() - RAIL_FILE_CAP
         )),
         "capped state must disclose the remainder: {rail}"
     );
     assert!(
-        rail.contains("href=\"#atlas-drill-weight\""),
-        "the remainder note must link to the weight detail"
+        rail.contains("href=\"atlas-weight.html\""),
+        "the remainder note must link to the weight detail page"
     );
 }
 

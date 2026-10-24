@@ -46,8 +46,8 @@ fn write_vision_matrix() {
             "{name}: report page must contain the Atlas map section"
         );
         assert!(
-            first.contains("<div class=\"atlas-block\" data-atlas-block=\"weight\""),
-            "{name}: report page must contain the Atlas weight block"
+            first.contains("<div class=\"atlas-chart\" data-atlas-block=\"weight-chart\""),
+            "{name}: report page must contain the Atlas weight chart"
         );
 
         let path = dir.join(format!("{name}.html"));

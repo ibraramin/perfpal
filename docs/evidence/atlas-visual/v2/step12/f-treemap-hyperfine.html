@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>F candidate · component weight treemap · hyperfine — candidate prototype, not shipped</title>
+<style>
+:root{
+  --paper:#f4f1ea;
+  --panel:#fbf9f4;
+  --ink:#202b35;
+  --entry:#1f2d3a;
+  --muted:#6f6a61;
+  --hairline:#d6d0c4;
+  --production:#3f6d6a;
+  --hot:#c2410c;
+  --neutral:#8d8577;
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.sheet{
+  width:1440px;
+  min-height:900px;
+  margin:0 auto;
+  padding:30px 16px 0;
+  background:
+    radial-gradient(1100px 460px at 50% -14%, rgba(255,255,255,.50), rgba(255,255,255,0) 72%),
+    var(--paper);
+}
+.head{
+  display:grid;
+  grid-template-columns:1fr auto;
+  column-gap:24px;
+  row-gap:10px;
+  border-bottom:1px solid var(--hairline);
+  padding-bottom:15px;
+}
+.kicker{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--hot);flex:0 0 auto}
+.kicker .slash{color:#a79f92;font-weight:650;letter-spacing:.08em}
+.status-chip{
+  align-self:start;
+  white-space:nowrap;
+  padding:5px 9px;
+  border:1px solid #e5c9b9;
+  border-radius:2px;
+  background:#fbefe8;
+  color:#a63c0c;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+.title-row{
+  grid-column:1 / -1;
+  display:flex;
+  align-items:baseline;
+  gap:14px;
+  min-width:0;
+}
+h1{
+  margin:0;
+  font-size:32px;
+  line-height:1.04;
+  font-weight:800;
+  letter-spacing:-.62px;
+  color:var(--ink);
+}
+.repo{
+  border-left:1px solid var(--hairline);
+  padding-left:14px;
+  font-family:var(--mono);
+  font-size:20px;
+  font-weight:600;
+  letter-spacing:-.2px;
+  color:var(--production);
+}
+.deck{
+  grid-column:1 / -1;
+  margin:0;
+  max-width:1190px;
+  font-size:13.5px;
+  line-height:1.5;
+  color:var(--muted);
+}
+.deck strong{color:var(--ink);font-family:var(--mono);font-size:.94em;font-weight:750}
+.deck code{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--entry);
+  background:#ece7dd;
+  border-radius:2px;
+  padding:1px 4px;
+}
+.read{
+  display:inline-block;
+  margin-right:8px;
+  padding:2px 5px;
+  border:1px solid #e5c9b9;
+  border-radius:2px;
+  background:#fbefe8;
+  color:var(--hot);
+  font-size:8.5px;
+  font-weight:800;
+  letter-spacing:.14em;
+  vertical-align:1px;
+}
+.panel{
+  margin-top:14px;
+  background:var(--panel);
+  border-radius:3px;
+  box-shadow:
+    inset 0 0 0 1px var(--hairline),
+    0 1px 0 rgba(32,43,53,.035),
+    0 18px 36px -30px rgba(32,43,53,.42);
+  overflow:hidden;
+}
+.treemap{display:block;width:1408px;height:260px;background:var(--panel)}
+.treemap text{
+  font-family:var(--mono);
+  font-variant-numeric:tabular-nums;
+  font-kerning:none;
+}
+.cell{animation:cellIn .30s ease-out both;animation-delay:calc(60ms + var(--i) * 22ms)}
+.cell .face{transition:filter .16s ease}
+.cell:hover .face{filter:brightness(1.06)}
+.cap{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:4px 16px;
+  margin-top:13px;
+}
+.cap-main{
+  margin:0;
+  font-size:12px;
+  font-weight:750;
+  color:var(--ink);
+  letter-spacing:.005em;
+}
+.cap-anchor{
+  margin:0;
+  font-size:10.5px;
+  line-height:1.45;
+  color:var(--muted);
+}
+.fig{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.96em}
+.legend{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+  font-size:10px;
+  color:var(--muted);
+}
+.legend-label{
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--ink);
+}
+.sw{
+  display:inline-block;
+  width:15px;
+  height:9px;
+  border-radius:1px;
+  border:1px solid rgba(32,43,53,.13);
+}
+.legend-note{line-height:1.35}
+.legend-sep{width:1px;height:12px;background:var(--hairline);margin:0 5px}
+.hatchbox{
+  display:inline-block;
+  width:15px;
+  height:9px;
+  border-radius:1px;
+  border:1px solid rgba(32,43,53,.13);
+  background:#ebe7df;
+  background-image:repeating-linear-gradient(45deg,rgba(141,133,119,0) 0 3px,rgba(141,133,119,.55) 3px 4px);
+}
+.badge-demo{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:var(--hot);
+  color:var(--panel);
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:800;
+}
+.meta{
+  margin:11px 0 0;
+  padding-top:8px;
+  border-top:1px solid var(--hairline);
+  font-size:10.5px;
+  line-height:1.5;
+  color:var(--muted);
+}
+.status{
+  margin:8px 0 0;
+  font-size:9.5px;
+  line-height:1.4;
+  color:#857d70;
+  letter-spacing:.01em;
+}
+@keyframes cellIn{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.head,.cap,.legend,.meta,.status{animation:rise .42s ease-out both}
+.cap{animation-delay:280ms}
+.legend{animation-delay:340ms}
+.meta{animation-delay:400ms}
+.status{animation-delay:440ms}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+@media print{
+  body{background:#fff}
+  .sheet{width:auto;min-height:0;padding:0}
+  .treemap{width:100%;height:auto}
+}
+</style>
+</head>
+<body>
+<main class="sheet">
+  <header class="head">
+    <div class="kicker"><span class="dot"></span>Atlas · below-graph weight slot <span class="slash">/</span> step 12 <span class="slash">/</span> F</div>
+    <div class="status-chip">candidate prototype, not shipped</div>
+    <div class="title-row">
+      <h1>Component weight map</h1>
+      <span class="repo">hyperfine</span>
+    </div>
+    <p class="deck"><span class="read">READ</span>Production is <strong>61.87%</strong> of scanned static cost; <code>src</code> alone is <strong>35.66%</strong> and the top six components hold <strong>90.06%</strong>.</p>
+  </header>
+
+  <section class="panel" aria-label="F treemap candidate panel">
+    <svg class="treemap" viewBox="0 0 1408 260" width="1408" height="260" role="img" aria-label="Component weight treemap for hyperfine: area equals static cost units (v2); colour uses the same scale; test and bench components are hatched. Candidate prototype, not shipped."><defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#ebe7df"/><line x1="0" y1="0" x2="0" y2="8" stroke="#8d8577" stroke-width="1.1" opacity=".30"/></pattern></defs><rect x="0" y="0" width="1408" height="260" fill="#fbf9f4"/><g class="cell class-production hot hot-1" style="--i:0"><title>src — production — 1,617 static cost units (v2) · 35.66% of scanned static cost · 8 files · 8.0× median component · top 8% of components</title><rect class="face" x="0" y="0" width="502" height="260" fill="#3f6d6a" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="10" y="24" font-size="13.5" font-weight="700" fill="#fbf9f4" opacity=".94">src</text><text x="10" y="42" font-size="10.0" font-weight="500" fill="#fbf9f4" opacity=".94">36% of scanned static cost</text><text x="10" y="57" font-size="10.0" font-weight="500" fill="#fbf9f4" opacity=".94">1,617 static cost units (v2)</text><rect x="1.25" y="1.25" width="499.5" height="257.5" fill="none" stroke="#c2410c" stroke-width="2.5" stroke-opacity="0.92"/><circle cx="489" cy="13" r="9" fill="#c2410c"/><text x="489" y="16.4" text-anchor="middle" font-size="9" font-weight="800" fill="#fbf9f4">1</text></g><g class="cell class-test hot hot-2" style="--i:1"><title>tests — test — 739 static cost units (v2) · 16.30% of scanned static cost · 3 files · 3.7× median component · top 17% of components</title><rect class="face" x="502" y="0" width="229" height="260" fill="url(#hatch)" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="512" y="21" font-size="11.5" font-weight="700" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">tests</text><text x="512" y="36" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">16% of scanned static cost</text><text x="512" y="50" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">739 static cost units (v2)</text><rect x="511" y="240" width="40" height="13" rx="2" fill="#fbf9f4" fill-opacity=".88" stroke="#d6d0c4" stroke-width=".6"/><text x="517" y="249.6" font-size="8.5" font-weight="800" letter-spacing=".08em" fill="#6f6a61">TEST</text><rect x="502.8" y="0.8" width="227.4" height="258.4" fill="none" stroke="#202b35" stroke-width="1.6" stroke-opacity="0.52"/><circle cx="718" cy="13" r="9" fill="#202b35"/><text x="718" y="16.4" text-anchor="middle" font-size="9" font-weight="800" fill="#fbf9f4">2</text></g><g class="cell class-bench hot hot-3" style="--i:2"><title>src/benchmark — bench — 589 static cost units (v2) · 12.99% of scanned static cost · 5 files · 2.9× median component · top 25% of components</title><rect class="face" x="731" y="0" width="183" height="260" fill="url(#hatch)" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="741" y="21" font-size="11.5" font-weight="700" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">src/benchmark</text><text x="741" y="36" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">13% of map</text><text x="741" y="50" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">589 static cost units (v2)</text><rect x="740" y="240" width="47" height="13" rx="2" fill="#fbf9f4" fill-opacity=".88" stroke="#d6d0c4" stroke-width=".6"/><text x="746" y="249.6" font-size="8.5" font-weight="800" letter-spacing=".08em" fill="#6f6a61">BENCH</text><rect x="731.65" y="0.65" width="181.7" height="258.7" fill="none" stroke="#202b35" stroke-width="1.3" stroke-opacity="0.52"/><circle cx="901" cy="13" r="9" fill="#202b35"/><text x="901" y="16.4" text-anchor="middle" font-size="9" font-weight="800" fill="#fbf9f4">3</text></g><g class="cell class-production" style="--i:3"><title>src/export — production — 471 static cost units (v2) · 10.39% of scanned static cost · 8 files · 2.3× median component · top 33% of components</title><rect class="face" x="914" y="0" width="147" height="260" fill="#95bbb3" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="924" y="21" font-size="11.5" font-weight="700" fill="#202b35" opacity=".94">src/export</text><text x="924" y="36" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94">10% of map</text></g><g class="cell class-bench" style="--i:4"><title>scripts — bench — 401 static cost units (v2) · 8.84% of scanned static cost · 8 files · 2.0× median component · top 42% of components</title><rect class="face" x="1061" y="0" width="207" height="156" fill="url(#hatch)" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1071" y="21" font-size="11.5" font-weight="700" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">scripts</text><text x="1071" y="36" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">8.8% of scanned static cost</text><text x="1071" y="50" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94" paint-order="stroke" stroke="#fbf9f4" stroke-width="2.4" stroke-linejoin="round">401 static cost units (v2)</text><rect x="1070" y="136" width="47" height="13" rx="2" fill="#fbf9f4" fill-opacity=".88" stroke="#d6d0c4" stroke-width=".6"/><text x="1076" y="145.6" font-size="8.5" font-weight="800" letter-spacing=".08em" fill="#6f6a61">BENCH</text></g><g class="cell class-production" style="--i:5"><title>src/output — production — 267 static cost units (v2) · 5.89% of scanned static cost · 4 files · 1.3× median component · top 50% of components</title><rect class="face" x="1061" y="156" width="207" height="104" fill="#afcdc6" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1071" y="177" font-size="11.5" font-weight="700" fill="#202b35" opacity=".94">src/output</text><text x="1071" y="192" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94">5.9% of scanned static cost</text><text x="1071" y="206" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94">267 static cost units (v2)</text></g><g class="cell class-production" style="--i:6"><title>src/timer — production — 137 static cost units (v2) · 3.02% of scanned static cost · 6 files · 0.7× median component · top 58% of components</title><rect class="face" x="1268" y="0" width="140" height="79" fill="#c3dad4" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1278" y="21" font-size="11.5" font-weight="700" fill="#202b35" opacity=".94">src/timer</text><text x="1278" y="36" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94">3.0% of map</text></g><g class="cell class-production" style="--i:7"><title>src/quantity — production — 131 static cost units (v2) · 2.89% of scanned static cost · 2 files · 0.6× median component · top 67% of components</title><rect class="face" x="1268" y="79" width="140" height="76" fill="#c4dbd5" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1278" y="100" font-size="11.5" font-weight="700" fill="#202b35" opacity=".94">src/quantity</text><text x="1278" y="115" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94">2.9% of map</text></g><g class="cell class-production" style="--i:8"><title>src/parameter — production — 119 static cost units (v2) · 2.62% of scanned static cost · 3 files · 0.6× median component · top 75% of components</title><rect class="face" x="1268" y="155" width="91" height="105" fill="#c7dcd6" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1278" y="176" font-size="9.5" font-weight="700" fill="#202b35" opacity=".94">parameter</text><text x="1278" y="190" font-size="9.5" font-weight="500" fill="#202b35" opacity=".94">2.6% of map</text></g><g class="cell class-production" style="--i:9"><title>src/util — production — 28 static cost units (v2) · 0.62% of scanned static cost · 4 files · 0.1× median component · top 83% of components</title><rect class="face" x="1359" y="155" width="49" height="46" fill="#dbe8e4" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1369" y="168" font-size="8.5" font-weight="700" fill="#202b35" opacity=".90">util</text></g><g class="cell class-production" style="--i:10"><title>src/export/json — production — 24 static cost units (v2) · 0.53% of scanned static cost · 1 file · 0.1× median component · top 92% of components</title><rect class="face" x="1359" y="201" width="49" height="39" fill="#dce9e4" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1369" y="214" font-size="8.5" font-weight="700" fill="#202b35" opacity=".90">json</text></g><g class="cell class-production" style="--i:11"><title>core (root) — production — 12 static cost units (v2) · 0.26% of scanned static cost · 1 file · 0.1× median component · top 100% of components</title><rect class="face" x="1359" y="240" width="49" height="20" fill="#e0ebe7" stroke="#fbf9f4" stroke-width="2" shape-rendering="crispEdges"/><text x="1369" y="253" font-size="8.5" font-weight="700" fill="#202b35" opacity=".90">core</text></g></svg>
+  </section>
+
+  <div class="cap">
+    <p class="cap-main">area = static cost units (v2); colour = the same scale</p>
+    <p class="cap-anchor">anchor = × median component (<span class="fig">202 static cost units (v2)</span>) · top P% of components · cell title carries the full identifier, class, share, file count and rank</p>
+  </div>
+
+  <div class="legend" aria-label="Legend">
+    <span class="legend-label">production</span>
+    <i class="sw" style="background:#e9f0ed"></i><i class="sw" style="background:#caded9"></i><i class="sw" style="background:#9dc0b8"></i><i class="sw" style="background:#6c9b92"></i><i class="sw" style="background:#3f6d6a"></i>
+    <span class="legend-note">lighter → heavier</span>
+    <span class="legend-sep"></span>
+    <span class="hatchbox"></span>
+    <span class="legend-note">test / bench / residual = neutral hatch, class-labelled</span>
+    <span class="legend-sep"></span>
+    <span class="badge-demo">1</span>
+    <span class="legend-note">top-3 cost rank</span>
+  </div>
+
+  <p class="meta">
+    <span class="fig">53</span> files ·
+    <span class="fig">353</span> functions ·
+    <span class="fig">348</span> findings ·
+    <span class="fig">12</span> components with cost (12 in the scan) ·
+    top-50 cap not reached: 12 of 12 components shown · production 2,806 of 4,535 static cost units (v2) ·
+    parse <span class="fig">53 ok / 0 partial / 0 failed</span>
+  </p>
+
+  <p class="status">candidate prototype, not shipped · F remains undecided · the Explorer treemap is untouched · static heuristic, not a measurement</p>
+</main>
+</body>
+</html>

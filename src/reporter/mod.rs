@@ -27,9 +27,12 @@
 
 pub mod atlas;
 pub mod atlas_brief;
+pub mod atlas_charts;
 pub mod atlas_metrics;
 pub mod atlas_render;
 pub mod views;
+
+pub use atlas_brief::{render_atlas_q2_html, render_atlas_weight_html};
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -469,8 +472,9 @@ pub fn escape_html(input: &str) -> String {
 /// (no `started_at`, no `duration_ms`, no `root_path`; header carries only
 /// `schema_version`, tool version, file/finding counts).
 ///
-/// Contents: header, the Perfpal Atlas `#map` page (100%-graph canvas +
-/// fixed seven-block brief + drills, ADR-0009), the Explorer chart links,
+/// Contents: header, the Perfpal Atlas `#map` page (chrome + 868px canvas +
+/// 530px rail + four progressive charts, ADR-0009; the retired seven-block
+/// brief lives in the step-<12 history), the Explorer chart links,
 /// component index (top-10 rank, prefix, metrics + detail-page links, with an
 /// honest `showing top … of M` note), file drill-down (top files by
 /// degree/cost + their top-10 finding_id lists linking into
@@ -1890,12 +1894,13 @@ fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
 /// `#map` — the Perfpal Atlas page (ADR-0009; `map-intelligibility` A8
 /// amended for this page).
 ///
-/// The first content block is the 100%-graph canvas; the fixed seven-block
-/// brief follows it, then the Q2/weight drills. Every block renders in every
-/// scan state. The legacy V4 KV1/KV2/KV3 list-first markup no longer lives
-/// here: KV1 actions, the weight mass and the blast radius ride in the brief,
-/// and the complete lists stay in `findings-detail.html` / `profile-queue.html`.
-fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
+/// First content: the masthead + key-metrics strip and the canvas/rail stage.
+/// Below it, [`atlas_charts::render_charts`] adds the four progressive,
+/// designed charts plus one coverage/links line. The retired seven-block text
+/// wall and the inline Q2/weight drills no longer live on `#map`; the
+/// complete lists stay in `findings-detail.html` / `profile-queue.html` and
+/// the drills moved to `atlas-weight.html` / `atlas-q2.html`.
+fn html_map(out: &mut String, doc: &MetricsDocument, _emitted_charts: &[String]) {
     let view = atlas::build_atlas_view(doc);
     let start_actions = atlas_brief::start_actions(doc);
     let rail = atlas_brief::render_rail(&view, doc);
@@ -1905,7 +1910,7 @@ fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) 
         &start_actions,
         &rail,
     ));
-    out.push_str(&atlas_brief::render_brief(&view, doc, emitted_charts));
+    out.push_str(&atlas_charts::render_charts(&view, doc));
     out.push_str("</section>\n");
 }
 
@@ -2501,7 +2506,7 @@ fn disambiguate_sorted_bases(bases: &[String]) -> Vec<String> {
 /// deduplicated path set, so `a-b.c` vs `a/b.c` (same slug) get
 /// `file-a-b-c` and `file-a-b-c-2` deterministically, independent of the
 /// degree/cost render order.
-fn file_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, String> {
+pub(crate) fn file_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, String> {
     let mut paths: Vec<String> = doc.files.iter().map(|f| f.path.clone()).collect();
     paths.sort();
     paths.dedup();
@@ -2516,7 +2521,9 @@ fn file_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, 
 /// Per-function profile-queue anchors keyed by function id. Bases are built
 /// over the SORTED deduplicated id set so slug collisions disambiguate
 /// deterministically (`fn-a-b-c`, `fn-a-b-c-2`) independent of render order.
-fn function_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<String, String> {
+pub(crate) fn function_anchor_map(
+    doc: &MetricsDocument,
+) -> std::collections::BTreeMap<String, String> {
     let mut ids: Vec<String> = doc
         .stats
         .functions
@@ -2544,7 +2551,7 @@ fn function_anchor_map(doc: &MetricsDocument) -> std::collections::BTreeMap<Stri
 /// of `finding_id` order, mislinking rows.) Stable sort keeps duplicate
 /// finding_ids in document order; pure function of document content —
 /// byte-deterministic.
-fn finding_anchor_assignments(doc: &MetricsDocument) -> (Vec<usize>, Vec<String>) {
+pub(crate) fn finding_anchor_assignments(doc: &MetricsDocument) -> (Vec<usize>, Vec<String>) {
     let mut order: Vec<usize> = (0..doc.findings.len()).collect();
     order.sort_by(|&a, &b| doc.findings[a].finding_id.cmp(&doc.findings[b].finding_id));
     let bases: Vec<String> = order
