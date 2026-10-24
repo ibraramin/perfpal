@@ -3,7 +3,12 @@
 **Track:** C (LLM depth layer) · **Branch:** `feat/agent-report` · **Worktree:** `/home/shafin/Opencode/Perfpal-agent-report`
 **Session:** C2 wiring + C3 (integration suite) · **Date:** 2026-10-24 · **Plan:** `docs/plans/agent-report.md` · **Spec:** `docs/specs/agent-report.md`
 **Status (updated 2026-10-24): C1–C4 COMPLETE AND MERGED** — C3 merged as `d097e04`, C4 as
-`c73d6ff`; no push. The paragraphs below describe the pre-merge state and are kept as session history. Rebased onto `main` `9a94905`; code commits `7e5b921` (wiring) and `1bc65d6` (hardening + this handoff) on `feat/agent-report`. Both artifacts are emitted by the CLI; 24 unit + 9 integration tests; DoD 7–20 green (see the evidence table below). C1 COMPLETE (`6d32e67`, hash `e730d01`). **No merge, no push.** The §13 downstream eval is deferred by the founder (recorded verbatim below).
+`c73d6ff`; no push. The C2/C3 narrative below and the "Next sessions" signposts are kept as session
+history: they describe the state at the time, when nothing was merged. The "Merge gate" and "C4" sections
+record the merges themselves. Rebased onto `main` `9a94905`; code commits `7e5b921` (wiring) and
+`1bc65d6` (hardening + this handoff) on `feat/agent-report`. Both artifacts are emitted by the CLI; 24 unit
++ 9 integration tests; DoD 7–20 green (see the evidence table below). C1 COMPLETE (`6d32e67`, hash
+`e730d01`). The §13 downstream eval is deferred by the founder (recorded verbatim below).
 
 ## Objective and phase
 
