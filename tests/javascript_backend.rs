@@ -800,11 +800,11 @@ fn nested_package_json_main_cannot_escape_the_scan_root() {
 }
 
 // ---------------------------------------------------------------------------
-// (8) No JS findings in W1
+// (8) JS-only corpus is scored only by JS rules
 // ---------------------------------------------------------------------------
 
 #[test]
-fn js_only_corpus_emits_zero_findings_in_w1() {
+fn js_only_corpus_emits_only_js_findings() {
     let root = write_tree(
         "no-findings",
         &[
@@ -818,11 +818,23 @@ fn js_only_corpus_emits_zero_findings_in_w1() {
     let (code, out) = run_pipeline("no-findings-out", &root);
     assert_eq!(code, 0, "findings never affect the exit code");
     let doc = read_json(&out.join("metrics.json"));
-    assert_eq!(
-        doc["findings"].as_array().expect("findings[]").len(),
-        0,
-        "W1 ships no PERF-JS-* rules"
-    );
+    // Since W2 the JS family ships rules, so findings may exist; the intent of
+    // this test is that JS units are scored ONLY by the shared PERF-JS-* family
+    // — never by a same-named C/Python/Rust heuristic.
+    let findings = doc["findings"].as_array().expect("findings[]");
+    for finding in findings {
+        let rule_id = finding["rule_id"].as_str().expect("rule_id");
+        assert!(
+            rule_id.starts_with("PERF-JS-"),
+            "JS-only corpus produced a non-JS rule id: {rule_id}"
+        );
+        for other in ["PERF-C-", "PERF-PY-", "PERF-RS-", "PERF-TS-"] {
+            assert!(
+                !rule_id.starts_with(other),
+                "JS-only corpus must not be scored by {other}: {rule_id}"
+            );
+        }
+    }
     assert_eq!(doc["scan"]["languages"], serde_json::json!(["js"]));
 
     fs::remove_dir_all(&root).ok();

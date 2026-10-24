@@ -208,15 +208,17 @@ impl FuncScan<'_> {
                 self.visit_children(node);
             }
             "object" | "array" => {
-                let kind = if node.kind() == "object" {
-                    AllocKind::Object
-                } else {
+                let is_array = node.kind() == "array";
+                let kind = if is_array {
                     AllocKind::Array
+                } else {
+                    AllocKind::Object
                 };
                 self.allocations.push(AllocEvent {
                     meta: self.meta_for(node),
                     kind,
                     referenced_names: infer::collect_identifier_names(node, self.source),
+                    has_spread: is_array && array_has_spread(node),
                 });
                 self.alloc_site_count += 1;
                 self.visit_children(node);
@@ -396,6 +398,7 @@ impl FuncScan<'_> {
             meta: self.meta_for(node),
             kind: AllocKind::New,
             referenced_names,
+            has_spread: false,
         });
         self.alloc_site_count += 1;
     }
@@ -601,6 +604,16 @@ impl FuncScan<'_> {
             macro_origin: false,
         }
     }
+}
+
+/// Whether an `array` literal has any `spread_element` child (`[...acc, x]`).
+/// Object literals never carry a spread element in this grammar, so callers
+/// only ask about arrays.
+fn array_has_spread(node: Node<'_>) -> bool {
+    (0..node.named_child_count() as u32).any(|i| {
+        node.named_child(i)
+            .is_some_and(|child| child.kind() == "spread_element")
+    })
 }
 
 /// Names bound by a `for_statement` initializer (`for (let i = 0; ...)`,

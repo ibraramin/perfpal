@@ -4,12 +4,32 @@ Scope: feature
 
 # Spec: js-ts
 
-**Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** **B2-W0 complete** (pins, link tests, canary
-freeze) and **B2-W1 implemented; full DoD green; panel APPROVED; committed `7fdfa1a`** (JS tree-sitter backend + scanner
-wiring + discovery/resolver/entry/instrument); B2-W2 next (11 `PERF-JS-*` rules + schema v1.8 +
-fixtures/goldens).
+**Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** B1/B2-W0 complete; **B2-W1 committed
+`90d5677` (pre-rebase `7fdfa1a`)**; **B2-W2 implemented — DoD applicable subset green (examples-ts is B3); uncommitted; panel final confirmation pending** (11 `PERF-JS-*` rules +
+catalog landing + schema v1.8 + fixtures/goldens). **B3 (TS/TSX) next.**
 **Owners:** Track B owns this spec, `docs/plans/js-ts.md`, the JS/TS ADR, the grammar pins, the JS/TS
 fixtures/goldens, and the `src/schema` language values. Track A owns `views.rs`/`mod.rs` wiring until A step 12.
+
+**B2-W2 close-out (implemented; uncommitted).** 11 `PERF-JS-*` rules landed in
+`src/analyzer/heuristics/js/mod.rs` with 27 parser-free IR unit tests; constants in
+`src/analyzer/finding.rs`; `RuleLanguage::{Js,Ts}`, the ascending registry block, and the `js|ts|tsx`
+partition in `src/analyzer/mod.rs` (`Ts` is reserved and empty in v1); 11 catalog entries in
+`src/reporter/mod.rs` (catalog **78** = 23 C + 11 JS + 22 PY + 22 RS). `B-tb-003` is **resolved**: the
+founder approved the atomic catalog-only B edit in the B2-W2 work order (`D-tb-017`), and the entries
+landed in the same change as the registry block. Schema v1.8 landed:
+`src/schema/metrics.schema.v1.8.json` + byte-identical `docs/schema/metrics.schema.v1.8.json`; v1.7 is
+retained; both language enums are `["c","js","python","rust","ts","tsx"]`; `tests/schema_1_7.rs` is
+renamed `tests/schema_1_8.rs` and the version-pin sweep is applied. DoD (recorded): `cargo test --locked`
+63 suites / 935 passed / 0 failed; `cargo deny check licenses` ok; semantic-feature and native checks
+green. Panel: round 1 R2/Q1/Q2 APPROVED, R1 CHANGES_REQUESTED -> fixed; round 2 R1/R3 APPROVED, Q2 doc fixes applied; final confirmation pending. Commit: **pending founder approval**.
+
+**B2-W2 review-panel R1 close-out (implemented).** The two blocking rule-gate defects are fixed
+in the same change: `PERF-JS-STR-001` is **string-gated** on the B2-W0 canary predicate (RHS must be a
+string/template literal; numeric and identifier `+=` are silent) and also admits the `x = x + <literal>`
+form; `PERF-JS-ALLOC-003` covers the frozen **spread** mechanism via `AllocEvent.has_spread`
+(`acc = [...acc, x]`), alongside `concat`/`slice`. Carry-in nits: `PERF-JS-TYPE-001` now requires a
+`MemberAccess` operand (`delete x` silent) and `PERF-JS-LOOP-001.max_depth` is scoped to loops contained
+in the anchored loop's span.
 
 **B2-W1 additive IR-internal facts (no schema/DTO change).** The backend now emits
 `FunctionUnit.allocations: Vec<AllocEvent>` (`new`/`object`/`array` + `referenced_names`),
@@ -17,11 +37,16 @@ fixtures/goldens, and the `src/schema` language values. Track A owns `views.rs`/
 Option<bool>` (`package.json` `main`/`bin` or an in-source `require.main === module` / `import.meta.url`
 guard). All three are serde-defaulted IR fields; they are **not** mirrored in `metrics.json`.
 
-**Disclosure — `js` precedes v1.8.** A B2-W1 tree emits `files[].language == "js"` and
-`scan.languages == ["js"]` while the bundled schema artifact is still v1.7 (whose language enum lists only
-`c`/`rust`/`python`) and the repo has no in-repo document validator. This is deliberate staging, **not a
-shippable point**: the single v1.8 bump with all six tokens lands in B2-W2 before any release
-(`R-tb-015`).
+**B2-W2 additive IR-internal fact (no schema/DTO change).** `AllocEvent.has_spread: bool`
+(`src/ir/mod.rs`, `#[serde(default)]`) is `true` only for an array literal containing a
+`spread_element` child; `new` expressions and object literals report `false`. It is the frozen
+ALLOC-003 spread-accumulator signal (`acc = [...acc, x]`) and is **not** mirrored in `metrics.json`.
+
+**Disclosure — `js` preceded v1.8 (now closed).** A B2-W1 tree emitted `files[].language == "js"` and
+`scan.languages == ["js"]` while the bundled schema artifact was still v1.7 (whose language enum listed
+only `c`/`rust`/`python`) and the repo had no in-repo document validator. This was deliberate staging,
+**not a shippable point**; the single v1.8 bump with all six tokens landed in B2-W2 before any release
+(`R-tb-015` resolved).
 
 ## 1. Purpose
 
@@ -95,9 +120,9 @@ iteration may reach output; `serde_json` stays default-features (no `preserve_or
 
 ## 5. Schema and output contract
 
-**One MINOR bump v1.7 → v1.8**, landing in B2, declaring **all three** tokens up front (B3 then emits
-`ts`/`tsx` without a second bump — this is the approved trade: one artifact re-emission and one golden
-regeneration instead of two).
+**One MINOR bump v1.7 → v1.8**, **landed in B2-W2** and declaring **all three** tokens up front (B3 then
+emits `ts`/`tsx` without a second bump — this is the approved trade: one artifact re-emission and one
+golden regeneration instead of two).
 
 - `scan.languages.items.enum` → `["c", "js", "python", "rust", "ts", "tsx"]`, still derived from the
   sorted-unique set of `files[].language`; zero-file scans fall back to the supported set.
@@ -143,15 +168,17 @@ async-function-gated and test-skewed. Every rule message must cite the engine me
 fix, and its accepted FP class. The M1 lesson governs: 5 rules once produced 89% of self-scan noise, so
 precision beats breadth.
 
-**Catalog wiring is A-owned until A step 12.** `src/reporter/mod.rs` holds `HEURISTIC_CATALOG_V1` (`:82`),
-the 67-entry/count/equality assertions (`:2980-3002`), and panics on any uncatalogued `rule_id` at
+**Catalog wiring was A-owned until A step 12.** `src/reporter/mod.rs` holds `HEURISTIC_CATALOG_V1` (`:82`),
+the catalog count/equality assertions (`:3010-3039`), and panics on any uncatalogued `rule_id` at
 `:1456` and `:2381` (line numbers re-read on the rebased tree, 2026-10-24; they move with A's edits).
-B2 cannot ship a rule without a catalog entry. Track B must either receive
+B2 could not ship a rule without a catalog entry. Track B had to either receive
 the entries from Track A before B2, or obtain explicit founder approval to edit **only** the catalog block
-in that file. Recorded as blocker `B-tb-003`; the count assertions move by exactly the number of shipped
+in that file. Recorded as `B-tb-003` (now resolved); the count assertions move by exactly the number of shipped
 JS rules. **Atomic landing:** because `catalog == registry` is asserted (`src/reporter/mod.rs:2999-3004`), a
 catalog-only landing ahead of B2 fails the count/equality tests immediately — A's entries and B2's registry
 block must land in the same change, or the founder-approved catalog-only B edit happens inside B2-W2.
+**Resolved (B2-W2, `D-tb-017`):** the founder approved the atomic catalog-only B edit; the 11 entries
+landed with the registry block, and the count/equality/Appendix-A locks moved by exactly 11 (catalog 78).
 
 | Candidate id | Mechanism (why it costs) | Frozen disposition (B2-W0) |
 |---|---|---|
@@ -232,15 +259,16 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
   hold the repo ratchet (**precision 1.0 / recall 1.0**), matching the roadmap ratchet.
 - **Benchmark ladder:** extend `tests/benchmark/corpus.rs` + `baseline.json` + active-catalog count so JS is
   measured, not asserted.
-- **Version-pin sweep (mechanical, explicit in B2):** `tests/schema_1_7.rs` becomes the v1.8 lock (including
-  its required-list comparison against v1.7, the executable proof that no required list grew);
+- **Version-pin sweep (mechanical, landed in B2-W2):** `tests/schema_1_7.rs` became the v1.8 lock and was
+  renamed `tests/schema_1_8.rs` (including its required-list comparison against v1.7, the executable proof
+  that no required list grew);
   `tests/schema_1_4.rs:88-119,247-291`; `tests/pipeline_e2e.rs:77,85`; `tests/resolver_health.rs:217`;
   `tests/exit_code_matrix.rs:75,90-93`; `tests/i1a_entry_c.rs:406`; `tests/i1b_entry_rust.rs:498`;
   `tests/i1c_entry_python.rs:582`; `tests/atlas_fixtures/mod.rs:155`; `tests/key_views.rs:203`.
   `GOLDEN_ARTIFACTS` and the regenerator's `provenance_free` list take the v1.8 filename (same 17 entries).
-- **Reporter catalog:** `HEURISTIC_CATALOG_V1` gains one entry per shipped JS rule — **11 entries** after
-  the W0 cut — and the count, catalog==registry and Appendix-A panic tests move by exactly 11 (see §6 and
-  blocker `B-tb-003`).
+- **Reporter catalog:** `HEURISTIC_CATALOG_V1` gained one entry per shipped JS rule — **11 entries** after
+  the W0 cut — and the count, catalog==registry and Appendix-A panic tests moved by exactly 11 (landed in
+  B2-W2; see §6).
 - **Determinism:** masked double-run byte equality on the JS and TS corpora via dedicated suites —
   `tests/determinism_js.rs` (B2) and `tests/determinism_ts.rs` (B3), both reusing the repo's provenance
   maskers. Each suite compares the full artifact set: `metrics.json` (provenance masked), `report.md`,
@@ -270,7 +298,7 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
    (`scan.started_at`, `scan.duration_ms`; `docs/report/output-contract.md:15,198`), which the double-run
    tests mask before comparing.
 4. No `node_modules`, `dist`, `build`, `.d.ts`, `*.min.js`, or >2 MiB JS/TS file contributes a finding.
-5. The v1.8 artifact is byte-identical between `src/schema/` and `docs/schema/`; all six golden trees carry
+5. The v1.8 artifact is byte-identical between `src/schema/` and `docs/schema/`; all five golden trees (six after B3) carry
    it; the v1.7 artifact is retained as history.
 6. No change to Atlas behavior and no schema field additions. C/Rust/Python finding sets are unchanged on the
    existing corpora (none contains a global-skip directory); the only mechanical delta is the v1.8 artifact

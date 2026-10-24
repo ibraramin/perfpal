@@ -1,6 +1,6 @@
 # Perfpal — metrics.json v1: Design & Stability Contract
 
-- **Status:** v1.7 — plan `map-intelligibility` V4 (additive `files[].path_class` + trip provenance). Formal schema: [`metrics.schema.v1.7.json`](./metrics.schema.v1.7.json) (JSON Schema Draft 2020-12). Internal representation: [`docs/architecture/ir-v1.md`](../architecture/ir-v1.md). Heuristic IDs: [`docs/heuristics/catalog-v1.md`](../heuristics/catalog-v1.md).
+- **Status:** v1.8 — plan `js-ts` B2 (both language enums widened to C / JavaScript / Python / Rust / TypeScript / TSX). Formal schema: [`metrics.schema.v1.8.json`](./metrics.schema.v1.8.json) (JSON Schema Draft 2020-12). Internal representation: [`docs/architecture/ir-v1.md`](../architecture/ir-v1.md). Heuristic IDs: [`docs/heuristics/catalog-v1.md`](../heuristics/catalog-v1.md).
 - **Audience:** consumers of Perfpal output — humans, tooling, and any LLM. The schema is deliberately **LLM-agnostic**: no vendor fields, no prompt-specific tuning (spec CONFIRMED-4).
 
 ---
@@ -84,6 +84,13 @@ The schema artifact was re-emitted as `metrics.schema.v1.3.json` (the v1.2, v1.1
 3. **`stats.functions[].known_trip_value`** — the largest clamped literal trip multiplier used by `function_cost_v2` (`max(min(t, MAX_TRIP))`); omitted when no loop has a literal trip.
 
 The schema artifact was re-emitted as `metrics.schema.v1.7.json` (the v1.6 copy is kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.7 name.
+
+**Minor bump v1.7 → v1.8 (2026-10-24, plan `js-ts` B2).** Two additive enum widenings, the same shape as v1.1 → v1.2 and v1.2 → v1.3; every v1.7 document still validates once its version marker is re-marked `"1.8"` (no `required` list grew, no field was removed or retyped, `additionalProperties: false` stays):
+
+1. **`scan.languages`** — item schema widened from `enum ["c","rust","python"]` to `enum ["c","js","python","rust","ts","tsx"]`. The value is still derived from the scanned files (sorted-unique `files[].language`); a zero-file scan emits the **binary's supported set**, described generically in the schema so the fallback can track the scanner's actual language list rather than the schema's full vocabulary.
+2. **`files[].language`** — widened to the same six sorted tokens, admitting JavaScript, TypeScript and TSX scanned files (the tokens are declared up front; the JS backend emits `js` in B2 and the TS backend emits `ts`/`tsx` in B3).
+
+The schema artifact was re-emitted as `metrics.schema.v1.8.json` (the v1.7 copy is kept as history); the bundled artifact shipped in `perfpal-report/` carries the full v1.8 name.
 
 ## 6. Worked example
 

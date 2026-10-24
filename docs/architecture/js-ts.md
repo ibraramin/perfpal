@@ -1,13 +1,14 @@
 # Perfpal — JS/TS backend (Track B — inventory and freeze record)
 
 **Status:** B1 planning complete; **B2-W0 complete** (exact pins, grammar-link tests, canary freeze);
-**B2-W1 implemented; full DoD green; panel APPROVED; committed `7fdfa1a`** — the JS tree-sitter backend, scanner wiring,
-discovery skips, relative import resolver, `package.json`/in-source entry declarations, aggregator JS entry
-lane, and instrument JS arms are in the tree and green. **B2-W2 next** (11 `PERF-JS-*` rules + schema v1.8 +
-fixtures/goldens). Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`, `docs/specs/js-ts.md`,
-`docs/plans/js-ts.md`.
-**Branch:** `feat/js-ts`, rebased on `main` @ `189df91` (B1 commits `3adf115` + `3e414e3`); implementation
-base `821b984`.
+**B2-W1 committed `90d5677` (pre-rebase `7fdfa1a`)** (panel APPROVED); **B2-W2 implemented — uncommitted, commit and review gate
+pending; B3 next.** B2-W2 adds the 11 `PERF-JS-*` rules + helpers, the registry and catalog entries
+(catalog 67 → 78), schema v1.8 with both language enums
+`["c","js","python","rust","ts","tsx"]`, `examples-js/`, parser-free IR fixtures, the `report-js` golden
+tree, and precision/benchmark/determinism coverage. The review panel is **pending** and the merge gate
+`A-tb-006` still requires founder approval. Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`,
+`docs/specs/js-ts.md`, `docs/plans/js-ts.md`.
+**Branch:** `feat/js-ts`, rebased on `main` @ `9a94905`; B1 commits `3adf115` + `3e414e3`; B2 base `821b984`.
 
 ## 1. Purpose
 
@@ -112,7 +113,13 @@ Line numbers are current-tree (`821b984`) and are evidence; re-read before editi
 | 9 | `src/scanner/instrument.rs:213-238` | `normalize_idiom` strips `//` and `/* */` for **every** language; only `#` is Python-gated (`strip_hash`, `:214-215`) | **no change expected** — JS `#` (private fields) must stay unstripped; verify C/Rust/Python idiom hashes are unchanged |
 | 10 | `src/scanner/instrument.rs:289-325` | `detect_error_path` per language | add `throw`/`try`/`catch` arm |
 
-Rule counts today: **C 23, Python 22, Rust 22**. Naming: `PERF-<LANG>-<FAMILY>-<NNN>`.
+Rule counts after B2-W2: **C 23, JS 11, Python 22, Rust 22 = 78**. Naming:
+`PERF-<LANG>-<FAMILY>-<NNN>`.
+
+**Implemented in B2-W2:** `JS_*_RULE_ID` constants in `src/analyzer/finding.rs`;
+`RuleLanguage::{Js,Ts}` and the ascending `PERF-JS-*` block between C and Python in
+`src/analyzer/mod.rs`; the `js|ts|tsx` partition (`Ts` is a reserved arm that runs over `&[]` in v1); and the
+family module `src/analyzer/heuristics/js/mod.rs`. Detail in §13.
 
 ### 4.6 Aggregator / IR
 
@@ -137,17 +144,30 @@ Rule counts today: **C 23, Python 22, Rust 22**. Naming: `PERF-<LANG>-<FAMILY>-<
 | 6 | `docs/schema/metrics-json-v1.md` | policy doc | add v1.7→v1.8 delta |
 | 7 | `src/reporter/mod.rs:2700-2718, 2762-2788` | mechanism/caption maps | **A-owned until A step 12**; after step 12, B4 may add label/caption strings only (no Atlas/view changes) |
 | 8 | `src/reporter/mod.rs:1077-1085, 1646-1655` | language list rendering | label-only; verify no exhaustive match breaks |
-| 9 | `src/reporter/mod.rs:82`, `:1456`, `:2381`, `:2980-3002` | `HEURISTIC_CATALOG_V1` + 67-entry/count/equality assertions + Appendix-A panics | **A-owned (blocker `B-tb-003`)**: entries land **in the same change as B2's registry block** (A supplies, or founder-approved catalog-only B edit inside B2-W2) — a catalog-only landing ahead of B2 fails the count/equality tests; counts move by exactly 11 |
+| 9 | `src/reporter/mod.rs:82`, `:1456`, `:2381`, `:3010-3039` | `HEURISTIC_CATALOG_V1` + count/equality assertions + Appendix-A panics | **landed (B2-W2, `D-tb-017`):** the founder approved the atomic catalog-only B edit in the B2-W2 work order; the 11 entries landed **with** the registry block. Catalog is now **78** (23 C + 11 JS + 22 PY + 22 RS); the count lock, `catalog == registry`, and Appendix-A panics moved by exactly 11. `B-tb-003` resolved |
 | 10 | `docs/architecture/modules.md:22` | determinism table still records `["c","rust"]` | B4 updates the supported-set row alongside §4.2/§5.2 |
 
-`rule_id` is an **open pattern** in the schema (`metrics.schema.v1.7.json:340-345`): new rule ids need no
-schema change. Only the language token requires the minor bump.
+`rule_id` is an **open pattern** in the schema: new rule ids need no schema change. Only the language
+token required the minor bump.
+
+**B2-W2 additive IR fact (IR-internal, no schema/DTO change).** `AllocEvent.has_spread: bool`
+(`src/ir/mod.rs`, `#[serde(default)]`) is `true` only for an array literal containing at least one
+`spread_element` child; `new` expressions and object literals always report `false`. The JS backend sets
+it in `tree_sitter_javascript/scan.rs`, and `PERF-JS-ALLOC-003` uses it to recognize the
+`acc = [...acc, x]` accumulator without re-opening the engine seam. `metrics.json`/schema DTOs are
+unchanged.
+
+**B2-W2 schema landing:** `SCHEMA_VERSION`, `SCHEMA_ARTIFACT_NAME`, `EMBEDDED_SCHEMA`, and the CLI
+`VERSION_SUFFIX` are `1.8`; `src/schema/metrics.schema.v1.8.json` and
+`docs/schema/metrics.schema.v1.8.json` are byte-identical; v1.7 is retained; `tests/schema_1_7.rs` is
+renamed `tests/schema_1_8.rs` and the version-pin sweep is applied. `docs/schema/metrics-json-v1.md`
+already carries the v1.7 → v1.8 delta entry.
 
 ### 4.8 CLI
 
 - `src/cli/mod.rs:54-79` — `Args { path, output, force }`; **no language flag**. B2 adds none.
 - Exit codes: usage 1, output 2, internal 3 (`src/cli/mod.rs:81-108`); unchanged.
-- `about`/help text currently says "C/Rust codebase" — widen to name JS/TS alongside the schema bump.
+- ``about`/help text now names the current contract: C/Rust/Python/JS/TS (B2-W2).
 
 ### 4.9 Tests / goldens / CI
 
@@ -158,7 +178,7 @@ schema change. Only the language token requires the minor bump.
 | 3 | `tests/p6_hardening.rs:373-546` | `PERFPAL_REGEN_GOLDEN=1` regenerator | used for all six trees |
 | 4 | `tests/p6_hardening.rs:165-176` | pinned detail-page set | extend per tree |
 | 5 | `tests/schema_1_4.rs:88-119, 247-291` | pins the supported set, `SCHEMA_VERSION`, artifact name, doc copy, emitted version | update to the staged fallback (B2/B3) and v1.8 |
-| 6 | `tests/schema_1_7.rs:36-63, 52-58, 121-163, 222` | v1.7 version/artifact/`$id`/doc-copy lock + required-list comparison against v1.6 | becomes the **v1.8** lock, keeping the required-list comparison against v1.7 |
+| 6 | `tests/schema_1_7.rs:36-63, 52-58, 121-163, 222` | v1.7 version/artifact/`$id`/doc-copy lock + required-list comparison against v1.6 | became the **v1.8** lock, renamed `tests/schema_1_8.rs`, keeping the required-list comparison against v1.7 (landed) |
 | 7 | `tests/pipeline_e2e.rs:77,85` | compares bundled artifact to docs v1.7 + emitted version | v1.8 |
 | 8 | `tests/resolver_health.rs:217`, `tests/i1a_entry_c.rs:406`, `tests/i1b_entry_rust.rs:498`, `tests/i1c_entry_python.rs:582` | emitted `schema_version == "1.7"` | v1.8 |
 | 9 | `tests/atlas_fixtures/mod.rs:155`, `tests/key_views.rs:203` | synthetic docs pinned to `"1.7"` | v1.8 (or version-agnostic; verify the assertion) |
@@ -215,7 +235,8 @@ not a reason to bump the pin without an ADR-0001 G5 review.
 
 **Additive IR-internal facts emitted in B2-W1 (no schema/DTO change).** The backend adds three
 serde-defaulted IR fields that carry the JS evidence the analyzer consumes in B2-W2; none is mirrored in
-`metrics.json`, so the wire schema stays v1.7-shaped until the v1.8 bump:
+`metrics.json`. The wire schema bump to v1.8 landed in B2-W2 (§13), and these facts still do not appear on
+the wire:
 
 - `FunctionUnit.allocations: Vec<AllocEvent>` — `kind` is `new` | `object` | `array`; each event carries
   the shared `EventMeta` (span, loop depth, innermost) and sorted/deduped `referenced_names` for the
@@ -251,7 +272,7 @@ different. **Implemented in B2-W1:**
   locks the surviving set (a `vendor/` JS file is scanned; the six skipped directories are not; oversized
   JS is dropped while oversized C still scans).
 
-## 8. Rule disposition table (FROZEN by the B2-W0 canary)
+## 8. Rule disposition table (frozen by the B2-W0 canary; implemented in B2-W2)
 
 **Freeze record (B2-W0, 2026-10-24).** Evidence: [`docs/evidence/js-canary.md`](../evidence/js-canary.md),
 the raw [`canary_results.json`](../evidence/js-canary/canary_results.json), and the counter
@@ -261,22 +282,27 @@ files, with 230 parse failures (220 are one pinned-TS-grammar limitation, `f<typ
 **Net: 11 rules ship, 1 is cut, 0 deferred.** The cut is an *identifiability* failure, not a
 frequency failure — no candidate scored zero corpus-wide.
 
+**Implementation status (B2-W2).** All 11 KEEP rules are implemented in
+`src/analyzer/heuristics/js/mod.rs` (`js_alloc_001` … `js_type_001`), registered with
+`RuleLanguage::Js`, and catalogued in `src/reporter/mod.rs`. `PERF-JS-LOOP-003` remains cut: it has no
+function, no `finding.rs` constant, and no catalog entry.
+
 Every rule message must cite **mechanism → fix → accepted FP class**.
 
-| Candidate | Construct | Mechanism | Fix | Accepted FP class | B2-W0 verdict |
-|---|---|---|---|---|---|
-| `PERF-JS-ALLOC-001` | object/array literal per iteration in a hot loop | young-gen allocation churn; escape analysis rarely elides | hoist the invariant construction | object created once for a different reason but mutated per iteration | **KEEP — reframed**: loop-invariance/escape gate mandatory, Info-first (1,021 prod vs 21,094 outside loops; the raw "literal in loop" shape is the corpus noise cannon) |
-| `PERF-JS-ALLOC-003` | `concat`/spread/`slice` accumulation in a loop | copies n elements per iteration → O(n²) | `push` into one array, or a single `concat` | deliberate immutable snapshot per iteration | **KEEP (Info)** — 16 prod / 32 outside-loop controls |
-| `PERF-JS-STR-001` | `+=` string accumulation in a loop | cons-string flattening at first use (MEDIUM; V8 ropes mitigate) | collect parts + `join("")` | tiny bounded loop (< 8 iterations) | **KEEP (MEDIUM)** — 73 prod / 159 outside-loop controls; honest V8-rope caveat |
-| `PERF-JS-LOOP-001` | nested loop depth ≥ 2 | superlinear iteration with no early exit | index map / early exit / hoist | matrix work where n² is inherent | **KEEP (Info)** — 165 prod / 900 depth-1 controls |
-| `PERF-JS-LOOP-002` | sync blocking I/O in a loop | one syscall/serialization per iteration, blocks the loop | batch, async API, or a single call outside the loop | startup-only loop | **KEEP (MEDIUM)** — 112 prod / 759 outside-loop controls |
-| `PERF-JS-LOOP-003` | `for...in` over an array | enumerates enumerable string keys incl. the prototype chain | `for...of` / indexed `for` | intentionally enumerating an object's keys | **CUT (v1)** — 0 array-literal RHS; all 24 prod hits are identifier RHS, statically indistinguishable from legitimate object enumeration without types |
-| `PERF-JS-LOOP-007` | `indexOf`/`includes`/`find` inside a loop | linear scan per iteration → O(n²) | `Set`/`Map` lookup | small (< 16) collections | **KEEP — flagship** — 177 prod / 857 outside-loop controls |
-| `PERF-JS-ASYNC-001` | `await` in a loop over independent work | serializes latency; one microtask round-trip per item | `Promise.all(items.map(...))` | deliberately sequential (rate limit, ordering) | **KEEP — flagship** — 395 prod (278 in `for...of`) / 4,363 await controls outside loops |
-| `PERF-JS-ASYNC-002` | sync blocking call inside `async` fn | stalls the event loop for every concurrent task | async API (`fs/promises`, `exec`) | CLI single-shot path | **KEEP — flagship** — 270 prod but 882 test hits (test-skewed); the async-function gate is mandatory; 462 non-async controls |
-| `PERF-JS-CALL-001` | direct recursion | stack growth + repeated frame cost | loop / accumulator | recursive tree walk with small depth | **KEEP (Info) — guard-gated** — 102/108 prod self-calls are guarded; only 6 unguarded, so the visible-base-case predicate is mandatory |
-| `PERF-JS-ARCH-001` | import cycle | module-init ordering + coupling; bundlers cannot tree-shake cleanly | break the cycle via a third module | type-only import cycles (TS erases them) | **KEEP (Info)** — 6 cyclic modules (execa); the relative-only graph is blind to alias monorepos (gemini-cli: 9 resolved edges over 1,255 modules) |
-| `PERF-JS-TYPE-001` | `delete obj.prop` | hidden-class → dictionary-mode transition | set to `undefined` or rebuild the object | intentional cache eviction (rare) | **KEEP (Info)** — 31 prod / 182 `.delete(...)` controls |
+| Candidate | Construct | Mechanism | Fix | Accepted FP class | B2-W0 verdict | B2-W2 |
+|---|---|---|---|---|---|---|
+| `PERF-JS-ALLOC-001` | object/array literal per iteration in a hot loop | young-gen allocation churn; escape analysis rarely elides | hoist the invariant construction | object created once for a different reason but mutated per iteration | **KEEP — reframed**: loop-invariance/escape gate mandatory, Info-first (1,021 prod vs 21,094 outside loops; the raw "literal in loop" shape is the corpus noise cannon) | implemented |
+| `PERF-JS-ALLOC-003` | `concat`/spread/`slice` accumulation in a loop | copies n elements per iteration → O(n²) | `push` into one array, or a single `concat` | deliberate immutable snapshot per iteration | **KEEP (Info)** — 16 prod / 32 outside-loop controls | implemented as: `concat`/`slice` calls + `has_spread` array literals, both gated on a loop-reassigned accumulator root |
+| `PERF-JS-STR-001` | `+=` string accumulation in a loop | cons-string flattening at first use (MEDIUM; V8 ropes mitigate) | collect parts + `join("")` | tiny bounded loop (< 8 iterations) | **KEEP (MEDIUM)** — 73 prod / 159 outside-loop controls; honest V8-rope caveat | implemented as: string/template-literal RHS gate on `+=`, plus the `x = x + <literal>` form **only when the binary is the whole RHS**; numeric `+=` stays silent |
+| `PERF-JS-LOOP-001` | nested loop depth ≥ 2 | superlinear iteration with no early exit | index map / early exit / hoist | matrix work where n² is inherent | **KEEP (Info)** — 165 prod / 900 depth-1 controls | implemented |
+| `PERF-JS-LOOP-002` | sync blocking I/O in a loop | one syscall/serialization per iteration, blocks the loop | batch, async API, or a single call outside the loop | startup-only loop | **KEEP (MEDIUM)** — 112 prod / 759 outside-loop controls | implemented |
+| `PERF-JS-LOOP-003` | `for...in` over an array | enumerates enumerable string keys incl. the prototype chain | `for...of` / indexed `for` | intentionally enumerating an object's keys | **CUT (v1)** — 0 array-literal RHS; all 24 prod hits are identifier RHS, statically indistinguishable from legitimate object enumeration without types | cut (no code) |
+| `PERF-JS-LOOP-007` | `indexOf`/`includes`/`find` inside a loop | linear scan per iteration → O(n²) | `Set`/`Map` lookup | small (< 16) collections | **KEEP — flagship** — 177 prod / 857 outside-loop controls | implemented |
+| `PERF-JS-ASYNC-001` | `await` in a loop over independent work | serializes latency; one microtask round-trip per item | `Promise.all(items.map(...))` | deliberately sequential (rate limit, ordering) | **KEEP — flagship** — 395 prod (278 in `for...of`) / 4,363 await controls outside loops | implemented |
+| `PERF-JS-ASYNC-002` | sync blocking call inside `async` fn | stalls the event loop for every concurrent task | async API (`fs/promises`, `exec`) | CLI single-shot path | **KEEP — flagship** — 270 prod but 882 test hits (test-skewed); the async-function gate is mandatory; 462 non-async controls | implemented |
+| `PERF-JS-CALL-001` | direct recursion | stack growth + repeated frame cost | loop / accumulator | recursive tree walk with small depth | **KEEP (Info) — guard-gated** — 102/108 prod self-calls are guarded; only 6 unguarded, so the visible-base-case predicate is mandatory | implemented |
+| `PERF-JS-ARCH-001` | import cycle | module-init ordering + coupling; bundlers cannot tree-shake cleanly | break the cycle via a third module | type-only import cycles (TS erases them) | **KEEP (Info)** — 6 cyclic modules (execa); the relative-only graph is blind to alias monorepos (gemini-cli: 9 resolved edges over 1,255 modules) | implemented |
+| `PERF-JS-TYPE-001` | `delete obj.prop` | hidden-class → dictionary-mode transition | set to `undefined` or rebuild the object | intentional cache eviction (rare) | **KEEP (Info)** — 31 prod / 182 `.delete(...)` controls | implemented |
 
 **Cut / deferred with reasons:** `PERF-JS-LOOP-003` is **cut for v1** (see the verdict row). The
 pre-canary cuts remain: `arr.length` hoisting (V8 does not pay a re-read — folklore);
@@ -311,7 +337,7 @@ counter twice and `cmp`s the output).
 
 ## 10. Cost model
 
-- Reuse `function_cost_v2` unchanged (`metrics.schema.v1.7.json:153`).
+- Reuse `function_cost_v2` unchanged (present in both v1.7 and v1.8).
 - Loop forms: C-style `for`, `for...of`, `for...in`, `while`, `do...while`; `await` does not alter shape.
 - **Implemented in B2-W1:** literal trip counts only for `for (let i = 0; i < N; i++)` / `<=` with an
   integer literal `N` (clamped to 1_000_000); `<=` adds one (`i <= 3` ⇒ 4). `for...of`, non-zero starts,
@@ -341,13 +367,14 @@ counter twice and `cmp`s the output).
 | `R-tb-006` | No type info → type-aware rules impossible | `syntactic` tier stated in every finding; limitations published |
 | `R-tb-007` | Build time/binary size +2 C parsers | accepted; no feature gate |
 | `R-tb-008` | Global directory skips change C/Rust/Python discovery for repos with those dirs | documented behavior change; existing corpora contain none; acceptance criterion 6 restated |
-| `R-tb-009` | Reporter `HEURISTIC_CATALOG_V1` is A-owned but mechanically required (panics on uncatalogued rule ids, 67-count locks) | blocker `B-tb-003`: A lands entries before B2, or founder approves a catalog-only B edit |
+| `R-tb-009` | Reporter `HEURISTIC_CATALOG_V1` is A-owned but mechanically required (panics on uncatalogued rule ids, 67-count locks) | **resolved (B2-W2, `D-tb-017`):** founder-approved atomic catalog-only B edit; the 11 entries landed with the registry block and the count/equality/Appendix-A locks moved by exactly 11 |
 | `R-tb-010` | TSX vs generic-arrow ambiguity (`<T,>`) degrades parse health | record parse-health degradation honestly; do not score unparsed regions; `.tsx` snapshot tests |
 | `R-tb-011` | CJS/ESM module kind is not inferred; entry detection mixes `require.main` and `import.meta.url` | document as a limitation; entry candidates are sorted/deduped/first-match; no `package.json` `"type"` claim |
 | `R-tb-012` | `.d.ts` skip makes type-only modules invisible (imports become unresolved-internal data-only); an unlabeled minified file < 2 MiB is still parsed; extension matching is case-sensitive | documented limitations; no finding emitted for unresolved-internal; size cap bounds the worst case |
 | `R-tb-013` | Malformed/unreadable `package.json` could escalate a per-file problem to exit 3 | **mitigated (B2-W1):** malformed/unreadable manifests are ignored, the conventional/in-source ladder still runs, and the scan exits 0 (locked by the integration test) |
 | `R-tb-014` | Pinned TS grammar `0.23.2` cannot parse `f<typeof import("x")>()` (220 of 229 gemini-cli parse failures in the canary) | degrade honestly (partial parse); upgrade only via the ADR-0001 G5 node-types review; B3 snapshot tests |
-| `R-tb-015` | **Schema staging (two surfaces):** B2-W1 emits `files[].language == "js"` AND an empty-scan `scan.languages` fallback of `["c","js","python","rust"]`; the bundled v1.7 artifact's enums list only `c`/`rust`/`python`, and there is no in-repo validator | deliberate staging, not a shippable point: v1.8 lands in B2-W2 (enums hold all six tokens) before any release; do not publish a W1 build as schema-valid |
+| `R-tb-015` | **Schema staging (two surfaces):** B2-W1 emitted `files[].language == "js"` against a bundled v1.7 artifact whose enums listed only `c`/`rust`/`python` | **resolved (B2-W2):** v1.8 landed in `src/schema/` + byte-identical `docs/schema/` copy; both enums hold all six tokens; v1.7 retained; version-pin sweep applied. A W1 build remains non-shippable (historical) |
+| `R-tb-016` | **Lexical rule gates:** `ALLOC-001` models loop-invariance, not a separate escape analysis; `CALL-001` treats any earlier comparison as a visible base case; `LOOP-001` cannot test for an early exit (no break/return events in IR); `LOOP-007` proxies the frozen "small collection" class with loop trip count | gates documented exactly as implemented; 1.0/1.0 is the synthetic precision corpus only — re-run the real-code canary before merge |
 
 **Accepted limitations added by B2-W1:**
 
@@ -363,7 +390,78 @@ counter twice and `cmp`s the output).
 and minified bundles skipped; no framework semantics; JSX parsed structurally only; computed
 `require`/`import()` invisible; static analysis is approximate — profile to confirm.
 
-## 13. Session B1 DoD (historical)
+## 13. Session B2-W2 implementation (rules + schema v1.8)
+
+**State:** implemented in the working tree; **uncommitted**, review panel **pending**, commit pending
+founder approval. Branch `feat/js-ts` rebased on `main` @ `9a94905`. TS/TSX scanning is B3, so
+`SUPPORTED_LANGUAGES` is still `["c","js","python","rust"]`; the schema admits all six tokens in advance.
+
+### 13.1 Rule → code (all confidence MEDIUM)
+
+| Rule | Severity | Function | Gate actually implemented (heuristic, not proof) |
+|---|---|---|---|
+| `PERF-JS-ALLOC-001` | info | `js_alloc_001` | object/array literal at loop depth ≥ 1; silent when a referenced name is the nearest loop's induction variable or is assigned inside that loop; silent with no enclosing loop node |
+| `PERF-JS-ALLOC-003` | info | `js_alloc_003` | `concat`/`slice` in a loop on a non-empty receiver that the same loop reassigns, **or** an array literal with `spread` (`has_spread`) whose referenced accumulator name the nearest enclosing loop reassigns; snapshot call/literal roots stay silent |
+| `PERF-JS-STR-001` | warn | `js_str_001` | `+=` with an identifier left operand **and a string/template-literal right operand** in a loop, or `x = x + <string\|template literal>` **where the binary is the whole RHS**; numeric/identifier `+=` is silent; silent on a canonical trip count < 8; unknown trip fires |
+| `PERF-JS-LOOP-001` | info | `js_loop_001` | one finding per function at the earliest loop with `depth >= 2`; `max_depth` counts only loops whose span is contained in that anchored loop's span |
+| `PERF-JS-LOOP-002` | warn | `js_loop_002` | known synchronous Node API (23-name set) at loop depth ≥ 1 |
+| `PERF-JS-LOOP-007` | warn | `js_loop_007` | `indexOf`/`includes`/`find`/`findIndex`/`some`/`every`/`filter` in a loop with a non-empty receiver root; silent on a canonical trip count < 16; unknown trip fires |
+| `PERF-JS-ASYNC-001` | warn | `js_async_001` | `await` at loop depth ≥ 1, only inside a function with `is_async` |
+| `PERF-JS-ASYNC-002` | warn | `js_async_002` | known synchronous Node API anywhere in an `is_async` function; **no loop requirement** |
+| `PERF-JS-CALL-001` | info | `js_call_001` | bare direct self-call (no receiver root); fires only when no comparison in the function starts before the call span — a visible base case is enough to stay silent |
+| `PERF-JS-ARCH-001` | info | `js_arch_001` | resolved relative-import cycles via `break_cycles`; one finding per broken edge at that pair's earliest retained directive span |
+| `PERF-JS-TYPE-001` | info | `js_type_001` | `delete obj.prop` with a `MemberAccess` operand; the subscript form (`delete obj["k"]`) and a bare identifier (`delete x`) are excluded |
+
+Wiring: constants in `src/analyzer/finding.rs`; the ascending `PERF-JS-*` registry block and
+`RuleLanguage::{Js,Ts}` in `src/analyzer/mod.rs`; the `js|ts|tsx` partition to `js_units` (`Ts` is reserved
+and empty in v1); 11 catalog entries and the 67 → 78 count/equality locks in `src/reporter/mod.rs`.
+
+### 13.2 Test and corpus inventory
+
+- `src/analyzer/heuristics/js/tests.rs` — 27 parser-free IR unit tests (positive + control per rule, plus
+  the LOOP-003/`PERF-TS-*` absence lock).
+- `tests/fixtures/ir/PERF-JS-*__*.json` — 22 fixtures (one positive + one control per rule), run by
+  `tests/js_ir_fixtures.rs` with no parser bound.
+- `examples-js/` — 15 scanned sources (14 `.js` + 1 `.cjs`) plus `package.json` (`main: index.js`, script /
+  HIGH). `tests/examples_js_coverage.rs` pins exactly 11 findings (0 hot / 5 warn / 6 info), each rule once,
+  and 18 silent controls.
+- `tests/fixtures/precision/js/` — 25 files with `labels.json` entries; all 11 rules measure 1.0 / 1.0.
+- `tests/determinism_js.rs` — masked double run over the full artifact set (metrics, report, detail/queue,
+  charts, bundled schema); byte-equal modulo `scan.started_at` / `scan.duration_ms`.
+- `tests/golden/report-js/` — 20 files; `GOLDEN_TREES` 4 → 5. All five trees carry
+  `metrics.schema.v1.8.json`; no v1.7 artifact remains.
+- `tests/benchmark/` — the `small` rung is 142 files / 1,655 LOC / 96 findings; 78 active rules (79 scoped
+  including retired `PERF-RS-STR-001`); JS rules 1.0 / 1.0.
+- Schema: `tests/schema_1_8.rs` (was `schema_1_7.rs`) plus the version-pin sweep in `schema_1_4`,
+  `pipeline_e2e`, `resolver_health`, `i1a`/`i1b`/`i1c`, `atlas_fixtures`, `key_views`, `p6_hardening`.
+
+### 13.3 Recorded verification
+
+- `cargo test --locked` — 63 suites, **935 passed**, 0 failed.
+- `cargo deny check licenses` — ok.
+- `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` and
+  `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` — green.
+- Native check — green.
+- `examples-js` double run — byte-identical modulo the two provenance fields.
+- Gate transcript: `docs/evidence/js-w2/gate.txt` (recorded in the tree).
+
+### 13.4 Accepted limitations added or still live
+
+- **TS/TSX scanning is B3.** `.ts`/`.mts`/`.cts`/`.tsx` are not in `SUPPORTED_LANGUAGES` yet; `.jsx` maps to
+  `js` because the JS grammar embeds JSX.
+- **Non-arrow class-field initializers and `class_static_block` bodies are not event-scanned** (`D-tb-016`);
+  they belong to no function record, so their calls/allocs never reach `stats.functions[]`.
+- **Reporter dependency clause** currently renders a JS corpus as bare "js module edges"; label polish is B4.
+- **Findings are optimization candidates, not proven bottlenecks.** The tier is syntactic; no type
+  information and no semantic resolver claim.
+- **`ALLOC-003` member/`this` accumulators and spread-root attribution:** `assigned_within` matches plain
+  identifier targets only, so `this.items = [...this.items, x]` is not detected; the spread arm reports
+  the alphabetically first loop-reassigned referenced name as `receiver_root` (the spread operand itself
+  is not identified in v1). Both are documented accepted limitations.
+- **Count synchronization is test-locked:** the reporter count, the benchmark active set, and the golden
+  artifact sets move together when a rule lands; the 78 count is asserted in both suites.
+
+## 14. Session B1 DoD (historical)
 
 > **Historical (B1).** This checkpoint fails by construction after B2-W0's pins; it is kept as the B1
 > evidence record. The current gate is the plan `js-ts` Definition of Done plus the B2-W0 verification
@@ -385,7 +483,7 @@ jq -e . state/tracks/js-ts/session-state.json >/dev/null && echo "state-json: OK
 Expected: every line prints its `OK` marker and the script exits `0`. (`cargo` is not on the non-interactive
 PATH in this environment; the full `~/.cargo/bin/cargo` path is required.)
 
-## 14. Open questions for B2 (must be resolved by the canary, not by assumption)
+## 15. Open questions for B2 (must be resolved by the canary, not by assumption)
 
 1. **Resolved (B2-W0):** 11 candidates survive; `PERF-JS-LOOP-003` is cut. Severity defaults:
    Info for `ALLOC-003`/`LOOP-001`/`CALL-001`/`ARCH-001`/`TYPE-001`; MEDIUM for
@@ -398,4 +496,5 @@ PATH in this environment; the full `~/.cargo/bin/cargo` path is required.)
 3. Is `require()` static-string extraction worth shipping in v1, or does it add more FP than graph value?
 4. Does a JS fixture join `tests/fixtures/e2e-mixed/` (which currently panics on non-C/Rust paths)?
 5. Who lands `HEURISTIC_CATALOG_V1` — Track A before B2, or a founder-approved catalog-only edit by B?
-   (Blocker `B-tb-003`; B2 cannot ship a rule without it. The frozen set is **11** entries, not 12.)
+   **Resolved (B2-W2, `D-tb-017`):** the founder approved the atomic catalog-only B edit; the 11 entries
+   landed with the registry block, so the frozen set is **11** entries, not 12 (`B-tb-003` closed).

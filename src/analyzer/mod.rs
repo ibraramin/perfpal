@@ -51,6 +51,14 @@ type HeuristicFn = fn(&[FileUnit]) -> Vec<Finding>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum RuleLanguage {
     C,
+    /// JavaScript and TypeScript/TSX share one family (`PERF-JS-*`): the
+    /// runtime mechanism (V8 / Node) is identical (plan `js-ts` B2-W2).
+    Js,
+    /// Reserved for TypeScript-only constructs. The B2-W0 canary proved none,
+    /// so v1 registers **zero** `PERF-TS-*` rules — the arm exists so the
+    /// language partition stays explicit and empty-slice skipping applies.
+    #[allow(dead_code)] // Reserved tag: no REGISTRY entry constructs it in v1.
+    Ts,
     Python,
     Rust,
 }
@@ -66,17 +74,23 @@ pub(crate) struct RegistryEntry {
     f: HeuristicFn,
 }
 
-/// The registry, DECLARED IN ASCENDING `rule_id` ORDER ACROSS ALL THREE
-/// LANGUAGES (all `PERF-C-*` ascending, then all `PERF-PY-*` ascending, then
-/// all `PERF-RS-*` ascending) — execution order equals declaration order and
-/// duplicate collapse is first-wins, so declaration order is load-bearing
-/// (modules.md §3.3). Adding a heuristic = inserting a new entry whose rule_id
-/// sorts into place (open pattern, minor-bump schema policy).
+/// The registry, DECLARED IN ASCENDING `rule_id` ORDER ACROSS ALL LANGUAGES
+/// (all `PERF-C-*` ascending, then all `PERF-JS-*` ascending, then all
+/// `PERF-PY-*` ascending, then all `PERF-RS-*` ascending) — execution order
+/// equals declaration order and duplicate collapse is first-wins, so
+/// declaration order is load-bearing (modules.md §3.3). Adding a heuristic =
+/// inserting a new entry whose rule_id sorts into place (open pattern,
+/// minor-bump schema policy).
 ///
 /// C: alloc_001, alloc_002, alloc_003, arch_001, arch_002, arch_003, call_001,
 /// call_002, loop_001, loop_002, loop_003, loop_004, loop_005, loop_006,
 /// loop_007, loop_008, mem_001, mem_002, str_001, str_002, str_003,
 /// type_001, type_002.
+/// JavaScript/TypeScript (plan `js-ts` B2-W2 — the frozen 11-rule disposition
+/// table, docs/architecture/js-ts.md §8): alloc_001, alloc_003, arch_001,
+/// async_001, async_002, call_001, loop_001, loop_002, loop_007, str_001,
+/// type_001, ascending. `PERF-JS-LOOP-003` is cut for v1; no `PERF-TS-*` rule
+/// exists.
 /// Python (plan `python-backend` W3 — 13 reframed mirrors + 9 native): the 22
 /// `PERF-PY-*` rules from docs/architecture/python-backend.md §9, ascending.
 /// Rust (waves C1 structural + C2 API-name) — the 22-rule Rust catalog
@@ -199,6 +213,63 @@ const REGISTRY: &[RegistryEntry] = &[
         language: RuleLanguage::C,
         rule_id: finding::TYPE_002_RULE_ID,
         f: heuristics::type_002,
+    },
+    // ---- JavaScript/TypeScript (`PERF-JS-*`) block — ascending rule_id
+    // (plan `js-ts` B2-W2; frozen 11-rule disposition table). ----
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_ALLOC_001_RULE_ID,
+        f: heuristics::js_alloc_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_ALLOC_003_RULE_ID,
+        f: heuristics::js_alloc_003,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_ARCH_001_RULE_ID,
+        f: heuristics::js_arch_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_ASYNC_001_RULE_ID,
+        f: heuristics::js_async_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_ASYNC_002_RULE_ID,
+        f: heuristics::js_async_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_CALL_001_RULE_ID,
+        f: heuristics::js_call_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_LOOP_001_RULE_ID,
+        f: heuristics::js_loop_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_LOOP_002_RULE_ID,
+        f: heuristics::js_loop_002,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_LOOP_007_RULE_ID,
+        f: heuristics::js_loop_007,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_STR_001_RULE_ID,
+        f: heuristics::js_str_001,
+    },
+    RegistryEntry {
+        language: RuleLanguage::Js,
+        rule_id: finding::JS_TYPE_001_RULE_ID,
+        f: heuristics::js_type_001,
     },
     // ---- Python (`PERF-PY-*`) block — ascending rule_id (W3). ----
     RegistryEntry {
@@ -448,24 +519,30 @@ pub(crate) use heuristics::{CrossFileCallEdge, cross_file_call_edges, scanf_form
 #[must_use]
 pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
     // Language gating (plan `rust-backend` R3 workstream C1; extended by plan
-    // `python-backend` W3). The registry is language-tagged, so each entry must
-    // receive ONLY the units for its own language — otherwise a name-based C
-    // rule (ALLOC/STR/ARCH) would fire on same-named constructs in another
-    // language. The units are partitioned ONCE here into three owned slices (a
-    // single deep clone of every `FileUnit`); the alternative — handing each
-    // rule the full borrowed set and repeating the language filter inside all
-    // 67 rules — trades that one upfront clone for 67 per-rule passes over the
-    // units. The upfront split is paid once per `analyze` call and keeps every
-    // rule a pure, language-homogeneous IR view. `"c"`, `"python"` and `"rust"`
-    // are bucketed explicitly; any OTHER language is dropped — it has no
-    // registry rules and MUST NOT be scored by another language's heuristics.
+    // `python-backend` W3 and plan `js-ts` B2-W2). The registry is
+    // language-tagged, so each entry must receive ONLY the units for its own
+    // language — otherwise a name-based C rule (ALLOC/STR/ARCH) would fire on
+    // same-named constructs in another language. The units are partitioned
+    // ONCE here into four owned slices (a single deep clone of every
+    // `FileUnit`); the alternative — handing each rule the full borrowed set
+    // and repeating the language filter inside every rule — trades that one
+    // upfront clone for one per-rule pass over the units. The upfront split is
+    // paid once per `analyze` call and keeps every rule a pure,
+    // language-homogeneous IR view. `"c"`, `"js" | "ts" | "tsx"`, `"python"`
+    // and `"rust"` are bucketed explicitly; any OTHER language is dropped — it
+    // has no registry rules and MUST NOT be scored by another language's
+    // heuristics.
     let mut c_units: Vec<FileUnit> = Vec::new();
+    let mut js_units: Vec<FileUnit> = Vec::new();
     let mut python_units: Vec<FileUnit> = Vec::new();
     let mut rust_units: Vec<FileUnit> = Vec::new();
     for unit in units {
         match unit.file.language.as_str() {
             "rust" => rust_units.push(unit.clone()),
             "c" => c_units.push(unit.clone()),
+            // JS and TS/TSX share one analyzer family: the V8/Node runtime
+            // mechanism is identical (plan `js-ts` §6).
+            "js" | "ts" | "tsx" => js_units.push(unit.clone()),
             "python" => python_units.push(unit.clone()),
             _ => {}
         }
@@ -477,6 +554,11 @@ pub fn analyze(units: &[FileUnit]) -> Vec<Finding> {
     for entry in REGISTRY {
         let slice: &[FileUnit] = match entry.language {
             RuleLanguage::C => &c_units,
+            RuleLanguage::Js => &js_units,
+            // No `PERF-TS-*` rule exists in v1 (the B2-W0 canary proved no
+            // TypeScript-only candidate), so the reserved language runs over
+            // the empty slice and the `is_empty` skip below applies.
+            RuleLanguage::Ts => &[],
             RuleLanguage::Python => &python_units,
             RuleLanguage::Rust => &rust_units,
         };

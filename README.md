@@ -84,8 +84,8 @@ A completed scan leaves exactly this layout (default `perfpal-report/`):
 
 ```
 perfpal-report/
-├── metrics.json              # raw machine-readable data (schema v1.7)
-├── metrics.schema.v1.7.json  # byte-copy of the exact schema for this schema_version
+├── metrics.json              # raw machine-readable data (schema v1.8)
+├── metrics.schema.v1.8.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report (answer-first key views)
 ├── report.html               # static HTML sibling (key views + Explorer)
 ├── findings-detail.md        # complete ranked action list + full finding detail

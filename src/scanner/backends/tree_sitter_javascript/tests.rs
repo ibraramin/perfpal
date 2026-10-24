@@ -206,21 +206,49 @@ fn delete_unary_event_only() {
     assert_eq!(f.unaries.len(), 1, "{:?}", f.unaries);
     assert_eq!(f.unaries[0].op, "delete");
     assert_eq!(f.unaries[0].operand.kind, ShapeKind::MemberAccess);
+    assert_eq!(
+        f.unaries[0].operand.name.as_deref(),
+        Some("prop"),
+        "member-expression shapes must carry the property name (TYPE-001 evidence)"
+    );
+    assert_eq!(
+        f.unaries[0].operand.depth,
+        Some(1),
+        "member-chain depth is preserved alongside the property name"
+    );
 }
 
 /// `new`, object and array literals each emit an `AllocEvent` and count toward
-/// `alloc_site_count`; `referenced_names` is sorted/deduped and excludes keys.
+/// `alloc_site_count`; `referenced_names` is sorted/deduped and excludes keys;
+/// only array literals with a spread child set `has_spread`.
 #[test]
 fn allocation_events_and_referenced_names() {
-    let src = "function f(a, b) {\n  const o = { a: 1, b: [x, y, x] };\n  const n = new Widget(b, a);\n}\n";
+    let src = "function f(a, b) {\n  const o = { a: 1, b: [x, y, x] };\n  const n = new Widget(b, a);\n  const s = [...a, b];\n}\n";
     let ex = extract_js(src);
     let f = function(&ex, "f");
-    assert_eq!(f.record.alloc_site_count, 3, "{:?}", f.allocations);
+    assert_eq!(f.record.alloc_site_count, 4, "{:?}", f.allocations);
     let kinds: Vec<AllocKind> = f.allocations.iter().map(|a| a.kind).collect();
-    assert_eq!(kinds, [AllocKind::Object, AllocKind::Array, AllocKind::New]);
+    assert_eq!(
+        kinds,
+        [
+            AllocKind::Object,
+            AllocKind::Array,
+            AllocKind::New,
+            AllocKind::Array
+        ]
+    );
     assert_eq!(f.allocations[0].referenced_names, ["x", "y"]);
     assert_eq!(f.allocations[1].referenced_names, ["x", "y"]);
     assert_eq!(f.allocations[2].referenced_names, ["a", "b"]);
+    // Object/new never carry a spread fact; the spread array does.
+    assert!(!f.allocations[0].has_spread);
+    assert!(!f.allocations[1].has_spread, "plain array literal");
+    assert!(!f.allocations[2].has_spread);
+    assert!(
+        f.allocations[3].has_spread,
+        "`[...a, b]` has a spread child"
+    );
+    assert_eq!(f.allocations[3].referenced_names, ["a", "b"]);
     let widget = f
         .calls
         .iter()

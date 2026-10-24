@@ -1,7 +1,7 @@
 //! P6 hardening gates (modules.md §7): finding-id uniqueness (composite-id
 //! contract, modules.md §1 analyzer row) and golden-report locking.
 //!
-//! Golden flow (four committed trees, see [`GOLDEN_TREES`]): each tree is a
+//! Golden flow (five committed trees, see [`GOLDEN_TREES`]): each tree is a
 //! FULL pipeline output over its fixture, masked in place for every
 //! run-varying field. Regenerate ALL trees with:
 //!
@@ -50,11 +50,12 @@ struct GoldenTree {
     snapshot_exclude: Option<&'static str>,
 }
 
-/// The four locked trees. `c` is the original (T1 uniqueness stays pointed
+/// The five locked trees. `c` is the original (T1 uniqueness stays pointed
 /// here); `mixed` (`.c` + `.h` + `.rs`) and `rust` (`examples-rust/`) are the
 /// R5 Wave 2 additions; `python` (`examples-python/`) is the plan
-/// `python-backend` W4 Lane 5 addition.
-const GOLDEN_TREES: [GoldenTree; 4] = [
+/// `python-backend` W4 Lane 5 addition; `js` (`examples-js/`) is the plan
+/// `js-ts` B2-W2 addition.
+const GOLDEN_TREES: [GoldenTree; 5] = [
     GoldenTree {
         tag: "c",
         fixture: "tests/fixtures/e2e",
@@ -77,6 +78,12 @@ const GOLDEN_TREES: [GoldenTree; 4] = [
         tag: "python",
         fixture: "examples-python",
         golden: "tests/golden/report-python",
+        snapshot_exclude: None,
+    },
+    GoldenTree {
+        tag: "js",
+        fixture: "examples-js",
+        golden: "tests/golden/report-js",
         snapshot_exclude: None,
     },
 ];
@@ -110,7 +117,7 @@ fn fixture_root() -> PathBuf {
 #[cfg(not(feature = "semantic-clang"))]
 const GOLDEN_ARTIFACTS: [&str; 17] = [
     "metrics.json",
-    "metrics.schema.v1.7.json",
+    "metrics.schema.v1.8.json",
     "report.md",
     "report.html",
     "findings-detail.md",
@@ -173,6 +180,9 @@ const EXPECTED_COMPONENT_PAGES: &[(&str, &[&str])] = &[
             "charts/component-02-pkg.svg",
         ],
     ),
+    // `examples-js` is flat (all sources at the package root), so its single
+    // component is the root component.
+    ("js", &["charts/component-01-root.svg"]),
 ];
 
 /// Assert a tree's page set is EXACTLY the pinned expectation (no
@@ -462,7 +472,7 @@ fn regenerate_goldens() {
             "charts/layer-bands.svg".to_string(),
             "charts/layer-findings.svg".to_string(),
             "charts/graph.dot".to_string(),
-            "metrics.schema.v1.7.json".to_string(),
+            "metrics.schema.v1.8.json".to_string(),
         ];
         let mut component_pages: Vec<String> = fs::read_dir(golden.join("charts"))
             .expect("charts dir")

@@ -1,0 +1,89 @@
+[
+  {
+    "file": {
+      "path": "pos/async_001.js",
+      "language": "js",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "pos/async_001.js#loadAll#1:1",
+          "name": "loadAll",
+          "path": "pos/async_001.js",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 9,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 9,
+          "resolver_tier": "syntactic",
+          "is_async": true
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {
+              "start_line": 4,
+              "start_col": 3,
+              "end_line": 7,
+              "end_col": 4
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "awaits": [
+          {
+            "span": {
+              "start_line": 5,
+              "start_col": 5,
+              "end_line": 5,
+              "end_col": 30
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "try_blocks": [],
+        "allocations": [],
+        "unaries": []
+      }
+    ]
+  }
+]

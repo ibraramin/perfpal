@@ -197,7 +197,7 @@ fn doc() -> MetricsDocument {
         ),
     ];
     MetricsDocument {
-        schema_version: "1.7".to_string(),
+        schema_version: "1.8".to_string(),
         tool: ToolInfo {
             name: "perfpal".to_string(),
             version: "test".to_string(),

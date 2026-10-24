@@ -22,18 +22,20 @@ fresh tempdir, and free of stale on-disk artifacts.
   unmatched scoped finding is already an FP); the harness additionally asserts
   every `Silent` rule is inside the scored set.
 - **`Rung { name, files, labels }`** — one labeled corpus.
-- The `small` rung plants ONE true positive for **every active rule in the
-  67-rule catalog** (23 C + 22 Python + 22 Rust) and an explicit `Silent`
-  control for every one of those rules, plus the retired `PERF-RS-STR-001`
-  always-silent control. The harness asserts that the set of rules carrying a
-  `Fire` label **equals** the 67 active rule ids and that `Silent` coverage is
-  exactly the 67 active rules plus `PERF-RS-STR-001`, so deleting an extension
-  unit can never silently drop a rule from scoring. The nine existential gate
-  constructs are lifted **verbatim** from the committed M1 corpus
-  (`tests/fixtures/precision/`), retaining every M1 fire anchor (including the
-  six Python KPI fixtures); the other rules use dedicated minimal files (with
-  unique `_cNN` / `_rNN` / `py_` names) so a construct can never trip a sibling
-  rule unlabelled.
+- The `small` rung plants at least ONE true positive for **every active rule
+  in the 78-rule catalog** (23 C + 11 JS + 22 Python + 22 Rust) and an explicit
+  `Silent` control for every one of those rules, plus the retired
+  `PERF-RS-STR-001` always-silent control. Rules with more than one implemented
+  arm (JS ALLOC-003 and STR-001) plant one TP per arm. The harness asserts that
+  the set of rules carrying a `Fire` label **equals** the 78 active rule ids and
+  that `Silent` coverage is exactly the 78 active rules plus
+  `PERF-RS-STR-001`, so deleting an extension unit can never silently drop a
+  rule from scoring. The
+  nine existential gate constructs are lifted **verbatim** from the committed
+  M1 corpus (`tests/fixtures/precision/`), retaining every M1 fire anchor
+  (including the six Python KPI fixtures); the other rules use dedicated
+  minimal files (with unique `_cNN` / `_rNN` / `py_` / `js_` names) so a
+  construct can never trip a sibling rule unlabelled.
 - `medium`/`large` replicate the NINE gate rules **unchanged** (the M1 KPI
   set) with a unique `_k` suffix on every function/definition name, so
   replicas can never trip the cross-file name-uniqueness gate (ARCH-003),
@@ -53,7 +55,7 @@ fresh tempdir, and free of stale on-disk artifacts.
 3. Silent controls are emitted without a line (`0`); they document the intended
    negative. The `small` rung labels one for every active rule (wherever the
    template contains a genuine near-miss construct), and the harness asserts
-   that coverage is exactly the 67 active rules plus `PERF-RS-STR-001`.
+   that coverage is exactly the 78 active rules plus `PERF-RS-STR-001`.
 
 ## Scoring
 
@@ -69,7 +71,7 @@ the baseline is the intended 1.0/1.0 target and must **never** be lowered to
 make a test pass. A shortfall is a real analyzer gap or a corpus bug.
 
 The ratchet is **per rung**, scoped to the rules that rung actually plants:
-`small` ratchets all 67 active rules (plus `PERF-RS-STR-001`), while
+`small` ratchets all 78 active rules (plus `PERF-RS-STR-001`), while
 `medium`/`large` ratchet only the nine gate rules they replicate. Every rule a
 rung plants MUST appear in `baseline.json`, and every `baseline.json` key MUST
 be planted by at least one rung (no stale entries).
@@ -77,13 +79,14 @@ be planted by at least one rung (no stale entries).
 ## Extending the catalog
 
 The rule set is pinned in `corpus.rs`: `gate_c_unit` / `gate_rust_unit` for
-the nine replicated gate rules, and `c_ext` / `rust_ext` / `py_ext` (plus the
-collateral labels folded into `small`) for the rest. To add another rule:
+the nine replicated gate rules, and `c_ext` / `rust_ext` / `py_ext` / `js_ext`
+(plus the collateral labels folded into `small`) for the rest. To add another
+rule:
 1. add a template (TP + silent control) in `corpus.rs`;
 2. add its fire/silent labels;
 3. add the rule id to `active_rule_ids()` in `tests/benchmark/mod.rs` (the
    `assert_small_covers_catalog` lock asserts the Fire-label set equals the
-   67 active ids, so a new rule fails loudly until listed);
+   78 active ids, so a new rule fails loudly until listed);
 4. add the rule to `baseline.json`.
 The in-crate reporter test `catalog_covers_every_registry_rule_id`
 (`src/reporter/mod.rs`) locks the registry, catalog and count together.

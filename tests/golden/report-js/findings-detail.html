@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Perfpal Findings Detail — schema 1.8</title>
+<style>
+body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+#findings table{min-width:72rem}
+#findings tbody td{white-space:nowrap}
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
+figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}
+figcaption{margin-top:.5rem}
+img{max-width:100%;height:auto}
+figure.pz img{max-width:none;touch-action:none}
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
+#filter-bar{margin:.5rem 0}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
+.kv{margin:1.25rem 0 1.75rem}
+.kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
+.kv-action{margin:.15rem 0 .75rem;color:#444}
+.kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
+.kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}
+.kv-rank{font-size:1.5rem;font-weight:700;line-height:1}
+.kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}
+.kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.kv-loc{font-weight:700;color:#111;text-decoration:none}
+.kv-loc:hover{text-decoration:underline}
+.kv-title{font-weight:600}
+.kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}
+.kv-caption{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
+.kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
+.sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
+.sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}
+.sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}
+.kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}
+.kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}
+.kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}
+.kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}
+.kv-more{margin:.5rem 0 .2rem;font-weight:600}
+.kv-bars{max-width:100%}
+.kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}
+.kv-brow:last-child{border-bottom:1px solid #999}
+.kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
+.kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
+.kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
+.kv-fill.demoted{background:#a0aec0}
+.kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
+.kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
+.kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
+@media print{.kv-row,.kv-brow{break-inside:avoid}}
+         </style>
+</head>
+<body>
+<header>
+<h1>Perfpal Report</h1>
+<p>schema_version 1.8 · perfpal perfpal 0.2.0-beta.1 · 15 files · 11 findings (0 hot, 5 warn, 6 info) · languages: js</p>
+</header>
+<nav>
+<ul>
+<li><a href="report.html">Report</a></li>
+<li><a href="#findings">Findings detail</a></li>
+</ul>
+</nav>
+<section id="findings">
+<h2>Findings detail</h2>
+<div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>11 rules: 11 of 11 total findings (0 hot, 5 warn, 6 info).</p>
+<p><a href="report.html">Back to report.html</a>.</p>
+<section id="ranked-actions">
+<h2>Complete ranked action list (KV1 order)</h2>
+<div class="table-scroll">
+<table>
+<thead><tr><th>rank</th><th>finding_id</th><th>title</th><th>location</th><th>function</th><th>severity</th><th>confidence</th><th>path class</th><th>cost anchor</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><a href="#finding-PERF-JS-LOOP-007-06-membership-scan-js-8-9">PERF-JS-LOOP-007:06_membership_scan.js:8:9</a></td><td>Linear membership scan inside loop</td><td>06_membership_scan.js:8</td><td>intersect</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">13 static cost units (v2) · 6.5× median · top 17%</td></tr>
+<tr><td>2</td><td><a href="#finding-PERF-JS-ASYNC-001-07-async-await-js-11-19">PERF-JS-ASYNC-001:07_async_await.js:11:19</a></td><td>`await` inside a loop</td><td>07_async_await.js:11</td><td>loadAll</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">11 static cost units (v2) · 5.5× median · top 19%</td></tr>
+<tr><td>3</td><td><a href="#finding-PERF-JS-LOOP-002-05-sync-io-loop-js-9-17">PERF-JS-LOOP-002:05_sync_io_loop.js:9:17</a></td><td>Synchronous blocking I/O inside loop</td><td>05_sync_io_loop.js:9</td><td>loadAll</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">10 static cost units (v2) · 5.0× median · top 23%</td></tr>
+<tr><td>4</td><td><a href="#finding-PERF-JS-STR-001-03-string-build-js-8-5">PERF-JS-STR-001:03_string_build.js:8:5</a></td><td>String accumulation with `+=` inside loop</td><td>03_string_build.js:8</td><td>render</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">7 static cost units (v2) · 3.5× median · top 27%</td></tr>
+<tr><td>5</td><td><a href="#finding-PERF-JS-ASYNC-002-08-async-blocking-js-7-10">PERF-JS-ASYNC-002:08_async_blocking.js:7:10</a></td><td>Synchronous blocking call inside `async` function</td><td>08_async_blocking.js:7</td><td>readConfig</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.5× median · top 79%</td></tr>
+<tr><td>6</td><td><a href="#finding-PERF-JS-LOOP-001-04-deep-nesting-js-7-5">PERF-JS-LOOP-001:04_deep_nesting.js:7:5</a></td><td>Nested loop depth ≥ 2</td><td>04_deep_nesting.js:7</td><td>score</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">18 static cost units (v2) · 9.0× median · top 4%</td></tr>
+<tr><td>7</td><td><a href="#finding-PERF-JS-ALLOC-001-01-alloc-churn-js-9-20">PERF-JS-ALLOC-001:01_alloc_churn.js:9:20</a></td><td>Loop-invariant object/array literal inside loop</td><td>01_alloc_churn.js:9</td><td>buildEnvelopes</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">13 static cost units (v2) · 6.5× median · top 8%</td></tr>
+<tr><td>8</td><td><a href="#finding-PERF-JS-ALLOC-003-02-array-accumulation-js-8-11">PERF-JS-ALLOC-003:02_array_accumulation.js:8:11</a></td><td>Superlinear spread accumulation in loop</td><td>02_array_accumulation.js:8</td><td>flatten</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">13 static cost units (v2) · 6.5× median · top 15%</td></tr>
+<tr><td>9</td><td><a href="#finding-PERF-JS-CALL-001-09-recursion-js-6-10">PERF-JS-CALL-001:09_recursion.js:6:10</a></td><td>Direct recursion without a visible base case</td><td>09_recursion.js:6</td><td>descend</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">5 static cost units (v2) · 2.5× median · top 38%</td></tr>
+<tr><td>10</td><td><a href="#finding-PERF-JS-ARCH-001-11-cycle-b-js-3-1">PERF-JS-ARCH-001:11_cycle_b.js:3:1</a></td><td>Import cycle</td><td>11_cycle_b.js:3</td><td>&lt;module&gt;</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.5× median · top 88%</td></tr>
+<tr><td>11</td><td><a href="#finding-PERF-JS-TYPE-001-12-delete-js-6-3">PERF-JS-TYPE-001:12_delete.js:6:3</a></td><td>`delete` on an object property</td><td>12_delete.js:6</td><td>dropField</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.5× median · top 92%</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-ASYNC-001">
+<h3><code>PERF-JS-ASYNC-001</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-ASYNC-001-07-async-await-js-11-19" data-path="07_async_await.js"><td>PERF-JS-ASYNC-001:07_async_await.js:11:19</td><td>PERF-JS-ASYNC-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_async_await.js:11:19</td><td>&lt;module&gt;</td><td class="wrap">an `await` runs inside a loop at depth 1 — awaiting each item sequentially serialises one microtask round-trip per iteration; collecting the promises and awaiting `Promise.all(items.map(...))` is a candidate optimization. Accepted FP class: deliberately sequential work (rate limiting, ordering)</td><td class="wrap">loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-ASYNC-002">
+<h3><code>PERF-JS-ASYNC-002</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-ASYNC-002-08-async-blocking-js-7-10" data-path="08_async_blocking.js"><td>PERF-JS-ASYNC-002:08_async_blocking.js:7:10</td><td>PERF-JS-ASYNC-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>08_async_blocking.js:7:10</td><td>&lt;module&gt;</td><td class="wrap">synchronous &#39;readFileSync&#39; is called inside an `async` function — the blocking call stalls the single event-loop thread for every concurrent task; using the async equivalent (`fs/promises`, async `exec`/`spawn`) is a candidate optimization. Accepted FP class: a CLI single-shot path</td><td class="wrap">callee=readFileSync, loop_depth=0</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-LOOP-002">
+<h3><code>PERF-JS-LOOP-002</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-LOOP-002-05-sync-io-loop-js-9-17" data-path="05_sync_io_loop.js"><td>PERF-JS-LOOP-002:05_sync_io_loop.js:9:17</td><td>PERF-JS-LOOP-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>05_sync_io_loop.js:9:17</td><td>&lt;module&gt;</td><td class="wrap">synchronous &#39;readFileSync&#39; runs inside a loop at depth 1 — each iteration performs a blocking syscall/serialization on the single event-loop thread; batching the work, using the async API (`fs/promises`, async `exec`), or making one call outside the loop is a candidate optimization. Accepted FP class: a startup-only loop</td><td class="wrap">callee=readFileSync, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-LOOP-007">
+<h3><code>PERF-JS-LOOP-007</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-LOOP-007-06-membership-scan-js-8-9" data-path="06_membership_scan.js"><td>PERF-JS-LOOP-007:06_membership_scan.js:8:9</td><td>PERF-JS-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>06_membership_scan.js:8:9</td><td>&lt;module&gt;</td><td class="wrap">&#39;seen.includes&#39; scans the collection linearly on every iteration at loop depth 1 — the nested linear scan makes the loop O(n²); building a `Set`/`Map` once and doing a keyed lookup is a candidate optimization. Accepted FP class: small (&lt; 16) collections</td><td class="wrap">callee=includes, loop_depth=1, receiver_root=seen</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-STR-001">
+<h3><code>PERF-JS-STR-001</code> — 1 findings (0 hot, 1 warn, 0 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-STR-001-03-string-build-js-8-5" data-path="03_string_build.js"><td>PERF-JS-STR-001:03_string_build.js:8:5</td><td>PERF-JS-STR-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>03_string_build.js:8:5</td><td>&lt;module&gt;</td><td class="wrap">&#39;out&#39; accumulates a string with &#39;+=&#39; or &#39;out = out + ...&#39; inside a loop at depth 1 — this builds a cons-string chain; V8 ropes mitigate short chains, but flattening the rope at first use is linear and repeated concatenation is quadratic; collecting parts into an array and joining once (`parts.join(&quot;&quot;)`) is a candidate optimization. Accepted FP class: a tiny bounded loop (&lt; 8 iterations)</td><td class="wrap">loop_depth=1, target=out</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-ALLOC-001">
+<h3><code>PERF-JS-ALLOC-001</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-ALLOC-001-01-alloc-churn-js-9-20" data-path="01_alloc_churn.js"><td>PERF-JS-ALLOC-001:01_alloc_churn.js:9:20</td><td>PERF-JS-ALLOC-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.js:9:20</td><td>&lt;module&gt;</td><td class="wrap">an object literal is constructed on every iteration at loop depth 1 — V8 allocates it in the young generation and escape analysis rarely elides a per-iteration literal; hoisting the loop-invariant construction (or reusing one object) is a candidate optimization. Accepted FP class: a literal created once for a different reason but mutated per iteration</td><td class="wrap">kind=object, loop_depth=1, referenced_names=</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-ALLOC-003">
+<h3><code>PERF-JS-ALLOC-003</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-ALLOC-003-02-array-accumulation-js-8-11" data-path="02_array_accumulation.js"><td>PERF-JS-ALLOC-003:02_array_accumulation.js:8:11</td><td>PERF-JS-ALLOC-003</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>02_array_accumulation.js:8:11</td><td>&lt;module&gt;</td><td class="wrap">&#39;acc = [...acc, ...]&#39; copies n elements per iteration at loop depth 1 — the spread materialises a fresh array each pass, making the loop O(n²); pushing into one array (`acc.push(x)`) or spreading once after the loop is a candidate optimization. Accepted FP class: a deliberate immutable snapshot per iteration</td><td class="wrap">kind=spread-accumulator, loop_depth=1, receiver_root=acc</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-ARCH-001">
+<h3><code>PERF-JS-ARCH-001</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-ARCH-001-11-cycle-b-js-3-1" data-path="11_cycle_b.js"><td>PERF-JS-ARCH-001:11_cycle_b.js:3:1</td><td>PERF-JS-ARCH-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>11_cycle_b.js:3:1</td><td>&lt;module&gt;</td><td class="wrap">&#39;11_cycle_b.js&#39; and &#39;10_cycle_a.js&#39; import each other, forming a cycle — module initialisation order becomes observable and bundlers cannot tree-shake the cycle cleanly; breaking the lowest-sorted edge into a shared leaf module is a candidate optimization. Accepted FP class: type-only import cycles (TypeScript erases them)</td><td class="wrap">coupled_with=10_cycle_a.js, kind=cycle</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-CALL-001">
+<h3><code>PERF-JS-CALL-001</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-CALL-001-09-recursion-js-6-10" data-path="09_recursion.js"><td>PERF-JS-CALL-001:09_recursion.js:6:10</td><td>PERF-JS-CALL-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>09_recursion.js:6:10</td><td>&lt;module&gt;</td><td class="wrap">&#39;descend&#39; calls itself directly with no comparison guarding the call — each recursive frame grows the stack and repeats frame-setup cost; converting to a loop with an accumulator, or adding an explicit base-case guard, is a candidate optimization. Accepted FP class: a recursive tree walk with small depth</td><td class="wrap">function=descend, loop_depth=0</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-LOOP-001">
+<h3><code>PERF-JS-LOOP-001</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-LOOP-001-04-deep-nesting-js-7-5" data-path="04_deep_nesting.js"><td>PERF-JS-LOOP-001:04_deep_nesting.js:7:5</td><td>PERF-JS-LOOP-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>04_deep_nesting.js:7:5</td><td>&lt;module&gt;</td><td class="wrap">loops nest 2 deep here (chain reaches depth 2) — every extra level multiplies the iteration count, so the body runs superlinearly; flattening the nesting, hoisting invariant work, or adding an early exit is a candidate optimization. Accepted FP class: matrix work where n² is inherent</td><td class="wrap">max_depth=2, nest_depth=2</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="rule-PERF-JS-TYPE-001">
+<h3><code>PERF-JS-TYPE-001</code> — 1 findings (0 hot, 0 warn, 1 info)</h3>
+<div class="table-scroll">
+<table>
+<thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
+<tbody>
+<tr id="finding-PERF-JS-TYPE-001-12-delete-js-6-3" data-path="12_delete.js"><td>PERF-JS-TYPE-001:12_delete.js:6:3</td><td>PERF-JS-TYPE-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>12_delete.js:6:3</td><td>&lt;module&gt;</td><td class="wrap">&#39;delete&#39; removes a property from an object (&#39;prop&#39;), forcing a V8 hidden-class → dictionary-mode transition that slows every later access; setting the property to `undefined` or rebuilding the object is a candidate optimization. Accepted FP class: intentional cache eviction (rare)</td><td class="wrap">property=prop</td><td>n/a</td><td>none</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<footer>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
+</body>
+</html>

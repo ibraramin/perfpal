@@ -769,6 +769,14 @@ pub struct AllocEvent {
     /// deduped (BTreeSet order). Omitted from the wire when empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub referenced_names: Vec<String>,
+    /// ADDITIVE B2-W2 accumulation fact (IR-internal, JS-only; no schema/DTO
+    /// change): true when an `array` literal contains at least one
+    /// `spread_element` child (`[...acc, x]`). `new` expressions and object
+    /// literals always report `false`. It lets `PERF-JS-ALLOC-003` recognize
+    /// the spread-accumulator shape without re-opening the engine seam;
+    /// `#[serde(default)]` keeps older documents deserializing unchanged.
+    #[serde(default)]
+    pub has_spread: bool,
 }
 
 /// One operand of a `UnaryEvent` (plan `js-ts`, additive, JS-only in v1).
@@ -1184,5 +1192,43 @@ mod tests {
                 "{absent} must be omitted when uncomputed"
             );
         }
+    }
+
+    /// B2-W2 additive IR fact lock: `AllocEvent.has_spread` is serde-defaulted
+    /// (older documents without it deserialize as `false`), false is emitted
+    /// on the wire, and a `true` fact round-trips unchanged. The field stays
+    /// IR-internal — it is deliberately absent from every metrics DTO.
+    #[test]
+    fn alloc_event_has_spread_is_serde_defaulted_and_round_trips() {
+        let old = serde_json::json!({
+            "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 5},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "kind": "array",
+            "referenced_names": ["acc", "item"]
+        });
+        let event: AllocEvent =
+            serde_json::from_value(old).expect("pre-has_spread AllocEvent deserializes");
+        assert!(!event.has_spread, "absent has_spread defaults to false");
+
+        // Explicit true survives a serialize → deserialize round trip.
+        let spread = AllocEvent {
+            has_spread: true,
+            ..event
+        };
+        let wire = serde_json::to_value(&spread).expect("serialize");
+        assert_eq!(wire["has_spread"], serde_json::json!(true));
+        let back: AllocEvent = serde_json::from_value(wire).expect("deserialize");
+        assert_eq!(back, spread);
+
+        // False is still emitted (plain `#[serde(default)]`, no skip).
+        let plain = AllocEvent {
+            has_spread: false,
+            ..back
+        };
+        let wire = serde_json::to_value(&plain).expect("serialize");
+        assert_eq!(wire["has_spread"], serde_json::json!(false));
     }
 }

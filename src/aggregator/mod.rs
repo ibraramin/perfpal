@@ -580,7 +580,7 @@ fn reaches_self(adj: &BTreeMap<&str, BTreeSet<&str>>, start: &str) -> bool {
 
 /// Entry-kind tokens (plan `map-build` I1a C + I1b Rust + I1c Python) — the
 /// closed `stats.functions[].entry_kind` value set, mirrored in
-/// `docs/schema/metrics.schema.v1.7.json`.
+/// `docs/schema/metrics.schema.v1.8.json`.
 const ENTRY_MAIN: &str = "main";
 /// Python-only entry kind (plan `map-build` I1c): a guarded `<module>`
 /// record (`has_main_guard == Some(true)`), confidence HIGH like `main`.
@@ -596,7 +596,7 @@ const ENTRY_LOW: &str = "LOW";
 
 /// Trip-provenance tokens (plan `map-intelligibility` V4) — the closed
 /// `stats.functions[].trip_count_source` value set, mirrored in
-/// `docs/schema/metrics.schema.v1.7.json`.
+/// `docs/schema/metrics.schema.v1.8.json`.
 const TRIP_LITERAL: &str = "literal";
 const TRIP_PARTIAL: &str = "partial";
 const TRIP_UNKNOWN: &str = "unknown";

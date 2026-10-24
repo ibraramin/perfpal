@@ -2,9 +2,9 @@
 
 **Start this tab:** open `/home/shafin/Opencode/Perfpal-js-ts` (`feat/js-ts`), first message:
 
-> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B2-W2.`
+> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B3.`
 
-**Track handoff:** `state/tracks/js-ts/handoff.md` · **Spec:** `docs/specs/js-ts.md` · **Plan:** `docs/plans/js-ts.md` · **ADR:** `docs/adr/ADR-0011-js-ts-backend.md` · **Inventory:** `docs/architecture/js-ts.md` · **Canary evidence:** `docs/evidence/js-canary.md` · **Base:** `821b984` (rebased on `main` @ `189df91`).
+**Track handoff:** `state/tracks/js-ts/handoff.md` · **Spec:** `docs/specs/js-ts.md` · **Plan:** `docs/plans/js-ts.md` · **ADR:** `docs/adr/ADR-0011-js-ts-backend.md` · **Inventory:** `docs/architecture/js-ts.md` · **Canary evidence:** `docs/evidence/js-canary.md` · **Base:** `9a94905` (rebased on `main` @ `9a94905`; B1 base `821b984`).
 **Scope:** add JS, then TS/TSX, as first-class backends in the existing Rust core — like C/Rust/Python. **Not a rewrite.** A later release; not beta-blocking.
 
 ## Read first
@@ -53,7 +53,7 @@ gate, `CALL-001` guard-gated, `ASYNC-002` async-gated. Evidence `docs/evidence/j
 dispositions `docs/architecture/js-ts.md` §8. Next: **B2-W1** (JS backend). Blockers `B-tb-003`
 (reporter catalog, W2) and `B-tb-001` (views wiring, A step 12) remain open and were not touched.
 
-## Session B2-W1 — JS backend + wiring — **committed `7fdfa1a`; full DoD green; panel APPROVED** (2026-10-24)
+## Session B2-W1 — JS backend + wiring — **committed `90d5677` (pre-rebase `7fdfa1a`); full DoD green; panel APPROVED** (2026-10-24)
 
 **Goal:** implement the JavaScript tree-sitter backend and every wiring point from the plan, with no rules
 or schema bump yet.
@@ -73,6 +73,65 @@ loops/cost provenance, alloc/error/idiom facts, exact include-graph edges, zero 
 determinism). **No `src/reporter`/Atlas edits, no schema bump, no main state.** Verification:
 `state/tracks/js-ts/handoff.md`. Next: **B2-W2** (rules + schema v1.8 + fixtures/goldens; `B-tb-003`).
 
+## Session B2-W2 — rules + schema v1.8 — **implemented (uncommitted)** (2026-10-24)
+
+**Goal:** ship the frozen 11 `PERF-JS-*` rules, land the catalog atomically, bump the schema to v1.8, and
+add the corpora/fixtures/goldens. Branch `feat/js-ts` rebased on `main` @ `9a94905`.
+
+**Deliverables:** `src/analyzer/heuristics/js/{mod.rs,tests.rs}` (11 rules + helpers; 27 IR unit tests);
+`JS_*_RULE_ID` constants in `src/analyzer/finding.rs`; `RuleLanguage::{Js,Ts}`, the ascending
+`PERF-JS-*` registry block, and the `js|ts|tsx` partition in `src/analyzer/mod.rs` (`Ts` reserved and empty
+in v1); 11 `HEURISTIC_CATALOG_V1` entries + count locks 67 → 78 in `src/reporter/mod.rs`;
+`src/schema/metrics.schema.v1.8.json` + byte-identical `docs/schema/metrics.schema.v1.8.json` (v1.7 kept);
+`SCHEMA_VERSION`/`SCHEMA_ARTIFACT_NAME`/`EMBEDDED_SCHEMA`/CLI `VERSION_SUFFIX` = 1.8; `tests/schema_1_7.rs`
+→ `tests/schema_1_8.rs` + version-pin sweep; `examples-js/` (15 scanned files: 14 `.js` + 1 `.cjs`, plus
+`package.json` `main`/script HIGH), `tests/examples_js_coverage.rs`, 22 parser-free IR fixtures +
+`tests/js_ir_fixtures.rs`, `tests/determinism_js.rs`, `tests/fixtures/precision/js/` (25 files) + labels,
+the `report-js` golden tree (20 files; `GOLDEN_TREES` 4 → 5), and the benchmark `small` rung (142 files /
+1,655 LOC / 96 findings; 78 active rules).
+
+**Rule table (shipped):**
+
+| id | severity | gate (implemented) |
+|---|---|---|
+| `PERF-JS-ALLOC-001` | info | object/array literal in a loop; silent when a referenced name is the loop induction variable or is assigned in that loop, or no enclosing loop |
+| `PERF-JS-ALLOC-003` | info | `concat`/`slice` calls **or** array literals with spread (`acc = [...acc, x]`) whose accumulator root the same enclosing loop reassigns; snapshot roots stay silent |
+| `PERF-JS-STR-001` | warn | string/template-literal RHS on `+=`, or `x = x + <string\|template literal>` where the binary is the whole RHS, in a loop; numeric/identifier/subscript/call RHS silent; canonical trip count < 8 silent |
+| `PERF-JS-LOOP-001` | info | one finding per function at the earliest loop with depth ≥ 2; `max_depth` scoped to that loop's span |
+| `PERF-JS-LOOP-002` | warn | known sync Node API (23 names) at loop depth ≥ 1 |
+| `PERF-JS-LOOP-007` | warn | membership callee in a loop with non-empty receiver; silent on canonical trip count < 16; unknown trip fires |
+| `PERF-JS-ASYNC-001` | warn | `await` in a loop, only inside an `is_async` function |
+| `PERF-JS-ASYNC-002` | warn | known sync Node API anywhere in an `is_async` function; no loop requirement |
+| `PERF-JS-CALL-001` | info | bare direct self-call; fires only when no comparison starts before the call span |
+| `PERF-JS-ARCH-001` | info | resolved relative-import cycle; one finding per `break_cycles` edge at its earliest span |
+| `PERF-JS-TYPE-001` | info | `delete obj.prop` with a `MemberAccess` operand; subscript form and bare identifier excluded; the property name is carried in evidence |
+
+**Verification (recorded):** `cargo test --locked` → 63 suites, **935 passed**, 0 failed;
+`cargo deny check licenses` → ok; semantic-feature clippy + `PERFPAL_SEMANTIC_TESTS=1` tests green; native
+check green. `examples-js` emits exactly 11 findings (0 hot / 5 warn / 6 info), each rule once, and all 18
+silent controls stay silent. Precision corpus: all 11 rules 1.0 / 1.0 (25 JS fixture files). `examples-js`
+double-run is byte-identical modulo `scan.started_at`/`scan.duration_ms`. Gate transcript:
+`docs/evidence/js-w2/gate.txt` (recorded in the tree). **Panel:** round 1 R2/Q1/Q2 APPROVED, R1
+CHANGES_REQUESTED (two rule-gate defects) → fixed; round 2 R1 and a fresh R3 APPROVED, Q2 asked for
+documentation fixes → applied; final confirmation pending. **Commit: pending founder approval. Merge gate
+`A-tb-006` still requires founder approval; `B-tb-002` stays open.**
+
+**Decisions:** `D-tb-017` — `B-tb-003` resolved: the founder approved the atomic catalog-only B edit in the
+B2-W2 work order; the 11 entries landed in the same change as the registry block.
+
+**Risks:** `R-tb-015` (schema staging) **resolved** — v1.8 landed in both copies before any release; v1.7
+retained. New `R-tb-016` (lexical rule gates) — `ALLOC-001` models loop-invariance rather than a separate
+escape analysis, `CALL-001` treats any earlier comparison as a visible base case, `LOOP-001` cannot test
+for early exits (no break/return events in IR), and `LOOP-007` proxies the frozen "small collection" FP
+class with loop trip count. `ALLOC-003` misses member/`this` accumulators (`assigned_within` matches plain
+identifier targets only) and the nested-function identifier walk can suppress an `ALLOC-001` hit. The
+1.0/1.0 precision result is on the synthetic precision corpus only; a
+real-code canary re-run is owed before merge.
+
+**Next:** **B3** — TS/TSX backend (`.ts`/`.mts`/`.cts` via `LANGUAGE_TYPESCRIPT`, `.tsx` via
+`LANGUAGE_TSX`), `SUPPORTED_LANGUAGES` to six values, `examples-ts/`, `report-ts` golden (`GOLDEN_TREES`
+5 → 6), TS type-only negative fixtures incl. `<T,>`, and TS coverage + determinism suites; no schema bump
+and no duplicated rule implementations.
 
 ## Sessions B2–B4 (signposts)
 

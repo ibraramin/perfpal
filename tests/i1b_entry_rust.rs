@@ -495,7 +495,7 @@ fn rust_entry_pipeline_emits_and_double_scan_is_byte_identical() {
     // a default build, so reachability is entries-only here — the honest
     // emptiness of `resolved_rust_edges`: Rust is syntactic-tier only,
     // rust/arch.rs:490-493).
-    assert_eq!(doc1["schema_version"], "1.7");
+    assert_eq!(doc1["schema_version"], "1.8");
     let by_path_name = |path: &str, name: &str| {
         doc1["stats"]["functions"]
             .as_array()

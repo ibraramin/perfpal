@@ -5,7 +5,7 @@ Four tracks, four worktrees, four sessions. **One session per worktree; never tw
 | Track | Worktree | Branch | Base | First session | Track handoff |
 |---|---|---|---|---|---|
 | **A Atlas beta** | `/home/shafin/Opencode/Perfpal` | `main` | `821b984` | **A1** step 11 rail | `state/handoff/latest.md` |
-| **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` | `feat/js-ts` | `821b984` (rebased on `189df91`) | **B2-W2** JS rules + schema | `state/tracks/js-ts/handoff.md` |
+| **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` | `feat/js-ts` | `9a94905` (rebased on `main` @ `9a94905`) | **B3** TS/TSX backend | `state/tracks/js-ts/handoff.md` |
 | **C Agent report** | `/home/shafin/Opencode/Perfpal-agent-report` | `feat/agent-report` | `821b984` (rebase after A step 12) | **C1** spec/contract | `state/tracks/agent-report/handoff.md` |
 | **D Atlas Run** | `/home/shafin/Opencode/Perfpal-atlas-sim` | `feat/atlas-sim` | `821b984` | **D1** static run-story prototype | `state/tracks/atlas-sim/handoff.md` |
 
@@ -14,11 +14,14 @@ Four tracks, four worktrees, four sessions. **One session per worktree; never tw
 Open opencode in the track worktree and send **one** first message:
 
 1. **A:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-beta.md and execute Session A1.`
-2. **B:** `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B2-W2.`
+2. **B:** `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B3.`
 3. **C:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/agent-report.md and execute Session C1.`
 4. **D:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md and execute Session D1.`
 
 The track file is the brief. Do not paste this README into a tab; it is the shared rulebook.
+
+**Track B branch state:** B2-W2 is implemented in the working tree and **uncommitted** (review panel and
+commit pending); `feat/js-ts` is rebased on `main` @ `9a94905`. B3 is the next session.
 
 ## Shared rules (all tracks)
 

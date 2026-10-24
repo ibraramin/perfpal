@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="736" viewBox="0 0 1100 736">
+<text x="40" y="56" font-family="monospace" font-size="13">Findings map — 15 files</text>
+<text x="40" y="76" font-family="monospace" font-size="11">heat = severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate) — profile to confirm</text>
+<g stroke="#999999" stroke-width="1">
+<line x1="210" y1="471" x2="260" y2="119"/>
+<line x1="430" y1="163" x2="480" y2="119"/>
+<line x1="210" y1="603" x2="260" y2="163"/>
+</g>
+<g font-family="monospace" font-size="11">
+<rect x="40" y="104" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="123">01_alloc_churn.js</text>
+<circle cx="205" cy="109" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="148" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="167">02_array_accumulation.js</text>
+<circle cx="205" cy="153" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="192" width="170" height="30" fill="#b30000" stroke="#1a1a1a" stroke-width="2"/>
+<text x="48" y="211" fill="#ffffff">03_string_build.js</text>
+<circle cx="205" cy="197" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="480" y="104" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
+<text x="488" y="123">04_deep_nesting.js</text>
+<circle cx="645" cy="109" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="236" width="170" height="30" fill="#b30000" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="255" fill="#ffffff">05_sync_io_loop.js</text>
+<circle cx="205" cy="241" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="280" width="170" height="30" fill="#b30000" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="299" fill="#ffffff">06_membership_scan.js</text>
+<circle cx="205" cy="285" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="324" width="170" height="30" fill="#b30000" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="343" fill="#ffffff">07_async_await.js</text>
+<circle cx="205" cy="329" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="368" width="170" height="30" fill="#b30000" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="387" fill="#ffffff">08_async_blocking.js</text>
+<circle cx="205" cy="373" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 1 warn / 0 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="412" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="431">09_recursion.js</text>
+<circle cx="205" cy="417" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="456" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="475">10_cycle_a.js</text>
+<rect x="260" y="104" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
+<text x="268" y="123">11_cycle_b.js</text>
+<circle cx="425" cy="109" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="40" y="500" width="170" height="30" fill="#d98080" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="519">12_delete.js</text>
+<circle cx="205" cy="505" r="4" fill="#2e6da4" stroke="#1b1b1b" stroke-width="1.2"><title>1 candidate finding(s): 0 hot / 0 warn / 1 info; confidence 0 high / 1 medium / 0 low — static candidates, profile to confirm</title></circle>
+<rect x="260" y="148" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
+<text x="268" y="167">13_controls.js</text>
+<rect x="40" y="544" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="563">14_commonjs.cjs</text>
+<rect x="40" y="588" width="170" height="30" fill="#ffffff" stroke="#4a6fa5" stroke-width="1"/>
+<text x="48" y="607">index.js</text>
+</g>
+<text x="40" y="682" font-family="monospace" font-size="11">finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm</text>
+<text x="40" y="698" font-family="monospace" font-size="11">cool</text>
+<rect x="73" y="688" width="12" height="12" fill="#ffffff"/>
+<rect x="85" y="688" width="12" height="12" fill="#f7e6e6"/>
+<rect x="97" y="688" width="12" height="12" fill="#f0cccc"/>
+<rect x="109" y="688" width="12" height="12" fill="#e8b3b3"/>
+<rect x="121" y="688" width="12" height="12" fill="#e19999"/>
+<rect x="133" y="688" width="12" height="12" fill="#d98080"/>
+<rect x="145" y="688" width="12" height="12" fill="#d16666"/>
+<rect x="157" y="688" width="12" height="12" fill="#ca4d4d"/>
+<rect x="169" y="688" width="12" height="12" fill="#c23333"/>
+<rect x="181" y="688" width="12" height="12" fill="#bb1a1a"/>
+<rect x="193" y="688" width="12" height="12" fill="#b30000"/>
+<text x="211" y="698" font-family="monospace" font-size="11">hot</text>
+<text x="40" y="724" font-family="monospace" font-size="11">1 cyclic edges broken (see ARCH-001 findings)</text>
+</svg>

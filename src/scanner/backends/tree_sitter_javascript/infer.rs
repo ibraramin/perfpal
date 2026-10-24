@@ -213,9 +213,8 @@ pub(super) fn final_segment_of(node: Node<'_>, source: &[u8]) -> String {
 /// Shape descriptor for an expression node (ir-v1.md §3.4 vocabulary).
 pub(super) fn shape_of_node(node: Node<'_>, source: &[u8]) -> Shape {
     match node.kind() {
-        "number" | "string" | "true" | "false" | "null" | "undefined" | "regex" => {
-            Shape::literal(text(node, source))
-        }
+        "number" | "string" | "template_string" | "true" | "false" | "null" | "undefined"
+        | "regex" => Shape::literal(text(node, source)),
         "identifier"
         | "shorthand_property_identifier"
         | "shorthand_property_identifier_pattern" => Shape::identifier(text(node, source)),
@@ -242,6 +241,9 @@ pub(super) fn shape_of_node(node: Node<'_>, source: &[u8]) -> Shape {
         },
         "member_expression" => Shape {
             kind: ShapeKind::MemberAccess,
+            name: node
+                .child_by_field_name("property")
+                .map(|p| text(p, source).to_string()),
             depth: Some(chain_depth(node)),
             ..Shape::default()
         },

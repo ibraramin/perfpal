@@ -36,23 +36,23 @@ pub mod corpus;
 
 /// The one retired rule id (M1 Precision Gate): a reserved const with no
 /// registry emitter. It is silent-only by design, so the no-vacuous-cell guard
-/// exempts it and it is excluded from the 67-rule active catalog.
+/// exempts it and it is excluded from the 78-rule active catalog.
 const RETIRED_RULE_ID: &str = "PERF-RS-STR-001";
 
-/// The 67 active rule ids, derived from the PRODUCT's public rule-id
+/// The 78 active rule ids, derived from the PRODUCT's public rule-id
 /// constants (`perfpal::analyzer::finding`) — NOT from the corpus or the
 /// baseline — so deleting a corpus unit can never silently shrink the scored
 /// set: the M2 assertion `fire_set(small) == active_rule_ids()` fails loudly
 /// instead.
 ///
-/// The product registry exposes 67 registered ids (23 `PERF-C-*` + 22
-/// `PERF-PY-*` + 22 `PERF-RS-*`); `PERF-RS-STR-001` is a reserved const with no
-/// registry entry, so it is deliberately absent here. (`perfpal::analyzer::
-/// registered_rule_ids()` would be the direct source, but it is `pub(crate)`
-/// and this task forbids `src/` changes; the public consts are the same
-/// authoritative ids. The in-crate test
+/// The product registry exposes 78 registered ids (23 `PERF-C-*` + 11
+/// `PERF-JS-*` + 22 `PERF-PY-*` + 22 `PERF-RS-*`); `PERF-RS-STR-001` is a
+/// reserved const with no registry entry, so it is deliberately absent here.
+/// (`perfpal::analyzer::registered_rule_ids()` would be the direct source, but
+/// it is `pub(crate)` and this task forbids `src/` changes; the public consts
+/// are the same authoritative ids. The in-crate test
 /// `reporter::tests::catalog_covers_every_registry_rule_id` locks the
-/// registry itself to exactly 67 ids, so a new registry rule still fails the
+/// registry itself to exactly 78 ids, so a new registry rule still fails the
 /// suite.)
 fn active_rule_ids() -> BTreeSet<&'static str> {
     use perfpal::analyzer::finding::*;
@@ -80,6 +80,17 @@ fn active_rule_ids() -> BTreeSet<&'static str> {
         STR_003_RULE_ID,
         TYPE_001_RULE_ID,
         TYPE_002_RULE_ID,
+        JS_ALLOC_001_RULE_ID,
+        JS_ALLOC_003_RULE_ID,
+        JS_ARCH_001_RULE_ID,
+        JS_ASYNC_001_RULE_ID,
+        JS_ASYNC_002_RULE_ID,
+        JS_CALL_001_RULE_ID,
+        JS_LOOP_001_RULE_ID,
+        JS_LOOP_002_RULE_ID,
+        JS_LOOP_007_RULE_ID,
+        JS_STR_001_RULE_ID,
+        JS_TYPE_001_RULE_ID,
         RS_ALLOC_001_RULE_ID,
         RS_ALLOC_002_RULE_ID,
         RS_ALLOC_003_RULE_ID,
@@ -239,7 +250,7 @@ pub fn run_suite() {
     println!("\n# M2 benchmark suite — measured per-rule precision/recall\n");
     println!("Baseline: `tests/fixtures/benchmark/baseline.json` (intended 1.0/1.0 ratchet).");
     println!(
-        "Scoped rules: {} (67 active rules + retired PERF-RS-STR-001); the `small` rung \
+        "Scoped rules: {} (78 active rules + retired PERF-RS-STR-001); the `small` rung \
          plants all of them, while `medium`/`large` replicate the nine gate rules only.",
         baseline.len()
     );
@@ -328,7 +339,7 @@ fn assert_small_anchors_match_m1(small: &Rung) {
         .filter(|l| l.expect == Expect::Fire)
         .map(|l| (l.rule_id.to_string(), l.rel_path.clone(), l.line))
         .collect();
-    // The small rung now plants the full 67-rule catalog, so it is a SUPERSET
+    // The small rung now plants the full 78-rule catalog, so it is a SUPERSET
     // of the M1 corpus: every committed M1 fire anchor must still be present
     // verbatim (the nine gate constructs are lifted unmodified), while the
     // added coverage contributes extra anchors that M1 never had.
@@ -339,14 +350,15 @@ fn assert_small_anchors_match_m1(small: &Rung) {
     );
 }
 
-/// M2: the `small` rung MUST carry exactly one `Fire` label for every one of
-/// the 67 active rules (and no other rule), so an extension unit deleted from
-/// the catalog can never silently drop a rule from scoring. M4: it must also
-/// carry an explicit `Silent` control for every active rule (plus the retired
-/// always-silent `PERF-RS-STR-001`).
+/// M2: the `small` rung MUST carry at least one `Fire` label for every one of
+/// the 78 active rules (and no other rule), so an extension unit deleted from
+/// the catalog can never silently drop a rule from scoring. Rules with two
+/// implemented arms carry two fire labels. M4: it must also carry an explicit
+/// `Silent` control for every active rule (plus the retired always-silent
+/// `PERF-RS-STR-001`).
 fn assert_small_covers_catalog(small: &Rung) {
     let active = active_rule_ids();
-    assert_eq!(active.len(), 67, "active catalog must be 67 rule ids");
+    assert_eq!(active.len(), 78, "active catalog must be 78 rule ids");
 
     let fired: BTreeSet<&str> = small
         .labels
@@ -362,7 +374,7 @@ fn assert_small_covers_catalog(small: &Rung) {
     );
     assert!(
         extra_fire.is_empty(),
-        "small rung fires rule(s) outside the 67-rule active catalog: {extra_fire:?}"
+        "small rung fires rule(s) outside the 78-rule active catalog: {extra_fire:?}"
     );
 
     let silenced: BTreeSet<&str> = small
@@ -445,7 +457,7 @@ fn run_labeled_rung(rung: &Rung, baseline: &BTreeMap<String, (f64, f64)>) {
     // finding would be silently unscored. Conversely the ratchet is scoped to
     // the rules the rung actually plants: `medium`/`large` replicate only the
     // nine gate rules (plus the retired always-silent control), so their
-    // KPI stays the committed M1 set, while `small` ratchets all 67.
+    // KPI stays the committed M1 set, while `small` ratchets all 78.
     let planted: BTreeSet<&str> = rung.labels.iter().map(|l| l.rule_id).collect();
     for rule in &planted {
         assert!(

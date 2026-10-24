@@ -33,9 +33,23 @@ pub(super) mod rust;
 /// `language == "python"` units.
 pub(super) mod python;
 
+/// JavaScript/TypeScript (`PERF-JS-*`) heuristic families (plan `js-ts`
+/// B2-W2): the frozen 11-rule disposition table in
+/// docs/architecture/js-ts.md §8 (JS and TS/TSX share one family because the
+/// V8/Node mechanism is identical; `PERF-JS-LOOP-003` is cut for v1 and no
+/// `PERF-TS-*` rule exists). The registry runs these only over
+/// `language == "js" | "ts" | "tsx"` units.
+pub(super) mod js;
+
 pub(super) use alloc::{alloc_001, alloc_002, alloc_003};
 pub(super) use arch::{arch_001, arch_002, arch_003};
 pub(super) use call::{call_001, call_002};
+/// JavaScript/TypeScript (`PERF-JS-*`) rule functions re-exported to the
+/// registry (plan `js-ts` B2-W2).
+pub(super) use js::{
+    js_alloc_001, js_alloc_003, js_arch_001, js_async_001, js_async_002, js_call_001, js_loop_001,
+    js_loop_002, js_loop_007, js_str_001, js_type_001,
+};
 pub(super) use r#loop::{
     loop_001, loop_002, loop_003, loop_004, loop_005, loop_006, loop_007, loop_008,
 };
