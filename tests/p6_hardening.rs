@@ -1,9 +1,13 @@
 //! P6 hardening gates (modules.md §7): finding-id uniqueness (composite-id
 //! contract, modules.md §1 analyzer row) and golden-report locking.
 //!
-//! Golden flow (four committed trees, see [`GOLDEN_TREES`]): each tree is a
-//! FULL pipeline output over its fixture, masked in place for every
-//! run-varying field. Regenerate ALL trees with:
+//! Golden flow (four committed trees, see [`GOLDEN_TREES`]): each tree is the
+//! full pipeline run over its fixture, masked in place for every run-varying
+//! field, and committed. Two artifacts of that run are PRUNED deliberately:
+//! the Track C `agent-report.md` / `agent-actions.json` carry the scan root as
+//! provenance and are locked outside the golden set (see
+//! [`AGENT_REPORT_ARTIFACTS`]).
+//! Regenerate ALL trees with:
 //!
 //! ```text
 //! PERFPAL_REGEN_GOLDEN=1 cargo test --test p6_hardening regenerate_goldens
@@ -127,6 +131,15 @@ const GOLDEN_ARTIFACTS: [&str; 17] = [
     "charts/layer-findings.svg",
     "charts/graph.dot",
 ];
+
+/// The two Track C artifacts the CLI emits into every output tree. They are
+/// PRUNED by [`regenerate_goldens`] rather than committed: both carry the scan
+/// root as deliberate provenance (`root_path` in the JSON, the `scan root:`
+/// header in the MD), so no mask could make them stable, and they are not in
+/// [`GOLDEN_ARTIFACTS`]. Their contract is locked by
+/// `docs/evidence/agent-report/sample/*` + `tests/agent_report.rs` instead.
+#[cfg(not(feature = "semantic-clang"))]
+const AGENT_REPORT_ARTIFACTS: [&str; 2] = ["agent-report.md", "agent-actions.json"];
 
 /// Sorted `charts/component-*.svg` page names under a report tree,
 /// excluding the `component-coupling.svg` overview (it is a fixed golden
@@ -367,9 +380,11 @@ fn materialize_fixture(tree: &GoldenTree) -> (PathBuf, Option<common::TempDir>) 
 
 /// Regeneration path (env-gated, not part of the default gate): run the REAL
 /// pipeline (through the real writer) directly into each committed golden
-/// tree, then mask the two text artifacts IN PLACE. SVGs and the bundled
+/// tree, then mask the text artifacts IN PLACE. SVGs and the bundled
 /// schema are committed byte-exact — they contain no provenance (asserted
-/// below at generation time for EVERY tree).
+/// below at generation time for EVERY tree). The two agent-report artifacts
+/// are DELETED afterwards (see [`AGENT_REPORT_ARTIFACTS`]): the pipeline emits
+/// them, the golden set does not keep them, so regeneration leaves no residue.
 #[cfg(not(feature = "semantic-clang"))]
 #[test]
 fn regenerate_goldens() {
@@ -445,6 +460,31 @@ fn regenerate_goldens() {
             common::mask_golden_html(&detail_html_raw, &fixture.to_string_lossy()),
         )
         .expect("write masked findings-detail.html");
+
+        // PRUNE the two agent-report artifacts. The CLI emits
+        // `agent-report.md` + `agent-actions.json` into every output tree, and
+        // both carry the scan root as CLI provenance BY DESIGN (the MD header
+        // prints it verbatim; the JSON records `root_path`) — so they cannot be
+        // masked into a stable golden, and they are deliberately NOT part of
+        // the fixed 17-artifact GOLDEN_ARTIFACTS set. Adding them would mint
+        // ~75 KB of new goldens that duplicate an existing lock: their shape
+        // and bytes are already pinned by `docs/evidence/agent-report/sample/*`
+        // (byte parity) and `tests/agent_report.rs` (emission, determinism,
+        // state matrix). Regeneration therefore deletes them so a regen leaves
+        // the committed tree byte-identical; the default comparator never
+        // looks for them.
+        for agent_artifact in AGENT_REPORT_ARTIFACTS {
+            let path = golden.join(agent_artifact);
+            fs::remove_file(&path).unwrap_or_else(|e| {
+                panic!("prune {agent_artifact} (tree '{}') failed: {e}", tree.tag)
+            });
+            assert!(
+                !path.exists(),
+                "{agent_artifact} (tree '{}') must not survive regeneration — it is \
+                 root-bearing provenance and not a committed golden",
+                tree.tag
+            );
+        }
 
         // SVGs + DOT + schema: committed byte-exact; assert they carry no
         // provenance (no year-like RFC3339 fragments, no absolute fixture

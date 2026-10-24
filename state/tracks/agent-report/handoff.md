@@ -312,7 +312,8 @@ Round-1 non-blocking items actioned before commit: Windows-safe sample token (+ 
 partial-parse row asserts real counts, capped row asserts the 25-heading cap, v1 row can no longer pass
 vacuously, the budget constant is the shipped `MD_SIZE_BUDGET`, the ≤80 KB contract claim is scoped to the
 §12 envelope, and the directory tree names the two Atlas drill pages. Not actioned (deliberate): pruning
-the agent artifacts in `regenerate_goldens` — see the follow-up note below. Round 2 (Q1 + Q2 re-run +
+the agent artifacts in `regenerate_goldens` — **superseded by C4 below (2026-10-24): the artifacts are now
+pruned there.** Round 2 (Q1 + Q2 re-run +
 one fresh confirmation lane) returned **APPROVED** on all three lanes; the verdicts are in the table above.
 
 ### Carry-forward non-blockers (unchanged)
@@ -321,9 +322,9 @@ one fresh confirmation lane) returned **APPROVED** on all three lanes; the verdi
 - Dynamic-only tier wording — still open.
 - Synthetic `scan.file_count` cosmetic — still open.
 
-Add one: `PERFPAL_REGEN_GOLDEN=1 … regenerate_goldens` now also writes the two agent artifacts into each
-`tests/golden/*` tree (unmasked root). They are intentionally **not** committed; a future regen should
-either mask them and add them to `GOLDEN_ARTIFACTS`, or delete them in the regen step.
+Add one — **resolved by C4 below**: `PERFPAL_REGEN_GOLDEN=1 … regenerate_goldens` wrote the two agent
+artifacts into each `tests/golden/*` tree (unmasked root). They are intentionally **not** committed; C4
+chose the delete-in-regen option and rejected masking + `GOLDEN_ARTIFACTS`.
 
 ### Merge gate
 
@@ -334,6 +335,41 @@ unresolved blocking findings. Founder approval was **requested and granted** ("M
 `main` = **`d097e04`** (pre-merge `9a94905`, fast-forward). Re-verified on `main`:
 `cargo test --locked --test agent_report` → 9 passed. **No push, no CHANGELOG entry** from this session; the
 main worktree's unrelated in-flight atlas docs/state edits were not staged or touched.
+
+## C4 — golden-regeneration prune (2026-10-24)
+
+**Branch:** `fix/agent-report-regen`, cut from `main` `c7f0009`. **Why:** since C3 wired the CLI, the real
+pipeline run inside `tests/p6_hardening.rs::regenerate_goldens` writes `agent-report.md` +
+`agent-actions.json` into every `tests/golden/*` tree. Both carry the scan root **by design** — the MD
+prints a `scan root:` header and the JSON records `root_path` — so they are not maskable into stable
+goldens, are not in the fixed 17-artifact `GOLDEN_ARTIFACTS` set, and would leave every regen with an
+uncommitted, root-bearing diff (one `git add -A` away from leaking a local absolute path into the repo).
+
+**What:** a new `AGENT_REPORT_ARTIFACTS` constant (`["agent-report.md", "agent-actions.json"]`, default-build
+only, same cfg as the golden set) and a prune step immediately after the `findings-detail.html` mask block:
+delete both files from each tree and assert they are gone. The module docstring ("each tree is a FULL
+pipeline output") and the `regenerate_goldens` doc comment now say the two agent artifacts are produced then
+pruned deliberately, and why.
+
+**Rejected:** masking them and adding them to `GOLDEN_ARTIFACTS` — ~75 KB of new A-owned goldens for two
+artifacts whose bytes are already locked by `docs/evidence/agent-report/sample/*` (sample byte parity) and
+`tests/agent_report.rs` (emission, double-run identity, state matrix).
+
+**Verification**
+
+| Claim | Command | Result |
+|---|---|---|
+| Format | `cargo fmt --all -- --check` | exit 0 |
+| Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
+| Golden suite | `cargo test --locked --test p6_hardening` | 4 passed |
+| Agent suite | `cargo test --locked --test agent_report` | 9 passed |
+| Regen leaves zero drift | `PERFPAL_REGEN_GOLDEN=1 cargo test --locked --test p6_hardening regenerate_goldens` then `git status --short tests/golden` | test passed; **status empty**; no `tests/golden/*/agent-*` remains |
+
+**Change set:** `tests/p6_hardening.rs` + this handoff only. **No** `src/`, `Cargo.*`, `deny.toml`,
+`CHANGELOG.md`, or other golden change; `GOLDEN_ARTIFACTS` unchanged.
+
+**Panel (2 lanes, founder pre-approved lighter):** reviewer (prune correctness) + requirements-reviewer
+("nothing else left dirty") — verdicts recorded at the merge gate below.
 
 ## Next sessions — signposts
 
