@@ -107,6 +107,7 @@
   | `0461f75` | path-independent provenance, reproducible gate, record | `sim/from-layout.py` (root_path strip, node extents), `sim/gate.sh`, `sim/make-source.sh`, `sim/verify.py`, `sim/data-*` (6), `docs/atlas/core-probes.md`, `docs/research/atlas-run.md`, `docs/evidence/atlas-sim/NOTES.md`, `CHANGELOG.md`, `docs/activeContext.md`, `state/tracks/atlas-sim/handoff.md` |
   | `9ad6ea2` | hard gate assertions, tree attestation, µs check, contract clarity | `sim/gate.sh`, `sim/verify.py`, `sim/make-source.sh`, `src/reporter/atlas_layout.rs`, `src/reporter/mod.rs`, `docs/report/output-contract.md`, `README.md`, registry/research/NOTES/CHANGELOG/state |
   | `7170cad` | gate self-attestation: dirty count excludes the transcript, `verdict=` recorded | `sim/gate.sh` |
+  | `63914f9` | gate fails on projection errors; record order/version marker | `sim/gate.sh`, `docs/atlas/core-probes.md`, `docs/specs/atlas-story.md`, `state/handoff/latest.md`, `state/tracks/atlas-sim/handoff.md`, `docs/activeContext.md` |
 
   **Authoritative for any gate run:** the `Commit at run` (and `Git tree`) line in
   `docs/evidence/atlas-sim/GATE.txt`. Commits that add a transcript are docs/evidence only; this table
