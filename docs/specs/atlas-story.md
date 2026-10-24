@@ -49,9 +49,9 @@ define what an action is (`docs/specs/map-intelligibility.md:93-95`).
 ## 4. Data contract (Perfpal core owns it)
 
 All story data comes from the Perfpal scan. The story renders from core-emitted JSON:
-`metrics.json` (existing `AtlasView`), **`atlas-layout.json`** (geometry, the presentation strings the
-SVG renders, state flags, top functions, derived `stages`, KV1 actions and drawn/scan findings counts —
-`--story` only) and, from S2, an optional **`flow`** block for data
+`metrics.json` (existing `AtlasView`), **`atlas-layout.json`** (`layout_version: 1`; geometry, the
+presentation strings the SVG renders, state flags, top functions, derived `stages`, KV1 actions and
+drawn/scan findings counts — `--story` only) and, from S2, an optional **`flow`** block for data
 movement. `sim/extract.py`'s HTML scraping is deleted.
 
 ```
@@ -112,7 +112,7 @@ must stay inside the existing scan budget (no second parse pass over unchanged f
 | F3 | Unresolved indirection is visibly distinct and never guessed | fixture with a C function pointer + Rust `dyn` call |
 | F4 | No forbidden claim (`execution`, `runs N times`, `ms`, `µs`, `runtime`, `speedup`) | grep test over story JSON + rendered DOM |
 | F5 | Double scan → byte-identical `flow` block, `atlas-layout.json` and final frame | `sha256sum` diff, exit 0 |
-| F6 | Existing scan output unchanged when story output is not requested | golden `metrics.json` byte diff = empty |
+| F6 | Existing scan output unchanged when story output is not requested | `report.html` byte-identical; `metrics.json` content-equal after removing scan provenance |
 | F7 | 3,000-file synthetic repo: page ≤ 5 MB, first frame < 2 s local, no horizontal scroll | timed script |
 | F8 | Founder A2: 3 actions in < 10 min on a holdout with animation on | founder session, recorded |
 

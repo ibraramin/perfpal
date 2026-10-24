@@ -30,8 +30,8 @@ implemented properly and merged later. Existing scan outputs must stay byte-iden
   by D-pf-252.
 
 ## In Progress
-- S1 committed: core `5faacb7`, sim `deb2cc2`, panel fixes `996d47e`/`462f4f4`, evidence `f9d0b93`
-  (gate re-attested after the final docs pass).
+- S1 committed: `5faacb7`…`7170cad` (core, sim, panel fixes, provenance/gate), not pushed; evidence tip
+  `e212396`. `atlas-layout.json` carries `layout_version: 1`.
 - Atlas v2: step 10 approved; step 11 (G-style detail rail) queued; step-13 gate pending.
 
 ## Next

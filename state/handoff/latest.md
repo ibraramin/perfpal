@@ -9,14 +9,14 @@
 
 Turn the Atlas map into a **temporal showcase of a codebase**: entry → stages → loops → I/O → stop,
 with the payload crossing each file boundary labelled; vibecoder-first, senior drill; static
-inference labelled; fed only by Perfpal core artifacts. S1 (pipeline truth) is done; data movement
+inference labelled; fed only by Perfpal core artifacts. S1 (pipeline truth) is done: `atlas-layout.json` (`layout_version: 1`); data movement
 (P1–P3) is S2/S3.
 
 ## Phase
 
 | Slice | Scope | Status |
 |---|---|---|
-| S1 | P4 stages + P5 `atlas-layout.json`; sim consumes core JSON; `extract.py` deleted | **done** (`5faacb7`…`7170cad`, gate PASS) |
+| S1 | P4 stages + P5 `atlas-layout.json` (`layout_version: 1`); sim consumes core JSON; `extract.py` deleted | **done** (`5faacb7`…`7170cad`, gate PASS) |
 | S2 | P3 signatures + P1 call-site payloads → labels on edges, unresolved greyed | next |
 | S3 | P2 I/O effects (file/env/net, literal targets) | pending |
 | S4 | scenes at 3k files, payoff beats, F1–F8 | pending |

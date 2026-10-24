@@ -125,9 +125,9 @@ PY
   fi
   echo
   echo '$ python3 sim/from-layout.py (twice; hashes must match)'
-  python3 sim/from-layout.py 2>&1 | tail -2
+  python3 sim/from-layout.py 2>&1 | tail -2; echo "exit=${PIPESTATUS[0]}"
   sha256sum sim/data-hyperfine.json sim/data-cjson.json > /var/tmp/opencode/gate-data.sha
-  python3 sim/from-layout.py >/dev/null 2>&1
+  python3 sim/from-layout.py >/dev/null 2>&1; echo "exit=$?"
   if sha256sum -c /var/tmp/opencode/gate-data.sha >/dev/null 2>&1; then
     echo "assert=pass projection_deterministic"
   else
@@ -157,7 +157,9 @@ PY
   echo "## 5. Worktree clean (scope containment is proven in section 2)"
   echo '$ git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock'
   git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock
-  echo "lines=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)"
+  DIRTY=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)
+  echo "lines=$DIRTY"
+  if [ "$DIRTY" -eq 0 ]; then echo "assert=pass worktree_clean"; else echo "assert=FAIL worktree_clean"; fi
 } > "$EVIDENCE/GATE.txt" 2>&1
 
 if grep -qE 'exit=[1-9]|assert=FAIL|assert_exit=[1-9]' "$EVIDENCE/GATE.txt"; then
