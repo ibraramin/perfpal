@@ -2,7 +2,7 @@
 
 **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` · branch `feat/atlas-sim`
 **Track:** `/home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md`
-**Status:** **D2 done + S1 committed (not pushed, `5faacb7..7170cad`).** D1 presentation was accepted by the founder; the requirement was
+**Status:** **D2 done + S1 committed (not pushed, `5faacb7..63914f9`).** D1 presentation was accepted by the founder; the requirement was
 re-sealed as a core-fed temporal showcase (`docs/specs/atlas-story.md`), and the first slice (S1) is
 implemented. S2 (data movement on the edges) is next. No push, no merge to `main`.
 
@@ -25,8 +25,8 @@ implemented. S2 (data movement on the edges) is next. No push, no merge to `main
 
 ## What S1 shipped
 
-- **Core (Perfpal):** `perfpal <repo> -o <dir> --story` now also writes `atlas-layout.json`
-  (`src/reporter/atlas_layout.rs`, `--story` in `src/cli/mod.rs`). It carries the exact geometry the SVG
+- **Core (Perfpal):** `perfpal <repo> -o <dir> --story` now also writes `atlas-layout.json` (`layout_version: 1`;
+  `src/reporter/atlas_layout.rs`, `--story` in `src/cli/mod.rs`). It carries the exact geometry the SVG
   draws — canvas, columns, node rects, edge `d` paths, hulls, aggregate boxes, cap chips — plus node
   presentation strings, state flags, drawn/scan findings counts, KV1 start actions and derived
   `stages`. Layout math is **shared** with the renderer (helpers extracted in `atlas_render.rs`), not
