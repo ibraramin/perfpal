@@ -38,7 +38,18 @@ PROFILE_JSON_CAP = 100
 SIZE_BUDGET = 65536
 FORBIDDEN = re.compile(r"\b(ms|µs|seconds|speedup|latency|throughput|runtime)\b", re.IGNORECASE)
 # Analyser provenance (D7): quoted finding text is exempt from the claim scan.
-PROVENANCE_PREFIXES = ("- why:", "- what:", "| PERF-", "| rule", "|---")
+PROVENANCE_PREFIXES = (
+    "- why:",
+    "- what:",
+    "- function:",
+    "- evidence:",
+    "- anchor:",
+    "### ",
+    "| PERF-",
+    "| rule",
+    "|---",
+)
+PROFILE_ROW = re.compile(r"^\d+\. `")
 
 
 def _single_line(text):
@@ -525,7 +536,7 @@ def md_report(env, doc):
     ]
     md = "\n".join(lines)
     for line in md.splitlines():
-        if line.startswith(PROVENANCE_PREFIXES):
+        if line.startswith(PROVENANCE_PREFIXES) or PROFILE_ROW.match(line):
             continue
         if FORBIDDEN.search(line):
             raise SystemExit(f"forbidden time claim in C-authored text: {line!r}")

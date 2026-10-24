@@ -1,14 +1,14 @@
 # Track C — agent report · handoff
 
 **Track:** C (LLM depth layer) · **Branch:** `feat/agent-report` · **Worktree:** `/home/shafin/Opencode/Perfpal-agent-report`
-**Session:** C1 (contract/spec) · **Date:** 2026-10-24 · **Plan:** `docs/plans/agent-report.md` · **Spec:** `docs/specs/agent-report.md`
-**Status:** C1 COMPLETE (docs + evidence-only tooling; **no production code**). C2 not started. No merge, no push. Committed on founder approval 2026-10-24 (hash below).
+**Session:** C2 (module + unit tests) · **Date:** 2026-10-24 · **Plan:** `docs/plans/agent-report.md` · **Spec:** `docs/specs/agent-report.md`
+**Status:** **C2 COMPLETE** — `src/reporter/agent_report.rs` (views + 67 hints + JSON + MD + 24 unit tests) with visibility-only `mod.rs`; **no CLI wiring** (waits on A step 12). C1 COMPLETE (`6d32e67`, hash recorded in `e730d01`). No merge, no push. C2 uncommitted pending founder approval.
 
 ## Objective and phase
 
-Define the agent-report artifact contract — the LLM-facing depth layer the simplified Atlas first page
-will point to (A step 12). C1 is contract-only: no `src/` changes, no schema change, no dependency, no
-`mod.rs`/CLI wiring until A step 12.
+Build the C2 renderers for the agent-report artifact — the LLM-facing depth layer the simplified Atlas
+first page will point to (A step 12). C2 is module-only: `src/reporter/agent_report.rs` + unit tests; no
+CLI emission, no schema change, no dependency, no artifact-set change.
 
 **North-star alignment:** C serves the pinned goal ("LLM-consumable metrics … so LLMs can optimize code
 with explicit, quantified signals") and the proposed agent-loop metric ("downstream fix success with the
@@ -18,11 +18,51 @@ JSON + arch map"). Beta remains Track A; C is a later add-on and blocked nothing
 
 - `feat/agent-report` was fast-forwarded to `main` at session start (`3a84a0e`, the docs/tracks
   checkpoint commit) per the track's "rebase on `main` at session start". `main` is unchanged.
-- **C1 commit:** ``6d32e67`` (docs + evidence only). No merge, no push.
-- Working tree contains only docs/state changes (see Change set). `src/`, `Cargo.*`, `deny.toml` and
-  `docs/schema/` are clean — the gate asserts it.
+- **C1 commits:** ``6d32e67`` (docs + evidence only) + ``e730d01`` (hash record). **C2 is uncommitted**
+  pending founder approval.
+- Worktree (C2): `src/reporter/agent_report.rs` (new), `src/reporter/mod.rs` (visibility/module declaration
+  only), `docs/specs/agent-report.md`, `docs/plans/agent-report.md`, `docs/tracks/agent-report.md`, and the
+  `derive_sample.py` predicate alignment. `Cargo.*`, `deny.toml`, `docs/schema/`, `tests/golden/`,
+  `docs/evidence/agent-report/sample/*.sample.*` and `src/cli/` are untouched.
 
-## What landed
+## C2 — what landed
+
+| Deliverable | Path | Notes |
+|---|---|---|
+| Renderer module | `src/reporter/agent_report.rs` | `render_actions_json` + `render_markdown`; reuses `views::complete_actions` / `complete_profile_queue` (single rank source, no second key); `data_quality`; §9.9 escaping; fixed seven-section MD; 25/25 caps; `MD_SIZE_BUDGET = 81,920` |
+| Fix hints | `AGENT_FIX_HINTS` | all 67 spec §8 sentences verbatim; `PERF-RS-STR-001` absent; unknown `rule_id` → JSON `null` + MD stub |
+| Wiring seam | `src/reporter/mod.rs` | `pub mod agent_report;` and `pub(crate)` on `HEURISTIC_CATALOG_V1`, `finding_anchor`, `finding_anchor_assignments` — visibility only, no behavior or emission change |
+| Unit tests | `agent_report.rs` `#[cfg(test)]` | 24 tests: rank/profile parity, hint set-equality + hygiene, anchor byte-parity, `detail_anchor` parity, integral cost, no clock, double render, empty/semantic/all-component/capped skeleton, v1 scale, nullable/threshold shapes, 200 B no-truncation, exact size pins, text safety, forbidden claims, committed-sample byte parity |
+
+**Founder decision at C2 kickoff (2026-10-24):** the §12 budget was raised **64 KB → 80 KB** because the
+literal 200 B envelope (worst-case widths) measures **76,416 B**; the bound change keeps the width honest
+instead of shrinking the fixture. `contract_version` stays 1.
+**Deferred (not done here):** CLI emission, artifact-set assertions, `tests/agent_report.rs` integration
+suite, sample regeneration gate, downstream eval, and A's step-12 link — all C3/wiring.
+
+## Verification (C2)
+
+All commands from the repo root with `PATH="$HOME/.cargo/bin:$PATH"`:
+
+| Claim | Command | Result |
+|---|---|---|
+| Format | `cargo fmt --all -- --check` | exit 0 |
+| Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
+| Unit tests | `cargo test --locked --lib agent_report` | 24 passed, 0 failed |
+| Test-count gate | `test "$(cargo test --locked --lib agent_report -- --list \| grep -c ': test$')" -ge 10` | exit 0 (24) |
+| Full suite | `cargo test --locked` | 55 `test result: ok` groups, exit 0 |
+| Licenses | `cargo deny check licenses` | `licenses ok` |
+| No schema/deps/fixtures/CLI | `test -z "$(git status --short Cargo.toml Cargo.lock deny.toml src/schema/ docs/schema/ tests/golden/ docs/evidence/ src/cli/ CHANGELOG.md)"` | exit 0 (the `derive_sample.py` predicate update is listed separately) |
+| Sample parity | `agent_report_sample_matches_committed_contract` | byte-equal for both artifacts |
+| Size | exact pins in `agent_report_size_budget_golden_fixtures` | report 13,469 · mixed 8,889 · python 26,889 · rust 25,848 · synthetic 76,416 B (budget 81,920) |
+
+**Review panel (C2):** R1/R2/R3/R5 reviewer lanes **APPROVED**; Q1/Q2 requirements lanes **APPROVED**;
+zero blocking findings. Round-1 findings fixed: unproven stubs/unknown-rule, v1 cost path, nullable and
+threshold shapes, capped tails, zero-branch aggregates, >100 profile cap, all-`-ARCH-002` state, exact
+size pins, `u64` cost serialization, table/backslash/`rule_id` escaping, the semantic-tier false claim,
+the worst-case fixture (unknown-trip suffix + 3-key evidence), and the state/handoff counts.
+
+## C1 — what landed
 
 | Deliverable | Path | Notes |
 |---|---|---|
@@ -45,8 +85,9 @@ profile queue by the shipped KV3 key with its own §6.2 row schema; cost anchors
 `views::ScaleOrdering`; the MD is a fixed seven-section skeleton (top 25 action details + a ≤67-row
 rollup over **all** actions + 25 profile rows). Scanner text is single-line-escaped and a backtick
 becomes `ˋ` (U+02CB) because CommonMark code spans ignore backslash escapes; `<`/`>` are neutralised in
-prose only. The 64 KB assertion covers the committed golden fixtures plus a 25+67+25 synthetic
-at-envelope fixture; the external `perfpal-test` scans run only with `PERFPAL_EXTERNAL_SCANS=1`. The
+prose only. The **80 KB** assertion covers the committed golden fixtures plus a 25+67+25 synthetic
+at-envelope fixture (measured 76,416 B); the external `perfpal-test` scans run only with
+`PERFPAL_EXTERNAL_SCANS=1` (C3). The
 JSON holds every action (uncapped), the top 100 profile rows, a data-quality block, and no clock fields.
 
 ## Verification
@@ -134,19 +175,43 @@ R4's non-blocking notes and resolutions:
 
 ## Risks / open
 
-- **Contract-vs-A-link ordering:** C must not wire `mod.rs`/CLI until A step 12; the link slot is A-owned. C2 can build the module + unit tests first.
-- **`detail_anchor` parity:** the shipped slug + collision suffixing lives in `mod.rs`; C2 must reuse it (`pub(crate)`) or duplicate it with an equality test.
-- **Sample drift until C3:** the C1 sample is produced by the evidence-only reproducer; C3 must regenerate it from the Rust renderer and prove an empty diff.
-- **Size on very large scans:** actions are uncapped in JSON (≈1.7 KB/action → multi-MB at 7.5k findings). Accepted for a machine artifact.
-- **Inherited wording:** `1 static cost units (v2)` and no thousands separators (D6). Fixing them is a shared-formatter change.
-- **Ratification still open (spec §16):** profile cap 100; hint wording; eval thresholds; whether A links from `report.html` only; formatter consolidation; whether the synthetic at-envelope fixture becomes a golden.
+- **C2 is module-only:** no CLI emission, no artifact-set update, no `tests/agent_report.rs`. Those are
+  C3/wiring and must land **after A step 12**; the DoD items 13–16 are not runnable yet by design.
+- **`detail_anchor` parity:** C2 reuses the shipped `finding_anchor_assignments` (`pub(crate)`), and
+  `agent_report_detail_anchor_matches_shipped_assignments` locks it.
+- **Sample drift until C3:** the C1 sample is still produced by the evidence-only reproducer; C3 must
+  regenerate it from the Rust renderer and prove an empty diff (the C2 sample-parity unit test already
+  proves today's renderer matches it byte-for-byte).
+- **Non-blocking panel follow-ups:** §9.7 does not yet exempt the MD header (`scan root: …`) from the
+  forbidden-time scan, so a root path containing `runtime`/`ms` could false-fail the predicate; a
+  `dynamic`-only `resolver_tiers` value falls into the syntactic wording (no producer emits it today);
+  the synthetic fixture keeps `scan.file_count = 4` in its header (width-neutral); the C1 gate's local
+  64 KB constant and the C1 README's "no production code" prose remain historical evidence.
+- **Size on very large scans:** actions are uncapped in JSON (≈1.7 KB/action); accepted for a machine
+  artifact.
+- **Ratification open (spec §16):** profile cap 100; hint wording; eval thresholds; whether A links from
+  `report.html` only; formatter consolidation; whether the synthetic becomes a golden.
 
 ## Next actions
 
-1. Founder review of the spec (§8 hints, §16 items) + approval to commit C1.
-2. `/new` → **C2**: `src/reporter/agent_report.rs` (views + hints + JSON + MD) with unit tests; no wiring until A step 12.
-3. Then C2 wiring (post-A-step-12) → **C3** integration, sample regen, downstream eval, A-link verification, review panel.
+1. Founder approval to commit C2 on `feat/agent-report`; no merge, no push.
+2. **Wait for A step 12**, then C2 wiring: emit both artifacts via `Artifact::text`, update the fixed
+   artifact-set assertions, and run the full DoD (items 13–20).
+3. **C3:** `tests/agent_report.rs` (double-run byte equality, state matrix, `detail_anchor` resolution,
+   no-script/network, emitted artifact set), regenerate the sample from Rust and byte-diff, then the
+   downstream eval or the founder's recorded deferral.
 4. No merge to `main`, no push without the track gate + founder approval.
+
+## Change set (C2, uncommitted)
+
+- **New code:** `src/reporter/agent_report.rs` (renderers + 67 hints + 24 unit tests).
+- **Visibility only:** `src/reporter/mod.rs` (module declaration + three `pub(crate)` exports).
+- **Docs:** `docs/specs/agent-report.md` (§7/§9/§10/§11/§12/§14 amendments incl. the 80 KB budget),
+  `docs/plans/agent-report.md` (80 KB + state-matrix wording), `docs/tracks/agent-report.md` (status).
+- **Evidence:** `docs/evidence/agent-report/sample/derive_sample.py` (predicate aligned with §9.7; the
+  committed sample output is unchanged).
+- **No** schema, `Cargo.*`, `deny.toml`, `src/cli/`, `tests/golden/`, CHANGELOG, main state, or A/D surface
+  changes.
 
 ## Change set (C1 commit)
 

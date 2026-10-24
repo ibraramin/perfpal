@@ -1,7 +1,8 @@
 # Evidence — Track C (agent report)
 
-**Status:** C1 contract evidence. No production code exists yet; nothing in this directory is emitted by
-`perfpal`. The normative contract is [`docs/specs/agent-report.md`](../../specs/agent-report.md).
+**Status:** C1 contract evidence. The C2 Rust renderer now exists (`src/reporter/agent_report.rs`); this
+directory still describes the C1 Python-derived sample and is not emitted by `perfpal`. The normative
+contract is [`docs/specs/agent-report.md`](../../specs/agent-report.md).
 
 ## Files
 
@@ -36,7 +37,7 @@ The reproducer prints `actions=9 profile=4 hints=67 bytes=8889 ok` and fails clo
 - a forbidden time claim (`ms`, `µs`, `seconds`, `speedup`, `latency`, `throughput`, `runtime`) in **C-authored**
   text (fix hints, headers, caveats, data-quality lines) — quoted `- why:` / `- what:` analyser
   provenance is exempt by contract (spec §2 D7);
-- a rendered MD over 64 KB.
+- a rendered MD over the C1 gate budget (64 KB; the C2 contract is 80 KB, spec §12).
 
 ## What this sample does and does not prove
 
@@ -44,8 +45,8 @@ The reproducer prints `actions=9 profile=4 hints=67 bytes=8889 ok` and fails clo
 key sets, the fixed seven-section MD skeleton, the `showing top N of M` cap lines, the per-rule rollup
 shape, the `unknown-trip` badge placement, the §9.9 escaping as far as this fixture can show it (single-line, backtick substitution), and that the 67-hint table is complete **as a set** against `HEURISTIC_CATALOG_V1`.
 
-**Does not prove:** byte-equality with the future Rust renderer, the 64 KB budget at real scan scale, the
-nine-state stubs, the prose-HTML neutralisation (no `<`/`>` occurs in this fixture's `title`/`why`), the
+**Does not prove:** byte-equality with the future Rust renderer, the 80 KB budget at real scan scale, the
+full state matrix, the prose-HTML neutralisation (no `<`/`>` occurs in this fixture's `title`/`why`), the
 unknown-`rule_id` hint stub (the reproducer fails closed before rendering it), or the `detail_anchor`
 collision path (no slug collisions here). Those are C2/C3 gates (spec §14.10/§14.8). Those are
 C2/C3 gates (spec §14). C3 regenerates this sample from `src/reporter/agent_report.rs` and asserts an

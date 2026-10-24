@@ -25,6 +25,7 @@
 //! Non-goals: reading source, IR, or scanner state; inventing aggregations
 //! beyond the output-contract §5 template.
 
+pub mod agent_report;
 pub mod atlas;
 pub mod atlas_brief;
 pub mod atlas_charts;
@@ -82,7 +83,7 @@ pub const MD_ESCAPE_CHARS: &[char] = &[
 /// with the CPython mechanism and the missing-signal limitations stated. A
 /// completeness lock in this module's tests asserts the catalog covers
 /// exactly the 67 rule ids the analyzer registry can emit.
-const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
+pub(crate) const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-C-ALLOC-001",
         "Heap allocation inside loop",
@@ -2468,7 +2469,7 @@ fn slugify(path: &str) -> String {
 /// kept, every other char → `-` (no collapsing across the fixed
 /// `rule:path:line:col` shape — each separator maps to exactly one dash, so
 /// distinct finding ids stay distinct).
-fn finding_anchor(finding_id: &str) -> String {
+pub(crate) fn finding_anchor(finding_id: &str) -> String {
     let mut anchor = String::with_capacity(finding_id.len() + 8);
     anchor.push_str("finding-");
     for c in finding_id.chars() {

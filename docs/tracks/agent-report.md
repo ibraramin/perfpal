@@ -3,7 +3,7 @@
 **Worktree:** `/home/shafin/Opencode/Perfpal-agent-report` (`feat/agent-report`, base `821b984`; rebase after A step 12).
 **Start this tab:** open the worktree, first message:
 
-> `Read /home/shafin/Opencode/Perfpal/docs/tracks/agent-report.md and execute Session C1.`
+> `Read /home/shafin/Opencode/Perfpal/docs/tracks/agent-report.md and execute Session C2.`
 
 If the worktree is missing:
 
@@ -14,13 +14,17 @@ git worktree add ../Perfpal-agent-report -b feat/agent-report 821b984
 **Track handoff:** `state/tracks/agent-report/handoff.md` · **Spec:** `docs/specs/agent-report.md` · **Plan:** `docs/plans/agent-report.md` · **A-pf-111** in the state/handoff.
 **Role:** the full-fidelity LLM layer the simplified Atlas first page points to. Not a human dashboard; no LLM calls.
 
-**Status 2026-10-24 — C1 COMPLETE (contract only; no production code).** Contract locked as
-`contract_version 1`: artifacts `agent-report.md` (bounded, fixed seven-section skeleton, ≤64 KB) +
-`agent-actions.json` (complete action list, 100-row profile cap named in-file); KV1/KV3 rank keys
-reused verbatim; 67 curated fix hints with a completeness lock; no clock provenance; sample +
-gate transcript under `docs/evidence/agent-report/`. Founder-ratified decisions D1–D8 in spec §2.
-Uncommitted pending founder approval. **C2 is next** — and its `mod.rs`/CLI wiring still waits on
-A step 12.
+**Status 2026-10-24 — C2 COMPLETE (module + unit tests; no wiring).** `src/reporter/agent_report.rs`
+renders both artifacts as pure functions of `MetricsDocument`: `agent-report.md` (fixed seven-section
+skeleton, 25/25 inline caps, ≤80 KB — measured 76,416 B at the §12 envelope) and `agent-actions.json`
+(complete action list, 100-row profile cap). It reuses the shipped KV1/KV3 rank keys and
+`views::ScaleOrdering` anchors, carries the 67 curated hints with a set-equality lock, and 24 unit tests
+pin rank parity, stubs, escaping, determinism, sample byte-parity and the exact size budget. Only
+`src/reporter/mod.rs` changed outside the module (module declaration + three `pub(crate)` exports).
+**C1 COMPLETE** (contract `contract_version 1`, sample + gate under `docs/evidence/agent-report/`;
+`6d32e67`, hash `e730d01`). **C2 is uncommitted pending founder approval.** CLI emission, the C3
+integration suite, sample regeneration, the downstream eval and A's step-12 link remain **pending A
+step 12**.
 
 ## Read first
 

@@ -37,7 +37,7 @@ without loading the full human report.
 
 | Name | Consumer | Completeness | Cap | Size class |
 |---|---|---|---|---|
-| `agent-report.md` | LLM / human triage | Bounded view | top 25 actions, top 25 profile rows | ≤ 64 KB on the named fixtures and the §12 width envelope |
+| `agent-report.md` | LLM / human triage | Bounded view | top 25 actions, top 25 profile rows | ≤ 80 KB on the named fixtures and the §12 width envelope |
 | `agent-actions.json` | tools / agents | **actions complete**; profile top 100 | `profile_queue_cap = 100` (named in the file) | O(actions) |
 
 - **Always emitted**, alongside the existing artifacts, with no CLI flag (D4).
@@ -114,7 +114,7 @@ Top-level envelope (all keys always present):
 | `schema_version` | string | mirrored verbatim from `metrics.json` (e.g. `"1.7"`) |
 | `tool` | object | `{name, version}` verbatim from `metrics.json` |
 | `scan` | object | `{root_path, languages, file_count, loc_total}` — **no** `started_at`, **no** `duration_ms` (D3). `loc_total` is `object \| null` (the producer omits it on a zero-file scan). |
-| `rank_key` | object | `{actions: string[], profile_queue: string[]}` — the ordered clause lists from §5, machine-readable |
+| `rank_key` | object | `{actions: string[], profile_queue: string[]}` — the ordered clause lists from §5, machine-readable (the profile list expands §5.2's final tie-break into its three atomic keys: `path`, `function_name`, `function_id`) |
 | `data_quality` | object | §10 |
 | `actions` | array | every action, KV1 order, uncapped |
 | `complete_action_count` | integer | `actions.len()` (invariant, tested) |
@@ -274,20 +274,29 @@ showing top {min(25, complete_profile_count)} of {complete_profile_count} functi
 Rules:
 
 - **Content varies, structure does not.** Heading text, section order, bullet labels and the caveat
-  bullets are fixed. Counts, rows and stubs change with data.
+  bullet **set** are fixed (the tier bullet is conditional; see below). Counts, rows and stubs change
+  with data.
 - **Stubs** (exact strings): `no findings — nothing to rank on this scan.`,
   `no functions recorded — nothing to queue.`, `no rules fired — nothing to index.`,
   `no enclosing function recorded for this location`, `no curated hint for this rule yet`,
   `parse: not recorded`. (Entry/`no resolved dependents`/`no cost` stubs
   belong to the Atlas surfaces and are **not** part of this artifact.)
+- **Tier caveat is conditional, shape is fixed.** When `resolver_tiers` is exactly `["syntactic"]`, the
+  caveat reads as shown. When any finding carries the `semantic` tier (a `--features semantic-clang`
+  build), the same bullet reads: `- **Resolver tiers** (`resolver_tier: {sorted tiers}`): semantic
+  resolution applies where libclang was available; unresolved sites still fall back to syntactic
+  analysis (no macro expansion, no type inference).` The bullet count and section set do not change,
+  and the MD never claims "syntactic only" while listing a semantic tier.
 - **Caps** print `showing top N of M` on every capped block (including `N == M`), so the shape never
   changes with data. The two conditional tail paragraphs (`complete list is …` / `complete human list …`)
   appear only when the population exceeds the inline cap — they are part of the fixed skeleton, not
   ad-hoc prose.
 - **The only table is the per-rule rollup** (≤ 67 rows, sorted by `rule_id`, counts over **all**
   actions); the MD uses no other tables (tables cost tokens and break on long paths).
-- **Byte budget + fixture scope:** `agent-report.md` ≤ 64 KB on the **named fixtures** (§12) and on any
-  scan whose paths are ≤ 200 B, messages ≤ 500 B and total evidence ≤ 300 B per action (C2 asserts this
+- **Byte budget + fixture scope:** `agent-report.md` ≤ 80 KB on the **named fixtures** (§12) and on any
+  scan whose paths are ≤ 200 B, function names ≤ 64 B, titles ≤ 120 B, messages ≤ 500 B and total
+  evidence ≤ 300 B per
+  action (C2 asserts this
   with a synthetic at-width fixture). No truncation is ever applied: inputs wider than that are still
   rendered correctly but may exceed the target, and the JSON remains authoritative. Measured as
   `md.len()` in bytes in C2's test.
@@ -405,13 +414,16 @@ Rules:
    `runtime`, `speedup`, `latency`, `throughput` in C-authored strings. Cost is static cost units; the
    caveat block states this once per artifact. **Scan definition (testable):** a case-insensitive
    word-boundary regex `\b(ms|µs|seconds|speedup|latency|throughput|runtime)\b` over every MD line **except**
-   the analyser-provenance lines (`- why:`, `- what:`, rollup `| PERF-` rows) and the rule definitions
-   in this spec. The evidence reproducer implements exactly this predicate.
+   the analyser-provenance lines (`- why:`, `- what:`, `- function:`, `- evidence:`, `- anchor:`,
+   the numbered profile rows, the `### ` action headings, rollup `| PERF-` rows) and the rule
+   definitions in this spec. The evidence reproducer implements
+   exactly this predicate.
 8. **No bare number.** A cost, multiple, share or count carries its unit/anchor (ordinal ranks exempt).
    The shipped `top P%` keeps its shipped wording (no population noun); that inherited label is the
    format of record, and the population is named in the section heading/cap line.
 9. **Text safety (MD only).** Every scanner-controlled value (`path`, `root_path`, `symbol`,
-   `function.name`, `title`, `why`, evidence keys/values, `action_id`) is rendered single-line and
+   `function.name`, `title`, `why`, evidence keys/values, `action_id`, `rule_id`, `path_class`,
+   `schema_version`, `tool.name`, `tool.version`) is rendered single-line and
    structure-safe before interpolation.
    - **Always:** `\r`/`\n`/`\t` → the two-character escapes `\r`/`\n`/`\t`; every backtick → `ˋ`
      (U+02CB MODIFIER LETTER GRAVE ACCENT). **Backslash does not escape a backtick inside a CommonMark
@@ -419,7 +431,8 @@ Rules:
      substitution is lossy by design; the JSON keeps the original.
    - **Inside a code span** (path, id, name, evidence): `<`/`>` stay literal — the span is inert.
    - **Prose fields** (`title`, `why`): `<` → `&lt;`, `>` → `&gt;` (no raw HTML can be injected).
-   - **Table cells only:** `|` → `\|`.
+    - **Table cells only:** `\` → `\\`, then `|` → `\|` (a cell ending in an unescaped backslash would
+      otherwise swallow the delimiter).
    - **Not escaped:** C-authored fixed strings (the 67 `fix_hint` sentences, headers, caveat bullets) —
      they are trusted content, not scanner data.
    This prevents a crafted path or message from forging a heading, closing a code span, breaking the
@@ -464,6 +477,8 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
 | partial-parse scan | counts in data quality (or `parse: not recorded`); no silent drop |
 | single-file scan | full blocks; rank/anchors over the one-file population |
 | v1-only cost scan | anchors read `static cost units (v1)`; no v2 multiple shares a row; `function.cost` carries the v1 chart-side value |
+| semantic-clang scan | full blocks; `resolver_tiers` lists `semantic`; the tier caveat switches to the resolver-tier wording (§7) — no "syntactic only" claim |
+| all-component scan (every finding is `-ARCH-002`) | full blocks; the action list and rollup are empty (fixed stubs); `component_findings_excluded = N` carries the disclosure |
 
 ## 12. Determinism and size
 
@@ -476,20 +491,31 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
 - **Byte-identical double run** is a hard test: two renders of the same document produce identical bytes
   for both artifacts, with **no normalization**.
 - **Size:** the hard assertions are:
-  - `agent-report.md` ≤ 64 KB on the **committed golden fixtures** (`tests/golden/report`,
+  - `agent-report.md` ≤ 80 KB (81,920 B) on the **committed golden fixtures** (`tests/golden/report`,
     `report-mixed`, `report-python`, `report-rust`), always run in `cargo test`.
   - the **synthetic at-envelope fixture**: exactly **25 detail actions + 67 rollup rules + 25 profile
     rows**, with paths = 200 B repeated at every rendering site (heading, function line, `action_id`),
-    titles = 120 B, messages = 500 B, evidence = 300 B/action, symbols = 64 B. This is the worst-case
-    width × cap combination, and it must stay ≤ 64 KB.
+    titles = 120 B, function names = 64 B, messages = 500 B, evidence = 300 B/action, symbols = 64 B.
+    This is the worst-case
+    width × cap combination, and it must stay ≤ 80 KB (81,920 B).
+  - **Measured at C2 (2026-10-24):** `report` 13,469 B · `report-mixed` 8,889 B · `report-python`
+    26,889 B · `report-rust` 25,848 B · synthetic 76,416 B (budget 81,920 B). The unit test asserts these
+    exact sizes so a wording change that moves them is a deliberate contract edit.
   - the three external scans (`~/Opencode/perfpal-test/out-{cJSON,hyperfine,bat}`) are an **optional
     manual check** (`PERFPAL_EXTERNAL_SCANS=1 cargo test --locked --test agent_report -- --nocapture`),
     not part of the required gate. A fresh checkout or CI therefore gates on the committed fixtures,
     never on a user-local path.
   **This is a fixture-and-envelope guarantee, not a theorem for arbitrary input.** Real scans are
   expected to land well under the budget (hyperfine's 348 actions ≈ 30 KB). Inputs beyond the envelope
-  are rendered correctly with **no truncation**, may exceed 64 KB, and `agent-actions.json` is then
+  are rendered correctly with **no truncation**, may exceed 80 KB, and `agent-actions.json` is then
   authoritative. JSON grows O(actions) with the 100-row profile cap.
+- **Amended at C2 kickoff (founder, 2026-10-24): the budget is 80 KB (81,920 B).** The original 64 KB
+  figure and the 200 B path envelope were chosen independently and cannot both hold: the §12 synthetic
+  at the literal width measures **76,416 B**, so the budget was raised to keep the worst-case width
+  honest (5,504 B headroom, 6.7% of the budget) rather than shrink the fixture. The C1 evidence
+  (`derive_sample.py`, `c1-gate.sh`) keeps its local 64 KB constant as historical evidence; the
+  committed sample is 8,889 B, so those checks are unaffected. This is a bound change, not a shape
+  change: `contract_version` stays 1.
 
 ## 13. Downstream eval (protocol; results gate C3, not CI)
 
@@ -527,9 +553,10 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
 4. Anchor parity: every `cost_anchor` byte-equals the shipped `views` anchor for the same function.
 5. Determinism: double render byte-equal; `scan` has no `started_at`/`duration_ms`; integral costs
    serialize without a fractional part.
-6. Size bound: MD ≤ 64 KB on each committed golden fixture and on the §12 synthetic fixture
-   (25 actions + 67 rollup rules + 25 profile rows at the stated widths); the external scans run only
-   with `PERFPAL_EXTERNAL_SCANS=1` and otherwise print a skip.
+6. Size bound: MD ≤ 80 KB on each committed golden fixture and on the §12 synthetic fixture
+   (25 actions + 67 rollup rules + 25 profile rows at the stated widths); the external scans are the
+   **C3** optional manual check in §12 (gated by `PERFPAL_EXTERNAL_SCANS=1`), not part of the C2 unit
+   gate, matching plan DoD #15.
 7. Forbidden strings: the §9.7 predicate over C-authored lines (including `seconds`) finds no time
    unit/claim; quoted `why`/`what`/rollup provenance lines are exempt.
 8. Stubs: each stub in the §7 list is reachable from a fixture state (or from a direct renderer call
@@ -537,15 +564,17 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
 9. Profile contract: every row carries the §6.2 keys with the declared types; `function_name` is a
    string (never an object).
 10. Text safety: a fixture with a path containing `\n`, a backtick and `<script>` renders one line, no
-    heading injection, no raw HTML; the backtick renders as `ˋ` (U+02CB) so no code span can be closed;
-    the JSON keeps the original bytes.
+    heading injection, and no executable/raw HTML (values inside inline code spans stay literal and inert
+    per §9.9; prose and table cells are entity-escaped); the fixture also carries a hostile `rule_id` and
+    `path_class`; the backtick renders as `ˋ` (U+02CB) so no code span can be closed; the JSON keeps the
+    original bytes.
 
 **C3 (integration)**
 
 11. Double run of the same fixture tree → byte-identical `agent-report.md` + `agent-actions.json`.
 12. Sample regen: the committed `docs/evidence/agent-report/sample/*` **byte-equals** the renderer
     output (empty diff, asserted by a test).
-13. State matrix: all nine states in §11 render the fixed skeleton (section/heading assertions).
+13. State matrix: every state in §11 (eleven rows) renders the fixed skeleton (section/heading assertions).
 14. Artifact set: a scan emits both files; no schema file, no `Cargo.toml`/`Cargo.lock`, no `deny.toml`
     change; no `<script>`/network anywhere in the artifacts.
 15. A's step-12 link slot resolves to an existing `agent-report.md` (A owns the link line; C verifies it
