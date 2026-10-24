@@ -36,7 +36,7 @@
 |---|---|---|---|---|---|
 | P1 | call-site payload | `flow.calls[]`: from, to, callee, line, args[{expr,type,dir,named}], unresolved | `src/analysis/flow.rs` (new) | syntactic + local type table | not started |
 | P2 | I/O effects | `flow.io[]`: op read/write, target file/env/net/stdio, literal | same module | call-name + string-literal match | not started |
-| P3 | signature summary | `flow.signatures[]`: params[{name,type,dir}], ret, unresolved[] | same module | types as written; macros/generics opaque | not started |
+| P3 | signature summary | `flow.signatures[]`: id, name, path, line, params[{name,type,dir}], ret, unresolved[] | `src/analysis/flow.rs` (new) | types as written; macros/generics opaque | **prototype** (`2108117`) |
 | P4 | stage order | `stages[]`: order, label, files, depth, leaf | `src/reporter/atlas_layout.rs` (derived, no new parse) | derived | **prototype** |
 | P5 | layout emission | `atlas-layout.json`: canvas, columns, nodes, edges, hulls, aggregates, cap chips | `src/reporter/atlas_layout.rs` + `pub(crate)` layout helpers in `atlas_render.rs` | exact (same math as the SVG) | **prototype** |
 
@@ -157,6 +157,39 @@
 - **Known limits:** `--story` builds the view twice (single-pass later); no data-movement fields yet
   (P1–P3 = S2/S3); no fixture with a capped/aggregated column; the JSON carries pre-fit header text
   while the SVG applies `fit_header_line` (equal today, may diverge at 11 columns).
+
+## S2 record (2026-10-24) — P3 `prototype`, P1 pending
+
+### P3 — signature summary (`2108117`)
+
+- **Commit:** `2108117` `core(P3): signature summaries` · `git show --stat 2108117`:
+  `src/analysis/flow.rs` new (563), `src/analysis/mod.rs` new (6), `src/lib.rs` +1,
+  `src/reporter/atlas_layout.rs` +18/−5, `src/reporter/mod.rs` +14, `tests/pipeline_e2e.rs` +74.
+- **Emitted:** `flow.flow_version = 1`, `flow.fidelity = "syntactic"`,
+  `flow.signatures[] = {id, name, path, line, params[{name, type, dir}], ret, unresolved[]}`.
+  `calls` and `io` are **omitted** in S2 until P1/P2 land. `layout_version` stays 1.
+- **Identity:** `id` is the canonical IR id (`path#name#start_line:start_col`, 1-based) copied
+  from the backend builders, so a signature joins `nodes[].functions[].id` without a translation
+  table (e2e asserts every id exists in `metrics.json` `stats.functions[].id`).
+- **Fidelity:** syntactic, types **as written**; local re-parse of the **drawn node files only**
+  under `--story` (C/Rust extensions). Nothing executes; no runtime claim.
+- **`dir`:** `in` for values, `const T*`, Rust `&T`/`*const T`; `inout` for non-const C pointers
+  and Rust `&mut T`/`*mut T`. `out` is deliberately **unused** in S2: write-only cannot be
+  inferred syntactically, and guessing it would break §5.
+- **`unresolved`:** only opaque constructs — `impl Trait`, `variadic`, `fn-pointer` (C `(*`).
+  Generics are recorded as written, not resolved, and are not by themselves an unresolved entry.
+- **Known limits:** second parse of the drawn files (bounded by the canvas cap; story-only);
+  macros are not expanded; C parameter text is assembled from the declaration so qualifiers and
+  pointers survive (the grammar's `type` field alone drops `const`/`*`); Rust pattern names use
+  the leftmost identifier; unnamed C parameters carry `name: null`; unreadable/unparsable files
+  are skipped (their edges stay `unresolved` later); no `io` block yet.
+- **Real implementation must:** capture return type + parameter names/direction in the scanner IR
+  in the same pass (no second parse), expand macros, and resolve `impl Trait`/generics only with a
+  real type analysis. Prototype stays story-only.
+- **Evidence:** 845 tests pass; `cargo fmt`/`clippy -D warnings` exit 0; on the hyperfine fixture
+  `--story` emits 191 signatures for 19 drawn nodes in 1.78 s; `report.html` byte-identical
+  with/without `--story`; `metrics.json` content-equal after masking scan provenance; two runs
+  produce identical `flow` bytes.
 
 ## Status legend
 
