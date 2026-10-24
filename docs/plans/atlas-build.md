@@ -61,6 +61,18 @@ Build and ship Perfpal Atlas: the entry-flow core graph (G) as a full-bleed 100%
     Evidence `docs/evidence/atlas-visual/v2/{STEP12.md,step12.json,gate-step12.txt,VISION-STEP12.md}`.
     No schema/JS/deps; A2/ship still blocked.
 - **Step 13 — Founder visual gate + G-baseline diff + V8 rerun.** Render 1440×900; the founder signs off the composition. Add DOM/render assertions: canvas bottom ≤ 900 including header/legend/footer; no clipped text; no duplicate definitions; `#map` height ≤ ~5,000px; no leading-dot truncation; no horizontal scroll. Re-run the V8 A1 + strip reads on the reworked page. Only then A2.
+  - **Step 13 — EVIDENCE COMPLETE 2026-10-24; FOUNDER SIGN-OFF PENDING.** Real hyperfine/cJSON
+    `report.html#map` measured and rendered at 1440×900 + 1280×800 (served page byte-identical to a
+    fresh scan): canvas bottom **869 ≤ 900**, `#map` **1,848 ≤ 5,000**, no horizontal scroll at either
+    viewport, no clipped text / node overflow / leading-dot / duplicate ids, exactly one unit, median,
+    structural caveat, unreached, legend and footer definition; A9/A12 re-asserted. V8 A1 **16/16** +
+    strip **16/16** (two blind reads per state, eight states). G-baseline diff + composite + fresh
+    comparative read recorded (SAME SYSTEM; step-11 filename elision remains the most visible
+    residual). Evidence `docs/evidence/atlas-visual/v2/{STEP13.md,step13.json,gate-step13.txt,
+    VISION-STEP13.md,step13-reads.json,render_step13.py,render_step13_states.py}` + 8 real-page
+    renders + `step13/`. Gate package `step13/FOUNDER-GATE.md`. **FOUNDER APPROVED 2026-10-24** (dated sign-off + provenance in
+    `step13/FOUNDER-GATE.md`; D-pf-253). Step 13 passes: A2 (step 14) may be scheduled; the plan stays
+    `active` and is not done (step 15). No commit/ship implied.
 - **Step 14 — Founder A2 (blocked until step 13):** pre-register the library-shaped holdout repo (A-pf-116; single-file C lib or Rust lib crate with no bin) alongside the vaulted django/postgres holdout; the registered holdout is the **published `memchr` crate payload** at `bd6068c3` (dev `benchmarks/` + `fuzz/` excluded; see `docs/evidence/map-vision/v8/PREREGISTRATION.md`); run the timed test with animation enabled (3 actions in under 10 minutes, understandable, pause/reduced-motion/print work), record the transcript and the verdict in docs/evidence/map-vision/v8/. If A2 fails on both application and library classes, stop and escalate a superseding ADR instead of tuning.
 - **Step 15 — Ship/docs/EOL (blocked until step 14):** update the output contract and README for the Atlas page, add the CHANGELOG entry, archive the V7 prototypes' role, run the Definition of Done below, run @reviewer + @requirements-reviewer on the final tree, mark the plan done, update state/session-state.json + state/handoff/latest.md + docs/activeContext.md, and commit.
 

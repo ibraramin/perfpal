@@ -7,7 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Agent report — LLM-facing artifacts from every scan (2026-10-24, `contract_version: 1`).** Each run
+  now writes two artifacts beside the human report: `agent-actions.json` — every ranked action with its
+  fix hint, evidence, cost anchor and a data-quality block (uncapped) — and `agent-report.md` — a fixed
+  seven-section, LLM-consumable digest (top 25 action details, a rollup over all actions, 25 profile
+  rows; ≤ 80 KB over the committed fixtures). `report.html` links both (`agent report` / `agent
+  actions`) so one scan yields a page for a human and a ranked queue for an agent. Ranking reuses the
+  shipped production-first → severity → confidence → containing-function-cost order (no new weights,
+  no new views), numbers reuse the shipped key-view strings, and documents carry no clock fields, so the
+  same scan command is byte-identical. No schema change, no new dependency. Contract
+  `docs/specs/agent-report.md`; evidence `docs/evidence/agent-report/`; tests `tests/agent_report.rs` +
+  24 unit tests. Golden regeneration **prunes** both artifacts from `tests/golden/*` (they carry the scan
+  root as provenance by design and are locked by the sample + the integration suite instead).
+
 ### Changed
+- **Atlas v2 step 13 — founder visual gate evidence (2026-10-24, no code change).** The reworked
+  `report.html#map` was measured and rendered at 1440×900 and 1280×800 (session-private fresh scans on merged `main` `c73d6ff`, byte-identical to the shared
+  `perfpal-test` outputs; Track C's two below-the-fold nav links change only `-charts`/`-full`). **All DOM/render assertions
+  pass:** `#atlas-canvas` bottom **869 ≤ 900** including header/legend/footer (`#map` **1,848px**
+  against the ≤5,000 budget), no horizontal scroll at either viewport, no clipped text, no node-text
+  overflow, no leading-dot truncation, no duplicate ids, and exactly one unit/median/structural
+  caveat/unreached/legend/footer definition; canvas purity (A9) and no-new-JS (A12) re-asserted. The
+  V8 A1 + strip reads were re-run on the reworked page: **16/16 A1 + 16/16 strip PASS** (two fresh
+  blind reads per state, eight states). The G-baseline diff against
+  `g-hyperfine-final.png` is recorded with a fresh composite and comparative read (**SAME SYSTEM**;
+  residuals: step-11 mid-token filename elision, sparse cJSON, legacy page height outside `#map`,
+  the V8-disclosed capped state). **Founder sign-off APPROVED 2026-10-24 (D-pf-253)** — A2 (step 14) may be
+  scheduled; ship (step 15) remains blocked; F remains undecided; holdouts vaulted; `map-build` not done. Evidence:
+  `docs/evidence/atlas-visual/v2/{STEP13.md,step13.json,gate-step13.txt,VISION-STEP13.md,
+  step13-reads.json,render_step13.py,render_step13_states.py}` + renders + `step13/`.
 - **Atlas v2 step 12 — progressive below-graph charts (2026-10-24).** `report.html#map` is now the
   two-layer contract: the approved first page (masthead + key-metrics strip + 868px canvas + 530px
   detail rail) followed by **four designed charts** — weight (production/non-production share

@@ -1,0 +1,190 @@
+{
+  "status": "PASS",
+  "failures": [],
+  "states": {
+    "application": {
+      "canvas_bottom": 859.8,
+      "canvas_footer_bottom": 859.8,
+      "map_height": 1623,
+      "rail_cards": 4,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": 11.473296440972224,
+        "minMeta": 8.9791015625,
+        "minBadge": 8.480262586805555,
+        "minColumn": 10.475618489583333,
+        "minAggregate": null,
+        "minHull": 9.178637152777778,
+        "maxEdgeLabel": 19
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    },
+    "library": {
+      "canvas_bottom": 869.2,
+      "canvas_footer_bottom": 869.2,
+      "map_height": 1616.3,
+      "rail_cards": 3,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": 11.473472318941504,
+        "minMeta": 8.979239206128133,
+        "minBadge": 8.48039258356546,
+        "minColumn": 10.475779073816156,
+        "minAggregate": null,
+        "minHull": 9.178777855153202,
+        "maxEdgeLabel": 0
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    },
+    "no-entry": {
+      "canvas_bottom": 859.8,
+      "canvas_footer_bottom": 859.8,
+      "map_height": 1343.2,
+      "rail_cards": 1,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": null,
+        "minMeta": null,
+        "minBadge": null,
+        "minColumn": null,
+        "minAggregate": null,
+        "minHull": null,
+        "maxEdgeLabel": 0
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    },
+    "empty": {
+      "canvas_bottom": 859.8,
+      "canvas_footer_bottom": 859.8,
+      "map_height": 1204.7,
+      "rail_cards": 0,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": null,
+        "minMeta": null,
+        "minBadge": null,
+        "minColumn": null,
+        "minAggregate": null,
+        "minHull": null,
+        "maxEdgeLabel": 0
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    },
+    "all-test": {
+      "canvas_bottom": 859.8,
+      "canvas_footer_bottom": 859.8,
+      "map_height": 1313.1,
+      "rail_cards": 1,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": null,
+        "minMeta": null,
+        "minBadge": null,
+        "minColumn": null,
+        "minAggregate": null,
+        "minHull": null,
+        "maxEdgeLabel": 0
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    },
+    "capped": {
+      "canvas_bottom": 1397.9,
+      "canvas_footer_bottom": 1397.9,
+      "map_height": 2372,
+      "rail_cards": 12,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": 9.976837940705128,
+        "minMeta": 8.480312249599358,
+        "minBadge": 8.480312249599358,
+        "minColumn": 10.475679837740383,
+        "minAggregate": 8.58008062900641,
+        "minHull": 9.178690905448716,
+        "maxEdgeLabel": 19
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    },
+    "partial-parse": {
+      "canvas_bottom": 859.8,
+      "canvas_footer_bottom": 859.8,
+      "map_height": 1479.7,
+      "rail_cards": 2,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": 11.473296440972224,
+        "minMeta": 8.9791015625,
+        "minBadge": 8.480262586805555,
+        "minColumn": 10.475618489583333,
+        "minAggregate": null,
+        "minHull": 9.178637152777778,
+        "maxEdgeLabel": 19
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    },
+    "single-file": {
+      "canvas_bottom": 859.8,
+      "canvas_footer_bottom": 859.8,
+      "map_height": 1387.4,
+      "rail_cards": 1,
+      "definitions": {
+        "structuralCaption": 1,
+        "medianDefinition": 1,
+        "unreachedDefinition": 1
+      },
+      "canvas_text": {
+        "minName": 11.473296440972224,
+        "minMeta": 8.9791015625,
+        "minBadge": 8.480262586805555,
+        "minColumn": 10.475618489583333,
+        "minAggregate": null,
+        "minHull": null,
+        "maxEdgeLabel": 0
+      },
+      "node_text_overflow": [],
+      "clipped": [],
+      "leading_dot": []
+    }
+  }
+}

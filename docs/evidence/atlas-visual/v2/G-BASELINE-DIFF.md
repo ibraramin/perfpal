@@ -141,3 +141,30 @@ applies; only the token/type layer changes.
 **Alternative:** a hybrid (G composition + a new warm-neutral palette) — rejected for now because it
 requires a second design pass and the founder's 2026-10-23 directive is explicit: restore G's visual
 language.
+
+## 9. Step-13 measured diff (2026-10-24)
+
+Measured on the real hyperfine page (`report.html#map`, 1440×900, reduced motion) against
+`docs/evidence/map-vision/v7/g/g-hyperfine-final.png` (`c52c58e9…`). Composite:
+`step13/G-vs-step13-hyperfine-1440x900.png`. Full data: `step13.json`.
+
+| | G (approved, 1440×900) | Atlas v2 step 13 | Verdict |
+|---|---|---|---|
+| Palette | warm paper `#f4f1ea`, panel `#fbf9f4`, ink `#202b35`, muted `#6f6a61`, accent `#c2410c` | **measured** `#map` bg `#f4f1ea`, ink `#202b35`, muted `#6f6a61`; accent `#c2410c` from the canvas CSS (not in the token sampler) | ported |
+| Type | G's sans chrome + mono identifiers; kicker 8/800; wordmark 21/800 | sans chrome (`ui-sans-serif`), mono node/figures; kicker 8/800; wordmark 21/800; node meta 8.5 mono | ported, floors raised |
+| Masthead | repo wordmark + entry breadcrumb + Pause/Explorer | `PERFPAL · ATLAS` / `Atlas` wordmark + Pause/Explorer; entry rides in the key-metrics strip (root path deliberately omitted from HTML) | **difference (disclosed)** |
+| First-page fit | one 900px artboard, 19-card rail, footer inside | canvas 120→**869**, footer 869, rail 120–834 (12 cards), first below-canvas block 879; all ≤900 | passes |
+| Detail layer | 19 file cards: role, cost, top functions, finding ID | 12 cards (top 12 of 51), role, M-04 cost anchor, top-3 functions + line, dominant finding; `+39 more` → weight page | present, capped |
+| Edge labels | path/selected only | **2 path labels** (cJSON 1); full counts in `title` | kept |
+| Truncation | mid-ellipsis, full path in rail | mid-ellipsis at 1440 on the real page; **basenames mid-token amputate in the 8-state matrix** (step-11 residual) | residual |
+| Page budget | 900px artboard | `#map` **1,848** (budget ≤5,000); page 15,872 / 22,058 outside `#map` | passes |
+| Charts | none | 4 progressive charts below the first page (weight, blast, file, coverage) | founder model |
+| Duplicate chrome | one legend/unit/footer | one each (DOM: caption 1, unit 1, legend 1, footer 1, median def 1, unreached def 1) | passes |
+
+The fresh comparative `@vision` read (two images, no labels) returned **SAME SYSTEM**: same palette
+roles, type roles, depth-column graph + rail skeleton, legend/footer grammar. Its three convention
+differences (masthead hero, rail top-12 + more link, basename nodes) are the rows above. Its
+"most visible defect" is the step-11 mid-token filename amputation — disclosed, not tuned in this
+session. The read's colour naming ("white ground") and its "10 of 19 reachable files shown" claim are
+misreads; the DOM tokens above and the printed `19 of 19 reachable files shown · 0 aggregated` are
+authoritative.

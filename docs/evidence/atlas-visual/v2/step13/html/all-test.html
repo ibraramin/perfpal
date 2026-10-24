@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Perfpal Report — schema 1.7</title>
+<style>
+body{font-family:monospace,monospace;max-width:90rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+#findings table{min-width:72rem}
+#findings tbody td{white-space:nowrap}
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
+figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}
+figcaption{margin-top:.5rem}
+img{max-width:100%;height:auto}
+figure.pz img{max-width:none;touch-action:none}
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
+#filter-bar{margin:.5rem 0}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+#findings summary{cursor:pointer;list-style:none}
+#findings summary::-webkit-details-marker{display:none}
+#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
+#findings details[open]>summary::before{transform:rotate(90deg)}
+.kv{margin:1.25rem 0 1.75rem}
+.kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
+.kv-action{margin:.15rem 0 .75rem;color:#444}
+.kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
+.kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}
+.kv-rank{font-size:1.5rem;font-weight:700;line-height:1}
+.kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}
+.kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.kv-loc{font-weight:700;color:#111;text-decoration:none}
+.kv-loc:hover{text-decoration:underline}
+.kv-title{font-weight:600}
+.kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}
+.kv-caption{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
+.kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
+.sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
+.sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}
+.sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}
+.kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}
+.kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}
+.kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}
+.kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}
+.kv-more{margin:.5rem 0 .2rem;font-weight:600}
+.kv-bars{max-width:100%}
+.kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}
+.kv-brow:last-child{border-bottom:1px solid #999}
+.kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
+.kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
+.kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
+.kv-fill.demoted{background:#a0aec0}
+.kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
+.kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
+.kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
+@media print{.kv-row,.kv-brow{break-inside:avoid}}
+         </style>
+</head>
+<body>
+<header>
+<h1>Perfpal Report</h1>
+<p class="breadcrumb"><a href="#map">Atlas</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
+<p>schema_version 1.7 · perfpal perfpal test · 1 files · 1 findings (0 hot, 0 warn, 1 info) · languages: c</p>
+</header>
+<nav>
+<ul>
+<li><a href="#map">Atlas</a></li>
+<li><a href="#explorer">Explorer</a></li>
+<li><a href="#components">Components</a></li>
+<li><a href="#files">Files</a></li>
+<li><a href="#findings">Findings</a></li>
+<li><a href="findings-detail.html">Findings detail</a></li>
+<li><a href="#appendix-a">Heuristic reference</a></li>
+</ul>
+</nav>
+<section id="map">
+<div class="atlas-page-chrome">
+<style>#map{background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0 -1rem;padding:8px 1rem;border-radius:0}
+#map .atlas-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#map .atlas-masthead{height:58px;box-sizing:border-box;display:flex;align-items:center;gap:14px;border-bottom:1px solid #d6d0c4}
+#map .atlas-brand{flex:0 0 244px;min-width:0}
+#map .atlas-kicker{font-size:8px;font-weight:800;letter-spacing:.16em;color:#6f6a61;text-transform:uppercase}
+#map .atlas-wordmark{font-size:21px;font-weight:800;letter-spacing:-.015em;line-height:1.05;color:#202b35;white-space:nowrap}
+#map .atlas-subline{display:block;font-size:9px;font-weight:600;color:#6f6a61;letter-spacing:.02em;line-height:1.05;margin-top:1px;white-space:normal}
+#map .atlas-masthead-spacer{flex:1;min-width:0}
+#map .atlas-masthead-actions{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+#map .atlas-pause-input{position:absolute;inline-size:1px;block-size:1px;opacity:0}
+#map .atlas-pause{display:inline-block;border:1px solid #9d9588;background:#fffdf8;color:#3c4650;padding:6px 10px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;user-select:none}
+#map .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #c2410c;outline-offset:2px}
+#map #atlas-pause:checked + .atlas-pause{background:#ece8df;border-color:#c2410c}
+#map .atlas-explorer{display:inline-block;background:#1f2d3a;color:#fff;text-decoration:none;padding:7px 10px;border-radius:4px;font-size:9px;font-weight:750}
+#map .atlas-keymetrics{border-bottom:1px solid #d6d0c4;padding:2px 0;font-size:9px;line-height:1.15;color:#6f6a61}
+#map .atlas-keymetrics-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 10px}
+#map .atlas-keymetrics b{color:#202b35;font-weight:700}
+#map .atlas-hot{color:#c2410c;font-weight:700}
+#map .atlas-chip{display:inline-block;color:#202b35;text-decoration:none;border:1px solid #b8b2a7;border-radius:3px;background:#fffdf8;padding:0 4px;font-size:9.5px;font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34rem;vertical-align:bottom}
+#map .atlas-chip:hover{border-color:#c2410c}
+#map .atlas-chip .atlas-mono{font-size:9.5px}
+#map .atlas-chip--stub{color:#6f6a61;border-style:dashed}
+#map .atlas-entry-value{font-size:10px;font-weight:600}
+#map .atlas-legend{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 9px}
+#map .atlas-sw{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:3px}
+#map .atlas-sw-prod{background:#fdfbf6;border:1px solid #8b8173}
+#map .atlas-sw-test{background:#eef2f7;border:1px dashed #7f93aa}
+#map .atlas-sw-unreached{background:#e8e5df;border:1px solid #b8b2a7}
+#map .atlas-sw-forward{border-top:2px solid #8d8577;width:12px;height:0;border-radius:0;background:none}
+#map .atlas-sw-back{border-top:2px dashed #8d8577;width:12px;height:0;border-radius:0;background:none}
+#map .atlas-sw-path{border-top:2.3px solid #c2410c;width:12px;height:0;border-radius:0;background:none}
+#map .atlas-unit{color:#6f6a61}
+#map .atlas-structural-caption{font-weight:700;color:#7c2d12}
+#map #atlas-canvas{position:relative;background:transparent;color:#202b35}
+#map .atlas-graph{background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;overflow:hidden}
+#map .atlas-svg{display:block;width:100%;height:auto;background:#fbf9f4}
+#map .atlas-svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#map .atlas-svg .atlas-column-header,#map .atlas-svg .atlas-hull text{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+#map .atlas-svg .atlas-edge,#map .atlas-svg .atlas-trace{fill:none}
+#map .atlas-footer{padding:5px 8px 2px;font-size:9px;line-height:1.35;color:#6f6a61;font-variant-numeric:tabular-nums}
+#map .atlas-footer .atlas-mono{color:#202b35}
+#map .atlas-footer-part{white-space:nowrap}
+#map .atlas-stage{display:flex;gap:10px;align-items:flex-start;justify-content:center}
+#map #atlas-canvas{flex:0 0 868px;max-width:868px;min-width:0}
+#map .atlas-rail{flex:1 1 0;min-width:0;max-width:530px;color:#202b35}
+#map .atlas-rail-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 1px 5px;border-bottom:1px solid #d6d0c4;font-size:8.5px;font-weight:800;letter-spacing:.11em;color:#6f6a61;text-transform:uppercase}
+#map .atlas-rail-title span{font-weight:600;letter-spacing:0;text-transform:none;color:#6f6a61}
+#map .atlas-rail-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
+#map .atlas-rail-card{min-width:0;overflow:hidden;border:1px solid #d8d2c6;border-left:3px solid #8b8173;border-radius:4px;background:#fffdf8;padding:4px 6px 5px}
+#map .atlas-rail-card.is-entry{border-left-color:#1f2d3a;background:#f3f1eb}
+#map .atlas-rail-card.is-hot{border-left-color:#c2410c}
+#map .atlas-rail-card.is-test{border-left-color:#5c7391;background:#f4f6f9}
+#map .atlas-rail-card.is-bench{border-left-color:#7a4f7d;background:#f8f3f8}
+#map .atlas-rail-card.is-unreached{border-left-color:#b3aca1;background:#efede8}
+#map .atlas-rail-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+#map .atlas-rail-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:700;color:#202b35;text-decoration:none}
+#map .atlas-rail-name:hover{text-decoration:underline}
+#map .atlas-rail-role{flex:0 0 auto;font-size:8.5px;font-weight:800;letter-spacing:.08em;color:#3c4650}
+#map .atlas-rail-card.is-production .atlas-rail-role{color:#3f6d6a}
+#map .atlas-rail-card.is-entry .atlas-rail-role{color:#1f2d3a}
+#map .atlas-rail-card.is-test .atlas-rail-role{color:#546a86}
+#map .atlas-rail-card.is-bench .atlas-rail-role{color:#7a4f7d}
+#map .atlas-rail-card.is-unreached .atlas-rail-role{color:#5f584f}
+#map .atlas-rail-anchor{margin-top:2px;font-size:8.5px;line-height:1.25;color:#6f6a61;overflow-wrap:anywhere}
+#map .atlas-rail-fn{margin-top:2px;font-size:8.5px;line-height:1.3;color:#3f4952;overflow-wrap:anywhere}
+#map .atlas-rail-fn a{color:#202b35;text-decoration:none}
+#map .atlas-rail-fn a:hover{text-decoration:underline}
+#map .atlas-rail-find{margin-top:3px;font-size:8.5px;line-height:1.25;color:#8a5a2b;font-weight:650;overflow-wrap:anywhere}
+#map .atlas-rail-find a{color:#7c2d12}
+#map .atlas-rail-stub{margin:6px 0 0;padding:6px 8px;border:1px dashed #b8b2a7;border-radius:4px;font-size:9px;color:#6f6a61}
+#map .atlas-rail-more{margin:6px 0 0;font-size:8.5px;color:#6f6a61}
+#map .atlas-charts{max-width:1408px;margin:10px auto 0;display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:10px}
+#map .atlas-chart{min-width:0;background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;padding:10px 12px 11px;color:#202b35}
+#map .atlas-chart h3{font-size:12px;font-weight:800;margin:0 0 2px;letter-spacing:-.005em}
+#map .atlas-chart h4{font-size:8.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6f6a61;margin:8px 0 3px}
+#map .atlas-chart-caption{margin:1px 0 5px;font-size:9px;line-height:1.35;color:#6f6a61}
+#map .atlas-chart .atlas-stub{margin:4px 0 2px;font-size:9px;color:#6f6a61;border:1px dashed #b8b2a7;border-radius:4px;padding:5px 7px}
+#map .atlas-share-ribbon{display:flex;height:24px;border:1px solid #d6d0c4;border-radius:4px;overflow:hidden;background:#fffdf8}
+#map .atlas-share-seg{display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;white-space:nowrap;font-size:8.5px;font-weight:700}
+#map .atlas-share-seg.is-prod{background:#3f6d6a;color:#fff}
+#map .atlas-share-seg.is-nonprod{background:repeating-linear-gradient(135deg,#e8e5df 0,#e8e5df 3px,#d8d2c6 3px,#d8d2c6 6px);color:#3c4650}
+#map .atlas-ribbon-labels{display:flex;justify-content:space-between;margin:3px 0 0;font-size:8.5px;color:#6f6a61;font-variant-numeric:tabular-nums}
+#map .atlas-bar-columns{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:6px}
+#map .atlas-bar-col{min-width:0}
+#map .atlas-bar-row{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(72px,auto);gap:7px;align-items:center;margin:2px 0;font-size:9px}
+#map .atlas-bar-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#202b35}
+#map .atlas-bar-track{display:block;height:8px;background:#ece8df;border:1px solid #dcd6ca;border-radius:2px;overflow:hidden}
+#map .atlas-bar-fill{display:block;height:100%;background:#3f6d6a}
+#map .atlas-bar-fill.is-nonprod{background:repeating-linear-gradient(135deg,#c9c2b6 0,#c9c2b6 3px,#e8e5df 3px,#e8e5df 6px)}
+#map .atlas-bar-share{text-align:right;color:#6f6a61;font-variant-numeric:tabular-nums;white-space:nowrap}
+#map .atlas-band{margin:6px 0 0;padding:4px 7px;border:1px dashed #9d9588;border-radius:3px;background:repeating-linear-gradient(135deg,#f7f4ed 0,#f7f4ed 4px,#efebe2 4px,#efebe2 8px);font-size:9px;color:#3c4650}
+#map .atlas-blast-line{font-size:12px;font-weight:750;margin:4px 0 6px;color:#202b35}
+#map .atlas-call-degree{margin:6px 0 0;font-size:9px;color:#6f6a61}
+#map .atlas-file-row{margin:0 0 5px;padding:0 0 5px;border-bottom:1px solid #ece8df}
+#map .atlas-file-row:last-of-type{border-bottom:0}
+#map .atlas-file-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+#map .atlas-file-path{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:700}
+#map .atlas-file-role{flex:0 0 auto;font-size:8.5px;font-weight:800;letter-spacing:.06em;color:#3f6d6a}
+#map .atlas-file-bar{display:block;margin:3px 0 1px}
+#map .atlas-file-bar .atlas-bar-track{height:9px;text-decoration:none}
+#map .atlas-file-cost{font-size:8.5px;line-height:1.25;color:#6f6a61;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#map .atlas-file-fns{margin-top:2px;font-size:8.5px;line-height:1.3;color:#3f4952;overflow-wrap:anywhere}
+#map .atlas-file-fns a{color:#202b35;text-decoration:none}
+#map .atlas-file-fns a:hover{text-decoration:underline}
+#map .atlas-file-find{margin-top:2px;font-size:8.5px;line-height:1.25;color:#8a5a2b;font-weight:650;overflow-wrap:anywhere}
+#map .atlas-file-find a{color:#7c2d12}
+#map .atlas-chart.atlas-coverage{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 10px}
+#map .atlas-coverage{margin:0;font-size:9px;color:#6f6a61}
+#map .atlas-links{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:9px}
+#map .atlas-links a{color:#7c2d12;font-weight:650;text-decoration:none}
+#map .atlas-links a:hover{text-decoration:underline}
+@media (max-width:900px){#map .atlas-bar-columns{grid-template-columns:1fr}}
+@media print{#map .atlas-charts{break-inside:avoid}}
+@media (max-width:1359px){#map .atlas-stage{flex-direction:column;align-items:center}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:868px;max-width:100%}}
+@media (min-width:1360px) and (max-width:1439px){#map .atlas-rail-name{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}}
+@media print{#map .atlas-stage{display:block}#map .atlas-rail{width:auto;max-width:none;margin-top:8px}}
+@keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
+@keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
+ @keyframes atlas-edge-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-edge-fade{from{opacity:0}to{opacity:1}}
+ @keyframes atlas-trace-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes atlas-hottest-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+ #map #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
+ #map #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
+ #map #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #map #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
+ #map #atlas-canvas .atlas-trace{animation:atlas-trace-draw 1.2s 4.2s both}
+#map #atlas-canvas .atlas-node.is-hottest{animation:atlas-hottest-pulse .8s 5.4s 2 both}
+#map:has(#atlas-pause:checked) #atlas-canvas .atlas-graph *{animation-play-state:paused !important}
+@media (prefers-reduced-motion: reduce){#map #atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
+@media print{#map{background:#fff}#map #atlas-canvas{break-inside:avoid}#map #atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#map .atlas-pause,#map .atlas-masthead-actions{display:none}}
+#map .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}</style>
+<header class="atlas-masthead">
+<div class="atlas-brand">
+<div class="atlas-kicker">PERFPAL · ATLAS</div>
+<div class="atlas-wordmark">Atlas</div>
+<div class="atlas-subline">entry-flow map · static, profile to confirm</div>
+</div>
+<div class="atlas-masthead-spacer"></div>
+<div class="atlas-masthead-actions">
+<input type="checkbox" id="atlas-pause" class="atlas-pause-input" aria-label="Pause the animation">
+<label for="atlas-pause" class="atlas-pause">Pause</label>
+<a class="atlas-explorer" href="#explorer">Explorer →</a>
+</div>
+</header>
+<div class="atlas-keymetrics">
+<div class="atlas-keymetrics-line">
+<span><b>ENTRY</b> <span class="atlas-mono atlas-entry-value">no entry · confidence UNKNOWN · 0 alternatives</span></span>
+<span class="atlas-hot">HOTTEST: <span class="atlas-mono">tests/test_main.c · 100 static cost units (v2) · 1.0× median function</span></span>
+<span class="atlas-mono">PATH · 0 steps · representative path (static, BFS-derived)</span>
+<span class="atlas-mono">0 of 0 reachable files shown · 0 aggregated</span>
+</div>
+<div class="atlas-keymetrics-line">
+<b>START</b>
+<a class="atlas-chip" href="findings-detail.html#finding-PERF-C-ALLOC-001-tests-test-main-c-3-1" title="tests/test_main.c:3 · test_main · Allocation in a test · INFO · HIGH · non-production (test) · 100 static cost units (v2) · 1.0× median · top 100%"><span class="atlas-mono">tests/test_main.c:3</span> — Allocation in a test</a>
+</div>
+<div class="atlas-keymetrics-line">
+<span class="atlas-legend"><span><span class="atlas-sw atlas-sw-prod"></span>production</span><span><span class="atlas-sw atlas-sw-test"></span>test/bench</span><span><span class="atlas-sw atlas-sw-unreached"></span>unreached</span><span><span class="atlas-sw atlas-sw-forward"></span>forward</span><span><span class="atlas-sw atlas-sw-back"></span>back</span><span><span class="atlas-sw atlas-sw-path"></span>path</span></span>
+<span class="atlas-unit">static cost units (v2) — relative scale · × median function = all functions in the scan</span>
+<span class="atlas-structural-caption">structural (LOW name-based + MEDIUM semantic)</span>
+</div>
+</div>
+</div>
+<div class="atlas-stage">
+<section id="atlas-canvas" class="atlas-canvas">
+<div class="atlas-graph">
+<svg viewBox="0 0 868 720" width="868" height="720" class="atlas-svg" role="img" aria-label="Perfpal Atlas entry-flow canvas" preserveAspectRatio="xMidYMid meet">
+<defs><marker id="atlas-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8d8577"/></marker><marker id="atlas-arrow-back" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8d8577"/></marker><marker id="atlas-arrow-path" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#c2410c"/></marker></defs><g class="atlas-stub" role="note"><rect x="184" y="300" width="500" height="120" rx="12" fill="#fbf9f4" stroke="#b8b2a7" stroke-dasharray="6 4"/><text x="434" y="352" text-anchor="middle" font-size="18" font-weight="700" fill="#202b35">NO ENTRY</text><text x="434" y="376" text-anchor="middle" font-size="13.5" fill="#6f6a61">no electable production entry</text></g>
+</svg>
+</div>
+<footer class="atlas-footer"><span class="atlas-footer-part">0 of 1 source files reachable (0.0%)</span> · <span class="atlas-footer-part">0 of 0 file pairs drawn</span> · <span class="atlas-footer-part">0 MEDIUM / 0 LOW structural edges</span> · <span class="atlas-footer-part">unreached production: 0 · non-production: 1</span> · <span class="atlas-footer-part">parse 1 ok / 0 partial / 0 failed</span> · <span class="atlas-footer-part">no include edges recorded</span> · <span class="atlas-footer-part">1 file demoted</span></footer>
+</section>
+<aside id="atlas-rail" class="atlas-rail" aria-label="File detail">
+<div class="atlas-rail-title">File detail<span>top 1 of 1 source files · production first</span></div>
+<div class="atlas-rail-cards">
+<article class="atlas-rail-card is-unreached is-test is-hot">
+<div class="atlas-rail-head"><a class="atlas-rail-name atlas-mono" href="atlas-weight.html#atlas-file-tests-test-main-c" title="tests/test_main.c">tests/test_main.c</a><span class="atlas-rail-role">UNREACHED</span></div>
+<div class="atlas-rail-anchor">file total 100 static cost units (v2) · 1.0× median function · top 100% of files</div>
+<div class="atlas-rail-fn"><a class="atlas-mono" href="profile-queue.html#fn-tests-test-main-c-test-main-1-1" title="tests/test_main.c:1 test_main">test_main:1</a></div>
+<div class="atlas-rail-find">FIND <a class="atlas-mono" href="findings-detail.html#finding-PERF-C-ALLOC-001-tests-test-main-c-3-1">PERF-C-ALLOC-001</a> · INFO ×1</div>
+</article>
+</div>
+</aside>
+</div>
+<section id="atlas-brief" class="atlas-brief">
+<div id="atlas-charts" class="atlas-charts">
+<div class="atlas-chart" data-atlas-block="weight-chart">
+<h3>Where is the mass?</h3>
+<p class="atlas-chart-caption">share of scanned static cost · production first · bar = cost relative to the largest item in each column · share printed</p>
+<p class="atlas-band">non-production (test/bench/other) = 100% of scanned static cost (1 files)</p>
+<div class="atlas-share-ribbon" role="img" aria-label="production 0% of scanned static cost · non-production 100% of scanned static cost">
+<span class="atlas-share-seg is-prod" style="width:0.0%" title="production = 0% of scanned static cost"></span>
+<span class="atlas-share-seg is-nonprod" style="width:100.0%" title="non-production = 100% of scanned static cost"></span>
+</div>
+<p class="atlas-ribbon-labels"><span>production 0% of scanned static cost</span><span>non-production 100% of scanned static cost</span></p>
+<p class="atlas-stub">no production cost recorded</p>
+</div>
+<div class="atlas-chart" data-atlas-block="blast-chart">
+<h3>What breaks if I touch it?</h3>
+<p class="atlas-stub">no entry — blast radius unavailable</p>
+</div>
+<div class="atlas-chart" data-atlas-block="file-chart">
+<h3>Which file carries the cost?</h3>
+<p class="atlas-chart-caption">bar = file cost relative to the largest file shown · exact file cost and median anchor printed · role = ENTRY / production class (PRODUCTION, TEST, BENCH, or another path class) / UNREACHED</p>
+<div class="atlas-file-row">
+<div class="atlas-file-head"><span class="atlas-file-path atlas-mono" title="tests/test_main.c">tests/test_main.c</span><span class="atlas-file-role">UNREACHED</span></div>
+<div class="atlas-file-bar"><a class="atlas-bar-track" href="atlas-weight.html#atlas-file-tests-test-main-c" title="weight detail for tests/test_main.c"><span class="atlas-bar-fill" style="width:100.0%"></span></a></div>
+<div class="atlas-file-cost">file total 100 static cost units (v2) · 1.0× median function · top 100% of files</div>
+<div class="atlas-file-fns">functions: <a class="atlas-mono" href="profile-queue.html#fn-tests-test-main-c-test-main-1-1" title="tests/test_main.c:1 test_main · 100 static cost units (v2) · 1.0× median function · top 100% of functions">test_main:1</a></div>
+<div class="atlas-file-find">FIND <a class="atlas-mono" href="findings-detail.html#finding-PERF-C-ALLOC-001-tests-test-main-c-3-1">PERF-C-ALLOC-001</a> · INFO ×1 — Allocation in a test</div>
+</div>
+<p class="atlas-chart-caption">showing top 1 of 1 source files (production first)</p>
+</div>
+<div class="atlas-chart atlas-coverage" data-atlas-block="coverage">
+<p class="atlas-coverage">Full scan:</p>
+<nav class="atlas-links" aria-label="Atlas artifacts">
+<a href="report.md">report.md</a>
+<a href="metrics.json">metrics.json</a>
+<a href="atlas-weight.html">weight detail</a>
+<a href="atlas-q2.html">blast drill</a>
+<a href="findings-detail.html#ranked-actions">complete actions</a>
+<a href="profile-queue.html">profile queue</a>
+<a href="agent-report.md">agent report</a>
+<a href="agent-actions.json">agent actions</a>
+</nav>
+</div>
+</div>
+</section>
+</section>
+<section id="explorer">
+<h2>Explorer</h2>
+<p>No charts were emitted for this scan.</p>
+<p>The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
+</p>
+<p>Machine-readable graph: <a href="charts/graph.dot">graph.dot</a> — deterministic DOT export of the include/call/component graphs (same source data as the figures above).</p>
+<p>Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).</p>
+</section>
+<section id="components">
+<h2>Component index</h2>
+<p>No components recorded.</p>
+</section>
+<section id="files">
+<h2>File drill-down</h2>
+<div class="table-scroll">
+<table>
+<thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th><th>component</th></tr></thead>
+<tbody>
+<tr id="file-tests-test-main-c" data-path="tests/test_main.c"><td>tests/test_main.c</td><td>0</td><td>100</td><td><a href="findings-detail.html#finding-PERF-C-ALLOC-001-tests-test-main-c-3-1">PERF-C-ALLOC-001:tests/test_main.c:3:1</a></td><td>n/a</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="findings">
+<h2>Findings</h2>
+<div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
+<p>1 rules: 1 of 1 total findings (0 hot, 0 warn, 1 info).</p>
+<p>Full per-finding tables: <a href="findings-detail.html">findings-detail.html</a>.</p>
+<details>
+<summary><code>PERF-C-ALLOC-001</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-ALLOC-001-tests-test-main-c-3-1">PERF-C-ALLOC-001:tests/test_main.c:3:1</a> — <a href="findings-detail.html#rule-PERF-C-ALLOC-001">full detail</a></summary>
+<p><a href="findings-detail.html#rule-PERF-C-ALLOC-001">View full detail table for PERF-C-ALLOC-001 (1 findings)</a></p>
+</details>
+</section>
+<section id="appendix-a">
+<h2>Appendix A. Heuristic reference</h2>
+<div class="table-scroll">
+<table>
+<thead><tr><th>rule_id</th><th>title</th><th>description</th></tr></thead>
+<tbody>
+<tr><td>PERF-C-ALLOC-001</td><td>Heap allocation inside loop</td><td>Detects malloc/calloc/realloc/aligned_alloc/strdup calls nested anywhere inside a loop body.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<footer>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+# Step-13 gate transcript — 2026-10-24T02:21:31Z
+
+## 0. Tree + release build (merged main c73d6ff, Track C fast-forward)
+HEAD c73d6ff test(agent-report): prune root-bearing agent artifacts after golden regen
+$ cargo build --locked --release
+    Finished `release` profile [optimized] target(s) in 0.03s
+exit=0
+
+## 1. Session-private scan (current release binary; shared dirs are cross-checked only)
+$ ./target/release/perfpal --output /tmp/opencode/step13-page/hyperfine --force perfpal-test/hyperfine
+exit=0
+$ ./target/release/perfpal --output /tmp/opencode/step13-page/cJSON --force perfpal-test/cJSON
+exit=0
+a4fade037db5943126c3d3f850a1011b36d4de60da5f796cb22ab6908353c392  /tmp/opencode/step13-page/hyperfine/report.html
+323ee0a8b018c0527e7f79d7b49289483f80f1d5a7b81cffe2c3a5e8fb3bbd49  /tmp/opencode/step13-page/cJSON/report.html
+
+## 2. Fixture regeneration (current tree -> step13/html)
+$ PERFPAL_ATLAS_VISION_DIR=docs/evidence/atlas-visual/v2/step13/html cargo test --locked --test atlas_vision -- --ignored
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running tests/atlas_vision.rs (target/debug/deps/atlas_vision-41c1db258461d166)
+
+running 1 test
+test write_vision_matrix ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+exit=0
+
+## 3. Real-page gate (1440x900 + 1280x800)
+$ python3 docs/evidence/atlas-visual/v2/render_step13.py
+chromium executable: /home/shafin/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+hyperfine  #map 1848px  canvas 120-869  footer 869  rail 120-834  brief 879  page 15872px  hscroll 1440/1440
+            definitions caption=1 unit=1 legend=1 footer=1 median=1 unreached=1  leading-dot=0 clipped=0 node-overflow=0 min-text=8px
+cJSON      #map 1848px  canvas 120-869  footer 869  rail 120-818  brief 879  page 22058px  hscroll 1440/1440
+            definitions caption=1 unit=1 legend=1 footer=1 median=1 unreached=1  leading-dot=0 clipped=0 node-overflow=0 min-text=8px
+chromium executable: /home/shafin/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+hyperfine  screenshots: final 1440x900, weight 1408x245, 1280 1280x800
+cJSON      screenshots: final 1440x900, weight 1408x245, 1280 1280x800
+
+PASS — wrote /home/shafin/Opencode/Perfpal/docs/evidence/atlas-visual/v2/step13.json
+G composite: /home/shafin/Opencode/Perfpal/docs/evidence/atlas-visual/v2/step13/G-vs-step13-hyperfine-1440x900.png
+exit=0
+
+## 4. Eight-state preflight + frames
+$ python3 docs/evidence/atlas-visual/v2/render_step13_states.py
+chromium executable: /home/shafin/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+application    canvas 108-860  map 1623  rail-cards  4  name 11.473296440972224  meta 8.9791015625  badge 8.480262586805555  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+library        canvas 120-869  map 1616  rail-cards  3  name 11.473472318941504  meta 8.979239206128133  badge 8.48039258356546  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+no-entry       canvas 108-860  map 1343  rail-cards  1  name None  meta None  badge None  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+empty          canvas 108-860  map 1205  rail-cards  0  name None  meta None  badge None  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+all-test       canvas 108-860  map 1313  rail-cards  1  name None  meta None  badge None  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+capped         canvas 120-1398  map 2372  rail-cards 12  name 9.976837940705128  meta 8.480312249599358  badge 8.480312249599358  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+partial-parse  canvas 108-860  map 1480  rail-cards  2  name 11.473296440972224  meta 8.9791015625  badge 8.480262586805555  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+single-file    canvas 108-860  map 1387  rail-cards  1  name 11.473296440972224  meta 8.9791015625  badge 8.480262586805555  defs c1/u1/l1/f1  lead 0  clip 0  over 0
+chromium executable: /home/shafin/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+application    final 1440x900  weight 1408x216
+library        final 1440x900  weight 1408x215
+no-entry       final 1440x900  weight 1408x186
+empty          final 1440x900  weight 1408x114
+all-test       final 1440x900  weight 1408x155
+capped         final 1440x900  weight 1408x246
+partial-parse  final 1440x900  weight 1408x201
+single-file    final 1440x900  weight 1408x186
+
+PASS — manifest /home/shafin/Opencode/Perfpal/docs/evidence/atlas-visual/v2/step13/manifest.json
+exit=0
+
+## 5. Provenance: private gate page vs the shared perfpal-test page
+a4fade037db5943126c3d3f850a1011b36d4de60da5f796cb22ab6908353c392  /tmp/opencode/step13-page/hyperfine/report.html
+a4fade037db5943126c3d3f850a1011b36d4de60da5f796cb22ab6908353c392  /home/shafin/Opencode/perfpal-test/out-atlas-v2-hyperfine/report.html
+323ee0a8b018c0527e7f79d7b49289483f80f1d5a7b81cffe2c3a5e8fb3bbd49  /tmp/opencode/step13-page/cJSON/report.html
+323ee0a8b018c0527e7f79d7b49289483f80f1d5a7b81cffe2c3a5e8fb3bbd49  /home/shafin/Opencode/perfpal-test/out-atlas-v2-cJSON/report.html
+diff_exit=0
+
+## 6. Assertion summary (derived flags)
+canvas_bottom_le_900=true
+canvas_footer_bottom_le_900=true
+map_height_le_5000=true
+no_leading_dot_truncation=true
+no_css_ellipsis_without_title=true
+no_clipped_text=true
+no_node_text_overflow=true
+one_structural_caption=true
+one_unit_definition=true
+one_median_definition=true
+one_unreached_definition=true
+one_legend=true
+one_footer=true
+no_duplicate_ids=true
+canvas_purity_tables_scripts_handlers=true
+below_canvas_first_block=true
+chrome_above_canvas=true
+no_horizontal_scroll_1440=true
+no_horizontal_scroll_1280=true
+rail_stacks_at_1280=true
+all_true=true
+
+## 7. Eight-state result
+PASS
+application canvas=859.8 map=1623 rail=4
+library canvas=869.2 map=1616.3 rail=3
+no-entry canvas=859.8 map=1343.2 rail=1
+empty canvas=859.8 map=1204.7 rail=0
+all-test canvas=859.8 map=1313.1 rail=1
+capped canvas=1397.9 map=2372 rail=12
+partial-parse canvas=859.8 map=1479.7 rail=2
+single-file canvas=859.8 map=1387.4 rail=1
+
+## 8. Scope: this session made no product change (the C merge is a separate track)
+$ git diff --stat 9a94905..HEAD -- src/ Cargo.toml Cargo.lock
+ src/cli/mod.rs               |    9 +
+ src/reporter/agent_report.rs | 2882 ++++++++++++++++++++++++++++++++++++++++++
+ src/reporter/atlas_charts.rs |    2 +
+ src/reporter/mod.rs          |    5 +-
+ 4 files changed, 2896 insertions(+), 2 deletions(-)
+$ git status --short src/ Cargo.toml Cargo.lock
+status_empty=0
+$ git status --short src/schema/ docs/schema/
+schema_clean=0
+
+## 9. Plan status (must remain active; step 13 not done)
+4:plan status: active
+
+## 10. Evidence hashes
+dd30e61f7145cb7d401ec8d5cde4e350248c4f1cec6a3d093bf95abb2b3ed879  atlas-v2-step13-cJSON-1280x800.png
+6a12ef2216ae06c0790a2ce82384c8286ec82636ca61eff65cde55b58445de9a  atlas-v2-step13-cJSON-charts.png
+186e8eb6406d4afcff0025c464ca697e14797acf28d2aa8d31b476941f9f6e2e  atlas-v2-step13-cJSON-final.png
+869e836f3c5adacde1984e7db100353ca6b676012a28349de585640a49db2c6a  atlas-v2-step13-cJSON-full.png
+2ae3cafbad6ef1deecf57f239ed231ace0b108cfd1dc038a1885df4ffd31f560  atlas-v2-step13-hyperfine-1280x800.png
+5e88db1ed3b4d9ab6fbc778c738e7b0e1d53bb5183932450e0a8a5c216b86596  atlas-v2-step13-hyperfine-charts.png
+a5ad6ad954b5cfc31859989eb3038369a28b419b7f0ec041c449c4709b7652e5  atlas-v2-step13-hyperfine-final.png
+2295e5278b524e040001cbee233c998cd99f2954f8cdee1bf2fa0c010d3dc620  atlas-v2-step13-hyperfine-full.png
+653c357f3b5a612b956a287b3952d693d5ced6d96b4513e58c4a23aea33389a7  step13/G-vs-step13-hyperfine-1440x900.png
+652a7484aa28d1b96e4301b3f2c6181b60b6f9c44c0d3f45a689ca486045ccdf  step13/all-test-final.png
+bb65c12a595822feb8b3ea3912535c14b850eb43f244394f8ee308cff618fdbc  step13/application-final.png
+8084a899da3e3aa4bdc9095388fd9ef28481003a66c550a29c342b7afb1e9db8  step13/capped-final.png
+1828883cb43ff08983f03b24c76725c500263d8f0d2adf4fc1384d7e3623bf34  step13/empty-final.png
+8c9b994df09c72cd57f68936cade9f755752498ee7d96b1df3a40658e02b9a65  step13/library-final.png
+55c4a662ddb5db2ef4ce631368796c5e6140d943f91f657ecab1fb9678b83d1d  step13/no-entry-final.png
+744375a107ba9ff18956df4fc90dccc2f0eaa40104fc439f18498744155fb0fb  step13/partial-parse-final.png
+1131054187225f06cc59489b3b6678a5756ca6bc0c34984443fecb94551d73b0  step13/single-file-final.png
+588ddfab34002ca885866068b8a81d5b14632aab17fa37f5cfc605c90f92b980  step13/all-test-weight.png
+6cf9886ed7037e5f2119b33ae25f6a22ae424b83fd68944c7550aa3ef4216a17  step13/application-weight.png
+49359f72c094035724a94f9e13a8e1315e2fa5482d8adf7a203c7832e08057a0  step13/capped-weight.png
+1f80507be7ed498247be2e6a5b98ee8201c49390ce70e718026b8a9adac975c2  step13/cJSON-weight.png
+2f8b2ad6b44b97fa337caa70471d53e8f3baf35a7fefd61a14a36d365d8a63a9  step13/empty-weight.png
+fa737cdacb5fcbc5ba92176e0cc7294f32e655ec5d58b3363dc1cd55ab0fdd29  step13/hyperfine-weight.png
+f03ff587d14fe36412669e5df4b4a43ad540f3052581199c1ed7f2cd3e4442dd  step13/library-weight.png
+edc2d82cf94cfad7aba087209e59d70e517c3491fb18b82001b2f11a1a5f7179  step13/no-entry-weight.png
+55ec8a43289d0214b5b13354d05764f90c384e31b1c0e5058f597fe2ccf9e83c  step13/partial-parse-weight.png
+ac6695cfb7aef42ad045f9b4c62e93330e57b4f32e46eb17ade1076cce85e5b0  step13/single-file-weight.png
+
+## 11. Working tree (A3 evidence + EOL docs; the C-track rows are the parallel session's)
+ M CHANGELOG.md
+ M docs/activeContext.md
+ M docs/atlas/AGENT-BRIEF.md
+ M docs/evidence/atlas-visual/v2/G-BASELINE-DIFF.md
+ M docs/evidence/atlas-visual/v2/README.md
+ M docs/plans/atlas-build.md
+ M docs/tracks/README.md
+ M state/archive/ledger.jsonl
+ M state/handoff/latest.md
+ M state/session-state.json
+ M state/tracks/agent-report/handoff.md
+?? docs/evidence/atlas-visual/v2/STEP13.md
+?? docs/evidence/atlas-visual/v2/VISION-STEP13.md
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-cJSON-1280x800.png
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-cJSON-charts.png
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-cJSON-final.png
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-cJSON-full.png
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-hyperfine-1280x800.png
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-hyperfine-charts.png
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-hyperfine-final.png
+?? docs/evidence/atlas-visual/v2/atlas-v2-step13-hyperfine-full.png
+?? docs/evidence/atlas-visual/v2/gate-step13.txt
+?? docs/evidence/atlas-visual/v2/render_step13.py
+?? docs/evidence/atlas-visual/v2/render_step13_states.py
+?? docs/evidence/atlas-visual/v2/step13-reads.json
+?? docs/evidence/atlas-visual/v2/step13.json
+?? docs/evidence/atlas-visual/v2/step13/

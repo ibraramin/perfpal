@@ -1,0 +1,500 @@
+{
+  "_comment": "Step-13 rerun of the V8 8-state matrix on the reworked page.",
+  "protocol": "Final frames captured at 1440x900 with #map at the viewport top, prefers-reduced-motion + animations disabled. Two blind A1 reads per state on the final frame; two blind strip reads per state on the weight-chart crop; one image per task; no source/siblings/expected answer.",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "device_scale_factor": 1,
+  "capped_exemption": "capped is the V8-disclosed framing exception: the canvas/footer fold is measured and disclosed, not asserted; its A1 reads still must pass.",
+  "states": [
+    {
+      "state": "application",
+      "html": "html/application.html",
+      "html_sha256": "e6c62aca8d868301a896084319e6652318a2cf076b03fd8b3cf8546099d4b715",
+      "final": {
+        "file": "application-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "bb65c12a595822feb8b3ea3912535c14b850eb43f244394f8ee308cff618fdbc"
+      },
+      "weight": {
+        "file": "application-weight.png",
+        "width": 1408,
+        "height": 216,
+        "sha256": "6cf9886ed7037e5f2119b33ae25f6a22ae424b83fd68944c7550aa3ef4216a17"
+      },
+      "measurements": {
+        "map_height": 1623,
+        "canvas_bottom": 859.8,
+        "canvas_footer_bottom": 859.8,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 4,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 4,
+          "railStubs": 0,
+          "edgeLabels": 2,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": 11.473296440972224,
+          "minMeta": 8.9791015625,
+          "minBadge": 8.480262586805555,
+          "minColumn": 10.475618489583333,
+          "minAggregate": null,
+          "minHull": 9.178637152777778,
+          "maxEdgeLabel": 19
+        },
+        "keymetrics": "ENTRY production main \u00b7 src/main.c:1 main \u00b7 confidence HIGH \u00b7 0 alternatives\nHOTTEST: tests/t.c \u00b7 900 static cost units (v2) \u00b7 3.0\u00d7 median function\nPATH \u00b7 3 steps \u00b7 representative path (static, BFS-derived)\n3 of 3 reachable files shown \u00b7 0 aggregated\nSTART\nsrc/a.c:3 \u2014 Loop with a large trip count\nsrc/main.c:4 \u2014 Allocation inside a loop\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "3 of 4 source files reachable (75%) \u00b7 2 of 2 file pairs drawn \u00b7 0 MEDIUM / 2 LOW structural edges \u00b7 unreached production: 0 \u00b7 non-production: 1 \u00b7 parse 4 ok / 0 partial / 0 failed \u00b7 0/2 unresolved includes \u00b7 1 file demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    },
+    {
+      "state": "library",
+      "html": "html/library.html",
+      "html_sha256": "59035e8dbe64816af228bfbe985bbf596753ef3df293c1f811ee4f21f4370c3e",
+      "final": {
+        "file": "library-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "8c9b994df09c72cd57f68936cade9f755752498ee7d96b1df3a40658e02b9a65"
+      },
+      "weight": {
+        "file": "library-weight.png",
+        "width": 1408,
+        "height": 215,
+        "sha256": "f03ff587d14fe36412669e5df4b4a43ad540f3052581199c1ed7f2cd3e4442dd"
+      },
+      "measurements": {
+        "map_height": 1616.3,
+        "canvas_bottom": 869.2,
+        "canvas_footer_bottom": 869.2,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 3,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 3,
+          "railStubs": 0,
+          "edgeLabels": 0,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": 11.473472318941504,
+          "minMeta": 8.979239206128133,
+          "minBadge": 8.48039258356546,
+          "minColumn": 10.475779073816156,
+          "minAggregate": null,
+          "minHull": 9.178777855153202,
+          "maxEdgeLabel": 0
+        },
+        "keymetrics": "ENTRY library root (no production main) \u00b7 src/lib.c:1 lib_root \u00b7 confidence MEDIUM \u00b7 0 alternatives\nHOTTEST: src/caller1.c \u00b7 200 static cost units (v2) \u00b7 2.0\u00d7 median function\nPATH \u00b7 1 steps \u00b7 representative path (static, BFS-derived)\n1 of 1 reachable files shown \u00b7 0 aggregated\nSTART\nsrc/lib.c:3 \u2014 String copy in a loop\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "1 of 3 source files reachable (33%) \u00b7 2 of 2 file pairs drawn \u00b7 0 MEDIUM / 2 LOW structural edges \u00b7 unreached production: 2 \u00b7 non-production: 0 \u00b7 parse 3 ok / 0 partial / 0 failed \u00b7 0/1 unresolved includes \u00b7 0 files demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    },
+    {
+      "state": "no-entry",
+      "html": "html/no-entry.html",
+      "html_sha256": "4d7f09dca66f39e37341b0b6cf4a62fc7c43527a3fce9ed7826de6d4c9076192",
+      "final": {
+        "file": "no-entry-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "55c4a662ddb5db2ef4ce631368796c5e6140d943f91f657ecab1fb9678b83d1d"
+      },
+      "weight": {
+        "file": "no-entry-weight.png",
+        "width": 1408,
+        "height": 186,
+        "sha256": "edc2d82cf94cfad7aba087209e59d70e517c3491fb18b82001b2f11a1a5f7179"
+      },
+      "measurements": {
+        "map_height": 1343.2,
+        "canvas_bottom": 859.8,
+        "canvas_footer_bottom": 859.8,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 1,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 1,
+          "railStubs": 0,
+          "edgeLabels": 0,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": null,
+          "minMeta": null,
+          "minBadge": null,
+          "minColumn": null,
+          "minAggregate": null,
+          "minHull": null,
+          "maxEdgeLabel": 0
+        },
+        "keymetrics": "ENTRY no entry \u00b7 confidence UNKNOWN \u00b7 0 alternatives\nHOTTEST: src/handler.c \u00b7 100 static cost units (v2) \u00b7 1.0\u00d7 median function\nPATH \u00b7 0 steps \u00b7 representative path (static, BFS-derived)\n0 of 0 reachable files shown \u00b7 0 aggregated\nSTART\nsrc/handler.c:3 \u2014 Nested loop\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "0 of 1 source files reachable (0.0%) \u00b7 0 of 0 file pairs drawn \u00b7 0 MEDIUM / 0 LOW structural edges \u00b7 unreached production: 1 \u00b7 non-production: 0 \u00b7 parse 1 ok / 0 partial / 0 failed \u00b7 no include edges recorded \u00b7 0 files demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    },
+    {
+      "state": "empty",
+      "html": "html/empty.html",
+      "html_sha256": "c6235f253deaaeab4417369cc0a2cce4a47f03e2059faa81a2f4a8e6f3567620",
+      "final": {
+        "file": "empty-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "1828883cb43ff08983f03b24c76725c500263d8f0d2adf4fc1384d7e3623bf34"
+      },
+      "weight": {
+        "file": "empty-weight.png",
+        "width": 1408,
+        "height": 114,
+        "sha256": "2f8b2ad6b44b97fa337caa70471d53e8f3baf35a7fefd61a14a36d365d8a63a9"
+      },
+      "measurements": {
+        "map_height": 1204.7,
+        "canvas_bottom": 859.8,
+        "canvas_footer_bottom": 859.8,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 0,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 0,
+          "railStubs": 1,
+          "edgeLabels": 0,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": null,
+          "minMeta": null,
+          "minBadge": null,
+          "minColumn": null,
+          "minAggregate": null,
+          "minHull": null,
+          "maxEdgeLabel": 0
+        },
+        "keymetrics": "ENTRY no entry \u00b7 confidence UNKNOWN \u00b7 0 alternatives\nHOTTEST: no file\nPATH \u00b7 0 steps \u00b7 representative path (static, BFS-derived)\n0 of 0 reachable files shown \u00b7 0 aggregated\nSTART\nno ranked action recorded\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "no source functions recorded \u00b7 0 of 0 file pairs drawn \u00b7 0 MEDIUM / 0 LOW structural edges \u00b7 unreached production: 0 \u00b7 non-production: 0 \u00b7 parse 0 ok / 0 partial / 0 failed \u00b7 no include edges recorded \u00b7 0 files demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    },
+    {
+      "state": "all-test",
+      "html": "html/all-test.html",
+      "html_sha256": "edb09f97d8b89fe5902a58b1b0b707db8e8136afc5d023bd7dc0781a87030eb2",
+      "final": {
+        "file": "all-test-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "652a7484aa28d1b96e4301b3f2c6181b60b6f9c44c0d3f45a689ca486045ccdf"
+      },
+      "weight": {
+        "file": "all-test-weight.png",
+        "width": 1408,
+        "height": 155,
+        "sha256": "588ddfab34002ca885866068b8a81d5b14632aab17fa37f5cfc605c90f92b980"
+      },
+      "measurements": {
+        "map_height": 1313.1,
+        "canvas_bottom": 859.8,
+        "canvas_footer_bottom": 859.8,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 1,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 1,
+          "railStubs": 0,
+          "edgeLabels": 0,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": null,
+          "minMeta": null,
+          "minBadge": null,
+          "minColumn": null,
+          "minAggregate": null,
+          "minHull": null,
+          "maxEdgeLabel": 0
+        },
+        "keymetrics": "ENTRY no entry \u00b7 confidence UNKNOWN \u00b7 0 alternatives\nHOTTEST: tests/test_main.c \u00b7 100 static cost units (v2) \u00b7 1.0\u00d7 median function\nPATH \u00b7 0 steps \u00b7 representative path (static, BFS-derived)\n0 of 0 reachable files shown \u00b7 0 aggregated\nSTART\ntests/test_main.c:3 \u2014 Allocation in a test\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "0 of 1 source files reachable (0.0%) \u00b7 0 of 0 file pairs drawn \u00b7 0 MEDIUM / 0 LOW structural edges \u00b7 unreached production: 0 \u00b7 non-production: 1 \u00b7 parse 1 ok / 0 partial / 0 failed \u00b7 no include edges recorded \u00b7 1 file demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    },
+    {
+      "state": "capped",
+      "html": "html/capped.html",
+      "html_sha256": "3945315cb223f8413fe1a0ebe0b2755dab09b0d6c7909ec75dc38d45ef4ca68b",
+      "final": {
+        "file": "capped-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "8084a899da3e3aa4bdc9095388fd9ef28481003a66c550a29c342b7afb1e9db8"
+      },
+      "weight": {
+        "file": "capped-weight.png",
+        "width": 1408,
+        "height": 246,
+        "sha256": "49359f72c094035724a94f9e13a8e1315e2fa5482d8adf7a203c7832e08057a0"
+      },
+      "measurements": {
+        "map_height": 2372,
+        "canvas_bottom": 1397.9,
+        "canvas_footer_bottom": 1397.9,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 12,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 12,
+          "railStubs": 0,
+          "edgeLabels": 1,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": 9.976837940705128,
+          "minMeta": 8.480312249599358,
+          "minBadge": 8.480312249599358,
+          "minColumn": 10.475679837740383,
+          "minAggregate": 8.58008062900641,
+          "minHull": 9.178690905448716,
+          "maxEdgeLabel": 19
+        },
+        "keymetrics": "ENTRY production main \u00b7 src/entry.c:1 main \u00b7 confidence HIGH \u00b7 0 alternatives\nHOTTEST: src/f0.c \u00b7 1,000 static cost units (v2) \u00b7 1.0\u00d7 median function\nPATH \u00b7 2 steps \u00b7 representative path (static, BFS-derived)\n20 of 26 reachable files shown \u00b7 6 aggregated\nSTART\nsrc/f0.c:3 \u2014 Loop with a large trip count\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "26 of 26 source files reachable (100%) \u00b7 19 of 19 file pairs drawn \u00b7 0 MEDIUM / 25 LOW structural edges \u00b7 unreached production: 0 \u00b7 non-production: 0 \u00b7 parse 26 ok / 0 partial / 0 failed \u00b7 no include edges recorded \u00b7 0 files demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    },
+    {
+      "state": "partial-parse",
+      "html": "html/partial-parse.html",
+      "html_sha256": "4bba9e94be8694a20463c7175f2a3a27fc125748d97083cfd382610dd20a816b",
+      "final": {
+        "file": "partial-parse-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "744375a107ba9ff18956df4fc90dccc2f0eaa40104fc439f18498744155fb0fb"
+      },
+      "weight": {
+        "file": "partial-parse-weight.png",
+        "width": 1408,
+        "height": 201,
+        "sha256": "55ec8a43289d0214b5b13354d05764f90c384e31b1c0e5058f597fe2ccf9e83c"
+      },
+      "measurements": {
+        "map_height": 1479.7,
+        "canvas_bottom": 859.8,
+        "canvas_footer_bottom": 859.8,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 2,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 2,
+          "railStubs": 0,
+          "edgeLabels": 1,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": 11.473296440972224,
+          "minMeta": 8.9791015625,
+          "minBadge": 8.480262586805555,
+          "minColumn": 10.475618489583333,
+          "minAggregate": null,
+          "minHull": 9.178637152777778,
+          "maxEdgeLabel": 19
+        },
+        "keymetrics": "ENTRY production main \u00b7 src/main.c:1 main \u00b7 confidence HIGH \u00b7 0 alternatives\nHOTTEST: src/main.c \u00b7 120 static cost units (v2) \u00b7 2.4\u00d7 median function\nPATH \u00b7 2 steps \u00b7 representative path (static, BFS-derived)\n2 of 2 reachable files shown \u00b7 0 aggregated\nSTART\nsrc/broken.c:3 \u2014 Loop in a partially parsed file\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "2 of 2 source files reachable (100%) \u00b7 1 of 1 file pairs drawn \u00b7 0 MEDIUM / 1 LOW structural edges \u00b7 unreached production: 0 \u00b7 non-production: 0 \u00b7 parse 1 ok / 1 partial / 0 failed \u00b7 no include edges recorded \u00b7 0 files demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    },
+    {
+      "state": "single-file",
+      "html": "html/single-file.html",
+      "html_sha256": "21906d588ee79d6b60e24c3d7d536755fc864a1f6a569d837ae7c9d212665689",
+      "final": {
+        "file": "single-file-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "1131054187225f06cc59489b3b6678a5756ca6bc0c34984443fecb94551d73b0"
+      },
+      "weight": {
+        "file": "single-file-weight.png",
+        "width": 1408,
+        "height": 186,
+        "sha256": "ac6695cfb7aef42ad045f9b4c62e93330e57b4f32e46eb17ade1076cce85e5b0"
+      },
+      "measurements": {
+        "map_height": 1387.4,
+        "canvas_bottom": 859.8,
+        "canvas_footer_bottom": 859.8,
+        "page_scroll_width": 1440,
+        "page_client_width": 1440,
+        "rail_cards": 1,
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 1,
+          "railStubs": 0,
+          "edgeLabels": 0,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "min_text": 8,
+        "leading_dot": [],
+        "clipped": [],
+        "node_overflow": [],
+        "duplicate_ids": [],
+        "canvas_text": {
+          "minName": 11.473296440972224,
+          "minMeta": 8.9791015625,
+          "minBadge": 8.480262586805555,
+          "minColumn": 10.475618489583333,
+          "minAggregate": null,
+          "minHull": null,
+          "maxEdgeLabel": 0
+        },
+        "keymetrics": "ENTRY production main \u00b7 src/solo.c:1 main \u00b7 confidence HIGH \u00b7 0 alternatives\nHOTTEST: src/solo.c \u00b7 42 static cost units (v2) \u00b7 1.0\u00d7 median function\nPATH \u00b7 1 steps \u00b7 representative path (static, BFS-derived)\n1 of 1 reachable files shown \u00b7 0 aggregated\nSTART\nsrc/solo.c:3 \u2014 Allocation in main\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footer": "1 of 1 source files reachable (100%) \u00b7 0 of 0 file pairs drawn \u00b7 0 MEDIUM / 0 LOW structural edges \u00b7 unreached production: 0 \u00b7 non-production: 0 \u00b7 parse 1 ok / 0 partial / 0 failed \u00b7 no include edges recorded \u00b7 0 files demoted",
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192"
+      }
+    }
+  ]
+}

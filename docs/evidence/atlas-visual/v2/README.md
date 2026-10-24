@@ -1,16 +1,16 @@
-# Atlas v2 — visual rework evidence (steps 9–12)
+# Atlas v2 — visual rework evidence (steps 9–13)
 
 **Status: STEP 9 SIGNED 2026-10-23; STEP 10 IMPLEMENTED AND STEP-10 FOUNDER-APPROVED 2026-10-24;
-STEP 11 (DETAIL RAIL) COMMITTED `189df91`; STEP 12 (PROGRESSIVE CHARTS) IMPLEMENTED 2026-10-24 —
-STEP-13 FOUNDER GATE PENDING.**
-Option A (port G) was signed and step 10 was executed; the founder approved the step-10 first page
-and authorized the commit. The **step-13 final composition/V8 gate is still pending**. This directory
-holds the signed decision, the G-baseline comparison, the step-10 1440×900 render evidence, the DoD
-transcript and the vision records.
+STEP 11 (DETAIL RAIL) COMMITTED `189df91`; STEP 12 (PROGRESSIVE CHARTS) COMMITTED `9a94905`;
+STEP 13 EVIDENCE COMPLETE 2026-10-24 — FOUNDER COMPOSITION SIGN-OFF PENDING.**
+Option A (port G) was signed and steps 10–12 were executed; the founder approved the step-10 first
+page and the step-12 commit. **The step-13 founder visual gate is the remaining blocker for A2/ship.**
+This directory holds the signed decision, the G-baseline comparison, the 1440×900 render evidence,
+the gate transcripts and the vision records.
 
-**Scope guard:** steps 9–12 only. The founder visual gate/V8 rerun (step 13), A2 (step 14) and ship
-(step 15) are **not** started here. The F treemap is a candidate prototype; F remains undecided. Holdouts stay
-vaulted; `map-build` is not done; A1b stays open.
+**Scope guard:** steps 9–13 only. A2 (step 14) and ship (step 15) are **not** started here. The F
+treemap is a candidate prototype; F remains undecided. Holdouts stay vaulted; `map-build` is not done;
+A1b stays open.
 
 ## Files
 
@@ -48,6 +48,22 @@ vaulted; `map-build` is not done; A1b stays open.
 | `step12/f-treemap-{hyperfine,cJSON}.{html,png}` | F candidate panels at the weight slot. |
 | `step12/f-render.py` | Deterministic F prototype renderer (refuses the holdout). |
 | `step12/W1-vs-F-{hyperfine,cJSON}.png` | Shipped weight panel vs F treemap side-by-side. |
+| `STEP13.md` | Step-13 gate: measured 1440×900/1280×800 composition, all DOM/render assertions, V8 rerun, founder package, residuals. |
+| `step13.json` | Reproduced real-page DOM geometry, definitions, clipping/leading-dot/duplicate checks, 1280 stack, hashes, G-baseline record. |
+| `render_step13.py` | Reproducer for the step-13 real-page gate (fails closed; writes the renders + G composite). |
+| `render_step13_states.py` | Reproducer for the eight-state rerun (preflight + final frames + weight crops). |
+| `gate-step13.txt` | Full step-13 transcript (both harnesses, currency hash, assertion summary, scope check, evidence hashes). |
+| `VISION-STEP13.md` | V8 rerun summary (A1 16/16, strip 16/16) + the G-baseline comparative read. |
+| `step13-reads.json` | Normalized 32-read transcript (2 A1 + 2 strip per state), images + sha256, evaluator decisions. |
+| `atlas-v2-step13-{hyperfine,cJSON}-final.png` | Step-13 1440×900 canonical `#map` first viewports. |
+| `atlas-v2-step13-{hyperfine,cJSON}-full.png` | Full-page step-13 renders. |
+| `atlas-v2-step13-{hyperfine,cJSON}-charts.png` | Step-13 below-graph charts at true panel width. |
+| `atlas-v2-step13-{hyperfine,cJSON}-1280x800.png` | Step-13 1280×800 stacked-rail renders. |
+| `step13/G-vs-step13-hyperfine-1440x900.png` | G (approved baseline) vs step-13 real page, labelled composite. |
+| `step13/FOUNDER-GATE.md` | The founder gate package: what to open, what is proven, what only the founder can judge, decision. |
+| `step13/{state}-{final,weight}.png` | Eight-state rerun frames + weight-panel crops. |
+| `step13/manifest.json` | Eight-state measurement + frame manifest (hashes, canvas bottom, definitions, floors). |
+| `step13/states.json` | Eight-state preflight result (PASS/FAIL + per-state measurements); rewritten on every run. |
 | `atlas-v2-hyperfine-final.png` / `atlas-v2-cJSON-final.png` | Step-10 1440×900 first viewports (`#map`, reduced motion). |
 | `atlas-v2-hyperfine-full.png` / `atlas-v2-cJSON-full.png` | Full-page step-10 renders. |
 

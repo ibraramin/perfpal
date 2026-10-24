@@ -1,0 +1,734 @@
+{
+  "protocol": "Step-13 rerun of the V8 protocol on the reworked page: two fresh blind @vision reads per state on the 1440x900 final frame (one image per task; neutral filename; no source, siblings, docs or expected answer); describe first, then strict JSON. Strip protocol: two fresh blind reads per state on the weight-chart crop; strict JSON {mass_answer, top_item, nonproduction_band, action, blockers, confidence}; no scale comparison, no time/runtime inference.",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "device_scale_factor": 1,
+  "candidate": "Atlas v2 step 13 (progressive charts + detail rail + G visual system)",
+  "blind_input": "temporary neutral copies /tmp/opencode/step13-blind/{a,w}0N.png; the committed frames keep their state names",
+  "images": {
+    "application": {
+      "final": {
+        "file": "application-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "bb65c12a595822feb8b3ea3912535c14b850eb43f244394f8ee308cff618fdbc"
+      },
+      "weight": {
+        "file": "application-weight.png",
+        "width": 1408,
+        "height": 216,
+        "sha256": "6cf9886ed7037e5f2119b33ae25f6a22ae424b83fd68944c7550aa3ef4216a17"
+      }
+    },
+    "library": {
+      "final": {
+        "file": "library-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "8c9b994df09c72cd57f68936cade9f755752498ee7d96b1df3a40658e02b9a65"
+      },
+      "weight": {
+        "file": "library-weight.png",
+        "width": 1408,
+        "height": 215,
+        "sha256": "f03ff587d14fe36412669e5df4b4a43ad540f3052581199c1ed7f2cd3e4442dd"
+      }
+    },
+    "no-entry": {
+      "final": {
+        "file": "no-entry-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "55c4a662ddb5db2ef4ce631368796c5e6140d943f91f657ecab1fb9678b83d1d"
+      },
+      "weight": {
+        "file": "no-entry-weight.png",
+        "width": 1408,
+        "height": 186,
+        "sha256": "edc2d82cf94cfad7aba087209e59d70e517c3491fb18b82001b2f11a1a5f7179"
+      }
+    },
+    "empty": {
+      "final": {
+        "file": "empty-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "1828883cb43ff08983f03b24c76725c500263d8f0d2adf4fc1384d7e3623bf34"
+      },
+      "weight": {
+        "file": "empty-weight.png",
+        "width": 1408,
+        "height": 114,
+        "sha256": "2f8b2ad6b44b97fa337caa70471d53e8f3baf35a7fefd61a14a36d365d8a63a9"
+      }
+    },
+    "all-test": {
+      "final": {
+        "file": "all-test-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "652a7484aa28d1b96e4301b3f2c6181b60b6f9c44c0d3f45a689ca486045ccdf"
+      },
+      "weight": {
+        "file": "all-test-weight.png",
+        "width": 1408,
+        "height": 155,
+        "sha256": "588ddfab34002ca885866068b8a81d5b14632aab17fa37f5cfc605c90f92b980"
+      }
+    },
+    "capped": {
+      "final": {
+        "file": "capped-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "8084a899da3e3aa4bdc9095388fd9ef28481003a66c550a29c342b7afb1e9db8"
+      },
+      "weight": {
+        "file": "capped-weight.png",
+        "width": 1408,
+        "height": 246,
+        "sha256": "49359f72c094035724a94f9e13a8e1315e2fa5482d8adf7a203c7832e08057a0"
+      }
+    },
+    "partial-parse": {
+      "final": {
+        "file": "partial-parse-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "744375a107ba9ff18956df4fc90dccc2f0eaa40104fc439f18498744155fb0fb"
+      },
+      "weight": {
+        "file": "partial-parse-weight.png",
+        "width": 1408,
+        "height": 201,
+        "sha256": "55ec8a43289d0214b5b13354d05764f90c384e31b1c0e5058f597fe2ccf9e83c"
+      }
+    },
+    "single-file": {
+      "final": {
+        "file": "single-file-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "1131054187225f06cc59489b3b6678a5756ca6bc0c34984443fecb94551d73b0"
+      },
+      "weight": {
+        "file": "single-file-weight.png",
+        "width": 1408,
+        "height": 186,
+        "sha256": "ac6695cfb7aef42ad045f9b4c62e93330e57b4f32e46eb17ade1076cce85e5b0"
+      }
+    }
+  },
+  "reads": {
+    "application": [
+      {
+        "read": "A",
+        "state": "application",
+        "image": "application-final.png",
+        "image_sha256": "bb65c12a595822feb8b3ea3912535c14b850eb43f244394f8ee308cff618fdbc",
+        "description": "Reads the entry (production main, src/main.c:1), 3-step path, HOTTEST tests/t.c (900 units, 3.0x) as unreached, the depth-0/1/2 chain main.c -> a.c -> b.c, and the 4-card rail; START chips name src/a.c:3 and src/main.c:4.",
+        "json": {
+          "question_answered": "Where is the static performance mass concentrated along the reachable production call path, and which candidate should be profiled first?",
+          "action": "src/a.c:3",
+          "blockers": "none",
+          "confidence": "medium"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "application",
+        "image": "application-final.png",
+        "image_sha256": "bb65c12a595822feb8b3ea3912535c14b850eb43f244394f8ee308cff618fdbc",
+        "description": "Names main.c 550 units / a.c 300 HOT / b.c 100, tests/t.c HOTTEST 900 UNREACHED, the 4-card rail with PERF-C-ALLOC-001 and PERF-C-LOOP-001, and the START chip src/a.c:3.",
+        "json": {
+          "question_answered": "Starting from the production entry main, which source files are reachable and where does the static cost mass (and its hottest findings) sit?",
+          "action": "src/a.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "library": [
+      {
+        "read": "A",
+        "state": "library",
+        "image": "library-final.png",
+        "image_sha256": "8c9b994df09c72cd57f68936cade9f755752498ee7d96b1df3a40658e02b9a65",
+        "description": "Reads ENTRY library root (no production main) at src/lib.c:1 MEDIUM, HOTTEST caller1.c 200 units 2.0x, three file cards, and the START probe src/lib.c:3.",
+        "json": {
+          "question_answered": "Where does execution enter this C codebase, which files are unreachable from that entry, and which file carries the most static cost?",
+          "action": "src/lib.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "library",
+        "image": "library-final.png",
+        "image_sha256": "8c9b994df09c72cd57f68936cade9f755752498ee7d96b1df3a40658e02b9a65",
+        "description": "Reads the library-root election, lib.c 100 / caller1.c 200 HOTTEST unreached / caller2.c 50, 1 of 3 reachable, 2 production unreached, and src/lib.c:3 as the start anchor.",
+        "json": {
+          "question_answered": "Where does static cost mass sit relative to this library's entry point, and which files never appear on any forward path from it?",
+          "action": "src/lib.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "no-entry": [
+      {
+        "read": "A",
+        "state": "no-entry",
+        "image": "no-entry-final.png",
+        "image_sha256": "55c4a662ddb5db2ef4ce631368796c5e6140d943f91f657ecab1fb9678b83d1d",
+        "description": "Reads ENTRY no entry / UNKNOWN, the NO ENTRY stub, the single UNREACHED rail card src/handler.c 100 units with PERF-C-LOOP-001, and the footer 0 of 1 reachable.",
+        "json": {
+          "question_answered": "Which production entry point drives the hottest static-cost path through this codebase?",
+          "action": "src/handler.c:3",
+          "blockers": "no electable production entry; src/handler.c is UNREACHED (0 of 1 reachable)",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "no-entry",
+        "image": "no-entry-final.png",
+        "image_sha256": "55c4a662ddb5db2ef4ce631368796c5e6140d943f91f657ecab1fb9678b83d1d",
+        "description": "Reads no entry, the dashed NO ENTRY stub, the 1-card rail (src/handler.c, 100 units, top 100% of files), and the 0 of 1 reachable footer.",
+        "json": {
+          "question_answered": "Can an entry-flow map be constructed for this codebase?",
+          "action": "no electable production entry",
+          "blockers": "no production entry point elected; the only file is UNREACHED",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "empty": [
+      {
+        "read": "A",
+        "state": "empty",
+        "image": "empty-final.png",
+        "image_sha256": "1828883cb43ff08983f03b24c76725c500263d8f0d2adf4fc1384d7e3623bf34",
+        "description": "Reads the empty state: no entry/UNKNOWN, HOTTEST no file, 0 steps, the 'no source functions recorded' stub in canvas and rail, and the empty weight panel.",
+        "json": {
+          "question_answered": "Which entry point and call path carries the most cost in the scanned codebase, and which files dominate it?",
+          "action": "no source functions recorded",
+          "blockers": "no data: no entry, 0 of 0 files, canvas and rail both show the stub",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "empty",
+        "image": "empty-final.png",
+        "image_sha256": "1828883cb43ff08983f03b24c76725c500263d8f0d2adf4fc1384d7e3623bf34",
+        "description": "Reads the same empty state and the state-unconditional legend/footer; identifies the stub as the answer.",
+        "json": {
+          "question_answered": "Which functions/files form the hottest entry-point-to-cost path in the scanned codebase, and what should be inspected next?",
+          "action": "no source functions recorded",
+          "blockers": "the scan produced no data (0 ok / 0 failed, no entry, no hottest file)",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "all-test": [
+      {
+        "read": "A",
+        "state": "all-test",
+        "image": "all-test-final.png",
+        "image_sha256": "652a7484aa28d1b96e4301b3f2c6181b60b6f9c44c0d3f45a689ca486045ccdf",
+        "description": "Reads no entry, HOTTEST tests/test_main.c 100 units, the NO ENTRY stub, the UNREACHED rail card with PERF-C-ALLOC-001, and 1 non-production unreached.",
+        "json": {
+          "question_answered": "Where is the static cost concentrated in this codebase, and what production entry point leads into it?",
+          "action": "tests/test_main.c:3",
+          "blockers": "no electable production entry; the only file is a non-production UNREACHED test file",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "all-test",
+        "image": "all-test-final.png",
+        "image_sha256": "652a7484aa28d1b96e4301b3f2c6181b60b6f9c44c0d3f45a689ca486045ccdf",
+        "description": "Reads the no-production answer, the START chip tests/test_main.c:3, the rail card and the 0 of 1 reachable / 1 file demoted footer.",
+        "json": {
+          "question_answered": "Which production entry point should anchor the Atlas entry-flow map, and where does the static cost mass sit?",
+          "action": "tests/test_main.c:3",
+          "blockers": "no electable production entry; only a demoted non-production test file exists",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "capped": [
+      {
+        "read": "A",
+        "state": "capped",
+        "image": "capped-final.png",
+        "image_sha256": "8084a899da3e3aa4bdc9095388fd9ef28481003a66c550a29c342b7afb1e9db8",
+        "description": "Reads entry src/entry.c 10 units, depth-1 node printed 20 of 26 reachable files shown (6 aggregated), f0.c 1,000 units HOTTEST badge 1, f1.c 999 badge 2, the 12-card rail (+14 more), and src/f0.c:3.",
+        "json": {
+          "question_answered": "Which file along the production entry path carries the most static cost, and where is its hotspot?",
+          "action": "src/f0.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "capped",
+        "image": "capped-final.png",
+        "image_sha256": "8084a899da3e3aa4bdc9095388fd9ef28481003a66c550a29c342b7afb1e9db8",
+        "description": "Reads the same 3-column capped graph, the aggregated depth-1 node, the 12-card rail, and names src/f0.c:3.",
+        "json": {
+          "question_answered": "Which files along the call flow from the production entry point (main in src/entry.c) carry the most static cost, and where is the hottest optimization candidate?",
+          "action": "src/f0.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "partial-parse": [
+      {
+        "read": "A",
+        "state": "partial-parse",
+        "image": "partial-parse-final.png",
+        "image_sha256": "744375a107ba9ff18956df4fc90dccc2f0eaa40104fc439f18498744155fb0fb",
+        "description": "Reads entry src/main.c 120 units 2.4x HOTTEST, 2-step path to src/broken.c 50 units WARN/partial, both rail cards, and parse 1 ok / 1 partial.",
+        "json": {
+          "question_answered": "Where does static cost flow from the main entry point, and which file/finding should be investigated first?",
+          "action": "src/broken.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "partial-parse",
+        "image": "partial-parse-final.png",
+        "image_sha256": "744375a107ba9ff18956df4fc90dccc2f0eaa40104fc439f18498744155fb0fb",
+        "description": "Reads the 2-depth graph, the partial badge on broken.c, the one finding PERF-C-LOOP-001, and the 100% reachability footer.",
+        "json": {
+          "question_answered": "From the production entry point, which files does static analysis reach, in what order, and how much static cost does each carry relative to the median?",
+          "action": "src/broken.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "single-file": [
+      {
+        "read": "A",
+        "state": "single-file",
+        "image": "single-file-final.png",
+        "image_sha256": "1131054187225f06cc59489b3b6678a5756ca6bc0c34984443fecb94551d73b0",
+        "description": "Reads the single ENTRY/HOTTEST/HOT node src/solo.c 42 units 1.0x, the 1-card rail with PERF-C-ALLOC-001, and src/solo.c:3.",
+        "json": {
+          "question_answered": "Where is the static cost mass on the entry path from main, and which file/function is the hottest starting point?",
+          "action": "src/solo.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "single-file",
+        "image": "single-file-final.png",
+        "image_sha256": "1131054187225f06cc59489b3b6678a5756ca6bc0c34984443fecb94551d73b0",
+        "description": "Reads the same single-file state, including the 1 of 1 reachable footer and the complete definition lines.",
+        "json": {
+          "question_answered": "Which file carries the static cost mass on the production entry path from main, and how hot is it relative to the rest of the scan?",
+          "action": "src/solo.c:3",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "question_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ]
+  },
+  "strip_reads": {
+    "application": [
+      {
+        "read": "A",
+        "state": "application",
+        "image": "application-weight.png",
+        "image_sha256": "6cf9886ed7037e5f2119b33ae25f6a22ae424b83fd68944c7550aa3ef4216a17",
+        "description": "Reads the 51.4/48.6 paired ribbon, top files main.c 30% / a.c 16% / b.c 5.4%, component src 51% across 3 files, and the dashed non-production band.",
+        "json": {
+          "mass_answer": "The mass sits almost evenly split, production 51.4% vs non-production 48.6%.",
+          "top_item": "src (production component) 51% of scanned static cost - 3 files",
+          "nonproduction_band": "48.6% of scanned static cost (1 files)",
+          "action": "Drill into src/main.c, the largest single production file at 30%.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "application",
+        "image": "application-weight.png",
+        "image_sha256": "6cf9886ed7037e5f2119b33ae25f6a22ae424b83fd68944c7550aa3ef4216a17",
+        "description": "Reads the same paired ribbon and ranks; separates the one non-production file.",
+        "json": {
+          "mass_answer": "The mass sits nearly evenly split, production 51.4% vs non-production 48.6%.",
+          "top_item": "src/main.c at 30% of scanned static cost",
+          "nonproduction_band": "48.6% of scanned static cost (1 files)",
+          "action": "Inspect src/main.c first and separate the single non-production file.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "library": [
+      {
+        "read": "A",
+        "state": "library",
+        "image": "library-weight.png",
+        "image_sha256": "f03ff587d14fe36412669e5df4b4a43ad540f3052581199c1ed7f2cd3e4442dd",
+        "description": "Reads the 100/0 split, caller1.c 57% / lib.c 29% / caller2.c 14%, component src 100% across 3 files.",
+        "json": {
+          "mass_answer": "The mass sits entirely in production (100%), non-production 0%.",
+          "top_item": "src/caller1.c at 57% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Focus on src/caller1.c, the single file carrying 57%.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "library",
+        "image": "library-weight.png",
+        "image_sha256": "f03ff587d14fe36412669e5df4b4a43ad540f3052581199c1ed7f2cd3e4442dd",
+        "description": "Reads the same 100/0 split and file ranks; notes the component src 100% across 3 files.",
+        "json": {
+          "mass_answer": "The mass sits entirely in production, printed as production 100%.",
+          "top_item": "src/caller1.c at 57% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Inspect src/caller1.c (57%) first.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "no-entry": [
+      {
+        "read": "A",
+        "state": "no-entry",
+        "image": "no-entry-weight.png",
+        "image_sha256": "edc2d82cf94cfad7aba087209e59d70e517c3491fb18b82001b2f11a1a5f7179",
+        "description": "Reads the full production bar, the single file/component winner at 100%, and the empty non-production band.",
+        "json": {
+          "mass_answer": "All scanned static cost sits in production 100%, non-production 0%.",
+          "top_item": "src/handler.c at 100% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Focus on src/handler.c, the full printed share.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "no-entry",
+        "image": "no-entry-weight.png",
+        "image_sha256": "edc2d82cf94cfad7aba087209e59d70e517c3491fb18b82001b2f11a1a5f7179",
+        "description": "Same read; also quotes the production-class/unreached note and approximate-prefix note.",
+        "json": {
+          "mass_answer": "The mass sits entirely in production, printed as production 100%.",
+          "top_item": "src/handler.c at 100% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Focus optimization review on src/handler.c.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "empty": [
+      {
+        "read": "A",
+        "state": "empty",
+        "image": "empty-weight.png",
+        "image_sha256": "2f8b2ad6b44b97fa337caa70471d53e8f3baf35a7fefd61a14a36d365d8a63a9",
+        "description": "Reads the empty weight panel: stub line in the production area, hatched non-production band also empty.",
+        "json": {
+          "mass_answer": "No cost mass is recorded; the panel shows 'no scanned static cost recorded'.",
+          "top_item": "none shown - no printed share",
+          "nonproduction_band": "no scanned static cost recorded (0 files)",
+          "action": "Run a scan that records static cost.",
+          "blockers": "no scanned static cost recorded (0 files)",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "empty",
+        "image": "empty-weight.png",
+        "image_sha256": "2f8b2ad6b44b97fa337caa70471d53e8f3baf35a7fefd61a14a36d365d8a63a9",
+        "description": "Same empty read; no bars or percentages invented.",
+        "json": {
+          "mass_answer": "The panel shows an empty state - no scanned static cost recorded, so no mass anywhere.",
+          "top_item": "none shown - no largest item",
+          "nonproduction_band": "no scanned static cost recorded (0 files)",
+          "action": "Supply a scan that records static cost.",
+          "blockers": "no scanned static cost recorded (0 files)",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "all-test": [
+      {
+        "read": "A",
+        "state": "all-test",
+        "image": "all-test-weight.png",
+        "image_sha256": "588ddfab34002ca885866068b8a81d5b14632aab17fa37f5cfc605c90f92b980",
+        "description": "Reads the 0/100 split, the 'no production cost recorded' note, and the 1-file band.",
+        "json": {
+          "mass_answer": "The entire scanned static cost sits in the non-production band (100%), production 0%.",
+          "top_item": "non-production (test/bench/other) at 100% of scanned static cost",
+          "nonproduction_band": "100% of scanned static cost (1 files)",
+          "action": "Verify why no production cost was recorded, then inspect the single non-production file.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "all-test",
+        "image": "all-test-weight.png",
+        "image_sha256": "588ddfab34002ca885866068b8a81d5b14632aab17fa37f5cfc605c90f92b980",
+        "description": "Reads the same 0/100 split and the top-of-panel note.",
+        "json": {
+          "mass_answer": "All scanned static cost sits in the non-production band, 100% from 1 file.",
+          "top_item": "non-production (test/bench/other) at 100% of scanned static cost",
+          "nonproduction_band": "100% of scanned static cost (1 files)",
+          "action": "Include production files in the scan so production share can be measured.",
+          "blockers": "only 1 file scanned; no production cost",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "capped": [
+      {
+        "read": "A",
+        "state": "capped",
+        "image": "capped-weight.png",
+        "image_sha256": "49359f72c094035724a94f9e13a8e1315e2fa5482d8adf7a203c7832e08057a0",
+        "description": "Reads the 100/0 split, five top files each 4.2%, component src 100% across 26 files, and the empty non-production band.",
+        "json": {
+          "mass_answer": "The entire scanned static cost sits in production (100%); non-production 0%.",
+          "top_item": "src component at 100% of scanned static cost - 26 files",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Drill into the src component; top five files each at 4.2%.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "capped",
+        "image": "capped-weight.png",
+        "image_sha256": "49359f72c094035724a94f9e13a8e1315e2fa5482d8adf7a203c7832e08057a0",
+        "description": "Same read; correctly reports the even 4.2% spread rather than inventing a dominant file.",
+        "json": {
+          "mass_answer": "All scanned static cost sits in production (100%); non-production 0%.",
+          "top_item": "src component at 100% of scanned static cost - 26 files",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Drill into the src component's files, each 4.2%.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "partial-parse": [
+      {
+        "read": "A",
+        "state": "partial-parse",
+        "image": "partial-parse-weight.png",
+        "image_sha256": "55ec8a43289d0214b5b13354d05764f90c384e31b1c0e5058f597fe2ccf9e83c",
+        "description": "Reads the 100/0 split, main.c 71% / broken.c 29%, component src 100% across 2 files.",
+        "json": {
+          "mass_answer": "The mass sits entirely in production (100%); non-production 0%.",
+          "top_item": "src/main.c at 71% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Start with src/main.c (71%).",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "partial-parse",
+        "image": "partial-parse-weight.png",
+        "image_sha256": "55ec8a43289d0214b5b13354d05764f90c384e31b1c0e5058f597fe2ccf9e83c",
+        "description": "Same read; includes the production-class/unreached note.",
+        "json": {
+          "mass_answer": "All scanned static cost sits in production (100%); non-production 0%.",
+          "top_item": "src/main.c at 71% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Focus on src/main.c, 71% of scanned static cost.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ],
+    "single-file": [
+      {
+        "read": "A",
+        "state": "single-file",
+        "image": "single-file-weight.png",
+        "image_sha256": "ac6695cfb7aef42ad045f9b4c62e93330e57b4f32e46eb17ade1076cce85e5b0",
+        "description": "Reads the 100/0 split, the single file and component at 100% (1 file), and the empty band.",
+        "json": {
+          "mass_answer": "The entire scanned static cost sits in production (100%); non-production 0%.",
+          "top_item": "src/solo.c at 100% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Focus optimization review on src/solo.c.",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      },
+      {
+        "read": "B",
+        "state": "single-file",
+        "image": "single-file-weight.png",
+        "image_sha256": "ac6695cfb7aef42ad045f9b4c62e93330e57b4f32e46eb17ade1076cce85e5b0",
+        "description": "Same read; component and file both at 100%.",
+        "json": {
+          "mass_answer": "All scanned static cost sits in production (100%); non-production 0%.",
+          "top_item": "src/solo.c at 100% of scanned static cost",
+          "nonproduction_band": "0% of scanned static cost (0 files)",
+          "action": "Focus optimization review on src/solo.c (component src).",
+          "blockers": "none",
+          "confidence": "high"
+        },
+        "mass_ok": true,
+        "action_ok": true,
+        "pass": true
+      }
+    ]
+  },
+  "verdict": {
+    "a1": {
+      "states_passed": 8,
+      "states_total": 8,
+      "reads_passed": 16,
+      "reads_total": 16,
+      "result": "PASS",
+      "criterion": "The read states the question the page answers and names one concrete file/path action. Empty, all-test and no-entry return the named stub/no-production answer; capped names src/f0.c; partial-parse names src/broken.c; single-file names src/solo.c.",
+      "framing_notes": [
+        "capped: the canvas is taller than the 900px fold (1398px) by design; both reads still recover entry, HOTTEST, the 20-of-26 shown / 6 aggregated depth-1 node and the src/f0.c:3 action. V8-disclosed framing exception, A2-owned.",
+        "The strip above the canvas is the first answer surface (A8 re-baselined in step 12); the canvas is the first block."
+      ]
+    },
+    "strip": {
+      "states_passed": 8,
+      "states_total": 8,
+      "reads_passed": 16,
+      "reads_total": 16,
+      "result": "PASS",
+      "mass_answers": 16,
+      "paired_shares_correct": 14,
+      "scale_confusions": 0,
+      "time_claims": 0,
+      "framing_notes": [
+        "Every 100/0 or paired split matches the page's single integer-tenths split; no read invented a time unit or a runtime claim."
+      ],
+      "stub_reads": 2,
+      "stub_reads_note": "the empty state contributes two named-stub reads; it has no paired share"
+    }
+  }
+}

@@ -1,0 +1,1254 @@
+{
+  "status": "PASS",
+  "step": 13,
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "viewport_1280": {
+    "width": 1280,
+    "height": 800
+  },
+  "capture": {
+    "source": "session-private fresh scan with the release binary built from merged main; the shared perfpal-test/out-atlas-v2-* outputs are cross-checked but never the render source",
+    "repos": {
+      "hyperfine": {
+        "report_html": "/tmp/opencode/step13-page/hyperfine/report.html",
+        "report_html_sha256": "a4fade037db5943126c3d3f850a1011b36d4de60da5f796cb22ab6908353c392",
+        "shared_output": {
+          "path": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-hyperfine/report.html",
+          "exists": true,
+          "sha256": "a4fade037db5943126c3d3f850a1011b36d4de60da5f796cb22ab6908353c392",
+          "same_as_private": true
+        }
+      },
+      "cJSON": {
+        "report_html": "/tmp/opencode/step13-page/cJSON/report.html",
+        "report_html_sha256": "323ee0a8b018c0527e7f79d7b49289483f80f1d5a7b81cffe2c3a5e8fb3bbd49",
+        "shared_output": {
+          "path": "/home/shafin/Opencode/perfpal-test/out-atlas-v2-cJSON/report.html",
+          "exists": true,
+          "sha256": "323ee0a8b018c0527e7f79d7b49289483f80f1d5a7b81cffe2c3a5e8fb3bbd49",
+          "same_as_private": true
+        }
+      }
+    },
+    "animation": "prefers-reduced-motion + animations=disabled",
+    "map_anchor": "#map scrolled to viewport top; #map is a DOM sibling of the global report header"
+  },
+  "assertions": {
+    "canvas_bottom_le_900": true,
+    "canvas_footer_bottom_le_900": true,
+    "map_height_le_5000": true,
+    "no_leading_dot_truncation": true,
+    "no_css_ellipsis_without_title": true,
+    "no_clipped_text": true,
+    "no_node_text_overflow": true,
+    "one_structural_caption": true,
+    "one_unit_definition": true,
+    "one_median_definition": true,
+    "one_unreached_definition": true,
+    "one_legend": true,
+    "one_footer": true,
+    "no_duplicate_ids": true,
+    "canvas_purity_tables_scripts_handlers": true,
+    "below_canvas_first_block": true,
+    "chrome_above_canvas": true,
+    "no_horizontal_scroll_1440": true,
+    "no_horizontal_scroll_1280": true,
+    "rail_stacks_at_1280": true
+  },
+  "shared_output_drift": {
+    "used": false,
+    "note": "Track C fast-forward merged into main (c73d6ff) during the gate. The gate was re-scanned and re-rendered on that tree; the private scan equals the shared perfpal-test page. The merge adds two below-the-fold nav links (agent-report.md, agent-actions.json): -charts and -full change, while the 900px -final, weight crops, 1280 frames and all eight fixture frames are byte-identical, so the 32 reads stand."
+  },
+  "measured": {
+    "hyperfine": {
+      "1440": {
+        "map": {
+          "x": 0,
+          "y": 0.4,
+          "w": 1440,
+          "h": 1848.2,
+          "bottom": 1848.7,
+          "right": 1440
+        },
+        "chrome": {
+          "x": 16,
+          "y": 8.4,
+          "w": 1408,
+          "h": 111.1,
+          "bottom": 119.5,
+          "right": 1424
+        },
+        "stage": {
+          "x": 16,
+          "y": 119.5,
+          "w": 1408,
+          "h": 749.6,
+          "bottom": 869.2,
+          "right": 1424
+        },
+        "canvas": {
+          "x": 16,
+          "y": 119.5,
+          "w": 868,
+          "h": 749.6,
+          "bottom": 869.2,
+          "right": 884
+        },
+        "canvasFooter": {
+          "x": 16,
+          "y": 837.9,
+          "w": 868,
+          "h": 31.3,
+          "bottom": 869.2,
+          "right": 884
+        },
+        "rail": {
+          "x": 894,
+          "y": 119.5,
+          "w": 530,
+          "h": 714.1,
+          "bottom": 833.7,
+          "right": 1424
+        },
+        "brief": {
+          "x": 16,
+          "y": 879.2,
+          "w": 1408,
+          "h": 961.5,
+          "bottom": 1840.7,
+          "right": 1424
+        },
+        "charts": {
+          "x": 16,
+          "y": 879.2,
+          "w": 1408,
+          "h": 961.5,
+          "bottom": 1840.7,
+          "right": 1424
+        },
+        "page": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440,
+          "scrollHeight": 15872
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 12,
+          "railStubs": 0,
+          "edgeLabels": 2,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "textLeaves": {
+          "count": 373,
+          "minSize": 8,
+          "smallest": [
+            {
+              "text": "PERFPAL \u00b7 ATLAS",
+              "tag": "DIV",
+              "cls": "atlas-kicker",
+              "size": 8,
+              "box": {
+                "x": 16,
+                "y": 15.2,
+                "w": 244,
+                "h": 11,
+                "bottom": 26.2,
+                "right": 260
+              }
+            },
+            {
+              "text": "ENTRY \u00b7 INFO \u00d78",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 88.4,
+                "y": 182.4,
+                "w": 76.2,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 164.7
+              }
+            },
+            {
+              "text": "HOTTEST \u00b7 INFO \u00d722",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 210.9,
+                "y": 182.4,
+                "w": 91.5,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 302.3
+              }
+            },
+            {
+              "text": "INFO \u00d713",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 261.7,
+                "y": 287.1,
+                "w": 40.7,
+                "h": 9,
+                "bottom": 296.1,
+                "right": 302.3
+              }
+            },
+            {
+              "text": "INFO \u00d72",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 266.8,
+                "y": 391.9,
+                "w": 35.6,
+                "h": 9,
+                "bottom": 400.9,
+                "right": 302.3
+              }
+            },
+            {
+              "text": "INFO \u00d78 \u00b7 bench",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 226.1,
+                "y": 496.7,
+                "w": 76.2,
+                "h": 9,
+                "bottom": 505.7,
+                "right": 302.3
+              }
+            }
+          ]
+        },
+        "leadingDot": [],
+        "cssEllipsis": [],
+        "clippedContainers": [],
+        "nodeTextOverflow": [],
+        "duplicateIds": [],
+        "duplicateIdsInMap": [],
+        "tokens": {
+          "body": {
+            "font": "monospace, monospace",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(17, 17, 17)",
+            "bg": "rgb(255, 255, 255)"
+          },
+          "map": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgb(244, 241, 234)"
+          },
+          "wordmark": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 21,
+            "weight": "800",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "kicker": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 8,
+            "weight": "800",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "subline": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "600",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "keymetrics": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "node": {
+            "font": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            "size": 8.5,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "legend": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          }
+        },
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192",
+        "keymetrics": "ENTRY production main \u00b7 src/main.rs:88 main \u00b7 confidence HIGH \u00b7 0 alternatives\nHOTTEST: src/command.rs \u00b7 611 static cost units (v2) \u00b7 87\u00d7 median function\nPATH \u00b7 3 steps \u00b7 representative path (static, BFS-derived)\n19 of 19 reachable files shown \u00b7 0 aggregated\nSTART\nsrc/output/report.rs:144 \u2014 Heap allocation inside loop (Rust)\nsrc/output/report.rs:49 \u2014 Heap allocation inside loop (Rust)\nsrc/options.rs:304 \u2014 Heap allocation inside loop (Rust)\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footerText": "19 of 51 source files reachable (37%) \u00b7 49 of 49 file pairs drawn \u00b7 0 MEDIUM / 297 LOW structural edges \u00b7 unreached production: 21 \u00b7 non-production: 11 \u00b7 parse 53 ok / 0 partial / 0 failed \u00b7 33/238 unresolved includes \u00b7 16 files demoted",
+        "firstActions": [
+          "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust)",
+          "src/output/report.rs:49 \u2014 Heap allocation inside loop (Rust)",
+          "src/options.rs:304 \u2014 Heap allocation inside loop (Rust)"
+        ],
+        "htmlTitle": "Perfpal Report \u2014 schema 1.7",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "1280": {
+        "map": {
+          "x": 0,
+          "y": 0.4,
+          "w": 1280,
+          "h": 2496.6,
+          "bottom": 2497,
+          "right": 1280
+        },
+        "chrome": {
+          "x": 16,
+          "y": 8.4,
+          "w": 1248,
+          "h": 111.1,
+          "bottom": 119.5,
+          "right": 1264
+        },
+        "stage": {
+          "x": 16,
+          "y": 119.5,
+          "w": 1248,
+          "h": 1398,
+          "bottom": 1517.5,
+          "right": 1264
+        },
+        "canvas": {
+          "x": 206,
+          "y": 119.5,
+          "w": 868,
+          "h": 749.6,
+          "bottom": 869.2,
+          "right": 1074
+        },
+        "canvasFooter": {
+          "x": 206,
+          "y": 837.9,
+          "w": 868,
+          "h": 31.3,
+          "bottom": 869.2,
+          "right": 1074
+        },
+        "rail": {
+          "x": 206,
+          "y": 879.2,
+          "w": 868,
+          "h": 638.3,
+          "bottom": 1517.5,
+          "right": 1074
+        },
+        "brief": {
+          "x": 16,
+          "y": 1527.5,
+          "w": 1248,
+          "h": 961.5,
+          "bottom": 2489,
+          "right": 1264
+        },
+        "charts": {
+          "x": 16,
+          "y": 1527.5,
+          "w": 1248,
+          "h": 961.5,
+          "bottom": 2489,
+          "right": 1264
+        },
+        "page": {
+          "clientWidth": 1280,
+          "scrollWidth": 1280,
+          "scrollHeight": 16938
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 12,
+          "railStubs": 0,
+          "edgeLabels": 2,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "textLeaves": {
+          "count": 373,
+          "minSize": 8,
+          "smallest": [
+            {
+              "text": "PERFPAL \u00b7 ATLAS",
+              "tag": "DIV",
+              "cls": "atlas-kicker",
+              "size": 8,
+              "box": {
+                "x": 16,
+                "y": 15.2,
+                "w": 244,
+                "h": 11,
+                "bottom": 26.2,
+                "right": 260
+              }
+            },
+            {
+              "text": "ENTRY \u00b7 INFO \u00d78",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 278.4,
+                "y": 182.4,
+                "w": 76.2,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 354.7
+              }
+            },
+            {
+              "text": "HOTTEST \u00b7 INFO \u00d722",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 400.9,
+                "y": 182.4,
+                "w": 91.5,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 492.3
+              }
+            },
+            {
+              "text": "INFO \u00d713",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 451.7,
+                "y": 287.1,
+                "w": 40.7,
+                "h": 9,
+                "bottom": 296.1,
+                "right": 492.3
+              }
+            },
+            {
+              "text": "INFO \u00d72",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 456.8,
+                "y": 391.9,
+                "w": 35.6,
+                "h": 9,
+                "bottom": 400.9,
+                "right": 492.3
+              }
+            },
+            {
+              "text": "INFO \u00d78 \u00b7 bench",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 416.1,
+                "y": 496.7,
+                "w": 76.2,
+                "h": 9,
+                "bottom": 505.7,
+                "right": 492.3
+              }
+            }
+          ]
+        },
+        "leadingDot": [],
+        "cssEllipsis": [],
+        "clippedContainers": [],
+        "nodeTextOverflow": [],
+        "duplicateIds": [],
+        "duplicateIdsInMap": [],
+        "tokens": {
+          "body": {
+            "font": "monospace, monospace",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(17, 17, 17)",
+            "bg": "rgb(255, 255, 255)"
+          },
+          "map": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgb(244, 241, 234)"
+          },
+          "wordmark": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 21,
+            "weight": "800",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "kicker": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 8,
+            "weight": "800",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "subline": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "600",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "keymetrics": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "node": {
+            "font": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            "size": 8.5,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "legend": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          }
+        },
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192",
+        "keymetrics": "ENTRY production main \u00b7 src/main.rs:88 main \u00b7 confidence HIGH \u00b7 0 alternatives\nHOTTEST: src/command.rs \u00b7 611 static cost units (v2) \u00b7 87\u00d7 median function\nPATH \u00b7 3 steps \u00b7 representative path (static, BFS-derived)\n19 of 19 reachable files shown \u00b7 0 aggregated\nSTART\nsrc/output/report.rs:144 \u2014 Heap allocation inside loop (Rust)\nsrc/output/report.rs:49 \u2014 Heap allocation inside loop (Rust)\nsrc/options.rs:304 \u2014 Heap allocation inside loop (Rust)\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footerText": "19 of 51 source files reachable (37%) \u00b7 49 of 49 file pairs drawn \u00b7 0 MEDIUM / 297 LOW structural edges \u00b7 unreached production: 21 \u00b7 non-production: 11 \u00b7 parse 53 ok / 0 partial / 0 failed \u00b7 33/238 unresolved includes \u00b7 16 files demoted",
+        "firstActions": [
+          "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust)",
+          "src/output/report.rs:49 \u2014 Heap allocation inside loop (Rust)",
+          "src/options.rs:304 \u2014 Heap allocation inside loop (Rust)"
+        ],
+        "htmlTitle": "Perfpal Report \u2014 schema 1.7",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        }
+      },
+      "assertions_1440": {
+        "canvas_bottom_le_900": true,
+        "canvas_footer_bottom_le_900": true,
+        "map_height_le_5000": true,
+        "no_horizontal_scroll": true,
+        "no_leading_dot_truncation": true,
+        "no_css_ellipsis_without_title": true,
+        "no_clipped_text": true,
+        "no_node_text_overflow": true,
+        "one_structural_caption": true,
+        "one_unit_definition": true,
+        "one_median_definition": true,
+        "one_unreached_definition": true,
+        "one_legend": true,
+        "one_footer": true,
+        "no_duplicate_ids": true,
+        "canvas_purity_tables_scripts_handlers": true,
+        "below_canvas_first_block": true,
+        "chrome_above_canvas": true
+      },
+      "assertions_1280": {
+        "map_height_le_5000": true,
+        "no_horizontal_scroll": true,
+        "no_leading_dot_truncation": true,
+        "no_css_ellipsis_without_title": true,
+        "no_clipped_text": true,
+        "no_node_text_overflow": true,
+        "one_structural_caption": true,
+        "one_unit_definition": true,
+        "one_median_definition": true,
+        "one_unreached_definition": true,
+        "one_legend": true,
+        "one_footer": true,
+        "no_duplicate_ids": true,
+        "canvas_purity_tables_scripts_handlers": true,
+        "below_canvas_first_block": true,
+        "chrome_above_canvas": true,
+        "rail_stacks_at_1280": true
+      }
+    },
+    "cJSON": {
+      "1440": {
+        "map": {
+          "x": 0,
+          "y": 0.4,
+          "w": 1440,
+          "h": 1848.2,
+          "bottom": 1848.7,
+          "right": 1440
+        },
+        "chrome": {
+          "x": 16,
+          "y": 8.4,
+          "w": 1408,
+          "h": 111.1,
+          "bottom": 119.5,
+          "right": 1424
+        },
+        "stage": {
+          "x": 16,
+          "y": 119.5,
+          "w": 1408,
+          "h": 749.6,
+          "bottom": 869.2,
+          "right": 1424
+        },
+        "canvas": {
+          "x": 16,
+          "y": 119.5,
+          "w": 868,
+          "h": 749.6,
+          "bottom": 869.2,
+          "right": 884
+        },
+        "canvasFooter": {
+          "x": 16,
+          "y": 837.9,
+          "w": 868,
+          "h": 31.3,
+          "bottom": 869.2,
+          "right": 884
+        },
+        "rail": {
+          "x": 894,
+          "y": 119.5,
+          "w": 530,
+          "h": 698.1,
+          "bottom": 817.6,
+          "right": 1424
+        },
+        "brief": {
+          "x": 16,
+          "y": 879.2,
+          "w": 1408,
+          "h": 961.5,
+          "bottom": 1840.7,
+          "right": 1424
+        },
+        "charts": {
+          "x": 16,
+          "y": 879.2,
+          "w": 1408,
+          "h": 961.5,
+          "bottom": 1840.7,
+          "right": 1424
+        },
+        "page": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440,
+          "scrollHeight": 22058
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 12,
+          "railStubs": 0,
+          "edgeLabels": 1,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "textLeaves": {
+          "count": 298,
+          "minSize": 8,
+          "smallest": [
+            {
+              "text": "PERFPAL \u00b7 ATLAS",
+              "tag": "DIV",
+              "cls": "atlas-kicker",
+              "size": 8,
+              "box": {
+                "x": 16,
+                "y": 15.2,
+                "w": 244,
+                "h": 11,
+                "bottom": 26.2,
+                "right": 260
+              }
+            },
+            {
+              "text": "ENTRY \u00b7 INFO \u00d75 \u00b7 partial",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 216.2,
+                "y": 182.4,
+                "w": 127,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 343.2
+              }
+            },
+            {
+              "text": "WARN \u00d711 \u00b7 partial",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 431.4,
+                "y": 182.4,
+                "w": 91.5,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 522.8
+              }
+            },
+            {
+              "text": "HOTTEST \u00b7 WARN \u00d76 \u00b7 unreached \u00b7 partial \u00b7 test",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 556.8,
+                "y": 182.4,
+                "w": 145.7,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 702.4
+              }
+            },
+            {
+              "text": "INFO \u00d756 \u00b7 unreached",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 600.8,
+                "y": 287.1,
+                "w": 101.6,
+                "h": 9,
+                "bottom": 296.1,
+                "right": 702.4
+              }
+            },
+            {
+              "text": "INFO \u00d714 \u00b7 unreached \u00b7 partial",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 556.8,
+                "y": 391.9,
+                "w": 145.7,
+                "h": 9,
+                "bottom": 400.9,
+                "right": 702.4
+              }
+            }
+          ]
+        },
+        "leadingDot": [],
+        "cssEllipsis": [],
+        "clippedContainers": [],
+        "nodeTextOverflow": [],
+        "duplicateIds": [],
+        "duplicateIdsInMap": [],
+        "tokens": {
+          "body": {
+            "font": "monospace, monospace",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(17, 17, 17)",
+            "bg": "rgb(255, 255, 255)"
+          },
+          "map": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgb(244, 241, 234)"
+          },
+          "wordmark": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 21,
+            "weight": "800",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "kicker": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 8,
+            "weight": "800",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "subline": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "600",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "keymetrics": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "node": {
+            "font": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            "size": 8.5,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "legend": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          }
+        },
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192",
+        "keymetrics": "ENTRY production main \u00b7 fuzzing/afl.c:85 main \u00b7 confidence HIGH \u00b7 1 alternative\nHOTTEST: tests/unity/test/tests/testunity.c \u00b7 2,000,468 static cost units (v2) \u00b7 1,000,234\u00d7 median function\nPATH \u00b7 2 steps \u00b7 representative path (static, BFS-derived)\n2 of 2 reachable files shown \u00b7 0 aggregated\nSTART\ncJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop\ncJSON_Utils.c:1203 \u2014 Expensive setup or I/O call inside loop\ncJSON_Utils.c:807 \u2014 High cyclomatic complexity\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footerText": "2 of 81 source files reachable (2.5%) \u00b7 5 of 5 file pairs drawn \u00b7 0 MEDIUM / 587 LOW structural edges \u00b7 unreached production: 4 \u00b7 non-production: 75 \u00b7 parse 63 ok / 38 partial / 0 failed \u00b7 133/229 unresolved includes \u00b7 75 files demoted",
+        "firstActions": [
+          "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop",
+          "cJSON_Utils.c:1203 \u2014 Expensive setup or I/O call inside loop",
+          "cJSON_Utils.c:807 \u2014 High cyclomatic complexity"
+        ],
+        "htmlTitle": "Perfpal Report \u2014 schema 1.7",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        }
+      },
+      "1280": {
+        "map": {
+          "x": 0,
+          "y": 0.4,
+          "w": 1280,
+          "h": 2468.5,
+          "bottom": 2468.9,
+          "right": 1280
+        },
+        "chrome": {
+          "x": 16,
+          "y": 8.4,
+          "w": 1248,
+          "h": 111.1,
+          "bottom": 119.5,
+          "right": 1264
+        },
+        "stage": {
+          "x": 16,
+          "y": 119.5,
+          "w": 1248,
+          "h": 1369.9,
+          "bottom": 1489.4,
+          "right": 1264
+        },
+        "canvas": {
+          "x": 206,
+          "y": 119.5,
+          "w": 868,
+          "h": 749.6,
+          "bottom": 869.2,
+          "right": 1074
+        },
+        "canvasFooter": {
+          "x": 206,
+          "y": 837.9,
+          "w": 868,
+          "h": 31.3,
+          "bottom": 869.2,
+          "right": 1074
+        },
+        "rail": {
+          "x": 206,
+          "y": 879.2,
+          "w": 868,
+          "h": 610.3,
+          "bottom": 1489.4,
+          "right": 1074
+        },
+        "brief": {
+          "x": 16,
+          "y": 1499.4,
+          "w": 1248,
+          "h": 961.5,
+          "bottom": 2460.9,
+          "right": 1264
+        },
+        "charts": {
+          "x": 16,
+          "y": 1499.4,
+          "w": 1248,
+          "h": 961.5,
+          "bottom": 2460.9,
+          "right": 1264
+        },
+        "page": {
+          "clientWidth": 1280,
+          "scrollWidth": 1280,
+          "scrollHeight": 22986
+        },
+        "counts": {
+          "structuralCaptions": 1,
+          "units": 1,
+          "legends": 1,
+          "footers": 1,
+          "railCards": 12,
+          "railStubs": 0,
+          "edgeLabels": 1,
+          "tablesInCanvas": 0,
+          "scriptsInCanvas": 0,
+          "eventHandlersInCanvas": 0,
+          "barRowsInCanvas": 0,
+          "railCardsInCanvas": 0
+        },
+        "definitions": {
+          "structuralCaption": 1,
+          "medianDefinition": 1,
+          "unreachedDefinition": 1
+        },
+        "textLeaves": {
+          "count": 298,
+          "minSize": 8,
+          "smallest": [
+            {
+              "text": "PERFPAL \u00b7 ATLAS",
+              "tag": "DIV",
+              "cls": "atlas-kicker",
+              "size": 8,
+              "box": {
+                "x": 16,
+                "y": 15.2,
+                "w": 244,
+                "h": 11,
+                "bottom": 26.2,
+                "right": 260
+              }
+            },
+            {
+              "text": "ENTRY \u00b7 INFO \u00d75 \u00b7 partial",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 406.2,
+                "y": 182.4,
+                "w": 127,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 533.2
+              }
+            },
+            {
+              "text": "WARN \u00d711 \u00b7 partial",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 621.4,
+                "y": 182.4,
+                "w": 91.5,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 712.8
+              }
+            },
+            {
+              "text": "HOTTEST \u00b7 WARN \u00d76 \u00b7 unreached \u00b7 partial \u00b7 test",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 746.8,
+                "y": 182.4,
+                "w": 145.7,
+                "h": 9,
+                "bottom": 191.4,
+                "right": 892.4
+              }
+            },
+            {
+              "text": "INFO \u00d756 \u00b7 unreached",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 790.8,
+                "y": 287.1,
+                "w": 101.6,
+                "h": 9,
+                "bottom": 296.1,
+                "right": 892.4
+              }
+            },
+            {
+              "text": "INFO \u00d714 \u00b7 unreached \u00b7 partial",
+              "tag": "text",
+              "cls": "atlas-node-badge",
+              "size": 8.5,
+              "box": {
+                "x": 746.8,
+                "y": 391.9,
+                "w": 145.7,
+                "h": 9,
+                "bottom": 400.9,
+                "right": 892.4
+              }
+            }
+          ]
+        },
+        "leadingDot": [],
+        "cssEllipsis": [],
+        "clippedContainers": [],
+        "nodeTextOverflow": [],
+        "duplicateIds": [],
+        "duplicateIdsInMap": [],
+        "tokens": {
+          "body": {
+            "font": "monospace, monospace",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(17, 17, 17)",
+            "bg": "rgb(255, 255, 255)"
+          },
+          "map": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 16,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgb(244, 241, 234)"
+          },
+          "wordmark": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 21,
+            "weight": "800",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "kicker": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 8,
+            "weight": "800",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "subline": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "600",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "keymetrics": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "node": {
+            "font": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            "size": 8.5,
+            "weight": "400",
+            "color": "rgb(32, 43, 53)",
+            "bg": "rgba(0, 0, 0, 0)"
+          },
+          "legend": {
+            "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+            "size": 9,
+            "weight": "400",
+            "color": "rgb(111, 106, 97)",
+            "bg": "rgba(0, 0, 0, 0)"
+          }
+        },
+        "header": "PERFPAL \u00b7 ATLAS\nAtlas\nentry-flow map \u00b7 static, profile to confirm\nPause\nExplorer \u2192",
+        "keymetrics": "ENTRY production main \u00b7 fuzzing/afl.c:85 main \u00b7 confidence HIGH \u00b7 1 alternative\nHOTTEST: tests/unity/test/tests/testunity.c \u00b7 2,000,468 static cost units (v2) \u00b7 1,000,234\u00d7 median function\nPATH \u00b7 2 steps \u00b7 representative path (static, BFS-derived)\n2 of 2 reachable files shown \u00b7 0 aggregated\nSTART\ncJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop\ncJSON_Utils.c:1203 \u2014 Expensive setup or I/O call inside loop\ncJSON_Utils.c:807 \u2014 High cyclomatic complexity\nproduction\ntest/bench\nunreached\nforward\nback\npath\nstatic cost units (v2) \u2014 relative scale \u00b7 \u00d7 median function = all functions in the scan\nstructural (LOW name-based + MEDIUM semantic)",
+        "footerText": "2 of 81 source files reachable (2.5%) \u00b7 5 of 5 file pairs drawn \u00b7 0 MEDIUM / 587 LOW structural edges \u00b7 unreached production: 4 \u00b7 non-production: 75 \u00b7 parse 63 ok / 38 partial / 0 failed \u00b7 133/229 unresolved includes \u00b7 75 files demoted",
+        "firstActions": [
+          "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop",
+          "cJSON_Utils.c:1203 \u2014 Expensive setup or I/O call inside loop",
+          "cJSON_Utils.c:807 \u2014 High cyclomatic complexity"
+        ],
+        "htmlTitle": "Perfpal Report \u2014 schema 1.7",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        }
+      },
+      "assertions_1440": {
+        "canvas_bottom_le_900": true,
+        "canvas_footer_bottom_le_900": true,
+        "map_height_le_5000": true,
+        "no_horizontal_scroll": true,
+        "no_leading_dot_truncation": true,
+        "no_css_ellipsis_without_title": true,
+        "no_clipped_text": true,
+        "no_node_text_overflow": true,
+        "one_structural_caption": true,
+        "one_unit_definition": true,
+        "one_median_definition": true,
+        "one_unreached_definition": true,
+        "one_legend": true,
+        "one_footer": true,
+        "no_duplicate_ids": true,
+        "canvas_purity_tables_scripts_handlers": true,
+        "below_canvas_first_block": true,
+        "chrome_above_canvas": true
+      },
+      "assertions_1280": {
+        "map_height_le_5000": true,
+        "no_horizontal_scroll": true,
+        "no_leading_dot_truncation": true,
+        "no_css_ellipsis_without_title": true,
+        "no_clipped_text": true,
+        "no_node_text_overflow": true,
+        "one_structural_caption": true,
+        "one_unit_definition": true,
+        "one_median_definition": true,
+        "one_unreached_definition": true,
+        "one_legend": true,
+        "one_footer": true,
+        "no_duplicate_ids": true,
+        "canvas_purity_tables_scripts_handlers": true,
+        "below_canvas_first_block": true,
+        "chrome_above_canvas": true,
+        "rail_stacks_at_1280": true
+      }
+    }
+  },
+  "artifacts": {
+    "hyperfine": {
+      "final": {
+        "file": "atlas-v2-step13-hyperfine-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "a5ad6ad954b5cfc31859989eb3038369a28b419b7f0ec041c449c4709b7652e5"
+      },
+      "full": {
+        "file": "atlas-v2-step13-hyperfine-full.png",
+        "width": 1440,
+        "height": 15872,
+        "sha256": "2295e5278b524e040001cbee233c998cd99f2954f8cdee1bf2fa0c010d3dc620"
+      },
+      "charts": {
+        "file": "atlas-v2-step13-hyperfine-charts.png",
+        "width": 1408,
+        "height": 962,
+        "sha256": "5e88db1ed3b4d9ab6fbc778c738e7b0e1d53bb5183932450e0a8a5c216b86596"
+      },
+      "weight": {
+        "file": "step13/hyperfine-weight.png",
+        "width": 1408,
+        "height": 245,
+        "sha256": "fa737cdacb5fcbc5ba92176e0cc7294f32e655ec5d58b3363dc1cd55ab0fdd29"
+      },
+      "1280": {
+        "file": "atlas-v2-step13-hyperfine-1280x800.png",
+        "width": 1280,
+        "height": 800,
+        "sha256": "2ae3cafbad6ef1deecf57f239ed231ace0b108cfd1dc038a1885df4ffd31f560"
+      }
+    },
+    "cJSON": {
+      "final": {
+        "file": "atlas-v2-step13-cJSON-final.png",
+        "width": 1440,
+        "height": 900,
+        "sha256": "186e8eb6406d4afcff0025c464ca697e14797acf28d2aa8d31b476941f9f6e2e"
+      },
+      "full": {
+        "file": "atlas-v2-step13-cJSON-full.png",
+        "width": 1440,
+        "height": 22058,
+        "sha256": "869e836f3c5adacde1984e7db100353ca6b676012a28349de585640a49db2c6a"
+      },
+      "charts": {
+        "file": "atlas-v2-step13-cJSON-charts.png",
+        "width": 1408,
+        "height": 962,
+        "sha256": "6a12ef2216ae06c0790a2ce82384c8286ec82636ca61eff65cde55b58445de9a"
+      },
+      "weight": {
+        "file": "step13/cJSON-weight.png",
+        "width": 1408,
+        "height": 245,
+        "sha256": "1f80507be7ed498247be2e6a5b98ee8201c49390ce70e718026b8a9adac975c2"
+      },
+      "1280": {
+        "file": "atlas-v2-step13-cJSON-1280x800.png",
+        "width": 1280,
+        "height": 800,
+        "sha256": "dd30e61f7145cb7d401ec8d5cde4e350248c4f1cec6a3d093bf95abb2b3ed879"
+      }
+    }
+  },
+  "g_baseline": {
+    "status": "ok",
+    "file": "step13/G-vs-step13-hyperfine-1440x900.png",
+    "sha256": "653c357f3b5a612b956a287b3952d693d5ced6d96b4513e58c4a23aea33389a7",
+    "g_baseline": {
+      "file": "docs/evidence/map-vision/v7/g/g-hyperfine-final.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "c52c58e901873479da05839070d75e4f7303443b9070c392fa06d2ca3271add3"
+    }
+  }
+}

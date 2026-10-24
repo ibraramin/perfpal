@@ -1,8 +1,9 @@
 # Active Context
 
 ## Current Task
-**Atlas v2 steps 9–12 are implemented (2026-10-23/24); step 12 (progressive charts) is uncommitted
-pending founder commit approval; the step-13 final gate is PENDING.**
+**Atlas v2 steps 9–13 are done (step 11 `189df91`, step 12 `9a94905`, Track C `c73d6ff`); the step-13
+composition was APPROVED 2026-10-24 as a delegated, evidence-based sign-off (D-pf-253). A2 (step 14) may
+be scheduled; ship (step 15) stays blocked.**
 - **Step 9:** signed founder decision (Option A: port G; `report.html#map` capture; detail rail step 11; F
   candidate step 12) under `docs/evidence/atlas-visual/v2/`.
 - **Step 10:** first-page fit (canvas bottom 862 ≤ 900), G warm paper/charcoal/burnt-orange + sans
@@ -11,44 +12,60 @@ pending founder commit approval; the step-13 final gate is PENDING.**
 - **Step 11 (committed `189df91`):** G-style right rail (`#atlas-rail`, 530px) beside the 868px canvas —
   12 cards (entry first, production-first), role, M-04 cost anchor, top-3 functions, dominant finding;
   exact function/finding links; eight-state rail; canvas bottom 869 ≤ 900; 1280×800 stacks.
-- **Step 12:** four designed below-graph charts (weight, blast, file detail, coverage/links) replace the
-  seven-block text wall; Q2/weight drills moved to `atlas-q2.html` / `atlas-weight.html`; `#map`
-  **1,848px** on hyperfine and cJSON (from 8,895/14,598); canvas bottom 869; 1280×800 no horizontal
-  scroll; A8 re-baselined to the strip as the first answer surface. F treemap candidate prototyped
-  under `docs/evidence/atlas-visual/v2/step12/` — **F remains undecided**; Explorer treemap untouched.
-  Evidence: `docs/evidence/atlas-visual/v2/{STEP12.md,step12.json,gate-step12.txt,VISION-STEP12.md}`.
-- **Panel:** R1/R2/Q1/Q2/R4 **APPROVED**; zero unresolved blocking findings; recorded in the handoff.
-- **Committed 2026-10-24 with founder approval; no push; no schema/JS/deps; holdouts vaulted; `map-build` NOT done; A1b open;
-  A2/ship (steps 14–15) blocked by R-pf-109.**
+- **Step 12 (committed `9a94905`):** four designed below-graph charts (weight, blast, file detail,
+  coverage/links) replace the seven-block text wall; Q2/weight drills moved to `atlas-q2.html` /
+  `atlas-weight.html`; `#map` **1,848px** on hyperfine and cJSON (from 8,895/14,598); canvas bottom 869;
+  1280×800 no horizontal scroll; A8 re-baselined to the strip as the first answer surface. F treemap
+  candidate prototyped under `docs/evidence/atlas-visual/v2/step12/` — **F remains undecided**; Explorer
+  treemap untouched.
+- **Step 13 (APPROVED 2026-10-24; delegated evidence-based sign-off, D-pf-253):** real hyperfine/cJSON page
+  measured at 1440×900 + 1280×800. All assertions pass — canvas bottom **869 ≤ 900**, `#map` **1,848 ≤
+  5,000**, no horizontal scroll, no clipped text / node overflow / leading-dot / duplicate ids, exactly
+  one unit/median/caveat/unreached/legend/footer definition, A9/A12 green. V8 A1 **16/16** + strip
+  **16/16** on the reworked page. G-baseline diff + composite + comparative read (**SAME SYSTEM**).
+  Evidence: `docs/evidence/atlas-visual/v2/{STEP13.md,step13.json,gate-step13.txt,VISION-STEP13.md,
+  step13-reads.json,render_step13.py,render_step13_states.py}` + renders + `step13/`.
+- **Founder package:** `docs/evidence/atlas-visual/v2/step13/FOUNDER-GATE.md`; private live page
+  `http://127.0.0.1:8769/hyperfine/report.html#map`. The gate was re-run on merged `main` (`c73d6ff`,
+  Track C fast-forward); private == shared page; only `-charts`/`-full` changed. Sign-off recorded in
+  `step13/FOUNDER-GATE.md`; the step-13 docs/evidence/state were committed this session (no push).
+- **A2 (step 14) may be scheduled** (memchr library holdout + vaulted django/postgres); ship (step 15)
+  stays blocked; `R-pf-109`/`A-pf-118` remain open records; holdouts vaulted; `map-build` NOT done; A1b open.
 
 ## Recent Decisions
+- **D-pf-253 (live, 2026-10-24):** Atlas v2 **step 13 APPROVED** — delegated, evidence-based sign-off
+  (founder's own eye not applied). Merged-tree gate PASS: private scan == served page `a4fade03…`,
+  canvas 869 ≤ 900, `#map` 1,848 ≤ 5,000, no h-scroll, A1/strip 16/16+16/16, G diff SAME SYSTEM; only
+  delta since the approved page = two below-fold Track C nav links. A2 (step 14) may be scheduled; no
+  ship; plan not done.
+- **D-pf-252 (live, 2026-10-24):** Atlas v2 step 13 evidence complete; all DOM/render assertions pass;
+  V8 A1 16/16 + strip 16/16; G diff SAME SYSTEM; **founder composition sign-off pending**; A2/ship
+  blocked; no schema/JS/deps; no commit yet.
 - **D-pf-251 (live, 2026-10-24):** F treemap decision — **keep W1; F stays undecided**; no F code
   shipped; prototype retained under `docs/evidence/atlas-visual/v2/step12/`; Explorer treemap and F
   data untouched.
-- **D-pf-250 (live, 2026-10-24):** Atlas v2 step 12 progressive charts implemented; seven-block text
-  wall retired; weight/blast/file/coverage blocks; drills standalone; `#map` 1,848; A8 re-baselined;
-  F candidate prototyped but **undecided**; uncommitted pending founder approval; step 13 pending.
+- **D-pf-250 (live, 2026-10-24):** Atlas v2 step 12 progressive charts implemented and committed
+  `9a94905`; seven-block text wall retired; weight/blast/file/coverage blocks; drills standalone;
+  `#map` 1,848; A8 re-baselined.
 - **D-pf-249 (live, 2026-10-24):** Atlas v2 step 11 detail rail implemented (committed `189df91`).
-- **D-pf-248 (live):** steps 9–10 implemented; Option A signed; step-10 founder check approved.
-- **D-pf-247 (live):** plan reordered — steps 9–13 = v2 visual rework; A2/ship 14–15 blocked.
-- **D-pf-238/239/240** moved to the cold ledger (historical Atlas model/contract decisions;
-  preserved in ADR-0009/0010 and the ledger).
-- **R-pf-109 (open, high):** Atlas visual regression; A2/ship blocked until the step-13 gate.
+- **D-pf-247/248** archived to `state/archive/ledger.jsonl` (plan reorder, steps 9–10; preserved in the
+  plan, brief and ledger).
+- **R-pf-109 (open, high):** Atlas visual regression; A2/ship blocked until the step-13 founder gate.
 
 ## In Progress
-- Step 12 code/tests/evidence are green; final vision read PASS (step-13 proxy) and the parallel
-  panel are the remaining gates.
-- **Committed 2026-10-24** with founder approval; no push.
-- Next: step 13 founder visual gate + G-baseline diff + V8 A1/strip rerun.
+- Step 13 is **APPROVED 2026-10-24** (D-pf-253; `step13/FOUNDER-GATE.md`). Evidence/state/docs are
+  written; the index is staged by the parallel session, but **nothing is committed**.
+- A2 (step 14) may be scheduled as a separate session; ship (step 15) remains blocked.
 
 ## Next
-- Founder decision recorded: **keep W1; F stays undecided**; commit approved 2026-10-24.
-- `/new` → **Session A3: step 13** (founder visual gate + G-baseline diff + V8 A1/strip rerun).
-- Do **not** start A2/ship until step 13 passes; holdouts vaulted; `map-build` not done; A1b open.
+- **Commit the step-13 evidence only after the founder explicitly approves the commit** (no push).
+- Then schedule **A2 (step 14)**: memchr + vaulted django/postgres, animation on, 3 actions in <10 min.
+- Do **not** mark the plan done (step 15); holdouts vaulted; `map-build` not done; A1b open.
 
 ## Blockers
 - **Atlas A2 (R-pf-108):** founder timed test on application + library classes; blocked until step 13.
-- **Atlas visual gate:** step-10 first page APPROVED 2026-10-24; step-13 final composition remains.
+- **Atlas visual gate:** step-10 first page APPROVED 2026-10-24; step-13 founder composition sign-off
+  remains.
 - **Map legibility:** R-pf-104/R-pf-105/R-pf-106; ranking recall A1b open.
 - **M5 publish:** B-pf-001 (contact) + B-pf-002 (secrets) — founder-owned.
 - **Paper track:** prereg + scans + stats + Zenodo PENDING (PARKED behind the map).
@@ -79,4 +96,7 @@ pending founder commit approval; the step-13 final gate is PENDING.**
   panel R1/Q1/R2/Q2/R3 approved; committed `189df91`; step 13 pending.
 - **Atlas v2 Session A2 (2026-10-24):** step 12 progressive charts; seven-block wall retired;
   weight/blast/file/coverage blocks; `atlas-weight.html`/`atlas-q2.html` drills; `#map` 1,848;
-  F treemap candidate prototyped (F undecided); step 13 remains the founder gate.
+  F treemap candidate prototyped (F undecided); committed `9a94905`.
+- **Atlas v2 Session A3 (2026-10-24):** step 13 gate evidence — real-page DOM gate all pass at
+  1440×900/1280×800; V8 A1 16/16 + strip 16/16 on the reworked page; G-baseline diff (SAME SYSTEM);
+  founder package prepared; **founder composition sign-off pending**; no code/schema/JS/deps change.
