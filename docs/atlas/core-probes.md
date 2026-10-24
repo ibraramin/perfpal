@@ -34,7 +34,7 @@
 
 | # | Probe | Emits | Site (prototype) | Fidelity | Status |
 |---|---|---|---|---|---|
-| P1 | call-site payload | `flow.calls[]`: from, to, callee, line, args[{expr,type,dir,named}], unresolved | `src/analysis/flow.rs` (new) | syntactic + local type table | not started |
+| P1 | call-site payload | `flow.calls[]`: from, to, to_id, caller, callee, line, args[{expr,type,dir,named,literal}], unresolved; per-edge `payload`/`label` | `src/analysis/flow.rs` (new) | syntactic + local type table | **prototype** (`ea72a86`) |
 | P2 | I/O effects | `flow.io[]`: op read/write, target file/env/net/stdio, literal | same module | call-name + string-literal match | not started |
 | P3 | signature summary | `flow.signatures[]`: id, name, path, line, params[{name,type,dir}], ret, unresolved[] | `src/analysis/flow.rs` (new) | types as written; macros/generics opaque | **prototype** (`2108117`) |
 | P4 | stage order | `stages[]`: order, label, files, depth, leaf | `src/reporter/atlas_layout.rs` (derived, no new parse) | derived | **prototype** |
@@ -158,7 +158,7 @@
   (P1–P3 = S2/S3); no fixture with a capped/aggregated column; the JSON carries pre-fit header text
   while the SVG applies `fit_header_line` (equal today, may diverge at 11 columns).
 
-## S2 record (2026-10-24) — P3 `prototype`, P1 pending
+## S2 record (2026-10-24) — P3 + P1 `prototype`
 
 ### P3 — signature summary (`2108117`)
 
@@ -190,6 +190,38 @@
   `--story` emits 191 signatures for 19 drawn nodes in 1.78 s; `report.html` byte-identical
   with/without `--story`; `metrics.json` content-equal after masking scan provenance; two runs
   produce identical `flow` bytes.
+
+### P1 — call-site payload (`ea72a86`)
+
+- **Commit:** `ea72a86` `core(P1): call-site payloads` · `git show --stat ea72a86`:
+  `src/analysis/flow.rs` +706/−21 (total stat), `src/reporter/atlas_layout.rs` +10,
+  `tests/pipeline_e2e.rs` +91.
+- **Emitted:** `flow.calls[] = {from, to, to_id, caller, callee, line, args[{expr, type, dir, named, literal}], unresolved}`
+  plus **per-edge** additive `edges[].payload` and `edges[].label` on every drawn edge
+  (`type-only` | `literal-observed` | `unresolved`). `layout_version` stays 1; no other artifact changes.
+  The edge label is computed in Rust — the film does not re-classify in Python/JS.
+- **Identity:** `from`/`to` are file paths (the drawn edge endpoints); `caller`/`to_id` are canonical
+  function ids so the inspector can drill to `path:line`. `to`/`to_id` are `null` when unresolved.
+- **Resolution:** direct names only (`identifier`, Rust `scoped_identifier` final segment) and only when
+  the name is **unique across the parsed drawn functions**. Ambiguous names, method/field calls,
+  function pointers and macros are `unresolved: true` — never guessed (§2 non-goals).
+- **Args / local type table:** function params + explicit locals only (Rust `let x: T`, C `T x`);
+  Rust references report the pointee (`&mut Config` ⇒ `Config`); C decimal constants are `int`;
+  string literals are typed `str`/`char*` with `literal: true`; `named` is the bare identifier or the
+  root of a field access. No cross-file or points-to inference.
+- **Edge classification:** any literal arg ⇒ `literal-observed` (payload = the literal, ≤24 chars);
+  else any typed arg ⇒ `type-only` (payload = most frequent type, ties lexicographic); else
+  `unresolved` (payload `null`). No matching call ⇒ `unresolved`.
+- **Evidence:** 849 tests pass; fmt/clippy exit 0; hyperfine `--story` in 1.9 s emits 1586 calls
+  (43 resolved) and 49 labelled edges — 44 `unresolved`, 4 `type-only`, 1 `literal-observed`;
+  every `from` is drawn, every `to` is drawn-or-null; `report.html` byte-identical with/without
+  `--story`; metrics content-equal after masking scan provenance; two runs identical.
+- **Known limits:** drawn files only (second parse, story-only); no cross-file type inference; method
+  and function-pointer calls stay unresolved; `named` is `null` for borrowed expressions (`&cfg`);
+  literal payloads are display-capped; file-scope initializer calls are not rows; intra-file calls are
+  included (the film may ignore same-file edges); C macros are never expanded.
+- **Real implementation must:** resolve C function pointers and Rust `dyn`/closures, expand macros,
+  infer argument types interprocedurally, and capture all of it in the single scanner pass.
 
 ## Status legend
 
