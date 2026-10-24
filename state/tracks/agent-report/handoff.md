@@ -347,8 +347,8 @@ uncommitted, root-bearing diff (one `git add -A` away from leaking a local absol
 
 **What:** a new `AGENT_REPORT_ARTIFACTS` constant (`["agent-report.md", "agent-actions.json"]`, default-build
 only, same cfg as the golden set) and a prune step immediately after the `findings-detail.html` mask block:
-delete both files from each tree and assert they are gone. The module docstring ("each tree is a FULL
-pipeline output") and the `regenerate_goldens` doc comment now say the two agent artifacts are produced then
+delete both files from each tree and assert they are gone. The module docstring (the `GOLDEN_TREES` flow
+overview) and the `regenerate_goldens` doc comment now say the two agent artifacts are produced then
 pruned deliberately, and why.
 
 **Rejected:** masking them and adding them to `GOLDEN_ARTIFACTS` — ~75 KB of new A-owned goldens for two
@@ -370,6 +370,13 @@ artifacts whose bytes are already locked by `docs/evidence/agent-report/sample/*
 
 **Panel (2 lanes, founder pre-approved lighter):** reviewer (prune correctness) + requirements-reviewer
 ("nothing else left dirty") — verdicts recorded at the merge gate below.
+
+**Merged 2026-10-24:** `git merge --ff-only fix/agent-report-regen` in `/home/shafin/Opencode/Perfpal` →
+`main` = **`c73d6ff`** (pre-merge `c7f0009`; fast-forward, 2 files). Panel: R1 prune-correctness
+**APPROVED**, Q1 scope/evidence **APPROVED**, plus one fresh confirmation lane **APPROVED**; zero
+blocking findings. **No push.** Re-verified on `main` after the merge: `cargo test --locked --test
+p6_hardening` → 4 passed; `PERFPAL_REGEN_GOLDEN=1 … regenerate_goldens` → `git status --short
+tests/golden` empty. The A worktree's nine in-flight atlas files were untouched by the merge.
 
 ## Next sessions — signposts
 

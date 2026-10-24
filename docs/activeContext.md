@@ -38,9 +38,8 @@ be scheduled; ship (step 15) stays blocked.**
   canvas 869 ≤ 900, `#map` 1,848 ≤ 5,000, no h-scroll, A1/strip 16/16+16/16, G diff SAME SYSTEM; only
   delta since the approved page = two below-fold Track C nav links. A2 (step 14) may be scheduled; no
   ship; plan not done.
-- **D-pf-252 (live, 2026-10-24):** Atlas v2 step 13 evidence complete; all DOM/render assertions pass;
-  V8 A1 16/16 + strip 16/16; G diff SAME SYSTEM; **founder composition sign-off pending**; A2/ship
-  blocked; no schema/JS/deps; no commit yet.
+- **D-pf-252 (superseded by D-pf-253, 2026-10-24):** Atlas v2 step 13 evidence complete; all DOM/render
+  assertions pass; V8 A1 16/16 + strip 16/16; G diff SAME SYSTEM; sign-off was pending at that point.
 - **D-pf-251 (live, 2026-10-24):** F treemap decision — **keep W1; F stays undecided**; no F code
   shipped; prototype retained under `docs/evidence/atlas-visual/v2/step12/`; Explorer treemap and F
   data untouched.
@@ -58,14 +57,14 @@ be scheduled; ship (step 15) stays blocked.**
 - A2 (step 14) may be scheduled as a separate session; ship (step 15) remains blocked.
 
 ## Next
-- **Commit the step-13 evidence only after the founder explicitly approves the commit** (no push).
-- Then schedule **A2 (step 14)**: memchr + vaulted django/postgres, animation on, 3 actions in <10 min.
+- **Schedule A2 (step 14)**: memchr + vaulted django/postgres, animation on, 3 actions in <10 min; record
+  the transcript and verdict. The step-13 evidence is committed; **no push**.
 - Do **not** mark the plan done (step 15); holdouts vaulted; `map-build` not done; A1b open.
 
 ## Blockers
 - **Atlas A2 (R-pf-108):** founder timed test on application + library classes; blocked until step 13.
-- **Atlas visual gate:** step-10 first page APPROVED 2026-10-24; step-13 founder composition sign-off
-  remains.
+- **Atlas visual gate:** step-10 first page APPROVED 2026-10-24; **step-13 composition APPROVED
+  2026-10-24** (D-pf-253, delegated/evidence-based, revisitable). No longer a blocker for A2.
 - **Map legibility:** R-pf-104/R-pf-105/R-pf-106; ranking recall A1b open.
 - **M5 publish:** B-pf-001 (contact) + B-pf-002 (secrets) — founder-owned.
 - **Paper track:** prereg + scans + stats + Zenodo PENDING (PARKED behind the map).

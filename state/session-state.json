@@ -19,7 +19,7 @@
     },
     {
       "id": "D-pf-252",
-      "status": "live",
+      "status": "superseded",
       "title": "ATLAS v2 STEP 13 EVIDENCE COMPLETE (2026-10-24): real 1440x900 gate passes all DOM/render assertions (canvas bottom 869<=900; #map 1,848<=5,000; no h-scroll 1440/1280; no clipped/leading-dot/duplicate defs; one unit/median/caveat/unreached/legend/footer; A9/A12 green); V8 rerun A1 16/16 + strip 16/16; G diff = SAME SYSTEM; FOUNDER SIGN-OFF PENDING; A2/ship blocked; no schema/JS/deps; no commit yet."
     },
     {
@@ -31,6 +31,11 @@
       "id": "D-pf-254",
       "status": "live",
       "title": "ATLAS v2 STEP 13 EVIDENCE COMMITTED 2026-10-24: commit 86c0537 (docs(atlas): v2 step 13 visual gate evidence + sign-off) on parent c73d6ff; 54 files, evidence/docs/state only; no src/schema/JS/deps; no push. A2 (step 14) may be scheduled; ship (step 15) and plan-done untouched."
+    },
+    {
+      "id": "D-pf-249",
+      "status": "archived",
+      "title": "RESTORED APPEND-ONLY RECORD: the step-13 commits pruned decisions D-pf-241/242/243/247/248/249 from the hot array (D-pf-249 was live when dropped). Full text for each is in state/archive/ledger.jsonl; no history is lost. This pointer restores the ids."
     }
   ],
   "open_risks": [
@@ -127,7 +132,7 @@
     },
     {
       "id": "A-pf-122",
-      "status": "active",
+      "status": "done",
       "action": "Atlas step 13: founder visual gate on the reworked #map at 1440x900, G-baseline diff, V8 A1/strip rerun. No A2/ship until the gate passes; holdouts vaulted; map-build not done; A1b open."
     },
     {

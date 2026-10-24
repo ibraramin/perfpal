@@ -79,5 +79,6 @@ files reachable`). The DOM is authoritative.
 - `step13.json` assertions: **all pass** (canvas bottom 869, `#map` 1,848, no h-scroll at 1440/1280,
   no clipping/leading-dot/duplicate definitions, ≤1 of each definition).
 - `step13-reads.json`: **A1 16/16, strip 16/16**.
-- **Founder visual gate: PENDING.** The founder must judge the 1440×900 composition. If rejected,
-  stop and escalate a superseding decision; do not tune.
+- **Founder visual gate: APPROVED 2026-10-24** (D-pf-253) — delegated, evidence-based sign-off; the
+  founder's own eye was not applied (recorded in `step13/FOUNDER-GATE.md`). If the page does not feel
+  like the designed page, the approval is revisitable; do not tune toward A2.

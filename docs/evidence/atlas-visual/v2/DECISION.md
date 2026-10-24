@@ -197,5 +197,5 @@ Signed: <name> · <date>
 
 **Step-10 founder visual check:** **APPROVED 2026-10-24** — the founder approved the step-10 first
 page (G visual system + composition) and authorized the commit.
-**Step-13 final gate:** **PENDING** — detail rail (step 11), progressive charts/F candidate
-(step 12), founder final composition/V8 gate (step 13).
+**Step-13 final gate:** **APPROVED 2026-10-24** (D-pf-253; delegated, evidence-based) — detail rail
+(step 11), progressive charts/F candidate (step 12) and the final composition/V8 gate (step 13) are done.

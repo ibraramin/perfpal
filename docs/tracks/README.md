@@ -6,7 +6,7 @@ Four tracks, four worktrees, four sessions. **One session per worktree; never tw
 |---|---|---|---|---|---|
 | **A Atlas beta** | `/home/shafin/Opencode/Perfpal` | `main` | `821b984` | **A1** step 11 rail | `state/handoff/latest.md` |
 | **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` | `feat/js-ts` | `821b984` | **B1** Phase 0 spec/plan/ADR | `state/tracks/js-ts/handoff.md` |
-| **C Agent report** | `/home/shafin/Opencode/Perfpal-agent-report` | `feat/agent-report` | `821b984` (rebase after A step 12) | **C1** spec/contract | `state/tracks/agent-report/handoff.md` |
+| **C Agent report** | `/home/shafin/Opencode/Perfpal-agent-report` | `feat/agent-report` (merged) · `fix/agent-report-regen` (C4) | `821b984` → merged `d097e04` (C3) + `c73d6ff` (C4) | **C1** spec/contract · **C1–C4 DONE** | `state/tracks/agent-report/handoff.md` |
 | **D Atlas Run** | `/home/shafin/Opencode/Perfpal-atlas-sim` | `feat/atlas-sim` | `821b984` | **D1** static run-story prototype | `state/tracks/atlas-sim/handoff.md` |
 
 ## How to start a tab

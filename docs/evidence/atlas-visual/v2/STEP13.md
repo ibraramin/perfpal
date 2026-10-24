@@ -152,7 +152,7 @@ session. The dated sign-off and its provenance are recorded in `step13/FOUNDER-G
 |---|---|---|
 | Real-page gate | `python3 docs/evidence/atlas-visual/v2/render_step13.py` | PASS, exit 0 |
 | Eight-state gate + frames | `python3 docs/evidence/atlas-visual/v2/render_step13_states.py` | PASS, exit 0 |
-| Fixture regeneration | `PERFPAL_ATLAS_VISION_DIR=…/step13/html cargo test --locked --test atlas_vision -- --ignored` | 1 passed (in `gate-step13.txt` §1) |
+| Fixture regeneration | `PERFPAL_ATLAS_VISION_DIR=…/step13/html cargo test --locked --test atlas_vision -- --ignored` | 1 passed (in `gate-step13.txt` §2) |
 | Currency | private scan sha256 vs shared page | identical (`a4fade03…` / `323ee0a8…`, merged `c73d6ff`) |
 | Frames affected by the merge | `-charts.png` / `-full.png` changed; `-final`/weights/1280/8 fixtures identical | 32 reads stand |
 | A1 reads | `step13-reads.json` | 16/16 PASS |

@@ -10,9 +10,9 @@ reads and the G comparison — not on taste. It is recorded so it can be revisit
 like the designed page.
 
 **Re-rendered 2026-10-24 on the post-Track-C tree** (`main` `c73d6ff`): every measurement below was
-re-taken. The **900px `-final.png` first screens, weight crops, 1280×800 frames and all eight fixture
-frames are byte-identical** to the earlier package, so the first-page composition you are judging has
-not changed. `-charts.png` and `-full.png` changed because the two new nav rows sit inside the
+re-taken. The **900px `-final.png` first screens and the 1280×800 frames are byte-identical to the
+step-12 committed renders** (`step12.json`), and every fixture frame still matches its `step13-reads.json`
+image hash, so the first-page composition you are judging has not changed. `-charts.png` and `-full.png` changed because the two new nav rows sit inside the
 below-the-fold coverage block; no chart data or geometry changed.
 
 ## Look at
@@ -24,10 +24,12 @@ below-the-fold coverage block; no chart data or geometry changed.
    the two `agent report` / `agent actions` links below the fold are expected. The served page
    was re-scanned and re-rendered from `main` `c73d6ff` (Track C merged) on 2026-10-24: a fresh scan with
    that binary is **byte-identical** to what is served (`report.html` sha256 `a4fade03…`).
-   **Difference from the earlier package:** `report.html` now carries two extra nav rows —
-   `agent report` / `agent actions` — linking the LLM artifacts that now sit beside the page in the same
-   output directory (`agent-report.md`, `agent-actions.json`, Track C). Nav text only: no chart,
-   geometry, label, or data change, and every assertion below was re-measured on this tree.
+   **Difference from the earlier package:** `report.html` now carries two nav links on one baseline row —
+   `agent report` / `agent actions` — for the LLM artifacts that sit beside the page
+   (`agent-report.md`, `agent-actions.json`, Track C), below the 900px fold. Nav text only: no chart,
+   geometry, label, or data change. **Servers:** `:8769` serves the private gate scan
+   (`/tmp/opencode/step13-page`), `:8767` serves the canonical shared `perfpal-test/out-atlas-v2-hyperfine`;
+   both serve the same bytes (`a4fade03…`).
 2. **First screens:**
    - `docs/evidence/atlas-visual/v2/atlas-v2-step13-hyperfine-final.png`
    - `docs/evidence/atlas-visual/v2/atlas-v2-step13-cJSON-final.png`
@@ -71,7 +73,7 @@ below-the-fold coverage block; no chart data or geometry changed.
    honest but visually thin (one reachable file, large empty UNREACHED column).
 3. Docs leftovers: output contract missing `atlas-weight.html`/`atlas-q2.html`; stale seven-block
    references; whole-tenth vs "one decimal" wording. Step-15 docs pass.
-4. Page height outside `#map` (legacy Explorer/appendix): 15,872 / 22,058px.
+4. Whole-document page height (includes the legacy Explorer/appendix below `#map`): 15,872 / 22,058px.
 5. Capped synthetic state: canvas 1,398px > the fold (V8-disclosed; A2-owned).
 6. The first below-canvas heading ("Where is the mass?", 890–907) is sliced by the 900px fold as a
    scroll affordance; no element is clipped by its container.

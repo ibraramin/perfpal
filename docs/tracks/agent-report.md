@@ -14,7 +14,7 @@ git worktree add ../Perfpal-agent-report -b feat/agent-report 821b984
 **Track handoff:** `state/tracks/agent-report/handoff.md` · **Spec:** `docs/specs/agent-report.md` · **Plan:** `docs/plans/agent-report.md` · **A-pf-111** in the state/handoff.
 **Role:** the full-fidelity LLM layer the simplified Atlas first page points to. Not a human dashboard; no LLM calls.
 
-**Status 2026-10-24 — C2 WIRING + C3 COMPLETE (awaiting founder merge approval).** `feat/agent-report`
+**Status 2026-10-24 — C1–C4 COMPLETE (merged).** `feat/agent-report`
 is rebased onto `main` `9a94905`; code commit `7e5b921`. The CLI now always emits `agent-report.md`
 (fixed seven-section skeleton, 25/25 inline caps, ≤80 KB on the §12 envelope) and `agent-actions.json`
 (complete action list, 100-row profile cap), both pure functions of `MetricsDocument`: no flag, no schema,
@@ -24,7 +24,9 @@ size budget, human-page link); the 24 unit tests are unchanged. **C1 COMPLETE** 
 `e730d01`). A step 12 (`9a94905`) shipped **without** the C link, so the founder authorized C to add the
 two nav rows + the output-contract rows (+ the four `report.html` goldens, +2 lines each); recorded in the
 track handoff. DoD 7–20 green; the §13 downstream eval is **deferred by the founder** (verbatim in the
-handoff). **Merged --ff-only into `main` as `d097e04` (2026-10-24); no push.**
+handoff). **Merged --ff-only into `main` as `d097e04` (2026-10-24); no push.** **C4** (the C-owned
+prune: `PERFPAL_REGEN_GOLDEN=1` deletes the two root-bearing agent artifacts from every `tests/golden/*`
+tree again, so regeneration leaves the golden set byte-clean) merged as **`c73d6ff`**.
 
 ## Read first
 

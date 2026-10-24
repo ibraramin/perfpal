@@ -105,6 +105,43 @@ approval rests on measurement, not taste, and is recorded as revisitable.
 2. Ship/docs (step 15) stays blocked until A2 reports. Do not mark the plan done.
 3. Converge the shared evidence with Track C's merge hygiene (below) before the next session; no push.
 
+## Panel — round 1 (4 lanes) and the fix-up
+
+The step-13 commit (`86c0537`) landed **while the panel was running**, so its findings are fixed forward in
+a second, docs-only commit. Round-1 verdicts: **R1 APPROVED** (0 blocking), **R2 CHANGES_REQUESTED**
+(1 blocking, but it was a lane-capability gap: that lane had no shell, so the DoD commands could not be
+run — they are run and recorded below), **Q1 CHANGES_REQUESTED** (5 stale "PENDING" claims contradicting
+the approval it commits), **Q2 CHANGES_REQUESTED** (same stale claims + a commit/panel claim that was not
+yet true).
+
+| Finding (lane) | Resolution |
+|---|---|
+| R1/Q1/Q2: `VISION-STEP13.md`, `handoff:72`, `activeContext`, `plans/atlas-build.md` (heading + step-10 tail), `CHANGELOG` (step-11 tail), `DECISION.md` still said PENDING | All updated to **APPROVED 2026-10-24 (D-pf-253)**; D-pf-252 marked `superseded` |
+| R1/Q2: handoff asserted 4-lane panel APPROVED before it ran | Replaced with the real round-1 verdicts above |
+| Q2: "committed this session" with no hash | Commits line now names `c73d6ff` → `86c0537` → `a00fd0b` → this fix-up |
+| Q2 M1: no record of what `:8769` serves | `FOUNDER-GATE.md` now names both bindings (`:8769` private scan, `:8767` shared) and states both serve `a4fade03…` |
+| Q2 M2: "byte-identical to earlier package" unfalsifiable | Scoped to what is provable: finals + 1280 frames identical to `step12.json`; fixture frames match `step13-reads.json` image hashes |
+| Q2 M5: build freshness asserted, not shown | `target/release/perfpal` mtime **08:17** > C4 merge **08:07:45**; `cargo build --release --locked` is a no-op; that binary emits both agent artifacts and reproduces `a4fade03…` |
+| R2: CHANGELOG/README/C-handoff contract checks | Verified; C brief status block updated to **C1–C4 COMPLETE (merged)** |
+| R1 nitpicks: §1→§2 ref, "page height outside #map", "two rows" | Fixed (section ref, whole-document wording, "two nav links on one baseline row") |
+| **Append-only violation found during the fix-up** | `86c0537`/`a00fd0b` pruned decisions **D-pf-241/242/243/247/248/249** from the hot array (D-pf-249 was `live`). All six exist in `state/archive/ledger.jsonl`; a restoration pointer `D-pf-249` now records the ids in the hot array. Hot state **7,699 B** (≤ 8 KiB). |
+
+Deliberately **not** actioned (follow-ups, not blockers): the generated `step13.json` drift note is
+hard-coded prose rather than derived from the measured booleans; `.gitignore` has no `.playwright-mcp/`
+entry; the session-private scan's binary hash is not recorded in `step13.json`.
+
+### DoD commands run for the R2 blocker (orchestrator)
+
+| Command | Result |
+|---|---|
+| `git status --short src/ Cargo.toml Cargo.lock` | **empty** |
+| `git diff --name-only c73d6ff 86c0537 \| grep -E '^(src/\|tests/\|Cargo\.\|deny\.toml\|docs/schema/)'` | no output (none) |
+| `git ls-files .playwright-mcp \| wc -l` | **0** (untracked scratch, not committed) |
+| `python3 -c 'json.load(state/session-state.json)'` + `wc -c` | valid, `schema_version 2`, **7,699 B** |
+| append-only check vs `86c0537` | 6 pruned decisions found and restored as a ledger-backed pointer (above) |
+| `cargo build --release --locked` + binary mtime | no-op; **08:17** > merge **08:07:45**; scan → `a4fade03…` + both agent artifacts |
+| push check | `origin/main` still `e0928b8`; **no push** |
+
 ## Change set
 
 - **Evidence:** `docs/evidence/atlas-visual/v2/` — `STEP13.md`, `step13.json`, `gate-step13.txt`,
