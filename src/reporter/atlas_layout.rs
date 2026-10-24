@@ -1,5 +1,5 @@
-//! Deterministic JSON projection of the Atlas canvas geometry (plan
-//! `atlas-build` S1a).
+//! Deterministic JSON projection of the Atlas canvas geometry (Atlas Story S1,
+//! `docs/specs/atlas-story.md`).
 //!
 //! The geometry is **not** recomputed here: layout, edge curves, aggregate
 //! boxes, cap chips, hulls and node styling all come from the SVG renderer's

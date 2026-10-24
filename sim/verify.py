@@ -166,7 +166,7 @@ def main() -> int:
                       and "profile to confirm" in honesty)
 
                 text = page.inner_text("body")
-                time_claim = re.search(r"\b\d+(?:\.\d+)?\s?(?:ms|milliseconds?|seconds?)\b", text, re.I)
+                time_claim = re.search(r"\b\d+(?:\.\d+)?\s?(?:ms|µs|μs|milliseconds?|seconds?)\b", text, re.I)
                 check(f"{case_id}: no time units rendered", time_claim is None,
                       time_claim.group(0) if time_claim else "none")
 
@@ -197,7 +197,7 @@ def main() -> int:
                 page.wait_for_timeout(80)
                 final_text = page.inner_text("body")
                 final_claim = re.search(
-                    r"\b\d+(?:\.\d+)?\s?(?:ms|milliseconds?|seconds?)\b", final_text, re.I)
+                    r"\b\d+(?:\.\d+)?\s?(?:ms|µs|μs|milliseconds?|seconds?)\b", final_text, re.I)
                 check(f"{case_id}: no time units at the final beat", final_claim is None,
                       final_claim.group(0) if final_claim else "none")
                 if case_id == "cjson":

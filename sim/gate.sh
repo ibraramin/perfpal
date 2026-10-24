@@ -5,7 +5,7 @@
 # pinned Chromium used by sim/verify.py, and the two fixture checkouts under
 # $FIXTURES (hyperfine, cJSON). No network is used.
 #
-# Usage: bash sim/gate.sh     # exits non-zero if any recorded command failed
+# Usage: bash sim/gate.sh     # exits non-zero if any assertion or command failed
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -24,7 +24,9 @@ export PATH="$HOME/.cargo/bin:$PATH"
   echo "Date: $(date -I)"
   echo "Worktree: $ROOT"
   echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
-  echo "Code commit: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
+  echo "Commit at run: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
+  echo "Git tree: $(git rev-parse HEAD^{tree})"
+  echo "Dirty paths at run: $(git status --porcelain | wc -l)"
   echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence."
   echo "Fixtures: hyperfine $(git -C "$FIXTURES/hyperfine" rev-parse --short HEAD 2>/dev/null || echo '?') · cJSON $(git -C "$FIXTURES/cJSON" rev-parse --short HEAD 2>/dev/null || echo '?')"
   echo
@@ -48,7 +50,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
   elif "$CARGO" deny --version >/dev/null 2>&1; then
     "$CARGO" deny check licenses 2>&1 | tail -5; echo "exit=${PIPESTATUS[0]}"
   else
-    echo "skipped: cargo-deny not installed"; echo "exit=0"
+    echo "skipped: cargo-deny not installed (the DoD requires it)"; echo "exit=1"
   fi
   echo
 
@@ -61,10 +63,23 @@ export PATH="$HOME/.cargo/bin:$PATH"
     "$BIN" "$FIXTURES/$case" -o "/var/tmp/opencode/gate-on/$case" --story >/dev/null 2>&1; echo "exit=$?"
     echo "\$ perfpal $case --story (second independent scan)"
     "$BIN" "$FIXTURES/$case" -o "/var/tmp/opencode/gate-on2/$case" --story >/dev/null 2>&1; echo "exit=$?"
+
     echo "report.html (story off vs on):"
     sha256sum "/var/tmp/opencode/gate-off/$case/report.html" "/var/tmp/opencode/gate-on/$case/report.html"
+    if [ "$(sha256sum "/var/tmp/opencode/gate-off/$case/report.html" "/var/tmp/opencode/gate-on/$case/report.html" | awk '{print $1}' | sort -u | wc -l)" -eq 1 ]; then
+      echo "assert=pass report_identical"
+    else
+      echo "assert=FAIL report_identical"
+    fi
+
     echo "atlas-layout.json (two independent scans):"
     sha256sum "/var/tmp/opencode/gate-on/$case/atlas-layout.json" "/var/tmp/opencode/gate-on2/$case/atlas-layout.json"
+    if [ "$(sha256sum "/var/tmp/opencode/gate-on/$case/atlas-layout.json" "/var/tmp/opencode/gate-on2/$case/atlas-layout.json" | awk '{print $1}' | sort -u | wc -l)" -eq 1 ]; then
+      echo "assert=pass layout_deterministic"
+    else
+      echo "assert=FAIL layout_deterministic"
+    fi
+
     echo "metrics.json (story off vs on; only scan provenance may differ):"
     python3 - "$case" <<'PY'
 import json, sys
@@ -74,8 +89,13 @@ b = json.load(open(f"/var/tmp/opencode/gate-on/{case}/metrics.json"))
 for doc in (a, b):
     doc.get("scan", {}).pop("duration_ms", None)
     doc.get("scan", {}).pop("started_at", None)
-print("content_equal:", a == b)
+ok = a == b
+print("content_equal:", ok)
+print("assert=" + ("pass" if ok else "FAIL") + " metrics_content_equal")
+sys.exit(0 if ok else 1)
 PY
+    echo "assert_exit=$?"
+
     echo "atlas-layout.json summary:"
     python3 - "$case" <<'PY'
 import json, sys
@@ -96,28 +116,38 @@ PY
   echo '$ bash sim/make-source.sh'
   bash sim/make-source.sh 2>&1 | tail -4; echo "exit=${PIPESTATUS[0]}"
   echo
-  echo "committed data unchanged by regeneration:"
+  echo -n "committed data unchanged by regeneration: "
   if sha256sum -c /var/tmp/opencode/gate-data-before.sha >/dev/null 2>&1; then
-    echo "yes"
+    echo "yes"; echo "assert=pass committed_data_unchanged"
   else
     echo "NO"; sha256sum -c /var/tmp/opencode/gate-data-before.sha 2>&1 | grep -v ': OK' || true
+    echo "assert=FAIL committed_data_unchanged"
   fi
   echo
   echo '$ python3 sim/from-layout.py (twice; hashes must match)'
   python3 sim/from-layout.py 2>&1 | tail -2
   sha256sum sim/data-hyperfine.json sim/data-cjson.json > /var/tmp/opencode/gate-data.sha
   python3 sim/from-layout.py >/dev/null 2>&1
-  sha256sum -c /var/tmp/opencode/gate-data.sha 2>&1; echo "exit=$?"
+  if sha256sum -c /var/tmp/opencode/gate-data.sha >/dev/null 2>&1; then
+    echo "assert=pass projection_deterministic"
+  else
+    echo "assert=FAIL projection_deterministic"
+  fi
   echo
   echo "provenance (data file source.sha256 vs the layout artifact it read):"
   python3 - <<'PY'
-import hashlib, json
+import hashlib, json, sys
+ok = True
 for case, out in (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson")):
     artifact = open(f"sim/source/{out}/atlas-layout.json", "rb").read()
     data = json.load(open(f"sim/data-{case}.json"))
-    print(case, data["source"]["sha256"] == hashlib.sha256(artifact).hexdigest(),
-          data["source"]["sha256"][:12])
+    match = data["source"]["sha256"] == hashlib.sha256(artifact).hexdigest()
+    ok = ok and match
+    print(case, match, data["source"]["sha256"][:12])
+print("assert=" + ("pass" if ok else "FAIL") + " provenance")
+sys.exit(0 if ok else 1)
 PY
+  echo "assert_exit=$?"
   echo
 
   echo "## 4. Story gate"
@@ -130,7 +160,7 @@ PY
   echo "lines=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)"
 } > "$EVIDENCE/GATE.txt" 2>&1
 
-if grep -qE 'exit=[1-9]' "$EVIDENCE/GATE.txt"; then
+if grep -qE 'exit=[1-9]|assert=FAIL|assert_exit=[1-9]' "$EVIDENCE/GATE.txt"; then
   echo "FAIL — see $EVIDENCE/GATE.txt"
   exit 1
 fi

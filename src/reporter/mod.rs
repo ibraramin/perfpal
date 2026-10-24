@@ -1902,7 +1902,7 @@ fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) 
     out.push_str("</section>\n");
 }
 
-/// JSON companion of the `#map` canvas (S1a): the exact Atlas story geometry
+/// JSON companion of the `#map` canvas (Atlas Story S1): the exact story geometry
 /// the SVG draws, reusing the same view, start actions and findings counts as
 /// [`html_map`]. Only emitted when `--story` is passed.
 #[must_use]

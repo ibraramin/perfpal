@@ -27,8 +27,8 @@ unless the core canvas is **1400 wide** with a height between 480 and 20000 (the
 718; deep paths legitimately grow the height). The sim data is built from
 Perfpal's own `atlas-layout.json` (`--story`) plus `metrics.json` by `sim/from-layout.py`; **no HTML is
 read**. Each data file embeds the layout artifact's SHA-256 in `source.sha256` and a canonical
-`source.metricsContentSha256` (metrics bytes with `scan.started_at`/`scan.duration_ms` stripped, so two
-scans of the same tree produce byte-identical data). This keeps the sim independent of whatever the
+`source.metricsContentSha256` (canonical metrics with `scan.started_at`, `scan.duration_ms` and
+`scan.root_path` stripped, so the same tree produces byte-identical data on any machine). This keeps the sim independent of whatever the
 shared `perfpal-test/out-*` directories contain at any moment.
 
 | Case | Source render | Nodes / edges / hulls / columns / path |
@@ -36,8 +36,8 @@ shared `perfpal-test/out-*` directories contain at any moment.
 | hyperfine | `sim/source/out-hyperfine/` | 19 / 49 / 5 / 6 (5 depth + UNREACHED) / 3 |
 | cJSON | `sim/source/out-cjson/` | 7 / 5 / 2 / 3 (2 depth + UNREACHED) / 2 |
 
-Data hashes: the current two-run transcript is in `GATE.txt` §3 (hashes change with the scan; the
-gate re-derives them rather than pinning them here).
+Data hashes are identical across scans of the same tree; the gate re-derives them (`GATE.txt` §2
+layout double-scan, §3 committed-data comparison) rather than pinning them here.
 
 ## Files
 
@@ -92,7 +92,7 @@ Keyboard: Space, ←/→, Home, 1–4, Escape. `prefers-reduced-motion` starts a
 
 ## Verification
 
-Run: `python3 sim/verify.py` (it starts and stops its own server on `:8768`). Prerequisites for
+Run: `SIM_PORT=8770 python3 sim/verify.py` (the gate uses 8770; the default is 8768). Prerequisites for
 `bash sim/gate.sh`: cargo (offline), python3, Playwright with the pinned Chromium, and the two fixture
 repos under `$FIXTURES`; the script records failures and exits non-zero.
 

@@ -35,4 +35,4 @@ done
 
 python3 "$ROOT/sim/from-layout.py" --source "$OUT" --sim "$ROOT/sim"
 
-echo "source renders + story data ready in $OUT (canvas width 1400; fixtures 718)"
+echo "source renders + story data ready in $OUT (canvas width 1400, height 480..20000; fixtures 718)"

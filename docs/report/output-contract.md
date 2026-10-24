@@ -10,7 +10,7 @@
 
 1. **One scan → one directory.** A completed report directory contains *exactly* the artifacts of that run — nothing stale from previous runs survives.
 2. **metrics.json is the source of truth.** `report.md` and `charts/` are derived artifacts: pure functions of `metrics.json` plus the reporter's built-in heuristic catalog (frozen for v1; used only for Appendix A descriptions). If they ever disagree, `metrics.json` wins.
-3. **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory. There is no separate "report format" version to drift.
+3. **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory. There is no separate "report format" version to drift. An optional artifact may carry its own internal format marker (the opt-in `atlas-layout.json` has `layout_version: 1`); that marker versions only that artifact and is absent unless `--story` is passed.
 4. **Self-contained.** The JSON Schema ships inside the report so any consumer (offline tool, LLM session) can validate and interpret `metrics.json` without access to the Perfpal installation.
 5. **Deterministic where it matters.** Artifact names, section order, and sort orders are fixed, so two scans of identical input produce structurally identical reports (modulo provenance timestamps).
 
