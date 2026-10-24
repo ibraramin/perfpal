@@ -959,13 +959,52 @@ fn c_function_name(fdef: Node<'_>, source: &[u8]) -> String {
         .unwrap_or_default()
 }
 
+/// The `function_declarator` that owns the function's **name** and its own
+/// parameter list. A function returning a function pointer
+/// (`int (*f(void))(int)`) has an outer declarator whose parameters belong to
+/// the returned function; choose the deepest name-owning declarator and never
+/// descend into a parameter list.
+fn deepest_name_declarator<'a>(
+    node: Node<'a>,
+    name: &str,
+    source: &[u8],
+    depth: usize,
+    best: &mut Option<Node<'a>>,
+) {
+    if depth > MAX_DEPTH || matches!(node.kind(), "parameter_list" | "parameters") {
+        return;
+    }
+    let owns_name = node.kind() == "function_declarator"
+        && node
+            .child_by_field_name("declarator")
+            .and_then(leftmost_identifier)
+            .is_some_and(|identifier| text(identifier, source) == name);
+    if owns_name && best.is_none_or(|current| node.start_byte() >= current.start_byte()) {
+        *best = Some(node);
+    }
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            deepest_name_declarator(cursor.node(), name, source, depth + 1, best);
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+}
+
 fn c_params(fdef: Node<'_>, source: &[u8]) -> (Vec<Param>, BTreeSet<String>) {
     let mut params = Vec::new();
     let mut unresolved = BTreeSet::new();
+    let name = c_function_name(fdef, source);
     let Some(declarator) = fdef.child_by_field_name("declarator") else {
         return (params, unresolved);
     };
-    let func = find_descendant(declarator, "function_declarator").unwrap_or(declarator);
+    let mut func = None;
+    deepest_name_declarator(declarator, &name, source, 0, &mut func);
+    let Some(func) = func else {
+        return (params, unresolved);
+    };
     let Some(list) = func.child_by_field_name("parameters") else {
         return (params, unresolved);
     };
@@ -1503,6 +1542,11 @@ mod tests {
         assert_eq!(
             by_name["factory"].unresolved,
             vec!["fn-pointer-return".to_string()]
+        );
+        assert!(
+            by_name["factory"].params.is_empty(),
+            "fn-pointer-returning function must not inherit the returned function's parameters: {:?}",
+            by_name["factory"].params
         );
         assert!(by_name["dup"].unresolved.is_empty());
         let _ = fs::remove_dir_all(&dir);
