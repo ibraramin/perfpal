@@ -192,9 +192,10 @@ were run directly (L4 claim→evidence is satisfied by the transcript).
 
 ## Commits (this session)
 
-- **Pending founder approval** — B2-W2 tree (rules + catalog + schema v1.8 + corpora/goldens/gates +
-  docs/state). Expected shape: one `feat(js-ts): B2-W2 …` commit plus a docs follow-up recording the
-  hash. No push.
+- `edfc98a` — `feat(js-ts): B2-W2 JS rules, catalog, schema v1.8, corpora and gates`
+  (151 files, +10,023/−710). No push.
+- `docs(js-ts): record B2-W2 commit hash in track handoff` — this follow-up (a commit cannot record its
+  own hash). No push.
 
 **Resume in a fresh session:** plan `js-ts`, next task **B3** (TS/TSX backend), branch `feat/js-ts`,
-base `main @ 9a94905`, W0 `e7f5332`, W1 `90d5677`, W2 pending.
+base `main @ 9a94905`, W0 `e7f5332`, W1 `90d5677`, W2 `edfc98a`.
