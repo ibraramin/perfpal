@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Atlas Story S2 — data movement on the film's edges (2026-10-24).** The core gains an optional
+  story-only `flow` block (`flow_version: 1`, `fidelity: "syntactic"`): P3 signature summaries
+  (`2108117`) and P1 call-site payloads (`ea72a86`) record verbatim argument expressions, local types,
+  direction and named payloads, and every drawn edge carries `payload`/`label` (`type-only` /
+  `literal-observed` / `unresolved`) computed in Rust. Existing scans are unchanged (`layout_version`
+  stays 1; `report.html` byte-identical; no new dependency). The sim labels every drawn edge, greys
+  unresolved indirection, and adds the `hottest` function, drawn-slice `profile`, `start-here` and
+  `trust` beats; the cJSON badge overprint is fixed. 853 tests; `sim/verify.py` 162/162; gate
+  `b8359ae` PASS; `@vision` Read 6 PASS. Records: `docs/atlas/core-probes.md` (P3/P1 `prototype`),
+  `docs/evidence/atlas-sim/`.
 - **Atlas Story S1 — `perfpal --story` emits `atlas-layout.json` (2026-10-24).** The core now writes
   the exact story geometry the SVG draws (canvas, columns, node rects, edge `d` paths, hulls,
   aggregate boxes, cap chips), the presentation strings the nodes already render (badge, cost/ratio/top
