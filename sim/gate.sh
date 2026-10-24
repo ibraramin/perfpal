@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Regenerate docs/evidence/atlas-sim/GATE.txt from the current worktree.
 #
-# Every line is produced by a command in this script; nothing is hand-edited.
-# Usage: bash sim/gate.sh
+# Prerequisites: Rust toolchain (cargo, offline), python3, Playwright with the
+# pinned Chromium used by sim/verify.py, and the two fixture checkouts under
+# $FIXTURES (hyperfine, cJSON). No network is used.
+#
+# Usage: bash sim/gate.sh     # exits non-zero if any recorded command failed
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,6 +14,7 @@ CARGO="${CARGO:-$HOME/.cargo/bin/cargo}"
 FIXTURES="${FIXTURES:-/home/shafin/Opencode/perfpal-test}"
 PORT="${SIM_PORT:-8770}"
 OUT="$ROOT/sim/source"
+BIN="$ROOT/target/debug/perfpal"
 
 cd "$ROOT"
 export PATH="$HOME/.cargo/bin:$PATH"
@@ -22,9 +26,13 @@ export PATH="$HOME/.cargo/bin:$PATH"
   echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
   echo "Code commit: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
   echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence."
+  echo "Fixtures: hyperfine $(git -C "$FIXTURES/hyperfine" rev-parse --short HEAD 2>/dev/null || echo '?') · cJSON $(git -C "$FIXTURES/cJSON" rev-parse --short HEAD 2>/dev/null || echo '?')"
   echo
 
-  echo "## 1. Format, lint, tests"
+  echo "## 1. Build, format, lint, tests"
+  echo '$ cargo build --locked --offline'
+  "$CARGO" build --locked --offline 2>&1 | tail -2; echo "exit=${PIPESTATUS[0]}"
+  echo
   echo '$ cargo fmt --all -- --check'
   "$CARGO" fmt --all -- --check 2>&1; echo "exit=$?"
   echo
@@ -32,7 +40,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
   "$CARGO" clippy --locked --all-targets -- -D warnings 2>&1 | tail -3; echo "exit=${PIPESTATUS[0]}"
   echo
   echo '$ cargo test --locked'
-  "$CARGO" test --locked 2>&1 | grep -E "^test result|^running" ; echo "exit=${PIPESTATUS[0]}"
+  "$CARGO" test --locked 2>&1 | grep -E "^test result|^running"; echo "exit=${PIPESTATUS[0]}"
   echo
   echo '$ cargo deny check licenses'
   if command -v "$HOME/.cargo/bin/cargo-deny" >/dev/null 2>&1; then
@@ -40,21 +48,23 @@ export PATH="$HOME/.cargo/bin:$PATH"
   elif "$CARGO" deny --version >/dev/null 2>&1; then
     "$CARGO" deny check licenses 2>&1 | tail -5; echo "exit=${PIPESTATUS[0]}"
   else
-    echo "skipped: cargo-deny not installed"
+    echo "skipped: cargo-deny not installed"; echo "exit=0"
   fi
   echo
 
-  echo "## 2. Additive proof — scan without and with --story"
-  rm -rf /var/tmp/opencode/gate-off /var/tmp/opencode/gate-on
+  echo "## 2. Additive proof — story off vs on, and a second on-scan"
+  rm -rf /var/tmp/opencode/gate-off /var/tmp/opencode/gate-on /var/tmp/opencode/gate-on2
   for case in hyperfine cJSON; do
     echo "\$ perfpal $case  (story off)"
-    "$ROOT/target/debug/perfpal" "$FIXTURES/$case" -o "/var/tmp/opencode/gate-off/$case" >/dev/null 2>&1
-    echo "exit=$?"
+    "$BIN" "$FIXTURES/$case" -o "/var/tmp/opencode/gate-off/$case" >/dev/null 2>&1; echo "exit=$?"
     echo "\$ perfpal $case --story"
-    "$ROOT/target/debug/perfpal" "$FIXTURES/$case" -o "/var/tmp/opencode/gate-on/$case" --story >/dev/null 2>&1
-    echo "exit=$?"
-    echo "report.html:"
+    "$BIN" "$FIXTURES/$case" -o "/var/tmp/opencode/gate-on/$case" --story >/dev/null 2>&1; echo "exit=$?"
+    echo "\$ perfpal $case --story (second independent scan)"
+    "$BIN" "$FIXTURES/$case" -o "/var/tmp/opencode/gate-on2/$case" --story >/dev/null 2>&1; echo "exit=$?"
+    echo "report.html (story off vs on):"
     sha256sum "/var/tmp/opencode/gate-off/$case/report.html" "/var/tmp/opencode/gate-on/$case/report.html"
+    echo "atlas-layout.json (two independent scans):"
+    sha256sum "/var/tmp/opencode/gate-on/$case/atlas-layout.json" "/var/tmp/opencode/gate-on2/$case/atlas-layout.json"
     echo "metrics.json (story off vs on; only scan provenance may differ):"
     python3 - "$case" <<'PY'
 import json, sys
@@ -66,8 +76,7 @@ for doc in (a, b):
     doc.get("scan", {}).pop("started_at", None)
 print("content_equal:", a == b)
 PY
-    echo "atlas-layout.json:"
-    ls -l "/var/tmp/opencode/gate-on/$case/atlas-layout.json"
+    echo "atlas-layout.json summary:"
     python3 - "$case" <<'PY'
 import json, sys
 case = sys.argv[1]
@@ -80,8 +89,19 @@ PY
   done
 
   echo "## 3. Story data from core artifacts"
+  echo "committed data hashes (before regeneration):"
+  sha256sum sim/data-*.json
+  sha256sum sim/data-*.json > /var/tmp/opencode/gate-data-before.sha
+  echo
   echo '$ bash sim/make-source.sh'
   bash sim/make-source.sh 2>&1 | tail -4; echo "exit=${PIPESTATUS[0]}"
+  echo
+  echo "committed data unchanged by regeneration:"
+  if sha256sum -c /var/tmp/opencode/gate-data-before.sha >/dev/null 2>&1; then
+    echo "yes"
+  else
+    echo "NO"; sha256sum -c /var/tmp/opencode/gate-data-before.sha 2>&1 | grep -v ': OK' || true
+  fi
   echo
   echo '$ python3 sim/from-layout.py (twice; hashes must match)'
   python3 sim/from-layout.py 2>&1 | tail -2
@@ -110,4 +130,8 @@ PY
   echo "lines=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)"
 } > "$EVIDENCE/GATE.txt" 2>&1
 
-echo "wrote $EVIDENCE/GATE.txt"
+if grep -qE 'exit=[1-9]' "$EVIDENCE/GATE.txt"; then
+  echo "FAIL — see $EVIDENCE/GATE.txt"
+  exit 1
+fi
+echo "PASS — wrote $EVIDENCE/GATE.txt"

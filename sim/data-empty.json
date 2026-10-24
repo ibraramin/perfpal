@@ -31,10 +31,7 @@
   },
   "nodes": [],
   "source": {
-    "metrics": null,
-    "renderDir": null,
-    "report": null,
-    "schemaVersion": null
+    "kind": "synthetic"
   },
   "stage": {
     "h": 718,

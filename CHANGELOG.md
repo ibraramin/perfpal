@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Atlas Story S1a — `perfpal --story` emits `atlas-layout.json` (2026-10-24).** The core now writes
+- **Atlas Story S1 — `perfpal --story` emits `atlas-layout.json` (2026-10-24).** The core now writes
   the exact story geometry the SVG draws (canvas, columns, node rects, edge `d` paths, hulls,
   aggregate boxes, cap chips), the presentation strings the nodes already render (badge, cost/ratio/top
   lines, fill/stroke/dash), the drawn-slice/scan findings counts, KV1 start actions, and derived

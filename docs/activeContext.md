@@ -7,7 +7,7 @@ The requirement was re-derived from the ratified docs and sealed as `docs/specs/
 a **temporal showcase** (entry → stages → loops → I/O → stop) with the **payload crossing each file
 boundary** labelled, readable by a vibecoder in 60 seconds and drillable by a senior dev
 (`path:line` + types), static inference throughout, shipped as `perfpal <repo> --story`.
-- **S1 shipped:** Perfpal core emits `atlas-layout.json` behind `--story` — the exact geometry the SVG
+- **S1 committed (not pushed):** Perfpal core emits `atlas-layout.json` behind `--story` — the exact geometry the SVG
   draws, presentation strings, state flags, derived `stages`, KV1 actions and drawn/scan findings
   counts. `sim/` builds its data from that artifact + `metrics.json`; HTML extraction
   (`sim/extract.py`) is **deleted**. `sim/verify.py` 101/101.
@@ -20,8 +20,9 @@ becomes a **core probe**: additive, story-only where possible, one commit per pr
 implemented properly and merged later. Existing scan outputs must stay byte-identical.
 
 ## Recent Decisions
-- **D-pf-252 (live):** Atlas Story spec `docs/specs/atlas-story.md` sealed; S1 shipped (core
-  `5faacb7` + sim commit); P4/P5 status `prototype`; next is S2 (P3 signatures + P1 call payloads).
+- **D-pf-252 (live):** Atlas Story spec `docs/specs/atlas-story.md` sealed; S1 committed
+  (`5faacb7`…`43a0841`, not pushed); P4/P5 status `prototype`; next is S2 (P3 signatures + P1 call
+  payloads).
 - **D-pf-251 (live, 2026-10-24):** D2 founder verdict — D1 presentation/animation accepted, information
   not insightful; Atlas is Perfpal's #1 priority; Atlas consumes Perfpal core data; core additions are
   allowed for this track when recorded for later merge.

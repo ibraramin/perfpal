@@ -96,12 +96,16 @@
 ## S1 record (2026-10-24) — P4 + P5, status `prototype`
 
 - **Commits (each reproducible with `git show --stat <sha>`):**
-  - `5faacb7` — core emitter + tests: `src/cli/mod.rs` +9, `src/reporter/atlas.rs` +49/−6,
-    `src/reporter/atlas_layout.rs` (new), `src/reporter/atlas_render.rs` +328/−124,
-    `src/reporter/mod.rs` +20, `tests/pipeline_e2e.rs` +49.
-  - `996d47e` — panel fixes: column geometry (header centre + width + label/count_text), provenance,
-    `sim/gate.sh`, e2e invariants (16 files).
-  - `462f4f4` — stable metrics content hash across scans (4 files).
+
+  | Commit | Scope | Files (stat) |
+  |---|---|---|
+  | `5faacb7` | core emitter + tests | `src/cli/mod.rs` +9, `src/reporter/atlas.rs` +49/−6, `src/reporter/atlas_layout.rs` new, `src/reporter/atlas_render.rs` +328/−124, `src/reporter/mod.rs` +20, `tests/pipeline_e2e.rs` +49 |
+  | `deb2cc2` | sim + spec + docs | `sim/from-layout.py` new (236), `sim/extract.py` deleted (−884), `sim/make-source.sh` +22/−?, `sim/data-{hyperfine,cjson}.json` regenerated, `docs/specs/atlas-story.md` new (149), `docs/atlas/core-probes.md` new (121), `docs/research/atlas-run.md`, `docs/activeContext.md`, `state/tracks/atlas-sim/handoff.md`, evidence |
+  | `996d47e` | panel fixes: column geometry, provenance, gate | `sim/from-layout.py` +45/−?, `sim/gate.sh` new (112), `sim/sim.js`, `sim/verify.py`, `src/reporter/atlas_layout.rs`, `src/reporter/atlas_render.rs`, `tests/pipeline_e2e.rs` +80, docs (16 files) |
+  | `462f4f4` | stable metrics content hash | `sim/from-layout.py` +19, `sim/data-{hyperfine,cjson}.json`, `docs/evidence/atlas-sim/NOTES.md` |
+  | `43a0841` | canvas height, record, stale docs | `sim/from-layout.py` +13, `sim/gate.sh` +7, `tests/pipeline_e2e.rs` +18, `docs/atlas/core-probes.md` +66, `docs/research/atlas-run.md` +11, `docs/specs/atlas-story.md` +7, `docs/activeContext.md`, `CHANGELOG.md`, `state/tracks/atlas-sim/handoff.md` |
+
+  Evidence commits (`f9d0b93`, `aac7e8f`, and later) add only `docs/evidence/atlas-sim/*`.
 - **Deviations (recorded, not silent):**
   1. **P4 + P5 share one emitter and shipped in one commit.** The one-probe-per-commit rule is waived
      because neither is independently useful; cherry-pick the pair.

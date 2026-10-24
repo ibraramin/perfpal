@@ -28,15 +28,16 @@ CASES = (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson"))
 def content_sha256(value: object) -> str:
     """Hash canonical JSON with scan provenance removed.
 
-    ``metrics.json`` carries ``scan.started_at`` and ``scan.duration_ms``, which
-    change on every run. The story data must stay byte-identical across scans
-    of the same tree, so that block is stripped before hashing; the field is
-    named ``metricsContentSha256`` rather than the file bytes' hash.
+    ``metrics.json`` carries ``scan.started_at``, ``scan.duration_ms`` and
+    ``scan.root_path`` (an absolute path), which change per run/machine. The
+    story data must stay byte-identical for the same tree anywhere, so that
+    provenance block is stripped before hashing; the field is named
+    ``metricsContentSha256`` rather than the file bytes' hash.
     """
     probe = json.loads(json.dumps(value))
     scan = probe.get("scan")
     if isinstance(scan, dict):
-        for key in ("started_at", "duration_ms"):
+        for key in ("started_at", "duration_ms", "root_path"):
             scan.pop(key, None)
     payload = json.dumps(probe, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(payload).hexdigest()
@@ -150,6 +151,17 @@ def build(case: str, out_dir: Path) -> dict:
             f"{layout_path}: unexpected canvas {canvas} "
             "(expected width 1400 and height 480..20000; the approved fixtures are 718)"
         )
+
+    for node in layout["nodes"]:
+        if (
+            node["x"] < 0
+            or node["y"] < 0
+            or node["x"] + node["w"] > canvas["w"]
+            or node["y"] + node["h"] > canvas["h"]
+        ):
+            raise SystemExit(
+                f"{case}: node {node['path']} outside canvas {canvas}"
+            )
 
     state = layout["state"]
     meta = layout["meta"]

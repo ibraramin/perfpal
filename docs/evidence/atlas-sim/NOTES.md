@@ -22,8 +22,9 @@ match this worktree's committed step-10 layout. The prototype therefore pins its
 bash sim/make-source.sh   # builds this worktree, scans both repos with --story, rebuilds sim/data-*.json
 ```
 
-`make-source.sh` writes `sim/source/out-{hyperfine,cjson}/` (gitignored) and fails closed unless the
-canvas is `viewBox="0 0 1400 718"` (the approved full-bleed composition). The sim data is built from
+`make-source.sh` writes `sim/source/out-{hyperfine,cjson}/` (gitignored); the converter fails closed
+unless the core canvas is **1400 wide** with a height between 480 and 20000 (the approved fixtures are
+718; deep paths legitimately grow the height). The sim data is built from
 Perfpal's own `atlas-layout.json` (`--story`) plus `metrics.json` by `sim/from-layout.py`; **no HTML is
 read**. Each data file embeds the layout artifact's SHA-256 in `source.sha256` and a canonical
 `source.metricsContentSha256` (metrics bytes with `scan.started_at`/`scan.duration_ms` stripped, so two
@@ -91,7 +92,9 @@ Keyboard: Space, ←/→, Home, 1–4, Escape. `prefers-reduced-motion` starts a
 
 ## Verification
 
-Run: `python3 sim/verify.py` (it starts and stops its own server on `:8768`).
+Run: `python3 sim/verify.py` (it starts and stops its own server on `:8768`). Prerequisites for
+`bash sim/gate.sh`: cargo (offline), python3, Playwright with the pinned Chromium, and the two fixture
+repos under `$FIXTURES`; the script records failures and exits non-zero.
 
 | Claim | Check | Result |
 |---|---|---|

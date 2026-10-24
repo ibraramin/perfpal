@@ -236,8 +236,9 @@ encoding" contract (`ADR-0009:77-79`) without becoming a second, competing encod
   repos into `sim/source/out-{hyperfine,cjson}/` (gitignored). The shared
   `perfpal-test/out-atlas-v2-*` directories are deliberately not used: during D1 they were
   overwritten by a newer build from another worktree whose layout is an 868px canvas plus a right
-  rail, not the approved step-10 full-bleed canvas. The build fails closed unless the stage is
-  1400×718 (the report's `viewBox` and the core artifact's `canvas` must both agree).
+  rail, not the approved step-10 full-bleed canvas. The build requires a **1400-wide** canvas with a
+  sane height (480..20000; the approved fixtures are 718) and validates the core artifact's `canvas`
+  only — it never reads the HTML.
 - **Data provenance (S1, 2026-10-24):** Perfpal's own artifacts only. `atlas-layout.json` (`--story`)
   supplies geometry, badges, masthead/strip text, state flags, stages and KV1 actions; `metrics.json`
   supplies the drawn-file findings. `sim/from-layout.py` refuses a layout whose drawn-findings count

@@ -2,7 +2,7 @@
 
 **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` · branch `feat/atlas-sim`
 **Track:** `/home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md`
-**Status:** **D2 done + S1 implemented (committed, not pushed).** D1 presentation was accepted by the founder; the requirement was
+**Status:** **D2 done + S1 committed (not pushed).** D1 presentation was accepted by the founder; the requirement was
 re-sealed as a core-fed temporal showcase (`docs/specs/atlas-story.md`), and the first slice (S1) is
 implemented. S2 (data movement on the edges) is next. No push, no merge to `main`.
 
@@ -72,7 +72,11 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
 ## Commits
 
 - `5faacb7` — `feat(core): atlas-layout story projection behind --story [P4/P5]`
-- this commit — `feat(sim): story data from Perfpal core, delete HTML extraction [S1]`
+- `deb2cc2` — `feat(sim): story data from Perfpal core, delete HTML extraction [S1]`
+- `996d47e` — `fix(story): panel blockers — column geometry, provenance, gate`
+- `462f4f4` — `fix(sim): stable metrics content hash across scans`
+- `43a0841` — `fix(story): close re-review — canvas height, record, stale docs`
+- evidence commits follow (`f9d0b93`, `aac7e8f`, …): transcripts only; **not pushed**.
 
 ## Next
 
