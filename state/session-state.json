@@ -9,13 +9,13 @@
   "decisions": [
     {
       "id": "D-pf-250",
-      "status": "live",
-      "title": "ATLAS v2 STEP 12 IMPLEMENTED (2026-10-24): seven-block below-graph text wall retired; four designed charts (weight share ribbon + production-class bars, blast radius, file cost ladder, coverage/links); Q2/weight drills moved to standalone atlas-q2.html/atlas-weight.html; #map 1,848px hyperfine+cJSON (from 8,895/14,598); canvas bottom 869 <= 900; 1280x800 no horizontal scroll; A8 re-baselined to the strip as the first answer surface; F treemap prototyped under docs/evidence/atlas-visual/v2/step12/ but F REMAINS UNDECIDED; no schema/JS/deps; step 13 founder gate next; A2/ship blocked."
+      "status": "superseded",
+      "title": "ATLAS v2 STEP 12 IMPLEMENTED (2026-10-24): seven-block below-graph text wall retired; four designed charts (weight share ribbon + production-class bars, blast radius, file cost ladder, coverage/links); Q2/weight drills moved to standalone atlas-q2.html/atlas-weight.html; #map 1,848px hyperfine+cJSON (from 8,895/14,598); canvas bottom 869 <= 900; 1280x800 no horizontal scroll; A8 re-baselined to the strip as the first answer surface; F treemap prototyped under docs/evidence/atlas-visual/v2/step12/ but F REMAINS UNDECIDED; no schema/JS/deps; step 13 founder gate next; A2/ship blocked at the time (superseded by D-pf-253: A2 schedulable 2026-10-24)."
     },
     {
       "id": "D-pf-251",
-      "status": "live",
-      "title": "F TREEMAP DECISION (2026-10-24): keep W1; F stays undecided. No F code ships in step 12; the Explorer treemap and all F data remain untouched; the prototype under docs/evidence/atlas-visual/v2/step12/ is retained as evidence for a later decision. Step 13 founder visual gate remains next; A2/ship blocked."
+      "status": "superseded",
+      "title": "F TREEMAP DECISION (2026-10-24): keep W1; F stays undecided. No F code ships in step 12; the Explorer treemap and all F data remain untouched; the prototype under docs/evidence/atlas-visual/v2/step12/ is retained as evidence for a later decision. Step 13 founder visual gate remains next; A2/ship blocked at the time (superseded by D-pf-253: A2 schedulable 2026-10-24)."
     },
     {
       "id": "D-pf-252",

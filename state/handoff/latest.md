@@ -3,7 +3,8 @@
 **North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. Step 13 is the
 composition gate that makes the approved designed page (G's visual system + the founder's
 graph-plus-key-metrics model) the thing that ships, instead of an instrument panel. **No drift:** no
-feature, no schema/JS/deps, no A2/ship, no plan-done; a rejected gate escalates instead of tuning.
+feature, no schema/JS/deps, no A2/ship work, no plan-done (this step-13 session); a rejected gate
+escalates instead of tuning.
 
 **Phase:** Atlas v2 steps 9–13 done (step 11 `189df91`, step 12 `9a94905`, Track C merged `c73d6ff`);
 **step 13 composition APPROVED 2026-10-24** — a delegated, evidence-based sign-off (the founder's own eye
@@ -14,9 +15,10 @@ vaulted; `map-build` NOT done; A1b open.
 **Commits:** `c73d6ff` (Track C4, merged before the gate commit) → `86c0537`
 `docs(atlas): v2 step 13 visual gate evidence + sign-off` (54 files: evidence, renders, state/docs) →
 `a00fd0b` (state records that commit) → `5b59065` (panel record + CHANGELOG status) →
-`7098a15` (first fix-up: stale-PENDING sweep + panel record) → **this second fix-up** (evidence
-README, both CHANGELOG tails, STEP13 status/scope, agent brief, plan banner, `A-pf-118`; hash in
-`git log -1`). **No push.**
+`7098a15` (first fix-up: stale-PENDING sweep + panel record) → `ae32d77` (second fix-up: evidence
+README, both CHANGELOG tails, STEP13 status/scope) → `c739bed` (third fix-up: agent brief, track A
+brief, `A-pf-118`, FOUNDER-GATE/STEP13 rescope) → **this fourth fix-up** (handoff commit chain, one
+stale `A-pf-118` line, C handoff status header). **No push.**
 
 ## This session — step 13 evidence
 
@@ -86,7 +88,8 @@ README, both CHANGELOG tails, STEP13 status/scope, agent brief, plan banner, `A-
 - **Capped synthetic state:** canvas 1,398 > 900 (V8-disclosed; A2-owned).
 - **Fold peek:** "Where is the mass?" heading (890–907) is sliced by the 900 fold as a scroll
   affordance; no container clipping.
-- `R-pf-109` open; `A-pf-118` blocked; F undecided; holdouts vaulted; `map-build` not done; A1b open.
+- `R-pf-109` open as a record; `A-pf-118` is `active` (A2 schedulable, ship blocked until A2 reports);
+  F undecided; holdouts vaulted; `map-build` not done; A1b open.
 
 ## Decision — step 13 composition (2026-10-24)
 
@@ -111,7 +114,7 @@ approval rests on measurement, not taste, and is recorded as revisitable.
 ## Panel — round 1 (4 lanes) and the fix-up
 
 The step-13 commit (`86c0537`) landed **while the panel was running**, so its findings are fixed forward in
-three docs-only commits (`5b59065`, `7098a15`, and the third fix-up). Round-1 verdicts: **R1 APPROVED** (0 blocking), **R2 CHANGES_REQUESTED**
+four docs-only commits (`5b59065`, `7098a15`, `ae32d77`, `c739bed`) plus this closing one. Round-1 verdicts: **R1 APPROVED** (0 blocking), **R2 CHANGES_REQUESTED**
 (1 blocking, but it was a lane-capability gap: that lane had no shell, so the DoD commands could not be
 run — they are run and recorded below), **Q1 CHANGES_REQUESTED** (5 stale "PENDING" claims contradicting
 the approval it commits), **Q2 CHANGES_REQUESTED** (same stale claims + a commit/panel claim that was not
@@ -121,7 +124,7 @@ yet true).
 |---|---|
 | R1/Q1/Q2: `VISION-STEP13.md`, `handoff:72`, `activeContext`, `plans/atlas-build.md` (banner + step-13 heading + step-10 tail), `CHANGELOG` (step-11 **and** step-12 tails), `DECISION.md`, the evidence `README.md` banner, `STEP13.md` status/scope, `AGENT-BRIEF.md`, `A-pf-118` | All updated to **APPROVED 2026-10-24 (D-pf-253)**; D-pf-252 `superseded`; A2 schedulable, ship blocked |
 | R1/Q2: handoff asserted 4-lane panel APPROVED before it ran | Replaced with the real round-1 verdicts above |
-| Q2: "committed this session" with no hash | Commits line now names `c73d6ff` → `86c0537` → `a00fd0b` → `5b59065` → `7098a15` → `ae32d77` → this fix-up |
+| Q2: "committed this session" with no hash | Commits line now names `c73d6ff` → `86c0537` → `a00fd0b` → `5b59065` → `7098a15` → `ae32d77` → `c739bed` → this fourth fix-up |
 | Q2 M1: no record of what `:8769` serves | `FOUNDER-GATE.md` now names both bindings (`:8769` private scan, `:8767` shared) and states both serve `a4fade03…` |
 | Q2 M2: "byte-identical to earlier package" unfalsifiable | Scoped to what is provable: finals + 1280 frames identical to `step12.json`; fixture frames match `step13-reads.json` image hashes |
 | Q2 M5: build freshness asserted, not shown | `target/release/perfpal` mtime **08:17** > C4 merge **08:07:45**; `cargo build --release --locked` is a no-op; that binary emits both agent artifacts and reproduces `a4fade03…` |
