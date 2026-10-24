@@ -328,8 +328,12 @@ either mask them and add them to `GOLDEN_ARTIFACTS`, or delete them in the regen
 ### Merge gate
 
 All four review families have at least one APPROVE (R1, R2, Q1, Q2) plus the fresh confirmation lane, with zero
-unresolved blocking findings. Founder approval to merge `feat/agent-report` into `main` is **requested, not
-assumed**. No merge, no push, no CHANGELOG entry from this session.
+unresolved blocking findings. Founder approval was **requested and granted** ("Merge --ff-only into main").
+
+**Merged 2026-10-24:** `git merge --ff-only feat/agent-report` in `/home/shafin/Opencode/Perfpal` →
+`main` = **`d097e04`** (pre-merge `9a94905`, fast-forward). Re-verified on `main`:
+`cargo test --locked --test agent_report` → 9 passed. **No push, no CHANGELOG entry** from this session; the
+main worktree's unrelated in-flight atlas docs/state edits were not staged or touched.
 
 ## Next sessions — signposts
 

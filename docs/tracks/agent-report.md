@@ -24,7 +24,7 @@ size budget, human-page link); the 24 unit tests are unchanged. **C1 COMPLETE** 
 `e730d01`). A step 12 (`9a94905`) shipped **without** the C link, so the founder authorized C to add the
 two nav rows + the output-contract rows (+ the four `report.html` goldens, +2 lines each); recorded in the
 track handoff. DoD 7–20 green; the §13 downstream eval is **deferred by the founder** (verbatim in the
-handoff). **No merge, no push.**
+handoff). **Merged --ff-only into `main` as `d097e04` (2026-10-24); no push.**
 
 ## Read first
 
