@@ -5,7 +5,7 @@ Scope: feature
 # Spec: js-ts
 
 **Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** **B2-W0 complete** (pins, link tests, canary
-freeze) and **B2-W1 implemented; full DoD green; panel APPROVED; commit pending** (JS tree-sitter backend + scanner
+freeze) and **B2-W1 implemented; full DoD green; panel APPROVED; committed `7fdfa1a`** (JS tree-sitter backend + scanner
 wiring + discovery/resolver/entry/instrument); B2-W2 next (11 `PERF-JS-*` rules + schema v1.8 +
 fixtures/goldens).
 **Owners:** Track B owns this spec, `docs/plans/js-ts.md`, the JS/TS ADR, the grammar pins, the JS/TS

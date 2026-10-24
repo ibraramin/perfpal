@@ -8,7 +8,7 @@ and a new integration suite; **no `PERF-JS-*` rules and no schema bump** (B2-W2)
 **Verdicts:** round 2 — **R1 APPROVED · R2 APPROVED · Q2 APPROVED · R3 APPROVED**, zero blocking findings;
 final confirmation (round 3) **APPROVED** after the comment-extra guard. Round 1 was
 R1/R2/Q1 APPROVED · Q2 CHANGES_REQUESTED; all round-1/2/3 fixes are in this tree.
-**Phase:** **B2-W1 implemented; full DoD green; panel APPROVED; commit pending.**
+**Phase:** **B2-W1 implemented; full DoD green; panel APPROVED; committed `7fdfa1a`.**
 
 ## Objective
 
@@ -19,7 +19,7 @@ real CLI. Rules, schema v1.8, examples and goldens are deliberately out of scope
 ## Phase / plan
 
 - Plan: `js-ts` (status active) · track B · B1 done, B2-W0 done, **B2-W1 implemented; full DoD green;
-  panel APPROVED; commit pending**, **B2-W2 next**.
+  panel APPROVED; committed `7fdfa1a`**, **B2-W2 next**.
 - North-star: Track B remains a **later release, non-blocking**. No reporter/Atlas surface, no
   `views.rs`/`mod.rs` language wiring, no main state files touched.
 - `src/` already contained the B2-W1 implementation when this session started (working-tree changes).
@@ -162,21 +162,11 @@ determinism/skip/single-file proofs, panel verdicts).
 3. `A-tb-005` — **B4**: docs/contract updates, CHANGELOG note for A.
 4. `A-tb-006` — gate: rebase after A step 12, full DoD, parallel review panel, founder merge approval.
 
-## Uncommitted files
+## Commits (this session)
 
-- `src/`: `src/ir/mod.rs`, `src/scanner/mod.rs`, `src/scanner/instrument.rs`,
-  `src/scanner/backends/mod.rs`, new `src/scanner/backends/tree_sitter_javascript/` (4 files:
-  `mod.rs`, `infer.rs`, `scan.rs`, `tests.rs`), `src/scanner/backends/tree_sitter_c/mod.rs`,
-  `src/scanner/backends/tree_sitter_python/mod.rs`, `src/scanner/backends/tree_sitter_rust/mod.rs`,
-  `src/aggregator/mod.rs`, `src/analyzer/mod.rs`, `src/analyzer/heuristics/python/mod.rs`.
-- `tests/`: new `tests/javascript_backend.rs`, `tests/common/mod.rs`, `tests/analyzer_registry.rs`,
-  `tests/schema_1_4.rs`, `tests/exit_code_matrix.rs`.
-- Docs: `docs/architecture/js-ts.md`, `docs/specs/js-ts.md`, `docs/tracks/js-ts.md`,
-  `docs/tracks/README.md`.
-- Evidence: new `docs/evidence/js-w1/gate.txt`.
-- State: `state/tracks/js-ts/session-state.json`, `state/tracks/js-ts/handoff.md`,
-  `state/archive/ledger.jsonl`.
-- No `.playwright-mcp/` files. Commit only with founder approval.
+- `7fdfa1a` — feat(js-ts): B2-W1 JS backend + scanner wiring (27 files, +4,860/−220).
+- `docs(js-ts): record B2-W1 commit hash in track handoff` — this follow-up (a commit cannot record
+  its own hash). No push.
 
-**Resume in a fresh session:** plan `js-ts`, next task **B2-W2** (rules + schema v1.8), branch
-`feat/js-ts`, base `main @ 189df91`, session HEAD `2166c8f`; W0 commit `6a3b7b1`.
+**Resume in a fresh session:** plan `js-ts`, next task **B2-W2** (11 rules + schema v1.8), branch
+`feat/js-ts`, base `main @ 189df91`, W0 commit `6a3b7b1`, W1 commit `7fdfa1a`.

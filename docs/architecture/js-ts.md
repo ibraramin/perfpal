@@ -1,7 +1,7 @@
 # Perfpal — JS/TS backend (Track B — inventory and freeze record)
 
 **Status:** B1 planning complete; **B2-W0 complete** (exact pins, grammar-link tests, canary freeze);
-**B2-W1 implemented; full DoD green; panel APPROVED; commit pending** — the JS tree-sitter backend, scanner wiring,
+**B2-W1 implemented; full DoD green; panel APPROVED; committed `7fdfa1a`** — the JS tree-sitter backend, scanner wiring,
 discovery skips, relative import resolver, `package.json`/in-source entry declarations, aggregator JS entry
 lane, and instrument JS arms are in the tree and green. **B2-W2 next** (11 `PERF-JS-*` rules + schema v1.8 +
 fixtures/goldens). Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`, `docs/specs/js-ts.md`,

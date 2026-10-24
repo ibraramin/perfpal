@@ -53,7 +53,7 @@ gate, `CALL-001` guard-gated, `ASYNC-002` async-gated. Evidence `docs/evidence/j
 dispositions `docs/architecture/js-ts.md` §8. Next: **B2-W1** (JS backend). Blockers `B-tb-003`
 (reporter catalog, W2) and `B-tb-001` (views wiring, A step 12) remain open and were not touched.
 
-## Session B2-W1 — JS backend + wiring — **implemented; full DoD green; panel APPROVED; commit pending** (2026-10-24)
+## Session B2-W1 — JS backend + wiring — **committed `7fdfa1a`; full DoD green; panel APPROVED** (2026-10-24)
 
 **Goal:** implement the JavaScript tree-sitter backend and every wiring point from the plan, with no rules
 or schema bump yet.
