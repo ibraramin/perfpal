@@ -11,18 +11,31 @@
 //!
 //! - Types are the source text: macros are never expanded, and generics /
 //!   `impl Trait` are recorded as written, not resolved. Opaque constructs are
-//!   listed in `unresolved` (`"impl Trait"`, `"variadic"`, `"fn-pointer"`)
-//!   rather than guessed.
-//! - `dir` only distinguishes by-value / const-pointer (`in`) from mutable
-//!   pointers (`inout`). `out` is never inferred in S2.
-//! - A callee resolves only when it is a direct name (identifier or Rust
-//!   scoped identifier's final segment) defined exactly once across the parsed
-//!   drawn functions. Methods, function pointers, dynamic dispatch, macros,
-//!   ambiguous names and unknown names stay unresolved — never guessed.
+//!   listed in `unresolved` (`"impl Trait"`, `"variadic"`, `"fn-pointer"`,
+//!   `"fn-pointer-return"`) rather than guessed. C return types include the
+//!   declarator prefix (`char *dup` ⇒ `char *`); function-pointer returns are
+//!   best-effort written text and marked `"fn-pointer-return"`.
+//! - `dir` is expression/type based: C address-of (`&x`) and non-const pointer
+//!   locals/params, Rust `&mut`/`*mut` expressions and `&mut T`/`*mut T`
+//!   locals are `inout`; `const T*`, `&T` and values are `in`. `out` is never
+//!   inferred in S2.
+//! - A callee resolves only when it is a direct name defined exactly once
+//!   across the parsed drawn functions: a bare identifier, or a Rust
+//!   `scoped_identifier` whose root is `crate`/`self`/`super`. Methods, field
+//!   calls, function pointers, dynamic dispatch, macros (collected across all
+//!   parsed drawn files), external scoped paths (`std::…`), ambiguous names
+//!   and unknown names stay unresolved — never guessed.
+//! - A call's `unresolved` flag means "callee unresolved OR every argument is
+//!   untyped/non-literal" (zero-arg resolved calls are resolved). It is not a
+//!   statement about indirection alone.
 //! - Argument types come from the caller's same-function local table only
 //!   (parameters plus explicit Rust `let x: T` / C `T x` declarations), with
 //!   no cross-file inference. C decimal integer constants are `int` by the
-//!   language. Rust reference/pointer types expose their pointee.
+//!   language. Rust reference/pointer types expose their pointee. `named` is
+//!   the bare identifier or field-access root only when it resolves; borrowed
+//!   expressions such as `&cfg` have `named: null`.
+//! - Recursion is capped at [`MAX_DEPTH`]: a pathologically deep expression
+//!   yields fewer rows rather than a stack overflow.
 //! - This is static inference: the flow says what the source *writes*, not
 //!   what the program does at runtime.
 //!
@@ -41,6 +54,11 @@ use tree_sitter::{Node, Parser, Tree};
 
 /// `flow_version` — bumped only when the shape of the flow block changes.
 pub(crate) const FLOW_VERSION: u8 = 1;
+
+/// Recursion guard for pathological syntax trees. Past this depth the probe
+/// stops descending: a pathologically deep expression yields fewer rows rather
+/// than a stack overflow. No panic path exists behind it.
+const MAX_DEPTH: usize = 256;
 
 /// The story-only `flow` block as emitted into `atlas-layout.json`.
 #[derive(Debug, Serialize)]
@@ -96,6 +114,14 @@ struct RawCall {
     args: Vec<CallArg>,
 }
 
+/// One successfully parsed drawn file, retained for the whole-set passes.
+struct ParsedFile {
+    path: String,
+    language: Language,
+    source: Vec<u8>,
+    tree: Tree,
+}
+
 /// Declared local/parameter type used for argument typing (never inferred).
 struct LocalType {
     type_text: String,
@@ -132,8 +158,7 @@ pub(crate) struct Param {
 /// reads that file directly. Paths with other extensions are ignored.
 #[must_use]
 pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flow {
-    let mut signatures = Vec::new();
-    let mut raw_calls = Vec::new();
+    let mut files = Vec::new();
     let mut seen = BTreeSet::new();
     for path in drawn {
         if !seen.insert(path.clone()) {
@@ -153,16 +178,43 @@ pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flo
         let Some(tree) = parse(language, &source) else {
             continue;
         };
-        let mut macro_names = BTreeSet::new();
-        collect_macro_names(tree.root_node(), language, &source, &mut macro_names);
-        collect_functions(
-            tree.root_node(),
+        files.push(ParsedFile {
+            path,
             language,
-            &path,
-            &source,
-            &macro_names,
+            source,
+            tree,
+        });
+    }
+
+    // Macro names are collected across ALL parsed drawn files before any call
+    // is extracted, so a macro defined in another drawn file still excludes a
+    // same-named call site from direct resolution.
+    let mut macro_names = BTreeSet::new();
+    for file in &files {
+        collect_macro_names(
+            file.tree.root_node(),
+            file.language,
+            &file.source,
+            &mut macro_names,
+            0,
+        );
+    }
+
+    let mut signatures = Vec::new();
+    let mut raw_calls = Vec::new();
+    for file in &files {
+        let context = FileContext {
+            language: file.language,
+            path: &file.path,
+            source: &file.source,
+            macro_names: &macro_names,
+        };
+        collect_functions(
+            file.tree.root_node(),
+            &context,
             &mut signatures,
             &mut raw_calls,
+            0,
         );
     }
 
@@ -298,24 +350,32 @@ fn parse(language: Language, source: &[u8]) -> Option<Tree> {
     parser.parse(source, None)
 }
 
+struct FileContext<'a> {
+    language: Language,
+    path: &'a str,
+    source: &'a [u8],
+    macro_names: &'a BTreeSet<String>,
+}
+
 /// Walk file-level items, stopping at each function body — the same boundary
 /// the scanner backends use, so nested function-local items never produce an
 /// id the metrics document does not carry.
 fn collect_functions(
     node: Node<'_>,
-    language: Language,
-    path: &str,
-    source: &[u8],
-    macro_names: &BTreeSet<String>,
+    context: &FileContext<'_>,
     signatures: &mut Vec<Signature>,
     calls: &mut Vec<RawCall>,
+    depth: usize,
 ) {
-    let function_kind = match language {
+    if depth > MAX_DEPTH {
+        return;
+    }
+    let function_kind = match context.language {
         Language::C => "function_definition",
         Language::Rust => "function_item",
     };
     if node.kind() == function_kind {
-        if let Some(signature) = signature(node, language, path, source) {
+        if let Some(signature) = signature(node, context.language, context.path, context.source) {
             let mut table = BTreeMap::new();
             for param in &signature.params {
                 if let Some(name) = &param.name {
@@ -329,19 +389,19 @@ fn collect_functions(
                 }
             }
             if let Some(body) = node.child_by_field_name("body") {
-                match language {
-                    Language::C => collect_c_locals(body, source, &mut table),
-                    Language::Rust => collect_rust_locals(body, source, &mut table),
+                match context.language {
+                    Language::C => collect_c_locals(body, context.source, &mut table, 0),
+                    Language::Rust => collect_rust_locals(body, context.source, &mut table, 0),
                 }
-                let context = CallContext {
-                    language,
-                    source,
+                let call_context = CallContext {
+                    language: context.language,
+                    source: context.source,
                     table: &table,
-                    macro_names,
-                    from: path,
+                    macro_names: context.macro_names,
+                    from: context.path,
                     caller: &signature.id,
                 };
-                collect_calls(body, &context, calls);
+                collect_calls(body, &call_context, calls, 0);
             }
             signatures.push(signature);
         }
@@ -349,15 +409,7 @@ fn collect_functions(
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        collect_functions(
-            child,
-            language,
-            path,
-            source,
-            macro_names,
-            signatures,
-            calls,
-        );
+        collect_functions(child, context, signatures, calls, depth + 1);
     }
 }
 
@@ -370,7 +422,11 @@ fn collect_macro_names(
     language: Language,
     source: &[u8],
     out: &mut BTreeSet<String>,
+    depth: usize,
 ) {
+    if depth > MAX_DEPTH {
+        return;
+    }
     if language == Language::C
         && matches!(node.kind(), "preproc_def" | "preproc_function_def")
         && let Some(name) = node.child_by_field_name("name")
@@ -379,7 +435,7 @@ fn collect_macro_names(
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        collect_macro_names(child, language, source, out);
+        collect_macro_names(child, language, source, out, depth + 1);
     }
 }
 
@@ -396,7 +452,10 @@ struct CallContext<'a> {
     caller: &'a str,
 }
 
-fn collect_calls(node: Node<'_>, context: &CallContext<'_>, out: &mut Vec<RawCall>) {
+fn collect_calls(node: Node<'_>, context: &CallContext<'_>, out: &mut Vec<RawCall>, depth: usize) {
+    if depth > MAX_DEPTH {
+        return;
+    }
     let function_kind = match context.language {
         Language::C => "function_definition",
         Language::Rust => "function_item",
@@ -411,7 +470,7 @@ fn collect_calls(node: Node<'_>, context: &CallContext<'_>, out: &mut Vec<RawCal
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        collect_calls(child, context, out);
+        collect_calls(child, context, out, depth + 1);
     }
 }
 
@@ -454,12 +513,33 @@ fn callee_of(function: Node<'_>, context: &CallContext<'_>) -> (String, Option<S
             }
         }
         (Language::Rust, "scoped_identifier") => {
-            let name = function
-                .child_by_field_name("name")
-                .map(|node| text(node, context.source).to_string());
+            // Only crate-internal paths are eligible. `std::fs::read` must not
+            // resolve to a unique drawn `fn read`.
+            let root = function
+                .child_by_field_name("path")
+                .and_then(|path| rust_path_root(path, context.source));
+            let name = if matches!(root, Some("crate" | "self" | "super")) {
+                function
+                    .child_by_field_name("name")
+                    .map(|node| text(node, context.source).to_string())
+            } else {
+                None
+            };
             (written, name)
         }
         _ => (written, None),
+    }
+}
+
+/// First segment of a Rust scoped path (`crate`, `self`, `super`, or a crate
+/// name). Only the first three make the path crate-internal.
+fn rust_path_root<'a>(node: Node<'a>, source: &'a [u8]) -> Option<&'a str> {
+    match node.kind() {
+        "identifier" | "crate" | "self" | "super" => Some(text(node, source)),
+        "scoped_identifier" => node
+            .child_by_field_name("path")
+            .and_then(|path| rust_path_root(path, source)),
+        _ => None,
     }
 }
 
@@ -508,14 +588,27 @@ fn build_arg(arg: Node<'_>, context: &CallContext<'_>) -> CallArg {
         None
     };
     let dir = match context.language {
-        Language::Rust if raw_expr.contains("&mut") || raw_expr.contains("*mut") => "inout",
-        Language::C
-            if arg.kind() == "identifier"
-                && lookup.is_some_and(|(_, local)| local.dir == "inout") =>
-        {
-            "inout"
+        Language::C => {
+            let address_of = arg.kind() == "pointer_expression"
+                && text(arg, source).trim_start().starts_with('&');
+            let mutable_pointer =
+                arg.kind() == "identifier" && lookup.is_some_and(|(_, local)| local.dir == "inout");
+            if address_of || mutable_pointer {
+                "inout"
+            } else {
+                "in"
+            }
         }
-        _ => "in",
+        Language::Rust => {
+            let mutable_expression = raw_expr.contains("&mut") || raw_expr.contains("*mut");
+            let mutable_local = arg.kind() == "identifier"
+                && lookup.is_some_and(|(_, local)| is_mutable_rust_type(&local.type_text));
+            if mutable_expression || mutable_local {
+                "inout"
+            } else {
+                "in"
+            }
+        }
     };
     CallArg {
         expr: truncate(&raw_expr, 48),
@@ -529,26 +622,53 @@ fn build_arg(arg: Node<'_>, context: &CallContext<'_>) -> CallArg {
 /// Root identifier of an expression: bare identifier, through `&`/`*` wrappers,
 /// or the base of a field access. Anything else has no local identity.
 fn expression_identifier(node: Node<'_>, language: Language) -> Option<Node<'_>> {
+    expression_identifier_at(node, language, 0)
+}
+
+fn expression_identifier_at(node: Node<'_>, language: Language, depth: usize) -> Option<Node<'_>> {
+    if depth > MAX_DEPTH {
+        return None;
+    }
     match node.kind() {
         "identifier" => Some(node),
-        "reference_expression"
-        | "unary_expression"
-        | "pointer_expression"
-        | "parenthesized_expression" => node
+        "reference_expression" => node
+            .child_by_field_name("value")
+            .and_then(|child| expression_identifier_at(child, language, depth + 1)),
+        "unary_expression" | "pointer_expression" => node
+            .child_by_field_name("argument")
+            .or_else(|| node.named_child(0))
+            .and_then(|child| expression_identifier_at(child, language, depth + 1)),
+        "parenthesized_expression" => node
             .named_child(0)
-            .and_then(|child| expression_identifier(child, language)),
+            .and_then(|child| expression_identifier_at(child, language, depth + 1)),
         "field_expression" => {
             let base = match language {
                 Language::C => node.child_by_field_name("argument"),
                 Language::Rust => node.child_by_field_name("value"),
             };
-            base.and_then(|child| expression_identifier(child, language))
+            base.and_then(|child| expression_identifier_at(child, language, depth + 1))
         }
         "scoped_identifier" => node
             .child_by_field_name("name")
-            .and_then(|child| expression_identifier(child, language)),
+            .and_then(|child| expression_identifier_at(child, language, depth + 1)),
         _ => None,
     }
+}
+
+/// Whether a written Rust type is a mutable reference/pointer (`&mut T`,
+/// `&'a mut T`, `*mut T`). Immutable `&T`/`*const T` stay `in`.
+fn is_mutable_rust_type(type_text: &str) -> bool {
+    let mut value = type_text.trim();
+    if let Some(rest) = value.strip_prefix('&') {
+        value = rest.trim_start();
+        if value.starts_with('\'') {
+            value = value
+                .split_once(char::is_whitespace)
+                .map_or(value, |(_, rest)| rest.trim_start());
+        }
+        return value.starts_with("mut ");
+    }
+    value.starts_with("*mut ")
 }
 
 /// Rust references/pointers expose their pointee for argument typing.
@@ -614,8 +734,13 @@ fn literal_payload(value: &str) -> String {
 // Local declarations (narrow, same-file only)
 // ---------------------------------------------------------------------------
 
-fn collect_c_locals(node: Node<'_>, source: &[u8], table: &mut BTreeMap<String, LocalType>) {
-    if node.kind() == "function_definition" {
+fn collect_c_locals(
+    node: Node<'_>,
+    source: &[u8],
+    table: &mut BTreeMap<String, LocalType>,
+    depth: usize,
+) {
+    if depth > MAX_DEPTH || node.kind() == "function_definition" {
         return;
     }
     if node.kind() == "declaration" {
@@ -623,7 +748,7 @@ fn collect_c_locals(node: Node<'_>, source: &[u8], table: &mut BTreeMap<String, 
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        collect_c_locals(child, source, table);
+        collect_c_locals(child, source, table, depth + 1);
     }
 }
 
@@ -675,8 +800,13 @@ fn collect_c_declaration(
     }
 }
 
-fn collect_rust_locals(node: Node<'_>, source: &[u8], table: &mut BTreeMap<String, LocalType>) {
-    if node.kind() == "function_item" {
+fn collect_rust_locals(
+    node: Node<'_>,
+    source: &[u8],
+    table: &mut BTreeMap<String, LocalType>,
+    depth: usize,
+) {
+    if depth > MAX_DEPTH || node.kind() == "function_item" {
         return;
     }
     if node.kind() == "let_declaration"
@@ -697,7 +827,7 @@ fn collect_rust_locals(node: Node<'_>, source: &[u8], table: &mut BTreeMap<Strin
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        collect_rust_locals(child, source, table);
+        collect_rust_locals(child, source, table, depth + 1);
     }
 }
 
@@ -732,11 +862,90 @@ fn c_signature(
     source: &[u8],
 ) -> (String, Vec<Param>, Option<String>, BTreeSet<String>) {
     let name = c_function_name(fdef, source);
-    let ret = fdef
-        .child_by_field_name("type")
-        .map(|node| collapse(text(node, source)));
-    let (params, unresolved) = c_params(fdef, source);
+    let (ret, function_pointer_return) = c_return(fdef, source);
+    let (params, mut unresolved) = c_params(fdef, source);
+    if function_pointer_return {
+        unresolved.insert("fn-pointer-return".to_string());
+    }
     (name, params, ret, unresolved)
+}
+
+/// Return type as written: the declaration specifiers plus the declarator
+/// prefix before the function name (`char *dup` ⇒ `char *`,
+/// `const char *name` ⇒ `const char *`, `int **grid` ⇒ `int **`).
+///
+/// The pointer/qualifier text lives in the declarator, not the `type` field
+/// (`src/scanner/backends/tree_sitter_c/mod.rs:459-461`). A function returning
+/// a function pointer is recorded best-effort (`int (*f(void))(int)` ⇒
+/// `int (*)(int)`) and flagged `fn-pointer-return`; it is never guessed.
+fn c_return(fdef: Node<'_>, source: &[u8]) -> (Option<String>, bool) {
+    let Some(declarator) = fdef.child_by_field_name("declarator") else {
+        return (None, false);
+    };
+    let func = find_descendant(declarator, "function_declarator").unwrap_or(declarator);
+    let Some(name) = func
+        .child_by_field_name("declarator")
+        .and_then(leftmost_identifier)
+    else {
+        return (
+            fdef.child_by_field_name("type")
+                .map(|node| collapse(text(node, source))),
+            false,
+        );
+    };
+    let start = c_type_start(fdef);
+    let written = collapse(&String::from_utf8_lossy(&source[start..name.start_byte()]));
+    let function_pointer_return = func.kind() == "function_declarator"
+        && written.contains("(*")
+        && func
+            .child_by_field_name("declarator")
+            .is_some_and(|inner| inner.kind() != "identifier");
+    if function_pointer_return {
+        let parameters = func
+            .child_by_field_name("parameters")
+            .map(|node| collapse(text(node, source)))
+            .unwrap_or_default();
+        let written = if written.ends_with('*') {
+            format!("{written}){parameters}")
+        } else {
+            format!("{written} (*){parameters}")
+        };
+        return (Some(written), true);
+    }
+    if written.is_empty() {
+        return (
+            fdef.child_by_field_name("type")
+                .map(|node| collapse(text(node, source))),
+            false,
+        );
+    }
+    (Some(written), false)
+}
+
+/// First byte of the return type: the earliest declaration specifier before
+/// the declarator, excluding storage classes (`static`, `extern`, `inline`).
+fn c_type_start(fdef: Node<'_>) -> usize {
+    let declarator_start = fdef
+        .child_by_field_name("declarator")
+        .map_or(fdef.end_byte(), |node| node.start_byte());
+    let mut start = fdef
+        .child_by_field_name("type")
+        .map_or(fdef.start_byte(), |node| node.start_byte());
+    let mut cursor = fdef.walk();
+    for child in fdef.named_children(&mut cursor) {
+        if child.start_byte() >= declarator_start {
+            break;
+        }
+        if matches!(
+            child.kind(),
+            "storage_class_specifier" | "attribute_specifier" | "attribute_declaration"
+        ) {
+            continue;
+        }
+        start = child.start_byte();
+        break;
+    }
+    start
 }
 
 fn c_function_name(fdef: Node<'_>, source: &[u8]) -> String {
@@ -924,12 +1133,19 @@ fn splice_without(node: Node<'_>, removed: Node<'_>, source: &[u8]) -> String {
 }
 
 fn leftmost_identifier(node: Node<'_>) -> Option<Node<'_>> {
+    leftmost_identifier_at(node, 0)
+}
+
+fn leftmost_identifier_at(node: Node<'_>, depth: usize) -> Option<Node<'_>> {
+    if depth > MAX_DEPTH {
+        return None;
+    }
     if node.kind() == "identifier" {
         return Some(node);
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        if let Some(found) = leftmost_identifier(child) {
+        if let Some(found) = leftmost_identifier_at(child, depth + 1) {
             return Some(found);
         }
     }
@@ -937,12 +1153,19 @@ fn leftmost_identifier(node: Node<'_>) -> Option<Node<'_>> {
 }
 
 fn find_descendant<'a>(node: Node<'a>, kind: &str) -> Option<Node<'a>> {
+    find_descendant_at(node, kind, 0)
+}
+
+fn find_descendant_at<'a>(node: Node<'a>, kind: &str, depth: usize) -> Option<Node<'a>> {
+    if depth > MAX_DEPTH {
+        return None;
+    }
     if node.kind() == kind {
         return Some(node);
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        if let Some(found) = find_descendant(child, kind) {
+        if let Some(found) = find_descendant_at(child, kind, depth + 1) {
             return Some(found);
         }
     }
@@ -1111,16 +1334,17 @@ mod tests {
         write(
             &dir,
             "callee.c",
-            "int parse(Config *cfg, const char *path, int flags) { return 0; }\n",
+            "int parse(Config *cfg, const char *path, int flags) { return 0; }\n\
+             void g(Config *cfg) { (void)cfg; }\n",
         );
         write(
             &dir,
             "caller.c",
-            "int caller(void) {\n    Config cfg;\n    return parse(&cfg, \"config.toml\", 1);\n}\n",
+            "int caller(void) {\n    Config cfg;\n    parse(&cfg, \"config.toml\", 1);\n    g(&cfg);\n    return 0;\n}\n",
         );
 
         let flow = flow_for(&dir, &["callee.c", "caller.c"]);
-        assert_eq!(flow.calls.len(), 1);
+        assert_eq!(flow.calls.len(), 2);
         let call = &flow.calls[0];
         assert_eq!(call.from, "caller.c");
         assert_eq!(call.to.as_deref(), Some("callee.c"));
@@ -1138,7 +1362,15 @@ mod tests {
         assert_eq!(types, vec![Some("Config"), Some("char*"), Some("int")]);
         let literals: Vec<bool> = call.args.iter().map(|arg| arg.literal).collect();
         assert_eq!(literals, vec![false, true, false]);
-        assert!(call.args.iter().all(|arg| arg.dir == "in"));
+        let dirs: Vec<&str> = call.args.iter().map(|arg| arg.dir).collect();
+        assert_eq!(dirs, vec!["inout", "in", "in"], "address-of is inout");
+
+        let g = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "g")
+            .expect("g call");
+        assert_eq!(g.args[0].dir, "inout", "C address-of is inout");
 
         let label = flow.edge_label("caller.c", "callee.c");
         assert_eq!(label.label, "literal-observed");
@@ -1157,10 +1389,12 @@ mod tests {
             "struct Config;\n\
              struct Thing;\n\
              fn run(cfg: &Config) { let _ = cfg; }\n\
+             fn mutate(cfg: &mut Config) { let _ = cfg; }\n\
              fn ping() {}\n\
              fn caller(cfg: Config) {\n\
-                 let local: Config = cfg;\n\
+                 let mut local: Config = cfg;\n\
                  run(&local);\n\
+                 mutate(&mut local);\n\
                  ping();\n\
              }\n\
              fn pointer_call(f: fn(&Config), cfg: Config) { f(&cfg); }\n\
@@ -1171,7 +1405,7 @@ mod tests {
         write(&dir, "parse_b.rs", "fn parse() {}\n");
 
         let flow = flow_for(&dir, &["a.rs", "parse_a.rs", "parse_b.rs"]);
-        assert_eq!(flow.calls.len(), 5);
+        assert_eq!(flow.calls.len(), 6);
 
         let run = flow
             .calls
@@ -1183,6 +1417,15 @@ mod tests {
         assert!(!run.unresolved);
         assert_eq!(run.args[0].type_text.as_deref(), Some("Config"));
         assert!(!run.args[0].literal);
+        assert_eq!(run.args[0].dir, "in", "immutable borrow stays in");
+
+        let mutate = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "mutate")
+            .expect("mutate call");
+        assert_eq!(mutate.args[0].dir, "inout", "&mut is inout");
+        assert_eq!(mutate.args[0].type_text.as_deref(), Some("Config"));
 
         let ping = flow
             .calls
@@ -1226,6 +1469,99 @@ mod tests {
     }
 
     #[test]
+    fn c_return_types_keep_pointer_and_qualifiers() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-ret-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(
+            &dir,
+            "ret.c",
+            "char *dup(const char *s) { return 0; }\n\
+             const char *name(void) { return 0; }\n\
+             int **grid(void) { return 0; }\n\
+             int plain(void) { return 0; }\n\
+             int (*factory(void))(int) { return 0; }\n",
+        );
+
+        let flow = flow_for(&dir, &["ret.c"]);
+        let by_name: BTreeMap<&str, &Signature> = flow
+            .signatures
+            .iter()
+            .map(|signature| (signature.name.as_str(), signature))
+            .collect();
+        assert_eq!(by_name["dup"].ret.as_deref(), Some("char *"));
+        assert_eq!(by_name["name"].ret.as_deref(), Some("const char *"));
+        assert_eq!(by_name["grid"].ret.as_deref(), Some("int **"));
+        assert_eq!(by_name["plain"].ret.as_deref(), Some("int"));
+        assert!(
+            by_name["factory"]
+                .ret
+                .as_deref()
+                .is_some_and(|ret| { ret.starts_with("int (") && ret.ends_with(")(int)") }),
+            "best-effort function-pointer return text: {:?}",
+            by_name["factory"].ret
+        );
+        assert_eq!(
+            by_name["factory"].unresolved,
+            vec!["fn-pointer-return".to_string()]
+        );
+        assert!(by_name["dup"].unresolved.is_empty());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn macros_defined_in_another_drawn_file_never_resolve() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-macro-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(&dir, "macro.c", "#define PARSE(x) x\n");
+        write(&dir, "parse_fn.c", "int PARSE(int x) { return x; }\n");
+        write(&dir, "caller.c", "int caller(void) { return PARSE(1); }\n");
+
+        let flow = flow_for(&dir, &["macro.c", "parse_fn.c", "caller.c"]);
+        let call = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "PARSE")
+            .expect("macro call site");
+        assert!(call.unresolved);
+        assert!(call.to.is_none(), "a cross-file macro must not resolve");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn rust_scoped_paths_resolve_only_crate_internal_roots() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-scope-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(
+            &dir,
+            "a.rs",
+            "fn read(p: &str) { let _ = p; }\n\
+             fn parse() {}\n\
+             fn caller() {\n\
+                 std::fs::read(\"x\");\n\
+                 crate::util::parse();\n\
+             }\n",
+        );
+
+        let flow = flow_for(&dir, &["a.rs"]);
+        let external = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "std::fs::read")
+            .expect("external scoped call");
+        assert!(external.unresolved, "std::fs::read must not resolve");
+        assert!(external.to.is_none());
+
+        let internal = flow
+            .calls
+            .iter()
+            .find(|call| call.callee == "crate::util::parse")
+            .expect("crate scoped call");
+        assert!(!internal.unresolved, "crate-internal scoped call resolves");
+        assert_eq!(internal.to_id.as_deref(), Some("a.rs#parse#2:1"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn edge_without_matching_calls_is_unresolved() {
         let dir = std::env::temp_dir().join(format!("perfpal-flow-call-e-{}", std::process::id()));
         fs::create_dir_all(&dir).expect("temp dir");
@@ -1234,6 +1570,24 @@ mod tests {
         let label = flow.edge_label("a.c", "b.c");
         assert_eq!(label.label, "unresolved");
         assert!(label.payload.is_none());
+        let _ = fs::remove_dir_all(&dir);
+    }
+    #[test]
+    fn deeply_nested_expressions_do_not_panic() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-depth-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        let nested = format!("{}1{}", "(".repeat(400), ")".repeat(400));
+        write(
+            &dir,
+            "a.rs",
+            &format!("fn sink(x: i32) {{ let _ = x; }}\nfn caller() {{ sink({nested}); }}\n"),
+        );
+        let flow = flow_for(&dir, &["a.rs"]);
+        assert!(
+            flow.signatures
+                .iter()
+                .any(|signature| signature.name == "caller")
+        );
         let _ = fs::remove_dir_all(&dir);
     }
 }
