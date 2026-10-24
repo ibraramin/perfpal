@@ -57,7 +57,8 @@ layout double-scan, §3 committed-data comparison) rather than pinning them here
 
 Beats are derived deterministically from the data (no randomness, no wall-clock input beyond the
 animation clock). Fixed durations: boot 1.6s, enter 2.2s, loop 2.6s, branch 1.8s, hottest 2.0s,
-stop 2.0s, summary 3.0s. hyperfine → **13 beats**; cJSON → **8 beats**.
+stop 2.0s, trust 2.4s, summary 3.0s. Beat counts are derived per case
+(boot, enter×N, loop×N, branch×N, hottest, profile, start-here, stop, trust, summary); no fixed count.
 
 - **boot** — elected entry (policy, confidence, alternatives); "nothing is executed".
 - **enter** (per path step) — node cost, × median function, top % of files, annotation.
@@ -69,8 +70,15 @@ stop 2.0s, summary 3.0s. hyperfine → **13 beats**; cJSON → **8 beats**.
   (`literal` / `partial` / `unknown`); "inferred trip weight, not measured iterations".
 - **branch** (when the node has off-path edges) — how many structural edges leave the path, the two
   largest targets; "the story does not follow them; they are not measured".
-- **hottest** — cost, ratio, and the top annotation from the global findings list.
+- **hottest** — the hottest **file** and the globally hottest drawn **function** (name, `L<line>`, path,
+  static units), with the top annotation from the global findings list. A test/bench hot file is
+  disclosed by its path and the trust line; it is never called production.
+- **profile** — the drawn-slice candidate queue (top 3 per file, production-only), each row a
+  `static candidate, verify`; explicitly not a whole-repo KV3 ranking.
+- **start-here** — KV1's three actions verbatim, each marked `on-canvas` / `off-canvas`.
 - **stop** — a static leaf / no forward path / partial parse / capped, from the real state flags.
+- **trust** — caps, partial parse, non-production share, unknown-trip function count, findings
+  included/total, and the honesty strip.
 - **summary** — path, caps, findings (including the data-slice cap), "static cost units, not time".
 - Synthetic cases (`no-forward-path`, `empty`, `capped`) render a labelled stub only: no fabricated
   nodes, edges, costs or findings.
@@ -100,7 +108,7 @@ repos under `$FIXTURES`; the script records failures and exits non-zero.
 |---|---|---|
 | Data build is deterministic | `from-layout.py` twice + `sha256sum` diff | identical (2 regenerated; all 6 unchanged by the gate) |
 | Data comes from Perfpal core | `source.sha256` in `data-*.json` vs `source/out-*/atlas-layout.json` | match, no HTML input |
-| Gate | `python3 sim/verify.py` | **101/101 checks, exit 0** |
+| Gate | `python3 sim/verify.py` | **162/162 checks, exit 0** |
 | Loop honesty | loop-beat narration | contains `Inferred trip weight, not measured iterations` |
 | Function highlight | loop-beat node bottom line | `▶ <function> · L<line>` in orange, both cases |
 | Findings cap | cJSON final narration | `837 findings in the scan (153 included in this data slice)` |
@@ -109,6 +117,8 @@ repos under `$FIXTURES`; the script records failures and exits non-zero.
 | Controls | play/pause, step ±, scrub, speed, reset, node select, Escape | all pass, both cases |
 | Honesty | label present; no rendered `ms`/`seconds` | pass |
 | Final frame | every node at effective opacity ≥ 0.9; footer verbatim | pass |
+| F2 edge payloads | every drawn edge labelled `type-only`/`literal-observed`/`unresolved` (data + DOM) | 49/49 hyperfine (44/4/1), 5/5 cJSON (1/2/2), 0 bad |
+| F5 final-frame determinism | two independent loads → canonical `#stage` SHA-256; double-scan data hashes | identical (hyperfine `2f1a3834…`, cJSON `65cd5446…`); PNGs are rasterization-dependent |
 | Fold | `#canvas-footer` bottom 894 ≤ 900 at 1440×900 | pass |
 | Narrow | no horizontal scroll at 1280×800 | pass |
 | Reduced motion | starts at the final beat | pass |

@@ -81,6 +81,146 @@
       "ok": true
     },
     {
+      "check": "hyperfine: F2 every edge has an allowed label",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F2 typed/literal labels carry a payload",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F2 unresolved labels are never guessed",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F2 label class matches the label",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F2 topCalls rows carry callee and line",
+      "detail": "6 rows",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F2 resolved-label edges carry top calls",
+      "detail": "5/5 resolved-label edges",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 every edge has an allowed label",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 typed/literal labels carry a payload",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 unresolved labels are never guessed",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 label class matches the label",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 topCalls rows carry callee and line",
+      "detail": "8 rows",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 resolved-label edges carry top calls",
+      "detail": "4/4 resolved-label edges",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: hottestFunction is the global cost leader",
+      "detail": "src/options.rs#from_cli_arguments#254:5 @ 165 vs src/options.rs#from_cli_arguments#254:5 @ 165",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: hottestFunction carries identity",
+      "detail": "{'id': 'src/options.rs#from_cli_arguments#254:5', 'name': 'from_cli_arguments', 'path': 'src/options.rs', 'line': 254, 'cost': 165}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: profile rows are production",
+      "detail": "8/8",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: profile ranks the production candidate set",
+      "detail": "src/options.rs#from_cli_arguments#254:5 vs src/options.rs#from_cli_arguments#254:5",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: profile does not outrank the global hottest",
+      "detail": "165 <= 165",
+      "ok": true
+    },
+    {
+      "check": "cjson: hottestFunction is the global cost leader",
+      "detail": "tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1 @ 2000008 vs tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1 @ 2000008",
+      "ok": true
+    },
+    {
+      "check": "cjson: hottestFunction carries identity",
+      "detail": "{'id': 'tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1', 'name': 'testFloatPrintingRandomSamples', 'path': 'tests/unity/test/tests/testunity.c', 'line': 4557, 'cost': 2000008}",
+      "ok": true
+    },
+    {
+      "check": "cjson: profile rows are production",
+      "detail": "8/8",
+      "ok": true
+    },
+    {
+      "check": "cjson: profile ranks the production candidate set",
+      "detail": "cJSON.c#cJSON_Delete#253:1 vs cJSON.c#cJSON_Delete#253:1",
+      "ok": true
+    },
+    {
+      "check": "cjson: profile does not outrank the global hottest",
+      "detail": "137 <= 2000008",
+      "ok": true
+    },
+    {
+      "check": "F4 no forbidden claim in sim/data-*.json",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "F4 no time units in sim/data-*.json",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "F4 runtime only appears negated in sim/data-*.json",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "F4 no bare execution/iteration claim in sim/data-*.json",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: core flow fidelity is syntactic",
+      "detail": "1 \u00b7 'syntactic'",
+      "ok": true
+    },
+    {
+      "check": "cjson: core flow fidelity is syntactic",
+      "detail": "1 \u00b7 'syntactic'",
+      "ok": true
+    },
+    {
       "check": "server answers on :8770",
       "detail": "",
       "ok": true
@@ -92,7 +232,7 @@
     },
     {
       "check": "hyperfine: beats derived",
-      "detail": "13 beats",
+      "detail": "16 beats",
       "ok": true
     },
     {
@@ -106,6 +246,21 @@
       "ok": true
     },
     {
+      "check": "hyperfine: F2 DOM labels every drawn edge",
+      "detail": "{'paths': 49, 'labels': 49, 'unresolved': 44, 'unresolvedLabels': 44, 'badLabel': 0, 'badEdge': 0}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F2 DOM labels use the allowed set",
+      "detail": "{'paths': 49, 'labels': 49, 'unresolved': 44, 'unresolvedLabels': 44, 'badLabel': 0, 'badEdge': 0}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F2 unresolved edges stay visibly distinct",
+      "detail": "{'paths': 49, 'labels': 49, 'unresolved': 44, 'unresolvedLabels': 44, 'badLabel': 0, 'badEdge': 0}",
+      "ok": true
+    },
+    {
       "check": "hyperfine: footer matches the render",
       "detail": "",
       "ok": true
@@ -116,13 +271,63 @@
       "ok": true
     },
     {
+      "check": "hyperfine: hottest ratio keeps its precision",
+      "detail": "87\u00d7 median \u00b7 \u00b7 611 cost \u00b7 87\u00d7 median",
+      "ok": true
+    },
+    {
       "check": "hyperfine: no time units rendered",
       "detail": "none",
       "ok": true
     },
     {
       "check": "hyperfine: beats include loop and summary",
-      "detail": "boot,branch,enter,hottest,loop,stop,summary",
+      "detail": "boot,branch,enter,hottest,loop,profile,start-here,stop,summary,trust",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: payoff beats present in order",
+      "detail": "boot,enter,loop,branch,enter,loop,branch,enter,loop,branch,hottest,profile,start-here,stop,trust,summary",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: profile narration is non-empty",
+      "detail": "Top 3 per file shown; static candidates, verify: from_cli_arguments (options.rs L254) \u00b7 16",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: start-here narration is non-empty",
+      "detail": "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust) (off-canvas) \u00b7 src/output/re",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: trust narration is non-empty",
+      "detail": "caps: 19 of 19 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: no \u00b7 non-production s",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: hottest beat names the global function",
+      "detail": "Hottest file: command.rs \u00b7 611 static cost units (v2) \u00b7 87\u00d7 median function \u00b7 top 2% of files. Hottest function: from_cli_arguments (L254, src/options.rs) \u00b7 165 units. Top annotati",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: hottest beat keeps the file separate",
+      "detail": "Hottest file: command.rs \u00b7 611 static cost units (v2) \u00b7 87\u00d7 median function \u00b7 top 2% of fi",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: hottest beat drops the file-local function",
+      "detail": "build_from_cli_arguments",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: profile labels the drawn-slice basis",
+      "detail": "top 3 per file shown; static candidates, verify: from_cli_arguments (options.rs l254) \u00b7 165 units \u00b7 build_from_cli_arguments (command.rs l226) \u00b7 109 units \u00b7 next (shell_syntax.rs l",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: start-here names up to 3 actions",
+      "detail": "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust) (off-canvas) \u00b7 src/output/report.rs:49 \u2014 Heap allocation inside loop (Rust) (o",
       "ok": true
     },
     {
@@ -137,12 +342,27 @@
     },
     {
       "check": "hyperfine: loop keyframe",
-      "detail": "249974 bytes",
+      "detail": "272337 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: no time units at the final beat",
       "detail": "none",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F4 no forbidden claim at the final frame",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F4 runtime only appears negated",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F4 no bare execution claim at the final frame",
+      "detail": "",
       "ok": true
     },
     {
@@ -157,7 +377,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "353",
+      "detail": "352",
       "ok": true
     },
     {
@@ -172,7 +392,7 @@
     },
     {
       "check": "hyperfine: scrub reaches the final beat",
-      "detail": "12/12",
+      "detail": "15/15",
       "ok": true
     },
     {
@@ -197,17 +417,17 @@
     },
     {
       "check": "hyperfine: start keyframe",
-      "detail": "242655 bytes",
+      "detail": "269649 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: mid keyframe",
-      "detail": "236094 bytes",
+      "detail": "258711 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: end keyframe",
-      "detail": "247213 bytes",
+      "detail": "274381 bytes",
       "ok": true
     },
     {
@@ -222,7 +442,7 @@
     },
     {
       "check": "cjson: beats derived",
-      "detail": "8 beats",
+      "detail": "11 beats",
       "ok": true
     },
     {
@@ -236,6 +456,21 @@
       "ok": true
     },
     {
+      "check": "cjson: F2 DOM labels every drawn edge",
+      "detail": "{'paths': 5, 'labels': 5, 'unresolved': 1, 'unresolvedLabels': 1, 'badLabel': 0, 'badEdge': 0}",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 DOM labels use the allowed set",
+      "detail": "{'paths': 5, 'labels': 5, 'unresolved': 1, 'unresolvedLabels': 1, 'badLabel': 0, 'badEdge': 0}",
+      "ok": true
+    },
+    {
+      "check": "cjson: F2 unresolved edges stay visibly distinct",
+      "detail": "{'paths': 5, 'labels': 5, 'unresolved': 1, 'unresolvedLabels': 1, 'badLabel': 0, 'badEdge': 0}",
+      "ok": true
+    },
+    {
       "check": "cjson: footer matches the render",
       "detail": "",
       "ok": true
@@ -246,13 +481,58 @@
       "ok": true
     },
     {
+      "check": "cjson: hottest ratio keeps its precision",
+      "detail": "1.0M\u00d7 median \u00b7 \u00b7 2.0M cost \u00b7 1.0M\u00d7 median",
+      "ok": true
+    },
+    {
       "check": "cjson: no time units rendered",
       "detail": "none",
       "ok": true
     },
     {
       "check": "cjson: beats include loop and summary",
-      "detail": "boot,enter,hottest,loop,stop,summary",
+      "detail": "boot,enter,hottest,loop,profile,start-here,stop,summary,trust",
+      "ok": true
+    },
+    {
+      "check": "cjson: payoff beats present in order",
+      "detail": "boot,enter,loop,enter,loop,hottest,profile,start-here,stop,trust,summary",
+      "ok": true
+    },
+    {
+      "check": "cjson: profile narration is non-empty",
+      "detail": "Top 3 per file shown; static candidates, verify: cJSON_Delete (cJSON.c L253) \u00b7 137 units \u00b7",
+      "ok": true
+    },
+    {
+      "check": "cjson: start-here narration is non-empty",
+      "detail": "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop (on-canvas) \u00b7 cJSON_Utils.c:1",
+      "ok": true
+    },
+    {
+      "check": "cjson: trust narration is non-empty",
+      "detail": "caps: 2 of 2 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: yes \u00b7 non-production sh",
+      "ok": true
+    },
+    {
+      "check": "cjson: hottest beat names the global function",
+      "detail": "Hottest file: testunity.c \u00b7 2,000,468 static cost units (v2) \u00b7 1,000,234\u00d7 median function \u00b7 top 1% of files. Hottest function: testFloatPrintingRandomSamples (L4557, tests/unity/te",
+      "ok": true
+    },
+    {
+      "check": "cjson: hottest beat keeps the file separate",
+      "detail": "Hottest file: testunity.c \u00b7 2,000,468 static cost units (v2) \u00b7 1,000,234\u00d7 median function ",
+      "ok": true
+    },
+    {
+      "check": "cjson: profile labels the drawn-slice basis",
+      "detail": "top 3 per file shown; static candidates, verify: cjson_delete (cjson.c l253) \u00b7 137 units \u00b7 apply_patch (cjson_utils.c l807) \u00b7 131 units \u00b7 cjson_compare (cjson.c l3072) \u00b7 101 units ",
+      "ok": true
+    },
+    {
+      "check": "cjson: start-here names up to 3 actions",
+      "detail": "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop (on-canvas) \u00b7 cJSON_Utils.c:1203 \u2014 Expensive setup or I/O call inside loop (on-",
       "ok": true
     },
     {
@@ -267,12 +547,27 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "130478 bytes",
+      "detail": "136853 bytes",
       "ok": true
     },
     {
       "check": "cjson: no time units at the final beat",
       "detail": "none",
+      "ok": true
+    },
+    {
+      "check": "cjson: F4 no forbidden claim at the final frame",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: F4 runtime only appears negated",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: F4 no bare execution claim at the final frame",
+      "detail": "",
       "ok": true
     },
     {
@@ -307,7 +602,7 @@
     },
     {
       "check": "cjson: scrub reaches the final beat",
-      "detail": "7/7",
+      "detail": "10/10",
       "ok": true
     },
     {
@@ -332,17 +627,17 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "131896 bytes",
+      "detail": "139790 bytes",
       "ok": true
     },
     {
       "check": "cjson: mid keyframe",
-      "detail": "132059 bytes",
+      "detail": "151199 bytes",
       "ok": true
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "135679 bytes",
+      "detail": "143982 bytes",
       "ok": true
     },
     {
@@ -353,6 +648,16 @@
     {
       "check": "cjson: final frame keeps the honesty label",
       "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: F5 final frame DOM is deterministic across loads",
+      "detail": "2f1a383466da296f == 2f1a383466da296f; data byte-identical across scans + DOM identical across loads \u21d2 frame deterministic; PNGs are rasterization-dependent",
+      "ok": true
+    },
+    {
+      "check": "cjson: F5 final frame DOM is deterministic across loads",
+      "detail": "65cd5446ea88cf07 == 65cd5446ea88cf07; data byte-identical across scans + DOM identical across loads \u21d2 frame deterministic; PNGs are rasterization-dependent",
       "ok": true
     },
     {
@@ -382,7 +687,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "67057 bytes",
+      "detail": "68812 bytes",
       "ok": true
     },
     {
@@ -412,7 +717,7 @@
     },
     {
       "check": "empty: state keyframe",
-      "detail": "64088 bytes",
+      "detail": "65843 bytes",
       "ok": true
     },
     {
@@ -442,7 +747,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "71264 bytes",
+      "detail": "73011 bytes",
       "ok": true
     },
     {
@@ -472,7 +777,7 @@
     },
     {
       "check": "reduced motion starts at the final frame",
-      "detail": "12/12",
+      "detail": "15/15",
       "ok": true
     },
     {
@@ -508,7 +813,7 @@
   ],
   "date": "2026-10-24",
   "failed": 0,
-  "passed": 101,
-  "total": 101,
+  "passed": 162,
+  "total": 162,
   "viewport": "1440x900"
 }
