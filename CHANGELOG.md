@@ -86,8 +86,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   labels with counts in `<title>`; neutral back edges; opaque test/bench fills; no schema, no new JS,
   no dependency. Evidence: `docs/evidence/atlas-visual/v2/` (`DECISION.md`, `G-BASELINE-DIFF.md`,
   `VISION-READ.md`, `VISION-STEP10.md`, `STEP10.md`, `step10.json`, `gate.txt`, 1440×900 renders).
-  Step-10 founder check approved 2026-10-24; step-13 final gate pending; the rail/progressive charts
-  (steps 11–12) are not started;
+  Step-10 founder check approved 2026-10-24; the step-13 final gate was pending at the time and is now
+  **APPROVED 2026-10-24** (D-pf-253); the rail/progressive charts (steps 11–12) are not started;
   holdouts vaulted; `map-build` not done; A1b open.
 - **Atlas visual regression audit + v2 visual rework plan (docs only, 2026-10-23).** The post-step-8 audit found the shipped `#map` page is not A2-ready: the first screen clips the canvas (980px > 900 fold), G's visual language was replaced by a white/slate all-monospace instrument panel, the page is 22,942/34,831px (`#map` 8,982/14,685), duplicate structural/median chrome, leading-dot truncation, 49 edge labels with a hue collision, and the F treemap is Explorer-only. V8 16/16 A1 + 16/16 strip passed because A1 measures comprehension, not composition. `R-pf-109` opens; A2/ship (now steps 14–15) are blocked. The plan is reordered: **steps 9–13 = visual rework** (G-baseline + founder composition decision; first-page fit/visual language/chrome hygiene; detail rail; progressive designed charts; founder visual gate + G-baseline diff + V8 rerun), **A2/ship move to 14–15**. New agent brief: `docs/atlas/AGENT-BRIEF.md`. No code/schema change; holdouts vaulted; `map-build` not done; A1b open.
 

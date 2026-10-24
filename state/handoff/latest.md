@@ -11,8 +11,10 @@ was not applied; provenance recorded in `step13/FOUNDER-GATE.md`). **A2 (step 14
 (step 15) still blocked; `R-pf-109`/`A-pf-118` remain open records; F undecided (`D-pf-251`); holdouts
 vaulted; `map-build` NOT done; A1b open.
 
-**Commits:** `86c0537` — `docs(atlas): v2 step 13 visual gate evidence + sign-off` (54 files:
-evidence, renders, state/docs; parent `c73d6ff`). **No push.**
+**Commits:** `c73d6ff` (Track C4, merged before the gate commit) → `86c0537`
+`docs(atlas): v2 step 13 visual gate evidence + sign-off` (54 files: evidence, renders, state/docs) →
+`a00fd0b` (state records that commit) → **the panel fix-up commit** (stale-PENDING and false
+panel/commit claims corrected; hash in `git log -1`). **No push.**
 
 ## This session — step 13 evidence
 
@@ -65,12 +67,13 @@ evidence, renders, state/docs; parent `c73d6ff`). **No push.**
 | G composite | `step13/G-vs-step13-hyperfine-1440x900.png` | present (`653c357f…`) |
 | No source/schema/deps | `git status --short src/ Cargo.toml Cargo.lock` | empty |
 | Evidence transcript | `gate-step13.txt` | complete (fixtures + both harnesses + scope + hashes) |
-| Parallel panel | R1 ORDERED→APPROVED; R2 APPROVED; Q1 APPROVED; Q2 APPROVED (merged tree); R3 fresh APPROVED | zero unresolved blocking findings |
+| Parallel panel | R1 correctness **APPROVED**; R2 contract/scope **APPROVED**; Q1 verbatim **APPROVED**; Q2 acceptance **APPROVED** (merged tree, final); R3 fresh confirmation **APPROVED** | zero unresolved blocking findings |
 
 ## Risks / open
 
-- **Founder composition sign-off PENDING** — the only remaining step-13 item. The DOM gate and A1
-  reads are proxies for comprehension/geometry, not taste.
+- **Founder composition sign-off RESOLVED 2026-10-24** by the delegated approval (D-pf-253). It was the
+  last step-13 item; the DOM gate and A1 reads are proxies for comprehension/geometry, not taste, which is
+  why the delegation is recorded explicitly as revisitable.
 - **Step-11 residuals:** canvas basenames can mid-elide (`executi_.ets.rs`) and drop `src/`; one rail
   function row wraps/truncates (`src/shell_syntax.rs`; full value in `title`/profile queue).
 - **Sparse cJSON:** 2 of 81 files reachable, 38 partial parses, 75 demoted, 133/229 unresolved
@@ -112,5 +115,5 @@ approval rests on measurement, not taste, and is recorded as revisitable.
   `docs/activeContext.md`, `CHANGELOG.md`, `state/session-state.json`, this handoff.
 - **Merge hygiene (Track C, added this session):** `CHANGELOG.md` (agent-report entry),
   `docs/tracks/README.md` (Track C row: `821b984` → merged `d097e04` + `c73d6ff`),
-  `state/tracks/agent-report/handoff.md` ("C4 merged as `c73d6ff`" + a stale-quote fix).
+  `state/tracks/agent-report/handoff.md` (C4 recorded as `main` = `c73d6ff`, plus a stale-quote fix).
 - **No** code, schema, JS, dependency or golden change; no push.
