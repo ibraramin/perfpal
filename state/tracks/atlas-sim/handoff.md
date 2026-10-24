@@ -78,6 +78,8 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
 - `43a0841` — `fix(story): close re-review — canvas height, record, stale docs`
 - `0461f75` — `fix(story): path-independent provenance, reproducible gate, record`
 - `7170cad` — `fix(gate): exclude the transcript from the dirty count, record the verdict`
+- `9ad6ea2` — `fix(story): hard gate assertions, tree attestation, final record`
+- `63914f9` — `fix(gate): fail on projection errors; record final commit order`
 - evidence commits follow (`f9d0b93`, `aac7e8f`, …): transcripts only; **not pushed**.
 
 ## Next
