@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   blind reads per state, eight states). The G-baseline diff against
   `g-hyperfine-final.png` is recorded with a fresh composite and comparative read (**SAME SYSTEM**;
   residuals: step-11 mid-token filename elision, sparse cJSON, legacy page height outside `#map`,
-  the V8-disclosed capped state). **Founder sign-off APPROVED 2026-10-24 (D-pf-253)** — A2 (step 14) may be
+  the V8-disclosed capped state). **Founder sign-off APPROVED 2026-10-24 (D-pf-253; delegated, evidence-based)** — A2 (step 14) may be
   scheduled; ship (step 15) remains blocked; F remains undecided; holdouts vaulted; `map-build` not done. Evidence:
   `docs/evidence/atlas-visual/v2/{STEP13.md,step13.json,gate-step13.txt,VISION-STEP13.md,
   step13-reads.json,render_step13.py,render_step13_states.py}` + renders + `step13/`.

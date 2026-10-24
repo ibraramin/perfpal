@@ -1,7 +1,7 @@
 # Founder gate — Atlas v2 step 13 (1440×900)
 
-**Status: APPROVED — 2026-10-24.** **Decision: the first-page composition is approved.** This is the gate that unblocks
-A2/ship (`R-pf-109` / `A-pf-118`). Nothing in this session tuned the page.
+**Status: APPROVED — 2026-10-24.** **Decision: the first-page composition is approved.** This is the gate that unblocks **A2 (step 14)**;
+ship (step 15) stays blocked until A2 reports (`R-pf-109` / `A-pf-118` stay open as records). Nothing in this session tuned the page.
 
 **Provenance of the decision (recorded honestly):** the founder asked the orchestrator which way to rule and
 delegated the call to the evidence below; **the founder's own eye was not applied**. The approval therefore
@@ -83,9 +83,10 @@ below-the-fold coverage block; no chart data or geometry changed.
 
 - **APPROVED — 2026-10-24.** Step 13 passes: the first-page composition is signed off and A2 (step 14) may
   be scheduled as a separate session. Basis: every measured clause above passed on the merged tree
-  (`c73d6ff`), the 900px first screens / weight crops / 1280 frames / state frames / G composite are
-  byte-identical to the earlier package, the two added nav rows are the requested Track C links below the
-  fold, and A1 + strip remain 16/16 + 16/16. Delegated approval — the founder's own eye was not applied
+  (`c73d6ff`), the 900px first screens and 1280 frames are byte-identical to the step-12 committed
+  renders (`step12.json`), the weight crops / state frames / G composite still hash to their recorded
+  values in `gate-step13.txt` §10 (and the state frames to `step13-reads.json`), the two added nav links
+  are the requested Track C links below the fold, and A1 + strip remain 16/16 + 16/16. Delegated approval — the founder's own eye was not applied
   (see the provenance note at the top). Recorded in `state/session-state.json` (D-pf-253) and
   `state/handoff/latest.md`.
 - **REJECT (not taken)** would have failed step 13 and required a superseding composition decision with no

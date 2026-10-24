@@ -87,7 +87,8 @@ the founder's eye. The data/model are fine.
 
 ## 4. What not to do
 
-- Do **not** run A2 or ship until the founder says the first page looks right.
+- Do **not** ship (step 15) until A2 reports. A2 (step 14) may be scheduled now that step 13 is
+  approved (D-pf-253, delegated evidence-based).
 - Do **not** add more blocks/features to fix the composition; remove and simplify first.
 - Do **not** spend sessions on pixel-level layout nudges before the visual language is approved —
   the founder says layout is cheap; the palette/typography/hierarchy are the hard part.
@@ -97,7 +98,8 @@ the founder's eye. The data/model are fine.
 
 ## 5. Current status and next step
 
-- `R-pf-109` (high) is open; `A-pf-118` (A2/ship) is **blocked**.
+- `R-pf-109` (high) stays open as a record. `A-pf-118`: A2 (step 14) is schedulable; ship (step 15) is
+  blocked until A2 reports.
 - **Done:** steps 9–10 (signed G system, first-page fit, key-metrics strip, chrome hygiene;
   founder-approved 2026-10-24), **step 11** (right detail rail, committed `189df91`), **step 12**
   (weight/blast/file/coverage charts; drills on `atlas-weight.html`/`atlas-q2.html`; `#map`
@@ -108,7 +110,7 @@ the founder's eye. The data/model are fine.
 - **Step 13 is APPROVED (2026-10-24):** see `docs/evidence/atlas-visual/v2/step13/FOUNDER-GATE.md`
   and D-pf-253. A2 (step 14) may be scheduled as a separate session; do not mark the plan done. F
   remains undecided; do not ship the F treemap without a founder decision.
-- Do not start A2/ship; holdouts stay vaulted; `map-build` is not done; A1b stays open.
+- Do not ship (step 15); A2 may run. Holdouts stay vaulted; `map-build` is not done; A1b stays open.
 
 ## 6. Reading order
 

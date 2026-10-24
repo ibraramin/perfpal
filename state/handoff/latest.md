@@ -69,7 +69,7 @@ README, both CHANGELOG tails, STEP13 status/scope, agent brief, plan banner, `A-
 | G composite | `step13/G-vs-step13-hyperfine-1440x900.png` | present (`653c357f…`) |
 | No source/schema/deps | `git status --short src/ Cargo.toml Cargo.lock` | empty |
 | Evidence transcript | `gate-step13.txt` | complete (fixtures + both harnesses + scope + hashes) |
-| Parallel panel | R1 correctness **APPROVED**; R2 contract/scope **APPROVED**; Q1 verbatim **APPROVED**; Q2 acceptance **APPROVED** (merged tree, final); R3 fresh confirmation **APPROVED** | zero unresolved blocking findings |
+| Parallel panel | Round 1: R1 correctness **APPROVED**; R2 contract/scope blocked only on DoD commands it could not run (run by the orchestrator, below); Q1 + Q2 **CHANGES_REQUESTED** on stale records. Fixes: `7098a15`, `ae32d77`, then a third docs-only fix-up | blockers fixed; the confirmation lanes re-run after the fixes and their verdicts are recorded in the commits they review |
 
 ## Risks / open
 
@@ -96,7 +96,8 @@ README, both CHANGELOG tails, STEP13 status/scope, agent brief, plan banner, `A-
 1440/1280, 0 clipped/overflow/dup-id, one unit/median/caveat/unreached/legend/footer each, A9/A12 green,
 A1 **16/16** + strip **16/16**, G comparison **SAME SYSTEM**. The only delta since the page approved at
 steps 10–12 is the two below-fold Track C nav links (`agent report`, `agent actions`); the 900px finals,
-weight crops, 1280 frames, all eight state frames and the G composite are byte-identical.
+the 1280 frames are byte-identical to `step12.json`, and the weight crops, eight state frames and G
+composite still hash to their recorded values (`gate-step13.txt` §10 / `step13-reads.json`).
 **Provenance:** delegated sign-off — the founder asked the orchestrator to rule on the evidence, so the
 approval rests on measurement, not taste, and is recorded as revisitable.
 
@@ -110,7 +111,7 @@ approval rests on measurement, not taste, and is recorded as revisitable.
 ## Panel — round 1 (4 lanes) and the fix-up
 
 The step-13 commit (`86c0537`) landed **while the panel was running**, so its findings are fixed forward in
-a second, docs-only commit. Round-1 verdicts: **R1 APPROVED** (0 blocking), **R2 CHANGES_REQUESTED**
+three docs-only commits (`5b59065`, `7098a15`, and the third fix-up). Round-1 verdicts: **R1 APPROVED** (0 blocking), **R2 CHANGES_REQUESTED**
 (1 blocking, but it was a lane-capability gap: that lane had no shell, so the DoD commands could not be
 run — they are run and recorded below), **Q1 CHANGES_REQUESTED** (5 stale "PENDING" claims contradicting
 the approval it commits), **Q2 CHANGES_REQUESTED** (same stale claims + a commit/panel claim that was not
@@ -120,7 +121,7 @@ yet true).
 |---|---|
 | R1/Q1/Q2: `VISION-STEP13.md`, `handoff:72`, `activeContext`, `plans/atlas-build.md` (banner + step-13 heading + step-10 tail), `CHANGELOG` (step-11 **and** step-12 tails), `DECISION.md`, the evidence `README.md` banner, `STEP13.md` status/scope, `AGENT-BRIEF.md`, `A-pf-118` | All updated to **APPROVED 2026-10-24 (D-pf-253)**; D-pf-252 `superseded`; A2 schedulable, ship blocked |
 | R1/Q2: handoff asserted 4-lane panel APPROVED before it ran | Replaced with the real round-1 verdicts above |
-| Q2: "committed this session" with no hash | Commits line now names `c73d6ff` → `86c0537` → `a00fd0b` → this fix-up |
+| Q2: "committed this session" with no hash | Commits line now names `c73d6ff` → `86c0537` → `a00fd0b` → `5b59065` → `7098a15` → `ae32d77` → this fix-up |
 | Q2 M1: no record of what `:8769` serves | `FOUNDER-GATE.md` now names both bindings (`:8769` private scan, `:8767` shared) and states both serve `a4fade03…` |
 | Q2 M2: "byte-identical to earlier package" unfalsifiable | Scoped to what is provable: finals + 1280 frames identical to `step12.json`; fixture frames match `step13-reads.json` image hashes |
 | Q2 M5: build freshness asserted, not shown | `target/release/perfpal` mtime **08:17** > C4 merge **08:07:45**; `cargo build --release --locked` is a no-op; that binary emits both agent artifacts and reproduces `a4fade03…` |

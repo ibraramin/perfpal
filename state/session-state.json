@@ -127,8 +127,8 @@
     },
     {
       "id": "A-pf-118",
-      "status": "blocked",
-      "action": "Atlas steps 14-15 (A2+ship) BLOCKED by R-pf-109 until the v2 visual rework (steps 9-13) passes the founder visual gate; read docs/atlas/AGENT-BRIEF.md first; holdouts vaulted; map-build NOT done; A1b open."
+      "status": "active",
+      "action": "A2 (step 14) may be scheduled - the step-13 composition was APPROVED 2026-10-24 (D-pf-253). Ship (step 15) stays blocked until A2 reports. Read docs/atlas/AGENT-BRIEF.md first; holdouts vaulted; map-build NOT done; A1b open."
     },
     {
       "id": "A-pf-122",

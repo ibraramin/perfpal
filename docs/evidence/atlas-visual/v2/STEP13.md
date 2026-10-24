@@ -16,8 +16,9 @@ release binary built from it. The session-private scans are **byte-identical to 
 `perfpal-test/out-atlas-v2-*` pages** (hyperfine `a4fade03…`, cJSON `323ee0a8…`), and
 `step13.json → capture` records both plus `same_as_private: true`. The merge adds two nav links
 (`agent report`, `agent actions`) inside the below-the-fold coverage block: **`-charts.png` and
-`-full.png` changed**, while the 900px `-final.png`, the weight crops, the 1280×800 frames and all
-eight fixture frames are **byte-identical**, so the 32 blind reads and the G composite remain valid.
+`-full.png` changed**, while the 900px `-final.png` and 1280×800 frames are **byte-identical to the
+step-12 renders** (`step12.json`) and the weight crops, eight fixture frames and G composite still hash to
+their recorded values (§10 here and `step13-reads.json`), so the 32 blind reads remain valid.
 No assertion or measurement changed.
 
 The founder page is served privately at **http://127.0.0.1:8769/hyperfine/report.html#map** (and
@@ -155,7 +156,7 @@ session. The dated sign-off and its provenance are recorded in `step13/FOUNDER-G
 | Eight-state gate + frames | `python3 docs/evidence/atlas-visual/v2/render_step13_states.py` | PASS, exit 0 |
 | Fixture regeneration | `PERFPAL_ATLAS_VISION_DIR=…/step13/html cargo test --locked --test atlas_vision -- --ignored` | 1 passed (in `gate-step13.txt` §2) |
 | Currency | private scan sha256 vs shared page | identical (`a4fade03…` / `323ee0a8…`, merged `c73d6ff`) |
-| Frames affected by the merge | `-charts.png` / `-full.png` changed; `-final`/weights/1280/8 fixtures identical | 32 reads stand |
+| Frames affected by the merge | `-charts.png` / `-full.png` changed; `-final` + 1280 identical to `step12.json`; weights/state frames/G match the §10 hashes | 32 reads stand |
 | A1 reads | `step13-reads.json` | 16/16 PASS |
 | Strip reads | `step13-reads.json` | 16/16 PASS |
 | G composite | `step13/G-vs-step13-hyperfine-1440x900.png` | present, sha256 `653c357f…` |

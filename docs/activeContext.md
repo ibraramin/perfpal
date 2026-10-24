@@ -63,7 +63,8 @@ be scheduled; ship (step 15) stays blocked.**
 - Do **not** mark the plan done (step 15); holdouts vaulted; `map-build` not done; A1b open.
 
 ## Blockers
-- **Atlas A2 (R-pf-108):** founder timed test on application + library classes; blocked until step 13.
+- **Atlas A2 (R-pf-108):** founder timed test on application + library classes; **unblocked
+  2026-10-24** (step 13 approved, D-pf-253) — A2 is the next gate.
 - **Atlas visual gate:** step-10 first page APPROVED 2026-10-24; **step-13 composition APPROVED
   2026-10-24** (D-pf-253, delegated/evidence-based, revisitable). No longer a blocker for A2.
 - **Map legibility:** R-pf-104/R-pf-105/R-pf-106; ranking recall A1b open.

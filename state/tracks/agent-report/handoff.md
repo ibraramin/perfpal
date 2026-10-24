@@ -395,7 +395,8 @@ Session 5: Atlas v2 steps 11–13.
   (docs/specs/agent-report.md:47, docs/tracks/README.md:48). The atlas plan's step-12 text currently
   omits the link: add it to the step before implementing, or escalate to the founder.
 - Step 13 — founder visual gate + G-baseline diff + V8 A1/strip rerun.
-Do not start A2 (step 14) or ship (step 15); R-pf-109 open; step-10 approved. Evidence under
+Do not start A2 (step 14) or ship (step 15); R-pf-109 open; step-10 approved. *(Historical: step 13 was
+APPROVED 2026-10-24 — A2 may now be scheduled; ship (step 15) stays blocked.)* Evidence under
 docs/evidence/atlas-visual/v2/. Done = step 12 committed on main (unblocks C) + step 13 founder-signed.
 ```
 
