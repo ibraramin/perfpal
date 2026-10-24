@@ -181,12 +181,12 @@
 - **Known limits:** second parse of the drawn files (bounded by the canvas cap; story-only);
   macros are not expanded; C parameter text is assembled from the declaration so qualifiers and
   pointers survive (the grammar's `type` field alone drops `const`/`*`); Rust pattern names use
-  the leftmost identifier; unnamed C parameters carry `name: null`; unreadable/unparsable files
-  are skipped (their edges stay `unresolved` later); no `io` block yet.
+  the leftmost identifier; unnamed C parameters carry `name: null`; unreadable or failed-to-parse
+  files are skipped (a partial parse tree can still emit rows); no `io` block yet.
 - **Real implementation must:** capture return type + parameter names/direction in the scanner IR
   in the same pass (no second parse), expand macros, and resolve `impl Trait`/generics only with a
   real type analysis. Prototype stays story-only.
-- **Evidence:** 845 tests pass; `cargo fmt`/`clippy -D warnings` exit 0; on the hyperfine fixture
+- **Evidence:** 853 tests pass; `cargo fmt`/`clippy -D warnings` exit 0; on the hyperfine fixture
   `--story` emits 191 signatures for 19 drawn nodes in 1.78 s; `report.html` byte-identical
   with/without `--story`; `metrics.json` content-equal after masking scan provenance; two runs
   produce identical `flow` bytes.
@@ -201,7 +201,7 @@
   (`type-only` | `literal-observed` | `unresolved`). `layout_version` stays 1; no other artifact changes.
   The edge label is computed in Rust — the film does not re-classify in Python/JS.
 - **Identity:** `from`/`to` are file paths (the drawn edge endpoints); `caller`/`to_id` are canonical
-  function ids so the inspector can drill to `path:line`. `to`/`to_id` are `null` when unresolved.
+  function ids so a later drill-down can join `path:line` (the S2 film shows `callee`/`line` in the edge tooltip; no inspector drill yet). `to`/`to_id` are `null` when unresolved.
 - **Resolution:** direct names only (`identifier`, Rust `scoped_identifier` final segment) and only when
   the name is **unique across the parsed drawn functions**. Ambiguous names, method/field calls,
   function pointers and macros are `unresolved: true` — never guessed (§2 non-goals).
@@ -209,11 +209,11 @@
   Rust references report the pointee (`&mut Config` ⇒ `Config`); C decimal constants are `int`;
   string literals are typed `str`/`char*` with `literal: true`; `named` is the bare identifier or the
   root of a field access. No cross-file or points-to inference.
-- **Edge classification:** any literal arg ⇒ `literal-observed` (payload = the literal, ≤24 chars);
+- **Edge classification:** any string-literal arg ⇒ `literal-observed` (payload = the literal, ≤24 chars);
   else any typed arg ⇒ `type-only` (payload = most frequent type, ties lexicographic); else
   `unresolved` (payload `null`). No matching call ⇒ `unresolved`.
-- **Evidence:** 849 tests pass; fmt/clippy exit 0; hyperfine `--story` in 1.9 s emits 1586 calls
-  (43 resolved) and 49 labelled edges — 44 `unresolved`, 4 `type-only`, 1 `literal-observed`;
+- **Evidence:** 853 tests pass; fmt/clippy exit 0; hyperfine `--story` in 1.9 s emits 1586 calls
+  (22 resolved after the `ee74206` conservatism fix) and 49 labelled edges — 44 `unresolved`, 4 `type-only`, 1 `literal-observed`;
   every `from` is drawn, every `to` is drawn-or-null; `report.html` byte-identical with/without
   `--story`; metrics content-equal after masking scan provenance; two runs identical.
 - **Known limits:** drawn files only (second parse, story-only); no cross-file type inference; method
@@ -222,6 +222,20 @@
   included (the film may ignore same-file edges); C macros are never expanded.
 - **Real implementation must:** resolve C function pointers and Rust `dyn`/closures, expand macros,
   infer argument types interprocedurally, and capture all of it in the single scanner pass.
+
+### S2 fixes (`ee74206`)
+
+- **Commit:** `ee74206` `fix(flow): pointer returns and conservative resolution` (panel findings).
+- **Fixed:** C return types include the declarator pointer/qualifiers (`char *dup` ⇒ `char *`,
+  `const char *name` ⇒ `const char *`, `int **grid` ⇒ `int **`); fn-pointer returns are recorded
+  as written and marked `fn-pointer-return`; argument `dir` is expression/type-consistent
+  (`&cfg` ⇒ `inout`); macro names are collected across **all** drawn files before call extraction;
+  Rust `scoped_identifier` resolves only from `crate`/`self`/`super`, so `std::fs::read` can no
+  longer masquerade as a drawn `read`; AST walks are capped at depth 256.
+- **Effect:** hyperfine resolved calls 43 → 22 (more conservative); edge labels unchanged
+  (44 `unresolved`, 4 `type-only`, 1 `literal-observed`). 853 tests pass.
+- **Not changed:** `out` still unused; `unresolved` still means "callee unresolved or every
+  argument untyped" (documented in the module).
 
 ## Status legend
 
