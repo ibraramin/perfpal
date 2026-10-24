@@ -1,6 +1,6 @@
 # Track C — Agent report (LLM depth layer)
 
-**Worktree:** `/home/shafin/Opencode/Perfpal-agent-report` (`feat/agent-report`, base `821b984`; rebase after A step 12).
+**Worktree:** `/home/shafin/Opencode/Perfpal-agent-report` (`feat/agent-report`, created from `821b984`, **rebased onto `main` `9a94905`** at C3).
 **Start this tab:** open the worktree, first message:
 
 > `Read /home/shafin/Opencode/Perfpal/docs/tracks/agent-report.md and execute Session C2.`
@@ -14,17 +14,17 @@ git worktree add ../Perfpal-agent-report -b feat/agent-report 821b984
 **Track handoff:** `state/tracks/agent-report/handoff.md` · **Spec:** `docs/specs/agent-report.md` · **Plan:** `docs/plans/agent-report.md` · **A-pf-111** in the state/handoff.
 **Role:** the full-fidelity LLM layer the simplified Atlas first page points to. Not a human dashboard; no LLM calls.
 
-**Status 2026-10-24 — C2 COMPLETE (module + unit tests; no wiring).** `src/reporter/agent_report.rs`
-renders both artifacts as pure functions of `MetricsDocument`: `agent-report.md` (fixed seven-section
-skeleton, 25/25 inline caps, ≤80 KB — measured 76,416 B at the §12 envelope) and `agent-actions.json`
-(complete action list, 100-row profile cap). It reuses the shipped KV1/KV3 rank keys and
-`views::ScaleOrdering` anchors, carries the 67 curated hints with a set-equality lock, and 24 unit tests
-pin rank parity, stubs, escaping, determinism, sample byte-parity and the exact size budget. Only
-`src/reporter/mod.rs` changed outside the module (module declaration + three `pub(crate)` exports).
-**C1 COMPLETE** (contract `contract_version 1`, sample + gate under `docs/evidence/agent-report/`;
-`6d32e67`, hash `e730d01`). **C2 is uncommitted pending founder approval.** CLI emission, the C3
-integration suite, sample regeneration, the downstream eval and A's step-12 link remain **pending A
-step 12**.
+**Status 2026-10-24 — C2 WIRING + C3 COMPLETE (awaiting founder merge approval).** `feat/agent-report`
+is rebased onto `main` `9a94905`; code commit `7e5b921`. The CLI now always emits `agent-report.md`
+(fixed seven-section skeleton, 25/25 inline caps, ≤80 KB on the §12 envelope) and `agent-actions.json`
+(complete action list, 100-row profile cap), both pure functions of `MetricsDocument`: no flag, no schema,
+no dependency. `tests/agent_report.rs` adds 9 integration tests (double-run byte equality, completeness
+arithmetic, the 11-row state matrix, `detail_anchor` resolution, inertness, artifact set, sample parity,
+size budget, human-page link); the 24 unit tests are unchanged. **C1 COMPLETE** (`6d32e67`, hash
+`e730d01`). A step 12 (`9a94905`) shipped **without** the C link, so the founder authorized C to add the
+two nav rows + the output-contract rows (+ the four `report.html` goldens, +2 lines each); recorded in the
+track handoff. DoD 7–20 green; the §13 downstream eval is **deferred by the founder** (verbatim in the
+handoff). **No merge, no push.**
 
 ## Read first
 

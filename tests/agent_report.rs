@@ -23,9 +23,6 @@ use perfpal::cli::run_with;
 use perfpal::reporter::agent_report;
 use perfpal::schema::MetricsDocument;
 
-/// Spec §12: the MD budget is 80 KB (81,920 B), not 80,000 B.
-const MD_BUDGET: usize = 80 * 1024;
-
 /// Spec §7: the fixed seven-section skeleton. A wording change is a contract
 /// edit — these strings are asserted, not the rendered body.
 const SECTION_HEADINGS: [&str; 7] = [
@@ -322,15 +319,21 @@ fn agent_report_state_matrix_renders_fixed_skeleton() {
         capped_md.contains("showing top 25 of 30 actions"),
         "the inline cap is printed with N of M"
     );
+    assert_eq!(
+        capped_md.matches("\n### ").count(),
+        25,
+        "the inline detail renders exactly the top-25 cap"
+    );
 
     // Row 7 — partial-parse scan: counts are reported, never silently dropped.
     let broken_root = temp_dir("state-partial");
     write_source(&broken_root, "src/broken.c", "void broken( { \n");
     let broken_doc = assemble_doc(&broken_root);
     assert_skeleton(&broken_doc, "partial-parse scan");
+    let broken_md = agent_report::render_markdown(&broken_doc);
     assert!(
-        agent_report::render_markdown(&broken_doc).contains("parse:"),
-        "partial-parse scan reports parse health"
+        broken_md.contains("parse: 0 ok / 1 partial / 0 failed"),
+        "a broken file is counted as partial, never silently dropped"
     );
 
     // Row 8 — single-file scan.
@@ -346,7 +349,14 @@ fn agent_report_state_matrix_renders_fixed_skeleton() {
     assert_skeleton(&v1, "v1-only cost scan");
     let v1_json: serde_json::Value =
         serde_json::from_str(&agent_report::render_actions_json(&v1)).expect("v1 JSON");
-    for action in v1_json["actions"].as_array().expect("actions") {
+    let v1_actions = v1_json["actions"].as_array().expect("actions");
+    assert!(
+        v1_actions
+            .iter()
+            .any(|action| action["function"].is_object()),
+        "the v1-only fixture still carries function sub-objects"
+    );
+    for action in v1_actions {
         if action["function"].is_object() {
             assert_eq!(
                 action["function"]["cost_scale"], "v1",
@@ -518,11 +528,30 @@ fn agent_report_sample_matches_committed_contract() {
     // goldens were written with the fixture root masked to `<ROOT>`, so the
     // parity assertion normalizes exactly that one token — nothing else.
     let root_token = fixture.to_string_lossy().into_owned();
-    for (emitted, committed) in [
-        ("agent-report.md", "agent-report.sample.md"),
-        ("agent-actions.json", "agent-actions.sample.json"),
+    // JSON escapes path separators (Windows), so the machine contract needs its
+    // own escaped form. Both tokens are asserted to occur exactly once, so the
+    // normalization can never hide a second (leaked) absolute path.
+    let json_token = serde_json::to_string(&root_token).expect("json-encode root path");
+    let json_token = &json_token[1..json_token.len() - 1];
+    for (emitted, committed, token) in [
+        (
+            "agent-report.md",
+            "agent-report.sample.md",
+            root_token.as_str(),
+        ),
+        (
+            "agent-actions.json",
+            "agent-actions.sample.json",
+            json_token,
+        ),
     ] {
-        let actual = read_artifact(&out, emitted).replace(&root_token, "<ROOT>");
+        let raw = read_artifact(&out, emitted);
+        assert_eq!(
+            raw.matches(token).count(),
+            1,
+            "{emitted} must carry the scan root exactly once (provenance)"
+        );
+        let actual = raw.replace(token, "<ROOT>");
         let expected = read_artifact(&manifest("docs/evidence/agent-report/sample"), committed);
         assert_eq!(
             actual, expected,
@@ -543,6 +572,7 @@ fn agent_report_sample_matches_committed_contract() {
 
 #[test]
 fn agent_report_size_budget_golden_fixtures() {
+    let budget = agent_report::MD_SIZE_BUDGET;
     for (tag, fixture) in [
         ("report", "tests/fixtures/e2e"),
         ("report-mixed", "tests/fixtures/e2e-mixed"),
@@ -552,8 +582,8 @@ fn agent_report_size_budget_golden_fixtures() {
         let doc = assemble_doc(&manifest(fixture));
         let (_, markdown) = render_pair(&doc);
         assert!(
-            markdown.len() <= MD_BUDGET,
-            "[{tag}] agent-report.md is {} B (budget {MD_BUDGET} B)",
+            markdown.len() <= agent_report::MD_SIZE_BUDGET,
+            "[{tag}] agent-report.md is {} B (budget {budget} B)",
             markdown.len()
         );
     }
@@ -574,8 +604,8 @@ fn agent_report_size_budget_golden_fixtures() {
         let doc = assemble_doc(&path);
         let (_, markdown) = render_pair(&doc);
         assert!(
-            markdown.len() <= MD_BUDGET,
-            "[{repo}] agent-report.md is {} B (budget {MD_BUDGET} B)",
+            markdown.len() <= agent_report::MD_SIZE_BUDGET,
+            "[{repo}] agent-report.md is {} B (budget {budget} B)",
             markdown.len()
         );
     }

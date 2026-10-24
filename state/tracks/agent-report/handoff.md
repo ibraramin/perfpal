@@ -1,8 +1,8 @@
 # Track C — agent report · handoff
 
 **Track:** C (LLM depth layer) · **Branch:** `feat/agent-report` · **Worktree:** `/home/shafin/Opencode/Perfpal-agent-report`
-**Session:** C2 (module + unit tests) · **Date:** 2026-10-24 · **Plan:** `docs/plans/agent-report.md` · **Spec:** `docs/specs/agent-report.md`
-**Status:** **C2 COMPLETE** — `src/reporter/agent_report.rs` (views + 67 hints + JSON + MD + 24 unit tests) with visibility-only `mod.rs`; **no CLI wiring** (waits on A step 12). C1 COMPLETE (`6d32e67`, hash recorded in `e730d01`). No merge, no push. C2 uncommitted pending founder approval.
+**Session:** C2 wiring + C3 (integration suite) · **Date:** 2026-10-24 · **Plan:** `docs/plans/agent-report.md` · **Spec:** `docs/specs/agent-report.md`
+**Status:** **C2 WIRING + C3 COMPLETE — awaiting founder merge approval.** Rebased onto `main` `9a94905`; code commit `7e5b921` on `feat/agent-report`. Both artifacts are emitted by the CLI; 24 unit + 9 integration tests; DoD 7–20 green (see the evidence table below). C1 COMPLETE (`6d32e67`, hash `e730d01`). **No merge, no push.** The §13 downstream eval is deferred by the founder (recorded verbatim below).
 
 ## Objective and phase
 
@@ -221,3 +221,154 @@ R4's non-blocking notes and resolutions:
   `state/tracks/agent-report/handoff.md`.
 - **Edited:** `docs/tracks/agent-report.md` (status block only).
 - **No** `src/`, schema, `Cargo.*`, `deny.toml`, main state, `CHANGELOG.md`, or A/D surface changes.
+
+## C2 wiring + C3 (2026-10-24)
+
+**Base / HEAD:** worktree created from `821b984`; pre-rebase merge-base `3a84a0e`; **rebased onto `main`
+`9a94905`** (atlas v2 step 12) before any C3 work. Code commit **`7e5b921`** (`2a624e9` is the rebased C2
+renderer commit). This handoff is committed immediately after it.
+
+### Precondition: failed twice, then authorized
+
+1. First check (A step 12 uncommitted): `rg -n "agent-report.md" /home/shafin/Opencode/Perfpal/src` → exit
+   1, zero hits. Stopped, reported.
+2. Step 12 then landed as `9a94905`, but the check still failed — the commit shipped **without** the C link
+   (no `agent-report` hit in `src/`, no output-contract row, and `docs/evidence/atlas-visual/v2/STEP12.md`
+   lists the artifacts without it). Stopped, reported.
+3. Founder decision, verbatim: **"Authorize C to add the link now, then proceed"**. That reassigns the
+   A-owned link line to C for this change set. Delivered as the minimum: two nav rows in
+   `src/reporter/atlas_charts.rs` (`render_coverage`), the two `docs/report/output-contract.md` artifact
+   rows + the 8 → 10 set sentence + the LLM entry-point sentence, the guard flip in
+   `tests/atlas_charts.rs` (it asserted "agent-report must wait for track C"), and the four
+   `tests/golden/*/report.html` goldens (+2 lines each). No chart geometry, label, or data change — the
+   nav is a text list; a `@vision` pass was not run because no figure changed.
+
+### Change set
+
+- **Wiring:** `src/cli/mod.rs` — both renderers called once, both artifacts appended via `Artifact::text`;
+  no flag, no schema, no dependency, no `Cargo.*`/`deny.toml` change.
+- **New tests:** `tests/agent_report.rs` (9 integration tests, §14.11–14.15).
+- **A-link (authorized):** `src/reporter/atlas_charts.rs`, `tests/atlas_charts.rs`,
+  `tests/golden/{report,report-mixed,report-python,report-rust}/report.html`,
+  `docs/report/output-contract.md`.
+- **Sample:** `docs/evidence/agent-report/sample/*` **unchanged** — regeneration is a no-op (the renderer
+  output already byte-equals the committed C1 sample; see the evidence row for DoD 12/14).
+- **Not touched:** `src/reporter/agent_report.rs` (C2 code as reviewed), schema, `Cargo.*`, `deny.toml`,
+  CHANGELOG, `state/session-state.json`, main state, D surfaces.
+
+### Definition of Done 7–20 — claim → evidence
+
+All commands run from the repo root; `cargo` is not on the default PATH in this shell (`export
+PATH="$HOME/.cargo/bin:$PATH"`).
+
+| # | Command | Observed |
+|---|---|---|
+| 7 | `cargo fmt --all -- --check` | exit 0 |
+| 8 | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
+| 9 | `cargo test --locked` | exit 0 — **879 passed**, 0 failed (58 test binaries) |
+| 10 | `cargo deny check licenses` | exit 0 (`licenses ok`) |
+| 11 | `… --lib agent_report -- --list \| grep -c ': test$'` | **24** (≥ 10) |
+| 12 | `cargo test --locked --lib agent_report` | 24 passed — rank parity, anchors, hints lock, profile schema, text safety, exact sizes, stubs, forbidden strings, double render, literal sample parity (`agent_report_sample_matches_committed_contract` in-module, no normalization) |
+| 13 | `… --test agent_report -- --list \| grep -c ': test$'` + run | **9** (≥ 8), 9 passed |
+| 14 | `agent_report_sample_matches_committed_contract` (name assert + run) | pass — CLI-emitted bytes equal the committed sample after normalizing exactly one token (fixture root → `<ROOT>`, asserted to occur once); the MD/JSON payload is otherwise byte-locked |
+| 15 | `agent_report_size_budget_golden_fixtures` | pass — ≤ 80 KB on the four committed fixture trees (`e2e`, `e2e-mixed`, `examples-python`, `examples-rust`); the `~/Opencode/perfpal-test` scans stay behind `PERFPAL_EXTERNAL_SCANS=1` and skip cleanly when absent |
+| 16 | `agent_report_human_page_links_to_agent_report` | pass — `report.html` carries `href="agent-report.md"` and `href="agent-actions.json"`, and both files exist in the same directory |
+| 17 | eval recorded **or** deferral | **deferral recorded below** |
+| 18 | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | exit 0 |
+| 19 | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | exit 0 (the sample-parity test is `cfg(not(semantic-clang))`, matching the committed-golden precedent; every wiring test still runs) |
+| 20 | `git status --short src/schema/ docs/schema/ Cargo.toml Cargo.lock deny.toml` | empty |
+
+Test-to-requirement map: double-run byte equality → `agent_report_double_run_bytes_identical`; completeness
+arithmetic → `agent_report_completeness_arithmetic`; §11 matrix (11 rows) →
+`agent_report_state_matrix_renders_fixed_skeleton`; `detail_anchor` → `…_detail_anchor_resolves_in_findings_detail`;
+no script/network → `…_artifacts_carry_no_script_or_network`; artifact set → `…_emitted_artifact_set`;
+sample → DoD 14 above; size → DoD 15 above; link → DoD 16 above.
+
+### §13 downstream eval — founder deferral, verbatim
+
+Founder decision: **"Defer the eval to post-merge"**.
+
+Recorded for DoD 17: **eval deferred by founder** — the §13 N=6 downstream eval runs after merge, as a
+manual external check. Nothing is claimed about top-1/top-3 hit, hallucination, or time-to-fix; the
+artifact is the ranked triage queue until that eval reports.
+
+### Panel — round 1
+
+| Lane | Verdict | Blocking |
+|---|---|---|
+| R1 correctness | APPROVE | none |
+| R2 contract/security | APPROVE | none |
+| Q1 verbatim scope | CHANGES_REQUESTED | the deferral + C3 handoff were not yet written (sequenced after the panel) |
+| Q2 acceptance/evidence | CHANGES_REQUESTED | same; also asked for in-tree gate evidence |
+
+Round-1 non-blocking items actioned before commit: Windows-safe sample token (+ exactly-once assertions),
+partial-parse row asserts real counts, capped row asserts the 25-heading cap, v1 row can no longer pass
+vacuously, the budget constant is the shipped `MD_SIZE_BUDGET`, the ≤80 KB contract claim is scoped to the
+§12 envelope, and the directory tree names the two Atlas drill pages. Not actioned (deliberate): pruning
+the agent artifacts in `regenerate_goldens` — see the follow-up note below. Round 2 (Q1 + Q2 re-run +
+one fresh confirmation lane) is appended in the follow-up commit.
+
+### Carry-forward non-blockers (unchanged)
+
+- §9.7 header exemption (the scan-root line is provenance) — still open by design.
+- Dynamic-only tier wording — still open.
+- Synthetic `scan.file_count` cosmetic — still open.
+
+Add one: `PERFPAL_REGEN_GOLDEN=1 … regenerate_goldens` now also writes the two agent artifacts into each
+`tests/golden/*` tree (unmasked root). They are intentionally **not** committed; a future regen should
+either mask them and add them to `GOLDEN_ARTIFACTS`, or delete them in the regen step.
+
+### Merge gate
+
+Founder approval to merge `feat/agent-report` into `main` is **requested, not assumed**. No merge, no push,
+no CHANGELOG entry from this session.
+
+## Next sessions — signposts
+
+Two sessions, in this order. C is blocked until A step 12 is committed on `main`.
+
+### 1) Session A — Atlas steps 11–13 (worktree `/home/shafin/Opencode/Perfpal`, branch `main`)
+
+```text
+Read docs/plans/atlas-build.md and docs/tracks/atlas-beta.md. Plan atlas-build; specs atlas-layout +
+atlas-metrics. Worktree /home/shafin/Opencode/Perfpal, branch main.
+Session 5: Atlas v2 steps 11–13.
+- Step 11 — G-style detail rail: canvas stays graph-only; functions and finding IDs reachable.
+- Step 12 — progressive key charts (weight/blast/file; evaluate the F treemap candidate; move Q2/weight
+  drills; #map ~4–5k px). ALSO add, as part of step 12, the human-page link to `agent-report.md` /
+  `agent-actions.json` and the `docs/report/output-contract.md` row — the C contract expects both
+  (docs/specs/agent-report.md:47, docs/tracks/README.md:48). The atlas plan's step-12 text currently
+  omits the link: add it to the step before implementing, or escalate to the founder.
+- Step 13 — founder visual gate + G-baseline diff + V8 A1/strip rerun.
+Do not start A2 (step 14) or ship (step 15); R-pf-109 open; step-10 approved. Evidence under
+docs/evidence/atlas-visual/v2/. Done = step 12 committed on main (unblocks C) + step 13 founder-signed.
+```
+
+### 2) Session C — C2 wiring + C3 (worktree `/home/shafin/Opencode/Perfpal-agent-report`, branch `feat/agent-report`)
+
+```text
+Read docs/tracks/agent-report.md, state/tracks/agent-report/handoff.md, docs/specs/agent-report.md and
+docs/plans/agent-report.md first.
+Track C: plan agent-report · spec agent-report (v1) · branch feat/agent-report · HEAD 4bf332d
+(C2 module + 24 unit tests complete; 6-lane panel APPROVED; no CLI wiring; no push/merge).
+
+Precondition: `rg -n "agent-report.md" /home/shafin/Opencode/Perfpal/src` must hit (A step 12 committed
+on main with the human-page link). If it does not, STOP and report — do not wire early.
+Then rebase feat/agent-report on main (record the base) and execute C2 wiring + C3 (plan DoD 13–20):
+1. src/cli/mod.rs: emit agent-report.md + agent-actions.json via Artifact::text; update the fixed
+   artifact-set assertions (8 → 10 files). No flag, no schema, no dependency; the output-contract row is
+   A-owned (verify only).
+2. tests/agent_report.rs (≥8 tests): double-run byte equality on the same fixture tree; completeness
+   arithmetic; the 11-row §11 state matrix; detail_anchor resolves in findings-detail.html; no
+   script/network; emitted artifact set.
+3. Regenerate docs/evidence/agent-report/sample/* from the Rust renderer and assert an empty byte-diff
+   against the committed C1 sample.
+4. §13 downstream eval (cJSON/hyperfine/bat, N=6) or record the founder's explicit deferral verbatim.
+5. Run DoD 7–20 (incl. semantic-feature lint/tests; the external perfpal-test scans only with
+   PERFPAL_EXTERNAL_SCANS=1), then the parallel panel (2 reviewers + 2 requirements-reviewers), update
+   only this handoff, request founder approval to merge; no push.
+
+Carry-forward non-blockers: §9.7 header exemption (root path), dynamic-only tier wording, synthetic
+scan.file_count cosmetic. Constraints: no A/D surfaces, no main state, no CHANGELOG, no merge/push.
+```
+
