@@ -150,6 +150,10 @@ Each slice = one commit per probe + evidence + probe-registry row status flip.
 2. **Slice order: pipeline first.** S1 (P4 stages + P5 layout) shipped before data movement (S2/S3).
 3. **Companion vs in-report: deferred to after S2.** If in-report with controls → new ADR + A12
    amendment (A12 already permits CSS/SMIL, not a second script).
+   **Resolved 2026-10-26 (ADR-0011):** the story **remains a standalone companion**; it does not
+   graduate into the static report, and A12 is unchanged. The founder-ratified graduation
+   conditions (D2 session, step-13 report gate, deterministic player, explicit A12 amendment) are
+   recorded in `docs/adr/ADR-0011-atlas-story-companion.md` Decision 4.
 4. **CLI shape:** S1 ships `--story` on the existing command; the target entry point remains
    `perfpal story <repo>` (S4). **S4 status (2026-10-26):** S4 shipped the `--story` flag only; the
    `perfpal story <repo>` subcommand is **deferred**, not delivered, and is recorded as a deviation

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Atlas Story stays a companion (2026-10-26, ADR-0011).** The founder decided the Atlas Story
+  does **not** graduate into the static report in v1: `report.html` keeps exactly one fixed
+  `REPORT_SCRIPT` and A12 is unchanged, so no second script, inline story data or CSS/SMIL film
+  ships in the report. Rationale: S4 proves the story's mechanism (F1–F7, 3k scale 44/44, F1 read
+  PASS-WITH-NITS) but the founder D2 interaction gate has not run and the report's composition is
+  still unapproved (`R-pf-109`). Graduation requires a founder D2 session on a self-contained story
+  artifact, the step-13 report gate, a deterministic offline player and an explicit A12 amendment.
+  The companion's packaging (data inlined, no server; CLI entry point) is a recorded follow-up, not
+  shipped here. No code/schema change; F8 remains deferred.
+
 ### Added
 - **Atlas Story S4 — scale scenes and payoff (2026-10-26).** Three story-only core probes land in
   `atlas-layout.json` (layout_version stays 1; no schema change, no dependency; non-story scans are

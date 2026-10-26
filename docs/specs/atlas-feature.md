@@ -58,7 +58,8 @@ Surfaces:
 - **A12** — no new JavaScript: the Atlas canvas and animation blocks contain no `<script>` and no
   event handlers; the report's existing single fixed enhancement script (`REPORT_SCRIPT`, fixed
   source, no interpolated data, no network) is unchanged. `report.html` has exactly one script
-  block; the canvas/SVG/animation artifacts have zero.
+  block; the canvas/SVG/animation artifacts have zero. **Status 2026-10-26:** unchanged; the Atlas
+  Story stays a companion (`ADR-0011`), so no second script ships in the report.
 - **A4** — double scan → byte-identical HTML/SVG (excluding run provenance).
 - **A7/A11** — no bare measured number; every `×`/`%` states its denominator; no time units.
 - **A8 (amended)** — first block = canvas; first answer block = answer line below; the canvas
