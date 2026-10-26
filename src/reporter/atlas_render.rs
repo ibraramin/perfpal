@@ -1433,7 +1433,7 @@ pub(crate) fn footer_parts(view: &AtlasView) -> [String; 7] {
         format_count(view.coverage.unreached_production as u64),
         format_count(view.coverage.unreached_nonproduction as u64)
     );
-    let parts = [
+    [
         reachable,
         pairs,
         mix,
@@ -1448,8 +1448,7 @@ pub(crate) fn footer_parts(view: &AtlasView) -> [String; 7] {
             view.blast_radius.include_edges_total,
         ),
         format_demoted_files(view.coverage.demoted_files),
-    ];
-    parts
+    ]
 }
 
 /// Canvas footer text (unescaped; the HTML path escapes the joined string).
