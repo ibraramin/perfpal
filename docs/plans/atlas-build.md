@@ -1,18 +1,21 @@
 ---
 plan name: atlas-build
 plan description: Ship the Atlas map page
-plan status: active
+plan status: done
 ---
 
-> **STATUS 2026-10-26 — steps 9–13 complete; step 13 APPROVED (D-pf-253); A2 (step 14) EXECUTED
-> (delegated PASS, evidence `docs/evidence/map-vision/v8/a2.md`).** Step 15 is schedulable; ship stays
-> blocked on the memchr library fold residual (canvas 1,282 px > 900) until step 15 resolves/accepts
-> it. `R-pf-109` remains open as a record.
+> **STATUS 2026-10-26 — Atlas v2 DONE.** Steps 9–15 complete; step 13 APPROVED (D-pf-253); A2
+> (step 14) delegated PASS (D-pf-255, evidence `docs/evidence/map-vision/v8/a2.md`) closes the beta
+> gate (D-pf-257); the memchr library fold (canvas 1,282 px > 900) is accepted as a documented beta
+> residual (D-pf-256, with a named fix trigger); step 15 docs/EOL + DoD 1–13 + the parallel panel
+> are complete; **`atlas-build` is marked done 2026-10-26 (D-pf-258)**. `R-pf-109` is closed as a
+> record; F stays undecided (D-pf-251); `map-build` not done; A1b open; publish gate B-pf-001/002
+> founder-owned; commit pending founder approval; no push.
 > **New agents: read `docs/atlas/AGENT-BRIEF.md` first.** The founder's 2026-10-23 model supersedes
 > the "100%-graph canvas" wording in this plan: the first page is the **main graph + some key
 > metrics**; below it, reveal more key charts slowly; restore G's visual language (warm palette,
-> sans chrome + mono data, masthead); F stays undecided. Do not mark the plan done; no visual tuning
-> in step 14.
+> sans chrome + mono data, masthead); F stays undecided. Do not retune the page without a new
+> founder-approved layout plan.
 >
 > **v2 composition amendment (2026-10-23):** the founder's model supersedes the v1 composition
 > clauses (the "100%-graph canvas" + fixed seven-block brief wording in the Idea). The data,
@@ -79,6 +82,7 @@ Build and ship Perfpal Atlas: the entry-flow core graph (G) as a full-bleed 100%
 - **Step 14 — Founder A2 (UNBLOCKED 2026-10-24: step 13 approved, D-pf-253):** pre-register the library-shaped holdout repo (A-pf-116; single-file C lib or Rust lib crate with no bin) alongside the vaulted django/postgres holdout; the registered holdout is the **published `memchr` crate payload** at `bd6068c3` (dev `benchmarks/` + `fuzz/` excluded; see `docs/evidence/map-vision/v8/PREREGISTRATION.md`); run the timed test with animation enabled (3 actions in under 10 minutes, understandable, pause/reduced-motion/print work), record the transcript and the verdict in docs/evidence/map-vision/v8/. If A2 fails on both application and library classes, stop and escalate a superseding ADR instead of tuning.
 - **DONE 2026-10-24/26 (delegated A2; timed reads 10-24, verification/panel 10-26; evidence `docs/evidence/map-vision/v8/a2.md`):** postgres (application, `856a659`) + memchr crate payload (`bd6068c3`; `benchmarks/`+`fuzz/` excluded); 4/4 blind lanes named 3 actions in 87–120 s and answered understandable YES; pause/reduced-motion/print verified on both (`a2_verify.py` exit 0). **Residual:** memchr canvas bottom 1,282 px > the 900 px fold (library class, 23-file UNREACHED column) — carried to step 15 to resolve/accept; no visual tuning here. Step 15 is schedulable; the plan is not done.
 - **Step 15 — Ship/docs/EOL (schedulable 2026-10-24 after delegated A2; resolve/accept the memchr fold residual before ship):** update the output contract and README for the Atlas page, add the CHANGELOG entry, archive the V7 prototypes' role, run the Definition of Done below, run @reviewer + @requirements-reviewer on the final tree, mark the plan done, update state/session-state.json + state/handoff/latest.md + docs/activeContext.md, and commit.
+- **DONE 2026-10-26 (Session A5):** output contract/README/specs/V7 archive/CHANGELOG updated; **DoD 1–13 PASS** (fmt/clippy/test/deny/semantic/determinism + panel; transcript `docs/evidence/atlas-visual/v2/gate-step15.txt`; lib 402, semantic 402). Parallel panel **APPROVED** after fixes: R1/R2/Q1/Q2 (round 2) + R3/R4 (round 3, after the transcript-reproducibility and `SUPPLEMENTAL: PASS` fixes); zero unresolved blocking. Memchr fold accepted **D-pf-256**; delegated A2 closure **D-pf-257**; plan done **D-pf-258**; `R-pf-109` closed as a record; commit pending founder approval; **no push**.
 
 ## Definition of Done
 

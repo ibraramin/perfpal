@@ -345,36 +345,45 @@ canvas carrying entry + HOTTEST + path; the one `path:line` action in the first 
 printed, never `resolved`/`reachable_from_entry` for that set), and A12 (exactly one fixed existing
 `REPORT_SCRIPT`; zero new scripts in the Atlas canvas/SVG/animation artifacts).
 
+> **Step-12 placement amendment (2026-10-24, implemented):** the seven-block brief is retired. On
+> the Atlas page the masthead + key-metrics strip above the canvas is the first answer-bearing
+> surface (entry, HOTTEST, path, three START actions, one caveat); the canvas stays graph-only and
+> still carries entry + HOTTEST + path; the first below-canvas block is the weight chart, followed
+> by blast radius, file detail and coverage/links. The v1 A8 "answer line below the canvas" wording
+> is superseded on this page only.
+
 **Placement (amends this spec's slot table for the Atlas page only).**
 
 | Slot | Question | Atlas placement | Encoding (unchanged) |
 |---|---|---|---|
-| **KV1 — Start here** | Where do I look first? | below the canvas, block 2 (3–5 actions) | severity (ranked position) |
-| **KV2 — Blast radius** | What breaks if I touch it? | below the canvas, block 4 + Q2 drill | coupling (dependent files) |
-| **KV3 — Profile queue** | Where might time go? | **splits:** overview = weight strip (file/component `% of scanned cost`, block 3); drill = complete function-level profile queue | cost (one encoding; no second channel) |
+| **KV1 — Start here** | Where do I look first? | key-metrics strip above the canvas (three START actions); canvas carries entry + HOTTEST + path | severity (ranked position) |
+| **KV2 — Blast radius** | What breaks if I touch it? | blast-radius chart below the canvas + `atlas-q2.html` | coupling (dependent files) |
+| **KV3 — Profile queue** | Where might time go? | **splits:** overview = weight chart (file/component `% of scanned cost`) + `atlas-weight.html`; drill = complete function-level profile queue | cost (one encoding; no second channel) |
 
 The slot questions, the one-encoding rule, the production-first rule, the default-tier claim limit
 and the A1b recall guarantee are unchanged. Only placements move, and KV3 gains progressive
 disclosure (overview + drill) — it is not a fourth slot and it does not stack a second encoding.
 
-**First screen (amends A8).** The first content block of the Atlas page is the **canvas**; the
-first answer-bearing block is the **answer line** directly below the canvas, within the first
-scroll. The canvas itself must carry the entry badge, the HOTTEST file and the path trace so a
-blind read of the first screen can name Q1 — entry, HOTTEST file, representative path — without
-scrolling; the one `path:line` action is in the first scroll (answer line + KV1). The old A8 rule
-(KV1 as the first block) applied to the list-first V4 page; it is amended for the Atlas page, not
-deleted for the legacy report.
+**First screen (amends A8; step-12 re-baselined).** The first content block of the Atlas page is
+the **key-metrics strip + canvas**; the strip above the canvas is the first answer-bearing surface
+(entry, HOTTEST, path, caps, three START actions, one caveat, one legend/unit definition), within
+the first screen. The canvas itself must carry the entry badge, the HOTTEST file and the path trace
+so a blind read of the first screen can name Q1 — entry, HOTTEST file, representative path —
+without scrolling; the concrete `path:line` actions are in the strip. The first below-canvas block
+is the weight chart. The old A8 rule (KV1 as the first block) applied to the list-first V4 page; it
+is amended for the Atlas page, not deleted for the legacy report.
 
 **Canvas purity.** The canvas is graph chrome only: entry badge, file nodes (name, cost,
 `× median function`, HOTTEST, finding annotation `HOT ×N`/`WARN ×N`/`INFO ×N`, M-18), depth columns, call edges (forward/back, distinct structural-edge
 count), component hulls, unreached column, numbered path trace, legend, caps chip, canvas footer.
 No cards, tables, bars, metric panels, metric selectors or a second map. The V7 G right-rail file
-cards move below the canvas (block 5).
+cards return as the first-page detail rail (`#atlas-rail`, step 11; DOM sibling outside the canvas).
 
-**No mode switch.** Every scan renders the same canvas + seven below-graph blocks
-(`atlas-layout.md` §4–§5). Library, no-entry, all-test, empty, capped, partial-parse and single-file states
-change labels/content, never page shape. The F weight mass is an always-on block; the F treemap is
-`weight-treemap` in Explorer. The six-test inclusion rule is
+**No mode switch.** Every scan renders the same first page (strip + canvas + rail) and the same
+four below-graph charts (`atlas-layout.md` step-12 amendment). Library, no-entry, all-test, empty,
+capped, partial-parse and single-file states change labels/content, never page shape. The F weight
+mass is an always-on chart; the F treemap candidate (`weight-treemap`) is **deferred** (F
+undecided, D-pf-251) and, when built, is Explorer-only. The six-test inclusion rule is
 `docs/research/atlas-developer-needs.md` §7.
 
 **Structural edges.** The default tier exports 0 resolved call edges, so the Atlas canvas draws
@@ -388,8 +397,9 @@ loop-I/O findings stay in KV1 as heuristics.
 
 **Additional acceptance (binds the Atlas build).**
 
-- **A8 (amended):** first block = canvas; first answer block = answer line below; canvas carries
-  entry + HOTTEST + path. Evidence: DOM assertion + committed PNG.
+- **A8 (amended; step-12 re-baselined):** first block = key-metrics strip + canvas; the strip above
+  the canvas is the first answer-bearing surface; canvas carries entry + HOTTEST + path; the first
+  below-canvas block is the weight chart. Evidence: DOM assertion + committed PNG.
 - **A9 (canvas purity):** the canvas element contains no `<table>`, bar/card list or metric
   selector. Evidence: DOM assertion.
 - **A10 (state-unconditional):** application, library, no-entry, empty, all-test, capped,
@@ -402,6 +412,7 @@ loop-I/O findings stay in KV1 as heuristics.
   includes a library-shaped repo (pre-registered; the django/postgres holdout stays vaulted until
   the A2 test).
 
-**Explorer.** The legacy 8 stems remain under the labelled `Explorer` divider and the F treemap is
-added as `weight-treemap`; all are labelled Explorer-tier and make no answer claim. Per-component
-pages remain Explorer-tier evidence.
+**Explorer.** The legacy 8 stems remain under the labelled `Explorer` divider; the F treemap
+candidate is **deferred** (F undecided, D-pf-251) and, when built, is `weight-treemap` in Explorer.
+All are labelled Explorer-tier and make no answer claim. Per-component pages remain Explorer-tier
+evidence.

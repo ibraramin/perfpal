@@ -1,15 +1,20 @@
 # Track A — Atlas beta (main)
 
-**Start this tab:** open `/home/shafin/Opencode/Perfpal` (branch `main`), first message:
+**Status: Atlas v2 is DONE (2026-10-26).** `atlas-build` is marked done (D-pf-258); DoD 1–13 and the
+parallel panel are green; the step-15 docs/state change set is **uncommitted pending founder
+approval**; **no push**. Next: founder commit approval, then the founder-owned publish gate
+B-pf-001/002.
 
-> `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-beta.md and execute Session A1.`
+**Start this tab:** open `/home/shafin/Opencode/Perfpal` (branch `main`), read
+`state/handoff/latest.md` first. There is no further Atlas build session; see the handoff for the
+post-beta follow-ups.
 
-**Track handoff:** `state/handoff/latest.md` · **Plan:** `docs/plans/atlas-build.md` steps 11–15 · **Contract:** `docs/evidence/atlas-visual/v2/DECISION.md` · **Brief:** `docs/atlas/AGENT-BRIEF.md` · **Audit:** `docs/evidence/atlas-audit/AUDIT.md`.
+**Track handoff:** `state/handoff/latest.md` · **Plan:** `docs/plans/atlas-build.md` (done) · **Contract:** `docs/evidence/atlas-visual/v2/DECISION.md` · **Brief:** `docs/atlas/AGENT-BRIEF.md` · **Audit:** `docs/evidence/atlas-audit/AUDIT.md`.
 **Base:** `821b984`. **Beta:** this is the release train; B/C/D are non-blocking.
 
 ## Read first
 
-1. `state/handoff/latest.md` — step-14 A2 verdict, the next actions, the known residuals.
+1. `state/handoff/latest.md` — step-15 done, D-pf-256/257/258, the next actions, the known residuals.
 2. `docs/plans/atlas-build.md` steps 11–15 and the DoD.
 3. `docs/evidence/atlas-visual/v2/DECISION.md` — signed Option A; rail step 11; F/charts step 12; founder gate step 13.
 4. `docs/atlas/AGENT-BRIEF.md` + `docs/evidence/atlas-audit/AUDIT.md`.
@@ -35,7 +40,10 @@ of other branches. *(A2/step 14 is no longer blocked: step 13 was APPROVED 2026-
   (D-pf-253, delegated evidence-based); A2 (step 14) **DONE** (delegated), step 15 schedulable, ship
   blocked on the memchr fold residual.
 - **A4 — step 14: A2 holdout.** memchr + django/postgres; animation on; 3 actions in <10 minutes; record the verdict. **DONE 2026-10-24/26 (delegated):** postgres + memchr payload, 4/4 blind lanes PASS, pause/reduced-motion/print PASS; `docs/evidence/map-vision/v8/a2.md`; memchr fold residual carried to step 15.
-- **A5 — step 15: ship/docs/EOL.** README/output contract/CHANGELOG; archive V7; full DoD; mark the plan done only after A2. Publish gate B-pf-001/002 is founder-owned.
+- **A5 — step 15: ship/docs/EOL. DONE 2026-10-26 (D-pf-258).** README/output contract/specs/V7
+  archive/CHANGELOG; full DoD 1–13 PASS; parallel panel approved; `atlas-build` marked done; memchr
+  fold accepted (D-pf-256); delegated A2 closes the beta gate (D-pf-257); **commit pending founder
+  approval; no push**. Publish gate B-pf-001/002 is founder-owned.
 
 ## Guardrails / ownership
 

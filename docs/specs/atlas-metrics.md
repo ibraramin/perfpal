@@ -73,7 +73,7 @@ invite invalid comparison.
 | **Canvas** | M-01, M-02 (canvas footer), M-03, M-04 (text label), M-10, M-13 (caps/coverage subset), M-14, M-16, M-17 (header), M-18 (node annotation); legend with the cost unit, depth key, edge style, production/test style, unreached key | cards, tables, bars, metric panels, metric selectors, a second map, severity colour/size, time |
 | **Below graph** | M-01, M-02, M-04, M-05, M-06, M-07, M-08, M-09, M-11, M-12, M-13, M-15 | a second full map; a duplicate of a canvas label with no added denominator/share |
 | **Drill** | Complete M-05 ranked list; complete M-08 dependents; M-07 detail; M-04 component multiples (Explorer) | claims the drill cannot support (e.g. resolved-call blast radius in the default tier) |
-| **Explorer** | Legacy stems + `weight-treemap`; component multiples with denominator printed | answer claims; key-view status |
+| **Explorer** | Legacy stems; the `weight-treemap` candidate is deferred (F undecided, D-pf-251); component multiples with denominator printed | answer claims; key-view status |
 
 ## 5. Formatting rules
 
@@ -113,8 +113,8 @@ invite invalid comparison.
    denominator are one text run. A reader must not need another block to know the base.
 5. **No cross-scale comparison.** `× median function` and `× median file` / `× median component`
    never appear in the same table or sentence as if comparable. The Atlas page uses only
-   `× median function`; the weight strip uses `% of scanned cost`; the Explorer treemap may use
-   `× median component` with its denominator.
+`× median function`; the weight chart uses `% of scanned cost`; the Explorer treemap candidate
+(when built) may use `× median component` with its denominator.
 6. **v1 fallback.** Rows computed from v1 cost read `static cost units (v1)` and anchor within the
    v1 set. A v1 row and a v2 row never share a multiple.
 

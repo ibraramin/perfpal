@@ -22,6 +22,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   root as provenance by design and are locked by the sample + the integration suite instead).
 
 ### Changed
+- **Atlas v2 step 15 — ship/docs pass (2026-10-26; docs/state only, no code).** The Atlas human map
+  is documented as the product's human map (beta artifacts; publish gate founder-owned):
+  `docs/report/output-contract.md` gains the `report.html#map`
+  Atlas-page contract, `atlas-weight.html` / `atlas-q2.html` stability rows and the agent-report
+  links; `README.md` gains an Atlas section, the full artifact layout, the LLM artifacts and the
+  library-class first-page-fit limitation; the stale seven-block brief wording is retired in
+  `atlas-feature` / `atlas-layout` / `maintainer-map` / `map-animation` / `map-intelligibility`; the
+  V7 F/G prototypes are marked archived evidence. **Decisions:** the memchr library fold (canvas
+  bottom 1,282 px > 900) is accepted as a documented beta residual with a named fix trigger
+  (`docs/evidence/accepted-limitations.md` §D); the delegated A2 PASS (D-pf-255) closes the A2 gate
+  for this beta, with the founder's own timed run recorded as the V6 gold standard that would need
+  a fresh holdout. **Full DoD 1–13 PASS** (transcript
+  `docs/evidence/atlas-visual/v2/gate-step15.txt`; lib 402, semantic 402, deny, determinism);
+  the parallel panel is **APPROVED** after fixes — R1/R2/Q1/Q2 (round 2) + R3/R4 (round 3), zero
+  unresolved blocking; **`atlas-build` is marked done (D-pf-258)**. No schema/JS/dependency/golden
+  change; **commit pending founder approval; no push**.
 - **Atlas v2 step 14 — A2 holdout executed (2026-10-24 timed reads; verification/panel 2026-10-26; delegated; no code change).** The application
   class was a fresh postgres scan (`856a659`; 2,566 files, 102,933 findings) and the library class the
   published `memchr` crate payload at `bd6068c3` (45 `.rs`; `benchmarks/` + `fuzz/` excluded). Four

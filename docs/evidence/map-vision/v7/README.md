@@ -1,6 +1,15 @@
 # V7 — F vs G human-map A/B (prototype evidence)
 
-**Status:** prototype evidence; no core `src/` change. Holdout (django/postgres) stays vaulted.
+> **ARCHIVED EVIDENCE — 2026-10-26.** The V7 F/G prototypes are the historical A/B that selected
+> the Atlas visual system. **G's system shipped** (Atlas v2 steps 9–13, approved D-pf-253);
+> **F remains undecided** (D-pf-251) and no F treemap ships. These HTML/PNG artifacts are evidence
+> only: they are **not current output**, are not linked from the shipped report, and must not be
+> tuned or served as the product. The current contract is `docs/specs/atlas-layout.md` /
+> `atlas-feature.md` / `atlas-metrics.md`; current evidence is
+> `docs/evidence/atlas-visual/v2/` and `docs/evidence/map-vision/v8/`.
+
+**Status:** archived prototype evidence; no core `src/` change. Holdout (django/postgres) was
+released for the A2 evidence only (D-pf-255) — do not tune against it.
 **Plans:** `map-f-treemap`, `map-g-flow`. **Animation spec:** `map-animation`.
 
 ## Candidates

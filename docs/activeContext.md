@@ -1,56 +1,63 @@
 # Active Context
 
 ## Current Task
-**Atlas v2 steps 9–14 are done. A2 (step 14) is a delegated PASS 2026-10-24/26 (D-pf-255);
-step 15 (ship/docs/EOL) is schedulable; ship stays blocked on the memchr library fold residual
-(canvas 1,282 px > 900).**
+**Atlas v2 steps 1–15 are DONE; `atlas-build` is marked done 2026-10-26 (D-pf-258).** Step 15
+docs/EOL + DoD 1–13 + the parallel panel are complete; the change set is uncommitted pending
+founder approval; no push.
 - **Step 9–10:** signed Option A; G warm/sans/mono system; first-page fit (862 ≤ 900); key-metrics
   strip; chrome hygiene; founder-approved 2026-10-24.
 - **Step 11 (`189df91`):** G-style right rail (530px, 12 cards, roles, exact function/finding links,
   eight-state rail); canvas 869 ≤ 900.
 - **Step 12 (`9a94905`):** four designed below-graph charts; drills moved to `atlas-weight.html` /
   `atlas-q2.html`; seven-block text wall retired; `#map` 1,848px; F treemap prototyped but **F remains
-  undecided** (D-pf-251 live).
+  undecided** (D-pf-251).
 - **Step 13 (D-pf-253, APPROVED 2026-10-24; delegated evidence-based):** real-page DOM gate all pass
   (canvas 869 ≤ 900; `#map` 1,848; no h-scroll; one definition each; A9/A12 green); V8 A1 16/16 +
   strip 16/16; G diff SAME SYSTEM. Evidence `docs/evidence/atlas-visual/v2/...`.
 - **A2 / step 14 (D-pf-255, delegated PASS 2026-10-24/26):** postgres `856a659` (2,566 files, 102,933
   findings, 181 s) + memchr crate payload `bd6068c3` (45 `.rs`, 530 findings, 1 s; `benchmarks/` +
   `fuzz/` excluded). Four fresh-context blind lanes (2/class) named 3 actions in **87–120 s** and
-  answered understandable **YES**; pause freezes (68/68, 45/45; identical frames), reduced motion and
-  print show the complete final frame; geometry postgres **871.2 ≤ 900**, memchr **1,282.2 > 900**.
-  Evidence `docs/evidence/map-vision/v8/a2.md` + `a2/`. No tuning; no src/schema/JS/deps/golden change.
+  answered understandable **YES**; pause freezes (68/68, 45/45), reduced motion and print show the
+  final frame; geometry postgres **871.2 ≤ 900**, memchr **1,282.2 > 900**. Evidence
+  `docs/evidence/map-vision/v8/a2.md` + `a2/`.
+- **Step 15 (D-pf-256/257/258, DONE 2026-10-26):** docs pass (output contract/README/specs/V7
+  archive/CHANGELOG); **memchr fold accepted as a documented beta residual** (D-pf-256, fix trigger);
+  **delegated A2 closes the beta gate** (D-pf-257; founder V6 gold standard open, fresh holdout
+  needed); DoD 1–13 PASS (`docs/evidence/atlas-visual/v2/gate-step15.txt`); parallel panel approved
+  after fixes; plan done; **commit pending founder approval; no push**. No schema/JS/deps/golden
+  change; no visual tuning.
 
 ## Recent Decisions
-- **D-pf-255 (live, 2026-10-24):** A2 delegated PASS (founder A4 instruction; founder's own eye not
-  applied); 4/4 blind lanes, 3 actions 87–120 s, understandable; pause/reduced/print PASS; residual
-  memchr fold 1,282 > 900; step 15 schedulable; plan not done.
-- **D-pf-253 (live, 2026-10-24):** step 13 composition APPROVED (delegated, evidence-based).
-- **D-pf-251 (live, 2026-10-24):** F treemap remains **undecided**; keep W1; no F code shipped.
-- **D-pf-250 / D-pf-252 (superseded):** step-12 implementation / step-13 evidence-complete records.
-- **D-pf-254 (live):** step-13 evidence committed `86c0537`; no push.
-- **R-pf-109 (open, high):** visual-regression record; step-13 approved; A2 done (delegated).
-- **D-pf-249 (archived pointer):** decisions D-pf-241/242/243/247/248/249 are in
-  `state/archive/ledger.jsonl`.
+- **D-pf-258 (live, 2026-10-26):** step 15 docs/EOL done; DoD 1–13 PASS; panel approved; `atlas-build`
+  done; commit pending founder approval; no push.
+- **D-pf-257 (live, 2026-10-26):** the delegated A2 PASS closes the A2 gate for this beta; the
+  founder's own timed eye-test remains the V6 gold standard and needs a fresh holdout.
+- **D-pf-256 (live, 2026-10-26):** memchr library fold (1,282 px > 900) accepted as a documented beta
+  residual, not a layout-contract pass; fix trigger in `accepted-limitations.md` §D.
+- **D-pf-255 (live):** A2 delegated PASS (postgres + memchr; 4/4 blind lanes).
+- **D-pf-253 (live):** step 13 composition approved (delegated, evidence-based).
+- **D-pf-251 (live):** F treemap remains **undecided**; keep W1; no F code shipped.
+- **D-pf-250/252/253/254 (archived):** full text in `state/archive/ledger.jsonl`; pointer D-pf-249.
+- **R-pf-109 (closed 2026-10-26):** visual regression resolved by the v2 rework + A2; kept as a
+  record. **R-pf-104 (closed):** A2 pass; ranking recall remains R-pf-105/106/A1b.
+- **D-pf-249 (archived pointer):** archived decisions are in `state/archive/ledger.jsonl`.
 
 ## In Progress
-- A2 evidence/docs/state are committed as `9631137`; no push.
-- Panel round 1: R1 APPROVED, Q1 APPROVED; R2/Q2 CHANGES_REQUESTED → fixes applied; confirmation lanes
-  running. No unresolved blocker is silently waived.
+- The step-15 change set (docs/state + `STEP15.md` + `gate-step15.txt`) is uncommitted; **commit
+  pending founder approval**. No code, schema, JS, dependency or golden change; no push.
 
 ## Next
-- **Step 15 in a fresh session:** output contract/README/CHANGELOG; archive the V7 prototypes' role; run
-  the full DoD; **resolve or explicitly accept the memchr fold residual before ship**; final parallel
-  panel; mark the plan done only then; update state/handoff/activeContext; commit. Publish gate
-  B-pf-001/002 is founder-owned.
+- **Founder approves the commit** → commit the step-15 docs/state/evidence; **no push**.
+- Publish gate B-pf-001 (contact) / B-pf-002 (minisign secrets) — founder-owned.
+- Post-beta: F decision (D-pf-251), memchr fold fix trigger (D-pf-256), `map-build`/A1b ranking
+  recall (R-pf-105/106/108).
 
 ## Blockers
-- **memchr library fold residual (ship-blocking):** canvas 1,282 px > 900; step 15 decision.
-- **A2 delegation:** founder's own timed eye-test not applied; a fresh holdout is needed for an
-  untainted founder re-run. Formal V6 bar remains an open record.
-- **Map legibility:** R-pf-104/R-pf-105/R-pf-106; ranking recall A1b open.
-- **M5 publish:** B-pf-001 (contact) + B-pf-002 (secrets) — founder-owned.
-- **Paper track:** prereg + scans + stats + Zenodo PENDING (PARKED behind the map).
+- **Publish gate:** B-pf-001 (contact) + B-pf-002 (minisign secrets) — founder-owned.
+- **Founder V6 gold standard:** the founder's own timed A2 run was not applied; a fresh holdout is
+  needed for an untainted re-run. Recorded, not waived.
+- **Map/ranking:** R-pf-105/106/108 open; A1b open; `map-build` not done.
+- **F undecided:** treemap candidate deferred; no F code ships.
 
 ## History
 - **L2 split (2026-09-29)** · **L6 pinned (2026-10-01)**, realigned 2026-10-17 twice · **first audit (2026-10-16)**.
@@ -63,7 +70,7 @@ step 15 (ship/docs/EOL) is schedulable; ship stays blocked on the memchr library
 - **V3–V6a:** 18 prototypes + 27 blind reads → V4 key views + Explorer → V5 validation + no-loop
   falsifier → V6a KV2 production-first amendment (6/6 reads PASS); V6 timed test scrapped.
 - **V7:** F/G prototypes + 12/12 blind reads (`docs/evidence/map-vision/v7/`); founder decision
-  D-pf-238 (G core, F supporting); Atlas named.
+  D-pf-238 (G core, F supporting); Atlas named. **V7 is now archived evidence (2026-10-26).**
 - **Atlas planning:** needs research → metrics contract → data-gap audit → layout + inclusion rule
   → ADR-0009/0010 + V8 amendments → `atlas-build` plan. Docs only.
 - **Atlas ratification (2026-10-23):** ADR-0009/0010 **Accepted**; V8 ratified; D-pf-239/240
@@ -84,4 +91,8 @@ step 15 (ship/docs/EOL) is schedulable; ship stays blocked on the memchr library
   founder composition sign-off APPROVED 2026-10-24 (delegated); evidence committed `86c0537`.
 - **Atlas v2 Session A4 (2026-10-24/26):** step 14 A2 holdout (postgres + memchr payload); 4/4 blind
   lanes, 3 actions 87–120 s, understandable YES; pause/reduced/print PASS; memchr fold residual
-  (1,282 > 900) carried to step 15; step 15 schedulable; no commit yet.
+  (1,282 > 900) carried to step 15; evidence committed `9631137`.
+- **Atlas v2 Session A5 (2026-10-26):** step 15 docs/EOL; D-pf-256 (memchr fold accepted), D-pf-257
+  (delegated A2 closes beta gate), D-pf-258 (plan done); DoD 1–13 PASS; parallel panel R1/R2/Q1/Q2 +
+  R3/R4 approved after fixes; state/handoff/activeContext/track/brief updated; **commit pending
+  founder approval; no push**.

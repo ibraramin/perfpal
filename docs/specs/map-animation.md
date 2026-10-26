@@ -71,13 +71,16 @@ prototypes may proceed under this spec.
 
 **Ratified 2026-10-23** (founder; ADR-0010 Accepted; A12 scope confirmed).
 
-The animation applies to the Atlas entry-flow canvas and its key drills. The timeline is a
-deterministic function of the view model (fixed constants; no randomness, no wall-clock input):
+The animation applies to the Atlas entry-flow canvas; the standalone drill pages are static (no
+animation). The timeline is a deterministic function of the view model (fixed constants; no
+randomness, no wall-clock input):
 entry pulse 0–1.2s → depth-column reveal 1.2–2.8s →
 edge draw-on 2.8–4.2s → path-trace numbering 4.2–5.4s → HOTTEST pulse 5.4s+. The CSS-only pause
-control sits in the canvas header; `prefers-reduced-motion: reduce` and `@media print` show the
-complete final frame. The final frame includes every node, label, number, caption, edge and the
-full seven-block brief (`docs/specs/atlas-layout.md` §7–§8).
+control sits in the masthead above the canvas (outside `#atlas-canvas`);
+`prefers-reduced-motion: reduce` and `@media print` show the
+complete final frame. The final frame includes every node, label, number, caption and edge, the
+key-metrics strip, the detail rail, and the four below-graph charts (`docs/specs/atlas-layout.md`
+step-12 amendment; the v1 seven-block brief is retired).
 
 Animation is presentation only: the canvas is readable with animation disabled, and no metric or
 answer exists only mid-animation. The metric contract (`docs/specs/atlas-metrics.md`) applies to

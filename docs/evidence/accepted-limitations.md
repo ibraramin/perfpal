@@ -66,7 +66,27 @@ container init (aider `linter.py:283`); a `+=` whose target is reset each pass (
 - **Determinism over cleverness.** Every traversal is sorted for byte-identical output; where two
   resolutions are equally plausible the tool reports the conservative one.
 
-## D. Disposition
+## D. Atlas page — first-page-fit limitation (library class, accepted for beta)
+
+- **What:** on a library-class scan with a large UNREACHED column, the Atlas canvas can extend below
+  the canonical 1440×900 fold. The reference is the published `memchr` crate payload at
+  `bd6068c30e9074a90c285e47912fa0b047d07597`: canvas top → bottom **120 → 1,282.2 px** (canvas
+  height 1,162.7; 23 production + 7 non-production files in the UNREACHED cluster). Application-class
+  postgres fits (**120 → 871.2 px**).
+- **Why accepted:** A2 was a delegated PASS on both classes (4/4 blind lanes named 3 concrete
+  actions in 87–120 s and answered understandable YES; pause/reduced-motion/print PASS —
+  `docs/evidence/map-vision/v8/a2.md`). The strip, rail and first scroll carry the actions even when
+  the canvas runs past the fold; the page stays truthful and state-unconditional. The approved
+  step-13 composition is unchanged.
+- **Explicitly not claimed:** the `atlas-layout` first-page-fit clause (canvas bottom ≤ 900 px) is
+  **not met for this class**. It is a documented beta residual, not a silent omission.
+- **Fix trigger:** a founder-approved layout change that caps/aggregates the UNREACHED column
+  (e.g. top-N by cost with a counted `+N more` chip) — requires code + tests/goldens + a fresh
+  vision/A2 gate; no tuning was done in step 15. Revisit at the first post-beta layout pass or when a
+  real user reports the fold as a blocker.
+- **Evidence:** `docs/evidence/map-vision/v8/a2.md` §8; `docs/evidence/atlas-visual/v2/STEP15.md`.
+
+## E. Disposition
 
 None of the classes above **blocks** the M4 evidence record (the gate asks for an honest showcase, and
 this page is that honesty). The M4-observed rule-level FPs are **follow-up candidates** — the strongest

@@ -1,108 +1,115 @@
-# Handoff — Atlas v2 Session A4 (step 14: A2 holdout, delegated; 2026-10-24/26)
+# Handoff — Atlas v2 Session A5 (step 15: ship/docs/EOL; 2026-10-26)
 
-**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. A2 is the decisive
-comprehension gate: can a first-time reader name 3 concrete actions from the page alone? **No drift:**
-no feature, no schema/JS/deps, no page tuning, no step-15 ship work, no plan-done.
+**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. Step 15 makes the
+shipped Atlas contract/docs truthful before beta and closes the plan. **No drift:** docs/state only;
+no code, schema, JS, dependency, golden or visual-tuning change; F undecided (D-pf-251);
+`map-build` not done; A1b open; publish gate B-pf-001/002 founder-owned.
 
-**Phase:** Atlas v2 steps 9–14 done. **A2 (step 14) is a delegated PASS (2026-10-24)** — postgres +
-memchr crate payload; 4/4 blind lanes named 3 actions in 87–120 s and answered understandable YES;
-pause/reduced-motion/print PASS. **Step 15 (ship/docs/EOL) is schedulable; ship stays blocked on the
-memchr library fold residual** (canvas 1,282 px > 900). `R-pf-109`/`A-pf-118` open; F undecided
-(D-pf-251 live); holdouts released for A2 only; `map-build` NOT done; A1b open.
+**Phase:** **Atlas v2 steps 9–15 are DONE; `atlas-build` is marked done 2026-10-26 (D-pf-258).**
+Step 13 approved (D-pf-253); A2 (step 14) delegated PASS (D-pf-255) closes the beta gate (D-pf-257);
+the memchr library fold is accepted as a documented beta residual (D-pf-256). DoD 1–13 PASS; the
+parallel panel is APPROVED with zero unresolved blocking findings. **Commit pending founder
+approval; no push.**
 
-**Commits:** HEAD `ce14a3d` (the C-session status syncs were already committed: `c739bed` → `3012546`
-→ `ce14a3d`). **No commit yet** — the A2 evidence/docs/state are in the working tree pending founder approval. **No push.**
+**Commits:** HEAD `07f557c`. The step-15 change set (docs/state + `STEP15.md` + `gate-step15.txt`)
+is in the working tree, **uncommitted pending founder approval**. `.playwright-mcp/` is untracked
+scratch and is not part of the change set. **No push.**
 
-## This session — A2 holdout (step 14)
+## This session — step 15 (docs / EOL / ship-prep)
 
-- **Application class:** postgres `856a659` (repo `perfpal-test/postgres`), fresh scan: 2,566 files
-  (1,401 ok / 1,165 partial / 0 failed), 102,933 findings, 181 s.
-- **Library class:** published `memchr` crate payload at `bd6068c3` (clone pinned; payload extracted
-  from `git archive`; **`benchmarks/` + `fuzz/` excluded**): 45 `.rs`, 530 findings, 1 s.
-- **Timed reads:** four fresh-context lanes (two per class), rendered page only, animation enabled,
-  1440×900. Elapsed **87.05 / 110.87 / 104.8 / 119.7 s**; each named 3 concrete actions; all answered
-  understandable **YES**. Transcripts in `docs/evidence/map-vision/v8/a2.md` §4–§6.
-- **Animation/pause/reduced-motion/print:** `python3 docs/evidence/map-vision/v8/a2_verify.py` → PASS,
-  exit 0. 68/45 CSS animations run by default; pause freezes mid-animation (68/68 and 45/45 paused;
-  byte-identical frame pairs); pause is keyboard-focusable; reduced-motion and print show the complete
-  final frame (0 animations, 0 hidden); final frame at ~7 s has 0 hidden nodes/edges/traces.
-- **Geometry:** postgres canvas bottom **871.2 ≤ 900**; memchr **1,282.2 > 900** (23-file UNREACHED
-  column); `#map` 1,850.2 / 2,326.3; no horizontal scroll at 1440 or 1280. The memchr fold is the real
-  instance of the step-13 capped-state residual — **carried to step 15 to resolve or explicitly accept;
-  no tuning here**.
-- **Delegation:** the founder's Session A4 instruction explicitly directed the run and the "if it passes,
-  step 15 becomes schedulable" rule (`D-pf-255`). The founder's own eye was not applied; the V6
-  founder-only bar remains the gold standard. Because the holdout pages are now released and the three
-  actions published, an untainted founder re-run would need a fresh holdout.
-- **No changes:** no `src/`, schema, JS, dependency or golden change; no page tuning; no new feature.
+- **Decision D-pf-256 — memchr fold accepted.** Library-class `memchr` payload (`bd6068c3`): canvas
+  bottom **1,282.2 px** at 1440×900 (canvas 1,162.7; 23 production + 7 non-production UNREACHED);
+  application postgres `856a659` fits at **871.2 px**. Accepted as a **documented beta residual**,
+  explicitly **not** a layout-contract pass; fix trigger in `accepted-limitations.md` §D
+  (cap/aggregate the UNREACHED column in a post-beta layout pass). No tuning.
+- **Decision D-pf-257 — delegated A2 closes the beta gate.** The founder's Session A4 instruction
+  delegated the A2 run; the delegated PASS closes the gate for this beta. The founder's own timed
+  eye-test remains the V6 gold standard and would need a fresh holdout (holdout released; actions
+  published). Recorded honestly, not waived.
+- **Docs pass:** output contract (`report.html#map` Atlas page, `atlas-weight.html` /
+  `atlas-q2.html` rows, agent-report links, schema 1.7); README (Atlas section, full artifact
+  layout, LLM artifacts, beta limitation, 67-rule counts); stale seven-block/answer-line wording
+  retired in `atlas-feature` / `atlas-layout` / `maintainer-map` / `map-intelligibility` /
+  `map-animation`; F treemap consistently marked deferred; V7 prototypes marked archived evidence;
+  CHANGELOG.
+- **DoD:** full gate PASS (`docs/evidence/atlas-visual/v2/gate-step15.txt`; cargo 1.92.0): fmt,
+  clippy, test (lib 402), deny, semantic clippy + tests (lib 402), the four targeted Atlas tests,
+  schema/evidence checks, preserve_order guard, no code/dependency/golden/JS change.
+- **Panel:** round 1 4/4 CHANGES_REQUESTED → fixes; round 2 R1/R2/Q1/Q2 APPROVED, R3 found the
+  transcript quoting defect; round 3 R4 APPROVED and R3 re-review APPROVED after the
+  `SUPPLEMENTAL: PASS` marker fix. **Zero unresolved blocking findings.**
+- **State hygiene:** hot `session-state.json` compacted to **7,992 bytes**; D-pf-250/252/253/254 and
+  the full R-pf-109 text archived to `state/archive/ledger.jsonl` (append-only; pointer D-pf-249).
 
 ## Measured evidence
 
 | Claim | Artifact | Result |
 |---|---|---|
-| postgres scan | `a2/a2-postgres-scan.log`, `a2/setup.txt` | 2,566 files; 102,933 findings; 181 s |
-| memchr payload scan | `a2/a2-memchr-scan.log`, `a2/setup.txt` | 45 `.rs`; 530 findings; 1 s; no benchmarks/fuzz |
-| report hashes | `a2/a2-verify.json` | postgres `47555d49…`, memchr `66756eb5…` |
-| Blind timed reads | `a2.md` §4–§6 | 4/4 PASS; 87–120 s; 3 actions; YES |
-| Pause | `a2/a2-verify.json` | 68/68 and 45/45 paused; identical frame pairs |
-| Reduced motion / print | `a2/a2-verify.json` | 0 animations; 20 nodes visible; 0 hidden; print pause hidden/white |
-| Geometry | `a2/a2-verify.json` | 871.2 ≤ 900 (postgres); 1,282.2 > 900 (memchr); no h-scroll |
-| Full gate | `a2/gate-a2.txt` | 10 CI commands + build/status/schema/evidence checks all exit 0; lib 402 passed; semantic pass; deny ok; no preserve_order |
-| Panel | round 1 + confirmation: R1/Q1 APPROVED; R2/Q2 approved after fixes; R3 fresh APPROVED | see the panel record below |
+| Full DoD | `gate-step15.txt` | 15 commands + supplemental checks all exit 0; `OVERALL: PASS`; `SUPPLEMENTAL: PASS` |
+| Format/lint/tests | `gate-step15.txt` | fmt 0; clippy 0; lib **402 passed**; semantic lib **402 passed**; 0 failed |
+| Licenses | `gate-step15.txt` | `cargo deny check licenses` exit 0 (5 benign allowlist warnings) |
+| Determinism | `gate-step15.txt` | double-render test pass; no `preserve_order` in `Cargo.lock` |
+| A9/A12/A10 | `gate-step15.txt` | canvas purity, no new script, eight-state stack pass |
+| Scope | `gate-step15.txt` scope snapshot | 11 docs files + 2 new evidence files; no src/Cargo/schema/tests/golden/JS change |
+| Panel | `STEP15.md` §4 | R1/R2/Q1/Q2 + R3/R4 APPROVED after fixes; 0 blocking |
+| Residual | `a2.md` §8; `accepted-limitations.md` §D | memchr 1,282.2 > 900 accepted; postgres 871.2 ≤ 900 |
 
 ## Verification
 
 | Claim | Command | Result |
 |---|---|---|
-| Binary current | `cargo build --release --locked` | exit 0, no-op |
-| postgres scan | `target/release/perfpal /home/shafin/Opencode/perfpal-test/postgres -o /tmp/opencode/a2-postgres` | exit 0 (181 s) |
-| memchr payload | clone/checkout `bd6068c3`; `git archive … src Cargo.toml …`; `perfpal /tmp/opencode/a2-memchr-payload -o /tmp/opencode/a2-memchr` | exit 0 (1 s) |
-| Pages | `curl -w '%{http_code} %{size_download}'` on 8771/8772 | 200 / 165,067 · 200 / 126,205 |
-| Animation/pause/print | `python3 docs/evidence/map-vision/v8/a2_verify.py` | PASS, exit 0 |
-| Full gate | `a2/gate-a2.txt` | all exit 0 |
-| Scope | `git status --short src/ Cargo.toml Cargo.lock`; `test -z "$(git status --short src/schema/ docs/schema/)"` | empty; exit 0 |
-| No commit/push | `git log --oneline -1` / `git status` | `ce14a3d`; evidence untracked |
+| Full gate | see `gate-step15.txt` | exit 0 for every command; `OVERALL: PASS` |
+| Supplemental | `tests/golden/`, `tests/`, JS/TS, `reads.json && a2.md` | exit 0; `SUPPLEMENTAL: PASS` |
+| Evidence present | `test -f docs/evidence/map-vision/v8/reads.json` / `a2.md` | exit 0 |
+| Schema unchanged | `test -z "$(git status --short src/schema/ docs/schema/)"` | exit 0 |
+| No code/deps | `test -z "$(git status --short src/ Cargo.toml Cargo.lock)"` | exit 0 |
+| Plan done | `plan status: done` in `docs/plans/atlas-build.md` | yes (markPlanDone) |
+| No commit/push | `git log --oneline -1` / `git status` | `07f557c`; docs uncommitted |
 
 ## Panel record
 
-- **Round 1 (2026-10-26):** R1 correctness **APPROVED**; Q1 verbatim scope **APPROVED**; R2
-  contract/security **CHANGES_REQUESTED** (delegation/vault framing; scope-command evidence);
-  Q2 acceptance/evidence **CHANGES_REQUESTED** (schema command not in the gate transcript; 0.87 vs 1
-  mismatch; delegation honesty). Fixes applied: explicit delegation basis + D-pf-255; exact gate/build/
-  status/schema/evidence commands recorded; `a2.md` numbers/citations/wording corrected; `setup.txt` +
-  `lanes/MANIFEST.txt` added; pause focusability measured (PASS); state D-pf-251 set live.
-- **Confirmation lanes (2026-10-26):** R2 **APPROVED** (delegation record adequate; scope commands
-  recorded); Q2 **APPROVED** (0.87→1 fixed; gate/setup/manifest evidence present; state/EOL
-  consistent); R3 fresh **APPROVED** (evidence→verdict, residual honesty, state/plan consistency).
-  Non-blocking notes fixed (dates, manifest wording, preserve_order negation, panel record). **No
-  blocking findings remain.** The founder still decides at the commit gate; the delegated-vs-founder
-  point is recorded, not silently waived.
+- **Round 1 (2026-10-26):** R1/R2/Q1/Q2 **CHANGES_REQUESTED** — schema 1.2 examples, deferred
+  treemap described as shipped, canvas "no SVG", stale canvas-first line, Q2 `% of source files`
+  claim, README rule counts, premature CHANGELOG, missing §8 ≤900 clause, no golden check.
+  Fixes applied.
+- **Round 2 (2026-10-26):** R1/R2/Q1/Q2 **APPROVED**; fresh R3 **CHANGES_REQUESTED** — the gate
+  transcript's recorder dropped shell quoting, so `bash -c` lines were not reproducible. Transcript
+  regenerated with `printf '%q'`; full gate re-run.
+- **Round 3 (2026-10-26):** R4 **APPROVED**; R3 **CHANGES_REQUESTED** on a missing
+  `SUPPLEMENTAL: PASS` marker; marker emitted by re-running the supplemental checks; **R3 re-review
+  APPROVED**. Panel final: approved, zero unresolved blocking.
+- **Non-blocking follow-ups (docs nits, not gate blockers):** `output-contract.md:68` still says
+  “each with its denominator” for count rows; `output-contract.md:62` retains “SVGs never inlined”
+  next to the inline Atlas canvas; `output-contract.md:4` grounds in the v1.0 schema;
+  `map-intelligibility.md:411-413` still says the holdout is “vaulted until the A2 test”;
+  `README.md:3` says “C + Rust backends” while Python is also shipped. None blocks the plan.
 
 ## Risks / open
 
-- **memchr fold residual (ship-blocking):** library class canvas bottom 1,282 px > 900; step 15 must
-  resolve or explicitly accept it before ship. The approved composition is unchanged.
-- **A2 delegation:** the founder's own timed eye-test was not applied; a fresh holdout is needed for an
-  untainted founder re-run. The formal V6 bar remains open as a record.
-- **Lane-flagged residuals:** `static cost units (v2)` / `× median` definition; canvas/chart label
-  truncation; postgres entry election (pgbench main; 49% reachable; 719 production unreached; 0
-  resolved blast-radius dependents); memchr `library root` MEDIUM with 5 alternatives; hottest file is
-  an unreached test on postgres. These are step-15 docs/ranking follow-ups, not A2 failures.
-- `R-pf-109`/`A-pf-118` open; F undecided; `map-build` not done; A1b open; publish gate B-pf-001/002
-  founder-owned.
+- **Founder V6 gold standard:** the founder's own timed A2 run was not applied; a fresh holdout is
+  required for an untainted re-run. Recorded, not waived.
+- **Accepted residual (D-pf-256):** library-class canvas can exceed the 900 px fold (memchr 1,282 px).
+  Fix trigger: post-beta layout pass or a real user blocker; no tuning now.
+- **Ranking / map quality:** R-pf-105 (KV1 recall), R-pf-106 (Q3 call-weighted ranking), R-pf-108
+  (structural LOW/MEDIUM honesty), A1b open; `map-build` not done.
+- **F:** undecided (D-pf-251); treemap candidate deferred, no F code ships.
+- **Publish gate:** B-pf-001 (contact) + B-pf-002 (minisign secrets) — founder-owned.
+- **Commit:** pending founder approval; **no push**.
 
 ## Next
 
-- **Step 15 in a fresh session:** output contract/README/CHANGELOG; archive the V7 prototypes' role;
-  run the full DoD; resolve or explicitly accept the memchr fold residual; run the final parallel panel;
-  mark the plan done **only then**; update state/handoff/activeContext; commit. Publish gate remains
-  founder-owned.
+1. **Founder approves the commit** → commit the step-15 change set (docs/state + evidence); no push.
+2. Publish gate B-pf-001/002 (founder-owned).
+3. Post-beta: F decision, memchr fold fix trigger, `map-build`/A1b ranking recall.
 
 ## Change set
 
-- **New:** `docs/evidence/map-vision/v8/a2.md`, `docs/evidence/map-vision/v8/a2/` (frames,
-  `a2-verify.json`, `setup.txt`, `gate-a2.txt`, scan logs, `lanes/`), `docs/evidence/map-vision/v8/a2_verify.py`.
-- **Docs/state:** `docs/plans/atlas-build.md` (step-14 annotation + status banner), `docs/atlas/AGENT-BRIEF.md`,
-  `docs/tracks/atlas-beta.md`, `state/session-state.json` (D-pf-255; D-pf-251 live), this handoff,
-  `docs/activeContext.md`, `CHANGELOG.md`.
-- **No** code, schema, JS, dependency or golden change; no push; no commit yet.
+- **Modified:** `CHANGELOG.md`, `README.md`, `docs/evidence/accepted-limitations.md`,
+  `docs/evidence/map-vision/v7/README.md`, `docs/report/output-contract.md`,
+  `docs/specs/{atlas-feature,atlas-layout,atlas-metrics,maintainer-map,map-animation,map-intelligibility}.md`,
+  `docs/plans/atlas-build.md`, `state/session-state.json`, `state/handoff/latest.md`,
+  `docs/activeContext.md`, `docs/tracks/atlas-beta.md`, `docs/atlas/AGENT-BRIEF.md`.
+- **New:** `docs/evidence/atlas-visual/v2/STEP15.md`,
+  `docs/evidence/atlas-visual/v2/gate-step15.txt`.
+- **Archived:** `state/archive/ledger.jsonl` (append-only: D-pf-250/252/253/254, full R-pf-109 text).
+- **No** `src/`, schema, JS, dependency, golden or test change; no visual tuning; no push.

@@ -17,10 +17,11 @@ findings ride as annotations on the map, never as a list to cross-reference by h
 - Level 1 file: top files by degree, heat = per-file function cost, single outlined hottest file.
 - Level 2 component pages: intra-component files + edges (existing pages).
 - Drill path: report header → workspace → file/component → findings-detail rows (finding_id + path:line:col).
-- **V2 reading path (locked):** `report.html#map` = **KV1 Start here → KV2 Blast radius →
-  KV3 Profile queue**; the Level-0/1/2 stems (all 8 current stems) are explorer evidence under
-  a labelled `#explorer` section. In the **legacy list-first report**, the first content block
-  answers Q1 in plain language; the Atlas page's first block is the canvas (V8 amendment).
+- **V2 reading path (locked):** `report.html#map` = **key-metrics strip (START actions) → Atlas
+  canvas + detail rail → weight/blast/file/coverage charts**; the Level-0/1/2 stems (all 8 current
+  stems) are explorer evidence under a labelled `#explorer` section. In the **legacy list-first
+  report**, the first content block answers Q1 in plain language; on the Atlas page the first block
+  is the key-metrics strip + canvas (step-12 A8 re-baseline).
 
 ## Honesty contract
 - Caps pre-layout (top-50, ties path-asc), top-10 report rows, labels tail-kept 32 chars.
@@ -130,22 +131,25 @@ Full-repo node-link beyond ~1k entities; force-directed full-corpus layout; runt
 
 The core visual is **Perfpal Atlas**: an entry-flow graph page. G (entry-flow) is the core graph;
 F (weight map) is not a fallback and not discarded — its weight mass ships as a supporting
-below-graph strip, its treemap is Explorer-only, and any other supporting component must pass the
-six-test inclusion rule (`docs/research/atlas-developer-needs.md` §7). No mode switch. The graph
-page is 100% graph; metrics/brief live below.
+below-graph chart, its treemap candidate remains deferred (Explorer-only when built; D-pf-251),
+and any other supporting component must pass the six-test inclusion rule (`docs/research/atlas-developer-needs.md` §7). No mode switch. The canvas
+is graph-only; the first page pairs it with a small key-metrics strip and a detail rail, and the
+designed charts are revealed below. **The v1 seven-block brief is retired (step 12).**
 
 | Level | Composition |
 |---|---|
-| **Atlas canvas** (first screen) | Elected entry (production `main`, then production `script` (Python `__main__`), else highest-fan-in production `lib-root`; else `NO ENTRY` stub), file nodes on BFS depth columns, structural call edges (LOW+MEDIUM, disclosed), component hulls (approximate), unreached tail, numbered representative path trace, legend + caps chip |
-| **Atlas brief** (below) | Answer line → KV1 actions → weight strip (F mass) → blast radius → file cards → noise footer → drill links; fixed seven blocks, state-unconditional |
-| **Drills** | Q2 reverse drill, complete action list, complete profile queue, weight detail, per-component pages |
-| **Explorer** | The 8 legacy stems + `weight-treemap` (F), labelled Explorer-tier, no answer claim |
+| **Atlas canvas** (first page) | Elected entry (production `main`, then production `script` (Python `__main__`), else highest-fan-in production `lib-root`; else `NO ENTRY` stub), file nodes on BFS depth columns, structural call edges (LOW+MEDIUM, disclosed), component hulls (approximate), unreached tail, numbered representative path trace, legend + caps chip. Graph-only (A9): no cards/tables/bars/selectors |
+| **Atlas first page** (strip + rail) | Key-metrics strip above the canvas: entry, HOTTEST, path, caps, three START actions, one caveat, one legend/unit definition. Right detail rail (12 cards): role, cost anchor, top-3 functions, dominant finding, exact function/finding links |
+| **Atlas charts** (below) | Four designed charts, state-unconditional: weight (production/non-production share ribbon + production file/component bars), blast radius (dependents, include coverage, callers/callees), file detail (top-6 cost ladder), coverage/links |
+| **Drills** | `atlas-q2.html` (Q2 reverse drill), `atlas-weight.html` (complete weight detail), complete action list, complete profile queue, per-component pages |
+| **Explorer** | The 8 legacy stems; the F treemap candidate is deferred (Explorer-only when built; D-pf-251), labelled Explorer-tier, no answer claim |
 
-The three questions keep their slots but move on the Atlas page: Q1 = canvas + KV1 actions below;
-Q2 = blast-radius block below + drill; Q3 = weight strip below (file/component share) + complete
-function-level profile queue in the drill. One encoding each; severity/confidence stay text. The
-first block is the canvas and the first answer-bearing block is the answer line below it
-(`map-intelligibility.md` V8, amending A8 for the Atlas page).
+The three questions keep their slots but move on the Atlas page: Q1 = key-metrics strip + canvas
+(three START actions in the strip); Q2 = blast-radius chart + `atlas-q2.html`; Q3 = weight/share
+charts (file/component share) + `atlas-weight.html` + the complete function-level profile queue in
+the drill. One encoding each; severity/confidence stay text. The first page is the strip + canvas;
+the strip above the canvas is the first answer-bearing surface and the first below-canvas block is
+the weight chart (step-12 A8 re-baseline; `map-intelligibility.md`).
 
 Honesty contract unchanged: caps, stubs, LOW/structural labels and counted demotions survive; the
 canvas never prints `resolved` or `reachable_from_entry` for the structural call set; no time

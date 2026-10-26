@@ -1,18 +1,22 @@
 # Atlas — new-agent brief (read this first)
 
-**Status:** Atlas steps 1–13 implemented; step 13 composition **APPROVED 2026-10-24** (delegated,
-evidence-based). **A2 (step 14) is DONE 2026-10-24/26 (delegated):** postgres + memchr crate payload; 4/4
-blind lanes named 3 actions in 87–120 s and answered understandable YES; pause/reduced-motion/print
-verified on both (`docs/evidence/map-vision/v8/a2.md`). **Step 15 (ship/docs/EOL) is schedulable; the
-plan is not done.** Residual: memchr canvas bottom **1,282 px > the 900 px fold** (library class,
-23-file UNREACHED column) — resolve or explicitly accept in step 15 before ship. Do **not** mark the
-plan done; no visual tuning in step 14.
+**Status:** **Atlas v2 steps 1–15 are DONE; `atlas-build` is marked done 2026-10-26 (D-pf-258).**
+Step 13 composition **APPROVED 2026-10-24** (delegated, evidence-based). A2 (step 14) is a
+**delegated PASS 2026-10-24/26** (postgres + memchr; 4/4 blind lanes named 3 actions in 87–120 s and
+answered understandable YES; pause/reduced-motion/print verified;
+`docs/evidence/map-vision/v8/a2.md`) and **D-pf-257 records that it closes the A2 gate for this
+beta**. Step 15 docs/EOL + DoD 1–13 + the parallel panel are complete. **Residual accepted:**
+memchr canvas bottom **1,282 px > the 900 px fold** (library class, 23-file UNREACHED column) is a
+documented beta residual (**D-pf-256**, fix trigger in `docs/evidence/accepted-limitations.md` §D),
+not a layout-contract pass. **Commit pending founder approval; no push.** F stays undecided; do not
+retune the page without a new founder-approved layout plan.
 **Owner:** orchestrator. **Audience:** every agent touching `src/reporter/atlas_*`, the Atlas specs,
 the V8 evidence, or the Atlas plan.
 
 ## 1. What Atlas is
 
-**Perfpal Atlas** is the shipped human map. **G (entry-flow) is the core graph.** F (weight
+**Perfpal Atlas** is the product's human map (beta artifacts; publish gate founder-owned). **G
+(entry-flow) is the core graph.** F (weight
 map/treemap) is **not a fallback and not discarded** — F's weight/treemap mass, production-first area
 and component cells are candidates for the "more key charts" below the graph, decided slowly with
 the founder. No mode switch.
@@ -88,8 +92,9 @@ the founder's eye. The data/model are fine.
 
 ## 4. What not to do
 
-- Do **not** ship (step 15) until its docs/EOL gate passes and the memchr first-page-fit residual is
-  resolved or explicitly accepted. A2 is done (delegated) — see `docs/evidence/map-vision/v8/a2.md`.
+- Step 15 is **done** (docs/EOL + DoD 1–13 + panel). Do **not** push; the commit is founder-gated and
+  the publish gate B-pf-001/002 remains founder-owned. The memchr residual is accepted (D-pf-256),
+  not a layout-contract pass.
 - Do **not** add more blocks/features to fix the composition; remove and simplify first.
 - Do **not** spend sessions on pixel-level layout nudges before the visual language is approved —
   the founder says layout is cheap; the palette/typography/hierarchy are the hard part.
@@ -100,22 +105,22 @@ the founder's eye. The data/model are fine.
 
 ## 5. Current status and next step
 
-- `R-pf-109` (high) stays open as a record. `A-pf-118`: A2 (step 14) is **DONE 2026-10-24
-  (delegated)**; step 15 (ship/docs/EOL) is schedulable. Ship still requires step 15 + the residual
-  decision.
+- **Plan `atlas-build` is DONE (D-pf-258).** `R-pf-109` is closed as a record; `R-pf-104` is closed
+  (A2 delegated PASS); `A-pf-118` (A2) is done; step 15 is done. The step-15 change set is
+  **uncommitted pending founder approval**; **no push**.
 - **Done:** steps 9–10 (signed G system, first-page fit, key-metrics strip, chrome hygiene;
   founder-approved 2026-10-24), **step 11** (right detail rail, committed `189df91`), **step 12**
   (weight/blast/file/coverage charts; drills on `atlas-weight.html`/`atlas-q2.html`; `#map`
-  1,848px; A8 re-baselined; committed `9a94905`), and **step 13 evidence** (DOM gate all pass;
-  V8 A1 16/16 + strip 16/16; G-baseline diff; evidence
-  `docs/evidence/atlas-visual/v2/{STEP13.md,step13.json,gate-step13.txt,VISION-STEP13.md,
-  step13-reads.json}`).
-- **Step 13 is APPROVED (2026-10-24):** see `docs/evidence/atlas-visual/v2/step13/FOUNDER-GATE.md`
-  and D-pf-253. **A2 (step 14) is DONE (delegated, 2026-10-24/26):** `docs/evidence/map-vision/v8/a2.md`
-  (postgres + memchr, 4/4 lanes PASS, pause/reduced/print PASS; memchr fold residual carried to step
-  15). F remains undecided; do not ship the F treemap without a founder decision.
-- Do not mark the plan done; step 15 is next. Holdouts are released for A2 evidence only — do not tune
-  against them; `map-build` is not done; A1b stays open.
+  1,848px; A8 re-baselined; committed `9a94905`), **step 13 evidence** (DOM gate all pass; V8 A1
+  16/16 + strip 16/16; G-baseline diff; committed `86c0537`), **A2/step 14** (delegated PASS;
+  committed `9631137`), and **step 15** (docs/EOL; DoD 1–13; panel approved; evidence
+  `docs/evidence/atlas-visual/v2/{STEP15.md,gate-step15.txt}`).
+- **Next:** founder commit approval → commit (no push); then publish gate B-pf-001/002
+  (founder-owned). Post-beta: F decision (D-pf-251), memchr fold fix trigger (D-pf-256),
+  `map-build`/A1b ranking recall (R-pf-105/106/108). F remains undecided; the treemap candidate is
+  deferred. Do not reopen the plan without a new founder-approved plan.
+- Holdouts are released for A2 evidence only — do not tune against them; `map-build` is not done;
+  A1b stays open.
 
 ## 6. Reading order
 
@@ -123,4 +128,5 @@ the founder's eye. The data/model are fine.
 2. `docs/evidence/map-vision/v7/COMPARISON.md`, `v7/g/reads.json`, `v7/g/NOTES.md`
 3. `docs/specs/atlas-feature.md`, `atlas-layout.md`, `atlas-metrics.md`
 4. `docs/adr/ADR-0009-atlas-core.md`
-5. `state/handoff/latest.md`, `docs/activeContext.md`
+5. `docs/evidence/atlas-visual/v2/STEP15.md` + `docs/evidence/map-vision/v8/a2.md`
+6. `state/handoff/latest.md`, `docs/activeContext.md`

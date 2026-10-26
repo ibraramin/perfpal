@@ -54,9 +54,11 @@ supporting elements only if justified (`docs/research/atlas-developer-needs.md` 
 
 ## 1. Purpose
 
-One full-page composition for Perfpal Atlas: the entry-flow canvas first, a fixed seven-block brief
-below it, drills for depth, and the legacy stems + F treemap in Explorer. The page shape is
-identical for every scan; only content and labels change.
+One full-page composition for Perfpal Atlas: the key-metrics strip + entry-flow canvas + detail rail
+first, four designed charts below, drills for depth, and the legacy stems in Explorer (the F
+treemap candidate remains deferred; D-pf-251).
+**The v1 seven-block below-graph brief is retired (step 12);** §2 and §4 are retained as the v1
+historical record. The page shape is identical for every scan; only content and labels change.
 
 ## 2. Page map
 
@@ -174,16 +176,16 @@ Every block renders in every state; a zero-state stub replaces missing content.
 
 ## 5. Scan states (same page shape, different content)
 
-| State | Canvas | Brief |
+| State | Canvas | Strip + below charts |
 |---|---|---|
-| **Application (production main/script)** | entry at depth 0; forward flow; HOTTEST; path trace | full brief; weight strip shows production share |
-| **Library (lib-root entry)** | entry = highest-fan-in production lib-root; forward edges may be empty; callers into the entry drawn grey in the unreached column with `reverse context → Q2 drill`; footer says `no forward path` | full brief; answer line states the library case; KV1 + weight strip carry the action; blast radius prominent |
-| **No entry** | `NO ENTRY` stub panel; no fake node | full brief; answer line states why; weight strip + KV1 still render |
-| **Empty / no functions** | named stub `no source functions recorded` | named stubs in every block |
-| **All-test / test-dominated** | production nodes may be tiny; test/bench hatched; counts printed | weight strip leads with the non-production band; KV1 production-first; noise footer prints the share |
-| **Capped (large repo)** | top-cost files per depth + `+N more` aggregated boxes; caps chip | file cards show the shown set; drill links resolve to complete lists |
-| **Partial parse** | parse-affected files marked `partial`; no silent omission | noise footer leads with `parse N partial / M failed` |
-| **Single-file repo** | one node + entry badge; no edges | full brief; weight strip = 100% one file; blast radius stub |
+| **Application (production main/script)** | entry at depth 0; forward flow; HOTTEST; path trace | strip carries entry/HOTTEST/path/three actions; weight chart shows production share |
+| **Library (lib-root entry)** | entry = highest-fan-in production lib-root; forward edges may be empty; callers into the entry drawn grey in the unreached column with `reverse context → Q2 drill`; footer says `no forward path` | strip states the library case; weight and blast-radius charts carry the action; blast drill prominent |
+| **No entry** | `NO ENTRY` stub panel; no fake node | strip states why; weight chart and START actions still render; named stubs |
+| **Empty / no functions** | named stub `no source functions recorded` | named stubs in every chart |
+| **All-test / test-dominated** | production nodes may be tiny; test/bench hatched; counts printed | weight chart leads with the non-production band; START actions production-first; coverage block prints the share |
+| **Capped (large repo)** | top-cost files per depth + `+N more` aggregated boxes; caps chip | file-detail chart shows the shown set; drill links resolve to complete lists |
+| **Partial parse** | parse-affected files marked `partial`; no silent omission | coverage block leads with `parse N partial / M failed` |
+| **Single-file repo** | one node + entry badge; no edges | weight chart = 100% one file; blast-radius chart stub |
 
 ## 6. Drills
 
@@ -191,8 +193,9 @@ Every block renders in every state; a zero-state stub replaces missing content.
   callers/callees with the structural label. Answers "what breaks if I touch it".
 - **Complete action list:** the full deterministic KV1 ranking (not a cap).
 - **Profile queue:** the complete function-level cost list within the non-demoted set.
-- **Weight detail:** file/component share detail; the F treemap (`weight-treemap`) lives in
-  **Explorer**, labelled, never on the Atlas page; the weight detail links to it.
+- **Weight detail:** file/component share detail; the F treemap candidate (`weight-treemap`) is
+  **deferred** (F undecided, D-pf-251); when built it is Explorer-only, labelled, and never on the
+  Atlas page. The weight detail links to Explorer and states the deferral.
 - **Per-component pages:** existing component pages, Explorer-tier evidence when reached from a
   key view.
 
@@ -204,18 +207,26 @@ Per `map-animation` (mandatory) and the pending ADR-0010:
 - Timeline (deterministic function of the view model; fixed constants): entry pulse (0–1.2s) →
   depth columns reveal (1.2–2.8s) → edge draw-on (2.8–4.2s) → path trace (4.2–5.4s) → HOTTEST
   pulse (5.4s+). No randomness, no wall-clock input.
-- The final frame is complete: every node, label, number, caption, edge and the full brief.
+- The final frame is complete: every node, label, number, caption and edge, the key-metrics strip,
+  the detail rail, and the four below-graph charts.
 - A CSS-only pause control freezes the timeline; keyboard accessible; labelled.
 - `prefers-reduced-motion: reduce` and `@media print` show the final frame with no motion.
 - Animation is presentation, never information: nothing exists only mid-animation.
 
 ## 8. Print and reduced motion
 
-- Print: page 1 = canvas final frame + legend + canvas footer; page 2+ = the seven-block brief;
-  drills are linked, not printed by default. No animation; no hover-only affordances.
+- Print: page 1 = key-metrics strip + canvas final frame + legend + canvas footer + detail rail;
+  page 2+ = the four below-graph charts; drills are linked, not printed by default. No animation;
+  no hover-only affordances.
 - Reduced motion: identical to print's final frame; the pause control stays.
+- **First-page fit:** at 1440×900 the canvas bottom is ≤ 900 including header/legend/footer for
+  application-class scans. **Beta exception (D-pf-256):** a library-class scan with a large
+  UNREACHED column may exceed the fold (memchr reference 1,282 px); accepted as a documented beta
+  residual with a named fix trigger (`docs/evidence/accepted-limitations.md` §D). No horizontal
+  scroll at 1280×800 remains mandatory.
 - 1440×900 canonical; canvas fills the first viewport (header + canvas ≥ 700px); no horizontal
-  scroll at 1280×800 minimum. Long paths wrap or tail-keep with `title`; the brief is single-column.
+  scroll at 1280×800 minimum. Long paths wrap or tail-keep with `title`; the below-graph charts are
+  single-column.
 
 ## 9. Accessibility
 
@@ -223,7 +234,8 @@ Per `map-animation` (mandatory) and the pending ADR-0010:
 - Pause is a real checkbox + label; focus order follows the header → canvas → brief.
 - No colour-only encoding: production/test, forward/back, reached/unreached, HOTTEST all carry
   text labels. Contrast: text on fills ≥ 4.5:1 for key-view text.
-- The answer line is the first text block; it is plain language (no `DAG`, `BFS`, `barycenter`).
+- The key-metrics strip is the first text block; its labels are plain language (no `DAG`, `BFS`,
+  `barycenter`).
 
 ## 10. Acceptance
 
@@ -231,8 +243,9 @@ Per `map-animation` (mandatory) and the pending ADR-0010:
   it answers and one concrete `path:line`/file action; library and capped states included.
 - **A2 (founder):** timed test on the holdout (application + a library-shaped repo), animation
   enabled; 3 actions in under 10 minutes; understandable; pause/reduced-motion/print work.
-- **A8 (amended first screen):** first block = canvas; first answer block = answer line directly
-  below; the canvas itself carries entry + HOTTEST + path.
+- **A8 (amended first screen; step-12 re-baselined):** first block = key-metrics strip + canvas;
+  the strip above the canvas is the first answer-bearing surface; the canvas itself carries entry
+  + HOTTEST + path; the first below-canvas block is the weight chart.
 - **A9 (canvas purity):** DOM assertion: no table, bar list, card list or metric selector inside
   the canvas element; only nodes/edges/labels/legend/caps.
 - **A10 (state-unconditional):** all §5 states render the same canvas + chart stack (step 12; the
