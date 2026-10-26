@@ -254,6 +254,30 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
 - `2ebeabd` — `docs(evidence): S4 final gate at 71d0d04`
 - S4 docs/state close commit follows this list; **not pushed, not merged**.
 
+## ADR-0011 — companion vs in-report (2026-10-26)
+
+**Decision: companion.** The Atlas Story does not graduate into `report.html` in v1; **A12 is
+unchanged** (exactly one fixed `REPORT_SCRIPT`; zero scripts/handlers/network in the
+canvas/SVG/animation artifacts; no CSS/SMIL story film). No code, schema, layout or dependency
+change; `layout_version`/`flow_version` stay 1.
+
+**Why.** S4 proves the mechanism (F1–F7; 3k 44/44; 304/304; page 463,490 B; first frame 1,706 ms;
+F6 byte-identity; F5 double-scan determinism), and the F1/scale reads are PASS-WITH-NITS, no
+blockers. But the pre-registered **founder D2 interaction gate has not run** (F8 deferred), and the
+report's composition is still unapproved (`R-pf-109`; step-13 gate pending; A2/ship blocked).
+In-report controls also require a second script + data channel + deterministic/offline gates and a
+port of the `sim.js` player into the Rust emitter. The companion itself is not shipped: it
+`fetch()`es its data and needs an HTTP server; `--story` writes only `atlas-layout.json`; the
+`perfpal story` subcommand is deferred.
+
+**Graduation conditions (ADR-0011 Decision 4).** (a) founder D2 on a self-contained story artifact,
+including the F8/A2 action read; (b) the report's step-13 founder visual gate passed; (c) a
+deterministic, offline, no-network player with a complete final frame and pause/reduced-motion/print;
+(d) an explicit A12 amendment + founder ratification.
+
+**Recorded follow-up (not active).** Companion packaging: inline the data (no `fetch`/server) and
+add a CLI entry point; that is the precondition for D2/F8. No ship claim.
+
 ## Next
 
 - **S4 close:** complete (panel 5/5 APPROVE, final gate `71d0d04`, evidence `2ebeabd`); then the

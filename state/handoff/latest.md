@@ -1,100 +1,94 @@
-# Session handoff — Atlas Story (D2 + S1 + S2 + S3 + S4)
+# Session handoff — ADR-0011 (Atlas Story: companion vs in-report)
 
 - **Date:** 2026-10-26 · **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (`feat/atlas-sim`)
-- **Track:** Atlas Run · **Status:** **S4 gated at `71d0d04` (tree `51548f3`, dirty 0, 897 tests, 304/304, 3k 44/44, `verdict=PASS`); 4-lane panel + fresh confirmation **5/5 APPROVE**; closed.** **Not
-  pushed, not merged.**
-- **Detail:** `state/tracks/atlas-sim/handoff.md` · **Requirement:** `docs/specs/atlas-story.md`
-  (sealed) · **Plan:** `docs/plans/atlas-s4.md` · **Probes:** `docs/atlas/core-probes.md` (P6–P8)
-- **State:** `state/session-state.json` · **Evidence:** `docs/evidence/atlas-sim/`
+- **HEAD:** `8f0249e` (S4 close; gate `71d0d04`, evidence `2ebeabd`) · **not pushed, not merged**
+- **Track:** Atlas Run · **Status:** **ADR-0011 accepted — the Atlas Story remains a standalone
+  companion; A12 unchanged; no code.** S4 remains the gated story baseline (`71d0d04`).
+- **ADR:** `docs/adr/ADR-0011-atlas-story-companion.md` · **Requirement:** `docs/specs/atlas-story.md`
+  (sealed) · **Evidence:** `docs/evidence/atlas-sim/` · **Detail:** `state/tracks/atlas-sim/handoff.md`
 
 ## Objective
 
-Turn the Atlas map into a **temporal showcase of a codebase**: entry → stages → loops → I/O → stop,
-with **the payload crossing each file boundary labelled**; vibecoder-first, senior drill; static
-inference labelled; fed only by Perfpal core artifacts. S4 makes the story scale: **directory scenes
-at 3k files**, the **whole-repo KV3 queue**, a **README purpose sentence**, scene-aware start-here and
-a scale-aware trust line, with the 3k F2–F7 gate.
+Decide, from S4 evidence, whether the Atlas Story remains a standalone companion or graduates into
+the static report. If in-report with controls, write the A12 amendment and a scoped implementation
+plan; if companion, record the decision and stop. No pixel work.
 
-## Phase
+## Decision (D-pf-256 / ADR-0011)
 
-| Slice | Scope | Status |
-|---|---|---|
-| S1 | P4 stages + P5 `atlas-layout.json` (`layout_version: 1`); sim consumes core JSON | **done** |
-| S2 | P3 signatures + P1 call payloads → `flow`, edge labels, payoff beats | **done** |
-| S3 | P2 I/O effects → stores + trust line | **done** |
-| S4 | P6 purpose + P7 KV3 queue + P8 scenes; 3k scale/payoff; F1–F7 | **done** (`71d0d04`) |
+1. **The Atlas Story remains a standalone companion** for v1; it does not graduate into
+   `report.html`.
+2. **A12 is unchanged.** `report.html` keeps exactly one fixed `REPORT_SCRIPT`; the Atlas
+   canvas/SVG/animation artifacts keep zero `<script>`, zero handlers, zero network references. No
+   CSS/SMIL story film is added to the report either.
+3. **No code, schema, layout or dependency change.** `layout_version`/`flow_version` stay 1; the
+   fixed artifact set, `metrics.json`, `report.html` and the `--story` output are untouched.
+4. **Graduation is a separate, founder-ratified decision** requiring all of: (a) a founder D2
+   session on a **self-contained** story artifact (the `docs/research/atlas-run.md` §5 protocol,
+   including the F8/A2-style action read); (b) the report's step-13 founder visual gate passed
+   (`R-pf-109` closed); (c) a deterministic, offline, no-network player that is byte-identical on
+   double render with a complete final frame and pause/reduced-motion/print; (d) an explicit A12
+   amendment naming the second script, its fixed source, data channel and gates.
+5. **The companion's packaging is a recorded follow-up, not this session's work.** A precondition
+   for D2 is a self-contained artifact (data inlined; no `fetch`, no server) reachable from the CLI.
+   This ADR makes **no ship claim** for the companion.
+6. **The story stays the temporal companion to the Atlas map**, not a second map: no second metric
+   encoding, schema field, time unit or runtime claim.
 
-## Decisions
+## Why (evidence)
 
-- **D-pf-255 (S4):** P6 `purpose` (README first prose paragraph, structural fallback), P7 `profile`
-  (authoritative KV3 order, top 12 production non-demoted rows + counts) and P8 `scenes` (depth-2
-  directory partition, 24-scene/5-file caps, production-cost-first, omitted totals, shared
-  `atlas::file_cost`, `nodes[].scene`/`actions[].scene`) are **story-only, additive, `layout_version:
-  1`**. Limits: README first-only; 12-row queue; 24/5/depth-2 scenes; scene cost is static, not
-  runtime; a 3k scene can be omitted by the cap (counts disclosed); the 3k fixture is synthetic.
-  F8 (founder A2) is deferred, not claimed.
-- **D-pf-254 (S3):** fixed v1 I/O call-name table; literals only for plain string arguments; unknown
-  stays unknown. **D-pf-253 (S2):** `flow` story-only/additive; labels computed in the core.
-  **D-pf-252/D-pf-251:** sealed spec; Atlas is Perfpal's #1 priority; core additions recorded.
+- **The mechanism is proven.** S4 gate `71d0d04` (tree `51548f3`, dirty 0): 897 tests, `sim/verify.py`
+  **304/304**, 3k scale **44/44**, page **463,490 B**, first frame **1,706 ms**, `verdict=PASS`
+  (`docs/evidence/atlas-sim/GATE.txt`); F1–F7 pass; F6 keeps `report.html` byte-identical story-off/on;
+  F5 keeps `atlas-layout.json` byte-identical on a double scan.
+- **The reads pass but are not the founder gate.** F1/scale reads are **PASS-WITH-NITS, no blockers**
+  (`VISION.md` Read 8). The pre-registered D2 protocol is a **founder** session; it has not run, and
+  F8 is deferred, not claimed (`atlas-story.md:117`; `NOTES.md:186`). V8 showed a comprehension-only
+  gate can pass a page the founder rejects (`AGENT-BRIEF.md:49-51`).
+- **The report is mid-rework.** `R-pf-109` is open, the step-13 founder visual gate is pending, and
+  A2/ship is blocked (`docs/plans/atlas-build.md:7-22`). Graduating now would add a surface to an
+  unapproved composition.
+- **A12 is load-bearing.** In-report controls need a second script + a data channel + new
+  deterministic/offline gates, and a port of the `sim.js` player into the Rust emitter (`sim.js` is
+  58,261 B). That is a build project after the value is proven, not before.
+- **The companion is not shipped.** It loads data with `fetch('data-index.json')` /
+  `fetch(entry.file)` (`sim/sim.js:1328,1426`) and therefore needs an HTTP server;
+  `perfpal <repo> --story` adds only `atlas-layout.json` (`docs/report/output-contract.md:90-113`);
+  the `perfpal story` subcommand is deferred (`atlas-story.md:157-160`).
+- **The report contract is singular.** `REPORT_SCRIPT` is one fixed block
+  (`src/reporter/mod.rs:1718,2443-2447`); A12 asserts exactly one block in `report.html` and zero in
+  the canvas/SVG/animation artifacts (`docs/specs/atlas-layout.md:198-201`; `ADR-0010:25-33,51-54`).
 
-## S4 shipped
+## Changed
 
-- **Core P6 (`9263c19`):** `purpose {purpose_version:1,text,source,kind}` from the scan-root README
-  (README.md/.rst/.txt/README; 64 KiB/200-char caps; front matter/badges/TOC/fences skipped) or the
-  entry line structural fallback. Hyperfine `A command-line benchmarking tool.`; cJSON
-  `Ultralightweight JSON parser in ANSI C.`
-- **Core P7 (`e55221c`):** `profile {queue_version:1,total_ranked,production_ranked,candidate_total,
-  demoted_production,shown,rows[]}` — authoritative `complete_profile_queue` order, production
-  non-demoted top 12; no re-rank.
-- **Core P8 (`3c80ae9`):** `scenes {scene_version:1,scene_cap:24,file_cap:5,total_scenes,shown_scenes,
-  total_files,shown_files,rows[],omitted{...}}` — root/top-level/split depth-2 partition, shared file
-  cost, top-5 files, production-cost-first, entry/hottest, node/action `scene`.
-- **Story (`30a3bba`, `49627b2`, `5f13b04`):** purpose masthead + source label, enter-beat scene
-  context, whole-repo profile beat, scene-aware start-here, compact trust narration, below-fold
-  SCENES / PROFILE QUEUE / TRUST ACCOUNTING, unresolved-calls inspector, `window.__sim.ready`, 1280
-  wrap fixes, scan-wide test/bench counts.
-- **3k fixture + scale gate (`4006315`, `5f7579d`):** deterministic 3,000 scanned files (2,999 C + 1
-  Rust; 2,731 production + 269 test/bench), C fn-pointer + Rust `dyn` engineered into the drawn slice,
-  loops/I/O/README; `sim/scale.py`/`scale.sh` F2–F7. Page **463,490 bytes**; first frame **under the 2,000 ms budget** (final transcript); no h-scroll at 1280/1440; double-scan/load determinism; story-off/on
-  byte identity.
-- **Docs/evidence:** `core-probes` P6–P8, spec §9 S4, output contract, `NOTES` S4, `VISION` Read 8
-  (two independent reads: PASS-WITH-NITS, no blockers), `CHANGELOG`.
+- **New:** `docs/adr/ADR-0011-atlas-story-companion.md` — decision, options A–D, consequences,
+  gates, graduation triggers.
+- **Annotated (no requirement change):** `docs/specs/atlas-layout.md` A12 and
+  `docs/specs/atlas-feature.md` A12 (dated ADR-0011 status note: unchanged);
+  `docs/specs/atlas-story.md` §11.3 (resolution of the deferred decision).
+- **CHANGELOG** `[Unreleased] → Changed` entry.
+- **State:** `state/session-state.json` (D-pf-256; A-pf-125 done; phase), `docs/activeContext.md`,
+  `state/tracks/atlas-sim/handoff.md`, this handoff.
 
-## Risks / carried nits
+## Not changed
 
-- **S4 limits:** README first-only/first-prose (a stale/marketing README is quoted and labelled); P7
-  12 rows (demoted production counted, not shown); P8 depth-2/24/5 (3k: `src` direct-files and the
-  269-file `tests` scene are omitted by the production-first cap; counts disclosed); scene cost is
-  static; mixed v1/v2 scene scale; the Rust `dyn` file is forced into the drawn slice as the unreached
-  hottest (C entry cannot reach Rust across the language-scoped call graph).
-- **Carried vision nits:** third START item scene-attribution tail; `PATH` meta ellipsis at 1440;
-  dense 3k depth-1 column + clipped edge labels; trust findings run-on; cJSON unreached START/empty
-  canvas; hyperfine edge-label density. F1 purpose + first `path:line` and the 1280 legend/START/footer
-  are readable.
-- **Prior:** S3 limits (out-of-slice wrappers, Rust path ambiguity, fd-based class, method writes);
-  S2 nits; `--story` still builds the view twice; `sim/verify.py` not in CI; F8/A2 deferred.
+`report.html`, `metrics.json`, `atlas-layout.json` output, `sim/`, `src/`, `docs/schema/`,
+`Cargo.toml`/`Cargo.lock`, `layout_version` 1, the holdouts (vaulted), A2/ship (still blocked).
 
-## Next
-
-1. Reconcile the 4-lane panel (R1/R2/Q1/Q2), fix any blockers, rerun the affected lanes + one fresh
-   confirmation; final gate on the close commit; commit evidence/state.
-2. Companion-vs-report ADR (+A12 if interactive) now that S4 evidence exists; then Atlas v2 step 11
-   remains the parallel queue. No A2/ship before step 13 (R-pf-109).
-
-## Verification (this session)
+## Verification
 
 | Claim | Command / artifact | Result |
 |---|---|---|
-| Core gates | `cargo fmt --all -- --check`; `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| Tests | `cargo test --locked` | **897 passed**, 0 failed, 1 ignored |
-| Licenses | `cargo deny check licenses` | exit 0 |
-| F6 additive | story-off vs story-on | `report.html` byte-identical; `metrics.json` content-equal after provenance masking |
-| Core determinism | two `--story` scans | `atlas-layout.json` byte-identical; layout/flow/data sorted |
-| Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **304/304**, exit 0 |
-| 3k scale gate | `bash sim/scale.sh` | **44/44**, exit 0; page 463,490 bytes; first frame under the 2,000 ms budget (final transcript); no h-scroll; F2–F6 PASS |
-| Full gate | `bash sim/gate.sh` | `71d0d04` · tree `51548f3…` · dirty 0 · 897 tests · 304/304 · 3k 44/44 · **verdict=PASS** (`GATE.txt`; evidence `2ebeabd`) |
-| Vision | `VISION.md` Read 8 (F1 + scale) | **PASS-WITH-NITS, no blockers**; purpose/1280/scene/queue/trust fixes landed; carried nits listed |
-| 3k fixture | `sim/fixtures/gen-3k.py` + `sim/scale.py` | 3,000 files; C fn-pointer + Rust `dyn` drawn and unresolved; 24 scene cards / 12 queue rows |
-| Review panel | 4 lanes (R1/R2/Q1/Q2) + fresh Q3 | **5/5 APPROVE**; zero unresolved blocking findings |
+| ADR committed | `git show --stat HEAD` | ADR-0011 + spec notes + CHANGELOG |
+| No code/schema change | `git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock` | empty |
+| State JSON valid | `jq empty state/session-state.json` | exit 0 |
+| A12 gate text intact | `git diff -U0 docs/specs/atlas-layout.md docs/specs/atlas-feature.md` | dated notes only; gate sentences unchanged |
+| Citations resolve | `rg`/`sed` spot-checks on ADR refs | lines match (story §11 shifted to 157-160; corrected) |
+| Review panel | R1/R2/Q1/Q2 parallel lanes | see close record |
 
-**Uncommitted:** none after this close commit. **No push, no merge.**
+## Next
+
+1. **Fresh session: Atlas v2 step 11** (G-style detail rail), then step 12 (progressive charts) and
+   the step-13 founder/V8 gate. No A2/ship until step 13; `R-pf-109` stays open.
+2. **Story follow-up (not active):** self-contained companion artifact + CLI entry point → founder
+   D2/F8 session → graduation only per ADR-0011 Decision 4.
+3. **Uncommitted:** none after the close commit.
