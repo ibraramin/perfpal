@@ -8,13 +8,12 @@ seconds and drillable by a senior dev (`path:line` + types), static inference th
 - **S1 committed:** core `atlas-layout.json` behind `--story`; the sim builds from core JSON.
 - **S2 committed and gated:** P3 signatures + P1 call payloads; edge labels + payoff beats.
 - **S3 committed and gated:** P2 `flow.io[]` + stores/trust/inspector.
-- **S4 built and gated (`9263c19`…`5f13b04`):** P6 README `purpose`, P7 authoritative whole-repo KV3
+- **S4 built and gated (`9263c19`…final close commit):** P6 README `purpose`, P7 authoritative whole-repo KV3
   queue, P8 directory scenes (depth-2, 24/5 caps, omitted totals, node/action scene context); sim
   purpose masthead, enter-beat scene context, whole-repo profile beat, scene-aware start-here,
   below-fold SCENES / PROFILE QUEUE / TRUST ACCOUNTING, unresolved-calls inspector. Deterministic
-  3k fixture + `sim/scale.py`/`scale.sh` gate F2–F7 (page **463,230 bytes**, first frame **max
-  1,649 ms**, no h-scroll at 1280, double-scan/load determinism). Gate `dirty 0` PASS; `sim/verify.py`
-  **302/302**; 3k **44/44**; 892 Rust tests; `@vision` Read 8 **PASS-WITH-NITS, no blockers**. F8
+  3k fixture + `sim/scale.py`/`scale.sh` gate F2–F7 (page **463,490 bytes**, first frame **under the 2,000 ms budget** (final transcript), no h-scroll at 1280, double-scan/load determinism). Gate `dirty 0` PASS; `sim/verify.py`
+  **304/304**; 3k **44/44**; 897 Rust tests; `@vision` Read 8 **PASS-WITH-NITS, no blockers**. F8
   (founder A2) is **deferred**, not claimed.
 - **Not yet:** the final 4-lane panel/close and the companion-vs-report ADR.
 

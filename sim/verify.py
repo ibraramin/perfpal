@@ -217,7 +217,7 @@ def main() -> int:
             or bool(NEGATED_RUNTIME.search(core_text)) \
             or bool(unnegated_hits(core_text, NEGATABLE_CLAIMS))
         if core_forbidden:
-            withheld = {"kind": "withheld", "source": None,
+            withheld = {"kind": "withheld", "source": core_purpose.get("source"),
                         "text": "No static purpose sentence.", "version": 1}
             check(f"{case_id}: S4 forbidden core purpose is withheld", purpose == withheld,
                   str(purpose))
@@ -255,7 +255,9 @@ def main() -> int:
               f'{profile[0].get("id") if profile else None} vs {core_rows[0].get("id") if core_rows else None}')
         check(f"{case_id}: S4 profile costs match metrics",
               all(row.get("id") in functions
-                  and row.get("cost") == functions[row["id"]].get("function_cost_v2")
+                  and (functions[row["id"]].get("function_cost_v2") is None
+                       or row.get("cost") == functions[row["id"]]["function_cost_v2"])
+                  and isinstance(row.get("cost"), (int, float)) and row["cost"] >= 0
                   for row in profile),
               str([row.get("id") for row in profile if row.get("id") not in functions][:3]))
         check(f"{case_id}: S4 profile counts reconcile with profileMeta/trust",
@@ -320,6 +322,18 @@ def main() -> int:
                   row["topFiles"], key=lambda file: (-file["cost"], file["path"]))
                   for row in scenes),
               str([len(row.get("topFiles") or []) for row in scenes]))
+        check(f"{case_id}: S4 scene scales and flags are valid",
+              all(row.get("scale") in {"v2", "v1", "mixed"}
+                  and row.get("depth") in (0, 1, 2)
+                  and isinstance(row.get("entry"), bool)
+                  and isinstance(row.get("hottest"), bool)
+                  and all(file.get("scale") in {"v2", "v1"}
+                          and isinstance(file.get("production"), bool)
+                          and isinstance(file.get("entry"), bool)
+                          and isinstance(file.get("hottest"), bool)
+                          for file in row.get("topFiles") or [])
+                  for row in scenes),
+              str([(row.get("path"), row.get("scale"), row.get("depth")) for row in scenes][:3]))
         check(f"{case_id}: S4 scene paths contain their top files",
               all(
                   (row["path"] == "(root)"
@@ -598,7 +612,11 @@ def main() -> int:
 
                 purpose = expected.get("purpose") or {}
                 if purpose.get("kind") == "withheld":
-                    purpose_line = "PURPOSE · Purpose withheld (README claim)."
+                    purpose_line = (
+                        "PURPOSE · Purpose withheld (README claim)."
+                        if purpose.get("source")
+                        else "PURPOSE · Purpose withheld (claim filter)."
+                    )
                 elif purpose.get("kind") == "readme":
                     purpose_line = f'PURPOSE · {purpose["text"]} · from {purpose.get("source") or "README"}'
                 elif purpose.get("kind") == "structural":

@@ -142,7 +142,7 @@
     <h1>Atlas sim needs local data</h1>
     <p id="error-detail">The case index could not be loaded.</p>
     <p>Serve the folder locally:</p>
-    <pre><code>python3 -m http.server 8768 --directory sim</code></pre>
+    <pre><code>python3 -m http.server 8768 --bind 127.0.0.1 --directory sim</code></pre>
     <p class="error-note">Opening <code>index.html</code> through <code>file://</code> blocks the JSON fetch. The story is static and offline: no CDN, no external fonts, no telemetry.</p>
   </div>
 </div>

@@ -96,7 +96,7 @@
 - **Prototype:** read the scan-root README (`README.md`, `README.rst`, `README.txt`, `README`;
   first match, 64 KiB cap), take the first prose paragraph after the title (skip front matter,
   headings, badges/images, TOC/link-only blocks, HTML, fences and tables), strip inline markdown,
-  collapse whitespace and cap at 200 chars. If there is no README or no usable paragraph, emit a
+  collapse whitespace and cap at 200 chars + ellipsis (≤201). If there is no README or no usable paragraph, emit a
   structural fallback built from the existing entry line. `purpose_version: 1`,
   `kind: "readme" | "structural"`, `source: <filename> | null`.
 - **Must not:** invent a purpose; summarise code as intent; follow links or read outside the scan
@@ -111,7 +111,7 @@
 - **Prototype:** project the **authoritative** `views::complete_profile_queue` ordering. Count
   `total_ranked`, `production_ranked`, eligible production non-demoted `candidate_total` and
   `demoted_production`; carry the first 12 eligible rows in queue order with rank, canonical id,
-  name, `path:line`, cost + rendered anchor, trip provenance and demotions. `queue_version: 1`.
+  name, `path:line`, cost + rendered anchor, unknown/known trip fields and demotions. `queue_version: 1`.
 - **Must not:** re-rank in the story; include non-production rows; hide the startup/no-loop
   demotions; call the rows runtime hot spots. They are static candidates.
 - **Real implementation:** emit the complete queue on demand (or a stable page), keep KV3 and the
@@ -346,8 +346,8 @@
 S4 is the scale + payoff slice (`docs/specs/atlas-story.md` §9): directory scenes at 3k files, the
 whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8 (founder A2) is
 **deferred**, not claimed. The authoritative gate run is the `Commit at run` line in
-`docs/evidence/atlas-sim/GATE.txt` (S4 close commit; `dirty 0`; `verdict=PASS`; 892 tests; story gate
-302/302; 3k scale 44/44).
+`docs/evidence/atlas-sim/GATE.txt` (S4 close commit; `dirty 0`; `verdict=PASS`; 897 tests; story gate
+304/304; 3k scale 44/44).
 
 ### P6 — purpose line (`9263c19`)
 
@@ -360,7 +360,7 @@ whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8
 - **Extraction:** first README at the scan root in `README.md` / `README.rst` / `README.txt` /
   `README` order; 64 KiB read cap; first prose paragraph after the title; skips YAML front matter,
   headings, badges/images, TOC/link-only blocks, HTML comments/tags, fences and tables; strips inline
-  links/emphasis/code ticks; collapses whitespace; 200-char word-boundary cap.
+  links/emphasis/code ticks; collapses whitespace; 200-char word-boundary cap + ellipsis (≤201).
 - **Fallback:** no README / no prose → `No README at the scan root; inferred entry: <entry_text>.`,
   `source: null`, `kind: "structural"` (also capped).
 - **Honesty:** the core copies text, never invents; the sim labels the source and withholds a README
@@ -425,7 +425,9 @@ whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8
   fixed (24/5), not configurable; production-first ordering can omit a huge test/bench scene (3k:
   `tests`, 269 files) — its counts are in the omitted block and the scan-wide non-production count;
   scene cost is static cost, not runtime work; a scene is a directory, not a component/call-graph
-  region; action scene is the directory partition, not the call path.
+  region; action scene is the directory partition, not the call path. A non-source path
+  (e.g. an action on a header with `function_count == 0`) uses a best-effort directory key
+  and may not name a shown scene row; source nodes/actions are exact.
 - **Real implementation must:** configurable depth/caps for 10k+ repos, component-aware grouping where
   justified, source-level scene drill links, and the same shared cost rule.
 - **Evidence:** hyperfine 11 scenes / 51 files (35 production / 16 test-bench), cJSON 3 / 81
@@ -451,8 +453,8 @@ whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8
   269 tests, a reachable high-cost C function-pointer file (`src/mod00/sub00/f00.c`) and a Rust `dyn`
   file (`src/mod29/sub08/f09.rs`) engineered into the drawn slice, loops/I/O and a README. Generated
   under `/var/tmp/opencode/atlas-3k-fixture`; never committed.
-- **F7:** page **463,230 bytes** (index 7,049 + CSS 24,176 + JS 58,166 + `data-3k.json` 373,839) vs
-  5 MB budget; first frame **max 1,570 ms** over three cold loads (budget 2,000); no horizontal scroll
+- **F7:** page **463,490 bytes** (component breakdown in `GATE.txt`) vs
+  5 MB budget; first frame **under the 2,000 ms budget** over three cold page loads (final transcript); no horizontal scroll
   at 1440×900 or 1280×800; 24 scene cards / 12 queue rows.
 - **F2–F6:** every drawn edge labelled; unresolved C fn-pointer + Rust `dyn` rows are visible and never
   guessed; no forbidden claim/time unit in the data or final frame; two scans → identical layout/flow;

@@ -96,12 +96,12 @@ def ensure_fixture() -> bool:
 
 
 def ensure_binary() -> bool:
-    if BIN.is_file() and os.access(BIN, os.X_OK):
-        return check("binary_present", True, str(BIN))
+    # Always build (incremental in the gate) so a standalone scale run cannot
+    # silently test a stale binary after source edits.
     proc = run([CARGO, "build", "--locked", "--offline"], timeout=900)
     ok = proc.returncode == 0 and BIN.is_file()
     return check("binary_present", ok,
-                 f"built missing binary · exit {proc.returncode}" if ok
+                 f"built current binary · exit {proc.returncode}" if ok
                  else proc.stderr[-400:])
 
 
@@ -320,7 +320,7 @@ def main() -> int:
         json.dumps({"cases": [REAL_CASE]}, indent=1) + "\n", encoding="utf-8"
     )
     page_files = [SITE / "index.html", SITE / "sim.css", SITE / "sim.js",
-                  SITE / "data-3k.json"]
+                  SITE / "data-3k.json", SITE / "data-index.json"]
     page_bytes = sum(path.stat().st_size for path in page_files)
     PAGE_BYTES = page_bytes
     check("F7_page_bytes", page_bytes <= PAGE_BUDGET,

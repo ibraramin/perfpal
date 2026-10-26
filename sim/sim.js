@@ -642,7 +642,11 @@
   function purposeText(data) {
     const purpose = data.purpose;
     if (data.synthetic || !purpose) return 'entry-flow map · static, profile to confirm';
-    if (purpose.kind === 'withheld') return 'PURPOSE · Purpose withheld (README claim).';
+    if (purpose.kind === 'withheld') {
+      return purpose.source
+        ? 'PURPOSE · Purpose withheld (README claim).'
+        : 'PURPOSE · Purpose withheld (claim filter).';
+    }
     if (purpose.kind === 'readme') {
       return `PURPOSE · ${purpose.text} · from ${purpose.source || 'README'}`;
     }

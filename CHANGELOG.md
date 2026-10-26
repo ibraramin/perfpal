@@ -18,9 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   <README sentence>`, enter-beat scene context, a whole-repo profile beat, scene-aware start-here,
   a compact trust line and the below-fold SCENES / PROFILE QUEUE / TRUST ACCOUNTING panels; the
   inspector gains UNRESOLVED CALLS (C function pointer + Rust `dyn` visible, never guessed). A
-  deterministic 3,000-file fixture and `sim/scale.py`/`scale.sh` gate F2–F7: page **463,230 bytes**,
-  first frame **max 1,570 ms**, no horizontal scroll at 1280×800, double-scan/double-load
-  determinism and story-off/on byte identity; 892 tests; `sim/verify.py` 302/302; 3k scale 44/44;
+  deterministic 3,000-file fixture and `sim/scale.py`/`scale.sh` gate F2–F7: page **463,490 bytes**,
+  first frame **under the 2,000 ms budget** (final transcript), no horizontal scroll at 1280×800, double-scan/double-load
+  determinism and story-off/on byte identity; 897 tests; `sim/verify.py` 304/304; 3k scale 44/44;
   gate `dirty 0` PASS. `@vision` Read 8 PASS-WITH-NITS (no blockers). F8 (founder A2) is deferred,
   not claimed. Records: `docs/atlas/core-probes.md` P6–P8; evidence `docs/evidence/atlas-sim/`.
 - **Atlas Story S3 — I/O effects (2026-10-26).** The core gains the story-only `flow.io[]` probe

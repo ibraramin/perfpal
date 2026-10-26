@@ -38,12 +38,8 @@ SCENE_ROWS = 24
 SCENE_TOP_FILES = 5
 UNRESOLVED_ROWS = 6
 PURPOSE_MAX_CHARS = 201  # core caps at 200 chars plus a trailing ellipsis
-WITHHELD_PURPOSE = {
-    "kind": "withheld",
-    "source": None,
-    "text": "No static purpose sentence.",
-    "version": 1,
-}
+SCENE_SCALES = ("v2", "v1", "mixed")
+FILE_SCALES = ("v2", "v1")
 
 # F4 honesty filter. These mirror `sim/verify.py`; keep the two in sync so a
 # claim can never be rejected by the gate after entering a data file.
@@ -150,7 +146,12 @@ def purpose_projection(layout: dict) -> dict:
     if version != 1:
         raise SystemExit(f"unsupported purpose_version: {version!r}")
     if forbidden_purpose(text):
-        return dict(WITHHELD_PURPOSE)
+        return {
+            "kind": "withheld",
+            "source": source,
+            "text": "No static purpose sentence.",
+            "version": 1,
+        }
     return {"kind": kind, "source": source, "text": text, "version": version}
 
 
@@ -327,6 +328,12 @@ def scenes_projection(layout: dict, metrics: dict) -> tuple[list[dict], dict]:
             raise SystemExit(f"scene path is invalid: {path!r}")
         if not isinstance(files, int) or files < 1:
             raise SystemExit(f"scene {path} has no files")
+        if row.get("scale") not in SCENE_SCALES:
+            raise SystemExit(f"scene {path} has an invalid scale: {row.get('scale')!r}")
+        if not isinstance(row.get("depth"), int) or row["depth"] not in (0, 1, 2):
+            raise SystemExit(f"scene {path} has an invalid depth: {row.get('depth')!r}")
+        if not isinstance(row.get("entry"), bool) or not isinstance(row.get("hottest"), bool):
+            raise SystemExit(f"scene {path} entry/hottest is not boolean")
         if not isinstance(top_files, list) or not top_files:
             raise SystemExit(f"scene {path} has no top files")
         if len(top_files) > SCENE_TOP_FILES:
@@ -344,6 +351,16 @@ def scenes_projection(layout: dict, metrics: dict) -> tuple[list[dict], dict]:
                 raise SystemExit(f"scene {path} top file missing from metrics: {file_path!r}")
             if not isinstance(file["cost"], int) or file["cost"] < 0:
                 raise SystemExit(f"scene {path} file {file_path} has an invalid cost")
+            if file.get("scale") not in FILE_SCALES:
+                raise SystemExit(
+                    f"scene {path} file {file_path} has an invalid scale: {file.get('scale')!r}"
+                )
+            if (
+                not isinstance(file.get("production"), bool)
+                or not isinstance(file.get("entry"), bool)
+                or not isinstance(file.get("hottest"), bool)
+            ):
+                raise SystemExit(f"scene {path} file {file_path} flags are not boolean")
             if path == "(root)":
                 contained = "/" not in file_path
             else:

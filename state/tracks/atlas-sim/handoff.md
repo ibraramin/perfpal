@@ -4,7 +4,7 @@
 **Track:** `/home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md`
 **Status:** **D2 done + S1 committed (`5faacb7..63914f9`) + S2 committed and gated
 (`2108117..b8359ae`) + S3 committed (`0ddf4ad..325571e`; docs `89f4feb`) + S4 committed and gated
-(`9263c19..61ef8c9`; evidence `97c4cda`), not pushed.** D1 presentation was accepted by the founder;
+(`9263c19..final close commit`; evidence follows), not pushed.** D1 presentation was accepted by the founder;
 the requirement was re-sealed as a core-fed temporal showcase (`docs/specs/atlas-story.md`); S1 made
 the story read core JSON, S2 added data movement on the edges, S3 added I/O effects (P2) with the
 stores/trust render, and S4 added directory scenes at 3k files, the README purpose line and the
@@ -122,13 +122,13 @@ push, no merge to `main`.
   TRUST ACCOUNTING panels; inspector UNRESOLVED CALLS; `window.__sim.ready`; 1280/1440 wrap fixes.
 - **3k fixture + scale gate (`4006315`, `5f7579d`):** deterministic `sim/fixtures/gen-3k.py` (3,000
   scanned files, 2,999 C + 1 Rust, 2,731 production + 269 test/bench, C fn-pointer + Rust `dyn` in
-  the drawn slice) and `sim/scale.py`/`scale.sh` (F2–F7). F7: page **463,230 bytes** (budget 5 MB),
-  first frame **max 1,570 ms** (1,570/420/413), no horizontal scroll at 1280×800, 24 scene cards /
+  the drawn slice) and `sim/scale.py`/`scale.sh` (F2–F7). F7: page **463,490 bytes** (budget 5 MB),
+  first frame **under the 2,000 ms budget** (final transcript), no horizontal scroll at 1280×800, 24 scene cards /
   12 queue rows. F2/F3/F4/F5/F6 pass at 3k. F8 (founder A2) **deferred**, not claimed.
 - **Record:** `docs/atlas/core-probes.md` P6/P7/P8 `prototype` (S4 record with commits, fields,
   fidelity, limits, real implementation); spec §9 S4 done; output contract names the three blocks.
 - **Evidence:** `GATE.txt` (final transcript on the S4 docs close commit, dirty 0, PASS), `checks.json`
-  302/302, 3k scale 44/44, `scale-{final,full,1280}.png`, `VISION.md` Read 8 (two independent reads;
+  304/304, 3k scale 44/44, `scale-{final,full,1280}.png`, `VISION.md` Read 8 (two independent reads;
   PASS-WITH-NITS, no blockers). The final 4-lane panel result is recorded below at close.
 
 ## Verification
@@ -163,9 +163,9 @@ push, no merge to `main`.
 | S4 queue emit | `profile` on hyperfine/cJSON/3k | hyperfine 12/35 eligible, 353 ranked; cJSON 12/45, 1055; 3k 12/2,730, 3,001 ranked; authoritative order asserted |
 | S4 scenes emit | `scenes` on hyperfine/cJSON/3k | hyperfine 11/51 files (35 production/16 test); cJSON 3/81 (6/75); 3k 32/3,000 (2,731/269), shown 24, omitted 8/816; sums reconcile |
 | S4 scene cost parity | unit test vs every drawn `AtlasNode.cost` | identical via shared `atlas::file_cost` |
-| S4 story gate | `SIM_PORT=8770 python3 sim/verify.py` | **302/302**, exit 0 (data/core/DOM + purpose/scenes/queue/trust/unresolved/PATH/1280) |
-| S4 3k scale gate | `bash sim/scale.sh` | **44/44**, exit 0; page 463,230 bytes; first frame max 1,570 ms (1,570/420/413); no h-scroll 1280/1440; F2–F6 PASS |
-| S4 full gate | `bash sim/gate.sh` | `61ef8c9` · tree `0658dc19…` · dirty 0 · 892 tests · 302/302 · 3k 44/44 · **verdict=PASS** (`GATE.txt`; evidence `97c4cda`) |
+| S4 story gate | `SIM_PORT=8770 python3 sim/verify.py` | **304/304**, exit 0 (data/core/DOM + purpose/scenes/queue/trust/unresolved/PATH/1280) |
+| S4 3k scale gate | `bash sim/scale.sh` | **44/44**, exit 0; page 463,490 bytes; first frame under the 2,000 ms budget (final transcript); no h-scroll 1280/1440; F2–F6 PASS |
+| S4 full gate | `bash sim/gate.sh` | final close commit · tree in `GATE.txt` · dirty 0 · 897 tests · 304/304 · 3k 44/44 · **verdict=PASS** |
 | S4 vision | `VISION.md` Read 8 | **PASS-WITH-NITS, no blockers** (two independent reads; purpose/1280/scene/queue/trust fixes landed; carried nits listed) |
 | S4 review | 4-lane panel (R1/R2/Q1/Q2) | record at close; zero unresolved blocking findings required |
 
@@ -204,6 +204,10 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
   the 1280 legend/START/footer are readable.
 - **F8:** founder A2 is deferred and not claimed; A2/ship remains behind the Atlas v2 step-13 founder
   gate (R-pf-109 for the map).
+- **Non-blocking gate limits:** F4 regexes can match code identifiers (a path/function named
+  `execution`); Playwright falls back to the bundled Chromium if the pinned path is absent; the 3k
+  fixture reuse checks counts, not a content digest; the first frame is measured in cold browser
+  contexts against a warmed local server.
 - Evidence keyframe PNGs are captured 250 ms after a seek and are not byte-stable (known D1 nit;
   transitions still running). Capture after `transitionend` if byte-diffable frames are needed.
 - Companion vs in-report is deferred until S2 produces evidence; an interactive in-report story would
@@ -243,6 +247,9 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
 - `49627b2` — `sim(S4): scene, queue and purpose payoff`
 - `5f7579d` — `test(S4): 3k scale gate`
 - `5f13b04` — `fix(S4): 1280 legibility and scan non-production` (post-vision gate run here)
+- `61ef8c9` — `docs(S4): record scale probes and payoff evidence`
+- `97c4cda` — `docs(evidence): S4 gate transcript and scale frames`
+- `21e6057` — `fix(S4): panel round 1 records and evidence`
 - S4 docs/evidence/state close commits follow (final gate transcript on the close commit);
   **not pushed**.
 

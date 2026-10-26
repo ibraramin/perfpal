@@ -67,22 +67,26 @@ pub(crate) fn read(root: &Path, entry_text: &str) -> Purpose {
     if root.is_dir() {
         for (name, kind) in README_CANDIDATES {
             let path = root.join(name);
-            if !path.is_file() {
+            // The scanner never follows symlinks (v1): a README symlink is not
+            // read, so the probe cannot pull text from outside the scan root.
+            let Ok(metadata) = path.symlink_metadata() else {
+                continue;
+            };
+            if metadata.file_type().is_symlink() || !metadata.is_file() {
                 continue;
             }
             let text = read_capped(&path).and_then(|raw| match kind {
                 ReadmeKind::Markdown => extract_markdown(&raw),
                 ReadmeKind::Plain => extract_plain(&raw),
             });
-            return match text {
-                Some(text) => Purpose {
+            if let Some(text) = text {
+                return Purpose {
                     purpose_version: PURPOSE_VERSION,
                     text,
                     source: Some(name.to_string()),
                     kind: "readme",
-                },
-                None => structural(entry_text),
-            };
+                };
+            }
         }
     }
     structural(entry_text)
@@ -244,7 +248,7 @@ fn is_md_skippable(line: &str) -> bool {
     if line.starts_with("![") || line.starts_with("[![") {
         return true;
     }
-    if line.starts_with('<') || line.starts_with('>') || line.starts_with('|') {
+    if line.starts_with('<') || line.starts_with('>') || line.contains('|') {
         return true;
     }
     if is_bullet_link(line) || is_numbered_link(line) {
@@ -708,5 +712,75 @@ mod tests {
         let second = read(&root, "ENTRY");
         assert_eq!(first, second);
         fs::remove_dir_all(root).ok();
+    }
+
+    #[test]
+    fn root_is_a_file_uses_the_structural_fallback() {
+        let root = temp_root("root-file");
+        let file = root.join("README.md");
+        fs::write(&file, "# T\n\nA purpose.\n").expect("write file");
+        let purpose = read(&file, "ENTRY");
+        assert_eq!(purpose.kind, "structural");
+        assert_eq!(purpose.source, None);
+        fs::remove_dir_all(root).ok();
+    }
+
+    #[test]
+    fn readme_without_prose_uses_the_structural_fallback() {
+        let root = temp_root("no-prose");
+        fs::write(root.join("README.md"), "# Title\n\n## Contents\n").expect("write README");
+        let purpose = read(&root, "ENTRY");
+        assert_eq!(purpose.kind, "structural");
+        assert_eq!(purpose.source, None);
+        fs::remove_dir_all(root).ok();
+    }
+
+    #[test]
+    fn front_matter_and_table_rows_are_skipped() {
+        let (root, purpose) = read_readme(
+            "front-matter",
+            "README.md",
+            "---\ntitle: Example\n---\n\n# T\n\n\
+             Name | Value\n--- | ---\nA | 1\n\n\
+             A real purpose sentence.\n",
+        );
+        assert_eq!(purpose.kind, "readme");
+        assert_eq!(purpose.text, "A real purpose sentence.");
+        fs::remove_dir_all(root).ok();
+    }
+
+    #[test]
+    fn unusable_first_readme_falls_through_to_the_next_candidate() {
+        let root = temp_root("fallthrough");
+        fs::write(root.join("README.md"), "# Only a heading\n").expect("write md");
+        fs::write(root.join("README.rst"), "A usable purpose.\n").expect("write rst");
+        let purpose = read(&root, "ENTRY");
+        assert_eq!(purpose.kind, "readme");
+        assert_eq!(purpose.source.as_deref(), Some("README.rst"));
+        assert_eq!(purpose.text, "A usable purpose.");
+        fs::remove_dir_all(root).ok();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn symlinked_readme_is_not_followed() {
+        let root = temp_root("symlink-root");
+        let secret = temp_root("symlink-secret");
+        let secret_file = secret.join("secret.txt");
+        fs::write(&secret_file, "A secret sentence outside the scan root.\n")
+            .expect("write secret");
+        std::os::unix::fs::symlink(&secret_file, root.join("README.md")).expect("symlink");
+        let purpose = read(&root, "ENTRY");
+        assert_eq!(purpose.kind, "structural");
+        assert_eq!(purpose.source, None);
+        assert!(!purpose.text.contains("secret sentence"));
+        fs::write(root.join("README.rst"), "A safe purpose.\n").expect("write rst");
+        let purpose = read(&root, "ENTRY");
+        assert_eq!(purpose.kind, "readme");
+        assert_eq!(purpose.source.as_deref(), Some("README.rst"));
+        assert_eq!(purpose.text, "A safe purpose.");
+        fs::remove_file(root.join("README.md")).ok();
+        fs::remove_dir_all(root).ok();
+        fs::remove_dir_all(secret).ok();
     }
 }
