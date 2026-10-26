@@ -4,40 +4,48 @@
 - **Date:** 2026-10-26
 - **Ratified:** 2026-10-26 (founder; companion option)
 - **Deciders:** Founder + orchestrator
-- **Gates:** resolves `atlas-story` §11 decision 3 and the "not decided here" item in
-  `docs/research/atlas-run.md` §5. Does **not** amend `ADR-0009`, `ADR-0010`, A12, or any spec
+- **Gates:** resolves `atlas-story` §11 decision 3 and the graduation item in
+  `docs/research/atlas-run.md` §8 (`:275`). Does **not** amend `ADR-0009`, `ADR-0010`, A12, or any spec
   requirement; changes no schema, layout version, dependency or code. `atlas-build` steps 11–15 are
-  unaffected.
+  unaffected on this branch.
 
 ## Context
 
-- The Atlas Story shipped as a **companion** over four slices (S1–S4). Perfpal core emits the data
+- The Atlas Story was built as a **companion** over four slices (S1–S4) and remains a track
+  artifact, **not a shipped one**. Perfpal core emits the data
   (`atlas-layout.json`; `flow`, `purpose`, `profile`, `scenes`); a separate player in `sim/` renders
   the inferred run — entry → stages → loops → I/O → stop — with the payload crossing each file
   boundary labelled (`docs/specs/atlas-story.md:10-20,122-135`).
-- **S4 evidence is strong on mechanism, not on product fit.** Final gate `71d0d04` (tree `51548f3`,
-  dirty 0): 897 tests, `sim/verify.py` 304/304, 3k scale 44/44, page 463,490 bytes, first frame
-  1,706 ms, `verdict=PASS` (`docs/evidence/atlas-sim/GATE.txt`). F1–F7 pass, including F6 byte-identity
+- **S4 evidence is strong on mechanism, not on product fit.** Final gate `71d0d04` (tree `51548f3`;
+  the gate reported 0 non-evidence dirty paths): **897 tests (896 passed, 1 ignored)**,
+  `sim/verify.py` 304/304, 3k scale 44/44, page 463,490 bytes, first frame 1,706 ms,
+  `verdict=PASS` (`docs/evidence/atlas-sim/GATE.txt`). F1–F7 pass, including F6 byte-identity
   of `report.html` story-off vs story-on and F5 double-scan determinism. The F1/scale vision reads are
   **PASS-WITH-NITS, no blockers** (`docs/evidence/atlas-sim/VISION.md` → Read 8).
 - **The companion is not a shipped artifact.** The player is `sim/index.html` + `sim/sim.js`
-  (58,261 B) + `sim/sim.css`, and loads its data with `fetch('data-index.json')` and
-  `fetch(entry.file)` (`sim/sim.js:1328,1426`) — it requires an HTTP server. `perfpal <repo> --story`
+  (58,261 B) + `sim/sim.css`, and loads its data with `fetch(entry.file)` (`sim/sim.js:1328`) and
+  `fetch('data-index.json')` (`:1426`) — it requires an HTTP server. `perfpal <repo> --story`
   adds only `atlas-layout.json` (`docs/report/output-contract.md:90-113`); the
   `perfpal story <repo>` subcommand is deferred (`atlas-story.md:157-160`).
 - **The report is byte-deterministic and zero-new-JS.** `report.html` carries exactly one fixed
   `REPORT_SCRIPT` (`src/reporter/mod.rs:1718,2443-2447`); the Atlas canvas/SVG/animation artifacts
   carry zero `<script>`, zero handlers and zero network references (A12; `docs/specs/atlas-layout.md:198-201`;
   `ADR-0010:25-33,51-54`).
-- **The founder interaction gate has not run.** The pre-registered D2 protocol is a founder review:
-  watch at 1440×900 with motion, check reduced-motion and print, use both reference repos, ask the A2
-  question, judge composition against the G baseline, then record *iterate / companion / graduate*
-  (`docs/research/atlas-run.md:127-159`). F8 is **deferred, not run or claimed**
-  (`atlas-story.md:117`; `docs/evidence/atlas-sim/NOTES.md:186`). V8 showed a comprehension-only gate
-  can pass a page the founder rejects (`docs/atlas/AGENT-BRIEF.md:49-51`).
-- **The report's own composition is unapproved.** `R-pf-109` is open, the v2 step-13 founder visual
-  gate is pending, and A2/ship is blocked (`docs/plans/atlas-build.md:7-22`;
-  `state/session-state.json` → `R-pf-109`).
+- **The §5 graduation session has not run on the S4 story.** The 2026-10-24 D2 session reviewed
+  **D1**: the founder accepted the presentation/animation but said the information was not
+  insightful, and that verdict drove S1–S4 (D-pf-251). The pre-registered §5 protocol on the
+  **post-S4** story — watch at 1440×900 with motion, check reduced-motion and print, both reference
+  repos, the A2 question, composition vs the G baseline, then *iterate / companion / graduate*
+  (`docs/research/atlas-run.md:127-159`) — has **not** run. F8 is deferred, not run or claimed
+  (`atlas-story.md:117`; `docs/evidence/atlas-sim/NOTES.md:186`). V8 passed 16/16 comprehension reads
+  while the founder rejected the page (`docs/evidence/atlas-audit/AUDIT.md:1-20`;
+  `docs/atlas/AGENT-BRIEF.md:49-51`).
+- **The report gate is snapshot-divergent.** On this branch (`feat/atlas-sim`, a pre-merge story
+  snapshot at `8f0249e`), `R-pf-109` is open and v2 step 13 is pending. The **main worktree** has
+  since recorded Atlas v2 done (`c797004`; step 13 approved, A2 delegated pass, `R-pf-109` closed:
+  D-pf-255/257/258). This ADR does **not** rely on the report gate being open; at merge, Decision
+  4(b) is satisfied. The branch still needs a rebase/reconciliation (decision IDs and the
+  `atlas-build` status differ) before any story merge.
 
 ## Decision
 
@@ -51,19 +59,22 @@
    fixed artifact set is unchanged; `metrics.json`, `report.html` and the `--story` output are
    untouched.
 4. **Graduation is a separate, founder-ratified decision** and requires all of:
-   (a) a founder D2 session on a **self-contained** story artifact using the
-   `docs/research/atlas-run.md` §5 protocol, including the F8/A2-style action read;
-   (b) the report's step-13 founder visual gate passed (`R-pf-109` closed);
+   (a) a founder **§5 graduation session on the post-S4 story** (distinct from the 2026-10-24 D1
+   review), on a **self-contained** artifact, using the `docs/research/atlas-run.md` §5 protocol,
+   including the F8/A2-style action read;
+   (b) the report's step-13 founder visual gate passed (`R-pf-109` closed; recorded on main
+   2026-10-26 — confirm at rebase);
    (c) a scoped player design that is deterministic, offline, no-network, byte-identical on double
    render, with a complete final frame, pause, reduced-motion and print;
    (d) an explicit A12 amendment naming the second script block, its fixed source, its data channel
    and its gates. Until (a)–(d), in-report-with-controls stays blocked.
 5. **The companion's packaging is a recorded follow-up, not work in this session.** A precondition for
-   any D2 session is a **self-contained story artifact** (data inlined; no `fetch`, no server) that a
-   user can open from the CLI (`perfpal story <repo>`, or `--story` writing it). This ADR does not
-   scope or start that slice, and it makes **no ship claim** for the companion.
+   any §5 graduation session is a **self-contained story artifact** (data inlined; no `fetch`, no
+   server) that a user can open from the CLI (`perfpal story <repo>`, or `--story` writing it). This
+   ADR does not scope or start that slice, and it makes **no ship claim** for the companion.
 6. **The story stays the temporal companion to the Atlas map**, not a second map. It may not add a
-   second metric encoding, a schema field, a time unit or a runtime claim
+   second metric encoding, a core `metrics.json` schema field or version bump (the existing
+   story-only additive `atlas-layout.json` blocks are unchanged), a time unit or a runtime claim
    (`atlas-story.md:27-35,71-83`).
 
 ## Options considered
@@ -72,7 +83,7 @@
 
 - **Pros:** preserves the report contract (byte-determinism, one fixed script, offline single file,
   LLM/agent consumption); the story can iterate without report goldens or A12 gates; no second
-  surface is added to a composition the founder has not approved; the graduation decision is made on
+  surface is added while the composition gate is still settling; the graduation decision is made on
   founder interaction evidence, as pre-registered; S4 evidence (F1–F7, 3k scale) stays valid.
 - **Cons:** the story is not reachable from the default artifact; the companion is currently
   HTTP-only and repo-relative; two surfaces exist (report map + story player) and can drift; the CLI
@@ -80,9 +91,9 @@
 - **Mitigation:** one data source and one layout (`atlas-layout.json`, probe P5); the player never
   re-derives geometry; provenance is carried as `source.sha256`; self-containment is a recorded
   precondition, not a nice-to-have.
-- **What would change the choice:** (i) a founder D2 read that uses the story to name an action and
-  asks for it in the report, with the step-13 composition approved and a scoped deterministic
-  player (Decision 4) → graduate; (ii) a D2 read that does not use the story at all → cut or
+- **What would change the choice:** (i) a founder §5 read that uses the story to name an action and
+  asks for it in the report, with the report composition approved (main) and a scoped deterministic
+  player (Decision 4) → graduate; (ii) a §5 read that does not use the story at all → cut or
   re-scope the story rather than graduate; (iii) a report-contract change that removes the
   A12/determinism constraint → option B becomes cheap.
 
@@ -93,9 +104,9 @@
   gates), plus porting the `sim.js` player into the Rust emitter and regenerating goldens. Every
   `report.html` would then carry the player and story data, or the story would remain a second
   artifact anyway.
-- **Why rejected now:** it spends the A12/determinism surface before the founder has used the story,
-  on top of an unapproved report composition (`R-pf-109`). Decision 4 keeps it available once its
-  four conditions hold.
+- **Why rejected now:** it spends the A12/determinism surface before the founder has used the
+  **post-S4** story, and the report contract is a shipped, founder-ratified boundary. Decision 4
+  keeps it available once its four conditions hold.
 
 ### C — in-report, CSS/SMIL only (rejected)
 
@@ -117,7 +128,7 @@
 - `report.html` stays a single deterministic, offline, zero-new-JS artifact; the LLM/agent contract
   and the fixed artifact set are untouched.
 - The story keeps iterating in the companion without report goldens or A12 gates.
-- The founder's D2 read remains the graduation gate, so the choice rests on interaction evidence,
+- The founder's §5 read remains the graduation gate, so the choice rests on interaction evidence,
   not on comprehension reads.
 - No schema, dependency or `layout_version` churn; F1–F7 stay green as shipped.
 
@@ -130,14 +141,17 @@
   map remains the canonical artifact.
 - A12 stays a hard boundary → any future graduation must amend it explicitly; no silent
   reinterpretation of the gate.
-- The companion's HTTP-only loading is a real distribution defect → self-containment gates D2.
+- The companion's HTTP-only loading is a real distribution defect → self-containment gates the §5
+  session.
 
 ## Gates
 
 - This ADR changes no gate. The report keeps A12/A4/A9/A10; the story keeps F1–F7 and the S4 gate
   (`bash sim/gate.sh`: 304/304 + 44/44, `verdict=PASS`).
-- **F8 remains deferred, not claimed.** The D2 session is the founder gate for graduation.
-- A2/ship remains blocked by `R-pf-109` until the Atlas v2 step-13 founder visual gate.
+- **F8 remains deferred, not claimed.** The §5 graduation session is the founder gate for graduation.
+- **Branch snapshot:** on this branch `R-pf-109` is open and A2/ship is not claimed. On main it is
+  recorded closed 2026-10-26 (step 13 approved, A2 delegated pass: D-pf-255/257/258); reconcile at
+  rebase. No A2/ship claim is made by this ADR either way.
 
 ## References
 
@@ -145,7 +159,7 @@
   `docs/specs/atlas-layout.md` §10 · `docs/specs/atlas-feature.md` A12 ·
   `docs/specs/map-animation.md` · `docs/report/output-contract.md:90-113`
 - `docs/adr/ADR-0009-atlas-core.md` · `docs/adr/ADR-0010-declarative-animation.md`
-- `docs/research/atlas-run.md:127-159` · `docs/evidence/atlas-sim/{GATE.txt,VISION.md,NOTES.md}` ·
-  `docs/evidence/atlas-audit/AUDIT.md`
+- `docs/research/atlas-run.md:127-159,275` · `docs/evidence/atlas-sim/{GATE.txt,VISION.md,NOTES.md}` ·
+  `docs/evidence/atlas-audit/AUDIT.md:1-20`
 - `src/reporter/mod.rs:1718,2443-2447` · `sim/sim.js:1328,1426` · `sim/index.html:150`
 - `docs/plans/atlas-build.md` steps 11–15 · `docs/atlas/AGENT-BRIEF.md:49-51`

@@ -210,8 +210,9 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
   contexts against a warmed local server.
 - Evidence keyframe PNGs are captured 250 ms after a seek and are not byte-stable (known D1 nit;
   transitions still running). Capture after `transitionend` if byte-diffable frames are needed.
-- Companion vs in-report is deferred until S2 produces evidence; an interactive in-report story would
-  need a new ADR + A12 amendment (A12 already permits CSS/SMIL, not a second script).
+- Companion vs in-report: **DECIDED 2026-10-26 (ADR-0011, D-pf-259) — companion stays**; A12
+  unchanged. The earlier "deferred until S2" note is resolved; an interactive in-report story would
+  still need a new ADR + A12 amendment (A12 permits CSS/SMIL, not a second script).
 
 ## Commits
 
@@ -263,23 +264,34 @@ change; `layout_version`/`flow_version` stay 1.
 
 **Why.** S4 proves the mechanism (F1–F7; 3k 44/44; 304/304; page 463,490 B; first frame 1,706 ms;
 F6 byte-identity; F5 double-scan determinism), and the F1/scale reads are PASS-WITH-NITS, no
-blockers. But the pre-registered **founder D2 interaction gate has not run** (F8 deferred), and the
-report's composition is still unapproved (`R-pf-109`; step-13 gate pending; A2/ship blocked).
-In-report controls also require a second script + data channel + deterministic/offline gates and a
-port of the `sim.js` player into the Rust emitter. The companion itself is not shipped: it
-`fetch()`es its data and needs an HTTP server; `--story` writes only `atlas-layout.json`; the
-`perfpal story` subcommand is deferred.
+blockers. But the founder has **not used the post-S4 story**: the 2026-10-24 D2 session reviewed
+**D1** (presentation accepted, information not insightful: D-pf-251), and F8 is deferred. The
+pre-registered **§5 graduation session on the post-S4 artifact** has not run. In-report controls also
+require a second script + data channel + deterministic/offline gates and a port of the `sim.js`
+player into the Rust emitter. The companion itself is not shipped: it `fetch()`es its data and needs
+an HTTP server; `--story` adds only `atlas-layout.json`; the `perfpal story` subcommand is deferred.
 
-**Graduation conditions (ADR-0011 Decision 4).** (a) founder D2 on a self-contained story artifact,
-including the F8/A2 action read; (b) the report's step-13 founder visual gate passed; (c) a
+**Branch snapshot.** This branch is a pre-merge story snapshot at `8f0249e`. Main has since
+recorded Atlas v2 done (`c797004`; step 13 approved, A2 delegated pass, `R-pf-109` closed:
+D-pf-255/257/258), while this branch's state says `R-pf-109` open. The ADR does not rely on the
+report gate being open; at merge, condition (b) is satisfied. Reconcile the branch (`R-pf-112`):
+61 story commits ahead, 8 v2-close commits behind; decision IDs collide (branch D-pf-255 = S4;
+main D-pf-255 = A2 PASS). This ADR uses **D-pf-259** to avoid adding a collision.
+
+**Graduation conditions (ADR-0011 Decision 4).** (a) a founder **§5 graduation session on the
+post-S4 story** (distinct from the 2026-10-24 D1 review) on a self-contained artifact, including the
+F8/A2 action read; (b) the report's visual gate (`R-pf-109` closed; on main 2026-10-26); (c) a
 deterministic, offline, no-network player with a complete final frame and pause/reduced-motion/print;
 (d) an explicit A12 amendment + founder ratification.
 
 **Recorded follow-up (not active).** Companion packaging: inline the data (no `fetch`/server) and
-add a CLI entry point; that is the precondition for D2/F8. No ship claim.
+add a CLI entry point; that is the precondition for the §5 session. No ship claim.
 
 ## Next
 
-- **S4 close:** complete (panel 5/5 APPROVE, final gate `71d0d04`, evidence `2ebeabd`); then the
-  companion-vs-report ADR (+A12 if interactive). S4 is built and gated; F8 remains founder-deferred.
-- Atlas v2 step 11 stays queued; A2/ship still blocked by the step-13 founder gate (R-pf-109).
+- **S4 close:** complete (panel 5/5 APPROVE, final gate `71d0d04`, evidence `2ebeabd`); **ADR-0011
+  decided 2026-10-26 (D-pf-259) — companion, A12 unchanged.** F8 remains founder-deferred.
+- **Reconcile the branch with main first** (`R-pf-112`): main has Atlas v2 done (`c797004`;
+  step 13/A2/step 15), this branch is 61 commits ahead on the story and 8 behind. Then **Atlas v2
+  step 11** (detail rail) on this branch, then step 12 and the step-13 gate. No A2/ship from this
+  branch.

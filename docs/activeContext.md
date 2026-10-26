@@ -28,13 +28,15 @@ becomes a **core probe**: additive, story-only where possible, one commit per pr
 implemented properly and merged later. Existing scan outputs must stay byte-identical.
 
 ## Recent Decisions
-- **D-pf-256 / ADR-0011 (live, 2026-10-26):** the Atlas Story stays a **standalone companion**; no
+- **D-pf-259 / ADR-0011 (live, 2026-10-26):** the Atlas Story stays a **standalone companion**; no
   in-report graduation in v1. **A12 unchanged** (report keeps exactly one fixed `REPORT_SCRIPT`;
   canvas/SVG/animation zero scripts/handlers/network; no CSS/SMIL story film). S4 proves the
-  mechanism (F1–F7, 3k 44/44, F1 read PASS-WITH-NITS), but the founder D2 interaction gate has not
-  run and the report composition is unapproved (`R-pf-109`). Graduation conditions: founder D2 on a
-  self-contained story artifact + step-13 report gate + deterministic offline player + explicit A12
-  amendment. No code/schema change; F8 deferred.
+  mechanism (F1–F7, 3k 44/44, F1 read PASS-WITH-NITS), but the founder has not used the **post-S4**
+  story (the 2026-10-24 D2 reviewed D1), and the companion is fetch/HTTP-only and unshipped.
+  Graduation conditions: §5 founder session on a self-contained story + report gate (main) +
+  deterministic offline player + explicit A12 amendment. No code/schema change; F8 deferred.
+  **Branch snapshot:** `feat/atlas-sim` is a pre-merge story snapshot; main has Atlas v2 done
+  (`R-pf-109` closed, A2 delegated pass); reconcile before merge (`R-pf-112`).
 - **D-pf-255 (live, S4):** P6 purpose (README first prose paragraph, structural fallback), P7 KV3
   queue (authoritative order, top 12 production non-demoted rows + counts) and P8 directory scenes
   (depth-2 partition, 24-scene/5-file caps, production-cost-first, omitted totals, shared
@@ -53,15 +55,23 @@ implemented properly and merged later. Existing scan outputs must stay byte-iden
 ## In Progress
 - **ADR-0011 recorded:** companion decision + A12 unchanged + graduation triggers; ADR, spec
   annotations, CHANGELOG and state updated. Docs-only session; no code, schema or dependency change.
-- **S4 remains the gated story baseline:** `71d0d04` (tree `51548f3`, dirty 0, 897 tests, 304/304,
-  3k 44/44), evidence `2ebeabd`; F8 deferred.
-- Atlas v2: step 10 approved; **step 11 (G-style detail rail) is next**; step-13 gate pending.
+- **S4 remains the gated story baseline:** `71d0d04` (tree `51548f3`, 0 non-evidence dirty paths,
+  897 tests (896 passed, 1 ignored), 304/304, 3k 44/44), evidence `2ebeabd`; F8 deferred.
+- **Branch snapshot:** main has Atlas v2 done (`c797004`; step 13 approved, A2 delegated pass,
+  `R-pf-109` closed); this branch's state still reads `R-pf-109` open. Reconcile (`R-pf-112`)
+  before any merge or step-11 work.
+- Atlas v2 on this branch: step 10 approved; **step 11 (G-style detail rail) is next**; step-13
+  gate pending here (already closed on main).
 
 ## Next
-- **Atlas v2 step 11** (detail rail) in a fresh session; then step 12 (progressive charts) and the
-  step-13 founder/V8 gate. No A2/ship until step 13.
-- Story follow-up (not active): self-contained companion artifact + CLI entry, then the founder D2/F8
+- **Atlas v2 step 11** (detail rail) in a fresh session — after reconciling this branch with main
+  (`R-pf-112`); then step 12 (progressive charts) and the step-13 gate on the branch. No A2/ship
+  from this branch.
+- Story follow-up (not active): self-contained companion artifact + CLI entry, then the §5 founder
   session; graduation only per ADR-0011 Decision 4.
 
 ## Blockers
-- None for the story track. A2/ship still gated by R-pf-109 (Atlas v2 step-13 founder visual gate).
+- **Branch divergence** (`R-pf-112`): 61 story commits ahead, 8 v2-close commits behind main;
+  decision IDs collide. Rebase/reconcile before merge.
+- A2/ship on this branch is not claimed; main's delegated A2 pass is recorded separately
+  (D-pf-255/257), not a founder-eye pass.

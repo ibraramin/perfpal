@@ -152,7 +152,8 @@ Each slice = one commit per probe + evidence + probe-registry row status flip.
    amendment (A12 already permits CSS/SMIL, not a second script).
    **Resolved 2026-10-26 (ADR-0011):** the story **remains a standalone companion**; it does not
    graduate into the static report, and A12 is unchanged. The founder-ratified graduation
-   conditions (D2 session, step-13 report gate, deterministic player, explicit A12 amendment) are
+   conditions (the §5 graduation session on the post-S4 story — distinct from the 2026-10-24 D1
+   review — the report's visual gate, a deterministic player, and an explicit A12 amendment) are
    recorded in `docs/adr/ADR-0011-atlas-story-companion.md` Decision 4.
 4. **CLI shape:** S1 ships `--story` on the existing command; the target entry point remains
    `perfpal story <repo>` (S4). **S4 status (2026-10-26):** S4 shipped the `--story` flag only; the
