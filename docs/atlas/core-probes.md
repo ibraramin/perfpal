@@ -94,7 +94,7 @@
 
 - **Question:** what does this scanned app do, in one plain sentence?
 - **Prototype:** read the scan-root README (`README.md`, `README.rst`, `README.txt`, `README`;
-  first match, 64 KiB cap), take the first prose paragraph after the title (skip front matter,
+  first README with usable prose, 64 KiB cap), take the first prose paragraph after the title (skip front matter,
   headings, badges/images, TOC/link-only blocks, HTML, fences and tables), strip inline markdown,
   collapse whitespace and cap at 200 chars + ellipsis (≤201). If there is no README or no usable paragraph, emit a
   structural fallback built from the existing entry line. `purpose_version: 1`,
@@ -192,6 +192,7 @@
   - `cap_chips[]{column,x,y,w,h,production_unreached,nonproduction_unreached}`.
   - `stages[]{order,label,depth,files,leaf}`.
   - `actions[]{location,rule,function,severity_confidence,production,cost_anchor}` (KV1).
+  - **S4 addendum:** `purpose`, `profile`, `scenes` and the additive `nodes[].scene` / `actions[].scene` fields are recorded in the S4 record; `layout_version` stays 1.
 - **Shared layout math:** `compute_layout`, `edge_shape`, `hull_boxes`, `aggregate_rect`,
   `cap_chip_rect`, `node_style`, `node_rank_lines`, `node_badges`, `column_header_lines` live in
   `atlas_render.rs` and are used by both the SVG and the JSON. No geometry is recomputed.
@@ -346,7 +347,7 @@
 S4 is the scale + payoff slice (`docs/specs/atlas-story.md` §9): directory scenes at 3k files, the
 whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8 (founder A2) is
 **deferred**, not claimed. The authoritative gate run is the `Commit at run` line in
-`docs/evidence/atlas-sim/GATE.txt` (S4 close commit; `dirty 0`; `verdict=PASS`; 897 tests; story gate
+`docs/evidence/atlas-sim/GATE.txt` (final gate at `71d0d04`, tree `51548f3`; evidence `2ebeabd`; `dirty 0`; `verdict=PASS`; 897 tests; story gate
 304/304; 3k scale 44/44).
 
 ### P6 — purpose line (`9263c19`)
@@ -366,7 +367,7 @@ whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8
 - **Honesty:** the core copies text, never invents; the sim labels the source and withholds a README
   sentence that trips the F4 claim/time filter (`purpose.kind: "withheld"` only in the sim data; the
   core block stays raw for provenance). A README quote is **not** an Atlas inference.
-- **Known limits:** first README only (a broken `README.md` does not fall through to `README.rst`);
+- **Known limits:** first README with usable prose (a no-prose, unreadable or symlinked candidate is skipped and the next candidate is tried); a README symlink is never followed (scanner policy);
   first prose paragraph only (a marketing sentence is still the author's words); no README freshness
   check; no heading/author provenance beyond the filename; no non-UTF-8 decoding beyond lossy UTF-8;
   a scan root that is a single file has no README.

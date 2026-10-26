@@ -8,7 +8,7 @@ seconds and drillable by a senior dev (`path:line` + types), static inference th
 - **S1 committed:** core `atlas-layout.json` behind `--story`; the sim builds from core JSON.
 - **S2 committed and gated:** P3 signatures + P1 call payloads; edge labels + payoff beats.
 - **S3 committed and gated:** P2 `flow.io[]` + stores/trust/inspector.
-- **S4 built and gated (`9263c19`…final close commit):** P6 README `purpose`, P7 authoritative whole-repo KV3
+- **S4 built and gated (`9263c19`…`71d0d04`):** P6 README `purpose`, P7 authoritative whole-repo KV3
   queue, P8 directory scenes (depth-2, 24/5 caps, omitted totals, node/action scene context); sim
   purpose masthead, enter-beat scene context, whole-repo profile beat, scene-aware start-here,
   below-fold SCENES / PROFILE QUEUE / TRUST ACCOUNTING, unresolved-calls inspector. Deterministic
@@ -40,13 +40,12 @@ implemented properly and merged later. Existing scan outputs must stay byte-iden
   when recorded for merge.
 
 ## In Progress
-- **S4 close:** final gate on the docs close commit, 4-lane review panel (R1/R2/Q1/Q2), evidence/state
-  commit. S4 code/gate/vision are green.
+- **S4 closed:** final gate `71d0d04` (tree `51548f3`, dirty 0, 897 tests, 304/304, 3k 44/44) and the
+  4-lane panel + fresh confirmation **5/5 APPROVE**; evidence `2ebeabd`. The companion-vs-report ADR is next.
 - Atlas v2: step 10 approved; step 11 (G-style detail rail) queued; step-13 gate pending.
 
 ## Next
-- Finish the S4 close; then the companion-vs-report ADR (+A12 if interactive; S4 evidence is now
-  available).
+- Start the companion-vs-report ADR (+A12 if interactive; S4 evidence is now available).
 - Atlas v2 step 11 remains the parallel queue; no A2/ship until step 13.
 
 ## Blockers

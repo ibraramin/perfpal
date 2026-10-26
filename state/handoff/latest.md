@@ -1,8 +1,7 @@
 # Session handoff — Atlas Story (D2 + S1 + S2 + S3 + S4)
 
 - **Date:** 2026-10-26 · **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (`feat/atlas-sim`)
-- **Track:** Atlas Run · **Status:** **S4 built; final close commit and 4-lane panel in progress**
-  (dirty 0, 897 tests, 304/304, 3k 44/44, `verdict=PASS`; final transcript in `GATE.txt`). **Not
+- **Track:** Atlas Run · **Status:** **S4 gated at `71d0d04` (tree `51548f3`, dirty 0, 897 tests, 304/304, 3k 44/44, `verdict=PASS`); 4-lane panel + fresh confirmation **5/5 APPROVE**; closed.** **Not
   pushed, not merged.**
 - **Detail:** `state/tracks/atlas-sim/handoff.md` · **Requirement:** `docs/specs/atlas-story.md`
   (sealed) · **Plan:** `docs/plans/atlas-s4.md` · **Probes:** `docs/atlas/core-probes.md` (P6–P8)
@@ -23,7 +22,7 @@ a scale-aware trust line, with the 3k F2–F7 gate.
 | S1 | P4 stages + P5 `atlas-layout.json` (`layout_version: 1`); sim consumes core JSON | **done** |
 | S2 | P3 signatures + P1 call payloads → `flow`, edge labels, payoff beats | **done** |
 | S3 | P2 I/O effects → stores + trust line | **done** |
-| S4 | P6 purpose + P7 KV3 queue + P8 scenes; 3k scale/payoff; F1–F7 | **done** (final close commit) |
+| S4 | P6 purpose + P7 KV3 queue + P8 scenes; 3k scale/payoff; F1–F7 | **done** (`71d0d04`) |
 
 ## Decisions
 
@@ -93,10 +92,9 @@ a scale-aware trust line, with the 3k F2–F7 gate.
 | Core determinism | two `--story` scans | `atlas-layout.json` byte-identical; layout/flow/data sorted |
 | Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **304/304**, exit 0 |
 | 3k scale gate | `bash sim/scale.sh` | **44/44**, exit 0; page 463,490 bytes; first frame under the 2,000 ms budget (final transcript); no h-scroll; F2–F6 PASS |
-| Full gate | `bash sim/gate.sh` | final close commit · tree in `GATE.txt` · dirty 0 · 897 tests · 304/304 · 3k 44/44 · **verdict=PASS** |
+| Full gate | `bash sim/gate.sh` | `71d0d04` · tree `51548f3…` · dirty 0 · 897 tests · 304/304 · 3k 44/44 · **verdict=PASS** (`GATE.txt`; evidence `2ebeabd`) |
 | Vision | `VISION.md` Read 8 (F1 + scale) | **PASS-WITH-NITS, no blockers**; purpose/1280/scene/queue/trust fixes landed; carried nits listed |
 | 3k fixture | `sim/fixtures/gen-3k.py` + `sim/scale.py` | 3,000 files; C fn-pointer + Rust `dyn` drawn and unresolved; 24 scene cards / 12 queue rows |
-| Review panel | 4 lanes (R1/R2/Q1/Q2) | **running at close**; result recorded in the S4 state close |
+| Review panel | 4 lanes (R1/R2/Q1/Q2) + fresh Q3 | **5/5 APPROVE**; zero unresolved blocking findings |
 
-**Uncommitted at this handoff:** docs/evidence close WIP (`core-probes`, spec §9, contract, NOTES,
-VISION, CHANGELOG, activeContext, this handoff, GATE/checks/PNGs/scale frames). **No push, no merge.**
+**Uncommitted:** none after this close commit. **No push, no merge.**

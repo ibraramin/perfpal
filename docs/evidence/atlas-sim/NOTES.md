@@ -151,7 +151,7 @@ frames `no-forward-path.png`, `empty.png`, `capped.png` (eleven 1440×900 frames
 
 ## S4 addendum — scale + payoff (2026-10-26)
 
-- **Core P6 (`9263c19`):** story-only `purpose` — scan-root README first prose paragraph (64 KiB/200-char
+- **Core P6 (`9263c19`):** story-only `purpose` — scan-root README first prose paragraph (64 KiB/200-char + ellipsis; a README symlink is never followed;
   caps, front matter/badges/TOC/fences skipped) or the existing entry line as a structural fallback;
   `purpose_version: 1`, `layout_version` stays 1. Hyperfine reads `A command-line benchmarking tool.`;
   cJSON reads `Ultralightweight JSON parser in ANSI C.`; a README with an F4 claim is withheld by the
@@ -180,8 +180,8 @@ frames `no-forward-path.png`, `empty.png`, `capped.png` (eleven 1440×900 frames
   guessed; no forbidden claim/time unit; double scan → identical layout/flow and data; two loads →
   identical DOM; story-off/on `report.html` byte-identical, `metrics.json` content-equal after
   provenance masking.
-- **Check delta:** S3 217 → S4 **302** checks (`sim/verify.py`), plus the separate 3k scale gate
-  **44/44** (`sim/scale.py`/`scale.sh`). 897 Rust tests. Gate on the S4 docs close commit: `dirty 0`,
+- **Check delta:** S3 217 → S4 **304** checks (`sim/verify.py`), plus the separate 3k scale gate
+  **44/44** (`sim/scale.py`/`scale.sh`). 897 Rust tests. Gate at 71d0d04 (tree 51548f3; evidence 2ebeabd): `dirty 0`,
   `verdict=PASS` (`GATE.txt`).
 - **F8:** founder A2 is **deferred**, not run or claimed; A2/ship remains behind the Atlas v2 step-13
   founder gate (R-pf-109 for the map).

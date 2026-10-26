@@ -1,7 +1,7 @@
 ---
 plan name: atlas-s4
 plan description: Scale scenes and payoff
-plan status: active
+plan status: done
 ---
 
 ## Idea
