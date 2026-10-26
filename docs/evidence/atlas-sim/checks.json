@@ -482,7 +482,7 @@
     },
     {
       "check": "hyperfine: S3 stores keyframe",
-      "detail": "268703 bytes",
+      "detail": "255818 bytes",
       "ok": true
     },
     {
@@ -491,8 +491,8 @@
       "ok": true
     },
     {
-      "check": "hyperfine: S3 inspector marks a non-literal target",
-      "detail": "src/main.rs",
+      "check": "hyperfine: S3 inspector marks a non-literal target row",
+      "detail": "[{'target': 'file', 'text': 'L132readfiletarget unknown', 'unknown': True}, {'target': 'file', 'text': 'L167writefiletarget unknown', 'unknown': True}]",
       "ok": true
     },
     {
@@ -572,7 +572,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "351",
+      "detail": "353",
       "ok": true
     },
     {
@@ -612,17 +612,17 @@
     },
     {
       "check": "hyperfine: start keyframe",
-      "detail": "269597 bytes",
+      "detail": "269663 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: mid keyframe",
-      "detail": "258639 bytes",
+      "detail": "258709 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: end keyframe",
-      "detail": "274313 bytes",
+      "detail": "274379 bytes",
       "ok": true
     },
     {
@@ -747,7 +747,7 @@
     },
     {
       "check": "cjson: S3 trust keyframe",
-      "detail": "147878 bytes",
+      "detail": "147880 bytes",
       "ok": true
     },
     {
@@ -762,7 +762,7 @@
     },
     {
       "check": "cjson: S3 stores keyframe",
-      "detail": "139885 bytes",
+      "detail": "139956 bytes",
       "ok": true
     },
     {
@@ -771,18 +771,23 @@
       "ok": true
     },
     {
-      "check": "cjson: S3 inspector marks a non-literal target",
-      "detail": "fuzzing/afl.c",
+      "check": "cjson: S3 inspector marks a non-literal target row",
+      "detail": "[{'target': 'file', 'text': 'L37readfiletarget unknown', 'unknown': True}, {'target': 'stdio', 'text': 'L66readstdiostream \u00b7 no path', 'unknown': True}]",
       "ok": true
     },
     {
-      "check": "cjson: S3 inspector marks stdio as pathless",
-      "detail": "fuzzing/afl.c",
+      "check": "cjson: S3 inspector marks a stdio row pathless",
+      "detail": "[{'target': 'stdio', 'text': 'L66readstdiostream \u00b7 no path', 'unknown': True}, {'target': 'stdio', 'text': 'L95writestdiostream \u00b7 no path', 'unknown': True}]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 inspector discloses the row cap",
+      "detail": "6/7",
       "ok": true
     },
     {
       "check": "cjson: S3 inspector keyframe",
-      "detail": "217003 bytes",
+      "detail": "217072 bytes",
       "ok": true
     },
     {
@@ -817,7 +822,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "136773 bytes",
+      "detail": "136848 bytes",
       "ok": true
     },
     {
@@ -897,17 +902,17 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "139732 bytes",
+      "detail": "139772 bytes",
       "ok": true
     },
     {
       "check": "cjson: mid keyframe",
-      "detail": "151165 bytes",
+      "detail": "151181 bytes",
       "ok": true
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "143936 bytes",
+      "detail": "143981 bytes",
       "ok": true
     },
     {
@@ -957,7 +962,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "68740 bytes",
+      "detail": "68739 bytes",
       "ok": true
     },
     {
@@ -1017,7 +1022,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "72936 bytes",
+      "detail": "72935 bytes",
       "ok": true
     },
     {
@@ -1083,7 +1088,7 @@
   ],
   "date": "2026-10-26",
   "failed": 0,
-  "passed": 216,
-  "total": 216,
+  "passed": 217,
+  "total": 217,
   "viewport": "1440x900"
 }

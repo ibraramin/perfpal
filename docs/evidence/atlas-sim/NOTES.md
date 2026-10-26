@@ -108,7 +108,7 @@ repos under `$FIXTURES`; the script records failures and exits non-zero.
 |---|---|---|
 | Data build is deterministic | `from-layout.py` twice + `sha256sum` diff | identical (2 regenerated; all 6 unchanged by the gate) |
 | Data comes from Perfpal core | `source.sha256` in `data-*.json` vs `source/out-*/atlas-layout.json` | match, no HTML input |
-| Gate (D1/S2 record) | `python3 sim/verify.py` | **162/162 checks, exit 0** (current S3 gate: 216/216, addendum below) |
+| Gate (D1/S2 record) | `python3 sim/verify.py` | **162/162 checks, exit 0** (current S3 gate: 217/217, addendum below) |
 | Loop honesty | loop-beat narration | contains `Inferred trip weight, not measured iterations` |
 | Function highlight | loop-beat node bottom line | `▶ <function> · L<line>` in orange, both cases |
 | Findings cap | cJSON final narration | `837 findings in the scan (153 included in this data slice)` |
@@ -140,12 +140,12 @@ frames `no-forward-path.png`, `empty.png`, `capped.png` (eleven 1440×900 frames
 - **Story (`9e23aa6`, fix `f3e8804`):** `Stores:` on trace beats, DATA STORES inspector section
   (up to 6 rows per file, `showing N of M`; stdio = `stream · no path`), and an I/O trust line with
   literal examples, a `+N` remainder and the stdio count. Validated by
-  `sim/verify.py` 216/216; `@vision` Read 7 **PASS** after the trust/inspector nits were fixed.
+  `sim/verify.py` 217/217; `@vision` Read 7 **PASS** after the trust/inspector nits were fixed.
 - **Fixture rows:** hyperfine 8 / 5 files (3 literal: `NO_COLOR`, `TERM`, `/dev/null`; 5 unknown);
   cJSON 24 / 4 files (0 literal; 2 unknown; 22 stdio).
 - **Check delta:** 162 → 216, adding core-array/shape, projected-count, trust-reconciliation,
   trace-stores, store/trust/inspector DOM, clipping, and stdio/no-path checks.
-- **Gate:** `GATE.txt` on the S3 docs commit, `dirty 0`, `verdict=PASS`; `checks.json` 216/216.
+- **Gate:** `GATE.txt` on the S3 docs commit, `dirty 0`, `verdict=PASS`; `checks.json` 217/217.
 
 ## Visual system and known nits
 
