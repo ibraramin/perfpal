@@ -130,7 +130,7 @@
 - The story keeps iterating in the companion without report goldens or A12 gates.
 - The founder's §5 read remains the graduation gate, so the choice rests on interaction evidence,
   not on comprehension reads.
-- No schema, dependency or `layout_version` churn; F1–F7 stay green as shipped.
+- No schema, dependency or `layout_version` churn; F1–F7 stay green as built/verified.
 
 **Negative / mitigated**
 

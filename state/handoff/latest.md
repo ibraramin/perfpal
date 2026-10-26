@@ -2,7 +2,8 @@
 
 - **Date:** 2026-10-26 · **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (`feat/atlas-sim`)
 - **HEAD:** base `8f0249e` (S4 close; gate `71d0d04`, evidence `2ebeabd`) → `daf3bcb` (ADR) →
-  `00da6fd` (state) → the panel-fix commit containing this file. **Not pushed, not merged.**
+  `00da6fd` (state) → `6d95411` (panel round 1 fixes) → this handoff's commit (panel round 2
+  fixes). **Not pushed, not merged.**
 - **Track:** Atlas Run · **Status:** **ADR-0011 accepted — the Atlas Story remains a standalone
   companion; A12 unchanged; no code.** S4 remains the gated story baseline (`71d0d04`).
 - **Branch snapshot:** this branch is a **pre-merge story snapshot**. `main` has since recorded
@@ -89,12 +90,13 @@ plan; if companion, record the decision and stop. No pixel work.
 |---|---|---|
 | ADR commit | `git show --stat daf3bcb` | ADR-0011 + A12 notes + story §11.3 + CHANGELOG |
 | State commit | `git show --stat 00da6fd` | state + activeContext + both handoffs |
+| Panel-fix commit (round 1) | `git show --stat 6d95411` | D2/branch-divergence/evidence corrections |
 | No code/schema change in the commits | `git diff --name-status 8f0249e..HEAD -- src/ sim/ docs/schema/ Cargo.toml Cargo.lock` | empty |
 | Worktree clean | `git status --porcelain` | 0 lines after the close commit |
 | State JSON valid | `jq empty state/session-state.json` | exit 0 |
 | A12 gate text intact | `git diff -U0 8f0249e..HEAD -- docs/specs/atlas-layout.md docs/specs/atlas-feature.md docs/specs/atlas-story.md` | dated notes only; gate sentences unchanged |
-| Citations resolve | `rg`/`sed` spot-checks on ADR refs | `sim.js:1328,1426`; `mod.rs:1718,2443-2447`; `output-contract.md:90-113`; `atlas-story.md:117,157-160`; `AGENT-BRIEF.md:49-51`; `atlas-run.md:127-159,275`; `atlas-layout.md:198-201`; `ADR-0010:25-33,51-54` |
-| Review panel | R1/R2/Q1/Q2 parallel lanes | R2 **APPROVE**, Q1 **APPROVED**; R1/Q2 **CHANGES_REQUESTED** on record accuracy → fixed; see `state/tracks/atlas-sim/handoff.md` close record |
+| Citations resolve | `rg`/`sed` spot-checks on ADR refs | `sim.js:1328,1426`; `mod.rs:1718,2443-2447`; `output-contract.md:90-113`; `atlas-story.md:117,151-156,157-160`; `AGENT-BRIEF.md:49-51`; `atlas-run.md:127-159,275`; `atlas-layout.md:198-201`; `ADR-0010:25-33,51-54` |
+| Review panel | R1/R2/Q1/Q2 parallel lanes + fresh confirmation | R2 **APPROVE**, Q1 **APPROVED**, fresh lane **APPROVE**; R1/Q2 **CHANGES_REQUESTED** on record accuracy → fixed in `6d95411`; round-2 textual fixes in this close commit (record in `state/tracks/atlas-sim/handoff.md`) |
 
 ## Next
 

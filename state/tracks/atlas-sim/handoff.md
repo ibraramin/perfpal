@@ -2,7 +2,7 @@
 
 **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` · branch `feat/atlas-sim`
 **Track:** `/home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md`
-**Status:** **D2 done + S1 committed (`5faacb7..63914f9`) + S2 committed and gated
+**Status:** **D2 (D1 review) done + S1 committed (`5faacb7..63914f9`) + S2 committed and gated
 (`2108117..b8359ae`) + S3 committed (`0ddf4ad..325571e`; docs `89f4feb`) + S4 committed and gated
 (`9263c19..71d0d04`; evidence `2ebeabd`), not pushed.** D1 presentation was accepted by the founder;
 the requirement was re-sealed as a core-fed temporal showcase (`docs/specs/atlas-story.md`); S1 made
@@ -286,6 +286,12 @@ deterministic, offline, no-network player with a complete final frame and pause/
 
 **Recorded follow-up (not active).** Companion packaging: inline the data (no `fetch`/server) and
 add a CLI entry point; that is the precondition for the §5 session. No ship claim.
+
+**Panel record (ADR-0011).** R1 correctness/claims: **CHANGES_REQUESTED** round 1 (D2 wording,
+HEAD/evidence reproducibility, no-code proof) → fixed in `6d95411`; R2 contract/A12/scope:
+**APPROVE**; Q1 verbatim scope: **APPROVED**; Q2 acceptance/evidence: **CHANGES_REQUESTED** round 1
+(same evidence items) → fixed in `6d95411`; fresh confirmation lane: **APPROVE**. Round-2 textual
+fixes (CHANGELOG D1/§5 wording, close-record reference, ID list) follow in the final close commit.
 
 ## Next
 

@@ -58,8 +58,8 @@ implemented properly and merged later. Existing scan outputs must stay byte-iden
 - **S4 remains the gated story baseline:** `71d0d04` (tree `51548f3`, 0 non-evidence dirty paths,
   897 tests (896 passed, 1 ignored), 304/304, 3k 44/44), evidence `2ebeabd`; F8 deferred.
 - **Branch snapshot:** main has Atlas v2 done (`c797004`; step 13 approved, A2 delegated pass,
-  `R-pf-109` closed); this branch's state still reads `R-pf-109` open. Reconcile (`R-pf-112`)
-  before any merge or step-11 work.
+  `R-pf-109` closed: D-pf-255/257/258); this branch's state still reads `R-pf-109` open. Reconcile
+  (`R-pf-112`) before any merge or step-11 work.
 - Atlas v2 on this branch: step 10 approved; **step 11 (G-style detail rail) is next**; step-13
   gate pending here (already closed on main).
 
