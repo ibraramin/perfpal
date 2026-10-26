@@ -1459,16 +1459,19 @@
    {
     "anchor": "cJSON_Utils.c:1188",
     "onCanvas": true,
+    "scene": "(root)",
     "title": "Expensive setup or I/O call inside loop"
    },
    {
     "anchor": "cJSON_Utils.c:1203",
     "onCanvas": true,
+    "scene": "(root)",
     "title": "Expensive setup or I/O call inside loop"
    },
    {
     "anchor": "cJSON_Utils.c:807",
     "onCanvas": true,
+    "scene": "(root)",
     "title": "High cyclomatic complexity"
    }
   ],
@@ -1583,11 +1586,47 @@
    "partialParse": true,
    "pathStep": 1,
    "ratioText": "41\u00d7 median function",
+   "scene": "fuzzing",
    "stroke": "#1f2d3a",
    "strokeWidth": 2,
    "title": "fuzzing/afl.c \u00b7 81 static cost units (v2)",
    "topText": "top 17% of files",
    "unreached": false,
+   "unresolvedCalls": {
+    "count": 18,
+    "rows": [
+     {
+      "callee": "fopen",
+      "caller": "fuzzing/afl.c#read_file#29:1",
+      "line": 37
+     },
+     {
+      "callee": "fseek",
+      "caller": "fuzzing/afl.c#read_file#29:1",
+      "line": 44
+     },
+     {
+      "callee": "ftell",
+      "caller": "fuzzing/afl.c#read_file#29:1",
+      "line": 48
+     },
+     {
+      "callee": "fseek",
+      "caller": "fuzzing/afl.c#read_file#29:1",
+      "line": 53
+     },
+     {
+      "callee": "malloc",
+      "caller": "fuzzing/afl.c#read_file#29:1",
+      "line": 59
+     },
+     {
+      "callee": "fread",
+      "caller": "fuzzing/afl.c#read_file#29:1",
+      "line": 66
+     }
+    ]
+   },
    "w": 150,
    "x": 445,
    "y": 72
@@ -1651,11 +1690,47 @@
    "partialParse": true,
    "pathStep": 2,
    "ratioText": "1,303\u00d7 median function",
+   "scene": "(root)",
    "stroke": "#8b8173",
    "strokeWidth": 1,
    "title": "cJSON.c \u00b7 2,605 static cost units (v2)",
    "topText": "top 4% of files",
    "unreached": false,
+   "unresolvedCalls": {
+    "count": 180,
+    "rows": [
+     {
+      "callee": "sprintf",
+      "caller": "cJSON.c#cJSON_Version#124:1",
+      "line": 127
+     },
+     {
+      "callee": "tolower",
+      "caller": "cJSON.c#case_insensitive_strcmp#133:1",
+      "line": 145
+     },
+     {
+      "callee": "tolower",
+      "caller": "cJSON.c#case_insensitive_strcmp#133:1",
+      "line": 145
+     },
+     {
+      "callee": "tolower",
+      "caller": "cJSON.c#case_insensitive_strcmp#133:1",
+      "line": 153
+     },
+     {
+      "callee": "tolower",
+      "caller": "cJSON.c#case_insensitive_strcmp#133:1",
+      "line": 153
+     },
+     {
+      "callee": "malloc",
+      "caller": "cJSON.c#internal_malloc#165:1",
+      "line": 167
+     }
+    ]
+   },
    "w": 150,
    "x": 625,
    "y": 72
@@ -1739,11 +1814,47 @@
    "partialParse": true,
    "pathStep": null,
    "ratioText": "1,000,234\u00d7 median function",
+   "scene": "tests",
    "stroke": "#c2410c",
    "strokeWidth": 2,
    "title": "tests/unity/test/tests/testunity.c \u00b7 2,000,468 static cost units (v2)",
    "topText": "top 1% of files",
    "unreached": true,
+   "unresolvedCalls": {
+    "count": 769,
+    "rows": [
+     {
+      "callee": "TEST_FAIL_MESSAGE",
+      "caller": "tests/unity/test/tests/testunity.c#tearDown#66:1",
+      "line": 72
+     },
+     {
+      "callee": "TEST_IGNORE_MESSAGE",
+      "caller": "tests/unity/test/tests/testunity.c#tearDown#66:1",
+      "line": 73
+     },
+     {
+      "callee": "UnityPrint",
+      "caller": "tests/unity/test/tests/testunity.c#tearDown#66:1",
+      "line": 77
+     },
+     {
+      "callee": "UNITY_OUTPUT_CHAR",
+      "caller": "tests/unity/test/tests/testunity.c#tearDown#66:1",
+      "line": 78
+     },
+     {
+      "callee": "TEST_ASSERT_EQUAL_MESSAGE",
+      "caller": "tests/unity/test/tests/testunity.c#testUnitySizeInitializationReminder#82:1",
+      "line": 129
+     },
+     {
+      "callee": "TEST_PASS",
+      "caller": "tests/unity/test/tests/testunity.c#testPassShouldEndImmediatelyWithPass#132:1",
+      "line": 134
+     }
+    ]
+   },
    "w": 150,
    "x": 805,
    "y": 72
@@ -1807,11 +1918,47 @@
    "partialParse": false,
    "pathStep": null,
    "ratioText": "524\u00d7 median function",
+   "scene": "(root)",
    "stroke": "#b8b2a7",
    "strokeWidth": 1,
    "title": "cJSON_Utils.c \u00b7 1,048 static cost units (v2)",
    "topText": "top 6% of files",
    "unreached": true,
+   "unresolvedCalls": {
+    "count": 61,
+    "rows": [
+     {
+      "callee": "strlen",
+      "caller": "cJSON_Utils.c#cJSONUtils_strdup#66:1",
+      "line": 71
+     },
+     {
+      "callee": "memcpy",
+      "caller": "cJSON_Utils.c#cJSONUtils_strdup#66:1",
+      "line": 77
+     },
+     {
+      "callee": "strcmp",
+      "caller": "cJSON_Utils.c#compare_strings#83:1",
+      "line": 97
+     },
+     {
+      "callee": "tolower",
+      "caller": "cJSON_Utils.c#compare_strings#83:1",
+      "line": 100
+     },
+     {
+      "callee": "tolower",
+      "caller": "cJSON_Utils.c#compare_strings#83:1",
+      "line": 100
+     },
+     {
+      "callee": "tolower",
+      "caller": "cJSON_Utils.c#compare_strings#83:1",
+      "line": 108
+     }
+    ]
+   },
    "w": 150,
    "x": 805,
    "y": 177
@@ -1930,11 +2077,47 @@
    "partialParse": true,
    "pathStep": null,
    "ratioText": "36\u00d7 median function",
+   "scene": "(root)",
    "stroke": "#b8b2a7",
    "strokeWidth": 1,
    "title": "test.c \u00b7 71 static cost units (v2)",
    "topText": "top 19% of files",
    "unreached": true,
+   "unresolvedCalls": {
+    "count": 32,
+    "rows": [
+     {
+      "callee": "strlen",
+      "caller": "test.c#print_preallocated#43:1",
+      "line": 57
+     },
+     {
+      "callee": "malloc",
+      "caller": "test.c#print_preallocated#43:1",
+      "line": 58
+     },
+     {
+      "callee": "printf",
+      "caller": "test.c#print_preallocated#43:1",
+      "line": 61
+     },
+     {
+      "callee": "exit",
+      "caller": "test.c#print_preallocated#43:1",
+      "line": 62
+     },
+     {
+      "callee": "strlen",
+      "caller": "test.c#print_preallocated#43:1",
+      "line": 66
+     },
+     {
+      "callee": "malloc",
+      "caller": "test.c#print_preallocated#43:1",
+      "line": 67
+     }
+    ]
+   },
    "w": 150,
    "x": 805,
    "y": 282
@@ -1974,11 +2157,42 @@
    "partialParse": true,
    "pathStep": null,
    "ratioText": "28\u00d7 median function",
+   "scene": "fuzzing",
    "stroke": "#b8b2a7",
    "strokeWidth": 1,
    "title": "fuzzing/cjson_read_fuzzer.c \u00b7 55 static cost units (v2)",
    "topText": "top 22% of files",
    "unreached": true,
+   "unresolvedCalls": {
+    "count": 5,
+    "rows": [
+     {
+      "callee": "free",
+      "caller": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+      "line": 55
+     },
+     {
+      "callee": "malloc",
+      "caller": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+      "line": 59
+     },
+     {
+      "callee": "memcpy",
+      "caller": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+      "line": 62
+     },
+     {
+      "callee": "cJSON_Minify",
+      "caller": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+      "line": 64
+     },
+     {
+      "callee": "free",
+      "caller": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
+      "line": 66
+     }
+    ]
+   },
    "w": 150,
    "x": 805,
    "y": 387
@@ -2073,11 +2287,47 @@
    "partialParse": false,
    "pathStep": null,
    "ratioText": "8.5\u00d7 median function",
+   "scene": "fuzzing",
    "stroke": "#b8b2a7",
    "strokeWidth": 1,
    "title": "fuzzing/fuzz_main.c \u00b7 17 static cost units (v2)",
    "topText": "top 44% of files",
    "unreached": true,
+   "unresolvedCalls": {
+    "count": 12,
+    "rows": [
+     {
+      "callee": "fprintf",
+      "caller": "fuzzing/fuzz_main.c#main#9:1",
+      "line": 17
+     },
+     {
+      "callee": "fopen",
+      "caller": "fuzzing/fuzz_main.c#main#9:1",
+      "line": 21
+     },
+     {
+      "callee": "fprintf",
+      "caller": "fuzzing/fuzz_main.c#main#9:1",
+      "line": 24
+     },
+     {
+      "callee": "fseek",
+      "caller": "fuzzing/fuzz_main.c#main#9:1",
+      "line": 28
+     },
+     {
+      "callee": "ftell",
+      "caller": "fuzzing/fuzz_main.c#main#9:1",
+      "line": 30
+     },
+     {
+      "callee": "rewind",
+      "caller": "fuzzing/fuzz_main.c#main#9:1",
+      "line": 31
+     }
+    ]
+   },
    "w": 150,
    "x": 805,
    "y": 492
@@ -2085,123 +2335,434 @@
  ],
  "profile": [
   {
-   "cost": 137,
+   "cost": 137.0,
+   "costText": "137 static cost units (v2) \u00b7 69\u00d7 median \u00b7 top 1%",
+   "demotions": [],
    "fanIn": 105,
    "fanOut": 1,
    "id": "cJSON.c#cJSON_Delete#253:1",
+   "knownTripValue": null,
    "line": 253,
    "loopDepth": 1,
    "name": "cJSON_Delete",
    "path": "cJSON.c",
+   "pathClass": "production",
    "production": true,
+   "rank": 1,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 1
   },
   {
-   "cost": 131,
-   "fanIn": 2,
-   "fanOut": 20,
-   "id": "cJSON_Utils.c#apply_patch#807:1",
-   "line": 807,
-   "loopDepth": 0,
-   "name": "apply_patch",
-   "path": "cJSON_Utils.c",
-   "production": true,
-   "recursive": false,
-   "tripSource": "",
-   "unknownTripLoops": 0
-  },
-  {
-   "cost": 101,
+   "cost": 101.0,
+   "costText": "101 static cost units (v2) \u00b7 51\u00d7 median \u00b7 top 1%",
+   "demotions": [],
    "fanIn": 10,
    "fanOut": 3,
    "id": "cJSON.c#cJSON_Compare#3072:1",
+   "knownTripValue": null,
    "line": 3072,
    "loopDepth": 1,
    "name": "cJSON_Compare",
    "path": "cJSON.c",
+   "pathClass": "production",
    "production": true,
+   "rank": 2,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 1
   },
   {
-   "cost": 94,
+   "cost": 94.0,
+   "costText": "94 static cost units (v2) \u00b7 47\u00d7 median \u00b7 top 1%",
+   "demotions": [],
    "fanIn": 3,
    "fanOut": 9,
    "id": "cJSON_Utils.c#create_patches#1141:1",
+   "knownTripValue": null,
    "line": 1141,
    "loopDepth": 1,
    "name": "create_patches",
    "path": "cJSON_Utils.c",
+   "pathClass": "production",
    "production": true,
+   "rank": 3,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 4
   },
   {
-   "cost": 84,
+   "cost": 84.0,
+   "costText": "84 static cost units (v2) \u00b7 42\u00d7 median \u00b7 top 1%",
+   "demotions": [],
    "fanIn": 2,
    "fanOut": 4,
    "id": "cJSON.c#print_object#1780:1",
+   "knownTripValue": null,
    "line": 1780,
    "loopDepth": 2,
    "name": "print_object",
    "path": "cJSON.c",
+   "pathClass": "production",
    "production": true,
+   "rank": 4,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 3
   },
   {
-   "cost": 76,
+   "cost": 76.0,
+   "costText": "76 static cost units (v2) \u00b7 38\u00d7 median \u00b7 top 1%",
+   "demotions": [],
+   "fanIn": 4,
+   "fanOut": 1,
+   "id": "cJSON.c#parse_string#824:1",
+   "knownTripValue": null,
+   "line": 824,
+   "loopDepth": 1,
+   "name": "parse_string",
+   "path": "cJSON.c",
+   "pathClass": "production",
+   "production": true,
+   "rank": 5,
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 2
+  },
+  {
+   "cost": 76.0,
+   "costText": "76 static cost units (v2) \u00b7 38\u00d7 median \u00b7 top 1%",
+   "demotions": [],
+   "fanIn": 3,
+   "fanOut": 1,
+   "id": "cJSON.c#print_string_ptr#954:1",
+   "knownTripValue": null,
+   "line": 954,
+   "loopDepth": 1,
+   "name": "print_string_ptr",
+   "path": "cJSON.c",
+   "pathClass": "production",
+   "production": true,
+   "rank": 6,
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 2
+  },
+  {
+   "cost": 76.0,
+   "costText": "76 static cost units (v2) \u00b7 38\u00d7 median \u00b7 top 1%",
+   "demotions": [],
    "fanIn": 3,
    "fanOut": 4,
    "id": "cJSON_Utils.c#compare_json#604:1",
+   "knownTripValue": null,
    "line": 604,
    "loopDepth": 1,
    "name": "compare_json",
    "path": "cJSON_Utils.c",
+   "pathClass": "production",
    "production": true,
+   "rank": 7,
    "recursive": true,
    "tripSource": "unknown",
    "unknownTripLoops": 2
   },
   {
-   "cost": 59,
-   "fanIn": 0,
-   "fanOut": 6,
-   "id": "fuzzing/afl.c#main#85:1",
-   "line": 85,
+   "cost": 74.0,
+   "costText": "74 static cost units (v2) \u00b7 37\u00d7 median \u00b7 top 1%",
+   "demotions": [],
+   "fanIn": 3,
+   "fanOut": 1,
+   "id": "cJSON.c#parse_number#307:1",
+   "knownTripValue": null,
+   "line": 307,
    "loopDepth": 1,
-   "name": "main",
-   "path": "fuzzing/afl.c",
+   "name": "parse_number",
+   "path": "cJSON.c",
+   "pathClass": "production",
    "production": true,
+   "rank": 8,
+   "recursive": false,
+   "tripSource": "unknown",
+   "unknownTripLoops": 2
+  },
+  {
+   "cost": 67.0,
+   "costText": "67 static cost units (v2) \u00b7 34\u00d7 median \u00b7 top 2%",
+   "demotions": [],
+   "fanIn": 2,
+   "fanOut": 2,
+   "id": "cJSON_Utils.c#sort_list#484:1",
+   "knownTripValue": null,
+   "line": 484,
+   "loopDepth": 1,
+   "name": "sort_list",
+   "path": "cJSON_Utils.c",
+   "pathClass": "production",
+   "production": true,
+   "rank": 9,
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 3
+  },
+  {
+   "cost": 62.0,
+   "costText": "62 static cost units (v2) \u00b7 31\u00d7 median \u00b7 top 2%",
+   "demotions": [],
+   "fanIn": 4,
+   "fanOut": 5,
+   "id": "cJSON.c#parse_object#1662:1",
+   "knownTripValue": null,
+   "line": 1662,
+   "loopDepth": 1,
+   "name": "parse_object",
+   "path": "cJSON.c",
+   "pathClass": "production",
+   "production": true,
+   "rank": 10,
+   "recursive": true,
+   "tripSource": "unknown",
+   "unknownTripLoops": 1
+  },
+  {
+   "cost": 56.0,
+   "costText": "56 static cost units (v2) \u00b7 28\u00d7 median \u00b7 top 2%",
+   "demotions": [],
+   "fanIn": 1,
+   "fanOut": 1,
+   "id": "cJSON.c#utf16_literal_to_utf8#703:1",
+   "knownTripValue": null,
+   "line": 703,
+   "loopDepth": 1,
+   "name": "utf16_literal_to_utf8",
+   "path": "cJSON.c",
+   "pathClass": "production",
+   "production": true,
+   "rank": 11,
    "recursive": false,
    "tripSource": "unknown",
    "unknownTripLoops": 1
   },
   {
-   "cost": 55,
-   "fanIn": 1,
-   "fanOut": 6,
-   "id": "fuzzing/cjson_read_fuzzer.c#LLVMFuzzerTestOneInput#13:1",
-   "line": 13,
-   "loopDepth": 0,
-   "name": "LLVMFuzzerTestOneInput",
-   "path": "fuzzing/cjson_read_fuzzer.c",
+   "cost": 56.0,
+   "costText": "56 static cost units (v2) \u00b7 28\u00d7 median \u00b7 top 2%",
+   "demotions": [],
+   "fanIn": 4,
+   "fanOut": 5,
+   "id": "cJSON_Utils.c#get_item_from_pointer#301:1",
+   "knownTripValue": null,
+   "line": 301,
+   "loopDepth": 2,
+   "name": "get_item_from_pointer",
+   "path": "cJSON_Utils.c",
+   "pathClass": "production",
    "production": true,
+   "rank": 12,
    "recursive": false,
-   "tripSource": "",
-   "unknownTripLoops": 0
+   "tripSource": "unknown",
+   "unknownTripLoops": 3
+  }
+ ],
+ "profileMeta": {
+  "candidateTotal": 45,
+  "demotedProduction": 116,
+  "productionRanked": 161,
+  "queueVersion": 1,
+  "shown": 12,
+  "totalRanked": 1055
+ },
+ "purpose": {
+  "kind": "readme",
+  "source": "README.md",
+  "text": "Ultralightweight JSON parser in ANSI C.",
+  "version": 1
+ },
+ "sceneMeta": {
+  "fileCap": 5,
+  "omitted": {
+   "cost": 0,
+   "files": 0,
+   "findings": 0,
+   "productionCost": 0,
+   "scenes": 0
+  },
+  "sceneCap": 24,
+  "sceneVersion": 1,
+  "shownFiles": 81,
+  "shownScenes": 3,
+  "totalFiles": 81,
+  "totalScenes": 3
+ },
+ "scenes": [
+  {
+   "cost": 3724,
+   "depth": 0,
+   "entry": false,
+   "files": 3,
+   "findings": 120,
+   "hottest": false,
+   "path": "(root)",
+   "productionCost": 3724,
+   "productionFiles": 3,
+   "scale": "v2",
+   "topFiles": [
+    {
+     "cost": 2605,
+     "entry": false,
+     "findings": 29,
+     "functionCount": 116,
+     "hottest": false,
+     "name": "cJSON.c",
+     "path": "cJSON.c",
+     "production": true,
+     "scale": "v2"
+    },
+    {
+     "cost": 1048,
+     "entry": false,
+     "findings": 77,
+     "functionCount": 38,
+     "hottest": false,
+     "name": "cJSON_Utils.c",
+     "path": "cJSON_Utils.c",
+     "production": true,
+     "scale": "v2"
+    },
+    {
+     "cost": 71,
+     "entry": false,
+     "findings": 14,
+     "functionCount": 3,
+     "hottest": false,
+     "name": "test.c",
+     "path": "test.c",
+     "production": true,
+     "scale": "v2"
+    }
+   ]
+  },
+  {
+   "cost": 153,
+   "depth": 1,
+   "entry": true,
+   "files": 3,
+   "findings": 17,
+   "hottest": false,
+   "path": "fuzzing",
+   "productionCost": 153,
+   "productionFiles": 3,
+   "scale": "v2",
+   "topFiles": [
+    {
+     "cost": 81,
+     "entry": true,
+     "findings": 9,
+     "functionCount": 2,
+     "hottest": false,
+     "name": "afl.c",
+     "path": "fuzzing/afl.c",
+     "production": true,
+     "scale": "v2"
+    },
+    {
+     "cost": 55,
+     "entry": false,
+     "findings": 7,
+     "functionCount": 1,
+     "hottest": false,
+     "name": "cjson_read_fuzzer.c",
+     "path": "fuzzing/cjson_read_fuzzer.c",
+     "production": true,
+     "scale": "v2"
+    },
+    {
+     "cost": 17,
+     "entry": false,
+     "findings": 1,
+     "functionCount": 1,
+     "hottest": false,
+     "name": "fuzz_main.c",
+     "path": "fuzzing/fuzz_main.c",
+     "production": true,
+     "scale": "v2"
+    }
+   ]
+  },
+  {
+   "cost": 2134892,
+   "depth": 1,
+   "entry": false,
+   "files": 75,
+   "findings": 689,
+   "hottest": true,
+   "path": "tests",
+   "productionCost": 0,
+   "productionFiles": 0,
+   "scale": "v2",
+   "topFiles": [
+    {
+     "cost": 2000468,
+     "entry": false,
+     "findings": 16,
+     "functionCount": 370,
+     "hottest": true,
+     "name": "testunity.c",
+     "path": "tests/unity/test/tests/testunity.c",
+     "production": false,
+     "scale": "v2"
+    },
+    {
+     "cost": 131081,
+     "entry": false,
+     "findings": 6,
+     "functionCount": 3,
+     "hottest": false,
+     "name": "parse_hex4.c",
+     "path": "tests/parse_hex4.c",
+     "production": false,
+     "scale": "v2"
+    },
+    {
+     "cost": 1101,
+     "entry": false,
+     "findings": 15,
+     "functionCount": 44,
+     "hottest": false,
+     "name": "unity.c",
+     "path": "tests/unity/src/unity.c",
+     "production": false,
+     "scale": "v2"
+    },
+    {
+     "cost": 254,
+     "entry": false,
+     "findings": 9,
+     "functionCount": 23,
+     "hottest": false,
+     "name": "unity_fixture.c",
+     "path": "tests/unity/extras/fixture/src/unity_fixture.c",
+     "production": false,
+     "scale": "v2"
+    },
+    {
+     "cost": 235,
+     "entry": false,
+     "findings": 157,
+     "functionCount": 32,
+     "hottest": false,
+     "name": "misc_tests.c",
+     "path": "tests/misc_tests.c",
+     "production": false,
+     "scale": "v2"
+    }
+   ]
   }
  ],
  "source": {
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
   "metricsContentSha256": "1e8bd62a4d0417bc1e60e1ab198b6dedaf5aff6d201d0a9df3d34f8e407cee5f",
-  "sha256": "482d82e302515fd0e8503976c2694b3d41857c317aec6a0a41f969073d733975"
+  "sha256": "3951ccbe0450830695a29c5f2e67e9b220dec08f9ec576092ba8234e622d5da6"
  },
  "stage": {
   "h": 718,
@@ -2244,6 +2805,26 @@
   },
   "nonProductionNodes": 1,
   "partialParse": true,
-  "unknownTripFunctions": 6
+  "profile": {
+   "candidateTotal": 45,
+   "demotedProduction": 116,
+   "productionRanked": 161,
+   "shown": 12,
+   "totalRanked": 1055
+  },
+  "purpose": {
+   "kind": "readme",
+   "source": "README.md"
+  },
+  "scenes": {
+   "files": 81,
+   "omitted": 0,
+   "shown": 3,
+   "shownFiles": 81,
+   "total": 3
+  },
+  "unknownTripFunctions": 6,
+  "unresolvedCalls": 1077,
+  "unresolvedFiles": 7
  }
 }

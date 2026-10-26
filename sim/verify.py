@@ -175,6 +175,214 @@ def main() -> int:
         check(f"{case_id}: no absolute paths in data",
               "/home/" not in (SIM / cases[case_id]["file"]).read_text())
 
+    # ---- S4: whole-repo projection (data-level, real cases only) -------
+    for case_id, payload in payloads.items():
+        case_dir = SIM / "source" / f"out-{case_id}"
+        if not (case_dir / "atlas-layout.json").is_file() or not (case_dir / "metrics.json").is_file():
+            check(f"{case_id}: S4 core artifacts present", False,
+                  f"missing {case_dir}; run bash sim/make-source.sh first")
+            continue
+        layout = json.loads((case_dir / "atlas-layout.json").read_text())
+        metrics = json.loads((case_dir / "metrics.json").read_text())
+        functions = {function["id"]: function for function in metrics["stats"]["functions"]}
+        metrics_files = {file["path"]: file for file in metrics["files"]}
+        trust = payload.get("trust") or {}
+
+        # purpose: projected envelope, honesty filter, core passthrough
+        core_purpose = layout.get("purpose") or {}
+        purpose = payload.get("purpose") or {}
+        purpose_text: str = "" if purpose.get("text") is None else str(purpose.get("text"))
+        purpose_hits = [pattern for pattern in FORBIDDEN_CLAIMS
+                        if re.search(pattern, purpose_text, re.I)]
+        if re.search(TIME_UNITS, purpose_text, re.I):
+            purpose_hits.append("time-unit")
+        if NEGATED_RUNTIME.search(purpose_text):
+            purpose_hits.append("runtime")
+        purpose_hits.extend(unnegated_hits(purpose_text, NEGATABLE_CLAIMS))
+        check(f"{case_id}: S4 purpose envelope is well formed",
+              set(purpose) == {"kind", "source", "text", "version"}
+              and purpose.get("kind") in {"readme", "structural", "withheld"}
+              and (purpose.get("source") is None or isinstance(purpose.get("source"), str))
+              and bool(purpose_text.strip())
+              and len(purpose_text) <= 201
+              and purpose.get("version") == 1,
+              str(purpose))
+        check(f"{case_id}: S4 purpose makes no forbidden claim", not purpose_hits,
+              ", ".join(purpose_hits))
+        core_text: str = "" if core_purpose.get("text") is None else str(core_purpose.get("text"))
+        core_forbidden = any(re.search(pattern, core_text, re.I) for pattern in FORBIDDEN_CLAIMS) \
+            or bool(re.search(TIME_UNITS, core_text, re.I)) \
+            or bool(NEGATED_RUNTIME.search(core_text)) \
+            or bool(unnegated_hits(core_text, NEGATABLE_CLAIMS))
+        if core_forbidden:
+            withheld = {"kind": "withheld", "source": None,
+                        "text": "No static purpose sentence.", "version": 1}
+            check(f"{case_id}: S4 forbidden core purpose is withheld", purpose == withheld,
+                  str(purpose))
+        else:
+            check(f"{case_id}: S4 purpose is the core sentence",
+                  purpose.get("kind") == core_purpose.get("kind")
+                  and purpose.get("source") == core_purpose.get("source")
+                  and purpose.get("text") == core_text
+                  and purpose.get("version") == core_purpose.get("purpose_version"),
+                  str(purpose))
+        check(f"{case_id}: S4 purpose trust matches",
+              trust.get("purpose") == {"kind": purpose.get("kind"),
+                                       "source": purpose.get("source")},
+              str(trust.get("purpose")))
+
+        # profile: whole-repo queue projected in authoritative order
+        profile = payload.get("profile") or []
+        profile_meta = payload.get("profileMeta") or {}
+        core_profile = layout.get("profile") or {}
+        core_rows = core_profile.get("rows") or []
+        trust_profile = trust.get("profile") or {}
+        ranks = [row.get("rank") for row in profile]
+        shown = profile_meta.get("shown")
+        candidate = profile_meta.get("candidateTotal")
+        production_ranked = profile_meta.get("productionRanked")
+        total_ranked = profile_meta.get("totalRanked")
+        check(f"{case_id}: S4 profile rows are production",
+              bool(profile) and all(row.get("production") is True for row in profile),
+              f'{sum(1 for row in profile if row.get("production"))}/{len(profile)}')
+        check(f"{case_id}: S4 profile ranks ascend in core order",
+              bool(ranks) and ranks == sorted(ranks) and len(set(ranks)) == len(ranks),
+              str(ranks))
+        check(f"{case_id}: S4 profile top row is the core top row",
+              bool(profile) and bool(core_rows) and profile[0].get("id") == core_rows[0].get("id"),
+              f'{profile[0].get("id") if profile else None} vs {core_rows[0].get("id") if core_rows else None}')
+        check(f"{case_id}: S4 profile costs match metrics",
+              all(row.get("id") in functions
+                  and row.get("cost") == functions[row["id"]].get("function_cost_v2")
+                  for row in profile),
+              str([row.get("id") for row in profile if row.get("id") not in functions][:3]))
+        check(f"{case_id}: S4 profile counts reconcile with profileMeta/trust",
+              isinstance(shown, int) and isinstance(candidate, int)
+              and isinstance(production_ranked, int) and isinstance(total_ranked, int)
+              and shown == len(profile) and 0 <= shown <= 12
+              and candidate >= shown and production_ranked >= candidate
+              and total_ranked >= production_ranked
+              and isinstance(profile_meta.get("demotedProduction"), int)
+              and profile_meta["demotedProduction"] >= 0
+              and trust_profile == {key: profile_meta.get(key) for key in
+                                    ("shown", "candidateTotal", "productionRanked",
+                                     "totalRanked", "demotedProduction")},
+              f"{profile_meta} · {trust_profile}")
+        check(f"{case_id}: S4 profile meta matches the core block",
+              shown == core_profile.get("shown")
+              and candidate == core_profile.get("candidate_total")
+              and production_ranked == core_profile.get("production_ranked")
+              and total_ranked == core_profile.get("total_ranked")
+              and profile_meta.get("queueVersion") == core_profile.get("queue_version"),
+              str(core_profile))
+
+        # scenes: counts, caps, containment, metrics membership, ordering
+        scenes = payload.get("scenes") or []
+        scene_meta = payload.get("sceneMeta") or {}
+        core_scenes = layout.get("scenes") or {}
+        core_scene_rows = core_scenes.get("rows") or []
+        trust_scenes = trust.get("scenes") or {}
+        omitted = scene_meta.get("omitted") or {}
+        scene_shown = scene_meta.get("shownScenes")
+        scene_total = scene_meta.get("totalScenes")
+        scene_files = scene_meta.get("totalFiles")
+        scene_shown_files = scene_meta.get("shownFiles")
+        check(f"{case_id}: S4 scene counts and caps reconcile",
+              isinstance(scene_shown, int) and isinstance(scene_total, int)
+              and isinstance(scene_files, int) and isinstance(scene_shown_files, int)
+              and scene_shown == len(scenes) and 0 <= scene_shown <= 24
+              and isinstance(scene_meta.get("fileCap"), int) and 0 <= scene_meta["fileCap"] <= 5
+              and scene_shown_files == sum(row["files"] for row in scenes)
+              and sum(row["files"] for row in scenes) + omitted.get("files", -1) == scene_files
+              and scene_files == sum(1 for file in metrics["files"] if file["function_count"] > 0)
+              and omitted.get("scenes") == scene_total - scene_shown,
+              str(scene_meta))
+        check(f"{case_id}: S4 scene top files are capped and sorted",
+              all(len(row.get("topFiles") or []) <= 5 for row in scenes)
+              and all(row["topFiles"] == sorted(
+                  row["topFiles"], key=lambda file: (-file["cost"], file["path"]))
+                  for row in scenes),
+              str([len(row.get("topFiles") or []) for row in scenes]))
+        check(f"{case_id}: S4 scene paths contain their top files",
+              all(
+                  (row["path"] == "(root)"
+                   and all("/" not in file["path"] for file in row["topFiles"]))
+                  or (row["path"] != "(root)"
+                      and all(file["path"].startswith(row["path"] + "/")
+                              for file in row["topFiles"]))
+                  for row in scenes
+              ),
+              str([row["path"] for row in scenes
+                   if not (row["path"] == "(root)" and all(
+                       "/" not in file["path"] for file in row["topFiles"]))
+                   and not (row["path"] != "(root)" and all(
+                       file["path"].startswith(row["path"] + "/") for file in row["topFiles"]))][:3]))
+        check(f"{case_id}: S4 scene top files exist in metrics",
+              all(file["path"] in metrics_files
+                  for row in scenes for file in row["topFiles"]),
+              str([file["path"] for row in scenes for file in row["topFiles"]
+                   if file["path"] not in metrics_files][:3]))
+        check(f"{case_id}: S4 scene totals are non-negative",
+              all(row["cost"] >= 0 and row["productionCost"] >= 0
+                  and row["findings"] >= 0 and row["files"] >= 1 for row in scenes)
+              and all(isinstance(omitted.get(key), int) and omitted[key] >= 0
+                      for key in ("scenes", "files", "cost", "productionCost", "findings")),
+              str(omitted))
+        check(f"{case_id}: S4 scene trust reconciles",
+              trust_scenes == {"total": scene_total, "shown": scene_shown,
+                               "files": scene_files, "shownFiles": scene_shown_files,
+                               "omitted": omitted.get("scenes")},
+              f"{trust_scenes} vs {scene_meta}")
+        check(f"{case_id}: S4 scenes keep core order",
+              [row["path"] for row in scenes] == [row["path"] for row in core_scene_rows],
+              str([row["path"] for row in scenes][:3]))
+        core_scene_of_node = {node["path"]: node.get("scene") for node in layout["nodes"]}
+        core_scene_of_action = {
+            action["location"]: action.get("scene") for action in layout["actions"]}
+        check(f"{case_id}: S4 node scenes are core strings",
+              all(isinstance(node.get("scene"), str)
+                  and node["scene"] == core_scene_of_node.get(node["id"])
+                  for node in payload["nodes"]),
+              str([node["id"] for node in payload["nodes"]
+                   if not isinstance(node.get("scene"), str)
+                   or node["scene"] != core_scene_of_node.get(node["id"])][:3]))
+        check(f"{case_id}: S4 action scenes are core strings",
+              all(isinstance(action.get("scene"), str)
+                  and action["scene"] == core_scene_of_action.get(action["anchor"])
+                  for action in payload["meta"]["actions"]),
+              str([action["anchor"] for action in payload["meta"]["actions"]
+                   if not isinstance(action.get("scene"), str)
+                   or action["scene"] != core_scene_of_action.get(action["anchor"])][:3]))
+
+        # unresolved calls: grouped by drawn call-site file, sorted, capped
+        unresolved_total = 0
+        unresolved_files = 0
+        unresolved_shape = True
+        unresolved_sorted = True
+        for node in payload["nodes"]:
+            block = node.get("unresolvedCalls")
+            if not block:
+                continue
+            unresolved_files += 1
+            count = block.get("count")
+            rows = block.get("rows") or []
+            unresolved_total += count if isinstance(count, int) else 0
+            if not isinstance(count, int) or count < 1 or len(rows) != min(count, 6):
+                unresolved_shape = False
+            if rows != sorted(rows, key=lambda row: (row["line"], row["callee"], row["caller"])):
+                unresolved_sorted = False
+        core_calls = (layout.get("flow") or {}).get("calls") or []
+        core_unresolved = [call for call in core_calls if call.get("unresolved")]
+        drawn = {node["path"] for node in layout["nodes"]}
+        check(f"{case_id}: S4 unresolved calls are grouped on drawn files",
+              unresolved_shape
+              and all(call.get("from") in drawn for call in core_unresolved)
+              and unresolved_total == len(core_unresolved)
+              and trust.get("unresolvedCalls") == unresolved_total
+              and trust.get("unresolvedFiles") == unresolved_files,
+              f"{unresolved_total} rows on {unresolved_files} files")
+        check(f"{case_id}: S4 unresolved-call rows are sorted", unresolved_sorted)
+
     # ---- F2: every drawn edge carries a core-classified label ----------
     for case_id, payload in payloads.items():
         edges = payload["edges"]
@@ -273,17 +481,6 @@ def main() -> int:
         check(f"{case_id}: hottestFunction carries identity",
               all(hottest.get(key) not in (None, "") for key in ("id", "name", "path", "line", "cost")),
               str({key: hottest.get(key) for key in ("id", "name", "path", "line", "cost")}))
-        production = [row for row in rows if row["production"]]
-        profile = payload.get("profile") or []
-        check(f"{case_id}: profile rows are production",
-              bool(profile) and all(row.get("production") is True for row in profile),
-              f'{sum(1 for row in profile if row.get("production"))}/{len(profile)}')
-        check(f"{case_id}: profile ranks the production candidate set",
-              bool(profile) and bool(production) and profile[0]["id"] == production[0]["id"],
-              f'{profile[0]["id"] if profile else None} vs {production[0]["id"] if production else None}')
-        check(f"{case_id}: profile does not outrank the global hottest",
-              bool(profile) and bool(hottest) and profile[0]["cost"] <= hottest["cost"],
-              f'{profile[0]["cost"] if profile else None} <= {hottest.get("cost")}')
 
     # ---- F4: no forbidden claim in the story data ----------------------
     story_text = "\n".join(
