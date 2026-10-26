@@ -4,7 +4,7 @@
   "schema_version": "1.8",
   "tool": {
     "name": "perfpal",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "scan": {
     "root_path": "<ROOT>",

@@ -7,7 +7,7 @@ Four tracks, four worktrees, four sessions. **One session per worktree; never tw
 | **A Atlas beta** | `/home/shafin/Opencode/Perfpal` | `main` | `821b984` | **A1** step 11 rail | `state/handoff/latest.md` |
 | **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` (archive) | `feat/js-ts` (merged into `main`) | `9a94905` → merged in merge-train M1 (`v0.3.0`) | **B1–B5 DONE · B6 merge gate DONE** (merged `main` `v0.3.0`) | `state/tracks/js-ts/handoff.md` |
 | **C Agent report** | `/home/shafin/Opencode/Perfpal-agent-report` | `feat/agent-report` (merged) · `fix/agent-report-regen` (C4) | `821b984` → merged `d097e04` (C3) + `c73d6ff` (C4) | **C1** spec/contract · **C1–C4 DONE** | `state/tracks/agent-report/handoff.md` |
-| **D Atlas Run** | `/home/shafin/Opencode/Perfpal-atlas-sim` | `feat/atlas-sim` | `821b984` | **D1** static run-story prototype | `state/tracks/atlas-sim/handoff.md` |
+| **D Atlas Run** | `/home/shafin/Opencode/Perfpal-atlas-sim` (archive) | `feat/atlas-sim` (merged into `main`) | `821b984` → merged in merge-train M2 (`v0.4.0`) | **D1–D2 + S1–S4 DONE · merged `main` `v0.4.0`** | `state/tracks/atlas-sim/handoff.md` |
 
 ## How to start a tab
 
@@ -16,9 +16,13 @@ Open opencode in the track worktree and send **one** first message:
 1. **A:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-beta.md and execute Session A1.`
 2. **B:** complete — `feat/js-ts` merged into `main` as `v0.3.0` in merge-train M1 (no further B session).
 3. **C:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/agent-report.md and execute Session C1.`
-4. **D:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md and execute Session D1.`
+4. **D:** complete — `feat/atlas-sim` merged into `main` as `v0.4.0` in merge-train M2 (no further D session).
 
 The track file is the brief. Do not paste this README into a tab; it is the shared rulebook.
+
+**Track D branch state:** D1–D2 + S1–S4 are done and gated (`71d0d04`; 897 tests, 304/304, 3k
+44/44); `feat/atlas-sim` merged into `main` with `--no-ff` in merge-train M2 and `main` is `v0.4.0`
+(layout/flow `1`, no schema change). The story stays a companion (ADR-0012); no graduation claim.
 
 **Track B branch state:** B2-W0/B2-W1/B2-W2 are committed (`e7f5332`/`90d5677`/`edfc98a`); **B3 is
 committed `9dd19bb`** (full DoD green, panel APPROVED); **B4 is committed `6d6bcdf`** (docs/contract/

@@ -1,5 +1,10 @@
 # Track D — Atlas Story · Session D2 + S1 + S2 + S3 + S4 handoff
 
+> **MERGED INTO `main` (merge-train M2, 2026-10-27, `v0.4.0`).** The sections below are the
+> historical branch record; state IDs in them are pre-merge. Final IDs: `D-pf-267` (ADR-0012),
+> `D-pf-268..272` (D2, S1–S4), `D-pf-273` (reconciliation), `A-pf-131/132`; see
+> `docs/adr/ADR-0013-atlas-branch-reconciliation.md` and the merge section at the end.
+
 **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` · branch `feat/atlas-sim`
 **Track:** `/home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md`
 **Status:** **D2 (D1 review) done + S1 committed (`5faacb7..63914f9`) + S2 committed and gated
@@ -307,7 +312,7 @@ fixes (CHANGELOG D1/§5 wording, close-record reference, ID list) follow in the 
 
 ## R-pf-112 reconciliation (2026-10-26)
 
-**Record:** `docs/adr/ADR-0012-atlas-branch-reconciliation.md` (Proposed; founder approval required
+**Record:** `docs/adr/ADR-0013-atlas-branch-reconciliation.md` (renumbered at merge; founder override recorded
 before any merge/rebase/cherry-pick/push/code change).
 
 **Facts (corrected).** `feat/atlas-sim` @ `988aea2`; `main` @ `c797004`; merge base `821b984`

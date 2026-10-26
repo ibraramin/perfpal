@@ -102,6 +102,8 @@ perfpal-report/
 
 The **Atlas page** (`report.html#map`) is the product's human map (beta artifacts; publish gate founder-owned): a key-metrics strip (entry, HOTTEST file, three START actions, one caveat, one legend/unit definition) above a graph-only entry-flow canvas with a right-hand detail rail, followed by four designed charts — weight share, blast radius, file detail, and coverage/links. Depth is one click away: `atlas-weight.html` (complete weight detail) and `atlas-q2.html` (reverse drill: what breaks if I touch the file), plus the complete ranked action list (`findings-detail.*`) and the complete cost-ranked function list (`profile-queue.*`). The page also links `agent-report.md` and `agent-actions.json`, the bounded and complete LLM-facing artifacts. The canvas draws the default-tier **structural** call graph (`LOW name-based + MEDIUM semantic`) and every view is framed as optimization candidates to confirm with a profiler — never runtime truth.
 
+The **Atlas Story companion** (opt-in, experimental) is the temporal companion to the map, not a second map and not part of `report.html`: `perfpal <repo> --story` adds `atlas-layout.json` — the canvas geometry the SVG already draws plus syntactic `flow`, `purpose`, `profile` and `scenes` blocks — and the standalone `sim/` player in this repository renders the inferred run (entry → stages → loops → I/O → stop) with the payload crossing each file boundary labelled. It is static inference, never a runtime trace; the report keeps A12 unchanged (one fixed script, no story script in the report), and the story does not graduate into the report (see `docs/adr/ADR-0012-atlas-story-companion.md`; `layout_version`/`flow_version` stay `1`).
+
 The eight Explorer stems (`#explorer`) are `include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, and `layer-findings.svg`, plus per-component detail pages (`component-<rank>-<slug>.svg`) and the `graph.dot` export; each chart is emitted only when its source section is present and non-empty (with deterministic stubs where the source exists but is empty), so `charts/` may be empty. Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy) or `agent-report.md` / `agent-actions.json`; humans can start at `report.html#map` or `report.md`. Never parse data out of the SVGs — they are advisory.
 
 ## CLI reference
@@ -111,7 +113,8 @@ The eight Explorer stems (`#explorer`) are `include-graph.svg`, `layer-file.svg`
 | `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs`/`.py`/`.pyi`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.ts`/`.mts`/`.cts`/`.tsx` file (declaration-only `.d.*` skipped) |
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
-| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.3.0 (metrics schema 1.8)`), exit 0 |
+| `--story` | — | off | Also emit `atlas-layout.json`, the opt-in data artifact for the Atlas Story companion (layout/flow `1`; report output is byte-identical) |
+| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.4.0 (metrics schema 1.8)`), exit 0 |
 | `-h`, `--help` | — | — | Usage text, exit 0; prints a beta evaluation-notice footer |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.
@@ -308,6 +311,7 @@ Perfpal `0.3.0` is a non-GA pre-release evaluation build. It is provided for non
 - `docs/specs/atlas-feature.md`, `docs/specs/atlas-layout.md`, `docs/specs/atlas-metrics.md` — the Atlas human-map contract (feature, composition, display metrics)
 - `docs/atlas/AGENT-BRIEF.md` — the Atlas contributor brief (visual system, rules, residuals)
 - `docs/specs/agent-report.md` — the LLM-facing `agent-report.md` / `agent-actions.json` contract
+- `docs/specs/atlas-story.md`, `docs/adr/ADR-0012-atlas-story-companion.md` — the Atlas Story data contract and the companion decision (no in-report graduation; A12 unchanged)
 - `docs/heuristics/catalog-v1.md` — the full 23-rule C catalog with thresholds and false-positive classes
 - `docs/heuristics/rust-catalog.md` — the full 22-rule Rust (`PERF-RS-*`) catalog with reframings and false-positive classes
 - `docs/schema/metrics-json-v1.md` + `docs/schema/metrics.schema.v1.8.json` — the `metrics.json` data contract and versioning policy
