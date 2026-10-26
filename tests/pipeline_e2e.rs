@@ -882,7 +882,7 @@ fn story_flow_io_effects_are_story_only_and_conservative() {
             );
         }
     }
-    let order: Vec<(String, u64, String, String)> = io
+    let order: Vec<(String, u64, String, String, String, Option<String>)> = io
         .iter()
         .map(|row| {
             (
@@ -890,12 +890,14 @@ fn story_flow_io_effects_are_story_only_and_conservative() {
                 row["line"].as_u64().expect("io line"),
                 row["callee"].as_str().expect("io callee").to_string(),
                 row["op"].as_str().expect("io op").to_string(),
+                row["target"].as_str().expect("io target").to_string(),
+                row["literal"].as_str().map(str::to_string),
             )
         })
         .collect();
     assert!(
         order.windows(2).all(|pair| pair[0] <= pair[1]),
-        "flow.io must be sorted (file, line, callee, op): {order:?}"
+        "flow.io must be sorted (file, line, callee, op, target, literal): {order:?}"
     );
 }
 
