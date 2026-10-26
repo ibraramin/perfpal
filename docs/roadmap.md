@@ -63,7 +63,7 @@ SmartScreen (reputation accrues over weeks), and macOS notarization needs $99/yr
 |---|---|
 | Published | **`v0.1.0`** (tag `v0.1.0`, commit `f368133`) — the only published release |
 | Parked by founder | **`v0.2.0-beta.1`** — code complete (`beta-release` B0–B6, commit `b3a1105`); **publishing is held** until the benchmark is run + the AI-code showcase is verified (see Direction). Still needs the EULA/privacy **contact address** + **`MINISIGN_SECRET_KEY`**/**`MINISIGN_PASSWORD`** secrets at tag time |
-| `Cargo.toml` version | `0.3.0` (unreleased; JS/TS line, schema 1.8) |
+| `Cargo.toml` version | `0.4.0` (unreleased; JS/TS + Atlas Story line, schema 1.8) |
 | `metrics.json` schema | **1.8** |
 | Languages supported | **C** + **Rust** + **Python** + **JavaScript** + **TypeScript/TSX** (`.c`/`.h`/`.rs`/`.py`/`.pyi`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.ts`/`.mts`/`.cts`/`.tsx`; `.ipynb` and declaration-only `.d.*` excluded) |
 | Specs | `perfpal-core-spec` (core product) · **`evidence-beta-spec`** (direction; post-MVP roadmap) |

@@ -3,8 +3,12 @@
 //!
 //! The geometry is **not** recomputed here: layout, edge curves, aggregate
 //! boxes, cap chips, hulls and node styling all come from the SVG renderer's
-//! own crate-visible helpers, so `atlas-layout.json` can never drift from the
-//! bytes `report.html` draws.
+//! own crate-visible helpers, so the JSON can never drift from the renderer.
+//! The story canvas is the standalone [`SVG_W`] (1400) layout; the embedded
+//! `report.html#map` page deliberately reuses the same layout function at
+//! `PAGE_GRAPH_W` (868) because the page shares the row with the detail rail.
+//! The two are not the same canvas, and `canvas` here always describes the
+//! story canvas.
 //!
 //! Every array has a total order; object keys serialize sorted because
 //! serde_json runs on default features (`preserve_order` OFF).
@@ -440,6 +444,7 @@ mod tests {
         assert_eq!(value["layout_version"], 1);
         assert_eq!(value["canvas"]["w"], SVG_W);
         assert_eq!(value["canvas"]["h"], layout.height);
+        assert_eq!(value["canvas"]["w"], SVG_W);
 
         let nodes = value["nodes"].as_array().expect("nodes array");
         assert_eq!(nodes.len(), view.nodes.len());

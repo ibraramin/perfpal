@@ -128,7 +128,7 @@ read-only archives; do not sync/merge inside them.
 
 > **Worktree:** `/home/shafin/Opencode/Perfpal` · **Branch:** `main` · **Base:** M1 close
 > **Track:** Merge Train M2 · **Task:** merge `feat/atlas-sim` into main → **v0.4.0**.
-> **Read:** `docs/plans/merge-train.md`, `docs/specs/merge-train.md`, Atlas ADR-0011/0012, story spec,
+> **Read:** `docs/plans/merge-train.md`, `docs/specs/merge-train.md`, Atlas ADR-0012/0013 (formerly 0011/0012), story spec,
 > atlas-s4 plan, track handoff/evidence via `git show feat/atlas-sim:...`.
 > **Merge:** `git merge --no-ff feat/atlas-sim`. Resolve `README`, `output-contract`,
 > `src/reporter/mod.rs`, `src/reporter/atlas_render.rs`, `state/*`, ledger semantically. Keep main's

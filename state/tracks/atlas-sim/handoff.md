@@ -215,7 +215,7 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
   contexts against a warmed local server.
 - Evidence keyframe PNGs are captured 250 ms after a seek and are not byte-stable (known D1 nit;
   transitions still running). Capture after `transitionend` if byte-diffable frames are needed.
-- Companion vs in-report: **DECIDED 2026-10-26 (ADR-0011, D-pf-259) — companion stays**; A12
+- Companion vs in-report: **DECIDED 2026-10-26 (ADR-0012, D-pf-259) — companion stays**; A12
   unchanged. The earlier "deferred until S2" note is resolved; an interactive in-report story would
   still need a new ADR + A12 amendment (A12 permits CSS/SMIL, not a second script).
 
@@ -260,7 +260,7 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
 - `2ebeabd` — `docs(evidence): S4 final gate at 71d0d04`
 - S4 docs/state close commit follows this list; **not pushed, not merged**.
 
-## ADR-0011 — companion vs in-report (2026-10-26)
+## ADR-0012 — companion vs in-report (2026-10-26)
 
 **Decision: companion.** The Atlas Story does not graduate into `report.html` in v1; **A12 is
 unchanged** (exactly one fixed `REPORT_SCRIPT`; zero scripts/handlers/network in the
@@ -281,11 +281,11 @@ an HTTP server; `--story` adds only `atlas-layout.json`; the `perfpal story` sub
 recorded Atlas v2 done (`c797004`; step 13 approved, A2 delegated pass, `R-pf-109` closed:
 D-pf-255/257/258), while this branch's state says `R-pf-109` open. The ADR does not rely on the
 report gate being open; at merge, condition (b) is satisfied. The recorded "61 ahead / 8 behind" was stale: the 2026-10-26
-recount is **63 ahead / 23 behind** (`ADR-0012`). Decision IDs collided (branch D-pf-251..255 =
-D2/S1/S2/S3/S4; main = F-treemap/archived/step-13/archived/A2 PASS); `ADR-0012` remaps them to
+recount is **63 ahead / 23 behind** (`ADR-0013`). Decision IDs collided (branch D-pf-251..255 =
+D2/S1/S2/S3/S4; main = F-treemap/archived/step-13/archived/A2 PASS); `ADR-0013` remaps them to
 D-pf-260..264 and keeps `D-pf-259` for this ADR.
 
-**Graduation conditions (ADR-0011 Decision 4).** (a) a founder **§5 graduation session on the
+**Graduation conditions (ADR-0012 Decision 4).** (a) a founder **§5 graduation session on the
 post-S4 story** (distinct from the 2026-10-24 D1 review) on a self-contained artifact, including the
 F8/A2 action read; (b) the report's visual gate (`R-pf-109` closed; on main 2026-10-26); (c) a
 deterministic, offline, no-network player with a complete final frame and pause/reduced-motion/print;
@@ -294,7 +294,7 @@ deterministic, offline, no-network player with a complete final frame and pause/
 **Recorded follow-up (not active).** Companion packaging: inline the data (no `fetch`/server) and
 add a CLI entry point; that is the precondition for the §5 session. No ship claim.
 
-**Panel record (ADR-0011).** R1 correctness/claims: **CHANGES_REQUESTED** round 1 (D2 wording,
+**Panel record (ADR-0012).** R1 correctness/claims: **CHANGES_REQUESTED** round 1 (D2 wording,
 HEAD/evidence reproducibility, no-code proof) → fixed in `6d95411`; R2 contract/A12/scope:
 **APPROVE**; Q1 verbatim scope: **APPROVED**; Q2 acceptance/evidence: **CHANGES_REQUESTED** round 1
 (same evidence items) → fixed in `6d95411`; fresh confirmation lane: **APPROVE**. Round-2 textual
@@ -302,9 +302,9 @@ fixes (CHANGELOG D1/§5 wording, close-record reference, ID list) follow in the 
 
 ## Next
 
-- **S4 close:** complete (panel 5/5 APPROVE, final gate `71d0d04`, evidence `2ebeabd`); **ADR-0011
+- **S4 close:** complete (panel 5/5 APPROVE, final gate `71d0d04`, evidence `2ebeabd`); **ADR-0012
   decided 2026-10-26 (D-pf-259) — companion, A12 unchanged.** F8 remains founder-deferred.
-- **Reconciliation recorded** (`R-pf-112`, `ADR-0012`, Proposed): direction **C** — keep this
+- **Reconciliation recorded** (`R-pf-112`, `ADR-0013`, Proposed): direction **C** — keep this
   branch separate from `main` until the §5 founder session; no story→main merge now. Next (after
   founder approval): merge `main` into this branch (sync; 7 conflicted paths), run the full story
   gate, then package the self-contained story + `perfpal story` CLI and take it to §5. **Do not
@@ -330,14 +330,14 @@ main's `strip_entry_line` is private; restore `pub(crate)` for the story project
 and `build_atlas_view` survive on main.
 
 **ID remap (applied).** `D-pf-251→260`, `D-pf-252→261`, `D-pf-253→262`, `D-pf-254→263`,
-`D-pf-255→264`; `A-pf-124→126`, `A-pf-125→127`. `D-pf-259` (ADR-0011) unchanged; `D-pf-265` records
+`D-pf-255→264`; `A-pf-124→126`, `A-pf-125→127`. `D-pf-259` (ADR-0012) unchanged; `D-pf-265` records
 this reconciliation; `D-pf-266` is the hot-state archive pointer for `D-pf-238..243`. `R-pf-109`
 is closed on this branch as a main-line record; `R-pf-112` stays open until the sync/packaging lands.
 The ledger keeps the old IDs as cold `superseded` records with a `ref` to the new IDs.
 
 **Direction (recommended, pending approval).** **C** — no story→main merge until the §5 founder
 session; next is a `main`→branch sync, then the self-contained story + CLI packaging slice. A/B are
-recorded in ADR-0012 with tradeoffs and "what would change my mind"; A would use the merge-based A′
+recorded in ADR-0013 with tradeoffs and "what would change my mind"; A would use the merge-based A′
 (not a literal rebase) to preserve evidence SHAs.
 
 ### Panel record (R-pf-112)

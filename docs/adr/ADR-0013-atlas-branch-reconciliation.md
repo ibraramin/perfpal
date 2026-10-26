@@ -133,8 +133,9 @@
 - **Two hops, one final block.** The branch first remapped `D-pf-251..255` → `260..264` and
   `A-pf-124/125` → `126/127` against `main@c797004` (max 258). M1 then landed `D-pf-259/260` and
   `A-pf-126/127` on main, so the merge moved the whole story block to `D-pf-267..274` /
-  `A-pf-129..133`. Ledger records for the wrappers keep their own superseded IDs (`D-pf-269..273`
-  at final numbering) with `ref`s to the live IDs.
+  `A-pf-129..133`. The branch's `superseded` tombstone wrappers are **not** carried into main's
+  ledger (their old IDs collide with main's live/archived records); the live records use
+  `D-pf-267..274` and `A-pf-131..133`, and this table plus `D-pf-273` preserve the mapping.
 - **`R-pf-109`:** closed as a record, matching main's 2026-10-26 closure (v2 rework + A2); the branch
   snapshot does not contain steps 11–15 and must not claim them. `R-pf-112` closes at this merge:
   the companion is in `main` and the report gate is satisfied; packaging stays a recorded follow-up.

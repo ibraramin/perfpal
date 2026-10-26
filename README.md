@@ -1,6 +1,6 @@
 # Perfpal
 
-> **Beta — `0.3.0`.** Pre-release evaluation build (C, Rust, Python, JavaScript and TypeScript/TSX backends), provided for **noncommercial evaluation only — not for commercial or production use at this beta**. Use is governed by the [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE). See also the [privacy statement](PRIVACY.md). **Binaries are unsigned** — see [Beta status, code signing, and privacy](#beta-status-code-signing-and-privacy).
+> **Beta — `0.4.0`.** Pre-release evaluation build (C, Rust, Python, JavaScript and TypeScript/TSX backends), provided for **noncommercial evaluation only — not for commercial or production use at this beta**. Use is governed by the [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE). See also the [privacy statement](PRIVACY.md). **Binaries are unsigned** — see [Beta status, code signing, and privacy](#beta-status-code-signing-and-privacy).
 
 Perfpal is a static-analysis CLI that scans C, Rust, Python, JavaScript and TypeScript/TSX codebases for performance-relevant patterns and writes a self-contained `perfpal-report/` directory: a versioned, LLM-consumable `metrics.json`, a human-readable `report.md`, a designed **Atlas** human map (`report.html#map`), LLM-facing `agent-report.md` / `agent-actions.json`, and deterministic SVG architecture charts. It is built for AI-generated codebases — high file volume, frequently non-compiling trees, missing headers and build configuration — where a compiler-based pipeline is often not viable. Parsing runs on a tree-sitter syntactic tier (ADR-0001): no build flags, compile database, or macro expansion are required. All output is framed as **optimization candidates for review, never certainties**.
 
@@ -295,7 +295,7 @@ This claim covers the report directory only. Release binaries make no bit-for-bi
 
 ## Beta status, code signing, and privacy
 
-Perfpal `0.3.0` is a non-GA pre-release evaluation build. It is provided for noncommercial evaluation only and is not for commercial or production use. Use is governed by the bundled [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE).
+Perfpal `0.4.0` is a non-GA pre-release evaluation build. It is provided for noncommercial evaluation only and is not for commercial or production use. Use is governed by the bundled [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE).
 
 **Binaries are unsigned.** No Windows Authenticode signing and no macOS notarization is applied at beta, so Windows SmartScreen and macOS Gatekeeper may warn about the download. Azure Trusted Signing is deliberately not wired at beta. Verify authenticity instead via the signed checksum manifest: `minisign -Vm SHA256SUMS -p minisign.pub` followed by `sha256sum -c SHA256SUMS`.
 

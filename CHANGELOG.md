@@ -34,8 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolution kept main's Atlas v2 report composition + js-ts wiring, restored `strip_entry_line` to
   `pub(crate)`, and unified the footer via one `footer_parts` source. `report.html` stays
   byte-identical story-off vs story-on; A12 unchanged (one fixed `REPORT_SCRIPT`); no schema change,
-  no new dependency, no push/tag, no graduation claim. Story gate: 897 tests, `sim/gate.sh`
-  304/304, 3k 44/44, F5/F6 (transcript under `docs/evidence/merge-m2/`). ADR-0012/0013.
+  no new dependency, no push/tag, no graduation claim. Story gate on merged `main`: **1,089 tests**
+  (1,088 passed, 1 ignored — the branch snapshot's 897 plus the JS/TS suites), `sim/gate.sh`
+  304/304, 3k 44/44, F5/F6 (`docs/evidence/atlas-sim/GATE.txt`); full gate
+  (`docs/evidence/merge-m2/gate.txt`). ADR-0012/0013.
 
 - **Atlas Story S4 — scale scenes and payoff (2026-10-26).** Three story-only core probes land in
   `atlas-layout.json` (layout_version stays 1; no schema change, no dependency; non-story scans are
@@ -102,8 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   addendum on `ADR-0013` records the founder's override of the recorded direction **C**: merge the
   companion into `main` now; **no A12 change**; **no graduation claim**; the §5 founder session and an
   explicit A12 amendment remain the precondition for in-report graduation. Story-line state IDs are
-  renumbered once more at merge — `D-pf-259` → `D-pf-267` (ADR-0012), `D-pf-260` → `D-pf-268` (D2),
-  `D-pf-251..255` → `D-pf-269..273` (superseded wrappers), `A-pf-125..128` → `A-pf-129..132` —
+  renumbered once more at merge — `D-pf-259` → `D-pf-267` (ADR-0012), `D-pf-251/260` → `D-pf-268` (D2),
+  `D-pf-252..255` → `D-pf-269..272` (S1–S4), `A-pf-126/127` → `A-pf-131/132`, `A-pf-128` → `A-pf-133` —
   because M1 landed `D-pf-259/260` and `A-pf-126/127` on `main` after the branch's first remap.
   `atlas-build` stays done (main `D-pf-258`); `R-pf-109` stays closed as a record. No code, schema,
   dependency or output change from the renumber; no A2/ship claim; F8 deferred.
