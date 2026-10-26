@@ -143,7 +143,8 @@ frames `no-forward-path.png`, `empty.png`, `capped.png` (eleven 1440×900 frames
   `sim/verify.py` 217/217; `@vision` Read 7 **PASS** after the trust/inspector nits were fixed.
 - **Fixture rows:** hyperfine 8 / 5 files (3 literal: `NO_COLOR`, `TERM`, `/dev/null`; 5 unknown);
   cJSON 24 / 4 files (0 literal; 2 unknown; 22 stdio).
-- **Check delta:** 162 → 216, adding core-array/shape, projected-count, trust-reconciliation,
+- **Check delta:** 162 → 217, adding core-array/shape, projected-count, trust-reconciliation,
+  row-level inspector labels/cap,
   trace-stores, store/trust/inspector DOM, clipping, and stdio/no-path checks.
 - **Gate:** `GATE.txt` on the S3 docs commit, `dirty 0`, `verdict=PASS`; `checks.json` 217/217.
 

@@ -1,7 +1,7 @@
 # Session handoff — Atlas Story (D2 + S1 + S2 + S3)
 
 - **Date:** 2026-10-26 · **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (`feat/atlas-sim`)
-- **Track:** Atlas Run · **Status:** S3 committed (`0ddf4ad` + `b63c6f6` core, `9e23aa6` + `f3e8804` story), gated; **not pushed**. S4 is next.
+- **Track:** Atlas Run · **Status:** S3 committed (`0ddf4ad` + `b63c6f6` + `27569a9` core, `9e23aa6` + `f3e8804` + `325571e` story), gated; **not pushed**. S4 is next.
 - **Detail:** `state/tracks/atlas-sim/handoff.md` · **Requirement:** `docs/specs/atlas-story.md` (sealed)
 - **Probe record:** `docs/atlas/core-probes.md` · **State:** `state/session-state.json`
 
@@ -94,11 +94,11 @@ trace beats, a per-file DATA STORES inspector, and an I/O trust line.
 | Core gates | `cargo fmt --all -- --check`, `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
 | Tests | `cargo test --locked` | 862 passed, 0 failed, 1 ignored |
 | Licenses | `cargo deny check licenses` | exit 0 (`licenses ok`) |
-| F6 additive | story-off vs story-on | `report.html` byte-identical hyperfine + cJSON; `metrics.json` content-equal after masking scan provenance |
+| F6 additive | story-off vs story-on | `report.html` byte-identical hyperfine + cJSON; `metrics.json` content-equal after masking scan provenance (`started_at`, `duration_ms`, `root_path`) |
 | Core flow determinism | two `--story` scans | `atlas-layout.json` byte-identical; `flow.io` sorted `(file,line,callee,op,target,literal)` |
 | Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **217/217**, exit 0 |
-| Full gate | `bash sim/gate.sh` | `4ef35cd` · tree `506aa38f…` · dirty 0 · 862 tests · 217/217 · **verdict=PASS** (`GATE.txt`; the gate fails on a non-zero full dirty count) |
+| Full gate | `bash sim/gate.sh` | `89f4feb` · tree `3e0d0ed…` · dirty 0 · 862 tests · 217/217 · **verdict=PASS** (`GATE.txt`; the gate fails on a non-zero full dirty count) |
 | Vision | `docs/evidence/atlas-sim/VISION.md` Read 7 | **PASS** (first pass PASS-WITH-NITS; stdio total, `+N` marker and `stream · no path` fixed; re-read PASS) |
-| Review panel | R1/R2/Q1/Q2 + fresh confirmation | round 1: R1/R2 CHANGES_REQUESTED (freopen index, numeric flags, typedef pointer), Q1 APPROVED, Q2 pending final gate; fixes `b63c6f6`/`f3e8804`; round 2 pending |
+| Review panel | R1/R2/R3 + Q1/Q2 | **5/5 APPROVE, zero unresolved blocking findings.** Round 1 found `freopen` mode index, numeric-flag guessing, typedef-pointer bypass, stale docs; fixed in `b63c6f6`/`f3e8804`/`27569a9`/`325571e`; round 3 R3 docs-only corrections applied and re-confirmed |
 
 **Uncommitted:** none after the S3 docs/state commit. **No push, no merge to `main`.**

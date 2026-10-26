@@ -35,8 +35,9 @@ implemented properly and merged later. Existing scan outputs must stay byte-iden
   when recorded for merge.
 
 ## In Progress
-- S3 evidence: gate transcript, `@vision` read of the stores/trust/inspector frames, and the 4-lane
-  review panel; the handoff closes S3 after those pass.
+- **S3 closed:** gate `89f4feb` (dirty 0, 862 tests, 217/217), `@vision` Read 7 PASS, and the final
+  review panel R1/R2/R3 + Q1/Q2 **5/5 APPROVE** with zero unresolved blocking findings; the handoff
+  carries the claim→evidence table.
 - Atlas v2: step 10 approved; step 11 (G-style detail rail) queued; step-13 gate pending.
 
 ## Next
