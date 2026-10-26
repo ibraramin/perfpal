@@ -7,7 +7,7 @@
 **Next-session signpost (merge gate):** branch `feat/js-ts`, base `main @ 9a94905`; W0 `e7f5332`, W1 `90d5677`,
 W2 `edfc98a`, B3 `9dd19bb`, **B4 committed `6d6bcdf` (docs/contract/canary + label polish; panel
 APPROVED: R1/R2/R3 + Q1/Q2), **B5 committed `1b23198` (feat; plan DoD green, canary re-run, panel
-APPROVED R1/R2/R3 + Q1/Q2, recorded in the handoff; docs/state record).** `PERF-JS-CALL-001` production
+APPROVED R1/R2/R3 + Q1/Q2, recorded in the handoff; docs `dbda7e3`).** `PERF-JS-CALL-001` production
 180 → 2 and `TYPE-001` 14 → 2, both remaining sets hand-verified true positives. The merge gate `A-tb-006`
 now remains blocked only on **founder approval** (+ the merge mechanics: rebase on current `main`, final DoD
 on the rebased tree). No push. See `state/tracks/js-ts/handoff.md` for the full B5 record.
@@ -228,7 +228,7 @@ closed; p6 compares both Atlas pages (`GOLDEN_ARTIFACTS` 17 → 19). Evidence:
 `docs/evidence/js-b5/real-code-canary.md` (exact pre/post diff against the B4 binary) and
 `docs/evidence/js-b5/gate.txt` (66 suites / 991 passed; semantic 994; fmt/clippy/deny/double-run/native
 green). **Panel APPROVED** (R1/R2/R3 + Q1/Q2), recorded in `state/tracks/js-ts/handoff.md`; zero unresolved
-blocking findings. Committed `1b23198` (feat) + this docs record; no push;
+blocking findings. Committed `1b23198` (feat) + `dbda7e3` (docs); no push;
 merge remains `A-tb-006` + founder approval.
 
 ## Sessions B2–B5 (signposts)

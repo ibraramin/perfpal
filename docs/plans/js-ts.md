@@ -33,7 +33,7 @@ Add JavaScript (B2), then TypeScript/TSX (B3), as first-class Perfpal backends i
   1,336 → 1,178); `.min.ts`/`.min.mts`/`.min.cts` skip gap closed; p6 compares both Atlas pages
   (`GOLDEN_ARTIFACTS` 17 → 19). Canary re-run + exact pre/post diff: `docs/evidence/js-b5/real-code-canary.md`;
   DoD transcript: `docs/evidence/js-b5/gate.txt`. No schema/catalog-count/dependency/rule-id change;
-  78 rules. Committed `1b23198` (+ docs record); merge remains `A-tb-006`.
+  78 rules. Committed `1b23198` (+ docs `dbda7e3`); merge remains `A-tb-006`.
 - Gate + merge: rebase on `main` after A step 12, run the Definition of Done below (every command exits 0), dispatch the parallel review panel (>=2 reviewer + >=2 requirements-reviewer, disjoint lanes) and require >=1 APPROVE per family with zero unresolved blocking findings; merge to `main` only with explicit founder approval.
 
 ## Required Specs

@@ -688,5 +688,5 @@ check green. Goldens changed only in `report-js`/`report-ts`/`report-python` (na
 finding counts and chart/Atlas artifacts are unchanged.
 
 **Panel:** **APPROVED (R1/R2/R3 + Q1/Q2)**; zero unresolved blocking findings. The Q lanes' round-1 bookkeeping
-items (main-ledger revert + panel record + stale citations + commit inventory) were fixed and re-confirmed. B5 is committed `1b23198` (+ this docs record); merge remains `A-tb-006` (founder approval),
+items (main-ledger revert + panel record + stale citations + commit inventory) were fixed and re-confirmed. B5 is committed `1b23198` (+ docs `dbda7e3`); merge remains `A-tb-006` (founder approval),
 no push.

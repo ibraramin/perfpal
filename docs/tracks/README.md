@@ -5,7 +5,7 @@ Four tracks, four worktrees, four sessions. **One session per worktree; never tw
 | Track | Worktree | Branch | Base | First session | Track handoff |
 |---|---|---|---|---|---|
 | **A Atlas beta** | `/home/shafin/Opencode/Perfpal` | `main` | `821b984` | **A1** step 11 rail | `state/handoff/latest.md` |
-| **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` | `feat/js-ts` | `9a94905` (rebased on `main` @ `9a94905`) | **B5 committed `1b23198` (docs/state record); panel APPROVED (R1/R2/R3 + Q1/Q2); merge gate** (`A-tb-006`, founder approval) | `state/tracks/js-ts/handoff.md` |
+| **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` | `feat/js-ts` | `9a94905` (rebased on `main` @ `9a94905`) | **B5 committed `1b23198` (docs `dbda7e3`); panel APPROVED (R1/R2/R3 + Q1/Q2); merge gate** (`A-tb-006`, founder approval) | `state/tracks/js-ts/handoff.md` |
 | **C Agent report** | `/home/shafin/Opencode/Perfpal-agent-report` | `feat/agent-report` | `821b984` (rebase after A step 12) | **C1** spec/contract | `state/tracks/agent-report/handoff.md` |
 | **D Atlas Run** | `/home/shafin/Opencode/Perfpal-atlas-sim` | `feat/atlas-sim` | `821b984` | **D1** static run-story prototype | `state/tracks/atlas-sim/handoff.md` |
 
@@ -23,7 +23,7 @@ The track file is the brief. Do not paste this README into a tab; it is the shar
 **Track B branch state:** B2-W0/B2-W1/B2-W2 are committed (`e7f5332`/`90d5677`/`edfc98a`); **B3 is
 committed `9dd19bb`** (full DoD green, panel APPROVED); **B4 is committed `6d6bcdf`** (docs/contract/
 canary + label polish; panel APPROVED: R1/R2/R3 + Q1/Q2); **B5 (post-B4 correctness pass) is committed `1b23198`
-(docs/state record)** (CALL-001 production 180 → 2, TYPE-001 14 → 2;
+(docs `dbda7e3`)** (CALL-001 production 180 → 2, TYPE-001 14 → 2;
 panel APPROVED: R1/R2/R3 + Q1/Q2). `B-tb-004` (CALL-001) is
 resolved in B5. `feat/js-ts` is based on `main` @ `9a94905`. The merge gate is `A-tb-006` + founder
 approval, plus a rebase/final DoD on the current `main`.

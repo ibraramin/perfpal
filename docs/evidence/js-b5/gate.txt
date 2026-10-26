@@ -2,7 +2,7 @@
 
 Tree: `feat/js-ts`, working tree of session B5 (base `main @ 9a94905`; B4 `6d6bcdf` + docs `683adab`).
 Date: 2026-10-26. `cargo` is not on the non-interactive PATH; all commands used
-`/home/shafin/.cargo/bin/cargo`. B5 feat commit `1b23198`; the docs record follows.
+`/home/shafin/.cargo/bin/cargo`. B5 feat commit `1b23198`; docs `dbda7e3`.
 
 ## 1. Docs/state completeness
 
@@ -141,4 +141,4 @@ byte-identical to the recorded two-run pair, so the table above is the final bin
 - `scripts/gates/task-gate.sh` is not present in this repo; the plan's commands were run directly and are
   recorded above (L4 claim → evidence is satisfied by this transcript).
 - The canary writes only to `/var/tmp`; no corpus was modified and no network fetch was needed.
-- B5 is committed `1b23198` (feat) + this docs record; no push/rebase/merge was performed.
+- B5 is committed `1b23198` (feat) + `dbda7e3` (docs); no push/rebase/merge was performed.

@@ -2,7 +2,7 @@
 
 > **Session:** B5 — post-B4 correctness/follow-up pass. Plan `js-ts`; branch `feat/js-ts`; base
 > `main @ 9a94905`; prior commits W0 `e7f5332`, W1 `90d5677`, W2 `edfc98a`, B3 `9dd19bb`, B4 `6d6bcdf`
-> (+ docs `683adab`). **B5 committed `1b23198` (feat) + this docs record; no push.**
+> (+ docs `683adab`). **B5 committed `1b23198` (feat) + `dbda7e3` (docs); no push.**
 > No push, no rebase, no merge (`A-tb-006` remains founder-gated).
 
 ## North-star / scope discipline
@@ -258,8 +258,8 @@ untracked `.playwright-mcp/` (NOT part of B5; exclude from any commit).
 ## Commits (this session)
 
 - `1b23198` — `feat(js-ts): B5 rule gates, symbol/path_class fixes and goldens`.
-- This docs commit — `docs(js-ts): record B5 correctness pass, canary and panel`.
-- A follow-up docs-record commit records these hashes. No push, no rebase, no merge.
+- `dbda7e3` — `docs(js-ts): record B5 correctness pass, canary and panel`.
+- This docs-record commit records both hashes. No push, no rebase, no merge.
 
 ## CHANGELOG note for Track A (apply at merge; do not land on this branch)
 
@@ -291,5 +291,5 @@ IR-internal serde-defaulted fields; no wire-schema change.
 
 **Resume in a fresh session:** plan `js-ts`, next task **B6 merge gate** (`A-tb-006`) after the founder's
 commit/merge go-ahead; branch `feat/js-ts`, base `main @ 9a94905`, W0 `e7f5332`, W1 `90d5677`, W2 `edfc98a`,
-B3 `9dd19bb`, B4 `6d6bcdf` (+ docs `683adab`), B5 `1b23198` (+ docs record). Signposts: B5 canary
+B3 `9dd19bb`, B4 `6d6bcdf` (+ docs `683adab`), B5 `1b23198` (+ docs `dbda7e3`). Signposts: B5 canary
 `docs/evidence/js-b5/real-code-canary.md`, gate `docs/evidence/js-b5/gate.txt`.
