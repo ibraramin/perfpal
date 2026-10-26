@@ -23,3 +23,6 @@ __pycache__/
 
 # Local browser-harness scratch (Playwright MCP screenshots/logs)
 /.playwright-mcp/
+
+# Atlas sim source renders (regenerate with sim/make-source.sh)
+/sim/source/

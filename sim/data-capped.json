@@ -1,0 +1,51 @@
+{
+  "case": "capped",
+  "columns": [],
+  "edges": [],
+  "findings": [],
+  "hulls": [],
+  "meta": {
+    "actions": [],
+    "caps": "state demo · no canvas nodes",
+    "entry": "capped · state demo",
+    "fileCount": 0,
+    "findingsIncluded": 0,
+    "findingsTotal": 0,
+    "footer": "state demo · synthetic state, not a scan",
+    "hottest": "no hotspot recorded",
+    "kicker": "PERFPAL · ATLAS",
+    "languages": [],
+    "locCode": 0,
+    "path": "0 steps",
+    "repo": "state demo",
+    "stub": {
+      "body": "In a capped scan, the canvas draws the top-cost files per depth plus aggregated boxes. This state demo carries no fabricated nodes or counts; the story stops at the cap. It is a state demo, not a scan.",
+      "caps": "state demo · capped, no canvas nodes",
+      "entry": "capped · state demo",
+      "footer": "state demo · synthetic state, not a scan",
+      "path": "0 steps",
+      "title": "capped canvas"
+    },
+    "subline": "entry-flow map · static, profile to confirm",
+    "wordmark": "Atlas"
+  },
+  "nodes": [],
+  "source": {
+    "kind": "synthetic"
+  },
+  "stage": {
+    "h": 718,
+    "w": 1400
+  },
+  "state": {
+    "allTest": false,
+    "capped": true,
+    "empty": false,
+    "library": false,
+    "noEntry": false,
+    "partialParse": false,
+    "singleFile": false
+  },
+  "synthetic": true,
+  "trace": []
+}

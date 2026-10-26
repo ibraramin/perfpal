@@ -486,6 +486,646 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     assert_eq!(dot1, dot2, "graph.dot not byte-stable across runs");
 }
 
+/// `--story` is additive: it emits `atlas-layout.json` while `metrics.json`
+/// and `report.html` stay byte-identical to the non-story run.
+#[test]
+fn story_flag_emits_atlas_layout_only_when_requested() {
+    let plain = temp_dir("story-off").join("perfpal-report");
+    let story = temp_dir("story-on").join("perfpal-report");
+
+    let plain_code = run_with(argv(&[
+        "--output",
+        plain.to_string_lossy().as_ref(),
+        fixture_root().to_string_lossy().as_ref(),
+    ]));
+    let story_code = run_with(argv(&[
+        "--output",
+        story.to_string_lossy().as_ref(),
+        "--story",
+        fixture_root().to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(plain_code, 0);
+    assert_eq!(story_code, 0);
+
+    assert!(
+        !plain.join("atlas-layout.json").exists(),
+        "atlas-layout.json must not be emitted without --story"
+    );
+    assert!(
+        story.join("atlas-layout.json").is_file(),
+        "atlas-layout.json missing with --story"
+    );
+
+    let plain_metrics = fs::read_to_string(plain.join("metrics.json")).expect("plain metrics");
+    let story_metrics = fs::read_to_string(story.join("metrics.json")).expect("story metrics");
+    assert_eq!(
+        common::mask_metrics_provenance(&plain_metrics),
+        common::mask_metrics_provenance(&story_metrics),
+        "metrics.json changed beyond provenance when --story was passed"
+    );
+    let plain_html = fs::read(plain.join("report.html")).expect("plain report");
+    let story_html = fs::read(story.join("report.html")).expect("story report");
+    assert_eq!(
+        story_html, plain_html,
+        "report.html changed when --story was passed"
+    );
+
+    let raw = fs::read_to_string(story.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    assert_eq!(layout["layout_version"], 1);
+    // P6 fallback: the committed fixture has no README at its root.
+    assert_eq!(layout["purpose"]["kind"], "structural");
+    assert_eq!(layout["purpose"]["source"], serde_json::Value::Null);
+    assert_eq!(layout["purpose"]["purpose_version"], 1);
+    assert!(
+        layout["purpose"]["text"]
+            .as_str()
+            .is_some_and(|text| text.starts_with("No README at the scan root; inferred entry: ")),
+        "structural purpose text missing: {}",
+        layout["purpose"]["text"]
+    );
+
+    // P7: the whole-repo profile queue is a projection of the authoritative
+    // KV3 ordering — capped, reconciled, and joined to metrics function ids.
+    let profile = &layout["profile"];
+    assert_eq!(profile["queue_version"], 1, "profile.queue_version");
+    let shown = profile["shown"].as_u64().expect("profile.shown");
+    assert!(shown <= 12, "profile.shown exceeds the 12-row cap");
+    let rows = profile["rows"].as_array().expect("profile.rows array");
+    assert_eq!(rows.len() as u64, shown, "profile.shown != profile.rows");
+    let total_ranked = profile["total_ranked"]
+        .as_u64()
+        .expect("profile.total_ranked");
+    let production_ranked = profile["production_ranked"]
+        .as_u64()
+        .expect("profile.production_ranked");
+    let candidate_total = profile["candidate_total"]
+        .as_u64()
+        .expect("profile.candidate_total");
+    let demoted_production = profile["demoted_production"]
+        .as_u64()
+        .expect("profile.demoted_production");
+    assert_eq!(
+        production_ranked,
+        candidate_total + demoted_production,
+        "profile production counts do not reconcile"
+    );
+    assert!(total_ranked >= production_ranked);
+    assert!(production_ranked >= candidate_total);
+    assert!(candidate_total >= shown);
+
+    let metrics_doc: serde_json::Value =
+        serde_json::from_str(&story_metrics).expect("story metrics parses");
+    let function_ids: Vec<&str> = metrics_doc["stats"]["functions"]
+        .as_array()
+        .expect("stats.functions array")
+        .iter()
+        .filter_map(|function| function["id"].as_str())
+        .collect();
+    for row in rows {
+        let id = row["id"].as_str().expect("profile row id");
+        assert!(
+            function_ids.contains(&id),
+            "profile row id {id} is not a metrics function id"
+        );
+        assert_eq!(row["production"], true, "non-production profile row: {row}");
+        assert_eq!(
+            row["demotions"],
+            serde_json::json!([]),
+            "demoted profile row: {row}"
+        );
+        assert!(
+            row["cost"].is_number() && row["cost_text"].is_string(),
+            "profile row cost fields missing: {row}"
+        );
+    }
+    if !rows.is_empty() {
+        assert_eq!(
+            rows[0]["demotions"],
+            serde_json::json!([]),
+            "top profile row must be non-demoted"
+        );
+    }
+
+    // P8: directory scenes cover every source file, respect the caps, and
+    // reconcile shown + omitted against the scan totals.
+    let file_paths: Vec<&str> = metrics_doc["files"]
+        .as_array()
+        .expect("files array")
+        .iter()
+        .filter_map(|file| file["path"].as_str())
+        .collect();
+    let source_file_count = metrics_doc["files"]
+        .as_array()
+        .expect("files array")
+        .iter()
+        .filter(|file| file["function_count"].as_u64().unwrap_or(0) > 0)
+        .count();
+
+    let scenes = &layout["scenes"];
+    assert_eq!(scenes["scene_version"], 1, "scenes.scene_version");
+    assert_eq!(scenes["scene_cap"], 24, "scenes.scene_cap");
+    assert_eq!(scenes["file_cap"], 5, "scenes.file_cap");
+    let scene_rows = scenes["rows"].as_array().expect("scenes.rows array");
+    assert_eq!(
+        scenes["shown_scenes"].as_u64().expect("shown_scenes"),
+        scene_rows.len() as u64,
+        "shown_scenes != rows.len()"
+    );
+    assert!(scene_rows.len() <= 24, "shown scenes exceed the cap");
+    let mut shown_files = 0_usize;
+    for scene in scene_rows {
+        let files = scene["files"].as_u64().expect("scene files") as usize;
+        shown_files += files;
+        let top_files = scene["top_files"]
+            .as_array()
+            .expect("scene top_files array");
+        assert!(
+            top_files.len() <= 5,
+            "top_files exceeds the per-scene cap: {scene}"
+        );
+        for file in top_files {
+            let path = file["path"].as_str().expect("top file path");
+            assert!(
+                file_paths.contains(&path),
+                "scene top file {path} is not a metrics file"
+            );
+            assert_eq!(
+                file["name"],
+                path.rsplit('/').next().unwrap_or(path),
+                "top file basename mismatch: {file}"
+            );
+        }
+        let path = scene["path"].as_str().expect("scene path");
+        if path != "(root)" {
+            let prefix = format!("{path}/");
+            assert!(
+                file_paths.iter().any(|file| file.starts_with(&prefix)),
+                "scene path {path} owns no metrics file"
+            );
+        }
+        assert!(scene["depth"].as_u64().is_some(), "scene depth missing");
+        assert!(scene["cost"].is_number(), "scene cost missing");
+        assert!(scene["scale"].is_string(), "scene scale missing");
+    }
+    let omitted = &scenes["omitted"];
+    let total_files = scenes["total_files"].as_u64().expect("scenes.total_files") as usize;
+    assert_eq!(total_files, source_file_count, "total_files mismatch");
+    assert_eq!(
+        shown_files + omitted["files"].as_u64().expect("omitted files") as usize,
+        total_files,
+        "shown + omitted files do not reconcile"
+    );
+    assert_eq!(
+        scene_rows.len() + omitted["scenes"].as_u64().expect("omitted scenes") as usize,
+        scenes["total_scenes"]
+            .as_u64()
+            .expect("scenes.total_scenes") as usize,
+        "shown + omitted scenes do not reconcile"
+    );
+
+    for action in layout["actions"].as_array().expect("actions array") {
+        assert!(
+            action["scene"].is_string(),
+            "story action missing its scene: {action}"
+        );
+    }
+
+    let canvas_w = layout["canvas"]["w"].as_i64().expect("canvas width");
+    let included = layout["meta"]["findings_included"]
+        .as_u64()
+        .expect("findings_included");
+    let total = layout["meta"]["findings_total"]
+        .as_u64()
+        .expect("findings_total");
+    assert!(included <= total, "included findings exceed the scan total");
+
+    let nodes = layout["nodes"].as_array().expect("nodes array");
+    for node in nodes {
+        let path = node["path"].as_str().expect("node path");
+        let scene = node["scene"].as_str().expect("drawn node scene");
+        assert!(
+            scene == "(root)" || path.starts_with(&format!("{scene}/")),
+            "node {path} scene {scene} is not a partition prefix"
+        );
+    }
+    let drawn: u64 = nodes
+        .iter()
+        .map(|node| {
+            node["findings"]["hot"].as_u64().unwrap()
+                + node["findings"]["warn"].as_u64().unwrap()
+                + node["findings"]["info"].as_u64().unwrap()
+        })
+        .sum();
+    assert_eq!(
+        included, drawn,
+        "findings_included != sum of drawn-node counts"
+    );
+
+    let columns = layout["columns"].as_array().expect("columns array");
+    assert!(!columns.is_empty(), "layout must have columns");
+    for column in columns {
+        assert!(
+            column["label"]
+                .as_str()
+                .is_some_and(|value| !value.is_empty()),
+            "column label missing: {column}"
+        );
+        assert!(
+            column["count_text"].as_str().is_some(),
+            "column count_text missing: {column}"
+        );
+        assert!(
+            column["width"].as_i64().is_some(),
+            "column width missing: {column}"
+        );
+        let x = column["x"].as_i64().expect("column x");
+        assert!(
+            (0..=canvas_w).contains(&x),
+            "column x outside [0, canvas.w]: {column}"
+        );
+    }
+
+    for (index, column) in columns.iter().enumerate() {
+        let centre = column["x"].as_i64().expect("column x");
+        let width = column["width"].as_i64().expect("column width");
+        for node in nodes
+            .iter()
+            .filter(|node| node["column"].as_u64() == Some(index as u64))
+        {
+            let node_x = node["x"].as_i64().expect("node x");
+            let node_w = node["w"].as_i64().expect("node w");
+            assert_eq!(
+                node_x + node_w / 2,
+                centre,
+                "column header centre must equal the node centre: {column} vs {node}"
+            );
+        }
+        assert!(width > 0, "column width must be positive: {column}");
+    }
+
+    for node in nodes {
+        assert!(node["cost"].as_i64().is_some(), "node cost missing: {node}");
+        let column = node["column"].as_u64().expect("node column");
+        assert!(
+            (column as usize) < columns.len(),
+            "node column out of range: {node}"
+        );
+    }
+}
+
+/// S4/P6: the story-only purpose block reads the scan-root README, and adding
+/// it changes nothing outside `atlas-layout.json` (F6).
+#[test]
+fn story_purpose_reads_root_readme_and_stays_story_only() {
+    let root = temp_dir("purpose-src");
+    fs::write(
+        root.join("README.md"),
+        "# Example\n\n\
+         ![badge](https://example.invalid/badge.svg)\n\n\
+         A deterministic C scanner for [Perfpal](https://example.invalid).\n\n\
+         A second paragraph is ignored.\n",
+    )
+    .expect("write README");
+    fs::write(root.join("main.c"), "int main(void) { return 0; }\n").expect("write main.c");
+
+    let plain = temp_dir("purpose-off").join("perfpal-report");
+    let story = temp_dir("purpose-on").join("perfpal-report");
+    let plain_code = run_with(argv(&[
+        "--output",
+        plain.to_string_lossy().as_ref(),
+        root.to_string_lossy().as_ref(),
+    ]));
+    let story_code = run_with(argv(&[
+        "--output",
+        story.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(plain_code, 0);
+    assert_eq!(story_code, 0);
+
+    assert!(
+        !plain.join("atlas-layout.json").exists(),
+        "atlas-layout.json must not be emitted without --story"
+    );
+
+    let raw = fs::read_to_string(story.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    assert_eq!(layout["layout_version"], 1);
+    let purpose = &layout["purpose"];
+    assert_eq!(purpose["kind"], "readme");
+    assert_eq!(purpose["source"], "README.md");
+    assert_eq!(purpose["purpose_version"], 1);
+    assert_eq!(purpose["text"], "A deterministic C scanner for Perfpal.");
+
+    // F6: --story changes nothing in the shared artifacts.
+    let plain_metrics = fs::read_to_string(plain.join("metrics.json")).expect("plain metrics");
+    let story_metrics = fs::read_to_string(story.join("metrics.json")).expect("story metrics");
+    assert_eq!(
+        common::mask_metrics_provenance(&plain_metrics),
+        common::mask_metrics_provenance(&story_metrics),
+        "metrics.json changed beyond provenance when --story was passed"
+    );
+    assert_eq!(
+        fs::read(plain.join("report.html")).expect("plain report"),
+        fs::read(story.join("report.html")).expect("story report"),
+        "report.html changed when --story was passed"
+    );
+}
+
+/// `atlas-layout.json` must be byte-identical across two independent scans.
+#[test]
+fn atlas_layout_json_is_byte_identical_on_double_scan() {
+    let first = temp_dir("story-double-a").join("perfpal-report");
+    let second = temp_dir("story-double-b").join("perfpal-report");
+    for out in [&first, &second] {
+        let code = run_with(argv(&[
+            "--output",
+            out.to_string_lossy().as_ref(),
+            "--story",
+            "--force",
+            fixture_root().to_string_lossy().as_ref(),
+        ]));
+        assert_eq!(code, 0);
+    }
+
+    let bytes_a = fs::read(first.join("atlas-layout.json")).expect("first layout");
+    let bytes_b = fs::read(second.join("atlas-layout.json")).expect("second layout");
+    assert_eq!(
+        bytes_a, bytes_b,
+        "atlas-layout.json not byte-stable across scans"
+    );
+}
+
+/// S2/P3: `--story` emits a syntactic signature block whose `id`s join the
+/// metrics function table exactly (canonical IR identity).
+#[test]
+fn story_flow_signatures_join_metrics_function_ids() {
+    let root = temp_dir("flow-src");
+    fs::write(
+        root.join("main.c"),
+        "int parse(Config *cfg, const char *path) { return cfg != 0 && path != 0; }\n\
+         int main(void) { return parse(0, 0); }\n",
+    )
+    .expect("write fixture");
+    let out = temp_dir("flow-out").join("perfpal-report");
+    let code = run_with(argv(&[
+        "--output",
+        out.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(code, 0);
+
+    let raw = fs::read_to_string(out.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    let flow = &layout["flow"];
+    assert_eq!(flow["flow_version"], 1);
+    assert_eq!(flow["fidelity"], "syntactic");
+    assert!(flow["calls"].is_array(), "P1 calls array missing");
+    assert!(flow["io"].is_array(), "P2 io array missing");
+    assert_eq!(flow["io"], serde_json::json!([]), "no I/O in this fixture");
+
+    let signatures = flow["signatures"]
+        .as_array()
+        .expect("flow signatures array");
+    assert!(!signatures.is_empty(), "signatures must not be empty");
+    assert!(
+        signatures
+            .iter()
+            .any(|signature| signature["id"] == "main.c#parse#1:1"),
+        "canonical IR id missing: {signatures:?}"
+    );
+    for signature in signatures {
+        assert!(
+            signature["params"].is_array(),
+            "params missing: {signature}"
+        );
+        assert!(
+            signature["unresolved"].is_array(),
+            "unresolved missing: {signature}"
+        );
+        assert!(
+            signature["ret"].is_string() || signature["ret"].is_null(),
+            "ret must be a string or null: {signature}"
+        );
+    }
+
+    let metrics_raw = fs::read_to_string(out.join("metrics.json")).expect("metrics JSON");
+    let metrics: serde_json::Value =
+        serde_json::from_str(&metrics_raw).expect("metrics JSON parses");
+    let ids: Vec<&str> = metrics["stats"]["functions"]
+        .as_array()
+        .expect("stats.functions array")
+        .iter()
+        .filter_map(|function| function["id"].as_str())
+        .collect();
+    for signature in signatures {
+        let id = signature["id"].as_str().expect("signature id");
+        assert!(
+            ids.contains(&id),
+            "flow signature id {id} is not a metrics function id"
+        );
+    }
+}
+
+/// S2/P1: call payloads and per-edge labels ride on the story-only flow block.
+#[test]
+fn story_flow_calls_and_edge_labels_are_story_only() {
+    let root = temp_dir("flow-calls-src");
+    fs::write(
+        root.join("main.c"),
+        "int helper(int x);\n\
+         int main(void) {\n\
+             int value = 1;\n\
+             return helper(value);\n\
+         }\n",
+    )
+    .expect("write main.c");
+    fs::write(root.join("util.c"), "int helper(int x) { return x; }\n").expect("write util.c");
+
+    let out = temp_dir("flow-calls-out").join("perfpal-report");
+    let code = run_with(argv(&[
+        "--output",
+        out.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(code, 0);
+
+    let raw = fs::read_to_string(out.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    let drawn: Vec<&str> = layout["nodes"]
+        .as_array()
+        .expect("nodes array")
+        .iter()
+        .filter_map(|node| node["path"].as_str())
+        .collect();
+
+    let calls = layout["flow"]["calls"]
+        .as_array()
+        .expect("flow calls array");
+    assert!(!calls.is_empty(), "drawn call sites must be recorded");
+    for call in calls {
+        let from = call["from"].as_str().expect("call from");
+        assert!(
+            drawn.contains(&from),
+            "call from is not a drawn path: {call}"
+        );
+        match call["to"].as_str() {
+            Some(to) => assert!(drawn.contains(&to), "call to is not a drawn path: {call}"),
+            None => assert!(call["to_id"].is_null(), "to_id set without to: {call}"),
+        }
+        assert!(
+            call["unresolved"].is_boolean(),
+            "unresolved must be a boolean: {call}"
+        );
+        for arg in call["args"].as_array().expect("args array") {
+            assert!(arg["expr"].is_string(), "arg expr missing: {arg}");
+            assert!(arg["literal"].is_boolean(), "arg literal missing: {arg}");
+            assert!(
+                matches!(arg["dir"].as_str(), Some("in" | "inout")),
+                "arg dir outside in/inout: {arg}"
+            );
+        }
+    }
+
+    let allowed = ["type-only", "literal-observed", "unresolved"];
+    let edges = layout["edges"].as_array().expect("edges array");
+    assert!(
+        !edges.is_empty(),
+        "a two-file fixture must draw at least one edge"
+    );
+    for edge in edges {
+        let label = edge["label"].as_str().expect("edge label");
+        assert!(
+            allowed.contains(&label),
+            "edge label outside the contract: {edge}"
+        );
+        assert!(
+            edge.get("payload").is_some(),
+            "edge payload key missing: {edge}"
+        );
+    }
+    let edge = edges
+        .iter()
+        .find(|edge| edge["from"] == "main.c" && edge["to"] == "util.c")
+        .expect("main.c → util.c edge");
+    assert_eq!(edge["label"], "type-only");
+    assert_eq!(edge["payload"], "int");
+}
+
+/// S3/P2: `--story` emits the flat, sorted `flow.io[]` rows; every row belongs
+/// to a drawn file, literals are plain string targets, and built values
+/// (`sprintf`) never appear.
+#[test]
+fn story_flow_io_effects_are_story_only_and_conservative() {
+    let root = temp_dir("flow-io-src");
+    fs::write(
+        root.join("io.c"),
+        "#include <stdio.h>\n\
+         #include <stdlib.h>\n\
+         int main(void) {\n\
+             FILE *f = fopen(\"cfg.ini\", \"r\");\n\
+             const char *home = getenv(\"HOME\");\n\
+             FILE *out = fopen(home, \"w\");\n\
+             char buf[8];\n\
+             sprintf(buf, \"%s\", home);\n\
+             printf(\"%s\\n\", home);\n\
+             return f != 0;\n\
+         }\n",
+    )
+    .expect("write io.c");
+
+    let out = temp_dir("flow-io-out").join("perfpal-report");
+    let code = run_with(argv(&[
+        "--output",
+        out.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(code, 0);
+
+    let raw = fs::read_to_string(out.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    let drawn: Vec<&str> = layout["nodes"]
+        .as_array()
+        .expect("nodes array")
+        .iter()
+        .filter_map(|node| node["path"].as_str())
+        .collect();
+    let io = layout["flow"]["io"].as_array().expect("flow.io array");
+
+    let rows: Vec<(u64, &str, &str, &str, Option<&str>)> = io
+        .iter()
+        .map(|row| {
+            (
+                row["line"].as_u64().expect("io line"),
+                row["callee"].as_str().expect("io callee"),
+                row["op"].as_str().expect("io op"),
+                row["target"].as_str().expect("io target"),
+                row["literal"].as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            (4, "fopen", "read", "file", Some("cfg.ini")),
+            (5, "getenv", "read", "env", Some("HOME")),
+            (6, "fopen", "write", "file", None),
+            (9, "printf", "write", "stdio", None),
+        ],
+        "sprintf is not I/O; a non-literal path stays null; stdio has no target literal"
+    );
+    for row in io {
+        assert_eq!(
+            row["file"].as_str(),
+            Some("io.c"),
+            "io.file must be a drawn call-site path: {row}"
+        );
+        assert!(
+            drawn.contains(&row["file"].as_str().expect("io file")),
+            "io.file is not drawn: {row}"
+        );
+        assert!(
+            matches!(row["op"].as_str(), Some("read" | "write")),
+            "io op outside read/write: {row}"
+        );
+        assert!(
+            matches!(
+                row["target"].as_str(),
+                Some("file" | "env" | "net" | "stdio")
+            ),
+            "io target outside the contract: {row}"
+        );
+        if row["target"] == "stdio" {
+            assert!(
+                row["literal"].is_null(),
+                "stdio rows never carry a path literal: {row}"
+            );
+        }
+    }
+    let order: Vec<(String, u64, String, String, String, Option<String>)> = io
+        .iter()
+        .map(|row| {
+            (
+                row["file"].as_str().expect("io file").to_string(),
+                row["line"].as_u64().expect("io line"),
+                row["callee"].as_str().expect("io callee").to_string(),
+                row["op"].as_str().expect("io op").to_string(),
+                row["target"].as_str().expect("io target").to_string(),
+                row["literal"].as_str().map(str::to_string),
+            )
+        })
+        .collect();
+    assert!(
+        order.windows(2).all(|pair| pair[0] <= pair[1]),
+        "flow.io must be sorted (file, line, callee, op, target, literal): {order:?}"
+    );
+}
+
 /// Slice `text` from the END of the `start` marker up to the `end` marker.
 fn section<'a>(text: &'a str, start: &str, end: &str) -> &'a str {
     let s = text.find(start).expect("section start marker") + start.len();

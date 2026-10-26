@@ -1,0 +1,51 @@
+{
+  "case": "empty",
+  "columns": [],
+  "edges": [],
+  "findings": [],
+  "hulls": [],
+  "meta": {
+    "actions": [],
+    "caps": "state demo · no canvas nodes",
+    "entry": "no entry · state demo",
+    "fileCount": 0,
+    "findingsIncluded": 0,
+    "findingsTotal": 0,
+    "footer": "state demo · synthetic state, not a scan",
+    "hottest": "no hotspot recorded",
+    "kicker": "PERFPAL · ATLAS",
+    "languages": [],
+    "locCode": 0,
+    "path": "0 steps",
+    "repo": "state demo",
+    "stub": {
+      "body": "The scan produced no source functions, so the canvas is a named stub. This is a state demo, not a scan.",
+      "caps": "state demo · no canvas nodes",
+      "entry": "no entry · state demo",
+      "footer": "state demo · synthetic state, not a scan",
+      "path": "0 steps",
+      "title": "no source functions recorded"
+    },
+    "subline": "entry-flow map · static, profile to confirm",
+    "wordmark": "Atlas"
+  },
+  "nodes": [],
+  "source": {
+    "kind": "synthetic"
+  },
+  "stage": {
+    "h": 718,
+    "w": 1400
+  },
+  "state": {
+    "allTest": false,
+    "capped": false,
+    "empty": true,
+    "library": false,
+    "noEntry": true,
+    "partialParse": false,
+    "singleFile": false
+  },
+  "synthetic": true,
+  "trace": []
+}

@@ -8,8 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Pending
-- **Merge Train M2:** `feat/atlas-sim` → `v0.4.0` (Atlas Story companion; ADR renumber `0011` → `0012`,
-  `0012` → `0013`; story gate + full gate; no push/tag).
 - **Merge Train M3:** finalization — verify all four branches are ancestors of `main`, remove the
   agent-report worktree, prune merged branches, full CI gate, EOL; no push/tag.
 - **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002
@@ -22,8 +20,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Agent-report hardening:** `empty_doc` fixture still carries the pre-merge version strings
   (test-only); the `VERSION_SUFFIX` ↔ `schema::SCHEMA_VERSION` equality guard already exists and
   must stay when the schema moves.
+- **Atlas Story companion follow-ups:** package the companion as a self-contained artifact (inline data; no `fetch`/HTTP server) and add a `perfpal story <repo>` entry point before the §5 founder session; F8/A2 story read deferred (ADR-0012 Decision 5); no in-report graduation (A12 unchanged).
 - **Cross-platform verification:** run `scripts/verify-windows-compat.sh` after major/OS-facing
   changes and at milestones (not every session).
+
+## [0.4.0] - 2026-10-27
+
+### Added
+- **Atlas Story companion merged into `main` (merge-train M2; `v0.4.0`, 2026-10-27).** `feat/atlas-sim`
+  merged with `--no-ff`, preserving the S1–S4 story line: the `--story` flag and opt-in
+  `atlas-layout.json` (layout/flow `1`), the three additive probes (signatures/payloads, I/O effects,
+  purpose, whole-repo queue, directory scenes), and the `sim/` companion with its gate. Semantic
+  resolution kept main's Atlas v2 report composition + js-ts wiring, restored `strip_entry_line` to
+  `pub(crate)`, and unified the footer via one `footer_parts` source. `report.html` stays
+  byte-identical story-off vs story-on; A12 unchanged (one fixed `REPORT_SCRIPT`); no schema change,
+  no new dependency, no push/tag, no graduation claim. Story gate: 897 tests, `sim/gate.sh`
+  304/304, 3k 44/44, F5/F6 (transcript under `docs/evidence/merge-m2/`). ADR-0012/0013.
+
+- **Atlas Story S4 — scale scenes and payoff (2026-10-26).** Three story-only core probes land in
+  `atlas-layout.json` (layout_version stays 1; no schema change, no dependency; non-story scans are
+  byte-identical): **P6** (`9263c19`) emits a README-derived `purpose` with a structural fallback,
+  **P7** (`e55221c`) emits the authoritative whole-repo KV3 queue slice (top 12 production,
+  non-demoted rows + counts, never re-ranked), and **P8** (`3c80ae9`) emits a depth-2 directory
+  `scenes` block (24 scenes × 5 top files, production-cost-first, explicit omitted totals, shared
+  file-cost rule) plus `nodes[].scene`/`actions[].scene`. The sim projects and renders `PURPOSE ·
+  <README sentence>`, enter-beat scene context, a whole-repo profile beat, scene-aware start-here,
+  a compact trust line and the below-fold SCENES / PROFILE QUEUE / TRUST ACCOUNTING panels; the
+  inspector gains UNRESOLVED CALLS (C function pointer + Rust `dyn` visible, never guessed). A
+  deterministic 3,000-file fixture and `sim/scale.py`/`scale.sh` gate F2–F7: page **463,490 bytes**,
+  first frame **under the 2,000 ms budget** (final transcript), no horizontal scroll at 1280×800, double-scan/double-load
+  determinism and story-off/on byte identity; 897 tests; `sim/verify.py` 304/304; 3k scale 44/44;
+  gate `dirty 0` PASS. `@vision` Read 8 PASS-WITH-NITS (no blockers). F8 (founder A2) is deferred,
+  not claimed. Records: `docs/atlas/core-probes.md` P6–P8; evidence `docs/evidence/atlas-sim/`.
+- **Atlas Story S3 — I/O effects (2026-10-26).** The core gains the story-only `flow.io[]` probe
+  (`0ddf4ad`): a fixed v1 call-name table classifies `read`/`write` effects on `file`/`env`/`net`/
+  `stdio`; a `literal` target is recorded only when the argument is a plain source string (never a
+  formatted/concatenated value), and a missing target stays `null` (never guessed). A drawn wrapper,
+  macro or function-pointer target is not classified by name. `layout_version`/`flow_version` stay 1;
+  no schema change, no new dependency; scans without `--story` are untouched. The sim renders
+  `Stores:` on trace beats, a per-file DATA STORES inspector section, and an I/O trust line with
+  literal examples (`9e23aa6`). Gate/vision/panel evidence in `docs/evidence/atlas-sim/`.
+- **Atlas Story S2 — data movement on the film's edges (2026-10-24).** The core gains an optional
+  story-only `flow` block (`flow_version: 1`, `fidelity: "syntactic"`): P3 signature summaries
+  (`2108117`) and P1 call-site payloads (`ea72a86`) record verbatim argument expressions, local types,
+  direction and named payloads, and every drawn edge carries `payload`/`label` (`type-only` /
+  `literal-observed` / `unresolved`) computed in Rust. Existing scans are unchanged (`layout_version`
+  stays 1; `report.html` byte-identical; no new dependency). The sim labels every drawn edge, greys
+  unresolved indirection, and adds the `hottest` function, drawn-slice `profile`, `start-here` and
+  `trust` beats; the cJSON badge overprint is fixed. 853 tests; `sim/verify.py` 162/162; gate
+  `b8359ae` PASS; `@vision` Read 6 PASS. Records: `docs/atlas/core-probes.md` (P3/P1 `prototype`),
+  `docs/evidence/atlas-sim/`.
+- **Atlas Story S1 — `perfpal --story` emits `atlas-layout.json` (2026-10-24).** The core now writes
+  the exact story geometry the SVG draws (canvas, columns, node rects, edge `d` paths, hulls,
+  aggregate boxes, cap chips), the presentation strings the nodes already render (badge, cost/ratio/top
+  lines, fill/stroke/dash), the drawn-slice/scan findings counts, KV1 start actions, and derived
+  `stages`. Emitted **only** with `--story`, so existing scans are unchanged: `report.html` is
+  byte-identical for hyperfine and cJSON, and `metrics.json` differs only in `scan.duration_ms` /
+  `scan.started_at`. No new dependency, no schema change, `preserve_order` still absent.
+  Record: `docs/atlas/core-probes.md` (P4/P5). This is the S1 pipeline slice of
+  `docs/specs/atlas-story.md`.
+- **Track D1 — Atlas run-story prototype (2026-10-24).** A standalone `sim/` companion (no build step,
+  no dependency, no network, no production edits) that plays a scrubbable **static, inferred** run
+  story over the real Atlas entry-flow map for hyperfine and cJSON: boot at the elected entry →
+  representative path → node/function highlights (the focused file node's bottom line becomes the
+  function at its line) → loop/trip moments (`max_loop_depth`,
+  `unknown_trip_loops`, `trip_source`) → off-path branch points → hottest file → stop/summary (leaf,
+  no forward path, partial parse, capped). Controls: play/pause, step, scrub, speed, node select with
+  an inspector, reset; keyboard; `prefers-reduced-motion` shows the final frame. Persistent honesty
+  label (`STATIC, INFERRED · not a runtime trace · profile to confirm`), no time units, unknown trips
+  weight ×1. Data is extracted from a reproducible step-10 render (`sim/make-source.sh` +
+  `sim/extract.py`, fail-closed — **superseded by the S1 entry above: the data now comes from `atlas-layout.json`
+  + `metrics.json` through `sim/from-layout.py`**) and includes three labelled synthetic state demos with no fabricated
+  nodes or numbers. Evidence: `docs/evidence/atlas-sim/` (eleven 1440×900 frames, `checks.json` 101/101,
+  `NOTES.md`, `VISION.md` PASS); vision, D2 review criteria and the D3 runtime-trace proposal are in
+  `docs/research/atlas-run.md`. Committed `7093c77`; D2 (founder review) completed 2026-10-24 — see the S1 entry above.
+
+### Changed
+- **Atlas ADR renumber + founder override of `R-pf-112` (merge-train M2, 2026-10-27).** `js-ts`
+  keeps `ADR-0011`; the Atlas documents renumber `ADR-0011-atlas-story-companion` → **`ADR-0012`**
+  and `ADR-0012-atlas-branch-reconciliation` → **`ADR-0013`**, with every reference updated. A dated
+  addendum on `ADR-0013` records the founder's override of the recorded direction **C**: merge the
+  companion into `main` now; **no A12 change**; **no graduation claim**; the §5 founder session and an
+  explicit A12 amendment remain the precondition for in-report graduation. Story-line state IDs are
+  renumbered once more at merge — `D-pf-259` → `D-pf-267` (ADR-0012), `D-pf-260` → `D-pf-268` (D2),
+  `D-pf-251..255` → `D-pf-269..273` (superseded wrappers), `A-pf-125..128` → `A-pf-129..132` —
+  because M1 landed `D-pf-259/260` and `A-pf-126/127` on `main` after the branch's first remap.
+  `atlas-build` stays done (main `D-pf-258`); `R-pf-109` stays closed as a record. No code, schema,
+  dependency or output change from the renumber; no A2/ship claim; F8 deferred.
+
+- **Atlas Story stays a companion (2026-10-26; ADR-0012 at merge).** The founder decided the Atlas Story
+  does **not** graduate into the static report in v1: `report.html` keeps exactly one fixed
+  `REPORT_SCRIPT` and A12 is unchanged, so no second script, inline story data or CSS/SMIL film
+  ships in the report. Rationale: S4 proves the story's mechanism (F1–F7, 3k 44/44, F1 read
+  PASS-WITH-NITS), but the founder has not used the **post-S4** story — the 2026-10-24 D2 session
+  reviewed D1 — and the companion is fetch/HTTP-only and unshipped. Graduation requires the §5
+  graduation session on a self-contained story, the report's visual gate (closed
+  2026-10-26), a deterministic offline player and
+  an explicit A12 amendment. The companion's packaging (data inlined, no server; CLI entry point)
+  is a recorded follow-up, not shipped here. No code/schema change; F8 remains deferred.
 
 ## [0.3.0] - 2026-10-27
 

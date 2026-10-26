@@ -29,8 +29,12 @@ pub mod agent_report;
 pub mod atlas;
 pub mod atlas_brief;
 pub mod atlas_charts;
+pub mod atlas_layout;
 pub mod atlas_metrics;
+pub mod atlas_purpose;
+pub mod atlas_queue;
 pub mod atlas_render;
+pub mod atlas_scenes;
 pub mod views;
 
 pub use atlas_brief::{render_atlas_q2_html, render_atlas_weight_html};
@@ -1977,6 +1981,52 @@ fn html_map(out: &mut String, doc: &MetricsDocument, _emitted_charts: &[String])
     ));
     out.push_str(&atlas_charts::render_charts(&view, doc));
     out.push_str("</section>\n");
+}
+
+/// JSON companion of the `#map` canvas (Atlas Story S1): the exact story geometry
+/// the SVG draws, reusing the same view, start actions and findings counts as
+/// [`html_map`]. Only emitted when `--story` is passed.
+#[must_use]
+pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
+    let view = atlas::build_atlas_view(doc);
+    let start_actions = atlas_brief::start_actions(doc);
+    // The story covers only the drawn file slice: findings_included is the sum
+    // of the per-node counts (many findings live on undrawn files), while
+    // findings_total stays the full scan total.
+    let findings_included = view
+        .nodes
+        .iter()
+        .map(|node| node.findings.hot + node.findings.warn + node.findings.info)
+        .sum();
+    let findings_total = doc.findings.len();
+    // Story-only P3 probe: parse just the drawn files for signatures. Normal
+    // scans never reach this function, so they pay nothing.
+    let flow = crate::analysis::flow::build(
+        std::path::Path::new(&doc.scan.root_path),
+        view.nodes.iter().map(|node| node.path.clone()),
+    );
+    // Story-only P6 probe: the scan-root README's first prose paragraph, with
+    // the existing entry line as the structural fallback.
+    let purpose = atlas_purpose::read(
+        std::path::Path::new(&doc.scan.root_path),
+        &atlas_render::strip_entry_line(&view),
+    );
+    // Story-only P7 probe: the whole-repo KV3 queue projected from the
+    // authoritative complete-profile-queue ordering (no second ranking).
+    let profile = atlas_queue::build(doc);
+    // Story-only P8 probe: directory scenes over every source file, derived
+    // from the same view the canvas draws.
+    let scenes = atlas_scenes::build(doc, &view);
+    atlas_layout::to_json(
+        &view,
+        &start_actions,
+        findings_included,
+        findings_total,
+        Some(&flow),
+        Some(&purpose),
+        Some(&profile),
+        Some(&scenes),
+    )
 }
 
 /// Component index: rank, prefix, metrics + link to the

@@ -1,0 +1,163 @@
+# Atlas sim — vision record (Track D, Session D1)
+
+**Date:** 2026-10-24 · **Viewport:** 1440×900 · **Seat:** `@vision` (independent reads)
+**Artifacts:** `hyperfine-{start,mid,end}.png`, `cjson-{start,mid,end}.png` (this directory)
+**Context:** standalone companion prototype, static inferred run story over the Atlas map.
+
+## Read 1 — first keyframes (pre-fix)
+
+Verdict: **changes required**, four blockers.
+
+| # | Blocker | Evidence |
+|---|---|---|
+| B1 | cJSON unreached cards floated outside any depth column, under no header | `cjson-mid` |
+| B2 | Key strip truncated ENTRY confidence, HOTTEST ratio, and the 2nd/3rd START entries | all frames |
+| B3 | Small badge text above the ENTRY card read as a clipped fragment | hyperfine frames |
+| B4 | CAPS segment adjacent to ENTRY read ambiguously (`19 of 10…`) | hyperfine frames |
+
+Nits: path order lost (plain dots instead of numbered badges); cJSON hottest was dimmed to
+invisibility; START row truncation; `Reset` focus ring competed with the honesty banner.
+
+## Read 2 — after the extraction + layout fixes
+
+Verdict: **PASS-WITH-NITS** — no blockers.
+
+- **B1 fixed:** cJSON now has `UNREACHED / no forward path` with five cards inside a labelled lane.
+  Residual: the left side of a two-reachable-file graph is empty by construction (accepted).
+- **B2 fixed:** ENTRY, HOTTEST and all three START entries are full in the hyperfine frames; the
+  three-row strip is not crowded. Residual: the cJSON HOTTEST value (`1,000,234× median`) overflowed
+  row 1.
+- **B3 fixed:** `ENTRY · INFO ×8` is legible above the card.
+- **B4 fixed:** `CAPS 19 of 19 reachable files shown · 0 aggregated` is unambiguous.
+- **N1 fixed:** numbered path badges `1/2/3` and `1/2` are readable.
+- New nits: the hyperfine `UNREACHED` header had no content beneath it (all unreached files are
+  capped out of the drawn set); cJSON node text sat against card edges; adjacent badges in the
+  depth-1/unreached corridor nearly touched.
+
+## Read 3 — final confirmation (post-nit fixes)
+
+Fixes: HOTTEST split into a mid-ellipsised path + compact metrics (`2.0M cost · 1.0M× median`, exact
+string in the element title); node text compressed with `textLength`/`lengthAdjust` and names capped
+at 24 characters; the `UNREACHED` header is suppressed when the lane has no drawn nodes.
+
+Verdict: **PASS** — see below.
+
+**Verdict: PASS.** No blockers.
+
+- cJSON HOTTEST now reads `tests/unity/tes…ts/testunity.c · 2.0M cost · 1.0M× median` and fits before
+  `PATH 2 steps`; it reads as the same Atlas strip, only compacted (exact value in the title).
+- cJSON cards: no overflow, no edge-hugging; all seven cards fit their 150px boxes.
+- hyperfine: no `UNREACHED` header over empty canvas; depth 0–4 only.
+- Fold intact (narration y≈845–870, footer y≈885); honesty banner visible; no new overlap or
+  clipping.
+
+**Carried-forward nits (non-blocking):** the cJSON `WARN ×11 · partial` and `WARN ×6 · unreached ·
+partial` badges sit ~3px apart across the depth-1/unreached boundary; a two-reachable-file graph
+leaves the left canvas empty by construction; mid-ellipsis can hide the directory/file boundary in
+long paths (tails stay distinguishable).
+
+
+## Read 4 — synthetic state demos
+
+Frames: `no-forward-path.png`, `empty.png`, `capped.png`.
+
+Verdict: **PASS-WITH-NITS** — no blockers.
+
+- All three are legible and labelled: `SYNTHETIC STATE DEMO`, a named title, a body, and the note
+  that nothing is fabricated; the honesty strip and the `synthetic state demo` chip are present.
+- No fake numbers: `no hotspot recorded`, `0 steps`, `no ranked actions recorded`, `no canvas nodes`;
+  no time units, no scan percentages.
+- The empty canvas is explained by the stub, not read as a render failure.
+
+Nits (both fixed after the read): the capped body opened with "This scan exceeds…" (it could imply a
+real scan — now "In a capped scan… It is a state demo, not a scan"); the capped stop said "ends at a
+static leaf" while `PATH` was 0 steps (now "the story stops at the canvas cap, not at a leaf").
+
+## Read 5 — post-fix function frames and badge definition
+
+Frames: `hyperfine-loop.png`, `cjson-loop.png`, `hyperfine-mid.png`, `capped.png`.
+
+Verdict: **PASS.**
+
+- **Function highlight:** the focused node's bottom line becomes `▶ run · L34` (hyperfine) and
+  `▶ main · L85` (cJSON) in bold type, inside the node border. Both loop targets are ENTRY nodes,
+  so the entry text rule out-specifies the orange and the label renders cream (#e7e1d6, measured);
+  it is highly legible, and the `▶` marker carries the highlight. On paper nodes the label is orange. It reads as that file's function,
+  not a separate card or annotation; legible at node size, no wrap or clip. Branch-beat frames
+  correctly keep `top N%` (highlight is loop-beat-only).
+- **Badge definition:** `badge ×N = dominant rule annotation, not a file total` sits on the
+  definition row without crowding or collision.
+- **Capped copy:** "It is a state demo, not a scan" is explicit; the stop line is "the story stops at
+  the canvas cap, not at a leaf"; no reader can infer a real scan.
+- No blocker. The only carried nit is the pre-existing tight cJSON badge cluster at the
+  depth-1/UNREACHED boundary.
+
+## Read 6 — S2 re-read (hottest separation, label placement, contrast, legend)
+
+- **Date:** 2026-10-24 · **Images:** `hyperfine-{start,end}.png`, `cjson-{start,end}.png`,
+  regenerated by the gate at `b8359ae` (1440×900).
+- **Verdict: PASS.** All three S2 blockers are fixed: card-text collisions are gone (hyperfine
+  depth-1→2 corridor, the dark `main.rs` card, cJSON `testunity.c`/`cJSON_Utils.c`); unresolved
+  grey is readable (`#666`) with no grey-on-dark; labels are de-stacked; the legend now names
+  `type-only`, `literal-observed` and `unresolved`. The cJSON badge overprint at the
+  depth-1/UNREACHED boundary stays fixed (badge fully inside `testunity.c`, no ellipsis/clipping).
+- **Hottest separation:** the final frame names the hottest file and the globally hottest drawn
+  function separately (`from_cli_arguments` L254 for hyperfine; `testFloatPrintingRandomSamples`
+  L4557 on the cJSON test file, with the trust line disclosing the non-production path).
+- **Carried nits (non-blocking):** cJSON `cJSON · type-only` sits ~50 px from its arrow next to the
+  `cJSON · 2` hull label; the top band around `tests · 2` / `src/timer · 3` is dense;
+  `…Option<Information>` is display-truncated (full payload in the tooltip); `name · literal-observed`
+  grazes the `cJSON_Utils.c` border; the pre-existing `PATH · 3 steps · re…` chrome truncation;
+  cJSON still has ~1/3 dead space. None are new and none block S2.
+
+## Read 7 — S3 re-read (I/O stores, trust line, inspector)
+
+- **Date:** 2026-10-26 · **Images (1440×900, gate-regenerated):**
+  `hyperfine-stores.png`, `hyperfine-trust.png`, `hyperfine-io-inspector.png`,
+  `cjson-stores.png`, `cjson-trust.png`, `cjson-io-inspector.png`;
+  regression: `hyperfine-end.png`, `cjson-end.png`.
+- **First pass: PASS-WITH-NITS.** Three nits: (1) the cJSON trust line omitted the 22 stdio
+  effects from the 24-effect total; (2) the hyperfine trust line said `3 literal` but showed only
+  two examples with no remainder marker; (3) inspector stdio rows rendered a bare `stream` in a
+  target-like column.
+- **Fixes:** the trust line now ends `— 0 literal, 2 target unknown, 22 stdio` (cJSON) and
+  `3 literal (env "NO_COLOR", env "TERM", +1)` (hyperfine); stdio inspector rows read
+  `stream · no path`; unknown text contrast raised to `#4a5560`.
+- **Re-read: PASS.** Sums reconcile (3+5=8; 0+2+22=24), both trust lines stay within the two-line
+  narration clamp with no ellipsis, and the inspector keeps the
+  `FINDINGS → TOP FUNCTIONS → DATA STORES → note → Why:` stack with aligned columns and no
+  collision. `target unknown` / `stream · no path` cannot be read as invented paths; literal values
+  stay quoted as written source text; the honesty strip is intact. No regression in the final frames.
+- **Carried nits (non-blocking):** the pre-existing `PATH · 3 steps · re…` chrome truncation; the S2
+  nits (detached cJSON `type-only` label, dense top band, payload display truncation, cJSON dead
+  space) are unchanged.
+
+## Read 8 — S4 re-read (purpose, scenes and 3k scale)
+
+- **Date:** 2026-10-26 · **Seats:** two independent `@vision` reads — F1 frames (`vis-2`) and scale
+  panels (`vis-3`). Images (gate-regenerated, 1440×900 unless named):
+  `hyperfine-end.png`, `cjson-end.png`, `scale-final.png`, `scale-full.png`, `scale-1280.png`.
+- **F1 read (vis-2): PASS-WITH-NITS, no blockers.** Both frames read the scanned app's purpose:
+  `PURPOSE · A command-line benchmarking tool. · from README.md` (hyperfine) and
+  `PURPOSE · Ultralightweight JSON parser in ANSI C. · from README.md` (cJSON); the first action is
+  fully legible (`src/output/report.rs:144 — Heap allocation inside loop (Rust)`;
+  `cJSON_Utils.c:1188 — Expensive setup or I/O call inside loop`). A follow-up entry-leg re-read of
+  the same frames read the ENTRY field verbatim: hyperfine `ENTRY production main · src/main.rs:88
+  main · confidence HIGH · 0 alternatives`; cJSON `ENTRY production main · fuzzing/afl.c:85 main ·
+  confidence HIGH · 1 alternative`. Purpose + entry + `path:line` are all present and legible. The
+  `PURPOSE` prefix + README provenance make the F1 sentence unambiguous; the static-inference
+  honesty strip is intact.
+- **Scale read (vis-3): PASS-WITH-NITS, no blockers.** The 1280 legend is visible on its own row;
+  START, footer and summary wrap without a mid-word cut; no horizontal scroll or overlaps. The 3k
+  purpose is fully readable at 1440 and 1280. The scenes caps and trust accounting now carry the
+  scan-wide test/bench count (`269 of 3,000 source files`), and the 24 scene cards / 12 queue rows /
+  trust panel are legible with no gutter collisions.
+- **Fixes from the first pass:** `PURPOSE` prefix + wrapping and 3k purpose; duplicate `PATH` label
+  stripped; 1280 key strip/legend/START/footer/summary wrap; scan-wide non-production counts; the
+  third START tail and PATH meta remain the only clipped items.
+- **Carried nits (non-blocking):** the third START item's scene attribution tail at 1280/1440; the
+  `PATH` meta ellipsis at 1440 (full text in the title/summary); dense depth-1 column and clipped
+  orange edge labels on the 3k canvas (synthetic fixture, pre-existing label-density class); the
+  trust findings/edge-coverage run-on; cJSON's unreached START node and bottom canvas space
+  (pre-existing KV1/state behaviour, not an S4 regression).
+- **F8:** not part of the visual read; founder A2 remains deferred and is not claimed.

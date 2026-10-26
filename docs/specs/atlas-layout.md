@@ -254,6 +254,9 @@ Per `map-animation` (mandatory) and the pending ADR-0010:
   handlers; the report's existing single fixed enhancement script (`REPORT_SCRIPT`, fixed source,
   no interpolated data, no network) is unchanged and inventoried. `grep` asserts exactly one block
   in `report.html` and zero in the canvas/SVG/animation artifacts.
+  **Status 2026-10-26:** A12 is **unchanged**; the Atlas Story remains a standalone companion and
+  does not graduate into `report.html` (`ADR-0012`). Any in-report interactive story would need an
+  explicit A12 amendment and founder ratification.
 - **A4 (determinism):** double scan → byte-identical HTML/SVG (excluding run provenance).
 - **A7/A11:** metrics spec §10.
 

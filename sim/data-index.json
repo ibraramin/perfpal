@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "file": "data-hyperfine.json",
+      "id": "hyperfine",
+      "label": "hyperfine · Rust + Python · application",
+      "synthetic": false
+    },
+    {
+      "file": "data-cjson.json",
+      "id": "cjson",
+      "label": "cJSON · C · test-dominated",
+      "synthetic": false
+    },
+    {
+      "file": "data-no-forward-path.json",
+      "id": "no-forward-path",
+      "label": "state demo · no forward path",
+      "synthetic": true
+    },
+    {
+      "file": "data-empty.json",
+      "id": "empty",
+      "label": "state demo · empty scan",
+      "synthetic": true
+    },
+    {
+      "file": "data-capped.json",
+      "id": "capped",
+      "label": "state demo · capped canvas",
+      "synthetic": true
+    }
+  ]
+}

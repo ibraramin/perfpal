@@ -5,8 +5,8 @@
 - **Plan:** `docs/plans/merge-train.md`
 - **Requirement:** R-pf-112 follow-on (founder chose merge-now)
 - **Related:** `docs/plans/js-ts.md`, `docs/plans/atlas-s4.md`,
-  `docs/adr/ADR-0011-js-ts-backend.md`, `docs/adr/ADR-0011-atlas-story-companion.md`,
-  `docs/adr/ADR-0012-atlas-branch-reconciliation.md`, `docs/specs/atlas-story.md`
+  `docs/adr/ADR-0011-js-ts-backend.md`, `docs/adr/ADR-0012-atlas-story-companion.md`,
+  `docs/adr/ADR-0013-atlas-branch-reconciliation.md`, `docs/specs/atlas-story.md`
 
 ## Purpose
 
@@ -23,7 +23,7 @@ combined gates.
 - Merge `feat/js-ts` into `main` as **v0.3.0** (JS/TS backends, metrics schema `1.8`).
 - Merge `feat/atlas-sim` into `main` as **v0.4.0** (Atlas Story companion S1–S4; layout/flow `1`,
   no schema change).
-- ADR-number reconciliation (js-ts `ADR-0011`; Atlas renumbers to `0012`/`0013`).
+- ADR-number reconciliation (js-ts `ADR-0011`; Atlas `ADR-0012`/`ADR-0013` — done in M2).
 - State/handoff/activeContext reconciliation, version bumps, CHANGELOG/README, gates.
 
 **Out of scope**
@@ -48,8 +48,9 @@ map (rail, progressive charts, key views); JS/TS backends, six language tokens, 
 Atlas Story S1–S4 (`--story`, `atlas-layout.json`, story-only probes, `sim/` companion).
 No duplicate modules, no removed feature, no lost test.
 
-**R5 — ADR numbering.** `js-ts` keeps `ADR-0011`. The Atlas documents renumber:
-`ADR-0011-atlas-story-companion` → `ADR-0012`, `ADR-0012-atlas-branch-reconciliation` → `ADR-0013`.
+**R5 — ADR numbering.** `js-ts` keeps `ADR-0011`. The Atlas documents are `ADR-0012`
+(`ADR-0012-atlas-story-companion`) and `ADR-0013` (`ADR-0013-atlas-branch-reconciliation`); no two
+ADRs share a number.
 Every reference in docs/state/handoff is updated; no two ADRs share a number.
 
 **R6 — Canonical state.** Main's `state/session-state.json`, `state/handoff/latest.md` and

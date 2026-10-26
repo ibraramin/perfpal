@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perfpal · Atlas — static inferred run story</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div class="brand">
+      <div class="kicker" id="brand-kicker">PERFPAL · ATLAS</div>
+      <div class="wordmark" id="brand-wordmark">Atlas</div>
+      <div class="subline" id="brand-subline">entry-flow map · static, profile to confirm</div>
+    </div>
+
+    <div class="transport" role="group" aria-label="Run story transport">
+      <button id="play-pause" class="transport-btn play" type="button" aria-label="Play story">▶ <span>Play</span></button>
+      <button id="step-back" class="transport-btn" type="button" aria-label="Previous beat" title="Previous beat (←)">◀ step</button>
+      <button id="step-forward" class="transport-btn" type="button" aria-label="Next beat" title="Next beat (→)">step ▶</button>
+      <input id="scrub" type="range" min="0" max="1" step="10" value="0" aria-label="Scrub the static run story">
+      <output id="beat-label" aria-live="off">beat 1/1</output>
+      <select id="speed" aria-label="Playback speed">
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+        <option value="4">4×</option>
+      </select>
+      <button id="reset" class="transport-btn" type="button" aria-label="Reset story to the beginning" title="Reset (Home)">Reset</button>
+    </div>
+  </header>
+
+  <div class="honesty" id="honesty" role="note">
+    <span class="honesty-label">STATIC, INFERRED · not a runtime trace · profile to confirm</span>
+    <label class="case-wrap" for="case-select">case
+      <select id="case-select" aria-label="Choose a case"></select>
+    </label>
+    <span id="synthetic-chip" class="chip chip-synth" hidden>synthetic state demo</span>
+  </div>
+
+  <section class="key-strip" aria-label="Atlas key facts">
+    <div class="key-row key-top">
+      <div class="key key-entry">
+        <span class="key-label">ENTRY</span>
+        <span id="key-entry" class="key-value mono">—</span>
+      </div>
+      <div class="key key-hottest">
+        <span class="key-label">HOTTEST</span>
+        <span id="key-hottest" class="key-value mono"><span id="key-hottest-path"></span><span id="key-hottest-meta"></span></span>
+      </div>
+      <div class="key key-path">
+        <span class="key-label">PATH</span>
+        <span id="key-path" class="key-value mono">0 steps</span>
+      </div>
+      <div class="key key-caps-key">
+        <span class="key-label">CAPS</span>
+        <span id="key-caps" class="key-caps"></span>
+      </div>
+    </div>
+    <div class="key-row key-mid">
+      <div class="starts">
+        <span class="key-label">START</span>
+        <span id="start-actions" class="start-actions"></span>
+      </div>
+      <div class="legend" id="legend" aria-label="Map legend">
+        <span class="legend-item"><span class="sw sw-prod" aria-hidden="true"></span>production</span>
+        <span class="legend-item"><span class="sw sw-nonprod" aria-hidden="true"></span>test/bench</span>
+        <span class="legend-item"><span class="sw sw-unreached" aria-hidden="true"></span>unreached</span>
+        <span class="legend-item"><span class="sw sw-forward" aria-hidden="true"></span>forward</span>
+        <span class="legend-item"><span class="sw sw-back" aria-hidden="true"></span>back</span>
+        <span class="legend-item"><span class="sw sw-path" aria-hidden="true"></span>path</span>
+        <span class="legend-item legend-labels" title="edge label classes">
+          <span class="legend-sub">label</span>
+          <span class="lg lg-type">type-only</span>
+          <span class="lg lg-literal">literal-observed</span>
+          <span class="lg lg-unresolved">unresolved</span>
+        </span>
+      </div>
+    </div>
+    <div class="key-row key-bottom">
+      <div class="key-defs">
+        <span class="definition" id="median-def">ratio × = file cost ÷ repo-wide median function cost</span>
+        <span class="definition" id="badge-def">badge ×N = dominant rule annotation, not a file total</span>
+        <span class="caveat" id="structural-caveat">Structural inference only — no edge, cost or trip is measured; confirm with a profiler.</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="canvas-shell" id="canvas-shell">
+    <svg id="stage" viewBox="0 0 1400 718" role="group" aria-label="Entry-flow map with interactive file nodes"></svg>
+
+    <div id="stub" class="stub" hidden>
+      <div class="stub-card">
+        <div class="stub-kicker">SYNTHETIC STATE DEMO</div>
+        <h2 id="stub-title"></h2>
+        <p id="stub-body"></p>
+        <p class="stub-note">No nodes, edges, costs, or findings are fabricated for this state.</p>
+      </div>
+    </div>
+
+    <aside id="inspector" class="inspector" hidden aria-label="File inspector">
+      <div class="inspector-head">
+        <div class="inspector-kicker">FILE INSPECTOR</div>
+        <button id="inspector-close" class="inspector-close" type="button" aria-label="Close file inspector">×</button>
+      </div>
+      <div id="inspector-body"></div>
+    </aside>
+  </div>
+
+  <section class="narration" aria-live="polite" aria-atomic="true">
+    <div id="narration-title" class="narration-title">Boot</div>
+    <div id="narration-body" class="narration-body">Loading the static inferred run story…</div>
+    <div id="narration-chips" class="narration-chips"></div>
+  </section>
+
+  <div class="canvas-footer" id="canvas-footer"></div>
+</div>
+
+<section id="s4-detail" class="s4-detail" aria-label="Whole-repo detail" hidden>
+  <div class="s4-panel" id="s4-scenes-panel">
+    <h2>SCENES</h2>
+    <p class="s4-caps" id="s4-scenes-caps"></p>
+    <div class="s4-scene-grid" id="s4-scene-grid"></div>
+  </div>
+  <div class="s4-panel" id="s4-profile-panel">
+    <h2>PROFILE QUEUE</h2>
+    <p class="s4-caps" id="s4-profile-caps"></p>
+    <ol class="s4-queue" id="s4-queue"></ol>
+  </div>
+  <div class="s4-panel" id="s4-trust-panel">
+    <h2>TRUST ACCOUNTING</h2>
+    <dl class="s4-trust" id="s4-trust-list"></dl>
+    <p class="s4-caveat">Static inference only — costs, scenes and call edges are candidates, not a runtime measurement. Validate with a profiler.</p>
+  </div>
+</section>
+
+<div id="load-error" class="load-error" hidden role="alert">
+  <div class="error-card">
+    <div class="error-kicker">PERFPAL · ATLAS</div>
+    <h1>Atlas sim needs local data</h1>
+    <p id="error-detail">The case index could not be loaded.</p>
+    <p>Serve the folder locally:</p>
+    <pre><code>python3 -m http.server 8768 --bind 127.0.0.1 --directory sim</code></pre>
+    <p class="error-note">Opening <code>index.html</code> through <code>file://</code> blocks the JSON fetch. The story is static and offline: no CDN, no external fonts, no telemetry.</p>
+  </div>
+</div>
+
+<script src="sim.js"></script>
+</body>
+</html>

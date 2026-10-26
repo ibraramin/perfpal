@@ -14,7 +14,7 @@ conflict resolution — not a mechanical merge. Fact base (2026-10-26):
 - **`feat/js-ts`** (`2e483b1`): 15 ahead / 20 behind main, base `9a94905`; plan `js-ts` active, B5 done,
   **B6 merge gate next**; owns schema `1.8`, JS/TS backends, `ADR-0011-js-ts-backend`.
 - **`feat/atlas-sim`** (`9e14507`): 65 ahead / 23 behind main, base `821b984`; story S1–S4 gated
-  (`71d0d04`); `ADR-0011-atlas-story-companion` + `ADR-0012-atlas-branch-reconciliation`; ADR-0012
+  (`71d0d04`); `ADR-0012-atlas-story-companion` + `ADR-0013-atlas-branch-reconciliation`; ADR-0013
   recorded direction C (defer), now **overridden by the founder: merge the companion into main**. No
   A12 change, no in-report graduation, no ship claim.
 

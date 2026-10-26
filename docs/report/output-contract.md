@@ -10,7 +10,7 @@
 
 1. **One scan → one directory.** A completed report directory contains *exactly* the artifacts of that run — nothing stale from previous runs survives.
 2. **metrics.json is the source of truth.** `report.md` and `charts/` are derived artifacts: pure functions of `metrics.json` plus the reporter's built-in heuristic catalog (frozen for v1; used only for Appendix A descriptions). If they ever disagree, `metrics.json` wins.
-3. **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory. There is no separate "report format" version to drift.
+3. **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory. There is no separate "report format" version to drift. An optional artifact may carry its own internal format marker (the opt-in `atlas-layout.json` has `layout_version: 1`); that marker versions only that artifact and is absent unless `--story` is passed.
 4. **Self-contained.** The JSON Schema ships inside the report so any consumer (offline tool, LLM session) can validate and interpret `metrics.json` without access to the Perfpal installation.
 5. **Deterministic where it matters.** Artifact names, section order, and sort orders are fixed, so two scans of identical input produce structurally identical reports (modulo provenance timestamps).
 
@@ -96,6 +96,32 @@ The directory inherits the [metrics.json versioning policy](../schema/metrics-js
   - Discover the bundled schema by mapping `schema_version` to its filename (`"1.8"` ⇒ `metrics.schema.v1.8.json`).
 - **Consumption entry points:** humans start at `report.html#map` (the Atlas page: key-metrics strip + graph + rail, then the four designed charts) or `report.md` (bounded groups + links); depth is one click away in `atlas-weight.html`, `atlas-q2.html`, `findings-detail.md` / `findings-detail.html` and `profile-queue.md` / `profile-queue.html`. LLMs/tooling start at `agent-report.md` (bounded, ranked, fix hints) or `agent-actions.json` (complete machine list), with `metrics.json` (raw) as the source of truth and `report.md` as a guided tour. Both paths must lead to consistent conclusions because of Principle 2.
 - **Bounded-human rule (C-split):** `report.md` and `report.html` carry ZERO per-finding rows at any scale — one group row per firing rule plus links into the detail artifacts. **Exception (report.md V4 key views):** a fixed ≤5 key-view rows per question (KV1 brief, KV2 bars, KV3 bars) is explicitly allowed — a bounded answer-first block, not a per-finding dump; uncapped per-finding rows remain forbidden. `-ARCH-002` hot-component aggregates are suppressed from KV1's action ranking and counted as "component-level finding(s) in Explorer" (`ARCH-001`/`ARCH-003` are file-level actions and stay ranked). The two remaining unbounded human-report sections are capped the same way (C-full-split follow-up, same `take(10)` precedent as the §3 top-files table and the `#files` drill-down): the §5 component table / Component index shows the top 10 in rank order with an honest `showing top <S> of <M> components` header/note, and each file drill-down row links at most the top 10 findings by severity-rank → `finding_id` with an honest `…+N more` marker. Full component and finding data stays in `metrics.json` (machine source of truth) and the uncapped `findings-detail.*` artifacts. The artifact SET per scan is therefore the 10 fixed files (`metrics.json`, bundled schema, `report.md`, `report.html`, `findings-detail.md`, `findings-detail.html`, `profile-queue.md`, `profile-queue.html`, `agent-report.md`, `agent-actions.json`) plus the two Atlas drill pages (`atlas-weight.html`, `atlas-q2.html`), `charts/graph.dot` and the chart set (3 v1 overviews + 5 layered/map overviews + one `component-<rank>-<slug>.svg` page per capped component).
+
+**Opt-in story artifact.** `perfpal <repo> --story` additionally writes **`atlas-layout.json`**
+(`layout_version: 1`): the exact Atlas canvas geometry the report's SVG draws (canvas, columns with
+header centres, node rects, edge paths, hulls, aggregate boxes, cap chips), the node presentation
+strings the SVG renders, derived run-story `stages`, the KV1 start actions, and the drawn-slice/scan
+findings counts. It is **absent unless `--story` is passed**, so the fixed set above is unchanged by
+default. Consumers must treat it as optional, pin `layout_version`, and never use it as a substitute
+for `metrics.json` (still the machine source of truth). Minor additions are backward-compatible; the
+geometry is a projection of the same layout function the SVG renderer uses, not a second layout.
+The same artifact may carry an optional `flow` block (`flow_version: 1`, `fidelity: "syntactic"`):
+signature summaries, call-site payloads and I/O effects (`io[]` with `op`, `target`, `literal`).
+I/O targets are a fixed call-name match, never a runtime path; a literal is recorded only when the
+argument is a plain source string (formatted/built values stay `null`). Story-only and omitted on
+every non-`--story` scan.
+
+The same artifact may carry three more additive story-only blocks (S4; `layout_version` stays 1):
+**`purpose`** (`purpose_version: 1`; `text`, `source`, `kind: "readme"|"structural"` — the scan-root
+README's first prose paragraph or the existing entry line as a fallback; the story labels the source
+and withholds claims that trip the honesty gate); **`profile`** (`queue_version: 1`; counts plus the
+top 12 non-demoted production rows of the authoritative KV3 queue, in queue order — never a second
+ranking); and **`scenes`** (`scene_version: 1`; a directory partition of source files with files,
+production files, findings, cost/production cost, top-5 files, `scene_cap: 24`, `file_cap: 5`, and an
+explicit omitted-scenes/files/cost/production-cost/findings block). Drawn `nodes[]` and KV1
+`actions[]` carry an additive `scene` string. Scene cost uses the same shared file-cost rule as the
+canvas; omitted totals are printed. All three blocks are absent unless `--story` is passed and never
+change `metrics.json`, `report.html` or the fixed artifact set.
 
 ## 5. `report.md` template outline
 

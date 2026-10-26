@@ -103,7 +103,7 @@ the founder's eye. The data/model are fine.
 - Do **not** mark `map-build` done; A1b stays open; holdouts are vaulted except the authorized A2
   release — do not tune against them.
 
-## 5. Current status and next step
+## 5. Status at the 2026-10-23 audit (historical)
 
 - **Plan `atlas-build` is DONE (D-pf-258).** `R-pf-109` is closed as a record; `R-pf-104` is closed
   (A2 delegated PASS); `A-pf-118` (A2) is done; step 15 is done. The step-15 change set is

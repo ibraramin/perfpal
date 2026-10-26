@@ -108,6 +108,24 @@ pub struct AtlasFunction {
     pub median: Option<f64>,
     pub top_pct: usize,
     pub fan_in: u32,
+    /// `max_loop_depth` carried for the JSON story projection.
+    pub loop_depth: u32,
+    /// `trip_count_source` (absent when the function has no loops).
+    pub trip_source: Option<String>,
+    /// Loops whose trip count is genuinely unknown.
+    pub unknown_trip_loops: u32,
+    /// Distinct direct-callee count.
+    pub fan_out: u32,
+    /// True when the function can reach itself statically.
+    pub recursive: bool,
+}
+
+/// Per-node finding severity counts (drives the JSON story projection).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct AtlasFindingCounts {
+    pub hot: usize,
+    pub warn: usize,
+    pub info: usize,
 }
 
 /// One drawn file node.
@@ -131,6 +149,7 @@ pub struct AtlasNode {
     pub unreached: bool,
     pub partial_parse: bool,
     pub finding: Option<AtlasFinding>,
+    pub findings: AtlasFindingCounts,
     pub top_functions: Vec<AtlasFunction>,
 }
 
@@ -437,6 +456,44 @@ fn build_structural(doc: &MetricsDocument, source_paths: &BTreeSet<String>) -> S
     Structural { pairs, fan_in, mix }
 }
 
+/// Shared per-file cost rule (Atlas file cards, scene aggregation).
+///
+/// Returns `(display_cost, exact_cost, scale)`: v2 sums `function_cost_v2`
+/// directly; v1 sums [`crate::charts::function_cost`] and half-up rounds the
+/// displayed integer exactly as [`build_file_infos`] does. `exact_cost` is the
+/// unrounded sum (the v2 integer sum for v2 files), used for anchor multiples.
+pub(crate) fn file_cost(
+    doc: &MetricsDocument,
+    indices: &[usize],
+) -> (u64, f64, crate::reporter::views::CostScale) {
+    use crate::reporter::views::CostScale;
+    let all_v2 = indices
+        .iter()
+        .all(|&index| doc.stats.functions[index].function_cost_v2.is_some());
+    let scale = if indices.is_empty() || all_v2 {
+        CostScale::V2
+    } else {
+        CostScale::V1
+    };
+    match scale {
+        CostScale::V2 => {
+            let cost = indices
+                .iter()
+                .filter_map(|&index| doc.stats.functions[index].function_cost_v2)
+                .fold(0_u64, u64::saturating_add);
+            (cost, cost as f64, scale)
+        }
+        CostScale::V1 => {
+            let sum: f64 = indices
+                .iter()
+                .map(|&index| crate::charts::function_cost(&doc.stats.functions[index]))
+                .sum();
+            let rounded = crate::schema::round_half_up(sum, 0).max(0);
+            (u64::try_from(rounded).unwrap_or(u64::MAX), sum, scale)
+        }
+    }
+}
+
 fn build_file_infos(
     doc: &MetricsDocument,
     functions_by_path: &BTreeMap<String, Vec<usize>>,
@@ -453,33 +510,9 @@ fn build_file_infos(
             .get(&file.path)
             .cloned()
             .unwrap_or_default();
-        let all_v2 = indices
-            .iter()
-            .all(|&index| doc.stats.functions[index].function_cost_v2.is_some());
-        let scale = if indices.is_empty() || all_v2 {
-            CostScale::V2
-        } else {
-            CostScale::V1
-        };
         // v1 file cost is summed unrounded for the anchor multiple; only the
         // displayed integer is HALF-UP rounded (ScaleOrdering parity).
-        let (cost, cost_exact) = match scale {
-            CostScale::V2 => {
-                let cost = indices
-                    .iter()
-                    .filter_map(|&index| doc.stats.functions[index].function_cost_v2)
-                    .fold(0_u64, u64::saturating_add);
-                (cost, cost as f64)
-            }
-            CostScale::V1 => {
-                let sum: f64 = indices
-                    .iter()
-                    .map(|&index| crate::charts::function_cost(&doc.stats.functions[index]))
-                    .sum();
-                let rounded = crate::schema::round_half_up(sum, 0).max(0);
-                (u64::try_from(rounded).unwrap_or(u64::MAX), sum)
-            }
-        };
+        let (cost, cost_exact, scale) = file_cost(doc, &indices);
         let class = file
             .path_class
             .clone()
@@ -762,6 +795,18 @@ fn representative_path(
     reversed
 }
 
+fn finding_counts(findings: &[&crate::schema::FindingEntry]) -> AtlasFindingCounts {
+    let mut counts = AtlasFindingCounts::default();
+    for finding in findings {
+        match finding.severity {
+            Severity::Hot => counts.hot += 1,
+            Severity::Warn => counts.warn += 1,
+            Severity::Info => counts.info += 1,
+        }
+    }
+    counts
+}
+
 fn dominant_finding(findings: &[&crate::schema::FindingEntry]) -> Option<AtlasFinding> {
     if findings.is_empty() {
         return None;
@@ -857,6 +902,11 @@ fn top_functions(
                 median: ordering.median(),
                 top_pct: top_pct(rank, population),
                 fan_in: function_fan_in(function),
+                loop_depth: function.max_loop_depth,
+                trip_source: function.trip_count_source.clone(),
+                unknown_trip_loops: function.unknown_trip_loops,
+                fan_out: function.call_fanout.unwrap_or(0),
+                recursive: function.is_recursive.unwrap_or(false),
             }
         })
         .collect()
@@ -1119,6 +1169,11 @@ impl NodeContext<'_> {
             .map(Vec::as_slice)
             .unwrap_or(&[]);
         let empty_findings: Vec<&crate::schema::FindingEntry> = Vec::new();
+        let node_findings = self
+            .findings_by_path
+            .get(path)
+            .map(Vec::as_slice)
+            .unwrap_or(&empty_findings);
         AtlasNode {
             path: info.path.clone(),
             file_name: final_segment(&info.path).to_string(),
@@ -1140,12 +1195,8 @@ impl NodeContext<'_> {
                 .statuses
                 .get(path)
                 .is_some_and(|status| matches!(status, ParseStatus::Partial | ParseStatus::Failed)),
-            finding: dominant_finding(
-                self.findings_by_path
-                    .get(path)
-                    .map(Vec::as_slice)
-                    .unwrap_or(&empty_findings),
-            ),
+            finding: dominant_finding(node_findings),
+            findings: finding_counts(node_findings),
             top_functions: top_functions(self.doc, indices, self.v2, self.v1),
         }
     }

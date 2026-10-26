@@ -73,6 +73,9 @@ pub struct Args {
     /// (safety-guard override).
     #[arg(long)]
     pub force: bool,
+    /// Also emit `atlas-layout.json`: the Atlas story geometry the SVG draws.
+    #[arg(long)]
+    pub story: bool,
 }
 
 /// Stage failures mapped to exit codes (modules.md §8.2). Constructed only
@@ -287,6 +290,12 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         Artifact::text("agent-actions.json", agent_json),
         Artifact::text("charts/graph.dot", dot),
     ];
+    if args.story {
+        artifacts.push(Artifact::text(
+            "atlas-layout.json",
+            crate::reporter::atlas_layout_json(&document),
+        ));
+    }
     for (name, bytes) in &charts {
         artifacts.push(Artifact {
             rel_path: format!("charts/{name}"),
