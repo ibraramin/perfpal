@@ -123,13 +123,14 @@ DoD gate: `cargo fmt --all -- --check` && `cargo clippy --locked --all-targets -
 
 - **S1 — pipeline truth (done 2026-10-24).** P4 (stages) + P5 (layout JSON); story consumes core
   JSON; `extract.py` deleted. No visuals change. *Proves Atlas reads Perfpal, not HTML.*
-- **S2 — data on edges.** P3 (signatures) + P1 (call payloads) → edge labels + inspector; grey
-  unresolved. First slice that answers "what moves".
+- **S2 — data on edges (done 2026-10-24).** P3 (signatures) + P1 (call payloads) → edge labels +
+  inspector; grey unresolved. First slice that answers "what moves".
 - **S3 — effects (done 2026-10-26).** P2 (I/O read/write with literal targets) → data stores on
   scenes; trust line. The core emits `flow.io[]` from a fixed v1 call-name table; a literal is only
   a plain source string (never a formatted value), and a non-literal target stays `null`/unknown.
-- **S4 — scale + payoff.** Scenes/aggregation at 3k files, `profile` + `start-here` + `trust` beats,
-  F1–F8 gate.
+- **S4 — scale + payoff (done 2026-10-26).** Directory scenes/aggregation at 3k files (P8), the
+  whole-repo KV3 queue (P7) and the README purpose line (P6) feed the `profile` + `start-here` +
+  `trust` beats; the 3k scale gate covers F2–F7. F8 (founder A2) is **deferred**, not claimed.
 
 Each slice = one commit per probe + evidence + probe-registry row status flip.
 

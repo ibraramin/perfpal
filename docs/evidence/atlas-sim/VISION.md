@@ -131,3 +131,29 @@ Verdict: **PASS.**
 - **Carried nits (non-blocking):** the pre-existing `PATH · 3 steps · re…` chrome truncation; the S2
   nits (detached cJSON `type-only` label, dense top band, payload display truncation, cJSON dead
   space) are unchanged.
+
+## Read 8 — S4 re-read (purpose, scenes and 3k scale)
+
+- **Date:** 2026-10-26 · **Seats:** two independent `@vision` reads — F1 frames (`vis-2`) and scale
+  panels (`vis-3`). Images (gate-regenerated, 1440×900 unless named):
+  `hyperfine-end.png`, `cjson-end.png`, `scale-final.png`, `scale-full.png`, `scale-1280.png`.
+- **F1 read (vis-2): PASS-WITH-NITS, no blockers.** Both frames read the scanned app's purpose:
+  `PURPOSE · A command-line benchmarking tool. · from README.md` (hyperfine) and
+  `PURPOSE · Ultralightweight JSON parser in ANSI C. · from README.md` (cJSON); the first action is
+  fully legible (`src/output/report.rs:144 — Heap allocation inside loop (Rust)`;
+  `cJSON_Utils.c:1188 — Expensive setup or I/O call inside loop`). The `PURPOSE` prefix + README
+  provenance make the F1 sentence unambiguous; the static-inference honesty strip is intact.
+- **Scale read (vis-3): PASS-WITH-NITS, no blockers.** The 1280 legend is visible on its own row;
+  START, footer and summary wrap without a mid-word cut; no horizontal scroll or overlaps. The 3k
+  purpose is fully readable at 1440 and 1280. The scenes caps and trust accounting now carry the
+  scan-wide test/bench count (`269 of 3,000 source files`), and the 24 scene cards / 12 queue rows /
+  trust panel are legible with no gutter collisions.
+- **Fixes from the first pass:** `PURPOSE` prefix + wrapping and 3k purpose; duplicate `PATH` label
+  stripped; 1280 key strip/legend/START/footer/summary wrap; scan-wide non-production counts; the
+  third START tail and PATH meta remain the only clipped items.
+- **Carried nits (non-blocking):** the third START item's scene attribution tail at 1280/1440; the
+  `PATH` meta ellipsis at 1440 (full text in the title/summary); dense depth-1 column and clipped
+  orange edge labels on the 3k canvas (synthetic fixture, pre-existing label-density class); the
+  trust findings/edge-coverage run-on; cJSON's unreached START node and bottom canvas space
+  (pre-existing KV1/state behaviour, not an S4 regression).
+- **F8:** not part of the visual read; founder A2 remains deferred and is not claimed.

@@ -1,104 +1,103 @@
-# Session handoff — Atlas Story (D2 + S1 + S2 + S3)
+# Session handoff — Atlas Story (D2 + S1 + S2 + S3 + S4)
 
 - **Date:** 2026-10-26 · **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (`feat/atlas-sim`)
-- **Track:** Atlas Run · **Status:** S3 committed (`0ddf4ad` + `b63c6f6` + `27569a9` core, `9e23aa6` + `f3e8804` + `325571e` story), gated; **not pushed**. S4 is next.
-- **Detail:** `state/tracks/atlas-sim/handoff.md` · **Requirement:** `docs/specs/atlas-story.md` (sealed)
-- **Probe record:** `docs/atlas/core-probes.md` · **State:** `state/session-state.json`
+- **Track:** Atlas Run · **Status:** **S4 built and gated at `5f13b04`** (dirty 0, 892 tests, 302/302,
+  3k 44/44, `verdict=PASS`); docs/evidence close and the final 4-lane panel are in progress. **Not
+  pushed, not merged.**
+- **Detail:** `state/tracks/atlas-sim/handoff.md` · **Requirement:** `docs/specs/atlas-story.md`
+  (sealed) · **Plan:** `docs/plans/atlas-s4.md` · **Probes:** `docs/atlas/core-probes.md` (P6–P8)
+- **State:** `state/session-state.json` · **Evidence:** `docs/evidence/atlas-sim/`
 
 ## Objective
 
 Turn the Atlas map into a **temporal showcase of a codebase**: entry → stages → loops → I/O → stop,
 with **the payload crossing each file boundary labelled**; vibecoder-first, senior drill; static
-inference labelled; fed only by Perfpal core artifacts. S1 made the story read core JSON; S2 added
-data movement (P3 signatures + P1 call payloads); **S3 adds I/O effects** (P2 read/write, target
-file/env/net/stdio, literal only when the source writes a plain string), rendered as `Stores:` on the
-trace beats, a per-file DATA STORES inspector, and an I/O trust line.
+inference labelled; fed only by Perfpal core artifacts. S4 makes the story scale: **directory scenes
+at 3k files**, the **whole-repo KV3 queue**, a **README purpose sentence**, scene-aware start-here and
+a scale-aware trust line, with the 3k F2–F7 gate.
 
 ## Phase
 
 | Slice | Scope | Status |
 |---|---|---|
-| S1 | P4 stages + P5 `atlas-layout.json` (`layout_version: 1`); sim consumes core JSON; `extract.py` deleted | **done** (`5faacb7`…`63914f9`) |
-| S2 | P3 signatures + P1 call-site payloads → `flow` block, edge labels, unresolved grey, payoff beats | **done** (`2108117`…`b8359ae`, gate PASS) |
-| S3 | P2 I/O effects (file/env/net/stdio, literal targets) → stores + trust line | **done** (`0ddf4ad` + `9e23aa6`, gate PASS) |
-| S4 | scenes at 3k files, F1–F8 gate, full payoff at scale | pending |
+| S1 | P4 stages + P5 `atlas-layout.json` (`layout_version: 1`); sim consumes core JSON | **done** |
+| S2 | P3 signatures + P1 call payloads → `flow`, edge labels, payoff beats | **done** |
+| S3 | P2 I/O effects → stores + trust line | **done** |
+| S4 | P6 purpose + P7 KV3 queue + P8 scenes; 3k scale/payoff; F1–F7 | **done and gated** (`5f13b04`) |
 
 ## Decisions
 
-- **D-pf-251:** founder verdict — D1 presentation/animation accepted, information not insightful;
-  Atlas is Perfpal's #1 priority; Atlas consumes Perfpal core data; core additions allowed when recorded.
-- **D-pf-252:** spec sealed; S1 committed; P4/P5 `prototype`.
-- **D-pf-253 (S2):** `flow` stays story-only and additive (`flow_version: 1`, `layout_version` 1);
-  edge labels are computed **in the core**; the resolver is conservative; the profile beat is the
-  drawn-slice queue.
-- **D-pf-254 (S3):** P2 `flow.io[]` uses a **fixed v1 call-name table**. A bare C name defined in the
-  drawn set, a macro, or **any local/parameter value** (function pointer, typedef'd pointer or closure)
-  is never I/O; the C bare-name rules are language-gated; Rust matches the complete written path.
-  A literal is recorded only for a plain `string_literal`/`raw_string_literal` (never `format!`,
-  `concat!`, C adjacent-string concatenation or `sprintf`); a missing literal stays `null` and renders
-  as `unknown`. Non-literal modes/flags, **non-zero numeric `open` flags** (platform-specific bits) and
-  variables emit no row (direction unknown, never guessed).
-  `layout_version` and `flow_version` stay 1; existing scans are byte-identical.
-- **S3 limits (recorded):** a wrapper defined outside the drawn set can still match; a Rust local
-  `File`/`fs` wrapper with the same written path can still match until imports/type resolution lands;
-  `read`/`write` are fd-based so `target: file` is the call class (may be pipe/socket); method calls
-  (`OpenOptions::open`, `write_all`) are not matched; `env::args*` is an `env` read; `connect` is the
-  outbound `write` net effect; `std::fs::copy` is read+write with no single literal, and `rename`/
-  `hard_link` emit no literal (source vs destination would be a guess); literal values are source
-  text (quotes stripped, escapes not decoded, display-capped at 160); stdio rows never carry a literal.
+- **D-pf-255 (S4):** P6 `purpose` (README first prose paragraph, structural fallback), P7 `profile`
+  (authoritative KV3 order, top 12 production non-demoted rows + counts) and P8 `scenes` (depth-2
+  directory partition, 24-scene/5-file caps, production-cost-first, omitted totals, shared
+  `atlas::file_cost`, `nodes[].scene`/`actions[].scene`) are **story-only, additive, `layout_version:
+  1`**. Limits: README first-only; 12-row queue; 24/5/depth-2 scenes; scene cost is static, not
+  runtime; a 3k scene can be omitted by the cap (counts disclosed); the 3k fixture is synthetic.
+  F8 (founder A2) is deferred, not claimed.
+- **D-pf-254 (S3):** fixed v1 I/O call-name table; literals only for plain string arguments; unknown
+  stays unknown. **D-pf-253 (S2):** `flow` story-only/additive; labels computed in the core.
+  **D-pf-252/D-pf-251:** sealed spec; Atlas is Perfpal's #1 priority; core additions recorded.
 
-## S3 shipped
+## S4 shipped
 
-- **Core (`0ddf4ad` + `b63c6f6`):** `src/analysis/flow.rs` gains `Flow.io[] =
-  {file, line, callee, op, target, literal}` and the fixed `IO_TABLE_VERSION = 1` table. Guards:
-  drawn-name wrapper, macro, any local/parameter value (incl. typedef'd fn-pointer), exact Rust
-  paths, C-rule language gate, plain-string-only literals, `freopen` mode index, numeric-flag
-  conservatism; deterministic sort `(file, line, callee, op, target, literal)`.
-  `tests/pipeline_e2e.rs` asserts the emitted shape, sorted rows, drawn call-site files, stdio-null
-  literals and a conservative wrapper/formatted-target fixture. 862 tests.
-- **Story (`9e23aa6` + `f3e8804`):** `sim/from-layout.py` projects per-node `io` summaries +
-  `trust.io` (totals, stdio, literal examples); `sim/sim.js` renders `Stores:` on trace beats, a
-  DATA STORES inspector section (up to 6 rows/file, `showing N of M`; stdio = `stream · no path`),
-  and the I/O trust line (literal examples, `+N` remainder, stdio count); `sim/verify.py` adds 55
-  checks and stores/trust/inspector keyframes; `sim/gate.sh` prints the io summary and asserts the
-  full dirty count is 0. Regenerated `sim/data-hyperfine.json` / `sim/data-cjson.json`.
-- **Fixture rows:** hyperfine 8 rows / 5 drawn files (5 read, 3 write; literal `TERM`, `NO_COLOR`,
-  `/dev/null`; 5 target-unknown); cJSON 24 rows / 4 drawn files (4 read, 20 write; 0 literal,
-  2 target-unknown; 22 stdio).
+- **Core P6 (`9263c19`):** `purpose {purpose_version:1,text,source,kind}` from the scan-root README
+  (README.md/.rst/.txt/README; 64 KiB/200-char caps; front matter/badges/TOC/fences skipped) or the
+  entry line structural fallback. Hyperfine `A command-line benchmarking tool.`; cJSON
+  `Ultralightweight JSON parser in ANSI C.`
+- **Core P7 (`e55221c`):** `profile {queue_version:1,total_ranked,production_ranked,candidate_total,
+  demoted_production,shown,rows[]}` — authoritative `complete_profile_queue` order, production
+  non-demoted top 12; no re-rank.
+- **Core P8 (`3c80ae9`):** `scenes {scene_version:1,scene_cap:24,file_cap:5,total_scenes,shown_scenes,
+  total_files,shown_files,rows[],omitted{...}}` — root/top-level/split depth-2 partition, shared file
+  cost, top-5 files, production-cost-first, entry/hottest, node/action `scene`.
+- **Story (`30a3bba`, `49627b2`, `5f13b04`):** purpose masthead + source label, enter-beat scene
+  context, whole-repo profile beat, scene-aware start-here, compact trust narration, below-fold
+  SCENES / PROFILE QUEUE / TRUST ACCOUNTING, unresolved-calls inspector, `window.__sim.ready`, 1280
+  wrap fixes, scan-wide test/bench counts.
+- **3k fixture + scale gate (`4006315`, `5f7579d`):** deterministic 3,000 scanned files (2,999 C + 1
+  Rust; 2,731 production + 269 test/bench), C fn-pointer + Rust `dyn` engineered into the drawn slice,
+  loops/I/O/README; `sim/scale.py`/`scale.sh` F2–F7. Page **463,230 bytes**; first frame **max
+  1,649 ms** (1,649/475/467); no h-scroll at 1280/1440; double-scan/load determinism; story-off/on
+  byte identity.
+- **Docs/evidence:** `core-probes` P6–P8, spec §9 S4, output contract, `NOTES` S4, `VISION` Read 8
+  (two independent reads: PASS-WITH-NITS, no blockers), `CHANGELOG`.
 
 ## Risks / carried nits
 
-- **S3 limits:** wrapper outside the drawn set; fd-based target class; method-based file writes not
-  matched; `env::args*` as `env` read; `connect` as outbound; literal display cap. Recorded in
-  `docs/atlas/core-probes.md` (P2 record).
-- **Carried S2 vision nits:** cJSON detached `type-only` label, dense hyperfine top band, truncated
-  payload display, `PATH` truncation, cJSON dead space. Untouched in S3.
-- **Carried data limits:** drawn-file re-parse, local types only, field-access args untyped,
-  pointer-to-array ret; profile is drawn-slice; `sim/verify.py` is not in CI.
-- `--story` builds the Atlas view twice; S4 owns scale/aggregation.
-- F1 (blind-read purpose), F7 (3k scale) and F8 (founder A2) remain S4; A2/ship is blocked by the
-  Atlas v2 step-13 founder gate (R-pf-109).
+- **S4 limits:** README first-only/first-prose (a stale/marketing README is quoted and labelled); P7
+  12 rows (demoted production counted, not shown); P8 depth-2/24/5 (3k: `src` direct-files and the
+  269-file `tests` scene are omitted by the production-first cap; counts disclosed); scene cost is
+  static; mixed v1/v2 scene scale; the Rust `dyn` file is forced into the drawn slice as the unreached
+  hottest (C entry cannot reach Rust across the language-scoped call graph).
+- **Carried vision nits:** third START item scene-attribution tail; `PATH` meta ellipsis at 1440;
+  dense 3k depth-1 column + clipped edge labels; trust findings run-on; cJSON unreached START/empty
+  canvas; hyperfine edge-label density. F1 purpose + first `path:line` and the 1280 legend/START/footer
+  are readable.
+- **Prior:** S3 limits (out-of-slice wrappers, Rust path ambiguity, fd-based class, method writes);
+  S2 nits; `--story` still builds the view twice; `sim/verify.py` not in CI; F8/A2 deferred.
 
-## Next actions
+## Next
 
-1. **S4:** scenes/aggregation at 3k files, F1–F8 gate; only then decide companion-vs-in-report
-   (ADR + A12 if interactive).
-2. **Atlas v2:** step 11 (G-style detail rail) remains the parallel queue; no A2/ship before step 13.
-3. Keep the S3 evidence chain (`GATE.txt`, `checks.json`, stores/trust/inspector frames, `VISION.md`,
-   4-lane panel) with the S3 close commit.
+1. Reconcile the 4-lane panel (R1/R2/Q1/Q2), fix any blockers, rerun the affected lanes + one fresh
+   confirmation; final gate on the close commit; commit evidence/state.
+2. Companion-vs-report ADR (+A12 if interactive) now that S4 evidence exists; then Atlas v2 step 11
+   remains the parallel queue. No A2/ship before step 13 (R-pf-109).
 
 ## Verification (this session)
 
 | Claim | Command / artifact | Result |
 |---|---|---|
-| Core gates | `cargo fmt --all -- --check`, `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| Tests | `cargo test --locked` | 862 passed, 0 failed, 1 ignored |
-| Licenses | `cargo deny check licenses` | exit 0 (`licenses ok`) |
-| F6 additive | story-off vs story-on | `report.html` byte-identical hyperfine + cJSON; `metrics.json` content-equal after masking scan provenance (`started_at`, `duration_ms`, `root_path`) |
-| Core flow determinism | two `--story` scans | `atlas-layout.json` byte-identical; `flow.io` sorted `(file,line,callee,op,target,literal)` |
-| Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **217/217**, exit 0 |
-| Full gate | `bash sim/gate.sh` | `89f4feb` · tree `3e0d0ed…` · dirty 0 · 862 tests · 217/217 · **verdict=PASS** (`GATE.txt`; the gate fails on a non-zero full dirty count) |
-| Vision | `docs/evidence/atlas-sim/VISION.md` Read 7 | **PASS** (first pass PASS-WITH-NITS; stdio total, `+N` marker and `stream · no path` fixed; re-read PASS) |
-| Review panel | R1/R2/R3 + Q1/Q2 | **5/5 APPROVE, zero unresolved blocking findings.** Round 1 found `freopen` mode index, numeric-flag guessing, typedef-pointer bypass, stale docs; fixed in `b63c6f6`/`f3e8804`/`27569a9`/`325571e`; round 3 R3 docs-only corrections applied and re-confirmed |
+| Core gates | `cargo fmt --all -- --check`; `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
+| Tests | `cargo test --locked` | **892 passed**, 0 failed, 1 ignored |
+| Licenses | `cargo deny check licenses` | exit 0 |
+| F6 additive | story-off vs story-on | `report.html` byte-identical; `metrics.json` content-equal after provenance masking |
+| Core determinism | two `--story` scans | `atlas-layout.json` byte-identical; layout/flow/data sorted |
+| Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **302/302**, exit 0 |
+| 3k scale gate | `bash sim/scale.sh` | **44/44**, exit 0; page 463,230 bytes; first frame max 1,649 ms; no h-scroll; F2–F6 PASS |
+| Full gate | `bash sim/gate.sh` | `5f13b04` · tree in `GATE.txt` · dirty 0 · 892 tests · 302/302 · 3k 44/44 · **verdict=PASS** |
+| Vision | `VISION.md` Read 8 (F1 + scale) | **PASS-WITH-NITS, no blockers**; purpose/1280/scene/queue/trust fixes landed; carried nits listed |
+| 3k fixture | `sim/fixtures/gen-3k.py` + `sim/scale.py` | 3,000 files; C fn-pointer + Rust `dyn` drawn and unresolved; 24 scene cards / 12 queue rows |
+| Review panel | 4 lanes (R1/R2/Q1/Q2) | **running at close**; result recorded in the S4 state close |
 
-**Uncommitted:** none after the S3 docs/state commit. **No push, no merge to `main`.**
+**Uncommitted at this handoff:** docs/evidence close WIP (`core-probes`, spec §9, contract, NOTES,
+VISION, CHANGELOG, activeContext, this handoff, GATE/checks/PNGs/scale frames). **No push, no merge.**

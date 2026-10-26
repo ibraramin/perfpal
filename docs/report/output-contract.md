@@ -101,6 +101,18 @@ I/O targets are a fixed call-name match, never a runtime path; a literal is reco
 argument is a plain source string (formatted/built values stay `null`). Story-only and omitted on
 every non-`--story` scan.
 
+The same artifact may carry three more additive story-only blocks (S4; `layout_version` stays 1):
+**`purpose`** (`purpose_version: 1`; `text`, `source`, `kind: "readme"|"structural"` — the scan-root
+README's first prose paragraph or the existing entry line as a fallback; the story labels the source
+and withholds claims that trip the honesty gate); **`profile`** (`queue_version: 1`; counts plus the
+top 12 non-demoted production rows of the authoritative KV3 queue, in queue order — never a second
+ranking); and **`scenes`** (`scene_version: 1`; a directory partition of source files with files,
+production files, findings, cost/production cost, top-5 files, `scene_cap: 24`, `file_cap: 5`, and an
+explicit omitted-scenes/files/cost/production-cost/findings block). Drawn `nodes[]` and KV1
+`actions[]` carry an additive `scene` string. Scene cost uses the same shared file-cost rule as the
+canvas; omitted totals are printed. All three blocks are absent unless `--story` is passed and never
+change `metrics.json`, `report.html` or the fixed artifact set.
+
 ## 5. `report.md` template outline
 
 The report is generated from `metrics.json` plus the reporter's built-in heuristic catalog (frozen for v1; the catalog supplies only the Appendix A descriptions). Section order is fixed; every number and finding is traceable to a `metrics.json` field — the report never invents or aggregates beyond what is stated here.

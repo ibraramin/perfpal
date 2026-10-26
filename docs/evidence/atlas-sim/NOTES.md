@@ -148,6 +148,43 @@ frames `no-forward-path.png`, `empty.png`, `capped.png` (eleven 1440×900 frames
   trace-stores, store/trust/inspector DOM, clipping, and stdio/no-path checks.
 - **Gate:** `GATE.txt` on the S3 docs commit, `dirty 0`, `verdict=PASS`; `checks.json` 217/217.
 
+## S4 addendum — scale + payoff (2026-10-26)
+
+- **Core P6 (`9263c19`):** story-only `purpose` — scan-root README first prose paragraph (64 KiB/200-char
+  caps, front matter/badges/TOC/fences skipped) or the existing entry line as a structural fallback;
+  `purpose_version: 1`, `layout_version` stays 1. Hyperfine reads `A command-line benchmarking tool.`;
+  cJSON reads `Ultralightweight JSON parser in ANSI C.`; a README with an F4 claim is withheld by the
+  story (raw text stays in the layout for provenance).
+- **Core P7 (`e55221c`):** story-only `profile` — the authoritative KV3 queue (`views::complete_profile_queue`)
+  filtered to production, non-demoted rows, top 12 in queue order, plus `total_ranked` /
+  `production_ranked` / `candidate_total` / `demoted_production` and `queue_version: 1`. No re-ranking.
+- **Core P8 (`3c80ae9`):** story-only `scenes` — depth-2 directory partition (root files, top-level
+  scene, split into `d1`/`d1/d2` when >1 child dir), shared `atlas::file_cost`, production-cost-first
+  ordering, 24 scenes × 5 top files, explicit omitted totals, `scene_version: 1`; additive
+  `nodes[].scene` / `actions[].scene`.
+- **Story (`30a3bba`, `49627b2`, `5f13b04`):** sim projects purpose/profile/scenes and unresolved-call
+  summaries; the masthead carries `PURPOSE · <README sentence> · from README.md`; enter beats name the
+  scene; the profile beat is whole-repo; the below-fold SCENES / PROFILE QUEUE / TRUST ACCOUNTING panels
+  carry the capped detail; the inspector gains UNRESOLVED CALLS; `window.__sim.ready` is exposed for
+  first-frame timing. 1280/1440 wrap fixes: legend/START/footer/summary, purpose, `PATH` dedupe,
+  scan-wide test/bench counts.
+- **3k fixture:** `sim/fixtures/gen-3k.py` — 3,000 scanned files (2,999 C + 1 Rust; 2,731 production +
+  269 test/bench), 30 modules, nested subdirs, C function-pointer + Rust `dyn` files in the drawn slice,
+  loops/I/O, README. Generated under `/var/tmp`; no repo data file.
+- **F7 numbers:** page **463,230 bytes** (index 7,049 + CSS 24,176 + JS 58,166 + `data-3k.json` 373,839)
+  vs 5 MB; first frame **max 1,649 ms** over three cold loads (1,649 / 475 / 467 ms) vs 2,000 ms; no
+  horizontal scroll at 1440×900 or 1280×800; 24 scene cards / 12 queue rows; 3k scan off/on/on2
+  8.83 / 6.52 / 5.09 s.
+- **F2–F6:** every drawn edge labelled; C fn-pointer + Rust `dyn` unresolved rows visible and never
+  guessed; no forbidden claim/time unit; double scan → identical layout/flow and data; two loads →
+  identical DOM; story-off/on `report.html` byte-identical, `metrics.json` content-equal after
+  provenance masking.
+- **Check delta:** S3 217 → S4 **302** checks (`sim/verify.py`), plus the separate 3k scale gate
+  **44/44** (`sim/scale.py`/`scale.sh`). 892 Rust tests. Gate on the S4 docs close commit: `dirty 0`,
+  `verdict=PASS` (`GATE.txt`).
+- **F8:** founder A2 is **deferred**, not run or claimed; A2/ship remains behind the Atlas v2 step-13
+  founder gate (R-pf-109 for the map).
+
 ## Visual system and known nits
 
 The page reuses the shipped Atlas v2 tokens: paper `#f4f1ea`, canvas `#fbf9f4`, charcoal `#1f2d3a`,

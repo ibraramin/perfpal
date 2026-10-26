@@ -39,6 +39,9 @@
 | P3 | signature summary | `flow.signatures[]`: id, name, path, line, params[{name,type,dir}], ret, unresolved[] | `src/analysis/flow.rs` (new) | types as written; macros/generics opaque | **prototype** (`2108117`) |
 | P4 | stage order | `stages[]`: order, label, files, depth, leaf | `src/reporter/atlas_layout.rs` (derived, no new parse) | derived | **prototype** |
 | P5 | layout emission | `atlas-layout.json`: canvas, columns, nodes, edges, hulls, aggregates, cap chips | `src/reporter/atlas_layout.rs` + `pub(crate)` layout helpers in `atlas_render.rs` | exact (same math as the SVG) | **prototype** |
+| P6 | purpose line | `purpose`: text, source, kind | `src/reporter/atlas_purpose.rs` (new) | first README prose paragraph, else structural fallback | **prototype** (`9263c19`) |
+| P7 | whole-repo profile queue | `profile`: queue_version, counts, rows[] | `src/reporter/atlas_queue.rs` (new; projects `views::complete_profile_queue`) | authoritative KV3 order; top 12 non-demoted production | **prototype** (`e55221c`) |
+| P8 | directory scenes | `scenes`: rows, caps, omitted totals; `nodes[].scene`, `actions[].scene` | `src/reporter/atlas_scenes.rs` (new) + shared `atlas::file_cost` | directory partition + shared file cost | **prototype** (`3c80ae9`) |
 
 ### P1 — call-site payload
 
@@ -74,6 +77,9 @@
 - **Prototype:** derive from existing depth + path steps + entry election; no new parse. Emit stage
   labels and the ordered file list.
 - **Must not:** claim runtime order; stages are a static slice, labelled as such.
+- **S4 update:** directory scenes are a separate **P8** block; `stages` stay the representative path
+  (entry → steps → leaf). Multi-entry/scene-ordered stages are **not** implemented and are not
+  claimed by S4.
 
 ### P5 — layout emission
 
@@ -84,14 +90,60 @@
 - **Why:** without it the story must either scrape HTML (current D1 shortcut, rejected) or fork the
   layout in JS (drift). This is the single most important probe for mergeability.
 
-## What the D1 prototype faked (and where it stands after S1)
+### P6 — purpose line
 
-| Fake | D1 | S1 status |
+- **Question:** what does this scanned app do, in one plain sentence?
+- **Prototype:** read the scan-root README (`README.md`, `README.rst`, `README.txt`, `README`;
+  first match, 64 KiB cap), take the first prose paragraph after the title (skip front matter,
+  headings, badges/images, TOC/link-only blocks, HTML, fences and tables), strip inline markdown,
+  collapse whitespace and cap at 200 chars. If there is no README or no usable paragraph, emit a
+  structural fallback built from the existing entry line. `purpose_version: 1`,
+  `kind: "readme" | "structural"`, `source: <filename> | null`.
+- **Must not:** invent a purpose; summarise code as intent; follow links or read outside the scan
+  root; treat a README as a runtime claim. The story labels the source (`from README.md` /
+  `structural fallback`) and withholds text that trips the F4 claim filter.
+- **Real implementation:** a README/metadata parser with provenance and a human-confirmed purpose
+  override; keep the quote-vs-inference distinction visible.
+
+### P7 — whole-repo profile queue
+
+- **Question:** what are the top non-test, production candidates in the whole scan (KV3)?
+- **Prototype:** project the **authoritative** `views::complete_profile_queue` ordering. Count
+  `total_ranked`, `production_ranked`, eligible production non-demoted `candidate_total` and
+  `demoted_production`; carry the first 12 eligible rows in queue order with rank, canonical id,
+  name, `path:line`, cost + rendered anchor, trip provenance and demotions. `queue_version: 1`.
+- **Must not:** re-rank in the story; include non-production rows; hide the startup/no-loop
+  demotions; call the rows runtime hot spots. They are static candidates.
+- **Real implementation:** emit the complete queue on demand (or a stable page), keep KV3 and the
+  story on one ranking function, and add a per-row drill identity.
+
+### P8 — directory scenes
+
+- **Question:** how is a 1k–10k-file repo organised, and where is the mass per directory?
+- **Prototype:** partition source files (`function_count > 0`) into directory scenes: root files →
+  `(root)`; a top-level dir with one child dir → one scene; with more than one child dir → split
+  into `d1` (direct files) + `d1/d2` scenes; deeper files stay in their depth-2 scene. Per scene:
+  files, production files, findings, cost and production cost (shared `atlas::file_cost` rule),
+  scale (`v2`/`v1`/`mixed`), entry/hottest flags, top 5 files by cost. Order production-cost↓,
+  cost↓, path↑; carry 24 scenes plus an explicit omitted totals block (`scenes`, `files`, `cost`,
+  `production_cost`, `findings`). Emit `scene_version: 1`; annotate `nodes[].scene` and
+  `actions[].scene` with the same partition.
+- **Must not:** claim the scene cost is runtime work; hide omitted scenes/files; use a different
+  cost formula from the canvas; treat a directory as a call-graph component; infer execution order
+  from the tree.
+- **Real implementation:** configurable scene depth/caps for very large repos, component-aware
+  scene grouping where it is justified, and a source-level scene index for drill links.
+
+## What the D1 prototype faked (and where it stands after S1/S4)
+
+| Fake | D1 | Status |
 |---|---|---|
 | Geometry | `sim/extract.py` parsed `report.html` | **resolved** — P5 `atlas-layout.json`, HTML extraction deleted |
 | Story data | `extract.py` read rendered text | **resolved** — P4 + `AtlasView` |
 | Data movement | absent | **resolved (S2/S3)** — P1/P3 (`ea72a86`, `2108117`) + P2 (`0ddf4ad`) |
-| Scene aggregation | none (19-node canvas only) | **still absent** — S4 |
+| Scene aggregation | none (19-node canvas only) | **resolved (S4/P8)** — directory scenes, 24-scene/5-file caps, counts + omitted totals; 3k fixture |
+| Whole-repo queue | drawn-slice only | **resolved (S4/P7)** — authoritative KV3 top 12 + totals |
+| Purpose | absent | **resolved (S4/P6)** — README first prose paragraph, structural fallback |
 
 ## S1 record (2026-10-24) — P4 + P5, status `prototype`
 
@@ -286,6 +338,120 @@
 - **Evidence:** 862 tests; `cargo fmt`/`cargo clippy -D warnings` exit 0; story gate
   `sim/verify.py` 217/217; `report.html` byte-identical with/without `--story`; two scans emit
   identical `flow.io`; `flow.io` sorted `(file, line, callee, op, target, literal)`.
+
+## S4 record (2026-10-26) — P6 + P7 + P8 `prototype`
+
+S4 is the scale + payoff slice (`docs/specs/atlas-story.md` §9): directory scenes at 3k files, the
+whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8 (founder A2) is
+**deferred**, not claimed. The authoritative gate run is the `Commit at run` line in
+`docs/evidence/atlas-sim/GATE.txt` (S4 close commit; `dirty 0`; `verdict=PASS`; 892 tests; story gate
+302/302; 3k scale 44/44).
+
+### P6 — purpose line (`9263c19`)
+
+- **Commit:** `9263c19` `core(P6): purpose line` · `git show --stat 9263c19`:
+  `src/reporter/atlas_purpose.rs` new (712), `src/reporter/atlas_layout.rs` +41/−?, `src/reporter/mod.rs` +8,
+  `tests/pipeline_e2e.rs` +71. Addendum: structural fallback is `cap_text`-bounded (same commit after the
+  unit-test pass).
+- **Emitted:** `purpose { purpose_version: 1, text, source: String|null, kind: "readme"|"structural" }`
+  in `atlas-layout.json`; only under `--story`; `layout_version` stays 1.
+- **Extraction:** first README at the scan root in `README.md` / `README.rst` / `README.txt` /
+  `README` order; 64 KiB read cap; first prose paragraph after the title; skips YAML front matter,
+  headings, badges/images, TOC/link-only blocks, HTML comments/tags, fences and tables; strips inline
+  links/emphasis/code ticks; collapses whitespace; 200-char word-boundary cap.
+- **Fallback:** no README / no prose → `No README at the scan root; inferred entry: <entry_text>.`,
+  `source: null`, `kind: "structural"` (also capped).
+- **Honesty:** the core copies text, never invents; the sim labels the source and withholds a README
+  sentence that trips the F4 claim/time filter (`purpose.kind: "withheld"` only in the sim data; the
+  core block stays raw for provenance). A README quote is **not** an Atlas inference.
+- **Known limits:** first README only (a broken `README.md` does not fall through to `README.rst`);
+  first prose paragraph only (a marketing sentence is still the author's words); no README freshness
+  check; no heading/author provenance beyond the filename; no non-UTF-8 decoding beyond lossy UTF-8;
+  a scan root that is a single file has no README.
+- **Real implementation must:** parse README metadata with explicit provenance, allow a human-confirmed
+  purpose override, and keep the quote-vs-inference distinction on screen.
+- **Evidence:** hyperfine `A command-line benchmarking tool.` (README.md); cJSON
+  `Ultralightweight JSON parser in ANSI C.` (README.md); structural fallback e2e fixture; 64 KiB/200-char
+  caps; story-off has no `atlas-layout.json`; F6 byte-identical.
+
+### P7 — whole-repo profile queue (`e55221c`)
+
+- **Commit:** `e55221c` `core(P7): whole-repo profile queue` · `git show --stat e55221c`:
+  `src/reporter/atlas_queue.rs` new (373), `src/reporter/atlas_layout.rs` +65/−?, `src/reporter/mod.rs` +5,
+  `tests/pipeline_e2e.rs` +62.
+- **Emitted:** `profile { queue_version: 1, total_ranked, production_ranked, candidate_total,
+  demoted_production, shown, rows: [{rank, id, name, path, line, path_class, production, cost, cost_text,
+  unknown_trip_loops, known_trip_value, demotions}] }`; top 12 eligible rows, in authoritative order.
+- **Source:** `views::complete_profile_queue` (the KV3 ranking used by `profile-queue.md`); the module
+  only filters `production && !row.is_demoted()` and copies; it never re-sorts. `rank` is the full
+  queue rank (demoted rows included).
+- **Counts:** `total_ranked` = every row; `production_ranked` = path-class production; `candidate_total`
+  = production and non-demoted; `demoted_production` = production but startup/no-loop demoted;
+  `shown = min(candidate_total, 12)`.
+- **Known limits:** capped at 12 rows; production-only (KV3 is non-test); startup/no-loop demoted rows
+  are counted but not carried; no line-level drill identity beyond `path:line`; the queue is still a
+  static cost ranking, not a runtime profile.
+- **Real implementation must:** emit the complete queue on demand (or a stable page), keep the story
+  and KV3 on one ranking function, and join to the drill/diagnostic identity.
+- **Evidence:** hyperfine `candidate_total=35`, `production_ranked=194`, `total_ranked=353`,
+  top `print` (`src/output/report.rs:19`, 213 units); cJSON `45/161/1055`, top `cJSON_Delete`
+  (`cJSON.c:253`, 137 units); 3k `candidate_total=2,730`, `shown=12`; e2e asserts every id exists in
+  `metrics.stats.functions` and the top row matches the authoritative first eligible row.
+
+### P8 — directory scenes (`3c80ae9`)
+
+- **Commit:** `3c80ae9` `core(P8): directory scenes` · `git show --stat 3c80ae9`:
+  `src/reporter/atlas_scenes.rs` new (607), `src/reporter/atlas.rs` +64/−? (shared `file_cost`),
+  `src/reporter/atlas_layout.rs` +106/−?, `src/reporter/mod.rs` +5, `tests/pipeline_e2e.rs` +92.
+- **Emitted:** `scenes { scene_version: 1, scene_cap: 24, file_cap: 5, total_scenes, shown_scenes,
+  total_files, shown_files, rows: [{path, depth, files, production_files, findings, cost,
+  production_cost, scale, entry, hottest, top_files: [{path, name, cost, scale, production, findings,
+  function_count, entry, hottest}]}], omitted: {scenes, files, cost, production_cost, findings} }`.
+  Additive `nodes[].scene` and `actions[].scene` use `SceneBlock::scene_for`.
+- **Partition:** source files = `doc.files` with `function_count > 0`; root files → `(root)`; a
+  top-level dir with 0–1 distinct child dirs → one scene at depth 1; with more than one child dir →
+  files directly in it form `d1` (depth 1) and `d1/d2/...` form `d1/d2` (depth 2); deeper files stay in
+  the depth-2 scene. Every file belongs to exactly one scene.
+- **Cost:** shared `atlas::file_cost` — all-`function_cost_v2` files sum v2; otherwise sum
+  `charts::function_cost` and round half-up, exactly as the canvas file cost. `scale` is `v2`/`v1`/
+  `mixed` (mixed only in the scene aggregate). Findings are counted by `findings[].path`.
+- **Ordering/caps:** production cost↓, cost↓, path↑; 24 scenes; top 5 files by cost↓/path↑; omitted
+  totals are the complement of the shown rows and are printed. `entry`/`hottest` flag the scene that
+  contains the elected entry / global hottest path.
+- **Known limits:** depth-2 cap (not recursive); the depth-1 direct-files scene can be small and can
+  fall below the 24-scene cap (3k: `src` with `main.c` is omitted while the canvas shows it); caps are
+  fixed (24/5), not configurable; production-first ordering can omit a huge test/bench scene (3k:
+  `tests`, 269 files) — its counts are in the omitted block and the scan-wide non-production count;
+  scene cost is static cost, not runtime work; a scene is a directory, not a component/call-graph
+  region; action scene is the directory partition, not the call path.
+- **Real implementation must:** configurable depth/caps for 10k+ repos, component-aware grouping where
+  justified, source-level scene drill links, and the same shared cost rule.
+- **Evidence:** hyperfine 11 scenes / 51 files (35 production / 16 test-bench), cJSON 3 / 81
+  (6/75), 3k 32 scenes / 3,000 files (2,731/269), shown 24, omitted 8 scenes / 816 files; every drawn
+  `AtlasNode.cost` equals the shared `file_cost`; all scene sums reconcile; two scans/double projection
+  byte-identical.
+
+### S4 scale fixture and evidence
+
+- **Fixture:** `sim/fixtures/gen-3k.py` (committed) — deterministic 3,000 scanned source files (2,999 C
+  + 1 Rust; 2,731 production + 269 test/bench), 30 modules × 9 subdirs × 10 files + 30 entries + main +
+  269 tests, a reachable high-cost C function-pointer file (`src/mod00/sub00/f00.c`) and a Rust `dyn`
+  file (`src/mod29/sub08/f09.rs`) engineered into the drawn slice, loops/I/O and a README. Generated
+  under `/var/tmp/opencode/atlas-3k-fixture`; never committed.
+- **F7:** page **463,230 bytes** (index 7,049 + CSS 24,176 + JS 58,166 + `data-3k.json` 373,839) vs
+  5 MB budget; first frame **max 1,649 ms** over three cold loads (budget 2,000); no horizontal scroll
+  at 1440×900 or 1280×800; 24 scene cards / 12 queue rows.
+- **F2–F6:** every drawn edge labelled; unresolved C fn-pointer + Rust `dyn` rows are visible and never
+  guessed; no forbidden claim/time unit in the data or final frame; two scans → identical layout/flow;
+  two loads → identical DOM; story-off vs story-on `report.html` identical and `metrics.json`
+  content-equal after provenance masking.
+- **F1:** `@vision` Read 8, two independent reads (F1 frames + scale frames): **PASS-WITH-NITS, no
+  blockers**. Hyperfine/cJSON purpose sentences and the first `path:line` were named; the 3k purpose
+  is fully readable; 1280 legend/START/footer wrap; scan-wide test/bench counts present. Carried nits:
+  third START item tail, PATH meta ellipsis at 1440, dense depth-1/edge labels, findings run-on, cJSON
+  unreached START/empty canvas (pre-existing).
+- **F8:** **deferred** — founder A2 session; not run or claimed. A2/ship remains behind the Atlas v2
+  step-13 founder gate (R-pf-109 for the map) and is not part of S4.
 
 ## Status legend
 

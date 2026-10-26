@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Atlas Story S4 — scale scenes and payoff (2026-10-26).** Three story-only core probes land in
+  `atlas-layout.json` (layout_version stays 1; no schema change, no dependency; non-story scans are
+  byte-identical): **P6** (`9263c19`) emits a README-derived `purpose` with a structural fallback,
+  **P7** (`e55221c`) emits the authoritative whole-repo KV3 queue slice (top 12 production,
+  non-demoted rows + counts, never re-ranked), and **P8** (`3c80ae9`) emits a depth-2 directory
+  `scenes` block (24 scenes × 5 top files, production-cost-first, explicit omitted totals, shared
+  file-cost rule) plus `nodes[].scene`/`actions[].scene`. The sim projects and renders `PURPOSE ·
+  <README sentence>`, enter-beat scene context, a whole-repo profile beat, scene-aware start-here,
+  a compact trust line and the below-fold SCENES / PROFILE QUEUE / TRUST ACCOUNTING panels; the
+  inspector gains UNRESOLVED CALLS (C function pointer + Rust `dyn` visible, never guessed). A
+  deterministic 3,000-file fixture and `sim/scale.py`/`scale.sh` gate F2–F7: page **463,230 bytes**,
+  first frame **max 1,649 ms**, no horizontal scroll at 1280×800, double-scan/double-load
+  determinism and story-off/on byte identity; 892 tests; `sim/verify.py` 302/302; 3k scale 44/44;
+  gate `dirty 0` PASS. `@vision` Read 8 PASS-WITH-NITS (no blockers). F8 (founder A2) is deferred,
+  not claimed. Records: `docs/atlas/core-probes.md` P6–P8; evidence `docs/evidence/atlas-sim/`.
 - **Atlas Story S3 — I/O effects (2026-10-26).** The core gains the story-only `flow.io[]` probe
   (`0ddf4ad`): a fixed v1 call-name table classifies `read`/`write` effects on `file`/`env`/`net`/
   `stdio`; a `literal` target is recorded only when the argument is a plain source string (never a
