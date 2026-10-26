@@ -17,6 +17,7 @@ use crate::analysis::flow::Flow;
 use crate::reporter::atlas::{AtlasNode, AtlasView};
 use crate::reporter::atlas_brief::StartAction;
 use crate::reporter::atlas_metrics::format_cost;
+use crate::reporter::atlas_purpose::Purpose;
 use crate::reporter::atlas_render::{
     EdgeShape, NodeRect, SVG_W, aggregate_rect, cap_chip_rect, caps_line, column_header_lines,
     compute_layout, edge_shape, footer_text, hottest_line, hull_boxes, node_badges,
@@ -28,7 +29,8 @@ use crate::reporter::atlas_render::{
 /// `findings_included`/`findings_total` are supplied by the caller (the same
 /// numbers the report header prints) so this module stays a pure projection of
 /// the view plus the already-ranked start actions. `flow` is the story-only
-/// P3 signature block; `None` on every non-story path.
+/// P3 signature block; `purpose` is the story-only P6 purpose block. Both are
+/// `None` on every non-story path.
 #[must_use]
 pub(crate) fn to_json(
     view: &AtlasView,
@@ -36,6 +38,7 @@ pub(crate) fn to_json(
     findings_included: usize,
     findings_total: usize,
     flow: Option<&Flow>,
+    purpose: Option<&Purpose>,
 ) -> String {
     let layout = compute_layout(view);
 
@@ -273,6 +276,13 @@ pub(crate) fn to_json(
         object.insert("flow".to_string(), flow_value);
     }
 
+    if let Some(purpose) = purpose
+        && let Ok(purpose_value) = serde_json::to_value(purpose)
+        && let serde_json::Value::Object(ref mut object) = value
+    {
+        object.insert("purpose".to_string(), purpose_value);
+    }
+
     serde_json::to_string_pretty(&value)
         .expect("atlas layout JSON is built from serializable primitives")
 }
@@ -368,7 +378,7 @@ mod tests {
             .iter()
             .map(|node| node.findings.hot + node.findings.warn + node.findings.info)
             .sum();
-        to_json(&view, &actions, included, doc.findings.len(), None)
+        to_json(&view, &actions, included, doc.findings.len(), None, None)
     }
 
     #[test]
@@ -474,6 +484,33 @@ mod tests {
             assert_eq!(stage["label"].as_str(), Some(expected_label.as_str()));
             assert_eq!(stage["leaf"].as_bool().unwrap(), index == stages.len() - 1);
         }
+    }
+
+    #[test]
+    fn purpose_is_emitted_only_when_supplied() {
+        let doc = application_fixture();
+        let view = build_atlas_view(&doc);
+        let actions = crate::reporter::atlas_brief::start_actions(&doc);
+        let purpose = Purpose {
+            purpose_version: 1,
+            text: "Test purpose.".to_string(),
+            source: Some("README.md".to_string()),
+            kind: "readme",
+        };
+
+        let plain = render(&doc);
+        let plain_value: Value = serde_json::from_str(&plain).expect("atlas layout JSON parses");
+        assert!(
+            plain_value.get("purpose").is_none(),
+            "purpose emitted without a value"
+        );
+
+        let raw = to_json(&view, &actions, 0, doc.findings.len(), None, Some(&purpose));
+        let value: Value = serde_json::from_str(&raw).expect("atlas layout JSON parses");
+        assert_eq!(value["layout_version"], 1);
+        assert_eq!(value["purpose"]["kind"], "readme");
+        assert_eq!(value["purpose"]["text"], "Test purpose.");
+        assert_eq!(value["purpose"]["source"], "README.md");
     }
 
     #[test]

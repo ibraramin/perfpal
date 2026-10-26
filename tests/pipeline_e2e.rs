@@ -533,6 +533,17 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
     let raw = fs::read_to_string(story.join("atlas-layout.json")).expect("layout JSON");
     let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
     assert_eq!(layout["layout_version"], 1);
+    // P6 fallback: the committed fixture has no README at its root.
+    assert_eq!(layout["purpose"]["kind"], "structural");
+    assert_eq!(layout["purpose"]["source"], serde_json::Value::Null);
+    assert_eq!(layout["purpose"]["purpose_version"], 1);
+    assert!(
+        layout["purpose"]["text"]
+            .as_str()
+            .is_some_and(|text| text.starts_with("No README at the scan root; inferred entry: ")),
+        "structural purpose text missing: {}",
+        layout["purpose"]["text"]
+    );
 
     let canvas_w = layout["canvas"]["w"].as_i64().expect("canvas width");
     let included = layout["meta"]["findings_included"]
@@ -607,6 +618,66 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
             "node column out of range: {node}"
         );
     }
+}
+
+/// S4/P6: the story-only purpose block reads the scan-root README, and adding
+/// it changes nothing outside `atlas-layout.json` (F6).
+#[test]
+fn story_purpose_reads_root_readme_and_stays_story_only() {
+    let root = temp_dir("purpose-src");
+    fs::write(
+        root.join("README.md"),
+        "# Example\n\n\
+         ![badge](https://example.invalid/badge.svg)\n\n\
+         A deterministic C scanner for [Perfpal](https://example.invalid).\n\n\
+         A second paragraph is ignored.\n",
+    )
+    .expect("write README");
+    fs::write(root.join("main.c"), "int main(void) { return 0; }\n").expect("write main.c");
+
+    let plain = temp_dir("purpose-off").join("perfpal-report");
+    let story = temp_dir("purpose-on").join("perfpal-report");
+    let plain_code = run_with(argv(&[
+        "--output",
+        plain.to_string_lossy().as_ref(),
+        root.to_string_lossy().as_ref(),
+    ]));
+    let story_code = run_with(argv(&[
+        "--output",
+        story.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(plain_code, 0);
+    assert_eq!(story_code, 0);
+
+    assert!(
+        !plain.join("atlas-layout.json").exists(),
+        "atlas-layout.json must not be emitted without --story"
+    );
+
+    let raw = fs::read_to_string(story.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    assert_eq!(layout["layout_version"], 1);
+    let purpose = &layout["purpose"];
+    assert_eq!(purpose["kind"], "readme");
+    assert_eq!(purpose["source"], "README.md");
+    assert_eq!(purpose["purpose_version"], 1);
+    assert_eq!(purpose["text"], "A deterministic C scanner for Perfpal.");
+
+    // F6: --story changes nothing in the shared artifacts.
+    let plain_metrics = fs::read_to_string(plain.join("metrics.json")).expect("plain metrics");
+    let story_metrics = fs::read_to_string(story.join("metrics.json")).expect("story metrics");
+    assert_eq!(
+        common::mask_metrics_provenance(&plain_metrics),
+        common::mask_metrics_provenance(&story_metrics),
+        "metrics.json changed beyond provenance when --story was passed"
+    );
+    assert_eq!(
+        fs::read(plain.join("report.html")).expect("plain report"),
+        fs::read(story.join("report.html")).expect("story report"),
+        "report.html changed when --story was passed"
+    );
 }
 
 /// `atlas-layout.json` must be byte-identical across two independent scans.

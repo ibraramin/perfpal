@@ -29,6 +29,7 @@ pub mod atlas;
 pub mod atlas_brief;
 pub mod atlas_layout;
 pub mod atlas_metrics;
+pub mod atlas_purpose;
 pub mod atlas_render;
 pub mod views;
 
@@ -1924,12 +1925,19 @@ pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
         std::path::Path::new(&doc.scan.root_path),
         view.nodes.iter().map(|node| node.path.clone()),
     );
+    // Story-only P6 probe: the scan-root README's first prose paragraph, with
+    // the existing entry line as the structural fallback.
+    let purpose = atlas_purpose::read(
+        std::path::Path::new(&doc.scan.root_path),
+        &atlas_render::strip_entry_line(&view),
+    );
     atlas_layout::to_json(
         &view,
         &start_actions,
         findings_included,
         findings_total,
         Some(&flow),
+        Some(&purpose),
     )
 }
 
