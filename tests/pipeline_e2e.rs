@@ -607,6 +607,90 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
         );
     }
 
+    // P8: directory scenes cover every source file, respect the caps, and
+    // reconcile shown + omitted against the scan totals.
+    let file_paths: Vec<&str> = metrics_doc["files"]
+        .as_array()
+        .expect("files array")
+        .iter()
+        .filter_map(|file| file["path"].as_str())
+        .collect();
+    let source_file_count = metrics_doc["files"]
+        .as_array()
+        .expect("files array")
+        .iter()
+        .filter(|file| file["function_count"].as_u64().unwrap_or(0) > 0)
+        .count();
+
+    let scenes = &layout["scenes"];
+    assert_eq!(scenes["scene_version"], 1, "scenes.scene_version");
+    assert_eq!(scenes["scene_cap"], 24, "scenes.scene_cap");
+    assert_eq!(scenes["file_cap"], 5, "scenes.file_cap");
+    let scene_rows = scenes["rows"].as_array().expect("scenes.rows array");
+    assert_eq!(
+        scenes["shown_scenes"].as_u64().expect("shown_scenes"),
+        scene_rows.len() as u64,
+        "shown_scenes != rows.len()"
+    );
+    assert!(scene_rows.len() <= 24, "shown scenes exceed the cap");
+    let mut shown_files = 0_usize;
+    for scene in scene_rows {
+        let files = scene["files"].as_u64().expect("scene files") as usize;
+        shown_files += files;
+        let top_files = scene["top_files"]
+            .as_array()
+            .expect("scene top_files array");
+        assert!(
+            top_files.len() <= 5,
+            "top_files exceeds the per-scene cap: {scene}"
+        );
+        for file in top_files {
+            let path = file["path"].as_str().expect("top file path");
+            assert!(
+                file_paths.contains(&path),
+                "scene top file {path} is not a metrics file"
+            );
+            assert_eq!(
+                file["name"],
+                path.rsplit('/').next().unwrap_or(path),
+                "top file basename mismatch: {file}"
+            );
+        }
+        let path = scene["path"].as_str().expect("scene path");
+        if path != "(root)" {
+            let prefix = format!("{path}/");
+            assert!(
+                file_paths.iter().any(|file| file.starts_with(&prefix)),
+                "scene path {path} owns no metrics file"
+            );
+        }
+        assert!(scene["depth"].as_u64().is_some(), "scene depth missing");
+        assert!(scene["cost"].is_number(), "scene cost missing");
+        assert!(scene["scale"].is_string(), "scene scale missing");
+    }
+    let omitted = &scenes["omitted"];
+    let total_files = scenes["total_files"].as_u64().expect("scenes.total_files") as usize;
+    assert_eq!(total_files, source_file_count, "total_files mismatch");
+    assert_eq!(
+        shown_files + omitted["files"].as_u64().expect("omitted files") as usize,
+        total_files,
+        "shown + omitted files do not reconcile"
+    );
+    assert_eq!(
+        scene_rows.len() + omitted["scenes"].as_u64().expect("omitted scenes") as usize,
+        scenes["total_scenes"]
+            .as_u64()
+            .expect("scenes.total_scenes") as usize,
+        "shown + omitted scenes do not reconcile"
+    );
+
+    for action in layout["actions"].as_array().expect("actions array") {
+        assert!(
+            action["scene"].is_string(),
+            "story action missing its scene: {action}"
+        );
+    }
+
     let canvas_w = layout["canvas"]["w"].as_i64().expect("canvas width");
     let included = layout["meta"]["findings_included"]
         .as_u64()
@@ -617,6 +701,14 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
     assert!(included <= total, "included findings exceed the scan total");
 
     let nodes = layout["nodes"].as_array().expect("nodes array");
+    for node in nodes {
+        let path = node["path"].as_str().expect("node path");
+        let scene = node["scene"].as_str().expect("drawn node scene");
+        assert!(
+            scene == "(root)" || path.starts_with(&format!("{scene}/")),
+            "node {path} scene {scene} is not a partition prefix"
+        );
+    }
     let drawn: u64 = nodes
         .iter()
         .map(|node| {

@@ -24,15 +24,17 @@ use crate::reporter::atlas_render::{
     compute_layout, edge_shape, footer_text, hottest_line, hull_boxes, node_badges,
     node_rank_lines, node_style, path_line, strip_entry_line,
 };
+use crate::reporter::atlas_scenes::SceneBlock;
 
 /// Serialize the Atlas story geometry as pretty JSON.
 ///
 /// `findings_included`/`findings_total` are supplied by the caller (the same
 /// numbers the report header prints) so this module stays a pure projection of
 /// the view plus the already-ranked start actions. `flow` is the story-only
-/// P3 signature block; `purpose` is the story-only P6 purpose block and
-/// `queue` the story-only P7 whole-repo profile queue. All are `None` on every
-/// non-story path.
+/// P3 signature block; `purpose` is the story-only P6 purpose block, `queue`
+/// the story-only P7 whole-repo profile queue and `scenes` the story-only P8
+/// directory scenes. All are `None` on every non-story path.
+#[allow(clippy::too_many_arguments)] // one additive slot per story-only probe
 #[must_use]
 pub(crate) fn to_json(
     view: &AtlasView,
@@ -42,6 +44,7 @@ pub(crate) fn to_json(
     flow: Option<&Flow>,
     purpose: Option<&Purpose>,
     queue: Option<&ProfileQueue>,
+    scenes: Option<&SceneBlock>,
 ) -> String {
     let layout = compute_layout(view);
 
@@ -73,7 +76,7 @@ pub(crate) fn to_json(
         } else {
             Value::String(dash.to_string())
         };
-        let value = json!({
+        let mut value = json!({
             "path": node.path,
             "name": node.file_name,
             "x": rect.x,
@@ -105,6 +108,9 @@ pub(crate) fn to_json(
             },
             "functions": functions_json(node),
         });
+        if let Some(scenes) = scenes {
+            value["scene"] = json!(scenes.scene_for(&node.path));
+        }
         nodes.push((column_index, rect.y, node.path.clone(), value));
     }
     nodes.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)).then(a.2.cmp(&b.2)));
@@ -227,14 +233,18 @@ pub(crate) fn to_json(
     let actions: Vec<Value> = actions
         .iter()
         .map(|action| {
-            json!({
+            let mut value = json!({
                 "location": action.location,
                 "rule": action.rule,
                 "function": action.function,
                 "severity_confidence": action.severity_confidence,
                 "production": action.production,
                 "cost_anchor": action.cost_anchor,
-            })
+            });
+            if let Some(scenes) = scenes {
+                value["scene"] = json!(scenes.scene_for(action_path(&action.location)));
+            }
+            value
         })
         .collect();
 
@@ -293,8 +303,27 @@ pub(crate) fn to_json(
         object.insert("profile".to_string(), queue_value);
     }
 
+    if let Some(scenes) = scenes
+        && let Ok(scenes_value) = serde_json::to_value(scenes)
+        && let serde_json::Value::Object(ref mut object) = value
+    {
+        object.insert("scenes".to_string(), scenes_value);
+    }
+
     serde_json::to_string_pretty(&value)
         .expect("atlas layout JSON is built from serializable primitives")
+}
+
+/// Strip the trailing `:line` from a `path:line` action location.
+fn action_path(location: &str) -> &str {
+    match location.rsplit_once(':') {
+        Some((path, line))
+            if !path.is_empty() && !line.is_empty() && line.chars().all(|c| c.is_ascii_digit()) =>
+        {
+            path
+        }
+        _ => location,
+    }
 }
 
 /// Per-node functions, sorted by `(cost desc, line, name)`.
@@ -393,6 +422,7 @@ mod tests {
             &actions,
             included,
             doc.findings.len(),
+            None,
             None,
             None,
             None,
@@ -531,6 +561,7 @@ mod tests {
             None,
             Some(&purpose),
             None,
+            None,
         );
         let value: Value = serde_json::from_str(&raw).expect("atlas layout JSON parses");
         assert_eq!(value["layout_version"], 1);
@@ -562,12 +593,75 @@ mod tests {
             None,
             None,
             Some(&queue),
+            None,
         );
         let value: Value = serde_json::from_str(&raw).expect("atlas layout JSON parses");
         assert_eq!(value["layout_version"], 1);
         assert_eq!(value["profile"]["queue_version"], 1);
         assert_eq!(value["profile"]["shown"], queue.shown);
         assert_eq!(value["profile"]["candidate_total"], queue.candidate_total);
+    }
+
+    #[test]
+    fn scenes_and_action_scene_are_emitted_only_when_supplied() {
+        let doc = application_fixture();
+        let view = build_atlas_view(&doc);
+        let actions = crate::reporter::atlas_brief::start_actions(&doc);
+        let scenes = crate::reporter::atlas_scenes::build(&doc, &view);
+
+        assert_eq!(action_path("src/a.c:12"), "src/a.c");
+        assert_eq!(action_path("src/a.c"), "src/a.c");
+
+        let plain: Value = serde_json::from_str(&render(&doc)).expect("atlas layout JSON parses");
+        assert!(
+            plain.get("scenes").is_none(),
+            "scenes emitted without a value"
+        );
+        assert!(
+            plain["actions"]
+                .as_array()
+                .expect("actions array")
+                .iter()
+                .all(|action| action.get("scene").is_none()),
+            "action scene emitted without a scenes block"
+        );
+        assert!(
+            plain["nodes"]
+                .as_array()
+                .expect("nodes array")
+                .iter()
+                .all(|node| node.get("scene").is_none()),
+            "node scene emitted without a scenes block"
+        );
+
+        let raw = to_json(
+            &view,
+            &actions,
+            0,
+            doc.findings.len(),
+            None,
+            None,
+            None,
+            Some(&scenes),
+        );
+        let value: Value = serde_json::from_str(&raw).expect("atlas layout JSON parses");
+        assert_eq!(value["layout_version"], 1);
+        assert_eq!(value["scenes"]["scene_version"], 1);
+        assert_eq!(value["scenes"]["shown_scenes"], scenes.shown_scenes);
+        for action in value["actions"].as_array().expect("actions array") {
+            assert!(
+                action["scene"].is_string(),
+                "action scene missing: {action}"
+            );
+        }
+        for node in value["nodes"].as_array().expect("nodes array") {
+            let path = node["path"].as_str().expect("node path");
+            assert_eq!(
+                node["scene"].as_str(),
+                Some(scenes.scene_for(path).as_str()),
+                "node scene mismatch for {path}"
+            );
+        }
     }
 
     #[test]

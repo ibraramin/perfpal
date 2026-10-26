@@ -32,6 +32,7 @@ pub mod atlas_metrics;
 pub mod atlas_purpose;
 pub mod atlas_queue;
 pub mod atlas_render;
+pub mod atlas_scenes;
 pub mod views;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -1935,6 +1936,9 @@ pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
     // Story-only P7 probe: the whole-repo KV3 queue projected from the
     // authoritative complete-profile-queue ordering (no second ranking).
     let profile = atlas_queue::build(doc);
+    // Story-only P8 probe: directory scenes over every source file, derived
+    // from the same view the canvas draws.
+    let scenes = atlas_scenes::build(doc, &view);
     atlas_layout::to_json(
         &view,
         &start_actions,
@@ -1943,6 +1947,7 @@ pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
         Some(&flow),
         Some(&purpose),
         Some(&profile),
+        Some(&scenes),
     )
 }
 

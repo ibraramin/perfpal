@@ -456,6 +456,44 @@ fn build_structural(doc: &MetricsDocument, source_paths: &BTreeSet<String>) -> S
     Structural { pairs, fan_in, mix }
 }
 
+/// Shared per-file cost rule (Atlas file cards, scene aggregation).
+///
+/// Returns `(display_cost, exact_cost, scale)`: v2 sums `function_cost_v2`
+/// directly; v1 sums [`crate::charts::function_cost`] and half-up rounds the
+/// displayed integer exactly as [`build_file_infos`] does. `exact_cost` is the
+/// unrounded sum (the v2 integer sum for v2 files), used for anchor multiples.
+pub(crate) fn file_cost(
+    doc: &MetricsDocument,
+    indices: &[usize],
+) -> (u64, f64, crate::reporter::views::CostScale) {
+    use crate::reporter::views::CostScale;
+    let all_v2 = indices
+        .iter()
+        .all(|&index| doc.stats.functions[index].function_cost_v2.is_some());
+    let scale = if indices.is_empty() || all_v2 {
+        CostScale::V2
+    } else {
+        CostScale::V1
+    };
+    match scale {
+        CostScale::V2 => {
+            let cost = indices
+                .iter()
+                .filter_map(|&index| doc.stats.functions[index].function_cost_v2)
+                .fold(0_u64, u64::saturating_add);
+            (cost, cost as f64, scale)
+        }
+        CostScale::V1 => {
+            let sum: f64 = indices
+                .iter()
+                .map(|&index| crate::charts::function_cost(&doc.stats.functions[index]))
+                .sum();
+            let rounded = crate::schema::round_half_up(sum, 0).max(0);
+            (u64::try_from(rounded).unwrap_or(u64::MAX), sum, scale)
+        }
+    }
+}
+
 fn build_file_infos(
     doc: &MetricsDocument,
     functions_by_path: &BTreeMap<String, Vec<usize>>,
@@ -472,33 +510,9 @@ fn build_file_infos(
             .get(&file.path)
             .cloned()
             .unwrap_or_default();
-        let all_v2 = indices
-            .iter()
-            .all(|&index| doc.stats.functions[index].function_cost_v2.is_some());
-        let scale = if indices.is_empty() || all_v2 {
-            CostScale::V2
-        } else {
-            CostScale::V1
-        };
         // v1 file cost is summed unrounded for the anchor multiple; only the
         // displayed integer is HALF-UP rounded (ScaleOrdering parity).
-        let (cost, cost_exact) = match scale {
-            CostScale::V2 => {
-                let cost = indices
-                    .iter()
-                    .filter_map(|&index| doc.stats.functions[index].function_cost_v2)
-                    .fold(0_u64, u64::saturating_add);
-                (cost, cost as f64)
-            }
-            CostScale::V1 => {
-                let sum: f64 = indices
-                    .iter()
-                    .map(|&index| crate::charts::function_cost(&doc.stats.functions[index]))
-                    .sum();
-                let rounded = crate::schema::round_half_up(sum, 0).max(0);
-                (u64::try_from(rounded).unwrap_or(u64::MAX), sum)
-            }
-        };
+        let (cost, cost_exact, scale) = file_cost(doc, &indices);
         let class = file
             .path_class
             .clone()
