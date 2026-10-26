@@ -385,7 +385,7 @@ const IO_RULES: &[IoRule] = &[
     IoRule { name: "std::fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
     IoRule { name: "fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
     IoRule { name: "std::fs::rename", op: OpRule::Write, target: "file", literal_arg: None, bare: false },
-    IoRule { name: "fs::rename", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::rename", op: OpRule::Write, target: "file", literal_arg: None, bare: false },
     IoRule { name: "std::fs::copy", op: OpRule::Both, target: "file", literal_arg: None, bare: false },
     IoRule { name: "fs::copy", op: OpRule::Both, target: "file", literal_arg: None, bare: false },
     IoRule { name: "std::fs::hard_link", op: OpRule::Write, target: "file", literal_arg: None, bare: false },
@@ -2126,6 +2126,7 @@ mod tests {
             &dir,
             "fp.c",
             "typedef int (*read_fn)(int);\n\
+             int run(read_fn read) { return read(0); }\n\
              int main(void) { read_fn read = 0; return read(0); }\n",
         );
 
@@ -2234,6 +2235,10 @@ mod tests {
         assert!(matches!(find("std::fs::copy").op, OpRule::Both));
         assert_eq!(find("rename").literal_arg, None);
         assert_eq!(find("std::fs::rename").literal_arg, None);
+        assert_eq!(find("fs::rename").literal_arg, None);
         assert_eq!(find("std::fs::copy").literal_arg, None);
+        assert_eq!(find("fs::copy").literal_arg, None);
+        assert_eq!(find("std::fs::hard_link").literal_arg, None);
+        assert_eq!(find("fs::hard_link").literal_arg, None);
     }
 }
