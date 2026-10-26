@@ -30,6 +30,7 @@ pub mod atlas_brief;
 pub mod atlas_layout;
 pub mod atlas_metrics;
 pub mod atlas_purpose;
+pub mod atlas_queue;
 pub mod atlas_render;
 pub mod views;
 
@@ -1931,6 +1932,9 @@ pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
         std::path::Path::new(&doc.scan.root_path),
         &atlas_render::strip_entry_line(&view),
     );
+    // Story-only P7 probe: the whole-repo KV3 queue projected from the
+    // authoritative complete-profile-queue ordering (no second ranking).
+    let profile = atlas_queue::build(doc);
     atlas_layout::to_json(
         &view,
         &start_actions,
@@ -1938,6 +1942,7 @@ pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
         findings_total,
         Some(&flow),
         Some(&purpose),
+        Some(&profile),
     )
 }
 

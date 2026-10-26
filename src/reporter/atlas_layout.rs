@@ -18,6 +18,7 @@ use crate::reporter::atlas::{AtlasNode, AtlasView};
 use crate::reporter::atlas_brief::StartAction;
 use crate::reporter::atlas_metrics::format_cost;
 use crate::reporter::atlas_purpose::Purpose;
+use crate::reporter::atlas_queue::ProfileQueue;
 use crate::reporter::atlas_render::{
     EdgeShape, NodeRect, SVG_W, aggregate_rect, cap_chip_rect, caps_line, column_header_lines,
     compute_layout, edge_shape, footer_text, hottest_line, hull_boxes, node_badges,
@@ -29,8 +30,9 @@ use crate::reporter::atlas_render::{
 /// `findings_included`/`findings_total` are supplied by the caller (the same
 /// numbers the report header prints) so this module stays a pure projection of
 /// the view plus the already-ranked start actions. `flow` is the story-only
-/// P3 signature block; `purpose` is the story-only P6 purpose block. Both are
-/// `None` on every non-story path.
+/// P3 signature block; `purpose` is the story-only P6 purpose block and
+/// `queue` the story-only P7 whole-repo profile queue. All are `None` on every
+/// non-story path.
 #[must_use]
 pub(crate) fn to_json(
     view: &AtlasView,
@@ -39,6 +41,7 @@ pub(crate) fn to_json(
     findings_total: usize,
     flow: Option<&Flow>,
     purpose: Option<&Purpose>,
+    queue: Option<&ProfileQueue>,
 ) -> String {
     let layout = compute_layout(view);
 
@@ -283,6 +286,13 @@ pub(crate) fn to_json(
         object.insert("purpose".to_string(), purpose_value);
     }
 
+    if let Some(queue) = queue
+        && let Ok(queue_value) = serde_json::to_value(queue)
+        && let serde_json::Value::Object(ref mut object) = value
+    {
+        object.insert("profile".to_string(), queue_value);
+    }
+
     serde_json::to_string_pretty(&value)
         .expect("atlas layout JSON is built from serializable primitives")
 }
@@ -378,7 +388,15 @@ mod tests {
             .iter()
             .map(|node| node.findings.hot + node.findings.warn + node.findings.info)
             .sum();
-        to_json(&view, &actions, included, doc.findings.len(), None, None)
+        to_json(
+            &view,
+            &actions,
+            included,
+            doc.findings.len(),
+            None,
+            None,
+            None,
+        )
     }
 
     #[test]
@@ -505,12 +523,51 @@ mod tests {
             "purpose emitted without a value"
         );
 
-        let raw = to_json(&view, &actions, 0, doc.findings.len(), None, Some(&purpose));
+        let raw = to_json(
+            &view,
+            &actions,
+            0,
+            doc.findings.len(),
+            None,
+            Some(&purpose),
+            None,
+        );
         let value: Value = serde_json::from_str(&raw).expect("atlas layout JSON parses");
         assert_eq!(value["layout_version"], 1);
         assert_eq!(value["purpose"]["kind"], "readme");
         assert_eq!(value["purpose"]["text"], "Test purpose.");
         assert_eq!(value["purpose"]["source"], "README.md");
+    }
+
+    #[test]
+    fn profile_is_emitted_only_when_supplied() {
+        let doc = application_fixture();
+        let view = build_atlas_view(&doc);
+        let actions = crate::reporter::atlas_brief::start_actions(&doc);
+        let queue = crate::reporter::atlas_queue::build(&doc);
+
+        assert!(
+            serde_json::from_str::<Value>(&render(&doc))
+                .expect("atlas layout JSON parses")
+                .get("profile")
+                .is_none(),
+            "profile emitted without a value"
+        );
+
+        let raw = to_json(
+            &view,
+            &actions,
+            0,
+            doc.findings.len(),
+            None,
+            None,
+            Some(&queue),
+        );
+        let value: Value = serde_json::from_str(&raw).expect("atlas layout JSON parses");
+        assert_eq!(value["layout_version"], 1);
+        assert_eq!(value["profile"]["queue_version"], 1);
+        assert_eq!(value["profile"]["shown"], queue.shown);
+        assert_eq!(value["profile"]["candidate_total"], queue.candidate_total);
     }
 
     #[test]

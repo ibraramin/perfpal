@@ -545,6 +545,68 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
         layout["purpose"]["text"]
     );
 
+    // P7: the whole-repo profile queue is a projection of the authoritative
+    // KV3 ordering — capped, reconciled, and joined to metrics function ids.
+    let profile = &layout["profile"];
+    assert_eq!(profile["queue_version"], 1, "profile.queue_version");
+    let shown = profile["shown"].as_u64().expect("profile.shown");
+    assert!(shown <= 12, "profile.shown exceeds the 12-row cap");
+    let rows = profile["rows"].as_array().expect("profile.rows array");
+    assert_eq!(rows.len() as u64, shown, "profile.shown != profile.rows");
+    let total_ranked = profile["total_ranked"]
+        .as_u64()
+        .expect("profile.total_ranked");
+    let production_ranked = profile["production_ranked"]
+        .as_u64()
+        .expect("profile.production_ranked");
+    let candidate_total = profile["candidate_total"]
+        .as_u64()
+        .expect("profile.candidate_total");
+    let demoted_production = profile["demoted_production"]
+        .as_u64()
+        .expect("profile.demoted_production");
+    assert_eq!(
+        production_ranked,
+        candidate_total + demoted_production,
+        "profile production counts do not reconcile"
+    );
+    assert!(total_ranked >= production_ranked);
+    assert!(production_ranked >= candidate_total);
+    assert!(candidate_total >= shown);
+
+    let metrics_doc: serde_json::Value =
+        serde_json::from_str(&story_metrics).expect("story metrics parses");
+    let function_ids: Vec<&str> = metrics_doc["stats"]["functions"]
+        .as_array()
+        .expect("stats.functions array")
+        .iter()
+        .filter_map(|function| function["id"].as_str())
+        .collect();
+    for row in rows {
+        let id = row["id"].as_str().expect("profile row id");
+        assert!(
+            function_ids.contains(&id),
+            "profile row id {id} is not a metrics function id"
+        );
+        assert_eq!(row["production"], true, "non-production profile row: {row}");
+        assert_eq!(
+            row["demotions"],
+            serde_json::json!([]),
+            "demoted profile row: {row}"
+        );
+        assert!(
+            row["cost"].is_number() && row["cost_text"].is_string(),
+            "profile row cost fields missing: {row}"
+        );
+    }
+    if !rows.is_empty() {
+        assert_eq!(
+            rows[0]["demotions"],
+            serde_json::json!([]),
+            "top profile row must be non-demoted"
+        );
+    }
+
     let canvas_w = layout["canvas"]["w"].as_i64().expect("canvas width");
     let included = layout["meta"]["findings_included"]
         .as_u64()
