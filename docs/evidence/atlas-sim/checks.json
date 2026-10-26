@@ -81,6 +81,236 @@
       "ok": true
     },
     {
+      "check": "hyperfine: S4 purpose envelope is well formed",
+      "detail": "{'kind': 'readme', 'source': 'README.md', 'text': 'A command-line benchmarking tool.', 'version': 1}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 purpose makes no forbidden claim",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 purpose is the core sentence",
+      "detail": "{'kind': 'readme', 'source': 'README.md', 'text': 'A command-line benchmarking tool.', 'version': 1}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 purpose trust matches",
+      "detail": "{'kind': 'readme', 'source': 'README.md'}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 profile rows are production",
+      "detail": "12/12",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 profile ranks ascend in core order",
+      "detail": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 profile top row is the core top row",
+      "detail": "src/output/report.rs#print#19:1 vs src/output/report.rs#print#19:1",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 profile costs match metrics",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 profile counts reconcile with profileMeta/trust",
+      "detail": "{'candidateTotal': 35, 'demotedProduction': 159, 'productionRanked': 194, 'queueVersion': 1, 'shown': 12, 'totalRanked': 353} \u00b7 {'candidateTotal': 35, 'demotedProduction': 159, 'productionRanked': 194, 'shown': 12, 'totalRanked': 353}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 profile meta matches the core block",
+      "detail": "{'candidate_total': 35, 'demoted_production': 159, 'production_ranked': 194, 'queue_version': 1, 'rows': [{'cost': 213.0, 'cost_text': '213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%', 'demotions': [], 'id': 'src/output/report.rs#print#19:1', 'known_trip_value': None, 'line': 19, 'name': 'print', 'path': 'src/output/report.rs', 'path_class': 'production', 'production': True, 'rank': 1, 'unknown_trip_loops': 3}, {'cost': 165.0, 'cost_text': '165 static cost units (v2) \u00b7 24\u00d7 median \u00b7 top 1%', 'd",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene counts and caps reconcile",
+      "detail": "{'fileCap': 5, 'nonProductionFiles': 16, 'omitted': {'cost': 0, 'files': 0, 'findings': 0, 'productionCost': 0, 'scenes': 0}, 'productionFiles': 35, 'sceneCap': 24, 'sceneVersion': 1, 'shownFiles': 51, 'shownScenes': 11, 'totalFiles': 51, 'totalScenes': 11}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene production split reconciles with metrics",
+      "detail": "production=35/35 non-production=16/16 trust=35/16",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene top files are capped and sorted",
+      "detail": "[5, 5, 3, 5, 2, 3, 3, 1, 3, 5, 5]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene paths contain their top files",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene top files exist in metrics",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene totals are non-negative",
+      "detail": "{'cost': 0, 'files': 0, 'findings': 0, 'productionCost': 0, 'scenes': 0}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene trust reconciles",
+      "detail": "{'files': 51, 'nonProductionFiles': 16, 'omitted': 0, 'productionFiles': 35, 'shown': 11, 'shownFiles': 51, 'total': 11} vs {'fileCap': 5, 'nonProductionFiles': 16, 'omitted': {'cost': 0, 'files': 0, 'findings': 0, 'productionCost': 0, 'scenes': 0}, 'productionFiles': 35, 'sceneCap': 24, 'sceneVersion': 1, 'shownFiles': 51, 'shownScenes': 11, 'totalFiles': 51, 'totalScenes': 11}",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scenes keep core order",
+      "detail": "['src', 'src/export', 'src/output']",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 node scenes are core strings",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 action scenes are core strings",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 action functions are carried",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 unresolved calls are grouped on drawn files",
+      "detail": "1564 rows on 19 files",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 unresolved-call rows are sorted",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 purpose envelope is well formed",
+      "detail": "{'kind': 'readme', 'source': 'README.md', 'text': 'Ultralightweight JSON parser in ANSI C.', 'version': 1}",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 purpose makes no forbidden claim",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 purpose is the core sentence",
+      "detail": "{'kind': 'readme', 'source': 'README.md', 'text': 'Ultralightweight JSON parser in ANSI C.', 'version': 1}",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 purpose trust matches",
+      "detail": "{'kind': 'readme', 'source': 'README.md'}",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 profile rows are production",
+      "detail": "12/12",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 profile ranks ascend in core order",
+      "detail": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 profile top row is the core top row",
+      "detail": "cJSON.c#cJSON_Delete#253:1 vs cJSON.c#cJSON_Delete#253:1",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 profile costs match metrics",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 profile counts reconcile with profileMeta/trust",
+      "detail": "{'candidateTotal': 45, 'demotedProduction': 116, 'productionRanked': 161, 'queueVersion': 1, 'shown': 12, 'totalRanked': 1055} \u00b7 {'candidateTotal': 45, 'demotedProduction': 116, 'productionRanked': 161, 'shown': 12, 'totalRanked': 1055}",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 profile meta matches the core block",
+      "detail": "{'candidate_total': 45, 'demoted_production': 116, 'production_ranked': 161, 'queue_version': 1, 'rows': [{'cost': 137.0, 'cost_text': '137 static cost units (v2) \u00b7 69\u00d7 median \u00b7 top 1%', 'demotions': [], 'id': 'cJSON.c#cJSON_Delete#253:1', 'known_trip_value': None, 'line': 253, 'name': 'cJSON_Delete', 'path': 'cJSON.c', 'path_class': 'production', 'production': True, 'rank': 1, 'unknown_trip_loops': 1}, {'cost': 101.0, 'cost_text': '101 static cost units (v2) \u00b7 51\u00d7 median \u00b7 top 1%', 'demotions':",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene counts and caps reconcile",
+      "detail": "{'fileCap': 5, 'nonProductionFiles': 75, 'omitted': {'cost': 0, 'files': 0, 'findings': 0, 'productionCost': 0, 'scenes': 0}, 'productionFiles': 6, 'sceneCap': 24, 'sceneVersion': 1, 'shownFiles': 81, 'shownScenes': 3, 'totalFiles': 81, 'totalScenes': 3}",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene production split reconciles with metrics",
+      "detail": "production=6/6 non-production=75/75 trust=6/75",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene top files are capped and sorted",
+      "detail": "[3, 3, 5]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene paths contain their top files",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene top files exist in metrics",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene totals are non-negative",
+      "detail": "{'cost': 0, 'files': 0, 'findings': 0, 'productionCost': 0, 'scenes': 0}",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene trust reconciles",
+      "detail": "{'files': 81, 'nonProductionFiles': 75, 'omitted': 0, 'productionFiles': 6, 'shown': 3, 'shownFiles': 81, 'total': 3} vs {'fileCap': 5, 'nonProductionFiles': 75, 'omitted': {'cost': 0, 'files': 0, 'findings': 0, 'productionCost': 0, 'scenes': 0}, 'productionFiles': 6, 'sceneCap': 24, 'sceneVersion': 1, 'shownFiles': 81, 'shownScenes': 3, 'totalFiles': 81, 'totalScenes': 3}",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scenes keep core order",
+      "detail": "['(root)', 'fuzzing', 'tests']",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 node scenes are core strings",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 action scenes are core strings",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 action functions are carried",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 unresolved calls are grouped on drawn files",
+      "detail": "1077 rows on 7 files",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 unresolved-call rows are sorted",
+      "detail": "",
+      "ok": true
+    },
+    {
       "check": "hyperfine: F2 every edge has an allowed label",
       "detail": "[]",
       "ok": true
@@ -221,21 +451,6 @@
       "ok": true
     },
     {
-      "check": "hyperfine: profile rows are production",
-      "detail": "8/8",
-      "ok": true
-    },
-    {
-      "check": "hyperfine: profile ranks the production candidate set",
-      "detail": "src/options.rs#from_cli_arguments#254:5 vs src/options.rs#from_cli_arguments#254:5",
-      "ok": true
-    },
-    {
-      "check": "hyperfine: profile does not outrank the global hottest",
-      "detail": "165 <= 165",
-      "ok": true
-    },
-    {
       "check": "cjson: hottestFunction is the global cost leader",
       "detail": "tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1 @ 2000008 vs tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1 @ 2000008",
       "ok": true
@@ -243,21 +458,6 @@
     {
       "check": "cjson: hottestFunction carries identity",
       "detail": "{'id': 'tests/unity/test/tests/testunity.c#testFloatPrintingRandomSamples#4557:1', 'name': 'testFloatPrintingRandomSamples', 'path': 'tests/unity/test/tests/testunity.c', 'line': 4557, 'cost': 2000008}",
-      "ok": true
-    },
-    {
-      "check": "cjson: profile rows are production",
-      "detail": "8/8",
-      "ok": true
-    },
-    {
-      "check": "cjson: profile ranks the production candidate set",
-      "detail": "cJSON.c#cJSON_Delete#253:1 vs cJSON.c#cJSON_Delete#253:1",
-      "ok": true
-    },
-    {
-      "check": "cjson: profile does not outrank the global hottest",
-      "detail": "137 <= 2000008",
       "ok": true
     },
     {
@@ -351,6 +551,11 @@
       "ok": true
     },
     {
+      "check": "window.__sim.ready is true after the first render",
+      "detail": "",
+      "ok": true
+    },
+    {
       "check": "hyperfine: beats derived",
       "detail": "16 beats",
       "ok": true
@@ -358,6 +563,56 @@
     {
       "check": "hyperfine: case is not synthetic",
       "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: masthead purpose matches the projection",
+      "detail": "PURPOSE \u00b7 A command-line benchmarking tool. \u00b7 from README.md",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 detail visible for the real case",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene cards match shownScenes",
+      "detail": "11/11 \u00b7 ['src', 'src/export', 'src/output']",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene caps disclose shown/total",
+      "detail": "11 of 11 scenes \u00b7 top 5 files each \u00b7 51 source files \u00b7 0 scenes / 0 files omitted \u00b7 16 test/bench files",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene caps disclose test/bench files",
+      "detail": "11 of 11 scenes \u00b7 top 5 files each \u00b7 51 source files \u00b7 0 scenes / 0 files omitted \u00b7 16 test/bench files",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 scene top files stay capped",
+      "detail": "5",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 queue shows every carried row",
+      "detail": "12/12 \u00b7 #1printsrc/output/report.rs:19213 static cost units (v2) \u00b7 30\u00d7 median \u00b7 top 1%3 unknown-tr",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 profile caps disclose the candidate set",
+      "detail": "top 12 of 35 production candidates \u00b7 353 functions ranked \u00b7 159 production rows demoted (startup/no-loop)",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 trust panel carries scenes, profile and unresolved totals",
+      "detail": "caps19 of 19 reachable files shown \u00b7 0 aggregatedpartial parsenonon-production share5/19 drawn files (test/bench)unknown-trip functions16 (estimate incomplete)findings included148/348I/O coverageI/O: ",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 trust panel carries the scan-wide test/bench split",
+      "detail": "caps19 of 19 reachable files shown \u00b7 0 aggregatedpartial parsenonon-production share5/19 drawn files (test/bench)unknown-trip functions16 (estimate incomplete)findings included148/348I/O coverageI/O: 8 effects / 5 files \u2014 3 literal (env \"NO_COLOR\", env \"TERM\",",
       "ok": true
     },
     {
@@ -383,6 +638,11 @@
     {
       "check": "hyperfine: footer matches the render",
       "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: key strip strips the duplicate PATH label",
+      "detail": "'3 steps \u00b7 representative path (static, BFS-derived)' \u00b7 title='PATH \u00b7 3 steps \u00b7 representative path (static, BFS-derived)'",
       "ok": true
     },
     {
@@ -412,17 +672,22 @@
     },
     {
       "check": "hyperfine: profile narration is non-empty",
-      "detail": "Top 3 per file shown; static candidates, verify: from_cli_arguments (options.rs L254) \u00b7 16",
+      "detail": "Whole-repo queue: 5 of 12 carried \u00b7 194 production rows ranked \u00b7 35 production candidates ",
       "ok": true
     },
     {
       "check": "hyperfine: start-here narration is non-empty",
-      "detail": "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust) (off-canvas) \u00b7 src/output/re",
+      "detail": "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust) \u00b7 print \u00b7 scene src/output (",
       "ok": true
     },
     {
       "check": "hyperfine: trust narration is non-empty",
-      "detail": "caps: 19 of 19 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: no \u00b7 non-production s",
+      "detail": "caps: 19 of 19 reachable files shown \u00b7 0 aggregated \u00b7 partial: no \u00b7 non-production: 5/19 d",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: enter beat carries scene context",
+      "detail": " 8.3\u00d7 median function \u00b7 top 39% of files. Annotation ENTRY \u00b7 INFO \u00d78. Scene src \u00b7 8 files \u00b7 8 production. Stores: 1 read \u2014 1 target unknown.",
       "ok": true
     },
     {
@@ -442,7 +707,7 @@
     },
     {
       "check": "hyperfine: S3 trust line carries I/O coverage",
-      "detail": "caps: 19 of 19 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: no \u00b7 non-production share: 5/19 drawn files (test/bench) \u00b7 unknown-trip functions: 16 (esti",
+      "detail": "caps: 19 of 19 reachable files shown \u00b7 0 aggregated \u00b7 partial: no \u00b7 non-production: 5/19 drawn (test/bench) \u00b7 unknown-trip: 16 (incomplete) \u00b7 findings: 148/348 ",
       "ok": true
     },
     {
@@ -457,7 +722,7 @@
     },
     {
       "check": "hyperfine: S3 trust line marks omitted literal examples",
-      "detail": "ed: 148/348 \u00b7 I/O: 8 effects in 5 files \u2014 3 literal (env \"NO_COLOR\", env \"TERM\", +1), 5 target unknown; call-name match.",
+      "detail": " calls 1,564 \u00b7 I/O: 8 effects / 5 files \u2014 3 literal (env \"NO_COLOR\", env \"TERM\", +1), 5 target unknown; call-name match.",
       "ok": true
     },
     {
@@ -467,12 +732,12 @@
     },
     {
       "check": "hyperfine: S3 trust keyframe",
-      "detail": "279030 bytes",
+      "detail": "280710 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: S3 stores make no forbidden claim",
-      "detail": "58 static cost units (v2) \u00b7 8.3\u00d7 median function \u00b7 top 39% of files. Annotation ENTRY \u00b7 INFO \u00d78. Stores: 1 read \u2014 1 target unknown.",
+      "detail": " 8.3\u00d7 median function \u00b7 top 39% of files. Annotation ENTRY \u00b7 INFO \u00d78. Scene src \u00b7 8 files \u00b7 8 production. Stores: 1 read \u2014 1 target unknown.",
       "ok": true
     },
     {
@@ -482,7 +747,7 @@
     },
     {
       "check": "hyperfine: S3 stores keyframe",
-      "detail": "255818 bytes",
+      "detail": "271248 bytes",
       "ok": true
     },
     {
@@ -497,7 +762,7 @@
     },
     {
       "check": "hyperfine: S3 inspector keyframe",
-      "detail": "337595 bytes",
+      "detail": "337151 bytes",
       "ok": true
     },
     {
@@ -516,13 +781,18 @@
       "ok": true
     },
     {
-      "check": "hyperfine: profile labels the drawn-slice basis",
-      "detail": "top 3 per file shown; static candidates, verify: from_cli_arguments (options.rs l254) \u00b7 165 units \u00b7 build_from_cli_arguments (command.rs l226) \u00b7 109 units \u00b7 next (shell_syntax.rs l",
+      "check": "hyperfine: profile labels the whole-repo basis",
+      "detail": "whole-repo queue: 5 of 12 carried \u00b7 194 production rows ranked \u00b7 35 production candidates \u00b7 353 functions ranked \u00b7 159 production rows demoted (startup/no-loop). static candidates,",
       "ok": true
     },
     {
       "check": "hyperfine: start-here names up to 3 actions",
-      "detail": "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust) (off-canvas) \u00b7 src/output/report.rs:49 \u2014 Heap allocation inside loop (Rust) (o",
+      "detail": "src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust) \u00b7 print \u00b7 scene src/output (off-canvas) \u00b7 src/output/report.rs:49 \u2014 Heap alloc",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: start-here carries scene and the first full anchor",
+      "detail": "src/output/report.rs:144 \u00b7 src/output \u00b7 title=src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust) (off-canvas)",
       "ok": true
     },
     {
@@ -537,7 +807,12 @@
     },
     {
       "check": "hyperfine: loop keyframe",
-      "detail": "254743 bytes",
+      "detail": "255911 bytes",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: final summary names the first start action",
+      "detail": " in this data slice). Start: src/output/report.rs:144 \u2014 Heap allocation inside loop (Rust). Static cost units, not time; profile to confirm.",
       "ok": true
     },
     {
@@ -572,7 +847,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "353",
+      "detail": "352",
       "ok": true
     },
     {
@@ -596,6 +871,31 @@
       "ok": true
     },
     {
+      "check": "hyperfine: S4 unresolved-call data is present",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 unresolved node opens the inspector",
+      "detail": "src/main.rs",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 inspector renders unresolved-call rows",
+      "detail": "6/26 rows",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 unresolved rows never guess a target",
+      "detail": "[{'line': '37', 'text': 'L37colored::control::set_virtual_terminal', 'title': 'src/main.rs#run#34:1'}, {'line': '37', 'text': 'L37colored::control::set_virtual_terminal(true).unwrap', 'title': 'src/main.rs#run#34:1'}]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S4 unresolved rows disclose the cap",
+      "detail": "6/26",
+      "ok": true
+    },
+    {
       "check": "hyperfine: node select opens the inspector",
       "detail": "src/main.rs",
       "ok": true
@@ -612,17 +912,17 @@
     },
     {
       "check": "hyperfine: start keyframe",
-      "detail": "269663 bytes",
+      "detail": "270841 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: mid keyframe",
-      "detail": "258709 bytes",
+      "detail": "262114 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: end keyframe",
-      "detail": "274379 bytes",
+      "detail": "278569 bytes",
       "ok": true
     },
     {
@@ -643,6 +943,56 @@
     {
       "check": "cjson: case is not synthetic",
       "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: masthead purpose matches the projection",
+      "detail": "PURPOSE \u00b7 Ultralightweight JSON parser in ANSI C. \u00b7 from README.md",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 detail visible for the real case",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene cards match shownScenes",
+      "detail": "3/3 \u00b7 ['(root)', 'fuzzing', 'tests']",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene caps disclose shown/total",
+      "detail": "3 of 3 scenes \u00b7 top 5 files each \u00b7 81 source files \u00b7 0 scenes / 0 files omitted \u00b7 75 test/bench files",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene caps disclose test/bench files",
+      "detail": "3 of 3 scenes \u00b7 top 5 files each \u00b7 81 source files \u00b7 0 scenes / 0 files omitted \u00b7 75 test/bench files",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene top files stay capped",
+      "detail": "5",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 queue shows every carried row",
+      "detail": "12/12 \u00b7 #1cJSON_DeletecJSON.c:253137 static cost units (v2) \u00b7 69\u00d7 median \u00b7 top 1%1 unknown-trip lo",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 profile caps disclose the candidate set",
+      "detail": "top 12 of 45 production candidates \u00b7 1,055 functions ranked \u00b7 116 production rows demoted (startup/no-loop)",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 trust panel carries scenes, profile and unresolved totals",
+      "detail": "caps2 of 2 reachable files shown \u00b7 0 aggregatedpartial parseyesnon-production share1/7 drawn files (test/bench)unknown-trip functions6 (estimate incomplete)findings included153/837I/O coverageI/O: 24 ",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 trust panel carries the scan-wide test/bench split",
+      "detail": "caps2 of 2 reachable files shown \u00b7 0 aggregatedpartial parseyesnon-production share1/7 drawn files (test/bench)unknown-trip functions6 (estimate incomplete)findings included153/837I/O coverageI/O: 24 effects / 4 files \u2014 0 literal, 2 target unknown, 22 stdio; c",
       "ok": true
     },
     {
@@ -668,6 +1018,11 @@
     {
       "check": "cjson: footer matches the render",
       "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: key strip strips the duplicate PATH label",
+      "detail": "'2 steps \u00b7 representative path (static, BFS-derived)' \u00b7 title='PATH \u00b7 2 steps \u00b7 representative path (static, BFS-derived)'",
       "ok": true
     },
     {
@@ -697,17 +1052,22 @@
     },
     {
       "check": "cjson: profile narration is non-empty",
-      "detail": "Top 3 per file shown; static candidates, verify: cJSON_Delete (cJSON.c L253) \u00b7 137 units \u00b7",
+      "detail": "Whole-repo queue: 5 of 12 carried \u00b7 161 production rows ranked \u00b7 45 production candidates ",
       "ok": true
     },
     {
       "check": "cjson: start-here narration is non-empty",
-      "detail": "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop (on-canvas) \u00b7 cJSON_Utils.c:1",
+      "detail": "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop \u00b7 create_patches \u00b7 scene (roo",
       "ok": true
     },
     {
       "check": "cjson: trust narration is non-empty",
-      "detail": "caps: 2 of 2 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: yes \u00b7 non-production sh",
+      "detail": "caps: 2 of 2 reachable files shown \u00b7 0 aggregated \u00b7 partial: yes \u00b7 non-production: 1/7 dra",
+      "ok": true
+    },
+    {
+      "check": "cjson: enter beat carries scene context",
+      "detail": "iles. Annotation ENTRY \u00b7 INFO \u00d75 \u00b7 partial. Scene fuzzing \u00b7 3 files \u00b7 3 production. Stores: 2 reads + 5 writes \u2014 1 target unknown \u00b7 6 stdio.",
       "ok": true
     },
     {
@@ -727,7 +1087,7 @@
     },
     {
       "check": "cjson: S3 trust line carries I/O coverage",
-      "detail": "caps: 2 of 2 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: yes \u00b7 non-production share: 1/7 drawn files (test/bench) \u00b7 unknown-trip functions: 6 (estimat",
+      "detail": "caps: 2 of 2 reachable files shown \u00b7 0 aggregated \u00b7 partial: yes \u00b7 non-production: 1/7 drawn (test/bench) \u00b7 unknown-trip: 6 (incomplete) \u00b7 findings: 153/837 \u00b7 s",
       "ok": true
     },
     {
@@ -737,7 +1097,7 @@
     },
     {
       "check": "cjson: S3 trust line discloses stdio effects",
-      "detail": "ete) \u00b7 findings included: 153/837 \u00b7 I/O: 24 effects in 4 files \u2014 0 literal, 2 target unknown, 22 stdio; call-name match.",
+      "detail": "ile 12/45 \u00b7 unresolved calls 1,077 \u00b7 I/O: 24 effects / 4 files \u2014 0 literal, 2 target unknown, 22 stdio; call-name match.",
       "ok": true
     },
     {
@@ -747,12 +1107,12 @@
     },
     {
       "check": "cjson: S3 trust keyframe",
-      "detail": "147880 bytes",
+      "detail": "149713 bytes",
       "ok": true
     },
     {
       "check": "cjson: S3 stores make no forbidden claim",
-      "detail": "v2) \u00b7 41\u00d7 median function \u00b7 top 17% of files. Annotation ENTRY \u00b7 INFO \u00d75 \u00b7 partial. Stores: 2 reads + 5 writes \u2014 1 target unknown \u00b7 6 stdio.",
+      "detail": "iles. Annotation ENTRY \u00b7 INFO \u00d75 \u00b7 partial. Scene fuzzing \u00b7 3 files \u00b7 3 production. Stores: 2 reads + 5 writes \u2014 1 target unknown \u00b7 6 stdio.",
       "ok": true
     },
     {
@@ -762,7 +1122,7 @@
     },
     {
       "check": "cjson: S3 stores keyframe",
-      "detail": "139956 bytes",
+      "detail": "144581 bytes",
       "ok": true
     },
     {
@@ -787,7 +1147,7 @@
     },
     {
       "check": "cjson: S3 inspector keyframe",
-      "detail": "217072 bytes",
+      "detail": "219452 bytes",
       "ok": true
     },
     {
@@ -801,13 +1161,18 @@
       "ok": true
     },
     {
-      "check": "cjson: profile labels the drawn-slice basis",
-      "detail": "top 3 per file shown; static candidates, verify: cjson_delete (cjson.c l253) \u00b7 137 units \u00b7 apply_patch (cjson_utils.c l807) \u00b7 131 units \u00b7 cjson_compare (cjson.c l3072) \u00b7 101 units ",
+      "check": "cjson: profile labels the whole-repo basis",
+      "detail": "whole-repo queue: 5 of 12 carried \u00b7 161 production rows ranked \u00b7 45 production candidates \u00b7 1,055 functions ranked \u00b7 116 production rows demoted (startup/no-loop). static candidate",
       "ok": true
     },
     {
       "check": "cjson: start-here names up to 3 actions",
-      "detail": "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop (on-canvas) \u00b7 cJSON_Utils.c:1203 \u2014 Expensive setup or I/O call inside loop (on-",
+      "detail": "cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop \u00b7 create_patches \u00b7 scene (root) (on-canvas) \u00b7 cJSON_Utils.c:1203 \u2014 Expensive se",
+      "ok": true
+    },
+    {
+      "check": "cjson: start-here carries scene and the first full anchor",
+      "detail": "cJSON_Utils.c:1188 \u00b7 (root) \u00b7 title=cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop (on-canvas)",
       "ok": true
     },
     {
@@ -822,7 +1187,12 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "136848 bytes",
+      "detail": "137628 bytes",
+      "ok": true
+    },
+    {
+      "check": "cjson: final summary names the first start action",
+      "detail": "d in this data slice). Start: cJSON_Utils.c:1188 \u2014 Expensive setup or I/O call inside loop. Static cost units, not time; profile to confirm.",
       "ok": true
     },
     {
@@ -847,7 +1217,7 @@
     },
     {
       "check": "cjson: findings cap disclosed",
-      "detail": "rs drawn \u00b7 0 MEDIUM / 587 LOW structural edges \u00b7 unreached production: 4 \u00b7 non-production: 75 \u00b7 parse 63 ok / 38 partial / 0 failed \u00b7 133/229 unresolved includes \u00b7 75 files demoted",
+      "detail": "ESOLVED CALLS\n1,077 on 7 files\nPURPOSE\nreadme \u00b7 README.md\n\nStatic inference only \u2014 costs, scenes and call edges are candidates, not a runtime measurement. Validate with a profiler.",
       "ok": true
     },
     {
@@ -886,6 +1256,31 @@
       "ok": true
     },
     {
+      "check": "cjson: S4 unresolved-call data is present",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 unresolved node opens the inspector",
+      "detail": "fuzzing/afl.c",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 inspector renders unresolved-call rows",
+      "detail": "6/18 rows",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 unresolved rows never guess a target",
+      "detail": "[{'line': '37', 'text': 'L37fopen', 'title': 'fuzzing/afl.c#read_file#29:1'}, {'line': '44', 'text': 'L44fseek', 'title': 'fuzzing/afl.c#read_file#29:1'}]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 unresolved rows disclose the cap",
+      "detail": "6/18",
+      "ok": true
+    },
+    {
       "check": "cjson: node select opens the inspector",
       "detail": "fuzzing/afl.c",
       "ok": true
@@ -902,17 +1297,17 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "139772 bytes",
+      "detail": "140526 bytes",
       "ok": true
     },
     {
       "check": "cjson: mid keyframe",
-      "detail": "151181 bytes",
+      "detail": "151937 bytes",
       "ok": true
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "143981 bytes",
+      "detail": "147633 bytes",
       "ok": true
     },
     {
@@ -927,16 +1322,26 @@
     },
     {
       "check": "hyperfine: F5 final frame DOM is deterministic across loads",
-      "detail": "2f1a383466da296f == 2f1a383466da296f; data byte-identical across scans + DOM identical across loads \u21d2 frame deterministic; PNGs are rasterization-dependent",
+      "detail": "ecddcb55666e725f == ecddcb55666e725f; data byte-identical across scans + DOM identical across loads \u21d2 frame deterministic; PNGs are rasterization-dependent",
       "ok": true
     },
     {
       "check": "cjson: F5 final frame DOM is deterministic across loads",
-      "detail": "65cd5446ea88cf07 == 65cd5446ea88cf07; data byte-identical across scans + DOM identical across loads \u21d2 frame deterministic; PNGs are rasterization-dependent",
+      "detail": "a4636fa4ec703aed == a4636fa4ec703aed; data byte-identical across scans + DOM identical across loads \u21d2 frame deterministic; PNGs are rasterization-dependent",
       "ok": true
     },
     {
       "check": "no-forward-path: labelled synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: synthetic purpose fallback unchanged",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "no-forward-path: S4 detail hidden for the state demo",
       "detail": "",
       "ok": true
     },
@@ -962,11 +1367,21 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "68739 bytes",
+      "detail": "68741 bytes",
       "ok": true
     },
     {
       "check": "empty: labelled synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "empty: synthetic purpose fallback unchanged",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "empty: S4 detail hidden for the state demo",
       "detail": "",
       "ok": true
     },
@@ -992,11 +1407,21 @@
     },
     {
       "check": "empty: state keyframe",
-      "detail": "65843 bytes",
+      "detail": "65869 bytes",
       "ok": true
     },
     {
       "check": "capped: labelled synthetic",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "capped: synthetic purpose fallback unchanged",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "capped: S4 detail hidden for the state demo",
       "detail": "",
       "ok": true
     },
@@ -1022,7 +1447,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "72935 bytes",
+      "detail": "73009 bytes",
       "ok": true
     },
     {
@@ -1088,7 +1513,7 @@
   ],
   "date": "2026-10-26",
   "failed": 0,
-  "passed": 217,
-  "total": 217,
+  "passed": 302,
+  "total": 302,
   "viewport": "1440x900"
 }

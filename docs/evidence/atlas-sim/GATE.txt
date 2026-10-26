@@ -3,27 +3,27 @@
 Date: 2026-10-26
 Worktree: /home/shafin/Opencode/Perfpal-atlas-sim
 Branch: feat/atlas-sim
-Commit at run: 89f4feb (docs(S3): close review numbers)
-Git tree: 3e0d0ed6d634321d50df8957230d83754aef5f76
+Commit at run: 61ef8c9 (docs(S4): record scale probes and payoff evidence)
+Git tree: 0658dc190e66c466ca56e68d3f9322d5fc1aade3
 Dirty paths at run (excluding docs/evidence/atlas-sim/): 0
 Note: this transcript is committed separately; commits after the one above add only docs/evidence or docs/state.
 Fixtures: hyperfine c516152 · cJSON 6d9f244
 
 ## 1. Build, format, lint, tests
 $ cargo build --locked --offline
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
 exit=0
 
 $ cargo fmt --all -- --check
 exit=0
 
 $ cargo clippy --locked --all-targets -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.08s
 exit=0
 
 $ cargo test --locked
-running 405 tests
-test result: ok. 405 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+running 434 tests
+test result: ok. 434 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 5 tests
@@ -39,19 +39,19 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 1 test
 test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.83s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.73s
 running 25 tests
 test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 running 3 tests
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 running 1 test
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 running 9 tests
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 running 8 tests
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 running 4 tests
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 2 tests
@@ -71,17 +71,17 @@ test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 11 tests
 test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 8 tests
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 running 6 tests
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 running 1 test
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 running 4 tests
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
-running 11 tests
-test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+running 12 tests
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 running 1 test
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 running 8 tests
@@ -89,9 +89,9 @@ test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 2 tests
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 50 tests
-test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 19 tests
-test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 running 25 tests
 test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 3 tests
@@ -99,13 +99,13 @@ test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 5 tests
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 running 13 tests
-test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 8 tests
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 2 tests
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 12 tests
-test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 22 tests
 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 20 tests
@@ -154,8 +154,8 @@ bd0b20553023f8ebbd3dc4866a489cb70588cc76e4fe7e8b8d1ca0e811f79e2b  /var/tmp/openc
 bd0b20553023f8ebbd3dc4866a489cb70588cc76e4fe7e8b8d1ca0e811f79e2b  /var/tmp/opencode/gate-on/hyperfine/report.html
 assert=pass report_identical
 atlas-layout.json (two independent scans):
-571745a963f43eac0ac3e9f4f6914e33579ea3d282a01c4f4bdb46f59dbd3d36  /var/tmp/opencode/gate-on/hyperfine/atlas-layout.json
-571745a963f43eac0ac3e9f4f6914e33579ea3d282a01c4f4bdb46f59dbd3d36  /var/tmp/opencode/gate-on2/hyperfine/atlas-layout.json
+b0884d5fb18a3686c12c26c30c89f3a2a8ffad50610165a1b97cd9705c3f6d9e  /var/tmp/opencode/gate-on/hyperfine/atlas-layout.json
+b0884d5fb18a3686c12c26c30c89f3a2a8ffad50610165a1b97cd9705c3f6d9e  /var/tmp/opencode/gate-on2/hyperfine/atlas-layout.json
 assert=pass layout_deterministic
 metrics.json (story off vs on; only scan provenance may differ):
 content_equal: True
@@ -177,8 +177,8 @@ report.html (story off vs on):
 373e8087872c6d9344b43074e7ab2d5a29d9c9bcade73c9331dcc40712979161  /var/tmp/opencode/gate-on/cJSON/report.html
 assert=pass report_identical
 atlas-layout.json (two independent scans):
-482d82e302515fd0e8503976c2694b3d41857c317aec6a0a41f969073d733975  /var/tmp/opencode/gate-on/cJSON/atlas-layout.json
-482d82e302515fd0e8503976c2694b3d41857c317aec6a0a41f969073d733975  /var/tmp/opencode/gate-on2/cJSON/atlas-layout.json
+3951ccbe0450830695a29c5f2e67e9b220dec08f9ec576092ba8234e622d5da6  /var/tmp/opencode/gate-on/cJSON/atlas-layout.json
+3951ccbe0450830695a29c5f2e67e9b220dec08f9ec576092ba8234e622d5da6  /var/tmp/opencode/gate-on2/cJSON/atlas-layout.json
 assert=pass layout_deterministic
 metrics.json (story off vs on; only scan provenance may differ):
 content_equal: True
@@ -192,16 +192,16 @@ columns [(0, 520, 180, 'depth 0 · ENTRY', '1 file'), (1, 700, 180, 'depth 1', '
 ## 3. Story data from core artifacts
 committed data hashes (before regeneration):
 ae47bc78fe35cd1c84d76b0327d37c8f88f2ac43e753564bfecb7a949b7babcd  sim/data-capped.json
-e7bc7b74ff262e79ae7efea6dfa95e9756d213748e7a8c25ce7eba63bb2fbdda  sim/data-cjson.json
+1410097dce1e98176f05ec63d77c283fe287057ac90050237efaab704420d510  sim/data-cjson.json
 78ebc7218a94f52f569a6fc94c87015db6626473e79f7fef7ae9ce19b3c07ed4  sim/data-empty.json
-9004f17666a3dcea3375d200dc5ca1655c737fcbcfa0192bc7dc8c4fd5c863dc  sim/data-hyperfine.json
+d78e066ab1a5f1fd6edcad4ec3d9825b1ec6c8d808da187a97d43b9eee85cdc9  sim/data-hyperfine.json
 d42564a03db5977541a60c62b8a43e8f412c0ea5d4b27b0d2864a7e0870dad22  sim/data-index.json
 845be10017393985ccfe93393d4154475b20ae6959e4d4644beb79a4c7a62c65  sim/data-no-forward-path.json
 
 $ bash sim/make-source.sh
 report: /home/shafin/Opencode/Perfpal-atlas-sim/sim/source/out-cjson
-/home/shafin/Opencode/Perfpal-atlas-sim/sim/data-hyperfine.json: 19 nodes, 49 edges, 148 findings, layout sha 571745a963f4
-/home/shafin/Opencode/Perfpal-atlas-sim/sim/data-cjson.json: 7 nodes, 5 edges, 153 findings, layout sha 482d82e30251
+/home/shafin/Opencode/Perfpal-atlas-sim/sim/data-hyperfine.json: 19 nodes, 49 edges, 148 findings, layout sha b0884d5fb18a
+/home/shafin/Opencode/Perfpal-atlas-sim/sim/data-cjson.json: 7 nodes, 5 edges, 153 findings, layout sha 3951ccbe0450
 source renders + story data ready in /home/shafin/Opencode/Perfpal-atlas-sim/sim/source (canvas width 1400, height 480..20000; fixtures 718)
 exit=0
 
@@ -209,26 +209,111 @@ committed data unchanged by regeneration: yes
 assert=pass committed_data_unchanged
 
 $ python3 sim/from-layout.py (twice; hashes must match)
-sim/data-hyperfine.json: 19 nodes, 49 edges, 148 findings, layout sha 571745a963f4
-sim/data-cjson.json: 7 nodes, 5 edges, 153 findings, layout sha 482d82e30251
+sim/data-hyperfine.json: 19 nodes, 49 edges, 148 findings, layout sha b0884d5fb18a
+sim/data-cjson.json: 7 nodes, 5 edges, 153 findings, layout sha 3951ccbe0450
 exit=0
 exit=0
 assert=pass projection_deterministic
 
 provenance (data file source.sha256 vs the layout artifact it read):
-hyperfine True 571745a963f4
-cjson True 482d82e30251
+hyperfine True b0884d5fb18a
+cjson True 3951ccbe0450
 assert=pass provenance
 assert_exit=0
 
-## 4. Story gate
+## 4. 3k scale gate (F2-F7)
+$ bash sim/scale.sh
+  masked scan.duration_ms/started_at/root_path
+assert=pass F5_layout_identical
+  on=b418c75e395a8288 on2=b418c75e395a8288
+assert=pass F5_projection_written
+  /var/tmp/opencode/atlas-s4-scale/data-3k.json /var/tmp/opencode/atlas-s4-scale/data-3k2.json
+assert=pass F5_projection_identical
+  data=6eee2679d93f5a45 data2=6eee2679d93f5a45
+assert=pass F7_page_bytes
+  463,230 bytes (budget 5,000,000) · index.html=7,049 · sim.css=24,176 · sim.js=58,166 · data-3k.json=373,839
+assert=pass server_ready
+  http://127.0.0.1:51269/
+first_frame[1]=1570ms
+first_frame[2]=420ms
+first_frame[3]=413ms
+assert=pass F7_first_frame
+  loads=[1570, 420, 413]ms · max=1570ms (budget 2000ms)
+assert=pass ready_true
+assert=pass F5_page_dom_identical
+  hash=ab7521d0408380d3
+assert=pass F7_no_hscroll_1440
+  {'doc': 1440, 'body': 1440, 'inner': 1440}
+assert=pass F7_s4_detail_1440
+  {'visible': True, 'scenes': 24, 'queue': 12}
+assert=pass F2_edge_labels
+  18 edges
+assert=pass F2_layout_edges_represented
+  layout=18 data=18
+assert=pass F2_unresolved_payloads_null
+  0 unresolved data edges
+assert=pass F2_dom_labels
+  {'paths': 18, 'labels': 18, 'bad': 0, 'unresolvedPaths': 0, 'unresolvedLabels': 0}
+assert=pass F3_engineered_drawn
+  c=src/mod00/sub00/f00.c rust=src/mod29/sub08/f09.rs drawn=20
+assert=pass F3_c_core_unresolved
+  3 unresolved / 4 calls; callees=['fclose', 'fopen', 'fp']
+assert=pass F3_c_selectable
+  selected=src/mod00/sub00/f00.c
+assert=pass F3_c_inspector_rows
+  3/3 rows
+assert=pass F3_c_no_guess_note
+  olved (indirection/untyped) — never guessed.
+
+Why: 579,711× median function and top 1% of files by static cost. Cost and trip counts are inferred, not measured; profile to confirm.
+assert=pass F3_rust_core_unresolved
+  2 unresolved / 2 calls; callees=['f', 'std::fs::read_to_string']
+assert=pass F3_rust_selectable
+  selected=src/mod29/sub08/f09.rs
+assert=pass F3_rust_inspector_rows
+  2/2 rows
+assert=pass F3_rust_no_guess_note
+  olved (indirection/untyped) — never guessed.
+
+Why: 724,638× median function and top 1% of files by static cost. Cost and trip counts are inferred, not measured; profile to confirm.
+assert=pass F7_scale_final_png
+  148493 bytes
+assert=pass F7_scale_full_png
+  532576 bytes
+assert=pass F7_no_hscroll_1280
+  {'doc': 1280, 'body': 1280, 'inner': 1280}
+assert=pass F7_s4_detail_1280
+  {'visible': True, 'scenes': 24, 'queue': 12}
+assert=pass F7_scale_1280_png
+  122512 bytes
+assert=pass F4_data_honesty
+assert=pass F4_final_honesty
+assert=pass F4_purpose_readme
+  kind=readme source=README.md text='A synthetic three-thousand-file C and Rust repository used to test Atlas scene aggregation at scale.'
+assert=pass ready_after_load
+assert=pass beats_present
+  14 beats
+assert=pass no_external_requests
+  []
+assert=pass no_console_errors
+assert=pass no_page_errors
+summary: page_bytes=463,230 first_frame_max_ms=1570 scans=off=3.82s on=4.10s on2=4.19s F2-F6=[F2=pass, F3=pass, F4=pass, F5=pass, F6=pass] failed=0
+F8 deferred: founder A2 session; not claimed
+
+asserts=44/44 passed · failed=0
+3k scale gate: PASS
+3k scale gate: PASS
+exit=0
+assert=pass scale_gate
+
+## 5. Story gate
 $ SIM_PORT=8770 python3 sim/verify.py
 PASS  data files unchanged by the gate
 
-217/217 checks passed -> /home/shafin/Opencode/Perfpal-atlas-sim/docs/evidence/atlas-sim/checks.json
+302/302 checks passed -> /home/shafin/Opencode/Perfpal-atlas-sim/docs/evidence/atlas-sim/checks.json
 exit=0
 
-## 5. Worktree clean (scope containment is proven in section 2)
+## 6. Worktree clean (scope containment is proven in section 2)
 $ git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock
 lines=0
 assert=pass worktree_clean
