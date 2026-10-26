@@ -30,7 +30,7 @@ canary + label polish; panel APPROVED: R1/R2/R3 + Q1/Q2); **B5 (post-B4 correctn
 (docs `dbda7e3`)** (CALL-001 production 180 → 2, TYPE-001 14 → 2;
 panel APPROVED: R1/R2/R3 + Q1/Q2). `B-tb-004` (CALL-001) is
 resolved in B5. **B6 (merge gate) is DONE:** `feat/js-ts` was merged into `main` with `--no-ff` in
-merge-train M1, the js-ts B6 DoD ran on the merged tree, and `main` is `v0.3.0` (metrics schema `1.8`).
+merge-train M1, the js-ts B6 DoD ran on the merged tree, and `main` was `v0.3.0` (metrics schema `1.8`) at the B6 close; it is now `v0.4.0` after merge-train M2.
 
 ## Shared rules (all tracks)
 

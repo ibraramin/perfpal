@@ -444,7 +444,6 @@ mod tests {
         assert_eq!(value["layout_version"], 1);
         assert_eq!(value["canvas"]["w"], SVG_W);
         assert_eq!(value["canvas"]["h"], layout.height);
-        assert_eq!(value["canvas"]["w"], SVG_W);
 
         let nodes = value["nodes"].as_array().expect("nodes array");
         assert_eq!(nodes.len(), view.nodes.len());

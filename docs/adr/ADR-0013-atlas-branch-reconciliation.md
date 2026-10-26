@@ -125,15 +125,15 @@
 | `D-pf-261..264` | S1–S4 (first remap) | none | `D-pf-269..272` |
 | `D-pf-265` | this reconciliation | none | `D-pf-273` |
 | `D-pf-266` | archive pointer | none | `D-pf-274` |
-| `A-pf-124` | S4 done | main commit/publish action | `A-pf-129` |
-| `A-pf-125` | `ADR-0012` action | main post-beta follow-ups | `A-pf-130` |
+| `A-pf-124` | S4 done | main commit/publish action | `A-pf-131` |
+| `A-pf-125` | `ADR-0012` action | main post-beta follow-ups | `A-pf-132` |
 | `A-pf-126/127` | S4 / ADR actions | main M2 / M3 actions | `A-pf-131/132` |
 | `A-pf-128` | next action (sync + packaging) | none | `A-pf-133` |
 
 - **Two hops, one final block.** The branch first remapped `D-pf-251..255` → `260..264` and
   `A-pf-124/125` → `126/127` against `main@c797004` (max 258). M1 then landed `D-pf-259/260` and
   `A-pf-126/127` on main, so the merge moved the whole story block to `D-pf-267..274` /
-  `A-pf-129..133`. The branch's `superseded` tombstone wrappers are **not** carried into main's
+  `A-pf-131..133`. The branch's `superseded` tombstone wrappers are **not** carried into main's
   ledger (their old IDs collide with main's live/archived records); the live records use
   `D-pf-267..274` and `A-pf-131..133`, and this table plus `D-pf-273` preserve the mapping.
 - **`R-pf-109`:** closed as a record, matching main's 2026-10-26 closure (v2 rework + A2); the branch
@@ -142,8 +142,9 @@
 - **`atlas-build`:** **done** (matching main `D-pf-258`) with no snapshot banner on main after this
   merge; **do not execute steps 11–15 here**. The story track is `atlas-s4` (done) and the story
   companion merges as a track artifact, not a second plan.
-- **Historical ledger:** old IDs stay in `state/archive/ledger.jsonl` as `superseded` records with a
-  `ref` to the new ID; `D-pf-273` records the remap. Live docs/state use the final IDs. This is a
+- **Historical ledger:** the branch's `superseded` tombstone wrappers are **not** carried into main's
+  ledger because their old IDs collide with main's live/archived records; `D-pf-273` records the
+  remap and the final IDs. Live docs/state use the final IDs. This is a
   documented, bounded exception to `STATE-SCHEMA.md` §2 ("never reused or renumbered"): the branch
   and main allocated the same IDs independently while divergent; the remap is closed after this
   merge and no further renumbering is authorized. The hot file keeps only live/open/active entries;
@@ -183,7 +184,7 @@ branch stops being a separate line.
 4. **Packaging remains a follow-up.** The companion is still fetch/HTTP-only and has no
    `perfpal story` entry point; self-containment (inline data, no server) and a CLI entry point are
    the precondition for the §5 session (`ADR-0012` Decision 5).
-5. **ID resolution is final at this merge** (`D-pf-267..274`, `A-pf-129..133`; see the table above).
+5. **ID resolution is final at this merge** (`D-pf-267..274`, `A-pf-131..133`; see the table above).
    `R-pf-112` closes: the branch is in `main` and the report gate is satisfied. The story gate is
    re-run on the merged tree; evidence lands under `docs/evidence/merge-m2/`.
 6. **No push/tag.** The merge commit and the `v0.4.0` bump stay local; publishing is the

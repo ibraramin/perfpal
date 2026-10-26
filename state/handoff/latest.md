@@ -3,7 +3,7 @@
 **Updated:** 2026-10-27
 **Repo:** `/home/shafin/Opencode/Perfpal`
 **Session:** merge-train M2 — merge the Atlas Story companion into `main` as v0.4.0 (plan `merge-train` / M2)
-**Verdicts:** `@reviewer` pending panel · `@requirements-reviewer` pending panel
+**Verdicts:** `@reviewer` APPROVED (R1; R2 APPROVE with non-blocking notes) · `@requirements-reviewer` Q1 APPROVED; Q2 CHANGES_REQUESTED pending the clean-status close (round 3)
 
 **North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. M2 integrates the Atlas
 Story **companion** (the temporal/data-flow showcase) into `main` as **v0.4.0** without changing the
@@ -126,7 +126,7 @@ Non-runnable evidence:
 - `646597c` — merge: feat/atlas-sim into main (Atlas Story companion)
 - `e1b4f1b` — release: v0.4.0 — Atlas Story companion, ADR renumber, goldens/state
 - `ff276fd` — fix(reporter): clippy let_and_return in footer_parts; regen story data at 0.4.0
-- `<fix-commit>` — fix(merge-train): contract truth, version/ADR sweep, ledger records
+- `3829e33` — fix(merge-train): M2 panel round 1 — contract truth, version/ADR sweep, ledger records
 - final evidence/state commit — docs(merge-train): M2 evidence + panel verdicts
 
 **Resume in a fresh session:** plan `merge-train`, next task **M3 — main finalization**, commit
