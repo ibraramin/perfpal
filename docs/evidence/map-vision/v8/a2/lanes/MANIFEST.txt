@@ -1,0 +1,13 @@
+A2 timed-read first views — manifest
+====================================
+Viewport: 1440x900. All four PNGs recorded 2026-10-24 during the blind timed reads.
+
+a2-memchr-lane1-first.png     254452 B  sha256 467310a84e3a41f36714c254e727076c48ae49a4f5edbadd650d82b5f3dde0b3  1440x900
+a2-memchr-lane2-first.png     254452 B  sha256 467310a84e3a41f36714c254e727076c48ae49a4f5edbadd650d82b5f3dde0b3  1440x900
+a2-postgres-lane1-first.png   246773 B  sha256 3af23a50b2126dde75ac03060cf8ae853248da143357c48141a94603e67ee17b  1440x900
+a2-postgres-lane2-first.png   191364 B  sha256 c89a06c36ac7dd94e8cc7f620abe0e59c8ef17f503ab8017561c08641a223429  1440x900
+
+The two memchr lanes captured the same static first view (identical sha256); the postgres lanes
+differ by capture timing/scroll position. These are the participants' independent first-view captures; three are byte-identical to harness
+frames because the static first view is the same (memchr lanes = memchr-animating.png; postgres lane 2
+= postgres-initial.png).

@@ -1,0 +1,36 @@
+A2 gate transcript — 2026-10-26
+================================
+HEAD:   ce14a3d97a3b29cb8e83240452810801b8c82ee2
+Binary: 6c630521042535795810e82e64a1d364092e2aa68d71a0603b248f749fd5c8f7
+
+Commands (exit code)
+--------------------
+### cargo fmt --all -- --check                                        EXIT 0
+### cargo clippy --locked --all-targets -- -D warnings               EXIT 0
+### cargo test --locked                                              EXIT 0
+### cargo deny check licenses                                       EXIT 0
+### cargo clippy --locked --all-targets --features semantic-clang -- -D warnings   EXIT 0
+### PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang          EXIT 0
+### cargo test --locked --test atlas_render atlas_double_render_is_byte_identical   EXIT 0
+### cargo test --locked --test atlas_render atlas_adds_no_new_script                EXIT 0
+### cargo test --locked --test atlas_render atlas_canvas_has_no_metric_panels       EXIT 0
+### cargo test --locked --test atlas_states atlas_states_render_same_stack          EXIT 0
+### cargo build --release --locked                                   EXIT 0 (no-op)
+### git status --short src/ Cargo.toml Cargo.lock                    output=[] EXIT 0
+### test -z "$(git status --short src/schema/ docs/schema/)"         EXIT 0
+### test -f docs/evidence/map-vision/v8/reads.json && test -f docs/evidence/map-vision/v8/a2.md   EXIT 0
+### ! grep -q preserve_order Cargo.lock                              EXIT 0 (no match)
+
+Test results
+------------
+- All test binaries: 0 failed. The lib suite reports `402 passed; 0 failed; 0 ignored`.
+- Semantic feature suite: `1 passed; 0 failed` (15.39 s).
+- Atlas locks: double render, no-new-script, canvas purity, eight-state stack — all EXIT 0.
+- `cargo deny check licenses`: EXIT 0 (permissive/proprietary allowlist).
+
+Scope
+-----
+- `git status --short src/ Cargo.toml Cargo.lock` → empty.
+- `git status --short src/schema/ docs/schema/` → empty (0 changed).
+- Both evidence files exist (`reads.json`, `a2.md`).
+- No source, schema, JS, dependency or golden change; no commit; no push.

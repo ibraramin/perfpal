@@ -1,0 +1,56 @@
+A2 setup transcript — 2026-10-24 (scans/timed reads); verification/gate re-run 2026-10-26
+================================
+
+Build
+-----
+HEAD:      ce14a3d97a3b29cb8e83240452810801b8c82ee2 (main)
+Binary:    target/release/perfpal 0.2.0-beta.1 (metrics schema 1.7)
+Binary sha256: 6c630521042535795810e82e64a1d364092e2aa68d71a0603b248f749fd5c8f7
+`cargo build --release --locked` → EXIT 0, no-op ("Finished `release` profile [optimized] target(s) in 0.11s").
+
+Application class — postgres
+----------------------------
+Repo:      /home/shafin/Opencode/perfpal-test/postgres
+Pin:       856a6594d86e4a7c0e9490253912af3f6159802f (2026-10-16)
+Command:   target/release/perfpal /home/shafin/Opencode/perfpal-test/postgres -o /tmp/opencode/a2-postgres
+Elapsed:   181 s (date +%s before/after; observed session output)
+Output:    scanned 2566 files (1401 ok, 1165 partial, 0 failed) · 102933 findings (484 hot, 4891 warn, 97558 info)
+Report:    /tmp/opencode/a2-postgres/report.html · 165,067 B · sha256 47555d49e982deb49b9f18887a46d806de63701591328a682b1e3f15cfe8a0a2
+Scan log:  a2/a2-postgres-scan.log (counts only; the elapsed is recorded here)
+
+Library class — memchr crate payload
+------------------------------------
+Repo:      https://github.com/BurntSushi/memchr
+Clone:     /tmp/opencode/a2-memchr-clone
+Pin:       bd6068c30e9074a90c285e47912fa0b047d07597
+Extract:   git -C /tmp/opencode/a2-memchr-clone archive bd6068c30e9074a90c285e47912fa0b047d07597 \
+             src Cargo.toml README.md UNLICENSE LICENSE-MIT COPYING | tar -x -C /tmp/opencode/a2-memchr-payload
+Preflight: 45 src/*.rs; no benchmarks/; no fuzz/; no src/bin/; no build.rs; no [workspace];
+           [lib] present; license = "Unlicense OR MIT"
+Command:   target/release/perfpal /tmp/opencode/a2-memchr-payload -o /tmp/opencode/a2-memchr
+Elapsed:   1 s (date +%s before/after; observed session output)
+Output:    scanned 45 files (45 ok, 0 partial, 0 failed) · 530 findings (3 hot, 27 warn, 500 info)
+Report:    /tmp/opencode/a2-memchr/report.html · 126,205 B · sha256 66756eb5b5cd71c3aa5f7ba7b84568f5eb1517e62522ad4d79eb34df85ce815a
+Scan log:  a2/a2-memchr-scan.log (counts only; the elapsed is recorded here)
+
+Serving and HTTP
+----------------
+Command:   python3 -m http.server 8771 --bind 127.0.0.1 --directory /tmp/opencode/a2-postgres
+           python3 -m http.server 8772 --bind 127.0.0.1 --directory /tmp/opencode/a2-memchr
+URLs:      http://127.0.0.1:8771/report.html#map · http://127.0.0.1:8772/report.html#map
+curl -w:   8771 → 200 · 165067 B
+           8772 → 200 · 126205 B
+
+Scope checks (after the A2 run, before the panel)
+-------------------------------------------------
+`git status --short src/ Cargo.toml Cargo.lock` → empty (exit 0)
+`test -z "$(git status --short src/schema/ docs/schema/)"` → exit 0
+`test -f docs/evidence/map-vision/v8/reads.json && test -f docs/evidence/map-vision/v8/a2.md` → exit 0
+`grep -q preserve_order Cargo.lock` → no match (PASS)
+No source/schema/JS/dependency/golden change; no commit; no push.
+
+Notes
+-----
+- The timed-read participants saw the served page only; this transcript records setup, not the run.
+- The A2 pages are session-private under /tmp/opencode and are not committed; the evidence to be committed
+  is the frames/JSON/logs under a2/ plus this transcript.

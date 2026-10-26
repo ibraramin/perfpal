@@ -1,11 +1,12 @@
 # Atlas — new-agent brief (read this first)
 
-**Status:** Atlas steps 1–12 implemented (v2 rework: 9–10 founder-approved; step 11 detail rail
-committed `189df91`; step 12 progressive charts committed `9a94905`). **Step 13 gate evidence is
-complete and the founder composition sign-off is APPROVED 2026-10-24 (all DOM/render assertions pass;
-V8 A1 16/16 + strip 16/16; G-baseline diff recorded). A2 (step 14) may be scheduled; ship (step 15)
-remains blocked and the plan is not done.** Do **not** ship (step 15) or mark the plan done; A2
-(step 14) may be scheduled.
+**Status:** Atlas steps 1–13 implemented; step 13 composition **APPROVED 2026-10-24** (delegated,
+evidence-based). **A2 (step 14) is DONE 2026-10-24/26 (delegated):** postgres + memchr crate payload; 4/4
+blind lanes named 3 actions in 87–120 s and answered understandable YES; pause/reduced-motion/print
+verified on both (`docs/evidence/map-vision/v8/a2.md`). **Step 15 (ship/docs/EOL) is schedulable; the
+plan is not done.** Residual: memchr canvas bottom **1,282 px > the 900 px fold** (library class,
+23-file UNREACHED column) — resolve or explicitly accept in step 15 before ship. Do **not** mark the
+plan done; no visual tuning in step 14.
 **Owner:** orchestrator. **Audience:** every agent touching `src/reporter/atlas_*`, the Atlas specs,
 the V8 evidence, or the Atlas plan.
 
@@ -87,19 +88,21 @@ the founder's eye. The data/model are fine.
 
 ## 4. What not to do
 
-- Do **not** ship (step 15) until A2 reports. A2 (step 14) may be scheduled now that step 13 is
-  approved (D-pf-253, delegated evidence-based).
+- Do **not** ship (step 15) until its docs/EOL gate passes and the memchr first-page-fit residual is
+  resolved or explicitly accepted. A2 is done (delegated) — see `docs/evidence/map-vision/v8/a2.md`.
 - Do **not** add more blocks/features to fix the composition; remove and simplify first.
 - Do **not** spend sessions on pixel-level layout nudges before the visual language is approved —
   the founder says layout is cheap; the palette/typography/hierarchy are the hard part.
 - Do **not** treat the V8 16/16 reads as proof the page looks good. They prove comprehension.
 - Do **not** delete the F treemap or the weight data; F is undecided, not rejected.
-- Do **not** mark `map-build` done; A1b stays open; holdouts stay vaulted.
+- Do **not** mark `map-build` done; A1b stays open; holdouts are vaulted except the authorized A2
+  release — do not tune against them.
 
 ## 5. Current status and next step
 
-- `R-pf-109` (high) stays open as a record. `A-pf-118`: A2 (step 14) is schedulable; ship (step 15) is
-  blocked until A2 reports.
+- `R-pf-109` (high) stays open as a record. `A-pf-118`: A2 (step 14) is **DONE 2026-10-24
+  (delegated)**; step 15 (ship/docs/EOL) is schedulable. Ship still requires step 15 + the residual
+  decision.
 - **Done:** steps 9–10 (signed G system, first-page fit, key-metrics strip, chrome hygiene;
   founder-approved 2026-10-24), **step 11** (right detail rail, committed `189df91`), **step 12**
   (weight/blast/file/coverage charts; drills on `atlas-weight.html`/`atlas-q2.html`; `#map`
@@ -108,9 +111,11 @@ the founder's eye. The data/model are fine.
   `docs/evidence/atlas-visual/v2/{STEP13.md,step13.json,gate-step13.txt,VISION-STEP13.md,
   step13-reads.json}`).
 - **Step 13 is APPROVED (2026-10-24):** see `docs/evidence/atlas-visual/v2/step13/FOUNDER-GATE.md`
-  and D-pf-253. A2 (step 14) may be scheduled as a separate session; do not mark the plan done. F
-  remains undecided; do not ship the F treemap without a founder decision.
-- Do not ship (step 15); A2 may run. Holdouts stay vaulted; `map-build` is not done; A1b stays open.
+  and D-pf-253. **A2 (step 14) is DONE (delegated, 2026-10-24/26):** `docs/evidence/map-vision/v8/a2.md`
+  (postgres + memchr, 4/4 lanes PASS, pause/reduced/print PASS; memchr fold residual carried to step
+  15). F remains undecided; do not ship the F treemap without a founder decision.
+- Do not mark the plan done; step 15 is next. Holdouts are released for A2 evidence only — do not tune
+  against them; `map-build` is not done; A1b stays open.
 
 ## 6. Reading order
 

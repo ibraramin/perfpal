@@ -1,163 +1,108 @@
-# Handoff — Atlas v2 Session A4 (step 13: post-C re-render, live gate evidence, sign-off)
+# Handoff — Atlas v2 Session A4 (step 14: A2 holdout, delegated; 2026-10-24/26)
 
-**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. Step 13 is the
-composition gate that makes the approved designed page (G's visual system + the founder's
-graph-plus-key-metrics model) the thing that ships, instead of an instrument panel. **No drift:** no
-feature, no schema/JS/deps, no A2/ship work, no plan-done (this step-13 session); a rejected gate
-escalates instead of tuning.
+**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. A2 is the decisive
+comprehension gate: can a first-time reader name 3 concrete actions from the page alone? **No drift:**
+no feature, no schema/JS/deps, no page tuning, no step-15 ship work, no plan-done.
 
-**Phase:** Atlas v2 steps 9–13 done (step 11 `189df91`, step 12 `9a94905`, Track C merged `c73d6ff`);
-**step 13 composition APPROVED 2026-10-24** — a delegated, evidence-based sign-off (the founder's own eye
-was not applied; provenance recorded in `step13/FOUNDER-GATE.md`). **A2 (step 14) may be scheduled**; ship
-(step 15) still blocked; `R-pf-109`/`A-pf-118` remain open records; F undecided (`D-pf-251`); holdouts
-vaulted; `map-build` NOT done; A1b open.
+**Phase:** Atlas v2 steps 9–14 done. **A2 (step 14) is a delegated PASS (2026-10-24)** — postgres +
+memchr crate payload; 4/4 blind lanes named 3 actions in 87–120 s and answered understandable YES;
+pause/reduced-motion/print PASS. **Step 15 (ship/docs/EOL) is schedulable; ship stays blocked on the
+memchr library fold residual** (canvas 1,282 px > 900). `R-pf-109`/`A-pf-118` open; F undecided
+(D-pf-251 live); holdouts released for A2 only; `map-build` NOT done; A1b open.
 
-**Commits:** `c73d6ff` (Track C4, merged before the gate commit) → `86c0537`
-`docs(atlas): v2 step 13 visual gate evidence + sign-off` (54 files: evidence, renders, state/docs) →
-`a00fd0b` (state records that commit) → `5b59065` (panel record + CHANGELOG status) →
-`7098a15` (first fix-up: stale-PENDING sweep + panel record) → `ae32d77` (second fix-up: evidence
-README, both CHANGELOG tails, STEP13 status/scope) → `c739bed` (third fix-up: agent brief, track A
-brief, `A-pf-118`, FOUNDER-GATE/STEP13 rescope) → **this fourth fix-up** (handoff commit chain, one
-stale `A-pf-118` line, C handoff status header). **No push.**
+**Commits:** HEAD `ce14a3d` (the C-session status syncs were already committed: `c739bed` → `3012546`
+→ `ce14a3d`). **No commit yet** — the A2 evidence/docs/state are in the working tree pending founder approval. **No push.**
 
-## This session — step 13 evidence
+## This session — A2 holdout (step 14)
 
-- **Real-page gate** (`render_step13.py`): measured and rendered hyperfine + cJSON
-  `report.html#map` at 1440×900 and 1280×800 from a **session-private fresh scan** with the current
-  binary built from merged `main` (`c73d6ff`). The private pages are **byte-identical to the shared
-  `perfpal-test/out-atlas-v2-*` pages** (`a4fade03…` / `323ee0a8…`), and `step13.json` records
-  `same_as_private: true`. Track C's merge adds two below-the-fold nav links: `-charts.png` /
-  `-full.png` changed; `-final`, weights, 1280 frames and all eight fixture frames are identical, so
-  the 32 reads stand. Private server for the founder: `:8769`.
-- **All assertions pass:** canvas bottom **869 ≤ 900** including header/legend/footer; `#map`
-  **1,848 ≤ 5,000**; no horizontal scroll at 1440 or 1280; no clipped text; no node-text overflow; no
-  leading-dot truncation; no duplicate ids; exactly one unit, median, structural caveat, unreached,
-  legend and footer definition; rail stacks at 1280; A9/A12 re-asserted (0 tables/bars/cards/scripts/
-  handlers in the canvas).
-- **V8 rerun** (`render_step13_states.py` + 32 blind reads): eight states regenerated from the current
-  tree; **A1 16/16 + strip 16/16 PASS**, 0 scale confusions, 0 time claims. The capped state's canvas
-  is 1,398px > the fold (V8-disclosed, measured not asserted); its reads still pass.
-- **G-baseline diff:** measured token/geometry diff (§9 of `G-BASELINE-DIFF.md`), a labelled composite
-  `step13/G-vs-step13-hyperfine-1440x900.png`, and a fresh comparative read (**SAME SYSTEM**). The
-  read's most visible defect is the step-11 mid-token filename elision; disclosed, not tuned.
-- **Founder package:** `step13/FOUNDER-GATE.md` — what to open, what is proven, what only the founder
-  can judge, residuals, APPROVE/REJECT.
+- **Application class:** postgres `856a659` (repo `perfpal-test/postgres`), fresh scan: 2,566 files
+  (1,401 ok / 1,165 partial / 0 failed), 102,933 findings, 181 s.
+- **Library class:** published `memchr` crate payload at `bd6068c3` (clone pinned; payload extracted
+  from `git archive`; **`benchmarks/` + `fuzz/` excluded**): 45 `.rs`, 530 findings, 1 s.
+- **Timed reads:** four fresh-context lanes (two per class), rendered page only, animation enabled,
+  1440×900. Elapsed **87.05 / 110.87 / 104.8 / 119.7 s**; each named 3 concrete actions; all answered
+  understandable **YES**. Transcripts in `docs/evidence/map-vision/v8/a2.md` §4–§6.
+- **Animation/pause/reduced-motion/print:** `python3 docs/evidence/map-vision/v8/a2_verify.py` → PASS,
+  exit 0. 68/45 CSS animations run by default; pause freezes mid-animation (68/68 and 45/45 paused;
+  byte-identical frame pairs); pause is keyboard-focusable; reduced-motion and print show the complete
+  final frame (0 animations, 0 hidden); final frame at ~7 s has 0 hidden nodes/edges/traces.
+- **Geometry:** postgres canvas bottom **871.2 ≤ 900**; memchr **1,282.2 > 900** (23-file UNREACHED
+  column); `#map` 1,850.2 / 2,326.3; no horizontal scroll at 1440 or 1280. The memchr fold is the real
+  instance of the step-13 capped-state residual — **carried to step 15 to resolve or explicitly accept;
+  no tuning here**.
+- **Delegation:** the founder's Session A4 instruction explicitly directed the run and the "if it passes,
+  step 15 becomes schedulable" rule (`D-pf-255`). The founder's own eye was not applied; the V6
+  founder-only bar remains the gold standard. Because the holdout pages are now released and the three
+  actions published, an untainted founder re-run would need a fresh holdout.
+- **No changes:** no `src/`, schema, JS, dependency or golden change; no page tuning; no new feature.
 
 ## Measured evidence
 
-| Claim | hyperfine | cJSON |
+| Claim | Artifact | Result |
 |---|---|---|
-| `#map` height (≤5,000) | **1,848** | **1,848** |
-| canvas top → bottom (≤900) | 120 → **869** | 120 → **869** |
-| canvas footer bottom (≤900) | **869** | **869** |
-| rail | 120–834, 530×714, 12 cards | 120–818, 530×698, 12 cards |
-| first below-canvas block | 879 ≥ 869 | 879 |
-| page height (outside `#map`) | 15,872 | 22,058 |
-| horizontal scroll 1440 / 1280 | none / none | none / none |
-| definitions (caption/unit/median/unreached/legend/footer) | 1/1/1/1/1/1 | 1/1/1/1/1/1 |
-| leading-dot / clipped / node overflow / dup ids | 0/0/0/0 | 0/0/0/0 |
-| A1 / strip reads | 16/16 / 16/16 | (eight-state matrix) |
+| postgres scan | `a2/a2-postgres-scan.log`, `a2/setup.txt` | 2,566 files; 102,933 findings; 181 s |
+| memchr payload scan | `a2/a2-memchr-scan.log`, `a2/setup.txt` | 45 `.rs`; 530 findings; 1 s; no benchmarks/fuzz |
+| report hashes | `a2/a2-verify.json` | postgres `47555d49…`, memchr `66756eb5…` |
+| Blind timed reads | `a2.md` §4–§6 | 4/4 PASS; 87–120 s; 3 actions; YES |
+| Pause | `a2/a2-verify.json` | 68/68 and 45/45 paused; identical frame pairs |
+| Reduced motion / print | `a2/a2-verify.json` | 0 animations; 20 nodes visible; 0 hidden; print pause hidden/white |
+| Geometry | `a2/a2-verify.json` | 871.2 ≤ 900 (postgres); 1,282.2 > 900 (memchr); no h-scroll |
+| Full gate | `a2/gate-a2.txt` | 10 CI commands + build/status/schema/evidence checks all exit 0; lib 402 passed; semantic pass; deny ok; no preserve_order |
+| Panel | round 1 + confirmation: R1/Q1 APPROVED; R2/Q2 approved after fixes; R3 fresh APPROVED | see the panel record below |
 
 ## Verification
 
-| Claim | Command / artifact | Result |
+| Claim | Command | Result |
 |---|---|---|
-| Real-page gate | `python3 docs/evidence/atlas-visual/v2/render_step13.py` | PASS, exit 0 |
-| Eight-state gate + frames | `python3 docs/evidence/atlas-visual/v2/render_step13_states.py` | PASS, exit 0 |
-| Fixture regeneration | `PERFPAL_ATLAS_VISION_DIR=docs/evidence/atlas-visual/v2/step13/html cargo test --locked --test atlas_vision -- --ignored` | 1 passed |
-| Currency | private scan sha256 vs shared page | identical (`a4fade03…` / `323ee0a8…`) |
-| Merge | `gate-step13.txt` §5 | Track C `c73d6ff`; private == shared; charts/full changed only |
-| A1 / strip | `step13-reads.json` | 16/16 · 16/16 PASS |
-| G composite | `step13/G-vs-step13-hyperfine-1440x900.png` | present (`653c357f…`) |
-| No source/schema/deps | `git status --short src/ Cargo.toml Cargo.lock` | empty |
-| Evidence transcript | `gate-step13.txt` | complete (fixtures + both harnesses + scope + hashes) |
-| Parallel panel | Round 1: R1 correctness **APPROVED**; R2 contract/scope blocked only on DoD commands it could not run (run by the orchestrator, below); Q1 + Q2 **CHANGES_REQUESTED** on stale records. Fixes: `7098a15`, `ae32d77`, then a third docs-only fix-up | blockers fixed; the confirmation lanes re-run after the fixes and their verdicts are recorded in the commits they review |
+| Binary current | `cargo build --release --locked` | exit 0, no-op |
+| postgres scan | `target/release/perfpal /home/shafin/Opencode/perfpal-test/postgres -o /tmp/opencode/a2-postgres` | exit 0 (181 s) |
+| memchr payload | clone/checkout `bd6068c3`; `git archive … src Cargo.toml …`; `perfpal /tmp/opencode/a2-memchr-payload -o /tmp/opencode/a2-memchr` | exit 0 (1 s) |
+| Pages | `curl -w '%{http_code} %{size_download}'` on 8771/8772 | 200 / 165,067 · 200 / 126,205 |
+| Animation/pause/print | `python3 docs/evidence/map-vision/v8/a2_verify.py` | PASS, exit 0 |
+| Full gate | `a2/gate-a2.txt` | all exit 0 |
+| Scope | `git status --short src/ Cargo.toml Cargo.lock`; `test -z "$(git status --short src/schema/ docs/schema/)"` | empty; exit 0 |
+| No commit/push | `git log --oneline -1` / `git status` | `ce14a3d`; evidence untracked |
+
+## Panel record
+
+- **Round 1 (2026-10-26):** R1 correctness **APPROVED**; Q1 verbatim scope **APPROVED**; R2
+  contract/security **CHANGES_REQUESTED** (delegation/vault framing; scope-command evidence);
+  Q2 acceptance/evidence **CHANGES_REQUESTED** (schema command not in the gate transcript; 0.87 vs 1
+  mismatch; delegation honesty). Fixes applied: explicit delegation basis + D-pf-255; exact gate/build/
+  status/schema/evidence commands recorded; `a2.md` numbers/citations/wording corrected; `setup.txt` +
+  `lanes/MANIFEST.txt` added; pause focusability measured (PASS); state D-pf-251 set live.
+- **Confirmation lanes (2026-10-26):** R2 **APPROVED** (delegation record adequate; scope commands
+  recorded); Q2 **APPROVED** (0.87→1 fixed; gate/setup/manifest evidence present; state/EOL
+  consistent); R3 fresh **APPROVED** (evidence→verdict, residual honesty, state/plan consistency).
+  Non-blocking notes fixed (dates, manifest wording, preserve_order negation, panel record). **No
+  blocking findings remain.** The founder still decides at the commit gate; the delegated-vs-founder
+  point is recorded, not silently waived.
 
 ## Risks / open
 
-- **Founder composition sign-off RESOLVED 2026-10-24** by the delegated approval (D-pf-253). It was the
-  last step-13 item; the DOM gate and A1 reads are proxies for comprehension/geometry, not taste, which is
-  why the delegation is recorded explicitly as revisitable.
-- **Step-11 residuals:** canvas basenames can mid-elide (`executi_.ets.rs`) and drop `src/`; one rail
-  function row wraps/truncates (`src/shell_syntax.rs`; full value in `title`/profile queue).
-- **Sparse cJSON:** 2 of 81 files reachable, 38 partial parses, 75 demoted, 133/229 unresolved
-  includes; honest but visually thin.
-- **Docs leftovers:** output contract missing `atlas-weight.html`/`atlas-q2.html`; stale seven-block
-  refs; whole-tenth vs "one decimal" wording. Step-15 docs pass.
-- **Page height outside `#map`:** 15,872 / 22,058px (legacy Explorer/appendix).
-- **Capped synthetic state:** canvas 1,398 > 900 (V8-disclosed; A2-owned).
-- **Fold peek:** "Where is the mass?" heading (890–907) is sliced by the 900 fold as a scroll
-  affordance; no container clipping.
-- `R-pf-109` open as a record; `A-pf-118` is `active` (A2 schedulable, ship blocked until A2 reports);
-  F undecided; holdouts vaulted; `map-build` not done; A1b open.
+- **memchr fold residual (ship-blocking):** library class canvas bottom 1,282 px > 900; step 15 must
+  resolve or explicitly accept it before ship. The approved composition is unchanged.
+- **A2 delegation:** the founder's own timed eye-test was not applied; a fresh holdout is needed for an
+  untainted founder re-run. The formal V6 bar remains open as a record.
+- **Lane-flagged residuals:** `static cost units (v2)` / `× median` definition; canvas/chart label
+  truncation; postgres entry election (pgbench main; 49% reachable; 719 production unreached; 0
+  resolved blast-radius dependents); memchr `library root` MEDIUM with 5 alternatives; hottest file is
+  an unreached test on postgres. These are step-15 docs/ranking follow-ups, not A2 failures.
+- `R-pf-109`/`A-pf-118` open; F undecided; `map-build` not done; A1b open; publish gate B-pf-001/002
+  founder-owned.
 
-## Decision — step 13 composition (2026-10-24)
+## Next
 
-**APPROVED** (D-pf-253; also in `state/session-state.json`, `state/archive/ledger.jsonl` and
-`step13/FOUNDER-GATE.md`). Basis: merged-tree gate PASS — private scan == served page `a4fade03…`
-(`same_as_private: true`), canvas bottom **869 ≤ 900**, `#map` **1,848 ≤ 5,000**, no horizontal scroll at
-1440/1280, 0 clipped/overflow/dup-id, one unit/median/caveat/unreached/legend/footer each, A9/A12 green,
-A1 **16/16** + strip **16/16**, G comparison **SAME SYSTEM**. The only delta since the page approved at
-steps 10–12 is the two below-fold Track C nav links (`agent report`, `agent actions`); the 900px finals,
-the 1280 frames are byte-identical to `step12.json`, and the weight crops, eight state frames and G
-composite still hash to their recorded values (`gate-step13.txt` §10 / `step13-reads.json`).
-**Provenance:** delegated sign-off — the founder asked the orchestrator to rule on the evidence, so the
-approval rests on measurement, not taste, and is recorded as revisitable.
-
-## Next actions
-
-1. Schedule **A2 (step 14)**: pre-registered `memchr` library holdout + vaulted django/postgres, animation
-   on, 3 actions in <10 minutes; record the transcript and verdict.
-2. Ship/docs (step 15) stays blocked until A2 reports. Do not mark the plan done.
-3. Converge the shared evidence with Track C's merge hygiene (below) before the next session; no push.
-
-## Panel — round 1 (4 lanes) and the fix-up
-
-The step-13 commit (`86c0537`) landed **while the panel was running**, so its findings are fixed forward in
-four docs-only commits (`5b59065`, `7098a15`, `ae32d77`, `c739bed`) plus this closing one. Round-1 verdicts: **R1 APPROVED** (0 blocking), **R2 CHANGES_REQUESTED**
-(1 blocking, but it was a lane-capability gap: that lane had no shell, so the DoD commands could not be
-run — they are run and recorded below), **Q1 CHANGES_REQUESTED** (5 stale "PENDING" claims contradicting
-the approval it commits), **Q2 CHANGES_REQUESTED** (same stale claims + a commit/panel claim that was not
-yet true).
-
-| Finding (lane) | Resolution |
-|---|---|
-| R1/Q1/Q2: `VISION-STEP13.md`, `handoff:72`, `activeContext`, `plans/atlas-build.md` (banner + step-13 heading + step-10 tail), `CHANGELOG` (step-11 **and** step-12 tails), `DECISION.md`, the evidence `README.md` banner, `STEP13.md` status/scope, `AGENT-BRIEF.md`, `A-pf-118` | All updated to **APPROVED 2026-10-24 (D-pf-253)**; D-pf-252 `superseded`; A2 schedulable, ship blocked |
-| R1/Q2: handoff asserted 4-lane panel APPROVED before it ran | Replaced with the real round-1 verdicts above |
-| Q2: "committed this session" with no hash | Commits line now names `c73d6ff` → `86c0537` → `a00fd0b` → `5b59065` → `7098a15` → `ae32d77` → `c739bed` → this fourth fix-up |
-| Q2 M1: no record of what `:8769` serves | `FOUNDER-GATE.md` now names both bindings (`:8769` private scan, `:8767` shared) and states both serve `a4fade03…` |
-| Q2 M2: "byte-identical to earlier package" unfalsifiable | Scoped to what is provable: finals + 1280 frames identical to `step12.json`; fixture frames match `step13-reads.json` image hashes |
-| Q2 M5: build freshness asserted, not shown | `target/release/perfpal` mtime **08:17** > C4 merge **08:07:45**; `cargo build --release --locked` is a no-op; that binary emits both agent artifacts and reproduces `a4fade03…` |
-| R2: CHANGELOG/README/C-handoff contract checks | Verified; C brief status block updated to **C1–C4 COMPLETE (merged)** |
-| R1 nitpicks: §1→§2 ref, "page height outside #map", "two rows" | Fixed (section ref, whole-document wording, "two nav links on one baseline row") |
-| **Append-only violation found during the fix-up** | `86c0537`/`a00fd0b` pruned decisions **D-pf-241/242/243/247/248/249** from the hot array (D-pf-249 was `live`). All six exist in `state/archive/ledger.jsonl`; a restoration pointer `D-pf-249` now records the ids in the hot array. Hot state **7,699 B** (≤ 8 KiB). |
-
-Deliberately **not** actioned (follow-ups, not blockers): the generated `step13.json` drift note is
-hard-coded prose rather than derived from the measured booleans; `.gitignore` has no `.playwright-mcp/`
-entry; the session-private scan's binary hash is not recorded in `step13.json`.
-
-### DoD commands run for the R2 blocker (orchestrator)
-
-| Command | Result |
-|---|---|
-| `git status --short src/ Cargo.toml Cargo.lock` | **empty** |
-| `git diff --name-only c73d6ff 86c0537 \| grep -E '^(src/\|tests/\|Cargo\.\|deny\.toml\|docs/schema/)'` | no output (none) |
-| `git ls-files .playwright-mcp \| wc -l` | **0** (untracked scratch, not committed) |
-| `python3 -c 'json.load(state/session-state.json)'` + `wc -c` | valid, `schema_version 2`, **7,699 B** |
-| append-only check vs `86c0537` | 6 pruned decisions found and restored as a ledger-backed pointer (above) |
-| `cargo build --release --locked` + binary mtime | no-op; **08:17** > merge **08:07:45**; scan → `a4fade03…` + both agent artifacts |
-| `git diff --name-only c73d6ff 7098a15 \| grep -E '^(src/\|tests/\|Cargo\.\|deny\.toml\|docs/schema/)'` | **no output** (full range to the first fix-up) |
-| push check | `origin/main` still `e0928b8`; **no push** |
+- **Step 15 in a fresh session:** output contract/README/CHANGELOG; archive the V7 prototypes' role;
+  run the full DoD; resolve or explicitly accept the memchr fold residual; run the final parallel panel;
+  mark the plan done **only then**; update state/handoff/activeContext; commit. Publish gate remains
+  founder-owned.
 
 ## Change set
 
-- **Evidence:** `docs/evidence/atlas-visual/v2/` — `STEP13.md`, `step13.json`, `gate-step13.txt`,
-  `VISION-STEP13.md`, `step13-reads.json`, `render_step13.py`, `render_step13_states.py`, 8 real-page
-  PNGs, `step13/` (8 states × final+weight, `manifest.json`, `FOUNDER-GATE.md`,
-  `G-vs-step13-hyperfine-1440x900.png`), `G-BASELINE-DIFF.md` §9, `README.md`.
-- **Docs/state:** `docs/plans/atlas-build.md` (step-13 annotation), `docs/atlas/AGENT-BRIEF.md`,
-  `docs/activeContext.md`, `CHANGELOG.md`, `state/session-state.json`, this handoff.
-- **Merge hygiene (Track C, added this session):** `CHANGELOG.md` (agent-report entry),
-  `docs/tracks/README.md` (Track C row: `821b984` → merged `d097e04` + `c73d6ff`),
-  `state/tracks/agent-report/handoff.md` (C4 recorded as `main` = `c73d6ff`, plus a stale-quote fix).
-- **No** code, schema, JS, dependency or golden change; no push.
+- **New:** `docs/evidence/map-vision/v8/a2.md`, `docs/evidence/map-vision/v8/a2/` (frames,
+  `a2-verify.json`, `setup.txt`, `gate-a2.txt`, scan logs, `lanes/`), `docs/evidence/map-vision/v8/a2_verify.py`.
+- **Docs/state:** `docs/plans/atlas-build.md` (step-14 annotation + status banner), `docs/atlas/AGENT-BRIEF.md`,
+  `docs/tracks/atlas-beta.md`, `state/session-state.json` (D-pf-255; D-pf-251 live), this handoff,
+  `docs/activeContext.md`, `CHANGELOG.md`.
+- **No** code, schema, JS, dependency or golden change; no push; no commit yet.

@@ -9,7 +9,7 @@
 
 ## Read first
 
-1. `state/handoff/latest.md` — step-10 approval, the next actions, the known residuals.
+1. `state/handoff/latest.md` — step-14 A2 verdict, the next actions, the known residuals.
 2. `docs/plans/atlas-build.md` steps 11–15 and the DoD.
 3. `docs/evidence/atlas-visual/v2/DECISION.md` — signed Option A; rail step 11; F/charts step 12; founder gate step 13.
 4. `docs/atlas/AGENT-BRIEF.md` + `docs/evidence/atlas-audit/AUDIT.md`.
@@ -32,8 +32,9 @@ of other branches. *(A2/step 14 is no longer blocked: step 13 was APPROVED 2026-
 
 - **A2 — step 12: simplified human page + progressive charts.** First page = graph + key metrics + top-3 actions + **one** caveat; below = weight/blast/file charts; retire the seven-block text wall; `#map` ≤~5k; link to `report.md`/`metrics.json` (and C’s `agent-report.md` when it lands). No schema/JS. This is the two-layer contract.
 - **A3 — step 13: founder visual gate + G-baseline diff + V8 A1/strip rerun.** **APPROVED 2026-10-24**
-  (D-pf-253, delegated evidence-based); A2 (step 14) may be scheduled, ship stays blocked.
-- **A4 — step 14: A2 holdout.** memchr + django/postgres; animation on; 3 actions in <10 minutes; record the verdict.
+  (D-pf-253, delegated evidence-based); A2 (step 14) **DONE** (delegated), step 15 schedulable, ship
+  blocked on the memchr fold residual.
+- **A4 — step 14: A2 holdout.** memchr + django/postgres; animation on; 3 actions in <10 minutes; record the verdict. **DONE 2026-10-24/26 (delegated):** postgres + memchr payload, 4/4 blind lanes PASS, pause/reduced-motion/print PASS; `docs/evidence/map-vision/v8/a2.md`; memchr fold residual carried to step 15.
 - **A5 — step 15: ship/docs/EOL.** README/output contract/CHANGELOG; archive V7; full DoD; mark the plan done only after A2. Publish gate B-pf-001/002 is founder-owned.
 
 ## Guardrails / ownership

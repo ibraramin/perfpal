@@ -4,13 +4,15 @@ plan description: Ship the Atlas map page
 plan status: active
 ---
 
-> **STATUS 2026-10-24 — steps 9–13 complete; step 13 APPROVED (D-pf-253).** A2 (step 14) may be
-> scheduled; ship (step 15) stays blocked. `R-pf-109` remains open as a record.
+> **STATUS 2026-10-26 — steps 9–13 complete; step 13 APPROVED (D-pf-253); A2 (step 14) EXECUTED
+> (delegated PASS, evidence `docs/evidence/map-vision/v8/a2.md`).** Step 15 is schedulable; ship stays
+> blocked on the memchr library fold residual (canvas 1,282 px > 900) until step 15 resolves/accepts
+> it. `R-pf-109` remains open as a record.
 > **New agents: read `docs/atlas/AGENT-BRIEF.md` first.** The founder's 2026-10-23 model supersedes
 > the "100%-graph canvas" wording in this plan: the first page is the **main graph + some key
 > metrics**; below it, reveal more key charts slowly; restore G's visual language (warm palette,
-> sans chrome + mono data, masthead); F stays undecided. A2 may run now that step 13 is approved;
-> do not ship or mark the plan done.
+> sans chrome + mono data, masthead); F stays undecided. Do not mark the plan done; no visual tuning
+> in step 14.
 >
 > **v2 composition amendment (2026-10-23):** the founder's model supersedes the v1 composition
 > clauses (the "100%-graph canvas" + fixed seven-block brief wording in the Idea). The data,
@@ -75,7 +77,8 @@ Build and ship Perfpal Atlas: the entry-flow core graph (G) as a full-bleed 100%
     `step13/FOUNDER-GATE.md`; D-pf-253). Step 13 passes: A2 (step 14) may be scheduled; the plan stays
     `active` and is not done (step 15). No commit/ship implied.
 - **Step 14 — Founder A2 (UNBLOCKED 2026-10-24: step 13 approved, D-pf-253):** pre-register the library-shaped holdout repo (A-pf-116; single-file C lib or Rust lib crate with no bin) alongside the vaulted django/postgres holdout; the registered holdout is the **published `memchr` crate payload** at `bd6068c3` (dev `benchmarks/` + `fuzz/` excluded; see `docs/evidence/map-vision/v8/PREREGISTRATION.md`); run the timed test with animation enabled (3 actions in under 10 minutes, understandable, pause/reduced-motion/print work), record the transcript and the verdict in docs/evidence/map-vision/v8/. If A2 fails on both application and library classes, stop and escalate a superseding ADR instead of tuning.
-- **Step 15 — Ship/docs/EOL (blocked until step 14):** update the output contract and README for the Atlas page, add the CHANGELOG entry, archive the V7 prototypes' role, run the Definition of Done below, run @reviewer + @requirements-reviewer on the final tree, mark the plan done, update state/session-state.json + state/handoff/latest.md + docs/activeContext.md, and commit.
+- **DONE 2026-10-24/26 (delegated A2; timed reads 10-24, verification/panel 10-26; evidence `docs/evidence/map-vision/v8/a2.md`):** postgres (application, `856a659`) + memchr crate payload (`bd6068c3`; `benchmarks/`+`fuzz/` excluded); 4/4 blind lanes named 3 actions in 87–120 s and answered understandable YES; pause/reduced-motion/print verified on both (`a2_verify.py` exit 0). **Residual:** memchr canvas bottom 1,282 px > the 900 px fold (library class, 23-file UNREACHED column) — carried to step 15 to resolve/accept; no visual tuning here. Step 15 is schedulable; the plan is not done.
+- **Step 15 — Ship/docs/EOL (schedulable 2026-10-24 after delegated A2; resolve/accept the memchr fold residual before ship):** update the output contract and README for the Atlas page, add the CHANGELOG entry, archive the V7 prototypes' role, run the Definition of Done below, run @reviewer + @requirements-reviewer on the final tree, mark the plan done, update state/session-state.json + state/handoff/latest.md + docs/activeContext.md, and commit.
 
 ## Definition of Done
 

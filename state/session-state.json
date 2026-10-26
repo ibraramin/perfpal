@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "Atlas v2 steps 9-13 done; step-13 gate COMMITTED 86c0537; A2 (14) may be scheduled; ship (15) blocked; R-pf-109/A-pf-118 open; F undecided; holdouts vaulted; map-build not done; A1b open.",
+  "current_phase": "Atlas v2 steps 9-14 done; A2 (14) delegated PASS 2026-10-24; step 15 schedulable; ship blocked on the memchr fold residual; R-pf-109/A-pf-118 open; F undecided; holdouts released for A2 only; map-build not done; A1b open.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 1,
@@ -14,7 +14,7 @@
     },
     {
       "id": "D-pf-251",
-      "status": "superseded",
+      "status": "live",
       "title": "F TREEMAP DECISION (2026-10-24): keep W1; F stays undecided. No F code ships in step 12; the Explorer treemap and all F data remain untouched; the prototype under docs/evidence/atlas-visual/v2/step12/ is retained as evidence for a later decision. Step 13 founder visual gate remains next; A2/ship blocked at the time (superseded by D-pf-253: A2 schedulable 2026-10-24)."
     },
     {
@@ -36,6 +36,11 @@
       "id": "D-pf-249",
       "status": "archived",
       "title": "RESTORED APPEND-ONLY RECORD: the step-13 commits pruned decisions D-pf-241/242/243/247/248/249 from the hot array (D-pf-249 was live when dropped). Full text for each is in state/archive/ledger.jsonl; no history is lost. This pointer restores the ids."
+    },
+    {
+      "id": "D-pf-255",
+      "status": "live",
+      "title": "ATLAS v2 STEP 14 A2 PASS 2026-10-24 (delegated; founder eye not applied): postgres+memchr, 4/4 blind lanes, 3 actions 87-120s, understandable; pause/reduced/print PASS; evidence v8/a2.md. Residual: memchr canvas 1,282px > 900 fold (step 15 resolve/accept). Step 15 schedulable; plan not done."
     }
   ],
   "open_risks": [
@@ -128,7 +133,7 @@
     {
       "id": "A-pf-118",
       "status": "active",
-      "action": "A2 (step 14) may be scheduled - the step-13 composition was APPROVED 2026-10-24 (D-pf-253). Ship (step 15) stays blocked until A2 reports. Read docs/atlas/AGENT-BRIEF.md first; holdouts vaulted; map-build NOT done; A1b open."
+      "action": "A2 (step 14) DONE 2026-10-24 (delegated PASS; evidence v8/a2.md). Step 15 schedulable; ship blocked on the memchr fold residual; no tuning; holdouts A2-only."
     },
     {
       "id": "A-pf-122",
@@ -141,5 +146,5 @@
       "action": "Founder step-13 gate -> DONE 2026-10-24 (approved on the evidence; delegated)."
     }
   ],
-  "last_updated": "2026-10-24"
+  "last_updated": "2026-10-26"
 }

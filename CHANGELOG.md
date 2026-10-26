@@ -22,6 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   root as provenance by design and are locked by the sample + the integration suite instead).
 
 ### Changed
+- **Atlas v2 step 14 — A2 holdout executed (2026-10-24 timed reads; verification/panel 2026-10-26; delegated; no code change).** The application
+  class was a fresh postgres scan (`856a659`; 2,566 files, 102,933 findings) and the library class the
+  published `memchr` crate payload at `bd6068c3` (45 `.rs`; `benchmarks/` + `fuzz/` excluded). Four
+  fresh-context blind lanes (two per class) named **3 concrete actions in 87–120 s** and answered
+  **understandable YES** on both classes. The CSS-only pause freezes the timeline (68/68 and 45/45
+  animations paused; byte-identical frame pairs); `prefers-reduced-motion` and print show the complete
+  final frame; the pause control is keyboard-focusable. **Residual:** the memchr library page's canvas
+  bottom is **1,282 px > the 900 px fold** (23-file UNREACHED column) — carried to step 15 to resolve
+  or explicitly accept; no visual tuning. Step 15 (ship/docs/EOL) is schedulable; the plan is not
+  done. Evidence: `docs/evidence/map-vision/v8/a2.md`, `a2/` (frames, JSON, setup/gate logs,
+  `lanes/MANIFEST.txt`), `a2_verify.py`.
 - **Atlas v2 step 13 — founder visual gate evidence (2026-10-24, no code change).** The reworked
   `report.html#map` was measured and rendered at 1440×900 and 1280×800 (session-private fresh scans on merged `main` `c73d6ff`, byte-identical to the shared
   `perfpal-test` outputs; Track C's two below-the-fold nav links change only `-charts`/`-full`). **All DOM/render assertions
