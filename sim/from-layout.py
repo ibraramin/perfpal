@@ -26,6 +26,10 @@ CASES = (("hyperfine", "out-hyperfine"), ("cjson", "out-cjson"))
 
 # S2 edge classification is computed by Perfpal core; the sim only projects it.
 EDGE_LABELS = ("type-only", "literal-observed", "unresolved")
+# S3 I/O effects are core-classified too (fixed call-name table v1).
+IO_OPS = ("read", "write")
+IO_TARGETS = ("file", "env", "net", "stdio")
+IO_ROWS_PER_FILE = 6
 
 
 def content_sha256(value: object) -> str:
@@ -65,8 +69,8 @@ def function_row(function: dict) -> dict:
     }
 
 
-def node_row(node: dict) -> dict:
-    return {
+def node_row(node: dict, io: dict | None = None) -> dict:
+    row = {
         "id": node["path"],
         "name": node["name"],
         "x": node["x"],
@@ -92,6 +96,103 @@ def node_row(node: dict) -> dict:
         "title": f"{node['path']} · {node['cost_text']}",
         "findings": node["findings"],
         "functions": [function_row(function) for function in node["functions"]],
+    }
+    if io:
+        row["io"] = io
+    return row
+
+
+def io_rows_by_path(rows: list[dict], drawn: set[str]) -> dict[str, list[dict]]:
+    """Core `flow.io[]` rows grouped by their drawn call-site file.
+
+    The row's ``file`` is the call site, never the target path. Rows are
+    validated against the spec enums here so a core regression cannot reach the
+    story as an invented class; stdio rows never carry a path literal.
+    """
+    grouped: dict[str, list[dict]] = {}
+    for row in rows:
+        path = row.get("file")
+        if path not in drawn:
+            raise SystemExit(f"io row on a non-drawn file: {row}")
+        op = row.get("op")
+        target = row.get("target")
+        literal = row.get("literal")
+        if op not in IO_OPS:
+            raise SystemExit(f"io op outside read/write: {row}")
+        if target not in IO_TARGETS:
+            raise SystemExit(f"io target outside the contract: {row}")
+        if literal is not None and not isinstance(literal, str):
+            raise SystemExit(f"io literal is not a string/null: {row}")
+        if target == "stdio" and literal is not None:
+            raise SystemExit(f"stdio io row carries a path literal: {row}")
+        line = row.get("line")
+        if not isinstance(line, int) or line < 1:
+            raise SystemExit(f"io line is not a positive integer: {row}")
+        grouped.setdefault(path, []).append(
+            {
+                "line": line,
+                "callee": row["callee"],
+                "op": op,
+                "target": target,
+                "literal": literal,
+            }
+        )
+    for grouped_rows in grouped.values():
+        grouped_rows.sort(
+            key=lambda row: (
+                row["line"],
+                row["callee"],
+                row["op"],
+                row["target"],
+                row["literal"] or "",
+            )
+        )
+    return grouped
+
+
+def io_summary(rows: list[dict] | None) -> dict | None:
+    """Per-file I/O summary: totals by op/target, literal/unknown counts, rows."""
+    if not rows:
+        return None
+    return {
+        "total": len(rows),
+        "read": sum(1 for row in rows if row["op"] == "read"),
+        "write": sum(1 for row in rows if row["op"] == "write"),
+        "file": sum(1 for row in rows if row["target"] == "file"),
+        "env": sum(1 for row in rows if row["target"] == "env"),
+        "net": sum(1 for row in rows if row["target"] == "net"),
+        "stdio": sum(1 for row in rows if row["target"] == "stdio"),
+        "literal": sum(1 for row in rows if row["literal"] is not None),
+        # stdio has no path target by design; only path/name/URL rows can be
+        # "unknown" when the argument is not a plain literal.
+        "unknownTarget": sum(
+            1 for row in rows if row["literal"] is None and row["target"] != "stdio"
+        ),
+        "rows": rows[:IO_ROWS_PER_FILE],
+    }
+
+
+def io_trust(grouped: dict[str, list[dict]]) -> dict:
+    """Aggregate I/O coverage for the trust beat."""
+    rows = [row for grouped_rows in grouped.values() for row in grouped_rows]
+    literals = sorted(
+        {(row["target"], row["literal"]) for row in rows if row["literal"] is not None}
+    )
+    return {
+        "rows": len(rows),
+        "files": sum(1 for grouped_rows in grouped.values() if grouped_rows),
+        "read": sum(1 for row in rows if row["op"] == "read"),
+        "write": sum(1 for row in rows if row["op"] == "write"),
+        "literal": sum(1 for row in rows if row["literal"] is not None),
+        "unknownTarget": sum(
+            1 for row in rows if row["literal"] is None and row["target"] != "stdio"
+        ),
+        # A few written literal examples for the trust line (sorted, capped);
+        # full per-file details stay in the inspector.
+        "literals": [
+            {"target": target, "literal": literal}
+            for target, literal in literals[:4]
+        ],
     }
 
 
@@ -295,6 +396,8 @@ def build(case: str, out_dir: Path) -> dict:
             )
 
     drawn = {node["path"] for node in layout["nodes"]}
+    io_grouped = io_rows_by_path(flow.get("io") or [], drawn)
+    io_totals = io_trust(io_grouped)
     unknown_trips = unknown_trip_functions(layout["nodes"])
 
     return {
@@ -330,6 +433,7 @@ def build(case: str, out_dir: Path) -> dict:
             "nonProductionNodes": sum(1 for node in layout["nodes"] if not node["production"]),
             "drawnNodes": len(layout["nodes"]),
             "unknownTripFunctions": unknown_trips,
+            "io": io_totals,
             "findingsIncluded": meta["findings_included"],
             "findingsTotal": meta["findings_total"],
         },
@@ -359,7 +463,10 @@ def build(case: str, out_dir: Path) -> dict:
             {"x": hull["x"], "y": hull["y"], "w": hull["w"], "h": hull["h"], "label": hull["label"]}
             for hull in layout["hulls"]
         ],
-        "nodes": [node_row(node) for node in layout["nodes"]],
+        "nodes": [
+            node_row(node, io_summary(io_grouped.get(node["path"])))
+            for node in layout["nodes"]
+        ],
         "edges": [edge_row(edge, order, calls) for order, edge in enumerate(layout["edges"])],
         "trace": [
             {"path": stage["files"][0], "step": stage["order"] + 1}

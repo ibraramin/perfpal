@@ -180,7 +180,38 @@
       `non-production share: ${fmt(trust.nonProductionNodes)}/${fmt(trust.drawnNodes)} drawn files (test/bench)`,
       `unknown-trip functions: ${fmt(trust.unknownTripFunctions)} (estimate incomplete)`,
       `findings included: ${fmt(trust.findingsIncluded)}/${fmt(trust.findingsTotal)}`,
-    ].join(' · ') + '.';
+      ioTrustText(trust.io),
+    ].filter(Boolean).join(' · ') + '.';
+  }
+
+  // S3: I/O coverage is a fixed-table call-name match. A missing literal is an
+  // unknown argument target, never an invented path; stdio has no path target.
+  function ioTrustText(io) {
+    if (!io) return '';
+    if (!io.rows) return 'I/O: no fixed-table call-name match in the drawn files';
+    const examples = (io.literals || [])
+      .slice(0, 2)
+      .map((row) => `${row.target} "${midEllipsis(row.literal, 16)}"`);
+    const literal = `${fmt(io.literal)} literal${examples.length ? ` (${examples.join(', ')})` : ''}`;
+    return `I/O: ${fmt(io.rows)} effect${io.rows === 1 ? '' : 's'} in ${fmt(io.files)} file${io.files === 1 ? '' : 's'} — ${literal}, ${fmt(io.unknownTarget)} target unknown; call-name match`;
+  }
+
+  function storesText(node) {
+    const io = node.io;
+    if (!io || !io.total) return '';
+    const counts = [];
+    if (io.read) counts.push(`${fmt(io.read)} read${io.read === 1 ? '' : 's'}`);
+    if (io.write) counts.push(`${fmt(io.write)} write${io.write === 1 ? '' : 's'}`);
+    const examples = io.rows
+      .filter((row) => row.literal !== null)
+      .slice(0, 2)
+      .map((row) => `${row.target} "${midEllipsis(row.literal, 18)}"`);
+    const unknown = io.unknownTarget
+      ? `${fmt(io.unknownTarget)} target${io.unknownTarget === 1 ? '' : 's'} unknown`
+      : '';
+    const stdio = io.stdio ? `${fmt(io.stdio)} stdio` : '';
+    const detail = [...examples, unknown, stdio].filter(Boolean).join(' · ');
+    return ` Stores: ${counts.join(' + ')}${detail ? ` — ${detail}` : ''}.`;
   }
 
   function buildBeats(data) {
@@ -240,7 +271,7 @@
       beats.push({
         kind: 'enter',
         title: `Step ${step.step}/${trace.length} · ${base(node.name)}`,
-        narration: `${node.costText}${from}${node.ratioText ? ` · ${node.ratioText}` : ''}${node.topText ? ` · ${node.topText}` : ''}.${node.badge ? ` Annotation ${node.badge}.` : ''}`,
+        narration: `${node.costText}${from}${node.ratioText ? ` · ${node.ratioText}` : ''}${node.topText ? ` · ${node.topText}` : ''}.${node.badge ? ` Annotation ${node.badge}.` : ''}${storesText(node)}`,
         chips: [`step ${step.step}/${trace.length}`, 'inferred'],
         step: step.step,
         focus: { node: node.id, edge: previous ? `${previous}->${node.id}` : null },
@@ -1028,6 +1059,36 @@
         table.append(row);
       }
       section.append(table);
+      body.append(section);
+    }
+
+    if (node.io) {
+      const section = html('div', { class: 'insp-section' });
+      const capped = node.io.rows.length < node.io.total
+        ? ` · showing ${node.io.rows.length} of ${fmt(node.io.total)}`
+        : '';
+      section.append(html('h3', {}, `DATA STORES${capped}`));
+      const list = html('ul', { class: 'insp-io' });
+      for (const row of node.io.rows) {
+        const item = html('li');
+        item.append(html('span', { class: 'io-line' }, `L${row.line}`));
+        item.append(html('span', { class: 'io-op' }, row.op));
+        item.append(html('span', { class: 'io-target' }, row.target));
+        if (row.literal !== null) {
+          item.append(html('span', { class: 'io-literal' }, `"${row.literal}"`));
+        } else if (row.target === 'stdio') {
+          item.append(html('span', { class: 'io-unknown' }, 'stream'));
+        } else {
+          item.append(html('span', { class: 'io-unknown' }, 'target unknown'));
+        }
+        list.append(item);
+      }
+      section.append(list);
+      const unknownNote = node.io.unknownTarget
+        ? ` ${fmt(node.io.unknownTarget)} argument target${node.io.unknownTarget === 1 ? '' : 's'} unknown (no plain literal).`
+        : '';
+      section.append(html('p', { class: 'insp-note' },
+        `Static call-name match (v1 table); a literal is the written source target, not an observed path. Stdio rows carry no path.${unknownNote}`));
       body.append(section);
     }
 

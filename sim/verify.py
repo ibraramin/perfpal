@@ -33,6 +33,9 @@ PINNED_CHROME = Path("/home/shafin/.cache/ms-playwright/chromium-1243/chrome-lin
 REAL_CASES = ["hyperfine", "cjson"]
 EDGE_LABELS = {"type-only", "literal-observed", "unresolved"}
 PAYLOAD_LABELS = {"type-only", "literal-observed"}
+# S3: P2 I/O effects are core-classified; the sim only projects and renders.
+IO_OPS = {"read", "write"}
+IO_TARGETS = {"file", "env", "net", "stdio"}
 # F4: claims the static inference may never make (S2 data + final frame).
 FORBIDDEN_CLAIMS = [
     r"speedup",
@@ -204,6 +207,49 @@ def main() -> int:
             check(f"{case_id}: F2 topCalls projection shape only", True,
                   f"no resolved-label edge had a top call in this data ({len(resolved_edges)} edges)")
 
+    # ---- S3: P2 I/O effects are projected honestly ---------------------
+    for case_id, payload in payloads.items():
+        nodes = payload["nodes"]
+        io_nodes = [node for node in nodes if node.get("io")]
+        rows = [row for node in io_nodes for row in node["io"]["rows"]]
+        check(f"{case_id}: S3 io rows are projected", bool(rows),
+              f"{len(rows)} rows on {len(io_nodes)} drawn files")
+        check(f"{case_id}: S3 io enums are respected",
+              all(row["op"] in IO_OPS and row["target"] in IO_TARGETS for row in rows),
+              str([(row["op"], row["target"]) for row in rows
+                   if row["op"] not in IO_OPS or row["target"] not in IO_TARGETS]))
+        check(f"{case_id}: S3 stdio rows never carry a path literal",
+              all(row["literal"] is None for row in rows if row["target"] == "stdio"))
+        check(f"{case_id}: S3 literals are strings or null",
+              all(row["literal"] is None or isinstance(row["literal"], str) for row in rows))
+
+        def counts_ok(node_io: dict) -> bool:
+            total = node_io["total"]
+            if total != node_io["read"] + node_io["write"]:
+                return False
+            if total != node_io["file"] + node_io["env"] + node_io["net"] + node_io["stdio"]:
+                return False
+            return len(node_io["rows"]) == min(total, 6)
+
+        check(f"{case_id}: S3 per-file io counts reconcile",
+              all(counts_ok(node["io"]) for node in io_nodes))
+        trust_io = (payload.get("trust") or {}).get("io") or {}
+        total = sum(node["io"]["total"] for node in io_nodes)
+        check(f"{case_id}: S3 trust io reconciles with the nodes",
+              trust_io.get("rows") == total
+              and trust_io.get("files") == len(io_nodes)
+              and trust_io.get("read") == sum(node["io"]["read"] for node in io_nodes)
+              and trust_io.get("write") == sum(node["io"]["write"] for node in io_nodes),
+              f'{trust_io} vs {total} rows on {len(io_nodes)} files')
+
+        def io_key(row: dict) -> tuple:
+            return (row["line"], row["callee"], row["op"], row["target"], row["literal"] or "")
+
+        check(f"{case_id}: S3 node io rows are sorted",
+              all([io_key(row) for row in node["io"]["rows"]]
+                  == sorted(io_key(row) for row in node["io"]["rows"])
+                  for node in io_nodes))
+
     # ---- hottest function and profile rank ----------------------------
     def function_rows(payload: dict) -> list[dict]:
         rows = []
@@ -260,6 +306,21 @@ def main() -> int:
         check(f"{case}: core flow fidelity is syntactic",
               flow.get("fidelity") == "syntactic",
               f'{layout.get("layout_version")} · {flow.get("fidelity")!r}')
+        io = flow.get("io")
+        check(f"{case}: core io is a flat array", isinstance(io, list), type(io).__name__)
+        core_io = io if isinstance(io, list) else []
+        drawn = {node["path"] for node in layout["nodes"]}
+        check(f"{case}: core io rows stay on drawn call-site files",
+              all(row.get("file") in drawn for row in core_io),
+              str([row.get("file") for row in core_io if row.get("file") not in drawn][:3]))
+        check(f"{case}: core io rows respect the enums",
+              all(row.get("op") in IO_OPS and row.get("target") in IO_TARGETS for row in core_io))
+        check(f"{case}: core io stdio rows carry no literal",
+              all(row.get("literal") is None for row in core_io if row.get("target") == "stdio"))
+        core_key = lambda row: (row["file"], row["line"], row["callee"],
+                                row["op"], row["target"], row["literal"] or "")
+        check(f"{case}: core io rows are sorted",
+              [core_key(row) for row in core_io] == sorted(core_key(row) for row in core_io))
 
     if not port_free():
         check(f"port {PORT} is free", False, "another process is listening; stop it and rerun")
@@ -384,6 +445,113 @@ def main() -> int:
                     page.wait_for_timeout(50)
                     body = page.inner_text("#narration-body").strip()
                     check(f"{case_id}: {kind} narration is non-empty", len(body) > 12, body[:90])
+
+                # ---- S3: stores on the scene + trust line ---------------
+                io_node = next((node for node in expected["nodes"] if node.get("io")), None)
+                literal_node = next(
+                    (node for node in expected["nodes"]
+                     if node.get("io") and any(row["literal"] for row in node["io"]["rows"])),
+                    None,
+                )
+                unknown_node = next(
+                    (node for node in expected["nodes"]
+                     if node.get("io") and node["io"]["unknownTarget"] > 0),
+                    None,
+                )
+                check(f"{case_id}: S3 the data slice carries io rows", io_node is not None)
+                beat_count = page.evaluate("() => window.__sim.state().beats")
+                stores = []
+                for index in range(beat_count):
+                    page.evaluate("(i) => window.__sim.seekIndex(i)", index)
+                    text = page.inner_text("#narration-body")
+                    if "Stores:" in text:
+                        stores.append((index, text))
+                check(f"{case_id}: S3 scene beats render stores", bool(stores),
+                      f"{len(stores)} stores beats")
+                literal = None
+                if literal_node:
+                    literal = next(
+                        row["literal"] for row in literal_node["io"]["rows"] if row["literal"])
+                page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("trust"))
+                page.wait_for_timeout(50)
+                trust_text = page.inner_text("#narration-body")
+                check(f"{case_id}: S3 trust line carries I/O coverage",
+                      "I/O:" in trust_text and "call-name match" in trust_text,
+                      trust_text[:160])
+                if literal:
+                    check(f"{case_id}: S3 a written literal target is rendered",
+                          literal in trust_text or any(literal in text for _, text in stores),
+                          literal)
+                if unknown_node:
+                    check(f"{case_id}: S3 a non-literal target is marked unknown",
+                          "unknown" in trust_text or any("unknown" in text for _, text in stores),
+                          unknown_node["id"])
+                trust_clipped = page.evaluate(
+                    """() => {
+                        const el = document.querySelector('#narration-body');
+                        return el ? el.scrollHeight > el.clientHeight + 1 : false;
+                    }"""
+                )
+                check(f"{case_id}: S3 trust line is not clipped", not trust_clipped)
+                page.evaluate("() => document.activeElement && document.activeElement.blur()")
+                page.wait_for_timeout(150)
+                shot = EVIDENCE / f"{case_id}-trust.png"
+                page.screenshot(path=str(shot), full_page=False)
+                check(f"{case_id}: S3 trust keyframe",
+                      shot.exists() and shot.stat().st_size > 20000,
+                      f"{shot.stat().st_size if shot.exists() else 0} bytes")
+                if stores:
+                    shot_index = stores[0][0]
+                    if literal:
+                        shot_index = next(
+                            (index for index, text in stores if literal in text), stores[0][0])
+                    page.evaluate("(i) => window.__sim.seekIndex(i)", shot_index)
+                    page.wait_for_timeout(50)
+                    stores_text = page.inner_text("#narration-body")
+                    check(f"{case_id}: S3 stores make no forbidden claim",
+                          not any(re.search(pattern, stores_text, re.I)
+                                  for pattern in FORBIDDEN_CLAIMS),
+                          stores_text[-140:])
+                    clipped = page.evaluate(
+                        """() => {
+                            const el = document.querySelector('#narration-body');
+                            return el ? el.scrollHeight > el.clientHeight + 1 : false;
+                        }"""
+                    )
+                    check(f"{case_id}: S3 stores line is not clipped", not clipped)
+                    page.evaluate("() => document.activeElement && document.activeElement.blur()")
+                    page.wait_for_timeout(150)
+                    shot = EVIDENCE / f"{case_id}-stores.png"
+                    page.screenshot(path=str(shot), full_page=False)
+                    check(f"{case_id}: S3 stores keyframe",
+                          shot.exists() and shot.stat().st_size > 20000,
+                          f"{shot.stat().st_size if shot.exists() else 0} bytes")
+                inspector_node = literal_node or unknown_node or io_node
+                if inspector_node:
+                    page.evaluate(
+                        """(path) => {
+                            const node = document.querySelector(`#stage g[role="button"][data-node="${path}"]`);
+                            if (node) node.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+                        }""",
+                        inspector_node["id"],
+                    )
+                    page.wait_for_timeout(50)
+                    insp = page.inner_text("#inspector")
+                    check(f"{case_id}: S3 inspector renders data stores",
+                          "DATA STORES" in insp
+                          and f'L{inspector_node["io"]["rows"][0]["line"]}' in insp,
+                          insp[:140])
+                    if unknown_node:
+                        check(f"{case_id}: S3 inspector marks a non-literal target",
+                              "unknown" in insp, unknown_node["id"])
+                    page.evaluate("() => document.activeElement && document.activeElement.blur()")
+                    page.wait_for_timeout(150)
+                    shot = EVIDENCE / f"{case_id}-io-inspector.png"
+                    page.screenshot(path=str(shot), full_page=False)
+                    check(f"{case_id}: S3 inspector keyframe",
+                          shot.exists() and shot.stat().st_size > 20000,
+                          f"{shot.stat().st_size if shot.exists() else 0} bytes")
+                    page.keyboard.press("Escape")
 
                 page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("hottest"))
                 page.wait_for_timeout(50)

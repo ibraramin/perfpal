@@ -2128,6 +2128,26 @@
    "h": 80,
    "hottest": false,
    "id": "src/main.rs",
+   "io": {
+    "env": 1,
+    "file": 0,
+    "literal": 0,
+    "net": 0,
+    "read": 1,
+    "rows": [
+     {
+      "callee": "env::args_os",
+      "line": 39,
+      "literal": null,
+      "op": "read",
+      "target": "env"
+     }
+    ],
+    "stdio": 0,
+    "total": 1,
+    "unknownTarget": 1,
+    "write": 0
+   },
    "name": "main.rs",
    "nonproduction": false,
    "partialParse": false,
@@ -2264,6 +2284,47 @@
    "h": 80,
    "hottest": false,
    "id": "src/options.rs",
+   "io": {
+    "env": 2,
+    "file": 2,
+    "literal": 2,
+    "net": 0,
+    "read": 3,
+    "rows": [
+     {
+      "callee": "File::open",
+      "line": 132,
+      "literal": null,
+      "op": "read",
+      "target": "file"
+     },
+     {
+      "callee": "File::create",
+      "line": 167,
+      "literal": null,
+      "op": "write",
+      "target": "file"
+     },
+     {
+      "callee": "env::var_os",
+      "line": 337,
+      "literal": "TERM",
+      "op": "read",
+      "target": "env"
+     },
+     {
+      "callee": "env::var_os",
+      "line": 340,
+      "literal": "NO_COLOR",
+      "op": "read",
+      "target": "env"
+     }
+    ],
+    "stdio": 0,
+    "total": 4,
+    "unknownTarget": 2,
+    "write": 1
+   },
    "name": "options.rs",
    "nonproduction": false,
    "partialParse": false,
@@ -2604,6 +2665,26 @@
    "h": 80,
    "hottest": false,
    "id": "tests/execution_order_tests.rs",
+   "io": {
+    "env": 0,
+    "file": 1,
+    "literal": 0,
+    "net": 0,
+    "read": 1,
+    "rows": [
+     {
+      "callee": "File::open",
+      "line": 84,
+      "literal": null,
+      "op": "read",
+      "target": "file"
+     }
+    ],
+    "stdio": 0,
+    "total": 1,
+    "unknownTarget": 1,
+    "write": 0
+   },
    "name": "execution_order_tests.rs",
    "nonproduction": true,
    "partialParse": false,
@@ -2876,6 +2957,26 @@
    "h": 80,
    "hottest": false,
    "id": "src/export/mod.rs",
+   "io": {
+    "env": 0,
+    "file": 1,
+    "literal": 0,
+    "net": 0,
+    "read": 0,
+    "rows": [
+     {
+      "callee": "File::create",
+      "line": 110,
+      "literal": null,
+      "op": "write",
+      "target": "file"
+     }
+    ],
+    "stdio": 0,
+    "total": 1,
+    "unknownTarget": 1,
+    "write": 1
+   },
    "name": "mod.rs",
    "nonproduction": false,
    "partialParse": false,
@@ -3056,6 +3157,26 @@
    "h": 80,
    "hottest": false,
    "id": "src/timer/mod.rs",
+   "io": {
+    "env": 0,
+    "file": 1,
+    "literal": 1,
+    "net": 0,
+    "read": 0,
+    "rows": [
+     {
+      "callee": "File::create",
+      "line": 38,
+      "literal": "/dev/null",
+      "op": "write",
+      "target": "file"
+     }
+    ],
+    "stdio": 0,
+    "total": 1,
+    "unknownTarget": 0,
+    "write": 1
+   },
    "name": "mod.rs",
    "nonproduction": false,
    "partialParse": false,
@@ -3437,7 +3558,7 @@
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
   "metricsContentSha256": "b512f5a726a6be72692d85df2669ce5d0b106b07f77d5bff0e7d3deaf336f6ea",
-  "sha256": "c82ae82da6f6ea37397ade0dcff0287e5e69c1aea6cbd6f5b75697dcab6f6403"
+  "sha256": "571745a963f43eac0ac3e9f4f6914e33579ea3d282a01c4f4bdb46f59dbd3d36"
  },
  "stage": {
   "h": 718,
@@ -3472,6 +3593,28 @@
   "drawnNodes": 19,
   "findingsIncluded": 148,
   "findingsTotal": 348,
+  "io": {
+   "files": 5,
+   "literal": 3,
+   "literals": [
+    {
+     "literal": "NO_COLOR",
+     "target": "env"
+    },
+    {
+     "literal": "TERM",
+     "target": "env"
+    },
+    {
+     "literal": "/dev/null",
+     "target": "file"
+    }
+   ],
+   "read": 5,
+   "rows": 8,
+   "unknownTarget": 5,
+   "write": 3
+  },
   "nonProductionNodes": 5,
   "partialParse": false,
   "unknownTripFunctions": 16

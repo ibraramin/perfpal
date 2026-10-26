@@ -1523,6 +1523,61 @@
    "h": 80,
    "hottest": false,
    "id": "fuzzing/afl.c",
+   "io": {
+    "env": 0,
+    "file": 1,
+    "literal": 0,
+    "net": 0,
+    "read": 2,
+    "rows": [
+     {
+      "callee": "fopen",
+      "line": 37,
+      "literal": null,
+      "op": "read",
+      "target": "file"
+     },
+     {
+      "callee": "fread",
+      "line": 66,
+      "literal": null,
+      "op": "read",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 95,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 96,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 97,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 98,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     }
+    ],
+    "stdio": 6,
+    "total": 7,
+    "unknownTarget": 1,
+    "write": 5
+   },
    "name": "afl.c",
    "nonproduction": false,
    "partialParse": true,
@@ -1659,6 +1714,26 @@
    "h": 80,
    "hottest": true,
    "id": "tests/unity/test/tests/testunity.c",
+   "io": {
+    "env": 0,
+    "file": 0,
+    "literal": 0,
+    "net": 0,
+    "read": 0,
+    "rows": [
+     {
+      "callee": "putchar",
+      "line": 3334,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     }
+    ],
+    "stdio": 1,
+    "total": 1,
+    "unknownTarget": 0,
+    "write": 1
+   },
    "name": "testunity.c",
    "nonproduction": true,
    "partialParse": true,
@@ -1795,6 +1870,61 @@
    "h": 80,
    "hottest": false,
    "id": "test.c",
+   "io": {
+    "env": 0,
+    "file": 0,
+    "literal": 0,
+    "net": 0,
+    "read": 0,
+    "rows": [
+     {
+      "callee": "printf",
+      "line": 61,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 70,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 76,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 78,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 79,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "printf",
+      "line": 80,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     }
+    ],
+    "stdio": 10,
+    "total": 10,
+    "unknownTarget": 0,
+    "write": 10
+   },
    "name": "test.c",
    "nonproduction": false,
    "partialParse": true,
@@ -1883,6 +2013,61 @@
    "h": 80,
    "hottest": false,
    "id": "fuzzing/fuzz_main.c",
+   "io": {
+    "env": 0,
+    "file": 1,
+    "literal": 0,
+    "net": 0,
+    "read": 2,
+    "rows": [
+     {
+      "callee": "fprintf",
+      "line": 17,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "fopen",
+      "line": 21,
+      "literal": null,
+      "op": "read",
+      "target": "file"
+     },
+     {
+      "callee": "fprintf",
+      "line": 24,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "fprintf",
+      "line": 38,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     },
+     {
+      "callee": "fread",
+      "line": 42,
+      "literal": null,
+      "op": "read",
+      "target": "stdio"
+     },
+     {
+      "callee": "fprintf",
+      "line": 44,
+      "literal": null,
+      "op": "write",
+      "target": "stdio"
+     }
+    ],
+    "stdio": 5,
+    "total": 6,
+    "unknownTarget": 1,
+    "write": 4
+   },
    "name": "fuzz_main.c",
    "nonproduction": false,
    "partialParse": false,
@@ -2016,7 +2201,7 @@
   "artifact": "atlas-layout.json",
   "layoutVersion": 1,
   "metricsContentSha256": "1e8bd62a4d0417bc1e60e1ab198b6dedaf5aff6d201d0a9df3d34f8e407cee5f",
-  "sha256": "fecbcd8eac10638c1439922d3ba499dbe27905225408a338fe1223ae3c93580f"
+  "sha256": "482d82e302515fd0e8503976c2694b3d41857c317aec6a0a41f969073d733975"
  },
  "stage": {
   "h": 718,
@@ -2047,6 +2232,15 @@
   "drawnNodes": 7,
   "findingsIncluded": 153,
   "findingsTotal": 837,
+  "io": {
+   "files": 4,
+   "literal": 0,
+   "literals": [],
+   "read": 4,
+   "rows": 24,
+   "unknownTarget": 2,
+   "write": 20
+  },
   "nonProductionNodes": 1,
   "partialParse": true,
   "unknownTripFunctions": 6

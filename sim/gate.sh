@@ -101,8 +101,15 @@ PY
 import json, sys
 case = sys.argv[1]
 d = json.load(open(f"/var/tmp/opencode/gate-on/{case}/atlas-layout.json"))
+flow = d.get("flow") or {}
+io = flow.get("io") or []
+summary = {}
+for row in io:
+    key = f'{row["op"]}/{row["target"]}'
+    summary[key] = summary.get(key, 0) + 1
 print("canvas", d["canvas"], "nodes", len(d["nodes"]), "edges", len(d["edges"]),
       "stages", len(d["stages"]), "findings", f'{d["meta"]["findings_included"]}/{d["meta"]["findings_total"]}')
+print("io rows", len(io), dict(sorted(summary.items())))
 print("columns", [(c["depth"], c["x"], c["width"], c["label"], c["count_text"]) for c in d["columns"]])
 PY
     echo

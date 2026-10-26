@@ -685,6 +685,23 @@ button,select,input{font:inherit;color:inherit}
 .insp-findings .sev.warn{color:#8a5a12}
 .insp-findings .sev.info{color:#5b6670}
 .insp-findings .rule{color:#6f4a2e}
+.insp-io{
+  margin:0;
+  padding:0;
+  list-style:none;
+  display:grid;
+  gap:3px;
+  font-family:var(--mono);
+  font-size:8.5px;
+  line-height:1.4;
+  color:#3f4952;
+}
+.insp-io li{display:flex;gap:6px;align-items:baseline;min-width:0}
+.insp-io .io-line{flex:0 0 2.5rem;color:var(--muted)}
+.insp-io .io-op{flex:0 0 2.4rem;font-weight:700;color:#8a3a12}
+.insp-io .io-target{flex:0 0 2.4rem;color:#5c665f}
+.insp-io .io-literal,.insp-io .io-unknown{overflow-wrap:anywhere;min-width:0}
+.insp-io .io-unknown{color:var(--muted);font-style:italic}
 .insp-why{
   font-family:var(--mono);
   font-size:8.5px;
