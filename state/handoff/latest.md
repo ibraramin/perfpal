@@ -73,6 +73,7 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
 | Branch ancestor | `git merge-base --is-ancestor feat/js-ts main` | exit 0 (observed post-commit) |
 | Clean status | `git status --porcelain` | empty (observed; `.playwright-mcp/` is ignored by `8f7c5c4`) |
 | No tag | `git tag --points-at HEAD` | empty |
+| Merge body | `git log -1 --format=%B cda9d5f` | 19 lines; lists the six conflict resolutions |
 | Plan done | `docs/plans/js-ts.md` frontmatter | `plan status: done` |
 | State valid | JSON parse of `state/session-state.json` + all `state/archive/ledger.jsonl` lines | all valid |
 
@@ -117,4 +118,6 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
   `state/handoff/latest.md`, `docs/activeContext.md`,
   `docs/evidence/merge-m1/{gate.txt,resolutions.md}`.
 - **Merge commit:** `cda9d5f` carries the six conflict resolutions and the js-ts feature tree.
+- **Hygiene:** `8f7c5c4` adds `/.playwright-mcp/` to `.gitignore` so the pre-existing local scratch
+  cannot block the requested clean `git status`; no product effect.
 - **No** push/tag; no A2/ship/graduation claim.
