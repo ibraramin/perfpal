@@ -20,3 +20,6 @@
 # Python bytecode from committed evidence/repro scripts (docs/evidence/**/render)
 __pycache__/
 *.pyc
+
+# Local browser-harness scratch (Playwright MCP screenshots/logs)
+/.playwright-mcp/
