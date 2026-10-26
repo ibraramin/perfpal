@@ -192,8 +192,10 @@
     const examples = (io.literals || [])
       .slice(0, 2)
       .map((row) => `${row.target} "${midEllipsis(row.literal, 16)}"`);
-    const literal = `${fmt(io.literal)} literal${examples.length ? ` (${examples.join(', ')})` : ''}`;
-    return `I/O: ${fmt(io.rows)} effect${io.rows === 1 ? '' : 's'} in ${fmt(io.files)} file${io.files === 1 ? '' : 's'} — ${literal}, ${fmt(io.unknownTarget)} target unknown; call-name match`;
+    const more = io.literal > examples.length ? `, +${io.literal - examples.length}` : '';
+    const literal = `${fmt(io.literal)} literal${examples.length ? ` (${examples.join(', ')}${more})` : ''}`;
+    const stdio = io.stdio ? `, ${fmt(io.stdio)} stdio` : '';
+    return `I/O: ${fmt(io.rows)} effect${io.rows === 1 ? '' : 's'} in ${fmt(io.files)} file${io.files === 1 ? '' : 's'} — ${literal}, ${fmt(io.unknownTarget)} target unknown${stdio}; call-name match`;
   }
 
   function storesText(node) {
@@ -1077,7 +1079,7 @@
         if (row.literal !== null) {
           item.append(html('span', { class: 'io-literal' }, `"${row.literal}"`));
         } else if (row.target === 'stdio') {
-          item.append(html('span', { class: 'io-unknown' }, 'stream'));
+          item.append(html('span', { class: 'io-unknown' }, 'stream · no path'));
         } else {
           item.append(html('span', { class: 'io-unknown' }, 'target unknown'));
         }

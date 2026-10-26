@@ -701,7 +701,7 @@ button,select,input{font:inherit;color:inherit}
 .insp-io .io-op{flex:0 0 2.4rem;font-weight:700;color:#8a3a12}
 .insp-io .io-target{flex:0 0 2.4rem;color:#5c665f}
 .insp-io .io-literal,.insp-io .io-unknown{overflow-wrap:anywhere;min-width:0}
-.insp-io .io-unknown{color:var(--muted);font-style:italic}
+.insp-io .io-unknown{color:#4a5560;font-style:italic}
 .insp-why{
   font-family:var(--mono);
   font-size:8.5px;

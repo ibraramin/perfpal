@@ -183,6 +183,7 @@ def io_trust(grouped: dict[str, list[dict]]) -> dict:
         "files": sum(1 for grouped_rows in grouped.values() if grouped_rows),
         "read": sum(1 for row in rows if row["op"] == "read"),
         "write": sum(1 for row in rows if row["op"] == "write"),
+        "stdio": sum(1 for row in rows if row["target"] == "stdio"),
         "literal": sum(1 for row in rows if row["literal"] is not None),
         "unknownTarget": sum(
             1 for row in rows if row["literal"] is None and row["target"] != "stdio"

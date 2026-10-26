@@ -197,17 +197,19 @@ pub fn set_stale_grace_env(val: Option<&str>) -> GraceEnvGuard {
 
 // ---------------------------------------------------------------------------
 // P4 integration determinism helpers (modules.md §7 "double-render modulo
-// provenance"): mask the two provenance fields (`started_at`, `duration_ms`)
-// wherever they surface — JSON in metrics.json, text in report.md.
+// provenance"): mask the provenance fields (`started_at`, `duration_ms`,
+// `root_path`) wherever they surface — JSON in metrics.json, text in report.md.
 // ---------------------------------------------------------------------------
 
-/// Mask `scan.started_at` / `scan.duration_ms` in a metrics.json payload,
-/// returning canonical JSON with both fields nulled.
+/// Mask `scan.started_at` / `scan.duration_ms` / `scan.root_path` in a
+/// metrics.json payload, returning canonical JSON with those fields nulled.
+/// All three are per-run/machine provenance, not scan content.
 #[must_use]
 pub fn mask_metrics_provenance(raw: &str) -> String {
     let mut value: serde_json::Value = serde_json::from_str(raw).expect("metrics.json parses");
     value["scan"]["started_at"] = serde_json::Value::Null;
     value["scan"]["duration_ms"] = serde_json::Value::Null;
+    value["scan"]["root_path"] = serde_json::Value::Null;
     value.to_string()
 }
 

@@ -3612,6 +3612,7 @@
    ],
    "read": 5,
    "rows": 8,
+   "stdio": 0,
    "unknownTarget": 5,
    "write": 3
   },

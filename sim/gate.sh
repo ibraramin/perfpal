@@ -27,7 +27,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
   echo "Commit at run: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
   echo "Git tree: $(git rev-parse HEAD^{tree})"
   echo "Dirty paths at run (excluding this transcript): $(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)"
-  echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence."
+  echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence or docs/state."
   echo "Fixtures: hyperfine $(git -C "$FIXTURES/hyperfine" rev-parse --short HEAD 2>/dev/null || echo '?') · cJSON $(git -C "$FIXTURES/cJSON" rev-parse --short HEAD 2>/dev/null || echo '?')"
   echo
 
@@ -89,6 +89,7 @@ b = json.load(open(f"/var/tmp/opencode/gate-on/{case}/metrics.json"))
 for doc in (a, b):
     doc.get("scan", {}).pop("duration_ms", None)
     doc.get("scan", {}).pop("started_at", None)
+    doc.get("scan", {}).pop("root_path", None)
 ok = a == b
 print("content_equal:", ok)
 print("assert=" + ("pass" if ok else "FAIL") + " metrics_content_equal")
@@ -167,6 +168,9 @@ PY
   DIRTY=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)
   echo "lines=$DIRTY"
   if [ "$DIRTY" -eq 0 ]; then echo "assert=pass worktree_clean"; else echo "assert=FAIL worktree_clean"; fi
+  DIRTY_ALL=$(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)
+  echo "all dirty paths=$DIRTY_ALL (the DoD requires 0)"
+  if [ "$DIRTY_ALL" -eq 0 ]; then echo "assert=pass worktree_dirty_zero"; else echo "assert=FAIL worktree_dirty_zero"; fi
 } > "$EVIDENCE/GATE.txt" 2>&1
 
 if grep -qE 'exit=[1-9]|assert=FAIL|assert_exit=[1-9]' "$EVIDENCE/GATE.txt"; then

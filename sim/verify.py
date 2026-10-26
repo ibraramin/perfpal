@@ -239,7 +239,8 @@ def main() -> int:
               trust_io.get("rows") == total
               and trust_io.get("files") == len(io_nodes)
               and trust_io.get("read") == sum(node["io"]["read"] for node in io_nodes)
-              and trust_io.get("write") == sum(node["io"]["write"] for node in io_nodes),
+              and trust_io.get("write") == sum(node["io"]["write"] for node in io_nodes)
+              and trust_io.get("stdio") == sum(node["io"]["stdio"] for node in io_nodes),
               f'{trust_io} vs {total} rows on {len(io_nodes)} files')
 
         def io_key(row: dict) -> tuple:
@@ -468,6 +469,13 @@ def main() -> int:
                         stores.append((index, text))
                 check(f"{case_id}: S3 scene beats render stores", bool(stores),
                       f"{len(stores)} stores beats")
+                drawn_by_id = {node["id"]: node for node in expected["nodes"]}
+                trace_io = sum(
+                    1 for step in expected["trace"]
+                    if (drawn_by_id.get(step["path"]) or {}).get("io")
+                )
+                check(f"{case_id}: S3 every trace node with io has a stores beat",
+                      len(stores) == trace_io, f"{len(stores)} stores / {trace_io} trace nodes with io")
                 literal = None
                 if literal_node:
                     literal = next(
@@ -486,6 +494,13 @@ def main() -> int:
                     check(f"{case_id}: S3 a non-literal target is marked unknown",
                           "unknown" in trust_text or any("unknown" in text for _, text in stores),
                           unknown_node["id"])
+                trust_io_expected = (expected.get("trust") or {}).get("io") or {}
+                if trust_io_expected.get("stdio"):
+                    check(f"{case_id}: S3 trust line discloses stdio effects",
+                          "stdio" in trust_text, trust_text[-120:])
+                if trust_io_expected.get("literal", 0) > 2:
+                    check(f"{case_id}: S3 trust line marks omitted literal examples",
+                          "+" in trust_text, trust_text[-120:])
                 trust_clipped = page.evaluate(
                     """() => {
                         const el = document.querySelector('#narration-body');
@@ -544,6 +559,9 @@ def main() -> int:
                     if unknown_node:
                         check(f"{case_id}: S3 inspector marks a non-literal target",
                               "unknown" in insp, unknown_node["id"])
+                    if any(row["target"] == "stdio" for row in inspector_node["io"]["rows"]):
+                        check(f"{case_id}: S3 inspector marks stdio as pathless",
+                              "no path" in insp, inspector_node["id"])
                     page.evaluate("() => document.activeElement && document.activeElement.blur()")
                     page.wait_for_timeout(150)
                     shot = EVIDENCE / f"{case_id}-io-inspector.png"
