@@ -274,9 +274,10 @@ an HTTP server; `--story` adds only `atlas-layout.json`; the `perfpal story` sub
 **Branch snapshot.** This branch is a pre-merge story snapshot at `8f0249e`. Main has since
 recorded Atlas v2 done (`c797004`; step 13 approved, A2 delegated pass, `R-pf-109` closed:
 D-pf-255/257/258), while this branch's state says `R-pf-109` open. The ADR does not rely on the
-report gate being open; at merge, condition (b) is satisfied. Reconcile the branch (`R-pf-112`):
-61 story commits ahead, 8 v2-close commits behind; decision IDs collide (branch D-pf-255 = S4;
-main D-pf-255 = A2 PASS). This ADR uses **D-pf-259** to avoid adding a collision.
+report gate being open; at merge, condition (b) is satisfied. The recorded "61 ahead / 8 behind" was stale: the 2026-10-26
+recount is **63 ahead / 23 behind** (`ADR-0012`). Decision IDs collided (branch D-pf-251..255 =
+D2/S1/S2/S3/S4; main = F-treemap/archived/step-13/archived/A2 PASS); `ADR-0012` remaps them to
+D-pf-260..264 and keeps `D-pf-259` for this ADR.
 
 **Graduation conditions (ADR-0011 Decision 4).** (a) a founder **§5 graduation session on the
 post-S4 story** (distinct from the 2026-10-24 D1 review) on a self-contained artifact, including the
@@ -297,7 +298,38 @@ fixes (CHANGELOG D1/§5 wording, close-record reference, ID list) follow in the 
 
 - **S4 close:** complete (panel 5/5 APPROVE, final gate `71d0d04`, evidence `2ebeabd`); **ADR-0011
   decided 2026-10-26 (D-pf-259) — companion, A12 unchanged.** F8 remains founder-deferred.
-- **Reconcile the branch with main first** (`R-pf-112`): main has Atlas v2 done (`c797004`;
-  step 13/A2/step 15), this branch is 61 commits ahead on the story and 8 behind. Then **Atlas v2
-  step 11** (detail rail) on this branch, then step 12 and the step-13 gate. No A2/ship from this
-  branch.
+- **Reconciliation recorded** (`R-pf-112`, `ADR-0012`, Proposed): direction **C** — keep this
+  branch separate from `main` until the §5 founder session; no story→main merge now. Next (after
+  founder approval): merge `main` into this branch (sync; 7 conflicted paths), run the full story
+  gate, then package the self-contained story + `perfpal story` CLI and take it to §5. **Do not
+  re-run Atlas v2 step 11 here** — main closed steps 11–15 (`c797004`; D-pf-258). No A2/ship.
+
+## R-pf-112 reconciliation (2026-10-26)
+
+**Record:** `docs/adr/ADR-0012-atlas-branch-reconciliation.md` (Proposed; founder approval required
+before any merge/rebase/cherry-pick/push/code change).
+
+**Facts (corrected).** `feat/atlas-sim` @ `988aea2`; `main` @ `c797004`; merge base `821b984`
+(v2 steps 9–10). `git rev-list --left-right --count main...HEAD` → **23 63**: 63 story commits
+ahead, **23** main commits behind (the recorded 61/8 was stale). Main is v2 DONE: steps 11–15
+(`189df91`, `9a94905`, step 13 `86c0537`/D-pf-253, A2 `D-pf-255`, step 15 `57d91a2`/D-pf-256/257/258);
+`R-pf-109` closed; `atlas-build` done. This branch is a pre-merge story snapshot; its `atlas-build`
+copy is now marked done with a snapshot banner.
+
+**Dry-run sync.** `git merge-tree --write-tree --name-only main HEAD` → 7 conflicted paths:
+`README.md`, `docs/activeContext.md`, `src/reporter/atlas_render.rs`, `src/reporter/mod.rs`,
+`state/archive/ledger.jsonl`, `state/handoff/latest.md`, `state/session-state.json`. Auto-merges:
+`CHANGELOG.md`, `docs/report/output-contract.md`, the Atlas specs, `src/cli/mod.rs`. Known API fix:
+main's `strip_entry_line` is private; restore `pub(crate)` for the story projection. `start_actions`
+and `build_atlas_view` survive on main.
+
+**ID remap (applied).** `D-pf-251→260`, `D-pf-252→261`, `D-pf-253→262`, `D-pf-254→263`,
+`D-pf-255→264`; `A-pf-124→126`, `A-pf-125→127`. `D-pf-259` (ADR-0011) unchanged; `D-pf-265` records
+this reconciliation; `D-pf-266` is the hot-state archive pointer for `D-pf-238..243`. `R-pf-109`
+is closed on this branch as a main-line record; `R-pf-112` stays open until the sync/packaging lands.
+The ledger keeps the old IDs plus a `decision_id_remap` entry.
+
+**Direction (recommended, pending approval).** **C** — no story→main merge until the §5 founder
+session; next is a `main`→branch sync, then the self-contained story + CLI packaging slice. A/B are
+recorded in ADR-0012 with tradeoffs and "what would change my mind"; A would use the merge-based A′
+(not a literal rebase) to preserve evidence SHAs.

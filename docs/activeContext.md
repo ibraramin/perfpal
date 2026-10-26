@@ -1,25 +1,23 @@
 # Active Context
 
 ## Current Task
-**Track D2 → S1 → S4 → ADR-0011 (2026-10-26): the Atlas Story remains a companion and does not
-graduate into the static report.** The sealed requirement (`docs/specs/atlas-story.md`) is a
-core-fed **temporal showcase** (entry → stages → loops → I/O → stop) with the payload crossing each
-file boundary labelled, readable by a vibecoder in 60 seconds and drillable by a senior dev
-(`path:line` + types), static inference throughout. S4 is built and gated (`71d0d04`); the
-companion-vs-report decision is made and recorded (`ADR-0011`).
-- **S1 committed:** core `atlas-layout.json` behind `--story`; the sim builds from core JSON.
-- **S2 committed and gated:** P3 signatures + P1 call payloads; edge labels + payoff beats.
-- **S3 committed and gated:** P2 `flow.io[]` + stores/trust/inspector.
-- **S4 built and gated (`9263c19`…`71d0d04`):** P6 README `purpose`, P7 authoritative whole-repo KV3
-  queue, P8 directory scenes (depth-2, 24/5 caps, omitted totals, node/action scene context); sim
-  purpose masthead, enter-beat scene context, whole-repo profile beat, scene-aware start-here,
-  below-fold SCENES / PROFILE QUEUE / TRUST ACCOUNTING, unresolved-calls inspector. Deterministic
-  3k fixture + `sim/scale.py`/`scale.sh` gate F2–F7 (page **463,490 bytes**, first frame **under the 2,000 ms budget** (final transcript), no h-scroll at 1280, double-scan/load determinism). Gate `dirty 0` PASS; `sim/verify.py`
-  **304/304**; 3k **44/44**; 897 Rust tests; `@vision` Read 8 **PASS-WITH-NITS, no blockers**. F8
-  (founder A2) is **deferred**, not claimed.
-- **Not yet:** the companion is **not shipped** — it still loads data with `fetch()` and lives in
-  `sim/`. A self-contained artifact (inline data, no server) + a CLI entry point is the recorded
-  precondition for the founder D2/F8 session; it is not scoped or started.
+**R-pf-112 — branch reconciliation (2026-10-26).** `feat/atlas-sim` is a pre-merge Atlas Story
+snapshot; `main` is the completed Atlas v2 line. `ADR-0012` records the recommended direction
+**C**: keep the story branch separate from `main` until the **§5 founder session**; no story→main
+merge now. The next implementation (after founder approval) is a **main→branch sync** (7 conflicted
+paths) followed by the **story packaging slice** (self-contained `story.html` + `perfpal story
+<repo>` CLI) and then §5. No push, no merge, no A2/ship claim.
+- **Actual divergence:** 63 story commits ahead / 23 main commits behind (the recorded 61/8 was
+  stale); merge base `821b984`.
+- **Main v2 is DONE:** steps 11–15 (`189df91`, `9a94905`, step 13 `86c0537`/D-pf-253, A2 `D-pf-255`,
+  step 15 `57d91a2`/D-pf-256/257/258); `atlas-build` done; `R-pf-109` closed as a record. **Do not
+  re-run step 11 on this branch.**
+- **Story baseline:** S4 gated at `71d0d04` (897 tests, `sim/verify.py` 304/304, 3k 44/44, page
+  463,490 B, first frame 1,706 ms); ADR-0011 decided companion, A12 unchanged; F8 deferred.
+- **IDs remapped** to avoid main collisions: D-pf-251..255 → D-pf-260..264; A-pf-124/125 →
+  A-pf-126/127; D-pf-259 (ADR-0011) and D-pf-265 (ADR-0012) are live; D-pf-266 is the archive
+  pointer. The ledger keeps the old IDs + a `decision_id_remap` entry.
+- **Not yet:** the story is not shipped; the companion still `fetch()`es data and has no CLI entry.
 
 ## Core-integration rule (live, founder 2026-10-24)
 Atlas is a view of Perfpal, not a separate pipeline. Any data it needs that the core does not emit
@@ -28,50 +26,53 @@ becomes a **core probe**: additive, story-only where possible, one commit per pr
 implemented properly and merged later. Existing scan outputs must stay byte-identical.
 
 ## Recent Decisions
+- **D-pf-265 / ADR-0012 (live, 2026-10-26, Proposed):** R-pf-112 reconciled. Direction **C** — the
+  story branch stays separate until §5; no story→main merge now. Actual divergence 63/23 (not 61/8);
+  7-path sync conflict; IDs remapped; `R-pf-109` closed as a main-line record; `atlas-build` done
+  (main D-pf-258). Next: founder approval → main→branch sync → packaging → §5. No push/A2/ship.
 - **D-pf-259 / ADR-0011 (live, 2026-10-26):** the Atlas Story stays a **standalone companion**; no
   in-report graduation in v1. **A12 unchanged** (report keeps exactly one fixed `REPORT_SCRIPT`;
-  canvas/SVG/animation zero scripts/handlers/network; no CSS/SMIL story film). S4 proves the
-  mechanism (F1–F7, 3k 44/44, F1 read PASS-WITH-NITS), but the founder has not used the **post-S4**
-  story (the 2026-10-24 D2 reviewed D1), and the companion is fetch/HTTP-only and unshipped.
-  Graduation conditions: §5 founder session on a self-contained story + report gate (main) +
-  deterministic offline player + explicit A12 amendment. No code/schema change; F8 deferred.
-  **Branch snapshot:** `feat/atlas-sim` is a pre-merge story snapshot; main has Atlas v2 done
-  (`R-pf-109` closed, A2 delegated pass); reconcile before merge (`R-pf-112`).
-- **D-pf-255 (live, S4):** P6 purpose (README first prose paragraph, structural fallback), P7 KV3
-  queue (authoritative order, top 12 production non-demoted rows + counts) and P8 directory scenes
-  (depth-2 partition, 24-scene/5-file caps, production-cost-first, omitted totals, shared
-  `atlas::file_cost`, node/action `scene`) are story-only, additive and `layout_version: 1`. Limits:
-  README first-only; 12-row queue; 24/5/depth-2 scenes; scene cost is static, not runtime; the 3k
-  fixture is synthetic. F8 founder A2 deferred.
-- **D-pf-254 (live, S3):** `flow.io` fixed v1 call-name table; a bare C name defined in the drawn
+  canvas/SVG/animation zero scripts/handlers/network; no CSS/SMIL story film). Graduation conditions:
+  §5 founder session on a self-contained story + report gate (main closed 2026-10-26) + deterministic
+  player + explicit A12 amendment. No code/schema change; F8 deferred.
+- **D-pf-264 (live, 2026-10-26):** S4 done — P6/P7/P8 probes + sim; gate `71d0d04` PASS (897 tests,
+  304/304, 3k 44/44, page 463,490 B, first frame 1,706 ms); vision PASS-WITH-NITS; F8 A2 deferred.
+- **D-pf-263 (live, S3):** `flow.io` fixed v1 call-name table; a bare C name defined in the drawn
   set, a macro or a fn-pointer is never I/O; a literal is only a plain string literal; non-literal
-  direction/targets stay omitted/`unknown`. Limits: wrappers outside the drawn set, fd-based
-  `read`/`write` class, method-based Rust writes.
-- **D-pf-253 (live, S2):** `flow` stays story-only/additive; edge labels are computed in the core.
-- **D-pf-252 (live):** spec sealed; S1 committed; P4/P5 `prototype`.
-- **D-pf-251 (live):** D2 founder verdict — Atlas is Perfpal's #1 priority; core additions allowed
-  when recorded for merge.
+  direction/targets stay omitted/`unknown`.
+- **D-pf-262 (live, S2):** `flow` stays story-only/additive; edge labels are computed in the core.
+- **D-pf-261 (live, S1):** core `atlas-layout.json` behind `--story`; sim builds from core JSON.
+- **D-pf-260 (live, D2):** D2 founder verdict — presentation/animation accepted, information not
+  insightful; Atlas is Perfpal's #1 priority; core additions allowed when recorded for merge.
+- **Archived (hot-state budget):** D-pf-238..243 (Atlas model, contracts, structural edges, A8, A12)
+  are in `state/archive/ledger.jsonl`; key points unchanged: G is the core canvas, F is supporting;
+  structural LOW/MEDIUM edges with disclosure; A8 canvas-first; A12 zero-new-JS. Main's D-pf-251 is
+  the **F-treemap decision** — do not conflate it with the renumbered story D-pf-260.
 
 ## In Progress
-- **ADR-0011 recorded:** companion decision + A12 unchanged + graduation triggers; ADR, spec
-  annotations, CHANGELOG and state updated. Docs-only session; no code, schema or dependency change.
-- **S4 remains the gated story baseline:** `71d0d04` (tree `51548f3`, 0 non-evidence dirty paths,
-  897 tests (896 passed, 1 ignored), 304/304, 3k 44/44), evidence `2ebeabd`; F8 deferred.
-- **Branch snapshot:** main has Atlas v2 done (`c797004`; step 13 approved, A2 delegated pass,
-  `R-pf-109` closed: D-pf-255/257/258); this branch's state still reads `R-pf-109` open. Reconcile
-  (`R-pf-112`) before any merge or step-11 work.
-- Atlas v2 on this branch: step 10 approved; **step 11 (G-style detail rail) is next**; step-13
-  gate pending here (already closed on main).
+- **ADR-0012 reconciliation record (docs/state only):** direction C recorded; `atlas-build` marked
+  done with a pre-merge snapshot banner; branch state/activeContext/track handoff corrected; IDs
+  remapped; `R-pf-109` closed as a record. No code, schema, dependency or output change.
+- **S4 remains the gated story baseline:** `71d0d04` (tree `51548f3`, 897 tests, 304/304, 3k 44/44),
+  evidence `2ebeabd`; F8 deferred.
+- **Main v2 is done:** commit `c797004` (records `57d91a2`); `R-pf-109` closed; delegated A2 pass
+  (`D-pf-255/257`); `atlas-build` done (`D-pf-258`). This branch snapshot does not contain steps
+  11–15 and makes no A2/ship claim.
+- **Branch status:** not merged; 23 commits behind main until a sync. No step-11 work here.
 
 ## Next
-- **Atlas v2 step 11** (detail rail) in a fresh session — after reconciling this branch with main
-  (`R-pf-112`); then step 12 (progressive charts) and the step-13 gate on the branch. No A2/ship
-  from this branch.
-- Story follow-up (not active): self-contained companion artifact + CLI entry, then the §5 founder
-  session; graduation only per ADR-0011 Decision 4.
+- **Founder approves ADR-0012 direction C** (or chooses A/B). On **C**: merge `main` into
+  `feat/atlas-sim` (one merge commit; resolve the 7 paths; restore `strip_entry_line` to
+  `pub(crate)`; keep `start_actions`/`build_atlas_view`), run the full story gate, then build the
+  self-contained story + `perfpal story` CLI → §5. On **A**: use the merge-based A′ (not a literal
+  rebase). On **B**: four curated cherry-picks; keep the branch as the evidence archive.
+- **No push/merge without explicit founder go;** no step-11 work on this branch.
+- Story follow-up (not active): self-contained companion + CLI entry, then §5; graduation only per
+  ADR-0011 Decision 4.
 
 ## Blockers
-- **Branch divergence** (`R-pf-112`): 61 story commits ahead, 8 v2-close commits behind main;
-  decision IDs collide. Rebase/reconcile before merge.
-- A2/ship on this branch is not claimed; main's delegated A2 pass is recorded separately
-  (D-pf-255/257), not a founder-eye pass.
+- **R-pf-112:** direction recorded; execution (sync + packaging) pending founder approval; the
+  branch stays 23 behind until then.
+- **R-pf-105/106/108:** ranking recall / static-cost limits / structural-edge honesty; A1b open.
+- **Publish gate:** B-pf-001 (contact) + B-pf-002 (minisign secrets) — founder-owned; beta parked.
+- **No A2/ship from this branch;** founder V6 gold standard remains open (delegated A2 only).

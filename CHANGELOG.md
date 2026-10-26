@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Branch reconciliation record — `R-pf-112` (2026-10-26, ADR-0012; docs/state only).**
+  `feat/atlas-sim` is **63 story commits ahead / 23 behind** `main` (the recorded 61/8 was stale;
+  merge base `821b984`). Main's Atlas v2 steps 11–15 and `R-pf-109` closure are authoritative.
+  ADR-0012 records the recommended direction **C**: keep the story branch separate until the §5
+  founder session; next is a main→branch sync plus the self-contained story + CLI packaging slice,
+  not a story→main merge. Colliding IDs are remapped (`D-pf-251..255` → `260..264`,
+  `A-pf-124/125` → `126/127`); `atlas-build` is marked done with a snapshot banner (main `D-pf-258`);
+  `R-pf-109` is closed as a record. No code/schema/dependency/output change; no merge/push; no
+  A2/ship claim.
 - **Atlas Story stays a companion (2026-10-26, ADR-0011).** The founder decided the Atlas Story
   does **not** graduate into the static report in v1: `report.html` keeps exactly one fixed
   `REPORT_SCRIPT` and A12 is unchanged, so no second script, inline story data or CSS/SMIL film

@@ -163,3 +163,12 @@
   `docs/evidence/atlas-audit/AUDIT.md:1-20`
 - `src/reporter/mod.rs:1718,2443-2447` · `sim/sim.js:1328,1426` · `sim/index.html:150`
 - `docs/plans/atlas-build.md` steps 11–15 · `docs/atlas/AGENT-BRIEF.md:49-51`
+
+## Addendum (2026-10-26, ADR-0012)
+
+- **IDs renumbered to resolve main collisions:** `D-pf-251` → `D-pf-260` (D2 verdict), `D-pf-252`
+  → `D-pf-261` (S1), `D-pf-253` → `D-pf-262` (S2), `D-pf-254` → `D-pf-263` (S3), `D-pf-255` →
+  `D-pf-264` (S4). The decision, A12 status, graduation conditions and no-code scope are unchanged.
+- **`R-pf-109`:** closed on main 2026-10-26 (v2 rework + delegated A2); the branch snapshot's
+  "open" status is superseded by `R-pf-112` / `ADR-0012`. At merge, Decision 4(b) is satisfied.
+- **No merge/push/A2/ship claim** is added by this addendum; direction approval is in ADR-0012.
