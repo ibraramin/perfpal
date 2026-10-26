@@ -1,5 +1,5 @@
 # Perfpal Report
-> schema_version 1\.8 · perfpal 0\.2\.0\-beta\.1 · scanned <ROOT>
+> schema_version 1\.8 · perfpal 0\.3\.0 · scanned <ROOT>
 > started <MASKED> · duration <MASKED> ms · 14 files
 
 ## 1. Executive summary
@@ -58,7 +58,7 @@ showing top 5 of 40 functions
 0 startup functions demoted · 20 no-loop functions demoted · 0 non-production files demoted.
 
 ## 2. Scan provenance & parse health
-- Tool: perfpal 0\.2\.0\-beta\.1
+- Tool: perfpal 0\.3\.0
 - Scan root: `<ROOT>`
 - Files scanned: 14
 

@@ -1,7 +1,7 @@
 ---
 plan name: js-ts
 plan description: JavaScript TypeScript backends
-plan status: active
+plan status: done
 ---
 
 ## Idea
@@ -35,6 +35,13 @@ Add JavaScript (B2), then TypeScript/TSX (B3), as first-class Perfpal backends i
   DoD transcript: `docs/evidence/js-b5/gate.txt`. No schema/catalog-count/dependency/rule-id change;
   78 rules. Committed `1b23198` (+ docs `dbda7e3`); merge remains `A-tb-006`.
 - Gate + merge: rebase on `main` after A step 12, run the Definition of Done below (every command exits 0), dispatch the parallel review panel (>=2 reviewer + >=2 requirements-reviewer, disjoint lanes) and require >=1 APPROVE per family with zero unresolved blocking findings; merge to `main` only with explicit founder approval.
+
+  **B6 result (2026-10-27, merge-train M1):** `feat/js-ts` was merged into `main` with `--no-ff`
+  (merge `cda9d5f`); the six conflicts were resolved semantically. The B6 DoD + full gate were rerun
+  on the merged tree and are green (`docs/evidence/merge-m1/gate.txt`). `Cargo.toml`/`Cargo.lock` are
+  **0.3.0**, schema **1.8**. Integration fix: main-side `agent_report` grew its catalog lock 67 → 78
+  with 11 curated `PERF-JS-*` hints; the §12 synthetic envelope is 77,713 B; the six goldens and the
+  agent-report sample were regenerated at 0.3.0 (version delta + the two new JS/TS agent-report nav links). **Plan done; no push/tag.**
 
 ## Required Specs
 <!-- SPECS_START -->

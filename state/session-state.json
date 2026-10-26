@@ -1,41 +1,31 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "Atlas v2 steps 9-15 DONE; `atlas-build` plan DONE 2026-10-26; A2 delegated PASS closes the beta gate (D-pf-257); memchr fold accepted as beta residual (D-pf-256); R-pf-109 closed as a record; A-pf-118 done; F undecided; map-build not done; A1b open; publish gate B-pf-001/002 founder-owned; commit `57d91a2`; no push.",
+  "current_phase": "Merge Train M1 DONE 2026-10-27: `feat/js-ts` merged into `main` with `--no-ff` (merge `cda9d5f`); v0.3.0, metrics schema 1.8; js-ts plan DONE; B6 DoD + full gate green (`docs/evidence/merge-m1/gate.txt`). M2 (`feat/atlas-sim` -> v0.4.0) next; no push/tag.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 1,
   "last_alignment_audit": "2026-10-16",
   "decisions": [
     {
-      "id": "D-pf-251",
-      "status": "live",
-      "title": "F TREEMAP DECISION (2026-10-24): keep W1; F stays undecided. No F code ships in step 12; the Explorer treemap and all F data remain untouched; the prototype under docs/evidence/atlas-visual/v2/step12/ is retained as evidence for a later decision. Step 13 founder visual gate remains next; A2/ship blocked at the time (superseded by D-pf-253: A2 schedulable 2026-10-24)."
-    },
-    {
       "id": "D-pf-249",
       "status": "archived",
       "title": "RESTORED APPEND-ONLY RECORD: archived decisions D-pf-241/242/243/247/248/249/250/252/253/254 are in state/archive/ledger.jsonl; no history is lost. D-pf-250/252/253/254 were moved there by A5-step15 after the plan-done record (D-pf-258)."
     },
     {
-      "id": "D-pf-255",
+      "id": "D-pf-251",
       "status": "live",
-      "title": "ATLAS v2 STEP 14 A2 PASS 2026-10-24 (delegated; founder eye not applied): postgres+memchr, 4/4 blind lanes, 3 actions 87-120s, understandable; pause/reduced/print PASS; evidence v8/a2.md. Residual: memchr canvas 1,282px > 900 fold (step 15 resolve/accept). Step 15 schedulable; plan not done."
+      "title": "F TREEMAP DECISION (2026-10-24): keep W1; F stays undecided. No F code ships in step 12; the Explorer treemap and all F data remain untouched; the prototype under docs/evidence/atlas-visual/v2/step12/ is retained as evidence for a later decision. Step 13 founder visual gate remains next; A2/ship blocked at the time (superseded by D-pf-253: A2 schedulable 2026-10-24)."
     },
     {
-      "id": "D-pf-256",
+      "id": "D-pf-259",
       "status": "live",
-      "title": "ATLAS v2 STEP 15 MEMCHR FOLD ACCEPTED 2026-10-26: library-class canvas bottom 1,282.2px > 900 (canvas 1,162.7; 23 production + 7 non-production UNREACHED); accepted as a documented beta residual, not a layout-contract pass; application postgres 871.2 <= 900. A2 4/4 lanes still named 3 actions (87-120s). Recorded in accepted-limitations §D, atlas-layout §8, README, CHANGELOG, STEP15; fix trigger = post-beta layout pass or user blocker. No tuning."
+      "title": "MERGE-TRAIN M1 DONE 2026-10-27: feat/js-ts merged into main --no-ff (merge cda9d5f); six conflicts resolved semantically (README, output-contract, tracks README, reporter/mod.rs, ledger append-only 724-line union, p6); Cargo 0.3.0 / schema 1.8; js-ts plan done; B6 DoD + full gate green (docs/evidence/merge-m1/gate.txt); no push/tag."
     },
     {
-      "id": "D-pf-257",
+      "id": "D-pf-260",
       "status": "live",
-      "title": "ATLAS v2 STEP 15 A2 CLOSURE 2026-10-26: the delegated A2 PASS (postgres + memchr; 4/4 blind lanes; pause/reduced/print) closes the A2 gate for this beta. The founder's own timed eye-test remains the V6 gold standard and would need a fresh holdout (holdout released; actions published). No claim the founder eye-test occurred."
-    },
-    {
-      "id": "D-pf-258",
-      "status": "live",
-      "title": "ATLAS v2 STEP 15 DONE 2026-10-26: docs/EOL pass complete; DoD 1-13 PASS (gate-step15.txt; lib 402; semantic 402; deny; determinism; schema/evidence checks); parallel panel APPROVED (R1/R2/Q1/Q2 + R3/R4 after fixes; zero unresolved blocking); `atlas-build` plan DONE; R-pf-109 closed as a record; A-pf-118 done; commit `57d91a2`; no push; F undecided, map-build not done, A1b open."
+      "title": "M1 INTEGRATION FIX 2026-10-27: main-side agent_report catalog lock grew 67->78 with 11 curated PERF-JS-* hints; spec 8/12 + derive_sample updated; synthetic envelope 76,416->77,713 B; goldens/sample regenerated at 0.3.0 (version + 2 new JS/TS agent-report nav links). Gate was not weakened."
     }
   ],
   "open_risks": [
@@ -50,12 +40,6 @@
       "status": "open",
       "severity": "high",
       "title": "EULA/PRIVACY contact placeholder before beta tag"
-    },
-    {
-      "id": "R-pf-104",
-      "status": "closed",
-      "severity": "high",
-      "title": "CLOSED 2026-10-26: A2 delegated PASS (D-pf-255/257) on application + library classes (4/4 lanes, 3 actions 87-120s, understandable YES); ranking recall remains R-pf-105/106/A1b."
     },
     {
       "id": "R-pf-105",
@@ -74,12 +58,6 @@
       "status": "open",
       "severity": "high",
       "title": "Atlas ratified 2026-10-23 (ADR-0009/0010 Accepted). A2 passed 2026-10-24 (D-pf-257). Structural LOW/MEDIUM edges on the hero canvas remain the main honesty risk (option A reversal trigger live); F undecided; A1b open."
-    },
-    {
-      "id": "R-pf-109",
-      "status": "closed",
-      "severity": "high",
-      "title": "CLOSED 2026-10-26 as a record: the v2 rework (steps 9-13, D-pf-253) + A2 (D-pf-255/257) resolved the visual regression; full text in state/archive/ledger.jsonl."
     }
   ],
   "blocked_by": [
@@ -121,35 +99,20 @@
       "action": "V7 re-triage: KV1 rank key + call-weighted/per-iteration Q3 ranking per the V5 falsifier; fix or explicitly accept R-pf-098/099/100; A1b open until recall is inline or explicitly scoped."
     },
     {
-      "id": "A-pf-111",
-      "status": "active",
-      "action": "Agent report (first): approve Q3 artifact (agent-report.md + agent-actions.json, pure renderer of metrics.json, fix hints, rank key, downstream eval); then plan."
-    },
-    {
-      "id": "A-pf-118",
-      "status": "done",
-      "action": "A2 (step 14) DONE 2026-10-24 (delegated PASS; evidence v8/a2.md). Step 15 docs/EOL DONE 2026-10-26; `atlas-build` plan DONE (D-pf-258); commit `57d91a2`; no push."
-    },
-    {
-      "id": "A-pf-122",
-      "status": "done",
-      "action": "Atlas step 13: founder visual gate on the reworked #map at 1440x900, G-baseline diff, V8 A1/strip rerun. No A2/ship until the gate passes; holdouts vaulted; map-build not done; A1b open."
-    },
-    {
-      "id": "A-pf-123",
-      "status": "done",
-      "action": "Founder step-13 gate -> DONE 2026-10-24 (approved on the evidence; delegated)."
-    },
-    {
-      "id": "A-pf-124",
-      "status": "active",
-      "action": "Commit DONE 2026-10-26 (`57d91a2`); no push. Then the founder-owned publish gate B-pf-001 (contact) / B-pf-002 (minisign secrets)."
-    },
-    {
       "id": "A-pf-125",
       "status": "active",
       "action": "Post-beta follow-ups: F treemap decision (D-pf-251), memchr fold fix trigger (D-pf-256), map-build/A1b ranking recall; R-pf-105/106/108 remain open."
+    },
+    {
+      "id": "A-pf-126",
+      "status": "active",
+      "action": "Merge Train M2: merge feat/atlas-sim into main -> v0.4.0; renumber Atlas ADR-0011->0012 / ADR-0012->0013 and update references; resolve README, output-contract, reporter/mod.rs, atlas_render.rs, state semantically; run the story gate (897 tests, sim/gate.sh 304/304, 3k 44/44, F5/F6) + full gate; no push/tag."
+    },
+    {
+      "id": "A-pf-127",
+      "status": "active",
+      "action": "Merge Train M3: verify feat/agent-report, fix/agent-report-regen, feat/js-ts, feat/atlas-sim are ancestors of main; remove the agent-report worktree; prune merged branches; verify 0.4.0/schema 1.8, CHANGELOG, README, hot state <=8 KB, clean status; EOL; no push/tag."
     }
   ],
-  "last_updated": "2026-10-26"
+  "last_updated": "2026-10-27"
 }

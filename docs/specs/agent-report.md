@@ -6,7 +6,7 @@ Scope: feature
 **Date:** 2026-10-24. **Owner:** orchestrator. **Plan:** `docs/plans/agent-report.md`. **Track brief:** `docs/tracks/agent-report.md`.
 **Inputs:** `docs/research/product-consolidation-options-2026-10-22.md` §Q3 (option A, ratified 2026-10-24);
 `docs/specs/atlas-metrics.md` (units/anchors precedent); `src/reporter/views.rs` (shipped rank keys);
-`src/reporter/mod.rs` `HEURISTIC_CATALOG_V1` (67 rules); `docs/report/output-contract.md`;
+`src/reporter/mod.rs` `HEURISTIC_CATALOG_V1` (78 rules); `docs/report/output-contract.md`;
 `tests/golden/report-mixed/metrics.json` (sample source).
 
 ## 1. Purpose
@@ -25,7 +25,7 @@ without loading the full human report.
 | ID | Decision | Rationale |
 |---|---|---|
 | **D1** | `agent-report.md` is a **bounded fixed skeleton** (top 25 actions in full detail, per-rule rollup, top 25 profile rows). `agent-actions.json` carries the **complete** action list. | An inline complete index reaches ~170k tokens on a 7.5k-finding scan and cannot be loaded. Completeness lives in the machine contract, never silently: every cap is printed with `N of M`. |
-| **D2** | Fix hints live in a **C-owned table** (`AGENT_FIX_HINTS`) in the new module, locked against the 67-rule catalog. | Zero edits to the A-owned `mod.rs`/`HEURISTIC_CATALOG_V1`; the lock test still makes drift impossible. |
+| **D2** | Fix hints live in a **C-owned table** (`AGENT_FIX_HINTS`) in the new module, locked against the 78-rule catalog. | Zero edits to the A-owned `mod.rs`/`HEURISTIC_CATALOG_V1`; the lock test still makes drift impossible. |
 | **D3** | The agent artifacts **omit clock provenance** (`scan.started_at`, `scan.duration_ms`). | Two runs of the **same command** are byte-identical with **no normalization**. `scan.root_path` is the verbatim CLI argument (the shipped `findings-detail.*` omits it entirely), so a different invocation path is a different input by design, not a determinism failure. |
 | **D4** | Artifact names are **`agent-report.md`** and **`agent-actions.json`**, always emitted, no flag. | Founder-approved names (research Q3); discoverable without a UX flag. |
 | **D5** | The rank keys are the **shipped key-view keys** (KV1 for actions, KV3 for the profile queue), not a new scoring model. | `agent-report.md`, `report.md`, `findings-detail.md` and `profile-queue.md` must never disagree about order. No new weights under this contract version. |
@@ -291,7 +291,7 @@ Rules:
   changes with data. The two conditional tail paragraphs (`complete list is …` / `complete human list …`)
   appear only when the population exceeds the inline cap — they are part of the fixed skeleton, not
   ad-hoc prose.
-- **The only table is the per-rule rollup** (≤ 67 rows, sorted by `rule_id`, counts over **all**
+- **The only table is the per-rule rollup** (≤ 78 rows, sorted by `rule_id`, counts over **all**
   actions); the MD uses no other tables (tables cost tokens and break on long paths).
 - **Byte budget + fixture scope:** `agent-report.md` ≤ 80 KB on the **named fixtures** (§12) and on any
   scan whose paths are ≤ 200 B, function names ≤ 64 B, titles ≤ 120 B, messages ≤ 500 B and total
@@ -314,7 +314,7 @@ Rules:
   `runtime`, `speedup`, `latency`, `throughput`.
 - **No certainty**: no "will", "guarantees", "fixes", "must"; the header owns the candidate framing.
 - Unknown `rule_id` → `fix_hint: null` in JSON and the stub line in MD (never a guessed hint).
-- **Completeness lock:** a test asserts the table covers exactly the 67 ids in
+- **Completeness lock:** a test asserts the table covers exactly the 78 ids in
   `HEURISTIC_CATALOG_V1`; a new catalog rule without a hint fails the test. Hints are data, not logic:
   changing wording is not a contract change, but the lock keeps the set aligned.
 
@@ -389,6 +389,17 @@ Rules:
 | PERF-RS-STR-003 | Replace the unsafe unbounded operation with a checked slice API, or assert the length at the boundary. |
 | PERF-RS-TYPE-001 | Pass large structs by reference (&T) instead of by value. |
 | PERF-RS-TYPE-002 | Order fields large-to-small, or use #[repr(C)] when the layout is part of an FFI contract. |
+| PERF-JS-ALLOC-001 | Hoist the loop-invariant literal outside the loop, or reuse one object and reset its fields per pass. |
+| PERF-JS-ALLOC-003 | Replace repeated concat or spread rebuilding with one accumulator and a single join at the end. |
+| PERF-JS-STR-001 | Collect parts in an array and join once, or use a pre-sized buffer outside the loop. |
+| PERF-JS-LOOP-001 | Flatten the nesting, hoist invariant work, or replace the inner scan with a lookup map. |
+| PERF-JS-LOOP-002 | Batch the I/O outside the loop, or use the asynchronous API with bounded concurrency. |
+| PERF-JS-LOOP-007 | Use a Set or Map for membership, or build an index once before the loop. |
+| PERF-JS-ASYNC-001 | Collect the promises and await Promise.all once, or batch the iterations deliberately. |
+| PERF-JS-ASYNC-002 | Replace the synchronous Node API with its asynchronous counterpart, or move it off the hot path. |
+| PERF-JS-CALL-001 | Add an explicit base case or reduce the input before the recursive call. |
+| PERF-JS-ARCH-001 | Break the cycle by extracting the shared module, or invert one edge behind an interface. |
+| PERF-JS-TYPE-001 | Set the property to undefined only if read semantics allow, or rebuild the object without it. |
 
 `PERF-RS-STR-001` is **retired** (reserved id, no emitter): it has no hint and is not in the lock set.
 
@@ -433,7 +444,7 @@ Rules:
    - **Prose fields** (`title`, `why`): `<` → `&lt;`, `>` → `&gt;` (no raw HTML can be injected).
     - **Table cells only:** `\` → `\\`, then `|` → `\|` (a cell ending in an unescaped backslash would
       otherwise swallow the delimiter).
-   - **Not escaped:** C-authored fixed strings (the 67 `fix_hint` sentences, headers, caveat bullets) —
+   - **Not escaped:** C-authored fixed strings (the 78 `fix_hint` sentences, headers, caveat bullets) —
      they are trusted content, not scanner data.
    This prevents a crafted path or message from forging a heading, closing a code span, breaking the
    rollup table or injecting HTML. `agent-actions.json` keeps the raw value (D7) — escaping is a
@@ -493,14 +504,17 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
 - **Size:** the hard assertions are:
   - `agent-report.md` ≤ 80 KB (81,920 B) on the **committed golden fixtures** (`tests/golden/report`,
     `report-mixed`, `report-python`, `report-rust`), always run in `cargo test`.
-  - the **synthetic at-envelope fixture**: exactly **25 detail actions + 67 rollup rules + 25 profile
+  - the **synthetic at-envelope fixture**: exactly **25 detail actions + 75 rollup rules + 25 profile
     rows**, with paths = 200 B repeated at every rendering site (heading, function line, `action_id`),
     titles = 120 B, function names = 64 B, messages = 500 B, evidence = 300 B/action, symbols = 64 B.
     This is the worst-case
     width × cap combination, and it must stay ≤ 80 KB (81,920 B).
   - **Measured at C2 (2026-10-24):** `report` 13,469 B · `report-mixed` 8,889 B · `report-python`
     26,889 B · `report-rust` 25,848 B · synthetic 76,416 B (budget 81,920 B). The unit test asserts these
-    exact sizes so a wording change that moves them is a deliberate contract edit.
+    exact sizes so a wording change that moves them is a deliberate contract edit. **M1 re-measure
+    (2026-10-27, v0.3.0):** the 11 JS rules grew the synthetic envelope to 77,713 B (4,207 B / 5.1%
+    headroom); the version-string move shortened each committed-fixture pin by 7 B — `report` 13,462 ·
+    `report-mixed` 8,882 · `report-python` 26,882 · `report-rust` 25,841.
   - the three external scans (`~/Opencode/perfpal-test/out-{cJSON,hyperfine,bat}`) are an **optional
     manual check** (`PERFPAL_EXTERNAL_SCANS=1 cargo test --locked --test agent_report -- --nocapture`),
     not part of the required gate. A fresh checkout or CI therefore gates on the committed fixtures,
@@ -548,13 +562,13 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
    `views::complete_profile_queue` order (element-wise, same fixtures).
 2. `actions.len() == complete_action_count`; `profile_queue.len() ==
    min(profile_queue_cap, complete_profile_count)`; ranks are `1..=N` with no gap or duplicate.
-3. Hint lock: the `AGENT_FIX_HINTS` key set **equals** the 67 `HEURISTIC_CATALOG_V1` ids (set equality,
+3. Hint lock: the `AGENT_FIX_HINTS` key set **equals** the 78 `HEURISTIC_CATALOG_V1` ids (set equality,
    not a count); an unknown id yields `null` + the MD stub.
 4. Anchor parity: every `cost_anchor` byte-equals the shipped `views` anchor for the same function.
 5. Determinism: double render byte-equal; `scan` has no `started_at`/`duration_ms`; integral costs
    serialize without a fractional part.
 6. Size bound: MD ≤ 80 KB on each committed golden fixture and on the §12 synthetic fixture
-   (25 actions + 67 rollup rules + 25 profile rows at the stated widths); the external scans are the
+   (25 actions + 75 rollup rules + 25 profile rows at the stated widths); the external scans are the
    **C3** optional manual check in §12 (gated by `PERFPAL_EXTERNAL_SCANS=1`), not part of the C2 unit
    gate, matching plan DoD #15.
 7. Forbidden strings: the §9.7 predicate over C-authored lines (including `seconds`) finds no time
@@ -597,7 +611,7 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
 ## 16. Open items (founder-ratify at C2 kickoff)
 
 1. `profile_queue_cap = 100` for the JSON (vs 50/200) — token/utility trade-off.
-2. Fix-hint wording review (§8): 67 sentences; the founder may edit any wording before C2 transcribes it.
+2. Fix-hint wording review (§8): 78 sentences; the founder may edit any wording before C2 transcribes it.
 3. Eval thresholds (§13) at N = 6: top-1 ≥ 4/6, top-3 ≥ 6/6, hallucination ≤ 10%, per-task ≤ 10 min.
 4. Whether A links `agent-report.md` from `report.html` only or also from `report.md` (A owns).
 5. Shared-formatter consolidation with `atlas_metrics` (separators, singular unit) — deferred to a

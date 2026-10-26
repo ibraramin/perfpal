@@ -38,6 +38,14 @@ read-only archives; do not sync/merge inside them.
   `Cargo.toml`/`Cargo.lock` to **0.3.0**; add `CHANGELOG [0.3.0]`; confirm `VERSION_SUFFIX` is
   metrics schema **1.8**; run the js-ts B6 DoD on the merged main tree + the full gate; mark plan
   `js-ts` done; update state/handoff; commit. **No push/tag.**
+
+  **M1 result (2026-10-27): DONE.** Merge `cda9d5f`; six conflicts resolved semantically;
+  `Cargo.toml`/`Cargo.lock` **0.3.0**, schema **1.8**; `feat/js-ts` is an ancestor of `main`; the
+  js-ts B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gate.txt`).
+  Integration fix: `agent_report` catalog lock 67 → 78 with 11 curated `PERF-JS-*` hints; spec
+  §8/§12 and `derive_sample.py` updated; synthetic envelope 77,713 B; six goldens + the agent-report
+  sample regenerated at 0.3.0 (version delta + the two new JS/TS agent-report nav links). `js-ts` plan done; state/handoff updated;
+  no push/tag.
 - **M2 — main worktree: `feat/atlas-sim` → v0.4.0.** `git merge --no-ff feat/atlas-sim`. Resolve
   semantically against the post-js-ts main: `README`, `docs/report/output-contract.md`,
   `src/reporter/mod.rs`, `src/reporter/atlas_render.rs`, `state/*`, `state/archive/ledger.jsonl`.

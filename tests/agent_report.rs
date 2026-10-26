@@ -258,7 +258,7 @@ fn agent_report_state_matrix_renders_fixed_skeleton() {
         "absent parse summary renders the named stub"
     );
     assert!(
-        empty_md.contains("languages: c, python, rust"),
+        empty_md.contains("languages: c, js, python, rust, ts, tsx"),
         "empty scan prints the producer's supported set verbatim"
     );
     let empty_json: serde_json::Value =
@@ -493,7 +493,7 @@ fn agent_report_emitted_artifact_set() {
     assert_eq!(run_scan(&manifest("tests/fixtures/e2e-mixed"), &out), 0);
     for name in [
         "metrics.json",
-        "metrics.schema.v1.7.json",
+        "metrics.schema.v1.8.json",
         "report.md",
         "report.html",
         "findings-detail.md",

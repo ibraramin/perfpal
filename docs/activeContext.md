@@ -1,54 +1,48 @@
 # Active Context
 
 ## Current Task
-**Atlas v2 steps 1–15 are DONE; `atlas-build` is marked done 2026-10-26 (D-pf-258).** Step 15
-docs/EOL + DoD 1–13 + the parallel panel are complete; the change set is committed `57d91a2`; no push.
-- **Step 9–10:** signed Option A; G warm/sans/mono system; first-page fit (862 ≤ 900); key-metrics
-  strip; chrome hygiene; founder-approved 2026-10-24.
-- **Step 11 (`189df91`):** G-style right rail (530px, 12 cards, roles, exact function/finding links,
-  eight-state rail); canvas 869 ≤ 900.
-- **Step 12 (`9a94905`):** four designed below-graph charts; drills moved to `atlas-weight.html` /
-  `atlas-q2.html`; seven-block text wall retired; `#map` 1,848px; F treemap prototyped but **F remains
-  undecided** (D-pf-251).
-- **Step 13 (D-pf-253, APPROVED 2026-10-24; delegated evidence-based):** real-page DOM gate all pass
-  (canvas 869 ≤ 900; `#map` 1,848; no h-scroll; one definition each; A9/A12 green); V8 A1 16/16 +
-  strip 16/16; G diff SAME SYSTEM. Evidence `docs/evidence/atlas-visual/v2/...`.
-- **A2 / step 14 (D-pf-255, delegated PASS 2026-10-24/26):** postgres `856a659` (2,566 files, 102,933
-  findings, 181 s) + memchr crate payload `bd6068c3` (45 `.rs`, 530 findings, 1 s; `benchmarks/` +
-  `fuzz/` excluded). Four fresh-context blind lanes (2/class) named 3 actions in **87–120 s** and
-  answered understandable **YES**; pause freezes (68/68, 45/45), reduced motion and print show the
-  final frame; geometry postgres **871.2 ≤ 900**, memchr **1,282.2 > 900**. Evidence
-  `docs/evidence/map-vision/v8/a2.md` + `a2/`.
-- **Step 15 (D-pf-256/257/258, DONE 2026-10-26):** docs pass (output contract/README/specs/V7
-  archive/CHANGELOG); **memchr fold accepted as a documented beta residual** (D-pf-256, fix trigger);
-  **delegated A2 closes the beta gate** (D-pf-257; founder V6 gold standard open, fresh holdout
-  needed); DoD 1–13 PASS (`docs/evidence/atlas-visual/v2/gate-step15.txt`); parallel panel approved
-  after fixes; plan done; **committed `57d91a2`; no push**. No schema/JS/deps/golden
-  change; no visual tuning.
+**Merge Train M1 DONE 2026-10-27.** `feat/js-ts` was merged into `main` with `--no-ff` (merge
+`cda9d5f`); `Cargo.toml`/`Cargo.lock` are **0.3.0** and the metrics schema is **1.8**. The js-ts
+plan is done; the B6 DoD + full gate are green on the merged tree
+(`docs/evidence/merge-m1/gate.txt`). **Next: M2 — merge `feat/atlas-sim` → v0.4.0.**
+- **Semantic resolution:** README, `docs/report/output-contract.md`, `docs/tracks/README.md`,
+  `src/reporter/mod.rs`, `state/archive/ledger.jsonl` (append-only union, 724 lines) and
+  `tests/p6_hardening.rs`; every conflict read on both sides and combined. Evidence:
+  `docs/evidence/merge-m1/resolutions.md` + the merge commit body.
+- **Integration fix:** main-side `agent_report` hardcoded the old 67-rule catalog. Added 11 curated
+  `PERF-JS-*` hints (catalog lock 78), updated spec §8/§12 (`derive_sample.py` too), re-measured the
+  synthetic envelope at **77,713 B** (4,207 B / 5.1% headroom), and regenerated the six goldens + the
+  agent-report sample at 0.3.0. The golden delta is `tool.version` plus main's agent-report nav links
+  restored in the two new JS/TS `report.html` files; finding counts are unchanged (15/9/32/29/11/11).
+- **Repo state:** 78 rules, six language tokens (`c`, `js`, `python`, `rust`, `ts`, `tsx`), six golden
+  trees, schema 1.8 byte-identical in `src/schema/` and `docs/schema/`; v1.7 retained as history.
 
 ## Recent Decisions
-- **D-pf-258 (live, 2026-10-26):** step 15 docs/EOL done; DoD 1–13 PASS; panel approved; `atlas-build`
-  done; commit `57d91a2`; no push.
-- **D-pf-257 (live, 2026-10-26):** the delegated A2 PASS closes the A2 gate for this beta; the
-  founder's own timed eye-test remains the V6 gold standard and needs a fresh holdout.
-- **D-pf-256 (live, 2026-10-26):** memchr library fold (1,282 px > 900) accepted as a documented beta
-  residual, not a layout-contract pass; fix trigger in `accepted-limitations.md` §D.
-- **D-pf-255 (live):** A2 delegated PASS (postgres + memchr; 4/4 blind lanes).
-- **D-pf-253 (live):** step 13 composition approved (delegated, evidence-based).
+- **D-pf-259 (live, 2026-10-27):** M1 merge done (`cda9d5f`); six semantic resolutions; v0.3.0 /
+  schema 1.8; js-ts plan done; B6 DoD + full gate green; no push/tag.
+- **D-pf-260 (live, 2026-10-27):** M1 integration fix — `agent_report` catalog lock 67 → 78 with 11
+  `PERF-JS-*` hints; sample/spec/goldens regenerated; gate not weakened.
 - **D-pf-251 (live):** F treemap remains **undecided**; keep W1; no F code shipped.
-- **D-pf-250/252/253/254 (archived):** full text in `state/archive/ledger.jsonl`; pointer D-pf-249.
-- **R-pf-109 (closed 2026-10-26):** visual regression resolved by the v2 rework + A2; kept as a
-  record. **R-pf-104 (closed):** A2 pass; ranking recall remains R-pf-105/106/A1b.
-- **D-pf-249 (archived pointer):** archived decisions are in `state/archive/ledger.jsonl`.
+- **D-pf-249 (pointer):** archived decisions are in `state/archive/ledger.jsonl`.
+- **D-pf-255/256/257/258 (archived 2026-10-27):** Atlas v2 step-14/15 records moved to the cold ledger
+  at M1 EOL; the phase is now merge-train.
+- **R-pf-104 / R-pf-109 (closed):** A2 pass and the visual-regression record; full text cold.
 
 ## In Progress
-- The step-15 change set is committed (`57d91a2`); **no push**. No code, schema, JS, dependency or
-  golden change.
+- M1 is committed: merge `cda9d5f` plus the v0.3.0/state/evidence commit. **No push, no tag.**
 
 ## Next
-- Publish gate B-pf-001 (contact) / B-pf-002 (minisign secrets) — founder-owned.
-- Post-beta: F decision (D-pf-251), memchr fold fix trigger (D-pf-256), `map-build`/A1b ranking
-  recall (R-pf-105/106/108).
+1. **M2:** `git merge --no-ff feat/atlas-sim` on `main`; resolve `README`,
+   `docs/report/output-contract.md`, `src/reporter/mod.rs`, `src/reporter/atlas_render.rs`, `state/*`,
+   `state/archive/ledger.jsonl` semantically; keep main's canonical state; preserve story-only code;
+   restore `strip_entry_line` to `pub(crate)`.
+2. **M2 ADR renumber:** Atlas `ADR-0011` → `ADR-0012`, `ADR-0012` → `ADR-0013`; update every reference;
+   add the direction-C override addendum (merge now; no A12 change; no graduation claim).
+3. **M2 close:** bump 0.4.0, `CHANGELOG [0.4.0]`, run the story gate (897 tests, `sim/gate.sh`
+   304/304, 3k 44/44, F5/F6) + full gate, mark the story track done, update state/handoff; no push/tag.
+4. **M3:** verify all four branches are ancestors; remove the agent-report worktree; prune merged
+   branches; full CI gate; verify 0.4.0/schema 1.8, CHANGELOG, README, hot state ≤8 KB, clean status;
+   EOL; no push/tag.
 
 ## Blockers
 - **Publish gate:** B-pf-001 (contact) + B-pf-002 (minisign secrets) — founder-owned.
@@ -94,3 +88,7 @@ docs/EOL + DoD 1–13 + the parallel panel are complete; the change set is commi
   (delegated A2 closes beta gate), D-pf-258 (plan done); DoD 1–13 PASS; parallel panel R1/R2/Q1/Q2 +
   R3/R4 approved after fixes; state/handoff/activeContext/track/brief updated; **committed
   `57d91a2`; no push**.
+- **Merge Train M1 (2026-10-27):** `feat/js-ts` merged into `main` (`cda9d5f`); six conflicts
+  resolved semantically; v0.3.0 / schema 1.8; `agent_report` catalog lock 67 → 78 (+11 JS hints);
+  synthetic envelope 77,713 B; goldens/sample regenerated at 0.3.0; B6 DoD + full gate green
+  (`docs/evidence/merge-m1/gate.txt`); js-ts plan done; **no push/tag**.

@@ -339,6 +339,50 @@ pub const AGENT_FIX_HINTS: &[(&str, &str)] = &[
         "PERF-RS-TYPE-002",
         "Order fields large-to-small, or use #[repr(C)] when the layout is part of an FFI contract.",
     ),
+    (
+        "PERF-JS-ALLOC-001",
+        "Hoist the loop-invariant literal outside the loop, or reuse one object and reset its fields per pass.",
+    ),
+    (
+        "PERF-JS-ALLOC-003",
+        "Replace repeated concat or spread rebuilding with one accumulator and a single join at the end.",
+    ),
+    (
+        "PERF-JS-STR-001",
+        "Collect parts in an array and join once, or use a pre-sized buffer outside the loop.",
+    ),
+    (
+        "PERF-JS-LOOP-001",
+        "Flatten the nesting, hoist invariant work, or replace the inner scan with a lookup map.",
+    ),
+    (
+        "PERF-JS-LOOP-002",
+        "Batch the I/O outside the loop, or use the asynchronous API with bounded concurrency.",
+    ),
+    (
+        "PERF-JS-LOOP-007",
+        "Use a Set or Map for membership, or build an index once before the loop.",
+    ),
+    (
+        "PERF-JS-ASYNC-001",
+        "Collect the promises and await Promise.all once, or batch the iterations deliberately.",
+    ),
+    (
+        "PERF-JS-ASYNC-002",
+        "Replace the synchronous Node API with its asynchronous counterpart, or move it off the hot path.",
+    ),
+    (
+        "PERF-JS-CALL-001",
+        "Add an explicit base case or reduce the input before the recursive call.",
+    ),
+    (
+        "PERF-JS-ARCH-001",
+        "Break the cycle by extracting the shared module, or invert one edge behind an interface.",
+    ),
+    (
+        "PERF-JS-TYPE-001",
+        "Set the property to undefined only if read semantics allow, or rebuild the object without it.",
+    ),
 ];
 
 /// Curated hint for `rule_id`, or `None` when the rule is absent from the
@@ -1568,31 +1612,30 @@ mod tests {
         }
     }
 
-    /// The §12 at-envelope fixture: 25 detail actions (67 total actions =
-    /// 67 rollup rules) and 25 profile rows, with paths 200 B at every
+    /// The §12 at-envelope fixture: 25 detail actions (75 total actions =
+    /// 75 rollup rules) and 25 profile rows, with paths 200 B at every
     /// rendering site, function names 64 B, titles 120 B, messages 500 B,
     /// three-key evidence 300 B/action (separator overhead included), symbols
     /// 64 B, and one unknown trip per function (every profile row carries the
     /// `unknown-trip ×1 — estimate incomplete` suffix).
     ///
-    /// The literal width × cap combination measures 76,416 B against the
-    /// amended §12 budget of 81,920 B (80 KB): 5,504 B headroom (6.7% of the
+    /// The literal width × cap combination measures 77,713 B against the
+    /// amended §12 budget of 81,920 B (80 KB): 4,207 B headroom (5.1% of the
     /// budget).
     const SYNTHETIC_PATH_LEN: usize = 200;
 
     fn synthetic_envelope_doc() -> MetricsDocument {
         let mut doc = load_metrics("tests/golden/report-mixed/metrics.json");
-        let mut rules: Vec<String> = crate::reporter::HEURISTIC_CATALOG_V1
+        let rules: Vec<String> = crate::reporter::HEURISTIC_CATALOG_V1
             .iter()
             .map(|(id, _, _)| (*id).to_string())
             .filter(|id| !id.ends_with("-ARCH-002"))
             .collect();
-        let mut extra = 1;
-        while rules.len() < 67 {
-            rules.push(format!("PERF-SYN-{extra:03}"));
-            extra += 1;
-        }
-        assert_eq!(rules.len(), 67);
+        assert_eq!(
+            rules.len(),
+            75,
+            "catalog minus the three ARCH-002 aggregates"
+        );
 
         let pad = SYNTHETIC_PATH_LEN - 2;
         let paths: Vec<String> = (0..25).map(|index| format!("p/{index:0>pad$}")).collect();
@@ -1765,7 +1808,7 @@ mod tests {
             .map(|(id, _, _)| *id)
             .collect();
         assert_eq!(hints, catalog, "hint table must cover the catalog exactly");
-        assert_eq!(catalog.len(), 67);
+        assert_eq!(catalog.len(), 78);
         assert_eq!(fix_hint("PERF-RS-STR-001"), None);
         assert_eq!(fix_hint("PERF-NOT-A-RULE"), None);
     }
@@ -2479,7 +2522,7 @@ mod tests {
         assert_seven_headings(&markdown);
         assert!(
             markdown.contains(
-                "showing the top 25 of 67 actions; the complete list is `agent-actions.json`."
+                "showing the top 25 of 75 actions; the complete list is `agent-actions.json`."
             ),
             "action tail"
         );
@@ -2693,10 +2736,10 @@ mod tests {
         // Exact pins: intentional renderer changes must update this table and
         // spec §12 (the pinned sizes are part of the measured contract).
         let pinned = [
-            ("tests/golden/report/metrics.json", 13_469usize),
-            ("tests/golden/report-mixed/metrics.json", 8_889),
-            ("tests/golden/report-python/metrics.json", 26_889),
-            ("tests/golden/report-rust/metrics.json", 25_848),
+            ("tests/golden/report/metrics.json", 13_462usize),
+            ("tests/golden/report-mixed/metrics.json", 8_882),
+            ("tests/golden/report-python/metrics.json", 26_882),
+            ("tests/golden/report-rust/metrics.json", 25_841),
         ];
         for (relative, expected) in pinned {
             let doc = load_metrics(relative);
@@ -2755,8 +2798,8 @@ mod tests {
                 .lines()
                 .filter(|line| line.starts_with("| PERF-"))
                 .count(),
-            67,
-            "67 rollup rules"
+            75,
+            "75 rollup rules"
         );
         assert_eq!(
             markdown
@@ -2771,7 +2814,7 @@ mod tests {
         );
         assert_eq!(
             markdown.len(),
-            76_416,
+            77_713,
             "intentional renderer changes must update this table and spec §12: synthetic"
         );
         assert!(

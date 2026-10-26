@@ -16,7 +16,7 @@ Mirrors the shipped key-view model (`src/reporter/views.rs`):
   * fix hints come from the spec table (single source) — never invented here
 
 Fail-closed rules (exit non-zero):
-  * hint table is not exactly 67 rows, has a duplicate id, or a hint > 20 words;
+  * hint table is not exactly 78 rows, has a duplicate id, or a hint > 20 words;
   * an action's rule_id has no hint;
   * a v1-only function is present (the chart-side v1 cost is not reproduced here);
   * a forbidden time claim appears in C-authored text;
@@ -90,8 +90,8 @@ def load_hints(spec_path):
             if len(hint.split()) > 20:
                 raise SystemExit(f"hint for {rule_id} exceeds 20 words")
             hints[rule_id] = hint
-    if len(hints) != 67:
-        raise SystemExit(f"expected 67 hint rows in {spec_path}, found {len(hints)}")
+    if len(hints) != 78:
+        raise SystemExit(f"expected 78 hint rows in {spec_path}, found {len(hints)}")
     return hints
 
 

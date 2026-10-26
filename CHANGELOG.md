@@ -7,7 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-27
+
 ### Added
+- **JavaScript and TypeScript/TSX backends (merge-train M1; plan `js-ts` B2–B6).** One shared
+  `PERF-JS-*` family (11 rules: `ALLOC-001`/`003`, `STR-001`, `LOOP-001`/`002`/`007`,
+  `ASYNC-001`/`002`, `CALL-001`, `ARCH-001`, `TYPE-001`) over new `tree-sitter-javascript =0.25.0`
+  and `tree-sitter-typescript =0.23.2` backends on the existing `tree-sitter =0.26.13` runtime.
+  `js`/`ts`/`tsx` tokens follow the grammar boundary (`.jsx` stays `js`; declaration-only
+  `.d.ts`/`.d.mts`/`.d.cts` skipped), `SUPPORTED_LANGUAGES` grows to six values, and the analyzer
+  catalog reaches **78 rules**. Discovery gains global directory skips (`node_modules`,
+  `bower_components`, `dist`, `build`, `out`, `coverage`) plus JS/TS-only min/bundle-name and
+  2 MiB file skips. ADR-0011; spec/plan `docs/specs/js-ts.md` / `docs/plans/js-ts.md`;
+  architecture `docs/architecture/js-ts.md`; catalog `docs/heuristics/js-catalog.md`.
+- **Metrics schema 1.8 (additive MINOR, 1.7 → 1.8).** Both language enums declare
+  `["c","js","python","rust","ts","tsx"]`; the v1.8 artifact is emitted byte-identically in
+  `src/schema/` and `docs/schema/`; v1.7 is retained as history; `--version` now reads
+  `(metrics schema 1.8)`.
+- **JS/TS corpus locks and evidence.** `examples-js/` (15 sources) and `examples-ts/` (17 sources),
+  parser-free IR fixtures, precision labels, `tests/golden/report-js` / `report-ts` (six golden
+  trees, 19-artifact set), JS/TS coverage and masked double-run determinism suites, grammar-link
+  tests, and the B3/B4/B5 gate transcripts + real-code canary under `docs/evidence/`. The B6 merge
+  gate merged `feat/js-ts` into `main` and reran the DoD on the merged tree.
+
+### Changed
+- **Version 0.3.0 (unreleased line; no tag or publish).** `Cargo.toml`/`Cargo.lock` move from
+  `0.2.0-beta.1` to `0.3.0`; the merge-train version train records v0.3.0 = JS/TS + schema 1.8
+  (v0.4.0 will carry the Atlas Story). README/roadmap name the five backends and six tokens. No
+  runtime dependency beyond the two exact-pinned grammars. C/Rust/Python finding sets are unchanged
+  on the existing corpora; the mechanical delta is the v1.8 artifact name, plus the documented
+  discovery skip beneath the new directory names.
 - **Agent report — LLM-facing artifacts from every scan (2026-10-24, `contract_version: 1`).** Each run
   now writes two artifacts beside the human report: `agent-actions.json` — every ranked action with its
   fix hint, evidence, cost anchor and a data-quality block (uncapped) — and `agent-report.md` — a fixed
@@ -160,6 +189,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hygiene: SPDX marker + CLI-doc drift + examples README (no behavior change).** `Cargo.toml` license is now `LicenseRef-PolyForm-Strict-1.0.0` (SPDX custom-ref form — the bare `PolyForm-Strict-1.0.0` id is not on the SPDX list and cargo-deny 0.20.2 rejects it; `deny.toml` allowlist + `README.md` license line match; `cargo deny check licenses` green). `docs/architecture/modules.md` §8.1 output-default wording + §8.2 exit-3 serialization path corrected to code. New `examples/README.md` (run instructions, per-file rule map). 626 tests green; dual review APPROVED.
 
 ### Fixed
+- **JS/TS rule precision (B5).** `PERF-JS-CALL-001` no longer reports member/method-name collisions
+  or same-name delegation; `PERF-JS-TYPE-001` no longer reports deletes from freshly built per-call
+  objects; `PERF-JS-ALLOC-003` no longer reports non-accumulator spreads. `findings[].symbol` names
+  the narrowest enclosing function, and `path_class` recognizes `.spec.`/`test-*` files. Discovery
+  also skips `.min.ts`/`.min.mts`/`.min.cts`.
 - **Hygiene: test-harness hardening — 5 R5 MINORs + M2 single-key assert (test-only; findings byte-identical).** `MD_ESCAPE_CHARS` hand-mirror replaced by reporter-const import, symlink-aware `copy_tree_excluding`, RAII temp-dir cleanup on panic paths, descriptor-driven `materialize_fixture` dispatch (no `tag=="rust"`), 4 file-unique control needles + `matches==1`, `replace_json_value` single-key assert. 626 tests green, goldens byte-identical; dual review APPROVED.
 - **Human/machine report split + bounded human sections (findings byte-identical).** New `findings-detail.md`/`.html` artifacts carry every per-finding row (promoted verbatim from the preserved full-detail renderers; 12 artifacts total); human `report.md`/`.html` carry zero per-finding rows — grouped §4, `<details>` rule groups, top-10 §5/component/drill-down sections behind pinned `HUMAN_CAP=10` with honest `top S of M` / `…+N more` markers linking to detail anchors. Full data stays in `metrics.json` + detail artifacts. Django scale: human files 34MB → 65,627 B combined (md 19,928 / html 45,699); detail artifacts hold all 26,089 findings. `docs/report/output-contract.md` amended (layout, artifact set, caps, order). Findings IDENTICAL on all four golden trees (15/9/32/29); 626 tests green; reviewer ALL-HOLD + requirements APPROVED (×2 waves).
 
