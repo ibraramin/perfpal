@@ -1,7 +1,7 @@
 ---
 plan name: merge-train
 plan description: Three-branch mainline merge
-plan status: active
+plan status: done
 ---
 
 ## Idea
@@ -72,6 +72,17 @@ read-only archives; do not sync/merge inside them.
   full CI gate; verify `--version` (**0.4.0**, schema **1.8**), CHANGELOG, README, hot state ≤8 KB,
   `git status` clean; update `state/handoff/latest.md` + `docs/activeContext.md` +
   `state/session-state.json` (EOL). No push/tag without founder go.
+- **M3 result (2026-10-27): DONE.** All four lines verified as ancestors of `main`. The agent-report
+  worktree was archived to `/home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27` and its git
+  registration pruned; **branch refs were retained** (founder instruction: no permanent deletion), so
+  no branch was deleted. Full CI gate on `main` at `2c01c17`: fmt, clippy, tests,
+  `cargo deny check licenses`, semantic clippy and semantic tests all exit 0 — **2,180 passed /
+  0 failed / 2 ignored** (`docs/evidence/merge-m3/gate.txt`). Story gate re-run on the final tree at
+  `978a623`: **PASS**, 1,089 tests (1 ignored), **304/304** checks, 3k scale PASS
+  (`docs/evidence/atlas-sim/GATE.txt`). `--version` = `perfpal 0.4.0 (metrics schema 1.8)`;
+  `Cargo.toml`/`Cargo.lock` 0.4.0; CHANGELOG `[0.3.0]` + `[0.4.0]`; README at 0.4.0 with JS/TS and
+  the Atlas Story; hot state **4,884 B** ≤ 8 KB; ADR numbers unique (0001–0013); no tag at HEAD;
+  clean status. No push/tag.
 
 ## Semantic integration rules (binding)
 

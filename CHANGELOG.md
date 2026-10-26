@@ -8,8 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Pending
-- **Merge Train M3:** finalization — verify all four branches are ancestors of `main`, remove the
-  agent-report worktree, prune merged branches, full CI gate, EOL; no push/tag.
 - **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002
   `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` before any tag.
 - **Post-beta map/ranking:** F treemap decision (D-pf-251), memchr fold fix trigger (D-pf-256),
@@ -34,8 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolution kept main's Atlas v2 report composition + js-ts wiring, restored `strip_entry_line` to
   `pub(crate)`, and unified the footer via one `footer_parts` source. `report.html` stays
   byte-identical story-off vs story-on; A12 unchanged (one fixed `REPORT_SCRIPT`); no schema change,
-  no new dependency, no push/tag, no graduation claim. Story gate on merged `main`: **1,089 tests**
-  (1,088 passed, 1 ignored — the branch snapshot's 897 plus the JS/TS suites), `sim/gate.sh`
+  no new dependency, no push/tag, no graduation claim. Story gate on merged `main`: **1,089 tests
+  passed** (1 ignored — the branch snapshot's 897 plus the JS/TS suites), `sim/gate.sh`
   304/304, 3k 44/44, F5/F6 (`docs/evidence/atlas-sim/GATE.txt`); full gate
   (`docs/evidence/merge-m2/gate.txt`). ADR-0012/0013.
 
@@ -120,6 +118,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   2026-10-26), a deterministic offline player and
   an explicit A12 amendment. The companion's packaging (data inlined, no server; CLI entry point)
   is a recorded follow-up, not shipped here. No code/schema change; F8 remains deferred.
+
+### Finalization
+- **Merge Train M3 — mainline finalization (2026-10-27).** All four lines (`feat/agent-report`,
+  `fix/agent-report-regen`, `feat/js-ts`, `feat/atlas-sim`) verified as ancestors of `main`. The
+  agent-report worktree was archived to `/home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27`
+  with its git registration pruned; branch refs were retained (no permanent deletion). Full CI gate on
+  `main`: fmt, clippy, tests, `cargo deny check licenses`, semantic clippy and semantic tests all exit
+  0 — **2,180 passed / 0 failed / 2 ignored** (`docs/evidence/merge-m3/gate.txt`). Story gate re-run on
+  the final tree: **PASS**, 1,089 tests, 304/304 checks, 3k scale PASS
+  (`docs/evidence/atlas-sim/GATE.txt`). `--version` = `perfpal 0.4.0 (metrics schema 1.8)`; hot state
+  4,884 B; clean status; no push/tag.
 
 ## [0.3.0] - 2026-10-27
 

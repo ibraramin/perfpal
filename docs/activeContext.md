@@ -1,49 +1,42 @@
 # Active Context
 
 ## Current Task
-**Merge Train M2 DONE 2026-10-27.** `feat/atlas-sim` was merged into `main` with `--no-ff` (merge
-`646597c`); `Cargo.toml`/`Cargo.lock` are **0.4.0**, metrics schema **1.8**, Atlas Story layout/flow
-`1`. The Atlas ADRs renumbered to **ADR-0012** (companion) and **ADR-0013** (branch reconciliation),
-with the founder-override addendum (direction C → merge now; **no A12 change**; **no graduation
-claim**). The story track is done; the story gate + full gate are green on the merged tree
-(`docs/evidence/atlas-sim/GATE.txt`, `docs/evidence/merge-m2/gate.txt`). **Next: M3 — finalization.**
-- **Merge:** twelve conflicts resolved semantically (code: `atlas_render.rs` keeps main's
-  `PAGE_GRAPH_W`/width-parameterised layout, crate-visible `Layout` fields, main's collision-aware
-  labels, `strip_entry_line` `pub(crate)`, one `footer_parts` source; `mod.rs` keeps both
-  `atlas_charts` and `atlas_layout` + `atlas_layout_json`). Docs/state: main's canonical state,
-  append-only ledger with the story IDs final at `D-pf-267..274` / `A-pf-131..132`, README/CHANGELOG
-  union at 0.4.0, ADR reference sweep.
-- **Gate fix:** the first story-gate run failed on clippy `let_and_return` (`footer_parts`) and the
-  committed story data's `source.metricsContentSha256` (version bump only); both fixed, then the
-  gate passed on a clean tree. Gate not weakened.
-- **Repo state:** 78 rules, six language tokens (`c`, `js`, `python`, `rust`, `ts`, `tsx`), six
-  golden trees regenerated at 0.4.0 (version-only delta, counts 15/9/32/29/11/11), agent-report
-  sample regenerated (78 hints, 8,882 B), schema 1.8 byte-identical in `src/schema/` and
-  `docs/schema/`.
+**Merge Train M3 DONE 2026-10-27 — the merge train is complete.** Finalization of the three-line
+merge into `main` at **v0.4.0** (metrics schema **1.8**, Atlas layout/flow `1`). All four feature
+lines (`feat/agent-report`, `fix/agent-report-regen`, `feat/js-ts`, `feat/atlas-sim`) are verified
+ancestors of `main`. The agent-report worktree was archived to
+`/home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27` and its git registration pruned;
+**branch refs were retained** (founder instruction: no permanent deletion). Full CI gate on `main` at
+`2c01c17`: fmt, clippy, tests, `cargo deny check licenses`, semantic clippy/tests all exit 0 —
+**2,180 passed / 0 failed / 2 ignored** (`docs/evidence/merge-m3/gate.txt`). Story gate re-run on the
+final tree at `978a623`: **PASS**, 1,089 tests (1 ignored), **304/304** checks, 3k scale PASS
+(`docs/evidence/atlas-sim/GATE.txt`). `--version` = `perfpal 0.4.0 (metrics schema 1.8)`; CHANGELOG
+`[0.3.0]` + `[0.4.0]`; README at 0.4.0 with JS/TS and the Atlas Story; hot state 4,884 B ≤ 8 KB; ADR
+numbers unique (0001–0013); clean status; no tag. **No push, no tag.**
 
 ## Recent Decisions
-- **D-pf-275 (live, 2026-10-27):** M2 merge done (`646597c`); v0.4.0 / schema 1.8 / layout+flow 1;
-  ADR-0012/0013 + founder override; story gate + full gate green; no push/tag.
+- **D-pf-276 (live, 2026-10-27):** M3 done — all four lines merged and verified; worktree archived
+  (reversible, branch refs kept); full CI gate + story-gate re-run green; v0.4.0 / schema 1.8;
+  clean status; no push/tag.
 - **D-pf-251 (live):** F treemap remains **undecided**; keep W1; no F code shipped.
 - **D-pf-267..274 / A-pf-131..132 (cold):** the story-line decision/action records, final IDs at
   merge; ADR-0013 documents the two-hop remap (251..255 → 260..264 → 267..274).
+- **D-pf-275 (archived 2026-10-27):** M2 merge moved to the cold ledger at the M3 close.
 - **D-pf-259/260 (archived 2026-10-27):** M1 merge + integration fix moved to the cold ledger at the
   M2 close.
 - **D-pf-249 (pointer):** archived decisions are in `state/archive/ledger.jsonl`.
 
 ## In Progress
-- M2 is committed: merge `646597c`, v0.4.0 prep `e1b4f1b`, gate fix/data `ff276fd`, evidence/state
-  commit. **No push, no tag.**
+- Nothing in flight. The merge train (M1 → M2 → M3) is closed on `main`; the working tree is clean at
+  the M3 close. **No push, no tag** — both remain founder-gated.
 
 ## Next
-1. **M3:** verify all four branches are ancestors of `main`; remove the agent-report worktree; prune
-   merged branches; full CI gate; verify 0.4.0/schema 1.8, CHANGELOG, README, hot state ≤8 KB, clean
-   status; update `state/handoff/latest.md` + this file + `state/session-state.json` (EOL); no
-   push/tag.
-2. **Story follow-up (`A-pf-133`):** self-contained companion artifact + `perfpal story <repo>`
-   entry before the §5 founder session; F8/A2 story read deferred; no in-report graduation.
-3. **Post-beta map/ranking:** F treemap decision (D-pf-251), memchr fold trigger (D-pf-256),
+1. **Story follow-up (`A-pf-133`):** self-contained companion artifact (inline data; no `fetch`/HTTP
+   server) + a `perfpal story <repo>` entry before the §5 founder session; F8/A2 story read deferred;
+   no in-report graduation (A12 unchanged).
+2. **Post-beta map/ranking:** F treemap decision (D-pf-251), memchr fold trigger (D-pf-256),
    `map-build`/A1b recall (R-pf-105/106/108).
+3. **Publish gate (founder-owned):** B-pf-001 contact + B-pf-002 minisign secrets, then tag/publish.
 
 ## Blockers
 - **Publish gate:** B-pf-001 (contact) + B-pf-002 (minisign secrets) — founder-owned.
@@ -74,4 +67,7 @@ claim**). The story track is done; the story gate + full gate are green on the m
   agent_report catalog lock 67 → 78; goldens regenerated; js-ts plan done; no push/tag.
 - **Merge Train M2 (2026-10-27):** `feat/atlas-sim` merged (`646597c`); v0.4.0 / layout+flow 1;
   ADR-0012/0013 + founder override; story gate 1,089 tests / 304/304 / 3k 44/44 / F5/F6; full gate
-  green; story track done; **no push/tag**.
+  green; story track done; no push/tag.
+- **Merge Train M3 (2026-10-27):** finalization — four lines ancestor-verified; worktree archived +
+  registration pruned (branch refs kept); full CI gate 2,180 passed / 0 failed / 2 ignored; story
+  gate re-run PASS at `978a623`; v0.4.0 / schema 1.8; hot state 4,884 B; clean status; no push/tag.
