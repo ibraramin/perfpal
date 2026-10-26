@@ -2,7 +2,7 @@
 
 > **Session:** B3 — TypeScript/TSX backend + wiring + corpora/goldens. Plan `js-ts`; branch `feat/js-ts`;
 > base `main @ 9a94905`; prior commits W0 `e7f5332`, W1 `90d5677`, W2 `edfc98a` (+ `b2f6eae`).
-> **Uncommitted; full DoD green; parallel panel recorded.** No push. Commit/merge pending founder approval.
+> **Committed `9dd19bb`; full DoD green; five-lane panel APPROVED.** No push. Merge pending founder approval.
 
 ## North-star / scope discipline
 
@@ -202,10 +202,10 @@ stale-evidence defect and it was fixed in one pass (§9 of the transcript). Non-
 
 ## Commits (this session)
 
-- **None yet** — commit pending founder approval. Working tree: 16 modified files, 7 new paths
+- `9dd19bb` — `feat(js-ts): B3 TypeScript/TSX backend, corpora and goldens` (67 files, +5,869/−352). No push. Working tree: 16 modified files, 7 new paths
   (`examples-ts/`, `src/scanner/backends/tree_sitter_typescript/`, `tests/typescript_backend.rs`,
   `tests/examples_ts_coverage.rs`, `tests/determinism_ts.rs`, `tests/fixtures/typescript/`,
   `tests/golden/report-ts/`).
 
 **Resume in a fresh session:** plan `js-ts`, next task **B4** (docs/contract/canary), branch `feat/js-ts`,
-base `main @ 9a94905`, W0 `e7f5332`, W1 `90d5677`, W2 `edfc98a`, B3 uncommitted.
+base `main @ 9a94905`, W0 `e7f5332`, W1 `90d5677`, W2 `edfc98a`, B3 `9dd19bb`.

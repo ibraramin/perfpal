@@ -5,8 +5,7 @@
 > `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B4.`
 
 **Next-session signpost (B4):** branch `feat/js-ts`, base `main @ 9a94905`; W0 `e7f5332`, W1 `90d5677`,
-W2 `edfc98a`, **B3 implemented in the working tree (full DoD green, panel APPROVED, uncommitted — commit
-pending founder approval)**. B4 scope: docs/contract pass (`modules.md` §4.2/5.2 + §1, output-contract
+W2 `edfc98a`, **B3 committed `9dd19bb` (full DoD green, five-lane panel APPROVED).** B4 scope: docs/contract pass (`modules.md` §4.2/5.2 + §1, output-contract
 labels, README/roadmap/`Cargo.toml` description), `docs/heuristics/js-catalog.md`, CHANGELOG note for A,
 semver note, **real-code canary re-run on the 11 rules**, real-parse negative `s = f(s + "x")`, spread-root
 attribution limitation, JS/TS dependency-label polish (`B-tb-001`). Gate: plan `js-ts` DoD + parallel panel;
@@ -141,7 +140,7 @@ real-code canary re-run is owed before merge.
 5 → 6), TS type-only negative fixtures incl. `<T,>`, and TS coverage + determinism suites; no schema bump
 and no duplicated rule implementations.
 
-## Session B3 — TS/TSX backend + wiring + corpora/goldens — **implemented (uncommitted; gated; panel recorded)** (2026-10-26)
+## Session B3 — TS/TSX backend + wiring + corpora/goldens — **committed `9dd19bb`; full DoD green; panel APPROVED** (2026-10-26)
 
 **Goal:** TypeScript/TSX as first-class backends without a second visitor, no schema bump, no new rules.
 

@@ -6,12 +6,11 @@ Scope: feature
 
 **Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** B1/B2-W0 complete; **B2-W1 committed
 `90d5677` (pre-rebase `7fdfa1a`)**; **B2-W2 committed `edfc98a`** (11 `PERF-JS-*` rules + catalog landing +
-schema v1.8 + fixtures/goldens); **B3 implemented, full DoD green, panel recorded — uncommitted; commit
-pending founder approval** (TypeScript/TSX backend + `examples-ts` + `report-ts` golden).
+schema v1.8 + fixtures/goldens); **B3 committed `9dd19bb`** (full DoD green, five-lane panel APPROVED) (TypeScript/TSX backend + `examples-ts` + `report-ts` golden).
 **Owners:** Track B owns this spec, `docs/plans/js-ts.md`, the JS/TS ADR, the grammar pins, the JS/TS
 fixtures/goldens, and the `src/schema` language values. Track A owns `views.rs`/`mod.rs` wiring until A step 12.
 
-**B3 close-out (implemented; uncommitted).** TypeScript and TSX are first-class backends without a second
+**B3 close-out (committed `9dd19bb`).** TypeScript and TSX are first-class backends without a second
 visitor: the JS backend is parameterized by a grammar/token/flavor `Dialect` and the new
 `src/scanner/backends/tree_sitter_typescript/` binds `LANGUAGE_TYPESCRIPT` (`ts`) and `LANGUAGE_TSX`
 (`tsx`). Scanner wiring adds `LanguageKind::{Ts,Tsx}`, the longest-suffix map (`.d.*` still skipped), the

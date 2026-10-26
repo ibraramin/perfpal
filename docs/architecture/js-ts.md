@@ -2,8 +2,7 @@
 
 **Status:** B1 planning complete; **B2-W0 complete** (exact pins, grammar-link tests, canary freeze);
 **B2-W1 committed `90d5677` (pre-rebase `7fdfa1a`)**; **B2-W2 committed `edfc98a`** (11 `PERF-JS-*` rules,
-catalog 78, schema v1.8, `examples-js`, `report-js` golden); **B3 implemented — uncommitted, full DoD green,
-panel recorded; commit pending founder approval.** B3 adds the TypeScript/TSX backend (dialect over the JS
+catalog 78, schema v1.8, `examples-js`, `report-js` golden); **B3 committed `9dd19bb`** (full DoD green, five-lane panel APPROVED). B3 adds the TypeScript/TSX backend (dialect over the JS
 visitor), the six-value `SUPPORTED_LANGUAGES`, `examples-ts/` and the `report-ts` golden (§16). The merge
 gate `A-tb-006` still requires founder approval. Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`,
 `docs/specs/js-ts.md`, `docs/plans/js-ts.md`.
