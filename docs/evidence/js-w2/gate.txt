@@ -1,0 +1,181 @@
+Perfpal — Track B, plan js-ts, wave B2-W2 gate transcript
+Date: 2026-10-24
+Branch: feat/js-ts (rebased on main @ 9a94905; prior wave head c3d9282 replayed cleanly)
+Scope: 11 PERF-JS-* rules + atomic 78-entry catalog + schema v1.8 + version sweep +
+       examples-js + IR fixtures + report-js golden + coverage/precision/benchmark +
+       determinism_js. No push; commit pending founder approval.
+
+== Rebase ==
+$ git rebase main
+Successfully rebased and updated refs/heads/feat/js-ts.
+$ git log --oneline -1 main
+9a94905 feat(atlas): v2 step 12 progressive charts
+$ git log --oneline -6
+c3d9282 docs(js-ts): record B2-W1 commit hash in track handoff
+90d5677 feat(js-ts): B2-W1 JS backend + scanner wiring
+...
+9a94905 feat(atlas): v2 step 12 progressive charts
+
+Baseline before edits:
+$ cargo test --locked --test p6_hardening
+4 passed; 0 failed.
+
+== Definition of Done (round 1 — pre-fix) ==
+$ cargo fmt --all -- --check
+(no output)                                                        exit 0
+$ cargo clippy --locked --all-targets -- -D warnings
+Finished `dev` profile ... (no warnings)                           exit 0
+$ cargo test --locked
+63 suites, 928 passed, 0 failed, 0 ignored                          exit 0
+$ cargo deny check licenses
+licenses ok (pre-existing "unmatched license allowance" note)      exit 0
+$ cargo clippy --locked --all-targets --features semantic-clang -- -D warnings
+Finished `dev` profile ... (no warnings)                           exit 0
+$ PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang
+63 suites, 931 passed, 0 failed                                    exit 0
+$ CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target cargo check --locked --all-targets
+Finished `dev` profile                                             exit 0
+
+Byte-determinism (plan DoD step 4; examples-ts is B3, so only examples-js exists):
+$ cargo run --locked --quiet -- examples-js -o "$out/a" --force
+$ cargo run --locked --quiet -- examples-js -o "$out/b" --force
+scanned 15 files (15 ok) · 11 findings (0 hot, 5 warn, 6 info)   (both runs)
+$ diff -r "$out/a/charts" "$out/b/charts"                          (no output)
+$ cmp "$out/a"/*.schema.*.json "$out/b"/*.schema.*.json            (no output)
+$ diff <(jq -S 'del(.scan.started_at,.scan.duration_ms)' a/metrics.json) \
+       <(jq -S 'del(.scan.started_at,.scan.duration_ms)' b/metrics.json)
+(no output)
+=> "deterministic (modulo provenance): examples-js"
+
+== Rules (11 shipped; LOOP-003 cut; zero PERF-TS-*) — round 1 gate wording; superseded by the fix sections below ==
+PERF-JS-ALLOC-001  info   object/array literal in loop; nearest loop required; silent when a
+                          referenced name is an induction var or is assigned inside the loop
+PERF-JS-ALLOC-003  info   concat/slice in loop, non-empty receiver_root, same loop reassigns root
+PERF-JS-STR-001    warn   `+=` on identifier in loop; silent when known trip < 8
+PERF-JS-LOOP-001   info   LoopNode.depth >= 2; one finding per function (earliest span)
+PERF-JS-LOOP-002   warn   sync Node API callee (23 names) inside a loop
+PERF-JS-LOOP-007   warn   indexOf/includes/find/findIndex/some/every/filter in loop;
+                          receiver_root required; silent when known trip < 16
+PERF-JS-ASYNC-001  warn   await with in_loop_depth >= 1; requires record.is_async
+PERF-JS-ASYNC-002  warn   sync Node API callee in an async function (no loop requirement)
+PERF-JS-CALL-001   info   direct bare self-call; silent when any comparison starts before the call
+PERF-JS-ARCH-001   info   resolved import cycle via graph::break_cycles; one finding per broken edge
+PERF-JS-TYPE-001   info   `delete obj.prop`; subscript form (`delete obj["k"]`) excluded
+All confidence MEDIUM. Catalog: 78 = 23 C + 11 JS + 22 PY + 22 RS (+ retired PERF-RS-STR-001
+outside the active set). Count/equality/Appendix-A locks in src/reporter/mod.rs pass.
+
+== Schema v1.8 ==
+$ cmp src/schema/metrics.schema.v1.8.json docs/schema/metrics.schema.v1.8.json
+(identical; 23,253 bytes each)
+- $id/title/description/schema_version.const = 1.8; both language enums =
+  ["c","js","python","rust","ts","tsx"]; zero-file fallback wording generic.
+- SCHEMA_VERSION / SCHEMA_ARTIFACT_NAME / EMBEDDED_SCHEMA / CLI VERSION_SUFFIX all 1.8.
+- tests/schema_1_7.rs -> tests/schema_1_8.rs (v1.8 lock, retained v1.7/v1.6/v1.5/v1.4 history);
+  sweep in schema_1_4, pipeline_e2e, resolver_health, i1a/i1b/i1c, atlas_fixtures, key_views,
+  p6_hardening (GOLDEN_ARTIFACTS + provenance_free). v1.7 retained in src/ and docs/.
+
+== Corpora and gates ==
+$ cargo test --locked --test examples_js_coverage      1 passed
+$ cargo test --locked --test js_ir_fixtures            1 passed (22 fixtures)
+$ cargo test --locked --test determinism_js            1 passed
+$ cargo test --locked --test precision_kpi             1 passed (11 JS rules: 1.00 / 1.00)
+$ cargo test --locked --test p6_hardening              4 passed
+$ cargo test --locked --test benchmark                 1 passed (15.06 s)
+  small rung (round 1 pre-fix): 140 files, 1,639 LOC, 94 findings, 79 scoped rules (78 active + retired);
+  every JS rule TP=1 FP=0 FN=0; medium/large/real-code PASS; determinism PASS.
+
+examples-js: 15 scanned files (14 .js + 1 .cjs) + package.json (main: index.js, HIGH entry);
+11 findings (0 hot / 5 warn / 6 info), each rule exactly once, 17 silent controls silent (18 after the round-2 numeric-`+=` control).
+IR fixtures: 22 (one positive + one control per rule), parser-free.
+Goldens: GOLDEN_TREES 4 -> 5 (tests/golden/report-js, 20 files); all five trees carry
+metrics.schema.v1.8.json and zero stale v1.7 artifacts.
+
+== Guards ==
+$ ! grep -q preserve_order Cargo.lock                      => pass
+$ git diff --name-only -- Cargo.toml Cargo.lock | wc -l    => 0
+$ git diff --check                                         => clean
+$ jq -e . state/tracks/js-ts/session-state.json && wc -c   => valid, 8174 bytes (<= 8192)
+$ cmp src/schema/... docs/schema/...                       => identical
+
+== Panel ==
+R1/R2 (reviewer) + Q1/Q2 (requirements) + fresh R3 confirmation: PENDING — appended after dispatch.
+
+== Panel round 1 (2026-10-24) ==
+R2 APPROVED (contract/schema/determinism/security).
+Q1 APPROVED (verbatim scope; no blocking findings).
+Q2 APPROVED (acceptance/evidence; no blocking findings).
+R1 CHANGES_REQUESTED — two blocking rule-gate defects:
+  1. PERF-JS-STR-001 fired on numeric `+=` accumulators; the B2-W0 canary counted only
+     string/template-literal RHS (tools/js_canary.rs:402-430; CTL-INT-ACC silent control).
+  2. PERF-JS-ALLOC-003 did not implement spread accumulation (`acc = [...acc, x]`), which the
+     frozen disposition and canary include (docs/architecture/js-ts.md §8; tools/js_canary.rs:385-395).
+
+== Round-2 fixes (post-panel) ==
+- STR-001: RHS must be a `ShapeKind::Literal` whose text starts with "/'/`; template_string now maps to
+  a literal shape. Both canary forms implemented: `+= <string|template>` and `x = x + <string|template>`.
+  Numeric/identifier/subscript/call RHS are silent; trip<8 suppression unchanged.
+- ALLOC-003: `AllocEvent.has_spread` (serde-default IR-internal B2-W2 fact) populated from
+  `spread_element` children; the spread accumulator arm fires when an array literal with spread is built
+  in a loop and one of its referenced names is reassigned inside that loop. concat/slice arm retained.
+- TYPE-001 now requires a MemberAccess operand (`delete x` silent); LOOP-001 max_depth scoped to the
+  anchored loop's span; aggregator doc pointers and the resolver test name updated to v1.8;
+  schema_1_8 asserts nested `additionalProperties: false`.
+- examples-js ALLOC-003 module uses spread; STR-001 uses a template literal plus a numeric `+=` control
+  (silent controls 17 -> 18; findings unchanged at 11, 0 hot / 5 warn / 6 info, 1 per rule).
+- IR fixture ALLOC-003 positive carries concat + spread (expected 2; fixture count stays 22).
+- Unit tests 21 -> 27.
+
+Post-fix gate (same commands as above):
+$ cargo fmt --all -- --check                      exit 0
+$ cargo clippy --locked --all-targets -- -D warnings   exit 0
+$ cargo test --locked                             63 suites, 935 passed, 0 failed
+$ cargo test --locked --lib                       437 passed
+$ cargo test --locked --test javascript_backend   20 passed
+$ cargo test --locked --test examples_js_coverage 1 passed
+$ cargo test --locked --test js_ir_fixtures       1 passed (22 fixtures)
+$ cargo test --locked --test determinism_js       1 passed
+$ cargo test --locked --test precision_kpi        1 passed (11 JS rules 1.00/1.00)
+$ cargo test --locked --test benchmark            1 passed
+$ PERFPAL_REGEN_GOLDEN=1 cargo test --locked --test p6_hardening regenerate_goldens  1 passed
+$ cargo test --locked --test p6_hardening         4 passed
+$ cargo test --locked --test schema_1_8           6 passed
+$ cargo deny check licenses                       licenses ok
+$ cargo clippy --features semantic-clang -- -D warnings   exit 0
+$ PERFPAL_SEMANTIC_TESTS=1 cargo test --features semantic-clang   63 suites, 938 passed, 0 failed
+$ CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target cargo check --locked --all-targets   exit 0
+$ examples-js double run                          byte-identical modulo provenance (11 findings)
+$ cmp src/docs v1.8 schema                        identical
+$ ! grep -q preserve_order Cargo.lock              pass
+$ git diff --name-only -- Cargo.toml Cargo.lock    0 files
+$ git diff --check                                clean
+$ wc -c state/tracks/js-ts/session-state.json     8174 bytes (<= 8192)
+
+Note: this is the DoD applicable subset for B2 — `examples-ts` and the six-language supported set are B3,
+and the merge gate (A-tb-006) re-runs the plan DoD after any further main movement.
+
+== Post-round-2 polish (fix-6) ==
+- STR-001 assignment arm now requires the binary `+` to be the WHOLE RHS (span end == assignment span end);
+  `s = f(s + "x")` is silent. `+=` arm unchanged.
+- TYPE-001 evidence carries the property name (`member_expression` shape now has `name`).
+- User-visible catalog text updated for ALLOC-003 (concat/spread/slice accumulator) and STR-001
+  (string/template RHS, both forms); report-js golden regenerated.
+- Tiny-loop controls now use a string/template RHS, so the trip<8 suppression is what silences them
+  (examples-js, precision, IR fixture).
+- Two second-arm precision TPs added and lifted into the benchmark: `js/alloc_003_spread.js` (spread) and
+  `js/str_001_assignment.js` (whole-RHS `x = x + "!"`), with labels + anchors.
+- CLI `about` now names the current contract: "C/Rust/Python/JS/TS codebase".
+Post-fix-6 gate:
+$ cargo test --locked                             63 suites, 935 passed, 0 failed
+$ cargo test --locked --lib                       437 passed
+$ PERFPAL_SEMANTIC_TESTS=1 cargo test --features semantic-clang   63 suites, 938 passed, 0 failed
+$ examples-js double run                          11 findings, byte-identical modulo provenance
+$ schema cmp                                      identical
+$ CARGO_TARGET_DIR=/var/tmp/... cargo check --all-targets   exit 0
+Benchmark small rung: 142 files / 1,655 LOC / 96 findings (79 scoped). JS precision files: 25 (64 total).
+
+== Panel round 2 ==
+R1 re-check: APPROVED (both blocking gates fixed; no new blocking finding).
+R3 fresh confirmation: APPROVED (no blocking finding; suggestions folded into fix-6).
+Q2 evidence re-check: CHANGES_REQUESTED (track-doc counts/gate rows, CLI `about` assignment, pre-fix
+labels) -> all three fixed in this tree; final confirmation lane pending.
+Panel status: awaiting the final Q2/R4 confirmation; commit remains pending founder approval.

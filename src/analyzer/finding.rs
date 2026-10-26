@@ -106,6 +106,25 @@ pub const PY_PANDAS_001_RULE_ID: &str = "PERF-PY-PANDAS-001";
 pub const PY_PANDAS_002_RULE_ID: &str = "PERF-PY-PANDAS-002";
 pub const PY_STR_001_RULE_ID: &str = "PERF-PY-STR-001";
 
+/// JavaScript/TypeScript (`PERF-JS-*`) rule ids (plan `js-ts` B2-W2), the
+/// frozen 11-rule disposition table in `docs/architecture/js-ts.md` §8. JS and
+/// TS/TSX share one family because the runtime mechanism (V8 / Node) is
+/// identical; `PERF-JS-LOOP-003` is CUT for v1 and deliberately has NO const
+/// here, and v1 ships **zero** `PERF-TS-*` rules (the B2-W0 canary proved none).
+/// Each const is the single spelling shared by the heuristic and its tests
+/// across the seam.
+pub const JS_ALLOC_001_RULE_ID: &str = "PERF-JS-ALLOC-001";
+pub const JS_ALLOC_003_RULE_ID: &str = "PERF-JS-ALLOC-003";
+pub const JS_ARCH_001_RULE_ID: &str = "PERF-JS-ARCH-001";
+pub const JS_ASYNC_001_RULE_ID: &str = "PERF-JS-ASYNC-001";
+pub const JS_ASYNC_002_RULE_ID: &str = "PERF-JS-ASYNC-002";
+pub const JS_CALL_001_RULE_ID: &str = "PERF-JS-CALL-001";
+pub const JS_LOOP_001_RULE_ID: &str = "PERF-JS-LOOP-001";
+pub const JS_LOOP_002_RULE_ID: &str = "PERF-JS-LOOP-002";
+pub const JS_LOOP_007_RULE_ID: &str = "PERF-JS-LOOP-007";
+pub const JS_STR_001_RULE_ID: &str = "PERF-JS-STR-001";
+pub const JS_TYPE_001_RULE_ID: &str = "PERF-JS-TYPE-001";
+
 /// Severity band (report §4 order: hot → warn → info).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

@@ -1,0 +1,28 @@
+digraph perfpal {
+  "01_alloc_churn.ts";
+  "02_array_accumulation.ts";
+  "03_string_build.ts";
+  "04_deep_nesting.ts";
+  "05_sync_io_loop.ts";
+  "06_membership_scan.ts";
+  "07_async_await.ts";
+  "08_async_blocking.ts";
+  "09_recursion.ts";
+  "10_cycle_a.ts" -> "11_cycle_b.ts";
+  "10_cycle_a.ts";
+  "10_cycle_a.ts#format#6:8" -> "11_cycle_b.ts" [style=dashed, label="formatFromB"];
+  "11_cycle_b.ts" -> "10_cycle_a.ts";
+  "11_cycle_b.ts";
+  "11_cycle_b.ts#formatFromB#5:8" -> "10_cycle_a.ts" [style=dashed, label="format"];
+  "12_delete.ts";
+  "13_controls.ts" -> "04_deep_nesting.ts";
+  "13_controls.ts";
+  "13_controls.ts#summarize#15:8" -> "04_deep_nesting.ts" [style=dashed, label="score"];
+  "14_types_only.ts";
+  "15_component.tsx";
+  "16_generic_arrow.tsx";
+  "component:." [shape=box, label=". (rank 1)"];
+  "index.ts" -> "13_controls.ts";
+  "index.ts";
+  "index.ts#boot#6:8" -> "13_controls.ts" [style=dashed, label="summarize"];
+}

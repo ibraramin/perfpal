@@ -1,0 +1,200 @@
+[
+  {
+    "file": {
+      "path": "pos/alloc_003.js",
+      "language": "js",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 2,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "pos/alloc_003.js#flatten#1:1",
+          "name": "flatten",
+          "path": "pos/alloc_003.js",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 9,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 1,
+          "alloc_site_count": 0,
+          "length_lines": 9,
+          "resolver_tier": "syntactic",
+          "is_async": false
+        },
+        "calls": [
+          {
+            "callee_name": "concat",
+            "callee_kind": "direct",
+            "args": [],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "receiver_root": "acc",
+            "span": {
+              "start_line": 5,
+              "start_col": 5,
+              "end_line": 5,
+              "end_col": 30
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [
+          {
+            "target": {
+              "kind": "identifier",
+              "name": "acc"
+            },
+            "scope_class": "local",
+            "binding_kind": "unknown",
+            "span": {
+              "start_line": 5,
+              "start_col": 5,
+              "end_line": 5,
+              "end_col": 30
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": [],
+            "span": {
+              "start_line": 4,
+              "start_col": 3,
+              "end_line": 7,
+              "end_col": 4
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "awaits": [],
+        "try_blocks": [],
+        "allocations": [],
+        "unaries": []
+      },
+      {
+        "record": {
+          "id": "pos/alloc_003.js#spread#11:1",
+          "name": "spread",
+          "path": "pos/alloc_003.js",
+          "span": {
+            "start_line": 11,
+            "start_col": 1,
+            "end_line": 19,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 1,
+          "alloc_site_count": 1,
+          "length_lines": 9,
+          "resolver_tier": "syntactic",
+          "is_async": false
+        },
+        "calls": [],
+        "assignments": [
+          {
+            "target": {
+              "kind": "identifier",
+              "name": "acc"
+            },
+            "scope_class": "local",
+            "binding_kind": "unknown",
+            "span": {
+              "start_line": 15,
+              "start_col": 5,
+              "end_line": 15,
+              "end_col": 28
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": [
+              "item"
+            ],
+            "span": {
+              "start_line": 14,
+              "start_col": 3,
+              "end_line": 17,
+              "end_col": 4
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "awaits": [],
+        "try_blocks": [],
+        "allocations": [
+          {
+            "span": {
+              "start_line": 15,
+              "start_col": 11,
+              "end_line": 15,
+              "end_col": 27
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "kind": "array",
+            "referenced_names": [
+              "acc",
+              "item"
+            ],
+            "has_spread": true
+          }
+        ],
+        "unaries": []
+      }
+    ]
+  }
+]

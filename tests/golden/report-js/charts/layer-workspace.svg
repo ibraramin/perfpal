@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="236" viewBox="0 0 1100 236">
+<text x="40" y="56" font-family="monospace" font-size="13">Workspace — 1 component</text>
+<text x="40" y="76" font-family="monospace" font-size="11">heat = candidate finding density per KLOC — profile to confirm</text>
+<g font-family="monospace" font-size="11">
+<rect x="40" y="104" width="170" height="30" fill="#b30000" stroke="#4a6fa5"/>
+<text x="48" y="123" fill="#ffffff">1 . 71.90</text>
+<circle cx="194" cy="109" r="4" fill="#d68910" stroke="#1b1b1b" stroke-width="1.2"><title>11 candidate finding(s): 0 hot / 5 warn / 6 info; confidence 0 high / 11 medium / 0 low — static candidates, profile to confirm</title></circle>
+<text x="200.5" y="111.5" font-family="monospace" font-size="7" fill="#1b1b1b">11</text>
+</g>
+<text x="40" y="198" font-family="monospace" font-size="11">finding dots: fill = severity (hot/warn/info), ring = lowest confidence present (thick HIGH / medium MEDIUM / thin LOW) — static candidates, profile to confirm</text>
+<text x="40" y="214" font-family="monospace" font-size="11">cool</text>
+<rect x="73" y="204" width="12" height="12" fill="#ffffff"/>
+<rect x="85" y="204" width="12" height="12" fill="#f7e6e6"/>
+<rect x="97" y="204" width="12" height="12" fill="#f0cccc"/>
+<rect x="109" y="204" width="12" height="12" fill="#e8b3b3"/>
+<rect x="121" y="204" width="12" height="12" fill="#e19999"/>
+<rect x="133" y="204" width="12" height="12" fill="#d98080"/>
+<rect x="145" y="204" width="12" height="12" fill="#d16666"/>
+<rect x="157" y="204" width="12" height="12" fill="#ca4d4d"/>
+<rect x="169" y="204" width="12" height="12" fill="#c23333"/>
+<rect x="181" y="204" width="12" height="12" fill="#bb1a1a"/>
+<rect x="193" y="204" width="12" height="12" fill="#b30000"/>
+<text x="211" y="214" font-family="monospace" font-size="11">hot</text>
+</svg>

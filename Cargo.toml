@@ -3,7 +3,7 @@ name = "perfpal"
 version = "0.2.0-beta.1"
 edition = "2024"
 rust-version = "1.92.0" # validated floor; pinned via rust-toolchain.toml (modules.md §6)
-description = "Static-analysis CLI that extracts performance-relevant heuristics from C and Rust codebases and emits LLM-consumable metrics."
+description = "Static-analysis CLI that extracts performance-relevant heuristics from C, Rust, Python, JavaScript and TypeScript/TSX codebases and emits LLM-consumable metrics."
 license = "LicenseRef-PolyForm-Strict-1.0.0" # SPDX custom-ref: PolyForm Strict 1.0.0 is not on the SPDX list (bare id rejected by cargo-deny)
 publish = false
 # License: source-available proprietary (free to use; modification/redistribution
@@ -21,6 +21,8 @@ tree-sitter = "=0.26.13" # ADR-0001 G5: exact pins for parser runtime + grammar
 tree-sitter-c = "=0.24.2"
 tree-sitter-rust = "=0.24.2" # ADR-0001 G5: exact pin for the Rust grammar (plan rust-backend)
 tree-sitter-python = "=0.25.0" # ADR-0001 G5: exact pin for the Python grammar (MIT, ABI 15; plan python-backend)
+tree-sitter-javascript = "=0.25.0" # ADR-0001 G5: exact pin for the JavaScript grammar (MIT, ABI 15; ADR-0011; plan js-ts B2)
+tree-sitter-typescript = "=0.23.2" # ADR-0001 G5: exact pin for the TypeScript + TSX grammars (MIT, ABI 14; ADR-0011)
 # Optional semantic-resolver engine (ADR-0001 deferred tier). Gated behind the
 # `semantic-clang` cargo feature (default OFF — musl release targets cannot
 # dlopen, so the feature stays OFF there by design). `runtime` = lazy dlopen
@@ -36,6 +38,13 @@ clang-sys = { version = "=1.9.1", optional = true, default-features = false, fea
 # Default OFF everywhere; darwin x2 + windows-msvc + new gnu release targets
 # pass it, musl x2 do not (static musl cannot dlopen).
 semantic-clang = ["dep:clang-sys"]
+
+# W0 canary counter (plan js-ts B2). Kept out of `examples/` — that directory is
+# the A-owned C demo corpus whose published counts must stay stable — while still
+# being runnable as `cargo run --example js_canary -- <ROOT_DIR>...`.
+[[example]]
+name = "js_canary"
+path = "tools/js_canary.rs"
 
 [profile.release]
 # Hardened release profile (plan `beta-release` B1).

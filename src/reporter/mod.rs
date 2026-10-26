@@ -80,9 +80,12 @@ pub const MD_ESCAPE_CHARS: &[char] = &[
 /// element count, default `repr(Rust)` field reordering). The Python
 /// (`PERF-PY-*`) entries transcribe the durable disposition table
 /// (docs/architecture/python-backend.md §9): 13 reframed mirrors + 9 native,
-/// with the CPython mechanism and the missing-signal limitations stated. A
-/// completeness lock in this module's tests asserts the catalog covers
-/// exactly the 67 rule ids the analyzer registry can emit.
+/// with the CPython mechanism and the missing-signal limitations stated. The
+/// JavaScript/TypeScript (`PERF-JS-*`) entries transcribe the frozen
+/// 11-rule disposition table (docs/architecture/js-ts.md §8; LOOP-003 cut for
+/// v1; no `PERF-TS-*` rule exists). A completeness lock in this module's
+/// tests asserts the catalog covers exactly the 78 rule ids the analyzer
+/// registry can emit (23 C + 11 JS + 22 PY + 22 RS).
 pub(crate) const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
     (
         "PERF-C-ALLOC-001",
@@ -198,6 +201,67 @@ pub(crate) const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
         "PERF-C-LOOP-008",
         "Pointer-chasing chain in innermost loop",
         "Detects member-access chains of depth ≥ 3 inside innermost loop bodies — pointer-chasing cache-miss candidates.",
+    ),
+    // -----------------------------------------------------------------------
+    // JavaScript/TypeScript (`PERF-JS-*`) entries (plan `js-ts` B2-W2),
+    // ascending rule_id. The frozen disposition table is
+    // docs/architecture/js-ts.md §8 (11 rules ship; LOOP-003 is cut for v1;
+    // no PERF-TS-* rule exists). JS and TS/TSX share one family because the
+    // V8/Node mechanism is identical.
+    (
+        "PERF-JS-ALLOC-001",
+        "Loop-invariant object/array literal inside loop",
+        "Detects an object/array literal constructed inside a loop at depth ≥ 1 behind a mandatory loop-invariance/escape gate: silent when a referenced name is the nearest loop's induction variable or is mutated inside that loop, and silent when no enclosing loop contains the span. Mechanism: V8 young-generation allocation churn that escape analysis rarely elides; fix: hoist the invariant construction. Accepted FP class: a literal created once for another reason but mutated per iteration.",
+    ),
+    (
+        "PERF-JS-ALLOC-003",
+        "Superlinear `concat`/spread/`slice` accumulation in loop",
+        "Detects `concat`/`slice` called inside a loop on a non-empty receiver that the same loop reassigns (`acc = acc.concat(x)`), or an array literal with a spread that folds a loop-reassigned accumulator (`acc = [...acc, x]`) — the accumulator pattern. Each pass copies n elements, making the loop O(n²); fix: push into one array or concat/spread once after the loop. Accepted FP class: a deliberate immutable snapshot per iteration. Info.",
+    ),
+    (
+        "PERF-JS-ARCH-001",
+        "Import cycle",
+        "Detects cycles over RESOLVED relative-import edges, one finding per broken edge anchored at its earliest directive span. Mechanism: module-init ordering becomes observable and bundlers cannot tree-shake the cycle cleanly; fix: break the lowest-sorted edge into a shared leaf module. Accepted FP class: type-only import cycles (TypeScript erases them). Info.",
+    ),
+    (
+        "PERF-JS-ASYNC-001",
+        "`await` inside a loop",
+        "Detects an `await` at loop depth ≥ 1 inside an `async` function — awaiting each item sequentially serialises one microtask round-trip per iteration; fix: collect the promises and await `Promise.all(items.map(...))`. Accepted FP class: deliberately sequential work (rate limiting, ordering). Flagship, Warn.",
+    ),
+    (
+        "PERF-JS-ASYNC-002",
+        "Synchronous blocking call inside `async` function",
+        "Detects a known synchronous Node API (`readFileSync`, `execSync`, sync `crypto`, …) called anywhere in an `async` function — the blocking call stalls the single event-loop thread for every concurrent task; fix: use the async equivalent (`fs/promises`, async `exec`/`spawn`). Async-function gate mandatory; accepted FP class: a CLI single-shot path. Flagship, Warn.",
+    ),
+    (
+        "PERF-JS-CALL-001",
+        "Direct recursion without a visible base case",
+        "Detects a bare direct self-call (`receiver_root` absent) ONLY when no comparison in the same function has a span strictly before the recursive call — the guard-gated predicate for a missing visible base case. Mechanism: stack growth plus repeated frame-setup cost; fix: convert to a loop with an accumulator or add an explicit guard. Accepted FP class: a recursive tree walk with small depth. Info.",
+    ),
+    (
+        "PERF-JS-LOOP-001",
+        "Nested loop depth ≥ 2",
+        "Detects a loop nested at depth ≥ 2 (the JS floor is 2, not the C catalog's 3), at most one finding per function anchored at the earliest such loop. Mechanism: every extra level multiplies the iteration count, so the body runs superlinearly; fix: flatten the nesting, hoist invariant work, or add an early exit. Accepted FP class: matrix work where n² is inherent. Info.",
+    ),
+    (
+        "PERF-JS-LOOP-002",
+        "Synchronous blocking I/O inside loop",
+        "Detects a known synchronous Node API (`readFileSync`, `execSync`, `spawnSync`, sync `crypto`, …) inside a loop — one blocking syscall/serialization per iteration on the single event-loop thread; fix: batch, use the async API, or make one call outside the loop. Accepted FP class: a startup-only loop. Warn.",
+    ),
+    (
+        "PERF-JS-LOOP-007",
+        "Linear membership scan inside loop",
+        "Detects `indexOf`/`includes`/`find`/`findIndex`/`some`/`every`/`filter` called inside a loop with a non-empty receiver root, excluding canonical loops with a known trip count < 16 — a linear scan per iteration makes the loop O(n²); fix: build a `Set`/`Map` once and do a keyed lookup. Flagship, Warn.",
+    ),
+    (
+        "PERF-JS-STR-001",
+        "String accumulation with `+=` or `x = x + …` inside loop",
+        "Detects a string/template literal appended inside a loop in either form: `s += \"…\"` or `s = s + \"…\"` (the binary `+` must be the whole right-hand side), excluding canonical loops with a known trip count < 8. Mechanism: cons-string flattening at first use (MEDIUM; V8 ropes mitigate); fix: collect parts into an array and `join(\"\")` once. Accepted FP class: a tiny bounded loop. Warn.",
+    ),
+    (
+        "PERF-JS-TYPE-001",
+        "`delete` on an object property",
+        "Detects `delete obj.prop`; the subscript form (`delete obj[\"k\"]`) is EXCLUDED per the frozen disposition. Mechanism: a V8 hidden-class → dictionary-mode transition slows every later access; fix: set the property to `undefined` or rebuild the object. Accepted FP class: intentional cache eviction (rare). Info.",
     ),
     // -----------------------------------------------------------------------
     // Python (`PERF-PY-*`) entries (plan `python-backend` W3), ascending
@@ -2725,8 +2789,17 @@ fn chart_caption(stem: &str, languages: &[String]) -> String {
     }
 }
 
+/// True for the JavaScript/TypeScript family (`js` | `ts` | `tsx`). All three
+/// share one dependency mechanism (`import`/`require`) and one prose fragment,
+/// so they render as a single family rather than three bare language names.
+fn is_js_family(language: &str) -> bool {
+    matches!(language, "js" | "ts" | "tsx")
+}
+
 /// Dependency mechanisms of the scanned languages in PINNED order
-/// (c → rust → python, then any other language sorted ascending by name).
+/// (c → rust → python → the js/ts/tsx family, then any other language sorted
+/// ascending by name). The JS family contributes exactly one `import/require`
+/// fragment even when several of `js`/`ts`/`tsx` were scanned.
 /// Pure function of the language list — deterministic regardless of document
 /// order. Unknown languages pass through as bare names (escaped by the
 /// caller — see [`dependency_clause`]).
@@ -2741,9 +2814,14 @@ fn dependency_mechanisms(languages: &[String]) -> Vec<String> {
     if languages.iter().any(|l| l == "python") {
         parts.push("import".to_string());
     }
+    if languages.iter().any(|l| is_js_family(l)) {
+        parts.push("import/require".to_string());
+    }
     let mut others: Vec<&String> = languages
         .iter()
-        .filter(|l| l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python")
+        .filter(|l| {
+            l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python" && !is_js_family(l)
+        })
         .collect();
     others.sort();
     others.dedup();
@@ -2786,11 +2864,12 @@ fn oxford_join(mut parts: Vec<String>) -> String {
 
 /// Edge-kind clause for the architecture paragraph ("C `#include`
 /// directives and Rust `mod`/`use` module paths"), conditioned on the ACTUAL
-/// scanned languages — same registry as [`dependency_mechanisms`]. `None`
-/// when no language names an edge kind (the paragraph then falls back to the
-/// generic sentence). Known-language fragments are pinned static text (they
-/// carry backticks that must render as Markdown code spans / literal HTML);
-/// unknown language names are document-derived and go through `escape`.
+/// scanned languages — same registry as [`dependency_mechanisms`], including
+/// the pinned c → rust → python → js/ts/tsx family order. `None` when no
+/// language names an edge kind (the paragraph then falls back to the generic
+/// sentence). Known-language fragments are pinned static text (they carry
+/// backticks that must render as Markdown code spans / literal HTML); unknown
+/// language names are document-derived and go through `escape`.
 #[must_use]
 fn dependency_clause(languages: &[String], escape: impl Fn(&str) -> String) -> Option<String> {
     let mut parts: Vec<String> = Vec::new();
@@ -2803,9 +2882,14 @@ fn dependency_clause(languages: &[String], escape: impl Fn(&str) -> String) -> O
     if languages.iter().any(|l| l == "python") {
         parts.push("Python `import` bindings".to_string());
     }
+    if languages.iter().any(|l| is_js_family(l)) {
+        parts.push("JavaScript/TypeScript `import`/`require` bindings".to_string());
+    }
     let mut others: Vec<&String> = languages
         .iter()
-        .filter(|l| l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python")
+        .filter(|l| {
+            l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python" && !is_js_family(l)
+        })
         .collect();
     others.sort();
     others.dedup();
@@ -2944,10 +3028,11 @@ mod tests {
         assert_eq!(format_fixed_point(-0.001, 2), "0.00");
     }
 
-    /// Completeness lock (plans `rust-backend` R3 D1 + `python-backend` W3):
-    /// the catalog must cover EXACTLY the rule ids the analyzer registry can
-    /// emit (23 `PERF-C-*` + 22 `PERF-PY-*` + 22 `PERF-RS-*`; C/Rust STR-001
-    /// and the 10 Python-retired ids never registered), so a newly added
+    /// Completeness lock (plans `rust-backend` R3 D1 + `python-backend` W3 +
+    /// `js-ts` B2-W2): the catalog must cover EXACTLY the rule ids the
+    /// analyzer registry can emit (23 `PERF-C-*` + 11 `PERF-JS-*` + 22
+    /// `PERF-PY-*` + 22 `PERF-RS-*`; C/Rust STR-001, the 10 Python-retired ids
+    /// and the cut `PERF-JS-LOOP-003` never registered), so a newly added
     /// heuristic cannot silently reintroduce the Appendix A `panic!` on an
     /// uncataloged rule_id. The expected set is derived FROM the registry
     /// ([`crate::analyzer::registered_rule_ids`]) — an id added to `REGISTRY`
@@ -2960,12 +3045,12 @@ mod tests {
         let registry_ids: Vec<&'static str> = crate::analyzer::registered_rule_ids().collect();
         assert_eq!(
             registry_ids.len(),
-            67,
-            "expected 23 C + 22 Python + 22 Rust ids"
+            78,
+            "expected 23 C + 11 JS + 22 Python + 22 Rust ids"
         );
 
         // The registry declares its entries in ascending rule_id order
-        // (the C block, then the `PERF-RS-*` block) — declaration order is
+        // (the C block, then the JS/Python/Rust blocks) — declaration order is
         // the load-bearing first-wins duplicate-collapse contract
         // (modules.md §3.3), so lock it globally with one comparison.
         let mut globally_sorted = registry_ids.clone();
@@ -2986,7 +3071,7 @@ mod tests {
         );
 
         let catalog_ids: Vec<&str> = HEURISTIC_CATALOG_V1.iter().map(|(id, _, _)| *id).collect();
-        assert_eq!(catalog_ids.len(), 67, "catalog entry count drifted");
+        assert_eq!(catalog_ids.len(), 78, "catalog entry count drifted");
 
         // Every catalog entry carries a non-empty title and description.
         for (id, title, description) in HEURISTIC_CATALOG_V1 {
@@ -3011,9 +3096,9 @@ mod tests {
             "catalog must cover exactly the registered rule ids"
         );
 
-        // The Python and Rust blocks are appended in ascending rule_id order
-        // (the C block keeps its frozen catalog-v1 doc order).
-        for prefix in ["PERF-PY-", "PERF-RS-"] {
+        // The JS, Python and Rust blocks are appended in ascending rule_id
+        // order (the C block keeps its frozen catalog-v1 doc order).
+        for prefix in ["PERF-JS-", "PERF-PY-", "PERF-RS-"] {
             let ids: Vec<&str> = catalog_ids
                 .iter()
                 .copied()
@@ -3044,5 +3129,49 @@ mod tests {
                 "retired Python rule id must not be registered/cataloged: {retired}"
             );
         }
+    }
+
+    /// B4 label polish lock: `js`/`ts`/`tsx` are ONE family — a single
+    /// `import/require` mechanism fragment and one prose clause, never bare
+    /// `js module edges` / `ts module edges` / `tsx module edges`. Pinned
+    /// order is c → rust → python → JS family, and unknown languages keep the
+    /// forward-compat `<name> module edges` escape path.
+    #[test]
+    fn dependency_labels_cover_the_js_family() {
+        // (a) one fragment only, no duplicates, for all three languages.
+        assert_eq!(
+            dependency_mechanisms(&["js".to_string(), "ts".to_string(), "tsx".to_string()]),
+            vec!["import/require".to_string()]
+        );
+
+        // (b) caption is the exact expected JS-family caption.
+        assert_eq!(
+            include_graph_caption(&["js".to_string(), "ts".to_string(), "tsx".to_string()]),
+            "Dependency graph — internal import/require dependencies between scanned files."
+        );
+
+        // (c) prose clause names the family once.
+        assert_eq!(
+            dependency_clause(
+                &["js".to_string(), "ts".to_string(), "tsx".to_string()],
+                |s| { s.to_string() }
+            ),
+            Some("JavaScript/TypeScript `import`/`require` bindings".to_string())
+        );
+
+        // (d) pinned order: C fragment before the JS family fragment.
+        assert_eq!(
+            dependency_clause(&["js".to_string(), "c".to_string()], |s| s.to_string()),
+            Some(
+                "C `#include` directives and JavaScript/TypeScript `import`/`require` bindings"
+                    .to_string()
+            )
+        );
+
+        // (e) unknown languages still take the module-edges escape path.
+        assert_eq!(
+            dependency_clause(&["zig".to_string()], |s| s.to_string()),
+            Some("zig module edges".to_string())
+        );
     }
 }

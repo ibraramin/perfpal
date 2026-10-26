@@ -1,8 +1,9 @@
-//! metrics.json schema 1.6 end-to-end lock (plan `map-build` I1a C + I1b
-//! Rust + I1c Python + I2 cost-v2): the v1.5 entry/reachability fields plus
-//! the ADDITIVE v1.6 `function_cost_v2` / `unknown_trip_loops` fields —
-//! additive-only over 1.5/1.4, so every `required` list stays byte-equal to
-//! the retained artifacts'. Retains the 1.4 locks below as history: the seven
+//! metrics.json schema 1.8 end-to-end lock (originally the 1.6 lock): the
+//! v1.5 entry/reachability fields plus the ADDITIVE v1.6 `function_cost_v2` /
+//! `unknown_trip_loops` fields — additive-only over 1.5/1.4, so every
+//! `required` list stays byte-equal to the retained artifacts'. The active
+//! artifact is now v1.8 (plan `js-ts` B2: both language enums widened to the
+//! six sorted tokens). Retains the 1.4 locks below as history: the seven
 //! v1.4 instrument fields + populated distributions (tests (6)–(7)), the
 //! language enum + structural finding-id locks (tests (1)–(5)).
 //!
@@ -85,36 +86,43 @@ fn rust_only_tree_derives_rust_language() {
 
 /// (3) Empty dir → exit 0 with the supported-set fallback (`minItems: 1`
 /// preserved; semantics = "languages scanned for"). Since the 1.3 bump the
-/// supported set is `["c","python","rust"]` (the `SUPPORTED_LANGUAGES` order);
-// v1.4 retains it unchanged.
+/// supported set is `["c","js","python","rust","ts","tsx"]` (the
+/// `SUPPORTED_LANGUAGES` order; `js` admitted by the `js-ts` B2 wiring wave and
+/// `ts`/`tsx` by B3).
 #[test]
 fn empty_dir_scan_falls_back_to_supported_set() {
     let root = temp_dir("empty");
     let doc = run_pipeline_and_parse("empty", &root);
     assert_eq!(
         doc["scan"]["languages"],
-        serde_json::json!(["c", "python", "rust"])
+        serde_json::json!(["c", "js", "python", "rust", "ts", "tsx"])
     );
     assert_eq!(doc["scan"]["file_count"], 0);
 }
 
-/// (4) Schema lock: the embedded canonical v1.6 schema admits exactly
-/// `["c","rust","python"]` at both language sites; the retained v1.4, v1.3,
-/// v1.2 and v1.1 artifacts still pin their own version markers and language
-/// values (proving the history copies are kept intact, not silently
-/// overwritten).
+/// (4) Schema lock: the embedded canonical v1.8 schema admits exactly
+/// `["c","js","python","rust","ts","tsx"]` at both language sites; the
+/// retained v1.4, v1.3, v1.2 and v1.1 artifacts still pin their own version
+/// markers and language values (proving the history copies are kept intact,
+/// not silently overwritten).
 #[test]
-fn schema_1_6_admits_c_rust_and_python_language_values() {
+fn schema_1_8_admits_all_supported_language_values() {
     let schema: serde_json::Value =
         serde_json::from_str(perfpal::schema::EMBEDDED_SCHEMA).expect("embedded schema parses");
 
     let langs_enum =
         schema["properties"]["scan"]["properties"]["languages"]["items"]["enum"].clone();
-    assert_eq!(langs_enum, serde_json::json!(["c", "rust", "python"]));
+    assert_eq!(
+        langs_enum,
+        serde_json::json!(["c", "js", "python", "rust", "ts", "tsx"])
+    );
 
     let file_lang_enum =
         schema["properties"]["files"]["items"]["properties"]["language"]["enum"].clone();
-    assert_eq!(file_lang_enum, serde_json::json!(["c", "rust", "python"]));
+    assert_eq!(
+        file_lang_enum,
+        serde_json::json!(["c", "js", "python", "rust", "ts", "tsx"])
+    );
 
     // Retained history: v1.4 artifact intact (const "1.4", declaring the
     // seven v1.4 instrument fields but NOT the v1.5 entry fields).
@@ -241,26 +249,29 @@ fn matches_finding_id(s: &str) -> bool {
 }
 
 #[test]
-fn v1_6_bump_and_findings_validate_structurally() {
-    // v1.7 is an additive minor bump: the version marker and bundled artifact
-    // name advance together, and v1.6/v1.5/v1.4 remain on disk as retained history.
-    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.7");
+fn v1_8_bump_and_findings_validate_structurally() {
+    // v1.8 is an additive minor bump: the version marker and bundled artifact
+    // name advance together, and v1.7/v1.6/v1.5/v1.4 remain on disk as
+    // retained history.
+    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.8");
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
-        "metrics.schema.v1.7.json"
+        "metrics.schema.v1.8.json"
     );
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
         format!("metrics.schema.v{}.json", perfpal::schema::SCHEMA_VERSION),
         "artifact name must stay derived from SCHEMA_VERSION"
     );
-    // The canonical v1.7 docs artifact is present and active.
+    // The canonical v1.8 docs artifact is present and active.
     let canonical: serde_json::Value =
-        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.7.json"))
-            .expect("canonical v1.7 schema parses");
-    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.7");
-    // v1.6/v1.5/v1.4 are retained as history — the bump did not overwrite them.
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.8.json"))
+            .expect("canonical v1.8 schema parses");
+    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.8");
+    // v1.7/v1.6/v1.5/v1.4 are retained as history — the bump did not
+    // overwrite them.
     for retained in [
+        "metrics.schema.v1.7.json",
         "metrics.schema.v1.6.json",
         "metrics.schema.v1.5.json",
         "metrics.schema.v1.4.json",
@@ -273,12 +284,12 @@ fn v1_6_bump_and_findings_validate_structurally() {
             "{retained} must remain as retained history"
         );
     }
-    // The active v1.7 artifact file IS emitted.
+    // The active v1.8 artifact file IS emitted.
     assert!(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("docs/schema/metrics.schema.v1.7.json")
+            .join("docs/schema/metrics.schema.v1.8.json")
             .exists(),
-        "the v1.7 artifact must be emitted by this bump"
+        "the v1.8 artifact must be emitted by this bump"
     );
 
     // A REAL mixed-language document: Rust findings present so the structural
@@ -288,23 +299,23 @@ fn v1_6_bump_and_findings_validate_structurally() {
     fs::write(root.join("rs_src.rs"), LOCK_RS_SRC).expect("write rs_src.rs");
     let doc = run_pipeline_and_parse("schema-lock", &root);
 
-    assert_eq!(doc["schema_version"], "1.7", "v1.7 bump in effect");
+    assert_eq!(doc["schema_version"], "1.8", "v1.8 bump in effect");
 
-    // files[].language within the v1.4 enum.
+    // files[].language within the v1.8 enum.
     let files = doc["files"].as_array().expect("files[] present");
     for f in files {
         let lang = f["language"].as_str().expect("language token");
         assert!(
-            matches!(lang, "c" | "rust" | "python"),
-            "files[].language {lang:?} outside the v1.4 enum"
+            matches!(lang, "c" | "js" | "python" | "rust" | "ts" | "tsx"),
+            "files[].language {lang:?} outside the v1.8 enum"
         );
     }
     // scan.languages within the same enum.
     for lang in doc["scan"]["languages"].as_array().expect("languages[]") {
         let lang = lang.as_str().expect("language token");
         assert!(
-            matches!(lang, "c" | "rust" | "python"),
-            "scan.languages entry {lang:?} outside the v1.4 enum"
+            matches!(lang, "c" | "js" | "python" | "rust" | "ts" | "tsx"),
+            "scan.languages entry {lang:?} outside the v1.8 enum"
         );
     }
 

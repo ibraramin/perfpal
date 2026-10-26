@@ -64,11 +64,11 @@ SmartScreen (reputation accrues over weeks), and macOS notarization needs $99/yr
 | Published | **`v0.1.0`** (tag `v0.1.0`, commit `f368133`) — the only published release |
 | Parked by founder | **`v0.2.0-beta.1`** — code complete (`beta-release` B0–B6, commit `b3a1105`); **publishing is held** until the benchmark is run + the AI-code showcase is verified (see Direction). Still needs the EULA/privacy **contact address** + **`MINISIGN_SECRET_KEY`**/**`MINISIGN_PASSWORD`** secrets at tag time |
 | `Cargo.toml` version | `0.2.0-beta.1` (unreleased) |
-| `metrics.json` schema | **1.3** |
-| Languages supported | **C** + **Rust** + **Python** (`.c`/`.h`/`.rs`/`.py`/`.pyi`; `.ipynb` excluded) |
+| `metrics.json` schema | **1.8** |
+| Languages supported | **C** + **Rust** + **Python** + **JavaScript** + **TypeScript/TSX** (`.c`/`.h`/`.rs`/`.py`/`.pyi`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.ts`/`.mts`/`.cts`/`.tsx`; `.ipynb` and declaration-only `.d.*` excluded) |
 | Specs | `perfpal-core-spec` (core product) · **`evidence-beta-spec`** (direction; post-MVP roadmap) |
 | ADRs | `0001` parser · `0002` visualization · **`0003` language order** · **`0004` cross-language deferral** · **`0005` evidence/publish gate** · **`0006` shipping scope** |
-| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish PARKED) · **`evidence-beta`** (active — M1 ✅ · M2 ✅ · M3 ✅ · **M4 ✅ record**) · **`python-backend`** ✅ COMPLETE (W0–W4) |
+| Plans | `mvp-implementation` ✅ · `housekeeping-batch` ✅ · `semantic-resolver` ✅ · `guarded-scan-fix` ✅ · `rust-backend` ✅ · `beta-release` ✅ code (B0–B6; publish PARKED) · **`evidence-beta`** (active — M1 ✅ · M2 ✅ · M3 ✅ · **M4 ✅ record**) · **`python-backend`** ✅ COMPLETE (W0–W4) · **`js-ts`** (active — B2 ✅ · B3 ✅ · B4 docs/canary; merge pending founder approval) |
 
 ## Milestone sequence
 
@@ -90,7 +90,7 @@ Ground-truth (mutation) fixtures + a **scale ladder** (small/medium/large corpor
 **determinism proof** (byte-stable artifacts across runs). **Run it** and record results as
 evidence in `docs/evidence/`. Hard precondition for the publish gate (ADR-0005): the metric is
 measured precision/recall against planted ground truth — never designed-on-paper.
-- **Status — BUILT and RUN.** A deterministic in-code mutation catalog (`tests/benchmark/corpus.rs`) + harness (`tests/benchmark/mod.rs`, entry `tests/benchmark.rs`) run the **REAL** pipeline (`cli::run_with`) over a three-rung ladder: `small` **113 files** plants a TP + silent control for **all 67 active rules** (C + Python + Rust) (+ the retired `PERF-RS-STR-001` always-silent control); `medium` **132 files** and `large` **418 files** replicate the **nine** existential M1 gate rules with per-replica unique names. Per-rule TP/FP/FN → precision/recall **ratchets** against `tests/fixtures/benchmark/baseline.json` (intended 1.0/1.0, never lowered), with a no-vacuous-cell guard, a 67-id coverage lock, and a stale-baseline check. All rules measure **1.00/1.00** on every rung. A **byte-determinism proof** runs every rung (plus an unlabeled mixed `src/`+`examples/`+`examples-rust/`+`examples-python/` real-code rung) twice under a **provenance-only** mask (metrics.json: only `scan.started_at`/`duration_ms`/`root_path` textually neutralized; report.md: provenance/root only, the §4 block NOT stripped; charts + bundled schema byte-exact) → **PASS**. All corpora parse cleanly (0 partial/failed); the ladder is always-on at **~4.3 s**. Evidence: `docs/evidence/benchmark-suite.md`. IR-only semantic sub-cases (proven-`fclose`, resolved-format, resolved-edge; ARCH-001 deep-chain/hub) are covered by the `tests/fixtures/ir/` fixtures + `semantic-clang`, not plain source.
+- **Status — BUILT and RUN.** A deterministic in-code mutation catalog (`tests/benchmark/corpus.rs`) + harness (`tests/benchmark/mod.rs`, entry `tests/benchmark.rs`) run the **REAL** pipeline (`cli::run_with`) over a three-rung ladder: `small` **142 files** plants a TP + silent control for **all 78 active rules** (C + Python + Rust + JS/TS) (+ the retired `PERF-RS-STR-001` always-silent control); `medium` **132 files** and `large` **418 files** replicate the **nine** existential M1 gate rules with per-replica unique names. Per-rule TP/FP/FN → precision/recall **ratchets** against `tests/fixtures/benchmark/baseline.json` (intended 1.0/1.0, never lowered), with a no-vacuous-cell guard, a 78-id coverage lock, and a stale-baseline check. All rules measure **1.00/1.00** on every rung. A **byte-determinism proof** runs every rung (plus an unlabeled mixed `src/`+`examples/`+`examples-rust/`+`examples-python/` real-code rung) twice under a **provenance-only** mask (metrics.json: only `scan.started_at`/`duration_ms`/`root_path` textually neutralized; report.md: provenance/root only, the §4 block NOT stripped; charts + bundled schema byte-exact) → **PASS**. All corpora parse cleanly (0 partial/failed); the ladder is always-on at **~4.3 s**. Evidence: `docs/evidence/benchmark-suite.md`. IR-only semantic sub-cases (proven-`fclose`, resolved-format, resolved-edge; ARCH-001 deep-chain/hub) are covered by the `tests/fixtures/ir/` fixtures + `semantic-clang`, not plain source.
 - **Close-out** — dual review (@reviewer + @requirements-reviewer; reviewer CHANGES_REQUESTED → fix wave → re-review **APPROVED**) + founder-approved commit.
 
 ### M3 — Python backend
@@ -105,7 +105,8 @@ reframing to Python idioms. Schema **MINOR bump** admitting the `"python"` langu
   10 C/Rust rules retired) + schema **1.2 → 1.3** → W4 the proof package: `examples-python/`
   (20-file real package) fires **all 22** rules exactly (29 findings, 0 hot / 12 warn / 17 info;
   `tests/examples_python_coverage.rs`), a 6-rule Python precision KPI at 1.0/1.0
-  (`tests/fixtures/precision/python/`), the benchmark `small` rung wide to 67 rules, and a 4th
+  (`tests/fixtures/precision/python/`), the benchmark `small` rung wide to 67 rules (at Python W4; later
+  78 with the JS/TS track), and a 4th
   golden tree `report-python`. Python is syntactic-tier only.
 
 ### M4 — AI-code credibility showcase
@@ -152,10 +153,14 @@ candidate itself is already built by plan `beta-release`:
   license-key/activation (deferred to paid GA).
 - Plan: `docs/plans/beta-release.md` (linked `perfpal-core-spec`).
 
-### M6+ — Fast-follow reach *(deferred, direction only)*
+### M6+ — Fast-follow reach *(JS/TS started; C++ deferred)*
 **JS → TS → C++** backends as separate milestones (ADR-0003), then **cross-language linking** as
-its own milestone **after** the language sequence (ADR-0004). Each becomes its own plan/session
-family when reached; recorded here so scope cannot creep into M1–M5.
+its own milestone **after** the language sequence (ADR-0004). Status: **JS + TS/TSX are implemented**
+on branch `feat/js-ts` (plan `js-ts` B2–B4: 11 shared `PERF-JS-*` rules, six language tokens,
+schema v1.8, `examples-js`/`examples-ts` + `report-js`/`report-ts` goldens); the merge is a later
+release, non-blocking for the beta and gated on founder approval. **C++ remains deferred.** Each
+remaining language becomes its own plan/session family when reached; recorded here so scope cannot
+creep into M1–M5.
 
 ### Website (separate repo, separate session family)
 Attractive showcase site covering the **full scope** (shipped + planned). **Different repo:**
@@ -204,5 +209,6 @@ read is not shippable). M5 remains gated by B-pf-001/B-pf-002 and is otherwise u
 ## Versioning
 - `0.1.0` released → `0.2.0` (Rust backend, unreleased; the beta is its prerelease) →
   **`0.2.0-beta.1`** (official beta, prerelease, publish parked) → later betas/GA as scoped.
-- `metrics.json` schema follows its own `MAJOR.MINOR` (currently **1.3** — the Python backend
-  landed the 1.2 → 1.3 MINOR that admits the `"python"` token; see `docs/schema/metrics-json-v1.md` §5).
+- `metrics.json` schema follows its own `MAJOR.MINOR` (currently **1.8** — the Python backend
+  landed the 1.2 → 1.3 MINOR that admits the `"python"` token, and the JS/TS track landed the additive
+  1.7 → 1.8 MINOR that admits `"js"`/`"ts"`/`"tsx"`; see `docs/schema/metrics-json-v1.md` §5).

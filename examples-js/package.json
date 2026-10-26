@@ -1,0 +1,8 @@
+{
+  "name": "perfpal-examples-js",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node-style ESM + CJS corpus for the PERF-JS-* rule family (plan js-ts B2-W2).",
+  "type": "module",
+  "main": "index.js"
+}

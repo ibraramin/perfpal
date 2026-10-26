@@ -19,7 +19,7 @@
    | `finding_id` construction & uniqueness | analyzer | `rule:path:line:col`, column disambiguates collisions |
    | Graph/component iteration order | aggregator | edges by `(from, to)`; components by `(rank, path_prefix)` |
    | `graphs.include_graph.nodes` order | aggregator | nodes sorted by path |
-   | `scan.languages` order & membership | aggregator | sorted-unique over `files[].language` (`BTreeSet`); supported set `["c","rust"]` on a zero-file scan |
+   | `scan.languages` order & membership | aggregator | sorted-unique over `files[].language` (`BTreeSet`); supported set `["c","js","python","rust","ts","tsx"]` on a zero-file scan (the binary's six-value language vocabulary, `D-tb-010`) |
    | `findings[]` array order | analyzer | report §4 total order: severity → confidence → rule_id → path → start_line → start_col |
    | `stats.functions[]` order | aggregator | `(path, span.start_line, span.start_col)` |
    | `stats.distributions[]` order | aggregator | `(metric, bucket)` |
@@ -85,7 +85,9 @@ Each module lists Consumes / Produces / Responsibilities / Non-goals.
 - **Produces:** the complete IR stream (file-level records, FunctionRecords, events — IR §3) in deterministic order.
 - **Responsibilities:**
   - Recursive file discovery with lexicographically sorted emission; hidden directories (dot-prefixed) are skipped and symlinks are not followed in v1; per-file read/parse failures become `ParseHealth{failed}` records, never run aborts (total discovery failure of the target itself is a usage error, exit 1).
-  - Language detection by extension: `.c` and `.h` are C and `.rs` is Rust in v1; other extensions are skipped silently (the v1 schema has no field for skipped-file counts). `scan.file_count` = number of scanned files = `len(files[])`. `scan.languages` is DERIVED by the aggregator as the sorted-unique set of `files[].language`; a zero-file scan records the supported set `scan.languages: ["c","rust"]` (schema `minItems: 1` holds; semantics = "languages scanned for").
+  - Language detection by extension (longest suffix first): `.c`/`.h` → `c`, `.rs` → `rust`, `.py`/`.pyi` → `python`, `.js`/`.jsx`/`.mjs`/`.cjs` → `js`, `.ts`/`.mts`/`.cts` → `ts`, `.tsx` → `tsx`; declaration-only `.d.ts`/`.d.mts`/`.d.cts` and other extensions are skipped silently (the v1 schema has no field for skipped-file counts). `.jsx` stays `js` because the JS grammar embeds JSX; `.ts` and `.tsx` are separate tokens because they use distinct grammars (ADR-0011).
+  - Discovery skips directory names `node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage` language-blind; JS/TS files additionally skip `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`/`*.min.ts`/`*.min.mts`/`*.min.cts` (seven suffixes) and anything over 2 MiB (minified bundles). The C/Rust/Python consequence is published: files beneath those directory names are no longer discovered (`R-tb-008`; acceptance criterion 6 in the `js-ts` spec).
+  - `scan.file_count` = number of scanned files = `len(files[])`. `scan.languages` is DERIVED by the aggregator as the sorted-unique set of `files[].language`; a zero-file scan records the supported set `scan.languages: ["c","js","python","rust","ts","tsx"]` (schema `minItems: 1` holds; semantics = "languages scanned for").
   - Parse via the bound backend; capture `ParseHealth` (status, error regions, error node count).
   - Quoted-include resolution against the filesystem (includer-relative first); angle-bracket includes bucketed external (ADR-0001); unresolvable quoted includes emit `IncludeEdge{resolved: false}` — ARCH-001 signal, not an error.
   - Curated macro-pattern recognizer pass → `MacroEvent`s.
@@ -155,11 +157,12 @@ Each heuristic is a pure function over IR views:
 
 A backend implements one interface: *given (path, source bytes), emit that language's IR records/events.*
 
-- v1 ships three backends: `tree-sitter-c` (`.c`/`.h`), `tree-sitter-rust` (`.rs`) and `tree-sitter-python` (`.py`/`.pyi`; `.ipynb` deliberately excluded) — all official grammars, MIT, pinned versions per ADR-0001 guardrail 5.
+- The shipped tree binds **six language tokens across five backend directories**: `tree-sitter-c` (`.c`/`.h`), `tree-sitter-rust` (`.rs`), `tree-sitter-python` (`.py`/`.pyi`; `.ipynb` deliberately excluded), `tree-sitter-javascript` (`.js`/`.jsx`/`.mjs`/`.cjs` → `js`) and `tree-sitter-typescript` (`.ts`/`.mts`/`.cts` → `ts` via `LANGUAGE_TYPESCRIPT`; `.tsx` → `tsx` via `LANGUAGE_TSX`) — all official grammars, MIT, exact-pinned per ADR-0001 guardrail 5 and ADR-0011.
 - Backends convert spans at the boundary and never leak node kinds past it.
 - New languages = new backends + grammar vendoring per the ADR-0001 license policy (official `tree-sitter-*` repos unless individually audited). No analyzer, aggregator, or reporter changes required — see §5.2 for the schema caveat.
 - **Close-out (plan `rust-backend`, R0–R5).** All backends are live in the shipped tree — C ships 23 `PERF-C-*` rules, Rust ships 22 `PERF-RS-*` rules, and the Rust `mod`/`use` module graph resolves with Cargo.toml-aware crate roots. Design record: [`rust-backend.md`](./rust-backend.md); Rust rule catalog: [`rust-catalog.md`](../heuristics/rust-catalog.md).
 - **Close-out (plan `python-backend`, W0–W4).** The Python backend ships 22 `PERF-PY-*` rules (13 reframed C/Rust mirrors + 9 Python-native; 10 C/Rust ids retired because their premise does not transfer to CPython), plus best-effort binding/alias inference and relative/absolute import resolution. Design record + disposition table: [`python-backend.md`](./python-backend.md). The Python tier is syntactic-only too — the libclang resolver stays C-only.
+- **Close-out (plan `js-ts`, B2–B5).** JavaScript and TypeScript/TSX are live as one shared `PERF-JS-*` analyzer family (11 rules; `RuleLanguage::Js` matches `js|ts|tsx`) because the runtime mechanism is identical (V8/Node). The TS backend parameterizes the JS visitor by dialect (`Dialect { language, token, flavor }`) rather than duplicating it; type land is never event-scanned and type-only imports emit no include edge. `PERF-TS-*` is reserved and empty in v1. B5 tightened the real-code gates with no catalog/schema change: `CALL-001` requires a bare `callee_path` plus `name_is_lexical_binding`, `TYPE-001` skips same-function fresh receivers, and `ALLOC-003` requires the spread literal to be an assignment RHS to the accumulator (`docs/evidence/js-b5/real-code-canary.md`). Design record: [`js-ts.md`](./js-ts.md); rule catalog: [`js-catalog.md`](../heuristics/js-catalog.md); ADR: [`ADR-0011`](../adr/ADR-0011-js-ts-backend.md).
 
 ### 4.3 Resolvers (future)
 
@@ -173,7 +176,7 @@ Profile adapters (perf / valgrind / cProfile) translate tool-specific output int
 
 ### 5.2 Additional languages (order per ADR-0003: Python, JS, TS, C++)
 
-Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.3.json](../schema/metrics.schema.v1.3.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2) and the Python re-emission as **v1.3** (admits `"python"`; plan `python-backend` W3). All three backends are live: C (23 `PERF-C-*`), Python (22 `PERF-PY-*`) and Rust (22 `PERF-RS-*`) ship together.
+Add a scanner backend + vendored grammar. Both extension costs are already priced into the schema: the `rule_id` pattern is open (future-language IDs validate without breaking strict v1.x validation), and the language constants widen as a **minor-bump schema re-emission** — see `scan.languages` / `files[].language` in [metrics.schema.v1.8.json](../schema/metrics.schema.v1.8.json) and the minor-bump policy in [metrics-json-v1.md §5](../schema/metrics-json-v1.md). No major bump is required merely to add a language. The C+Rust re-emission landed as **v1.2** (`scan.languages` + `files[].language` admit `"rust"`; plan `rust-backend` R2), the Python re-emission as **v1.3** (admits `"python"`; plan `python-backend` W3), and the JS/TS re-emission as **v1.8** (admits `"js"`, `"ts"`, `"tsx"` up front; plan `js-ts` B2, ADR-0011). All five backend directories are live: C (23 `PERF-C-*`), Python (22 `PERF-PY-*`), Rust (22 `PERF-RS-*`) and the shared JS/TS family (11 `PERF-JS-*`) ship together; language order follows ADR-0003 (C → Rust → Python → JS → TS → C++).
 
 ### 5.3 Semantic resolver — REALIZED (plan `semantic-resolver`, waves A–B2)
 
@@ -184,7 +187,7 @@ libclang joins as an additive resolver per ADR-0001 (license-clean: `clang-sys` 
 - **Conservative-upgrade rule.** Tier/facts are set ONLY on unambiguous resolution: `CallEvent.semantic` (`Some` only when at least one of `resolved_definition` / `fopened_handle` / `literal_args` is proven — the `Some`-only-when-proven invariant), the definition's `FunctionRecord.resolver_tier = Semantic`, and finding-level upgrades. Ambiguous same-name targets keep the syntactic path; macro-origin and error-region-overlapped calls are gated out on both the resolver and consumer sides. The analyzer's central `apply_upgrade_hooks` gate (mirroring `apply_downgrade_hooks`, running pre-dedup) reverts any `Semantic`-tier finding lacking backing facts at its span.
 - **USR-internal rule.** USRs are internal decl↔def pairing keys only (the map types are deliberately not `Serialize`); they never enter IR identity, findings, or output (ADR-0001 identity rule).
 - **Single-run assumption.** The resolver re-reads sources from disk via the scanner's recorded scan root; enrichment assumes the tree is unchanged between scan and resolve.
-- **Schema.** v1.2 (current; [metrics-json-v1.md §5](../schema/metrics-json-v1.md)): optional `files[].parse_health.resolver` + `graphs.call_graph.edges[].confidence` widened from const `"LOW"` to oneOf `["LOW", "MEDIUM", "HIGH"]` (additive v1.1 widening; old reports still validate), plus the v1.2 `scan.languages` / `files[].language` language widening.
+- **Schema.** v1.8 (current; [metrics-json-v1.md §5](../schema/metrics-json-v1.md)): optional `files[].parse_health.resolver` + `graphs.call_graph.edges[].confidence` widened from const `"LOW"` to oneOf `["LOW", "MEDIUM", "HIGH"]` (additive v1.1 widening; old reports still validate), the v1.2 `scan.languages` / `files[].language` Rust widening, the v1.3 Python widening, the v1.7 `path_class`/trip-provenance optionals, and the v1.8 JS/TS widening. The schema copy ships inside every report directory.
 
 Wave B retirements: ARCH-003 resolved edges (Info/MEDIUM/semantic, USR-based true-callee resolution); ALLOC-002 proven-fclose (Warn/HIGH/semantic, exact free semantics incl. escalation); STR-003 resolved-format (Warn/HIGH/semantic + `resolved_format` evidence). LOOP-004 resolver constness proofs DEFERRED to a follow-up session (budget call; syntactic behavior unchanged).
 
@@ -227,9 +230,9 @@ perfpal/
 ├── src/
 │   ├── cli/            # §3.1
 │   ├── scanner/        # §3.2 — discovery, resolution, recognizer pass
-│   │   └── backends/{tree-sitter-c,tree-sitter-rust,tree-sitter-python}/
+│   │   └── backends/{tree-sitter-c,tree-sitter-rust,tree-sitter-python,tree-sitter-javascript,tree-sitter-typescript}/
 │   ├── ir/             # the seam: record/event/shape types (IR v1)
-│   ├── analyzer/       # §3.3 — registry + the catalog heuristics (23 C + 22 Python + 22 Rust)
+│   ├── analyzer/       # §3.3 — registry + the catalog heuristics (23 C + 11 JS + 22 Python + 22 Rust)
 │   ├── aggregator/     # §3.4
 │   ├── schema/         # §3.5 — document model, serializer, embedded JSON Schema
 │   ├── reporter/       # §3.6

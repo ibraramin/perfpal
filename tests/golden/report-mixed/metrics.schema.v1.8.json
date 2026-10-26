@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.7.json",
-  "title": "Perfpal metrics.json schema v1.7",
-  "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, Rust, Python). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.8.json",
+  "title": "Perfpal metrics.json schema v1.8",
+  "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, JavaScript, Rust, Python, TypeScript). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.7",
-      "description": "Schema version of this document. MAJOR.MINOR: minor = additive-only changes; major = breaking."
+      "const": "1.8",
+      "description": "Schema version of this document (currently v1.8). MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
       "type": "object",
@@ -32,9 +32,9 @@
         "duration_ms": { "type": "integer", "minimum": 0 },
         "languages": {
           "type": "array",
-          "items": { "enum": ["c", "rust", "python"] },
+          "items": { "enum": ["c", "js", "python", "rust", "ts", "tsx"] },
           "minItems": 1,
-          "description": "Languages scanned — the sorted-unique set of files[].language (or the supported set [\"c\",\"python\",\"rust\"] on a zero-file scan); widening is a minor-bump schema re-emission."
+          "description": "Languages scanned — the sorted-unique set of files[].language (or the binary's supported set on a zero-file scan); widening is a minor-bump schema re-emission."
         },
         "file_count": { "type": "integer", "minimum": 0 },
         "loc_total": {
@@ -68,7 +68,7 @@
         "additionalProperties": false,
         "properties": {
           "path": { "type": "string", "description": "Repo-relative POSIX path." },
-          "language": { "enum": ["c", "rust", "python"], "description": "Scanned file language (schema 1.4 admits c, rust, and python); widening is a minor-bump schema re-emission." },
+          "language": { "enum": ["c", "js", "python", "rust", "ts", "tsx"], "description": "Scanned file language (schema 1.8 admits c, js, python, rust, ts, and tsx); widening is a minor-bump schema re-emission." },
           "loc": {
             "type": "object",
             "required": ["code", "comment", "blank"],

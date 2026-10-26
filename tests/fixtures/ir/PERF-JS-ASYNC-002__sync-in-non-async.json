@@ -1,0 +1,81 @@
+[
+  {
+    "file": {
+      "path": "neg/async_002_non_async.js",
+      "language": "js",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "neg/async_002_non_async.js#readConfigSync#1:1",
+          "name": "readConfigSync",
+          "path": "neg/async_002_non_async.js",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 6,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 0,
+          "alloc_site_count": 0,
+          "length_lines": 6,
+          "resolver_tier": "syntactic",
+          "is_async": false
+        },
+        "calls": [
+          {
+            "callee_name": "readFileSync",
+            "callee_kind": "direct",
+            "args": [],
+            "statement_role": "nested",
+            "conditional_guarded": false,
+            "receiver_root": "fs",
+            "span": {
+              "start_line": 4,
+              "start_col": 3,
+              "end_line": 4,
+              "end_col": 40
+            },
+            "in_loop_depth": 0,
+            "is_innermost": false,
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [],
+        "awaits": [],
+        "try_blocks": [],
+        "allocations": [],
+        "unaries": []
+      }
+    ]
+  }
+]

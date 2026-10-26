@@ -1,0 +1,453 @@
+{
+  "corpus": {
+    "execa": {
+      "commit": "84e1f36b2c31a463e3efbd37c7505da9438a05c9",
+      "parse_failures": 1,
+      "prod_files": 219,
+      "prod_lines": 13224,
+      "tag": "v9.6.1",
+      "test_files": 329,
+      "test_lines": 19685
+    },
+    "express": {
+      "commit": "cd7d4397c398a3f3ecadeaf9ef6ac1377bd414c4",
+      "parse_failures": 0,
+      "prod_files": 51,
+      "prod_lines": 4883,
+      "tag": "v5.1.0",
+      "test_files": 91,
+      "test_lines": 16281
+    },
+    "gemini-cli": {
+      "commit": "6006c14a4decfe4b891c6263ad6ad5992e404b5b",
+      "parse_failures": 229,
+      "prod_files": 1255,
+      "prod_lines": 303008,
+      "tag": "v0.65.0",
+      "test_files": 993,
+      "test_lines": 402004
+    }
+  },
+  "repos": {
+    "execa": {
+      "breakdown": {
+        "arch_internal_edges": {
+          "prod": 372,
+          "test": 791
+        },
+        "arch_modules": {
+          "prod": 219,
+          "test": 329
+        },
+        "arch_modules_acyclic": {
+          "prod": 213,
+          "test": 329
+        },
+        "arch_modules_in_cycle": {
+          "prod": 6,
+          "test": 0
+        },
+        "await_for_of": {
+          "prod": 0,
+          "test": 8
+        },
+        "call001_guarded": {
+          "prod": 3,
+          "test": 0
+        },
+        "call001_unguarded": {
+          "prod": 0,
+          "test": 1
+        },
+        "forin_array": {
+          "prod": 0,
+          "test": 0
+        },
+        "forin_object": {
+          "prod": 0,
+          "test": 0
+        },
+        "forin_other": {
+          "prod": 0,
+          "test": 0
+        }
+      },
+      "controls_prod": {
+        "CTL-ACYCLIC": 213,
+        "CTL-ALLOC-NOLOOP": 4649,
+        "CTL-ALLOC-NOLOOP-MUT": 0,
+        "CTL-AWAIT-NOLOOP": 1458,
+        "CTL-DELETE-MAP": 2,
+        "CTL-DEPTH1": 35,
+        "CTL-FORIN-OBJ": 0,
+        "CTL-INT-ACC": 1,
+        "CTL-IO-NOLOOP": 5,
+        "CTL-MEMBERSHIP-NOLOOP": 21,
+        "CTL-STR-NOLOOP": 0,
+        "CTL-SYNC-SYNC-FN": 7
+      },
+      "controls_test": {
+        "CTL-ACYCLIC": 329,
+        "CTL-ALLOC-NOLOOP": 3403,
+        "CTL-ALLOC-NOLOOP-MUT": 0,
+        "CTL-AWAIT-NOLOOP": 1806,
+        "CTL-DELETE-MAP": 0,
+        "CTL-DEPTH1": 32,
+        "CTL-FORIN-OBJ": 0,
+        "CTL-INT-ACC": 1,
+        "CTL-IO-NOLOOP": 0,
+        "CTL-MEMBERSHIP-NOLOOP": 113,
+        "CTL-STR-NOLOOP": 0,
+        "CTL-SYNC-SYNC-FN": 0
+      },
+      "parse_failures": 1,
+      "prod_files": 219,
+      "prod_lines": 13224,
+      "rules_prod": {
+        "PERF-JS-ALLOC-001": 8,
+        "PERF-JS-ALLOC-003": 0,
+        "PERF-JS-ARCH-001": 6,
+        "PERF-JS-ASYNC-001": 5,
+        "PERF-JS-ASYNC-002": 0,
+        "PERF-JS-CALL-001": 3,
+        "PERF-JS-LOOP-001": 3,
+        "PERF-JS-LOOP-002": 2,
+        "PERF-JS-LOOP-003": 0,
+        "PERF-JS-LOOP-007": 2,
+        "PERF-JS-STR-001": 0,
+        "PERF-JS-TYPE-001": 2
+      },
+      "rules_test": {
+        "PERF-JS-ALLOC-001": 5,
+        "PERF-JS-ALLOC-003": 0,
+        "PERF-JS-ARCH-001": 0,
+        "PERF-JS-ASYNC-001": 18,
+        "PERF-JS-ASYNC-002": 0,
+        "PERF-JS-CALL-001": 1,
+        "PERF-JS-LOOP-001": 1,
+        "PERF-JS-LOOP-002": 0,
+        "PERF-JS-LOOP-003": 0,
+        "PERF-JS-LOOP-007": 1,
+        "PERF-JS-STR-001": 0,
+        "PERF-JS-TYPE-001": 1
+      },
+      "test_files": 329,
+      "test_lines": 19685
+    },
+    "express": {
+      "breakdown": {
+        "arch_internal_edges": {
+          "prod": 22,
+          "test": 34
+        },
+        "arch_modules": {
+          "prod": 51,
+          "test": 91
+        },
+        "arch_modules_acyclic": {
+          "prod": 51,
+          "test": 91
+        },
+        "arch_modules_in_cycle": {
+          "prod": 0,
+          "test": 0
+        },
+        "await_for_of": {
+          "prod": 0,
+          "test": 0
+        },
+        "call001_guarded": {
+          "prod": 0,
+          "test": 0
+        },
+        "call001_unguarded": {
+          "prod": 0,
+          "test": 0
+        },
+        "forin_array": {
+          "prod": 0,
+          "test": 0
+        },
+        "forin_object": {
+          "prod": 0,
+          "test": 0
+        },
+        "forin_other": {
+          "prod": 3,
+          "test": 0
+        }
+      },
+      "controls_prod": {
+        "CTL-ACYCLIC": 51,
+        "CTL-ALLOC-NOLOOP": 152,
+        "CTL-ALLOC-NOLOOP-MUT": 0,
+        "CTL-AWAIT-NOLOOP": 0,
+        "CTL-DELETE-MAP": 2,
+        "CTL-DEPTH1": 12,
+        "CTL-FORIN-OBJ": 0,
+        "CTL-INT-ACC": 0,
+        "CTL-IO-NOLOOP": 3,
+        "CTL-MEMBERSHIP-NOLOOP": 9,
+        "CTL-STR-NOLOOP": 3,
+        "CTL-SYNC-SYNC-FN": 3
+      },
+      "controls_test": {
+        "CTL-ACYCLIC": 91,
+        "CTL-ALLOC-NOLOOP": 560,
+        "CTL-ALLOC-NOLOOP-MUT": 0,
+        "CTL-AWAIT-NOLOOP": 0,
+        "CTL-DELETE-MAP": 3,
+        "CTL-DEPTH1": 10,
+        "CTL-FORIN-OBJ": 0,
+        "CTL-INT-ACC": 0,
+        "CTL-IO-NOLOOP": 0,
+        "CTL-MEMBERSHIP-NOLOOP": 2,
+        "CTL-STR-NOLOOP": 9,
+        "CTL-SYNC-SYNC-FN": 0
+      },
+      "parse_failures": 0,
+      "prod_files": 51,
+      "prod_lines": 4883,
+      "rules_prod": {
+        "PERF-JS-ALLOC-001": 1,
+        "PERF-JS-ALLOC-003": 0,
+        "PERF-JS-ARCH-001": 0,
+        "PERF-JS-ASYNC-001": 0,
+        "PERF-JS-ASYNC-002": 0,
+        "PERF-JS-CALL-001": 0,
+        "PERF-JS-LOOP-001": 0,
+        "PERF-JS-LOOP-002": 0,
+        "PERF-JS-LOOP-003": 3,
+        "PERF-JS-LOOP-007": 4,
+        "PERF-JS-STR-001": 0,
+        "PERF-JS-TYPE-001": 3
+      },
+      "rules_test": {
+        "PERF-JS-ALLOC-001": 0,
+        "PERF-JS-ALLOC-003": 0,
+        "PERF-JS-ARCH-001": 0,
+        "PERF-JS-ASYNC-001": 0,
+        "PERF-JS-ASYNC-002": 0,
+        "PERF-JS-CALL-001": 0,
+        "PERF-JS-LOOP-001": 0,
+        "PERF-JS-LOOP-002": 0,
+        "PERF-JS-LOOP-003": 0,
+        "PERF-JS-LOOP-007": 0,
+        "PERF-JS-STR-001": 1,
+        "PERF-JS-TYPE-001": 2
+      },
+      "test_files": 91,
+      "test_lines": 16281
+    },
+    "gemini-cli": {
+      "breakdown": {
+        "arch_internal_edges": {
+          "prod": 9,
+          "test": 5
+        },
+        "arch_modules": {
+          "prod": 1255,
+          "test": 993
+        },
+        "arch_modules_acyclic": {
+          "prod": 1255,
+          "test": 993
+        },
+        "arch_modules_in_cycle": {
+          "prod": 0,
+          "test": 0
+        },
+        "await_for_of": {
+          "prod": 278,
+          "test": 65
+        },
+        "call001_guarded": {
+          "prod": 99,
+          "test": 4
+        },
+        "call001_unguarded": {
+          "prod": 6,
+          "test": 4
+        },
+        "forin_array": {
+          "prod": 0,
+          "test": 1
+        },
+        "forin_object": {
+          "prod": 0,
+          "test": 0
+        },
+        "forin_other": {
+          "prod": 21,
+          "test": 2
+        }
+      },
+      "controls_prod": {
+        "CTL-ACYCLIC": 1255,
+        "CTL-ALLOC-NOLOOP": 16293,
+        "CTL-ALLOC-NOLOOP-MUT": 32,
+        "CTL-AWAIT-NOLOOP": 2905,
+        "CTL-DELETE-MAP": 178,
+        "CTL-DEPTH1": 853,
+        "CTL-FORIN-OBJ": 0,
+        "CTL-INT-ACC": 18,
+        "CTL-IO-NOLOOP": 751,
+        "CTL-MEMBERSHIP-NOLOOP": 827,
+        "CTL-STR-NOLOOP": 156,
+        "CTL-SYNC-SYNC-FN": 452
+      },
+      "controls_test": {
+        "CTL-ACYCLIC": 993,
+        "CTL-ALLOC-NOLOOP": 57530,
+        "CTL-ALLOC-NOLOOP-MUT": 3,
+        "CTL-AWAIT-NOLOOP": 17154,
+        "CTL-DELETE-MAP": 13,
+        "CTL-DEPTH1": 511,
+        "CTL-FORIN-OBJ": 0,
+        "CTL-INT-ACC": 6,
+        "CTL-IO-NOLOOP": 1295,
+        "CTL-MEMBERSHIP-NOLOOP": 993,
+        "CTL-STR-NOLOOP": 7,
+        "CTL-SYNC-SYNC-FN": 421
+      },
+      "parse_failures": 229,
+      "prod_files": 1255,
+      "prod_lines": 303008,
+      "rules_prod": {
+        "PERF-JS-ALLOC-001": 1012,
+        "PERF-JS-ALLOC-003": 16,
+        "PERF-JS-ARCH-001": 0,
+        "PERF-JS-ASYNC-001": 390,
+        "PERF-JS-ASYNC-002": 270,
+        "PERF-JS-CALL-001": 105,
+        "PERF-JS-LOOP-001": 162,
+        "PERF-JS-LOOP-002": 110,
+        "PERF-JS-LOOP-003": 21,
+        "PERF-JS-LOOP-007": 171,
+        "PERF-JS-STR-001": 73,
+        "PERF-JS-TYPE-001": 26
+      },
+      "rules_test": {
+        "PERF-JS-ALLOC-001": 270,
+        "PERF-JS-ALLOC-003": 1,
+        "PERF-JS-ARCH-001": 0,
+        "PERF-JS-ASYNC-001": 104,
+        "PERF-JS-ASYNC-002": 882,
+        "PERF-JS-CALL-001": 8,
+        "PERF-JS-LOOP-001": 17,
+        "PERF-JS-LOOP-002": 8,
+        "PERF-JS-LOOP-003": 3,
+        "PERF-JS-LOOP-007": 7,
+        "PERF-JS-STR-001": 10,
+        "PERF-JS-TYPE-001": 44
+      },
+      "test_files": 993,
+      "test_lines": 402004
+    }
+  },
+  "totals": {
+    "breakdown": {
+      "arch_internal_edges": {
+        "prod": 403,
+        "test": 830
+      },
+      "arch_modules": {
+        "prod": 1525,
+        "test": 1413
+      },
+      "arch_modules_acyclic": {
+        "prod": 1519,
+        "test": 1413
+      },
+      "arch_modules_in_cycle": {
+        "prod": 6,
+        "test": 0
+      },
+      "await_for_of": {
+        "prod": 278,
+        "test": 73
+      },
+      "call001_guarded": {
+        "prod": 102,
+        "test": 4
+      },
+      "call001_unguarded": {
+        "prod": 6,
+        "test": 5
+      },
+      "forin_array": {
+        "prod": 0,
+        "test": 1
+      },
+      "forin_object": {
+        "prod": 0,
+        "test": 0
+      },
+      "forin_other": {
+        "prod": 24,
+        "test": 2
+      }
+    },
+    "controls_prod": {
+      "CTL-ACYCLIC": 1519,
+      "CTL-ALLOC-NOLOOP": 21094,
+      "CTL-ALLOC-NOLOOP-MUT": 32,
+      "CTL-AWAIT-NOLOOP": 4363,
+      "CTL-DELETE-MAP": 182,
+      "CTL-DEPTH1": 900,
+      "CTL-FORIN-OBJ": 0,
+      "CTL-INT-ACC": 19,
+      "CTL-IO-NOLOOP": 759,
+      "CTL-MEMBERSHIP-NOLOOP": 857,
+      "CTL-STR-NOLOOP": 159,
+      "CTL-SYNC-SYNC-FN": 462
+    },
+    "controls_test": {
+      "CTL-ACYCLIC": 1413,
+      "CTL-ALLOC-NOLOOP": 61493,
+      "CTL-ALLOC-NOLOOP-MUT": 3,
+      "CTL-AWAIT-NOLOOP": 18960,
+      "CTL-DELETE-MAP": 16,
+      "CTL-DEPTH1": 553,
+      "CTL-FORIN-OBJ": 0,
+      "CTL-INT-ACC": 7,
+      "CTL-IO-NOLOOP": 1295,
+      "CTL-MEMBERSHIP-NOLOOP": 1108,
+      "CTL-STR-NOLOOP": 16,
+      "CTL-SYNC-SYNC-FN": 421
+    },
+    "parse_failures": 230,
+    "prod_files": 1525,
+    "prod_lines": 321115,
+    "rules_prod": {
+      "PERF-JS-ALLOC-001": 1021,
+      "PERF-JS-ALLOC-003": 16,
+      "PERF-JS-ARCH-001": 6,
+      "PERF-JS-ASYNC-001": 395,
+      "PERF-JS-ASYNC-002": 270,
+      "PERF-JS-CALL-001": 108,
+      "PERF-JS-LOOP-001": 165,
+      "PERF-JS-LOOP-002": 112,
+      "PERF-JS-LOOP-003": 24,
+      "PERF-JS-LOOP-007": 177,
+      "PERF-JS-STR-001": 73,
+      "PERF-JS-TYPE-001": 31
+    },
+    "rules_test": {
+      "PERF-JS-ALLOC-001": 275,
+      "PERF-JS-ALLOC-003": 1,
+      "PERF-JS-ARCH-001": 0,
+      "PERF-JS-ASYNC-001": 122,
+      "PERF-JS-ASYNC-002": 882,
+      "PERF-JS-CALL-001": 9,
+      "PERF-JS-LOOP-001": 18,
+      "PERF-JS-LOOP-002": 8,
+      "PERF-JS-LOOP-003": 3,
+      "PERF-JS-LOOP-007": 8,
+      "PERF-JS-STR-001": 11,
+      "PERF-JS-TYPE-001": 47
+    },
+    "test_files": 1413,
+    "test_lines": 437970
+  }
+}

@@ -218,6 +218,8 @@ pub(crate) mod test_support {
                 resolver_tier: ResolverTier::Syntactic,
                 is_async,
                 is_module_scope: false,
+                // Test-helper records model `def` functions.
+                name_is_lexical_binding: true,
                 call_fanout: None,
                 call_fanin: None,
                 call_depth: None,
@@ -233,6 +235,7 @@ pub(crate) mod test_support {
                 entry_kind: None,
                 entry_confidence: None,
                 reachable_from_entry: None,
+                entry_declared: None,
             },
             calls,
             assignments,
@@ -242,6 +245,8 @@ pub(crate) mod test_support {
             loops,
             awaits,
             try_blocks: Vec::new(),
+            allocations: Vec::new(),
+            unaries: Vec::new(),
         }
     }
 

@@ -1,0 +1,102 @@
+# B4 gate transcript — plan js-ts Definition of Done
+# date: 2026-10-26T10:32:26Z  branch: feat/js-ts  head: 21ede53
+
+## 1. Docs/state completeness
+files: OK
+
+## 2a. cargo fmt --all -- --check
+fmt: OK
+
+## 2b. cargo clippy --locked --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+
+## 2c. cargo test --locked
+full-suite: 66 suites, 976 passed, 0 failed, 0 failed_suites
+lib: 458 passed
+  javascript_backend: test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+  typescript_backend: test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+  examples_js_coverage: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+  examples_ts_coverage: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+  determinism_js: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+  determinism_ts: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+  p6_hardening: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+  schema_1_8: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+  exit_code_matrix: test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+## 2d. cargo deny check licenses
+   │    ━━━ unmatched license allowance
+
+licenses ok
+
+## 3a. semantic-feature clippy
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+
+## 3b. semantic-feature tests
+semantic-suite: 66 suites, 979 passed, 0 failed, 0 failed_suites
+
+## 4. DoD double-run (masked provenance)
+scanned 15 files (15 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.inPMazxcF7/a
+scanned 15 files (15 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.inPMazxcF7/b
+deterministic (modulo provenance): examples-js
+scanned 17 files (17 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.0cu0Ta3IFW/a
+scanned 17 files (17 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.0cu0Ta3IFW/b
+deterministic (modulo provenance): examples-ts
+
+## 5. native check (separate target dir)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+
+## 6. golden identity
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+git diff --stat -- tests/golden:
+ tests/golden/report-js/report.html | 6 +++---
+ tests/golden/report-js/report.md   | 4 ++--
+ tests/golden/report-ts/report.html | 6 +++---
+ tests/golden/report-ts/report.md   | 4 ++--
+ 4 files changed, 10 insertions(+), 10 deletions(-)
+
+## 7. guards
+guard: no preserve_order: OK
+guard: Cargo.lock untouched: OK
+guard: Cargo.toml description-only: OK
+guard: whitespace: OK
+guard: state JSON valid: OK
+guard: state bytes: 7526
+
+## 8. B4 canary evidence present
+canary evidence: OK
+
+GATE: ALL OK (plan DoD only; merge is blocked by B-tb-004 / R-tb-017 — CALL-001 gate fix + founder approval)
+
+## 9. Post-panel fixes (final tree, 2026-10-26)
+
+R1/R2/Q1 non-blocking findings applied after the first panel round:
+- Symbol wording narrowed everywhere: the ranked action list/key views resolve the narrowest function;
+  the full-detail rows still inherit `<module>` until the aggregator fix (`A-tb-008`).
+- Canary split caveat names express explicitly (W0 51 -> B4 7 production files; execa exact 219;
+  gemini 1,255 -> 1,110).
+- Real-parse STR-001 test now asserts `parse_health_summary.ok == 1`, `partial == 0`, and
+  `files[0].parse_health.error_node_count == 0` in addition to the exact finding/line/ranked attribution.
+- ALLOC-003 spread pin reverses the assignment order so it distinguishes sorted `referenced_names`
+  order from assignment-stream order.
+- Tracks README/signpost corrected to "panel running; commit pending"; stale 67-rule sentence annotated
+  (historical Python W4; later 78); output-contract grounding moved to v1.8; duplicate `R-tb-016` row
+  removed; gate line annotated as plan-DoD-only; AGENTS.md stale C+Rust sentence noted as an A-owned
+  merge follow-up; ledger append documented (16 additions, 0 deletions).
+
+Post-panel verification:
+- `cargo fmt --all -- --check`: OK
+- `cargo clippy --locked --all-targets -- -D warnings`: Finished, no warnings
+- `cargo test --locked`: 66 suites, 976 passed, 0 failed; lib 458 passed
+- `javascript_backend`: 21 passed; `p6_hardening`: 4 passed; `determinism_js`/`determinism_ts`: 1 passed each
+- `dependency_labels_cover_the_js_family`: 1 passed
+- `alloc_003_spread_arm_attributes_the_first_sorted_reassigned_name`: 1 passed
+- `str_001_real_parse_ignores_a_string_plus_nested_in_a_call`: 1 passed
+- `git diff --check`: OK; state bytes: 7544
+
+Panel: R1/R2/R3 + Q1/Q2 all APPROVED after the post-panel fixes; zero unresolved blocking findings.
+B4 feature commit: 6d6bcdf
+FINAL: ALL OK (post-panel; merge still blocked by B-tb-004 / R-tb-017 + founder approval)

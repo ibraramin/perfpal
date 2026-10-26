@@ -3,8 +3,8 @@
 //! File-level records ([`FileRecord`], [`ParseHealth`], [`IncludeEdge`],
 //! [`GlobalVar`], [`StructDef`], [`MacroEvent`]), [`FunctionRecord`], and typed
 //! events ([`CallEvent`], [`AssignmentEvent`], [`BinaryOpEvent`],
-//! [`ComparisonEvent`], [`AccessChainEvent`], [`LoopNode`], [`AwaitEvent`])
-//! sharing the [`Shape`] descriptor.
+//! [`ComparisonEvent`], [`AccessChainEvent`], [`LoopNode`], [`AwaitEvent`],
+//! [`AllocEvent`], [`UnaryEvent`]) sharing the [`Shape`] descriptor.
 //!
 //! Conventions (ir-v1.md §2): spans are 1-based lines and byte-columns with
 //! INCLUSIVE ends; engine-native conversion (+1/−1) happens only at the
@@ -478,6 +478,21 @@ pub struct FunctionRecord {
     /// additive v1 field with `#[serde(default)]`, defaulting to `false`).
     #[serde(default)]
     pub is_module_scope: bool,
+    /// ADDITIVE IR-internal field (B5, `R-tb-017`): true when the record's
+    /// `name` is a LEXICAL BINDING visible inside the body, so a bare
+    /// `name(...)` call can actually be a self-call. True for function
+    /// declarations, named function expressions, and anonymous
+    /// function/arrow expressions bound by a `const`/`let`/`var` declarator
+    /// or a plain-identifier assignment. False for class/object methods and
+    /// property/field arrows, where the name is a property key rather than a
+    /// binding — `class X { f() { f(); } }` resolves `f` to an outer binding,
+    /// so the call is delegation, never recursion. The JS backend computes it;
+    /// the C/Rust/Python backends set it for their function records (a
+    /// declaration binds the name) and leave module record labels `false`.
+    /// The only consumer today is `PERF-JS-CALL-001`. `#[serde(default)]`
+    /// keeps older IR documents deserializing unchanged.
+    #[serde(default)]
+    pub name_is_lexical_binding: bool,
     /// ADDITIVE v1.4 skeleton (plan `divergence-revamp` step 1, specs
     /// `divergence-study`/`divergence-paper`): per-function call-shape —
     /// distinct direct-callee count. `Option` + `#[serde(default,
@@ -597,6 +612,17 @@ pub struct FunctionRecord {
     /// pattern as [`FunctionRecord::entry_kind`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reachable_from_entry: Option<bool>,
+    /// ADDITIVE JS module-entry declaration fact (plan `js-ts`, additive v1
+    /// field with `#[serde(default, skip_serializing_if)]`): `Some(true)` on a
+    /// synthetic `<module>` record when the module is a proven JavaScript entry
+    /// declaration — a `package.json` `main`/`bin` target (aggregator-owned;
+    /// not computed by this field's writer), the `require.main === module`
+    /// idiom, or an `import.meta.url` guard. `Some(false)` on guard- and
+    /// declaration-less JS module records; `None` (omitted) for every other
+    /// record and all non-JS backends. IR-internal — the schema DTO does NOT
+    /// mirror it; the wire surface is entry/reachability.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_declared: Option<bool>,
 }
 
 /// Resolver tier tag carried by every event (ir-v1.md §2). v1 emits only
@@ -722,6 +748,74 @@ pub struct AwaitEvent {
 pub struct TryEvent {
     #[serde(flatten)]
     pub meta: EventMeta,
+}
+
+/// Allocation site kind (plan `js-ts`, additive IR-only type).
+///
+/// - `new` — a JavaScript `new` expression;
+/// - `object` — an object literal `{ ... }`;
+/// - `array` — an array literal `[ ... ]`.
+///
+/// IR-internal (like `param_types`): the schema DTO does not mirror it; only
+/// the JavaScript backend emits these events today.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AllocKind {
+    New,
+    Object,
+    Array,
+}
+
+/// One allocation-site occurrence inside a function body (plan `js-ts`,
+/// additive, JS-only in v1).
+///
+/// Carries the shared event meta (span, loop depth, innermost, resolver tier,
+/// macro origin) so parser-free heuristics can reason about allocation sites
+/// without engine node kinds crossing the seam. `referenced_names` records the
+/// identifiers referenced inside the literal/argument set, sorted and deduped —
+/// it feeds the future loop-invariance gate (whether an allocation's contents
+/// change across iterations).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AllocEvent {
+    #[serde(flatten)]
+    pub meta: EventMeta,
+    pub kind: AllocKind,
+    /// Identifiers referenced inside the literal/argument set, sorted and
+    /// deduped (BTreeSet order). Omitted from the wire when empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub referenced_names: Vec<String>,
+    /// ADDITIVE B2-W2 accumulation fact (IR-internal, JS-only; no schema/DTO
+    /// change): true when an `array` literal contains at least one
+    /// `spread_element` child (`[...acc, x]`). `new` expressions and object
+    /// literals always report `false`. It lets `PERF-JS-ALLOC-003` recognize
+    /// the spread-accumulator shape without re-opening the engine seam;
+    /// `#[serde(default)]` keeps older documents deserializing unchanged.
+    #[serde(default)]
+    pub has_spread: bool,
+}
+
+/// One operand of a `UnaryEvent` (plan `js-ts`, additive, JS-only in v1).
+///
+/// v1's only consumer is `delete obj.prop` (`op == "delete"`); other unary
+/// operators are not emitted.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UnaryEvent {
+    #[serde(flatten)]
+    pub meta: EventMeta,
+    /// Operator text exactly as written (`"delete"` in v1).
+    pub op: String,
+    pub operand: Shape,
+    /// ADDITIVE IR-internal field (B5, `R-tb-018`): true when the operand's
+    /// receiver root is bound in the SAME function — by a declarator or an
+    /// assignment visited before this event, source order — to a fresh object
+    /// literal, array literal or `new` expression. `TYPE-001` uses it to
+    /// suppress the fresh-object FP class (the hidden-class cost applies to
+    /// long-lived/shared objects, not a per-call object that is rebuilt); a
+    /// receiver root that is a parameter, a global, `this`, or unknown stays
+    /// `false` and the rule still fires. `#[serde(default)]` keeps older IR
+    /// documents deserializing unchanged (`false` = not known fresh).
+    #[serde(default)]
+    pub operand_root_fresh: bool,
 }
 
 /// Call event (ir-v1.md §3.3).
@@ -1124,5 +1218,43 @@ mod tests {
                 "{absent} must be omitted when uncomputed"
             );
         }
+    }
+
+    /// B2-W2 additive IR fact lock: `AllocEvent.has_spread` is serde-defaulted
+    /// (older documents without it deserialize as `false`), false is emitted
+    /// on the wire, and a `true` fact round-trips unchanged. The field stays
+    /// IR-internal — it is deliberately absent from every metrics DTO.
+    #[test]
+    fn alloc_event_has_spread_is_serde_defaulted_and_round_trips() {
+        let old = serde_json::json!({
+            "span": {"start_line": 1, "start_col": 1, "end_line": 1, "end_col": 5},
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "kind": "array",
+            "referenced_names": ["acc", "item"]
+        });
+        let event: AllocEvent =
+            serde_json::from_value(old).expect("pre-has_spread AllocEvent deserializes");
+        assert!(!event.has_spread, "absent has_spread defaults to false");
+
+        // Explicit true survives a serialize → deserialize round trip.
+        let spread = AllocEvent {
+            has_spread: true,
+            ..event
+        };
+        let wire = serde_json::to_value(&spread).expect("serialize");
+        assert_eq!(wire["has_spread"], serde_json::json!(true));
+        let back: AllocEvent = serde_json::from_value(wire).expect("deserialize");
+        assert_eq!(back, spread);
+
+        // False is still emitted (plain `#[serde(default)]`, no skip).
+        let plain = AllocEvent {
+            has_spread: false,
+            ..back
+        };
+        let wire = serde_json::to_value(&plain).expect("serialize");
+        assert_eq!(wire["has_spread"], serde_json::json!(false));
     }
 }

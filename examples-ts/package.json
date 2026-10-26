@@ -1,0 +1,8 @@
+{
+  "name": "perfpal-examples-ts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeScript + TSX corpus for the shared PERF-JS-* rule family (plan js-ts B3).",
+  "type": "module",
+  "main": "index.ts"
+}

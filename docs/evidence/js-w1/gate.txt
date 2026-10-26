@@ -1,0 +1,89 @@
+# B2-W1 gate transcript — 2026-10-24
+
+Track B / plan `js-ts` / branch `feat/js-ts` / base commit `2166c8f` + uncommitted W1 tree.
+Recorded by the orchestrator from direct command runs (there is no `scripts/gates/task-gate.sh`
+in this repository; the plan's DoD commands were run individually).
+
+Round 1 = first implementation; Round 2 = after the round-1 panel fixes (nested-function loop
+context, destructured params, single-file skip policy, package.json root-escape guard, comments,
+tests, docs/state evidence).
+
+## Round 2 (polished tree)
+
+| # | Command | Observed | Exit |
+|---|---|---|---|
+| 1 | `~/.cargo/bin/cargo fmt --all -- --check` | no output | 0 |
+| 2 | `~/.cargo/bin/cargo clippy --locked --all-targets -- -D warnings` | `Finished dev …`, no warnings | 0 |
+| 3 | `~/.cargo/bin/cargo test --locked` | 59 suites, **898 passed**, 0 failed | 0 |
+| 4 | `~/.cargo/bin/cargo deny check licenses` | `licenses ok` (pre-existing `ISC` unmatched allowance) | 0 |
+| 5 | `~/.cargo/bin/cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | `Finished dev …`, no warnings | 0 |
+| 6 | `PERFPAL_SEMANTIC_TESTS=1 ~/.cargo/bin/cargo test --locked --features semantic-clang` | 59 suites, **901 passed**, 0 failed | 0 |
+| 7 | `~/.cargo/bin/cargo test --locked --test javascript_backend` | **20 passed**, 0 failed | 0 |
+| 8 | `CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target ~/.cargo/bin/cargo check --locked --all-targets` | `Finished dev …` | 0 |
+| 9 | `test -z "$(git status --short src/schema docs/schema src/reporter)"` | empty | 0 |
+| 10 | `! grep -q preserve_order Cargo.lock` | absent | 0 |
+| 11 | `test -z "$(git diff --name-only -- Cargo.toml Cargo.lock)"` | empty (W0 pins only) | 0 |
+| 12 | `test "$(wc -c < state/tracks/js-ts/session-state.json)" -le 8192` | **7874 bytes**, valid JSON | 0 |
+| 13 | `git diff --check` | clean | 0 |
+
+Round 1 reference (same commands, first tree): 59 suites / 889 tests; JS suite 15/15;
+semantic 59 suites / 892 tests. All exit 0.
+
+## CLI / discovery / determinism proofs (round 2)
+
+Corpus `/var/tmp/pf-w1-corpus`: `package.json` (`main: src/index.js`), `src/index.js`
+(relative import, canonical `for (let i=0;i<10;i++)`, `await` in loop, object literal, throw),
+`src/util.js` (exported helper, try/catch).
+
+Two consecutive runs (`/var/tmp/pf-w1r2-a`, `/var/tmp/pf-w1r2-b`):
+
+- `diff -r charts` → empty; `cmp *.schema.*.json` → identical.
+- `metrics.json` with `del(.scan.started_at, .scan.duration_ms)` → identical.
+- `report.html`, `findings-detail.md/.html`, `profile-queue.md/.html` → byte-identical.
+- `report.md` differs only in the provenance line `> started … · duration … ms`; masking that
+  line makes the files byte-identical (`DETERMINISTIC_MODULO_PROVENANCE_OK`).
+
+Observed metrics (both runs):
+
+```json
+{"langs":["js"],"files":2,"findings":0,
+ "entries":[{"name":"<module>","entry_kind":"script","entry_confidence":"HIGH"},
+            {"name":"helper","entry_kind":"lib-root","entry_confidence":"MEDIUM"}],
+ "trips":[{"name":"run","trip_count_source":"literal","known_trip_value":10}]}
+```
+
+- Skip tree (`node_modules/`, `dist/`, `vendor/`): only `vendor/v.js` scanned.
+- Single-file `src/util.js`: 1 file, `["js"]`.
+- Single-file `app.min.js`: 0 files (silent skip; supported-set fallback).
+- Single-file `sample.ts`: 0 files (unsupported TS suffix; not parsed as C).
+- Single-file `legacy.unknown`: 1 file, `["c"]` (documented unknown-extension fallback preserved).
+- Round 1 also proved: 0 JS findings (rules are B2-W2), one resolved include edge, entry and trip
+  ladder as above.
+
+## Round 3 (final delta — comment extras)
+
+Final confirmation caught one delta regression before commit: the identifier-less-parameter rule counted
+tree-sitter comment extras inside `formal_parameters` as parameters. Fixed by excluding `is_extra()` nodes;
+new unit test `comments_between_params_are_not_counted` (`function f(a /* c */, b)` → 2 params).
+
+- `~/.cargo/bin/cargo fmt --all -- --check` → 0
+- `~/.cargo/bin/cargo clippy --locked --all-targets -- -D warnings` → 0
+- `~/.cargo/bin/cargo test --locked` → 59 suites, **901 passed**, 0 failed → 0
+- `PERFPAL_SEMANTIC_TESTS=1 ~/.cargo/bin/cargo test --locked --features semantic-clang` → 59 suites,
+  **904 passed**, 0 failed → 0
+- `~/.cargo/bin/cargo test --locked --test javascript_backend` → 20 passed, 0 failed → 0
+- `git diff --check` → clean → 0
+
+The round-2 CLI/determinism/skip/single-file proofs below still describe the final tree (the delta is a
+parameter-count guard only; the proof corpus has no comments inside parameter lists).
+
+## Panel
+
+- Round 1: **R1 APPROVED · R2 APPROVED · Q1 APPROVED · Q2 CHANGES_REQUESTED**
+  (DoD/panel rows still marked pending; three stale line refs). Fixes applied in round 2:
+  `scan.rs` loop-context boundary stop, `infer.rs` shorthand destructured params, single-file
+  minified/TS skip policy + unknown-extension fallback preserved, `js_entry_candidates` root-escape
+  rejection, stale comments/docs refs, 5 new tests, this transcript, handoff/state evidence.
+- Round 2: **R1 APPROVED · R2 APPROVED · Q2 APPROVED · R3 APPROVED** (fresh confirmation lane),
+  zero blocking findings. One delta regression (comment extras counted as parameters) was caught by the
+  final confirmation and fixed in round 3; the final lane then **APPROVED** the tree for commit.

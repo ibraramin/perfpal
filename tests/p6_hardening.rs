@@ -1,9 +1,9 @@
 //! P6 hardening gates (modules.md §7): finding-id uniqueness (composite-id
 //! contract, modules.md §1 analyzer row) and golden-report locking.
 //!
-//! Golden flow (four committed trees, see [`GOLDEN_TREES`]): each tree is the
-//! full pipeline run over its fixture, masked in place for every run-varying
-//! field, and committed. Two artifacts of that run are PRUNED deliberately:
+//! Golden flow (six committed trees, see [`GOLDEN_TREES`]): each tree is the
+//! FULL pipeline output over its fixture, masked in place for every
+//! run-varying field. Two artifacts of that run are PRUNED deliberately:
 //! the Track C `agent-report.md` / `agent-actions.json` carry the scan root as
 //! provenance and are locked outside the golden set (see
 //! [`AGENT_REPORT_ARTIFACTS`]).
@@ -54,11 +54,13 @@ struct GoldenTree {
     snapshot_exclude: Option<&'static str>,
 }
 
-/// The four locked trees. `c` is the original (T1 uniqueness stays pointed
+/// The six locked trees. `c` is the original (T1 uniqueness stays pointed
 /// here); `mixed` (`.c` + `.h` + `.rs`) and `rust` (`examples-rust/`) are the
 /// R5 Wave 2 additions; `python` (`examples-python/`) is the plan
-/// `python-backend` W4 Lane 5 addition.
-const GOLDEN_TREES: [GoldenTree; 4] = [
+/// `python-backend` W4 Lane 5 addition; `js` (`examples-js/`) is the plan
+/// `js-ts` B2-W2 addition; `ts` (`examples-ts/`) is the plan `js-ts` B3-WP2
+/// addition.
+const GOLDEN_TREES: [GoldenTree; 6] = [
     GoldenTree {
         tag: "c",
         fixture: "tests/fixtures/e2e",
@@ -83,6 +85,18 @@ const GOLDEN_TREES: [GoldenTree; 4] = [
         golden: "tests/golden/report-python",
         snapshot_exclude: None,
     },
+    GoldenTree {
+        tag: "js",
+        fixture: "examples-js",
+        golden: "tests/golden/report-js",
+        snapshot_exclude: None,
+    },
+    GoldenTree {
+        tag: "ts",
+        fixture: "examples-ts",
+        golden: "tests/golden/report-ts",
+        snapshot_exclude: None,
+    },
 ];
 
 /// Resolve a repo-relative path against the crate manifest dir.
@@ -99,7 +113,10 @@ fn fixture_root() -> PathBuf {
 /// Run-varying-masked artifacts under comparison. metrics.json, report.md,
 /// findings-detail.md, report.html and findings-detail.html are compared as
 /// masked text; schema + SVGs + graph.dot carry no provenance and are
-/// compared byte-exact (verified by `regenerate_goldens`). report.html and
+/// compared byte-exact (verified by `regenerate_goldens`). The two Atlas
+/// pages (`atlas-q2.html`, `atlas-weight.html`) are in the fixed set too and
+/// are compared byte-exact: regeneration asserts they carry no provenance
+/// (no year-like RFC3339 fragment, no absolute fixture path). report.html and
 /// findings-detail.html carry no provenance by construction (schema/file/
 /// finding counts only), so their masks are the absolute-root substitution
 /// plus the Wave B1 resolved-ARCH-003 row neutralizer (see
@@ -112,13 +129,15 @@ fn fixture_root() -> PathBuf {
 /// semantic tier is covered by `tests/resolver_health.rs` and the
 /// double-run determinism suites instead.
 #[cfg(not(feature = "semantic-clang"))]
-const GOLDEN_ARTIFACTS: [&str; 17] = [
+const GOLDEN_ARTIFACTS: [&str; 19] = [
     "metrics.json",
-    "metrics.schema.v1.7.json",
+    "metrics.schema.v1.8.json",
     "report.md",
     "report.html",
     "findings-detail.md",
     "findings-detail.html",
+    "atlas-q2.html",
+    "atlas-weight.html",
     "profile-queue.md",
     "profile-queue.html",
     "charts/include-graph.svg",
@@ -186,6 +205,11 @@ const EXPECTED_COMPONENT_PAGES: &[(&str, &[&str])] = &[
             "charts/component-02-pkg.svg",
         ],
     ),
+    // `examples-js` is flat (all sources at the package root), so its single
+    // component is the root component.
+    ("js", &["charts/component-01-root.svg"]),
+    // `examples-ts` is likewise flat; one root component.
+    ("ts", &["charts/component-01-root.svg"]),
 ];
 
 /// Assert a tree's page set is EXACTLY the pinned expectation (no
@@ -466,7 +490,7 @@ fn regenerate_goldens() {
         // both carry the scan root as CLI provenance BY DESIGN (the MD header
         // prints it verbatim; the JSON records `root_path`) — so they cannot be
         // masked into a stable golden, and they are deliberately NOT part of
-        // the fixed 17-artifact GOLDEN_ARTIFACTS set. Adding them would mint
+        // the fixed 19-artifact GOLDEN_ARTIFACTS set. Adding them would mint
         // ~75 KB of new goldens that duplicate an existing lock: their shape
         // and bytes are already pinned by `docs/evidence/agent-report/sample/*`
         // (byte parity) and `tests/agent_report.rs` (emission, determinism,
@@ -486,13 +510,15 @@ fn regenerate_goldens() {
             );
         }
 
-        // SVGs + DOT + schema: committed byte-exact; assert they carry no
-        // provenance (no year-like RFC3339 fragments, no absolute fixture
-        // path). The per-component detail pages join the fixed set here —
-        // discovered from the fresh output so the lock tracks the emission
-        // rule instead of a hardcoded count.
+        // SVGs + DOT + schema + the two Atlas pages: committed byte-exact;
+        // assert they carry no provenance (no year-like RFC3339 fragments, no
+        // absolute fixture path). The per-component detail pages join the
+        // fixed set here — discovered from the fresh output so the lock
+        // tracks the emission rule instead of a hardcoded count.
         let root_str = fixture.to_string_lossy().into_owned();
         let mut provenance_free = vec![
+            "atlas-q2.html".to_string(),
+            "atlas-weight.html".to_string(),
             "charts/include-graph.svg".to_string(),
             "charts/layer-file.svg".to_string(),
             "charts/layer-entry.svg".to_string(),
@@ -502,7 +528,7 @@ fn regenerate_goldens() {
             "charts/layer-bands.svg".to_string(),
             "charts/layer-findings.svg".to_string(),
             "charts/graph.dot".to_string(),
-            "metrics.schema.v1.7.json".to_string(),
+            "metrics.schema.v1.8.json".to_string(),
         ];
         let mut component_pages: Vec<String> = fs::read_dir(golden.join("charts"))
             .expect("charts dir")

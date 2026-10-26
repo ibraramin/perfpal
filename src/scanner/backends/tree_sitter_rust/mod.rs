@@ -965,6 +965,8 @@ fn function_unit(
         resolver_tier: ResolverTier::default(),
         is_async: false,
         is_module_scope: false,
+        // A Rust `fn` item binds its name in the enclosing scope.
+        name_is_lexical_binding: true,
         // v1.4 step 2 (plan `divergence-revamp`): `idiom_hash` / `error_path` /
         // `alloc_family` are populated by the scanner post-pass
         // (`scanner::instrument::populate`, needs source text); call-shape
@@ -987,6 +989,9 @@ fn function_unit(
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
+        // Plan `js-ts`: module-entry declaration is JS-only; other backends
+        // leave it `None`.
+        entry_declared: None,
     };
     FunctionUnit {
         record,
@@ -998,6 +1003,8 @@ fn function_unit(
         loops: scan.loops,
         awaits: Vec::new(),
         try_blocks: Vec::new(),
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 

@@ -7,6 +7,14 @@
 //! emits `unknown` — that enum value is reserved for absent/hand-written
 //! documents; every computed file gets a concrete class.
 //!
+//! `test` covers exact test segments (`tests`, `spec`, …) plus common
+//! JS/TS naming conventions: a segment that starts with `test-` or ends with
+//! `-test`/`-tests`/`-spec`/`-specs` (`test-utils/`, `e2e-tests/`,
+//! `foo-specs/`), and basenames shaped `test_*`/`test-*`, `*_test.*`,
+//! `*.test.*`, `*_spec.*`, `*.spec.*`, or `*-spec.*` (`fetch.spec.ts`).
+//! Production lookalikes (`latest.ts`, `contest.ts`, `attestation/`,
+//! `spectrum/`) deliberately stay `production`.
+//!
 //! `bench` deliberately also covers repo tooling/harness paths
 //! (`scripts/`, `tools/`, `ci/`, `.github/`): hyperfine's `scripts/plot_*.py`
 //! must not rank as production source. `compat/` is compiled source, not
@@ -65,7 +73,7 @@ pub(crate) fn classify(path: &str) -> &'static str {
     let segments: Vec<&str> = lower.split('/').filter(|s| !s.is_empty()).collect();
     let basename = segments.last().copied().unwrap_or("");
 
-    if segments.iter().any(|s| TEST_SEGMENTS.contains(s)) || is_test_basename(basename) {
+    if segments.iter().any(|s| is_test_segment(s)) || is_test_basename(basename) {
         return PATH_TEST;
     }
     if segments.iter().any(|s| EXAMPLE_SEGMENTS.contains(s)) {
@@ -86,12 +94,35 @@ pub(crate) fn classify(path: &str) -> &'static str {
     PATH_PRODUCTION
 }
 
-/// `test_*` | `*_test.*` | `*.test.*` | `*_spec.*` basename shapes.
+/// True when a single path segment classifies as `test`: an exact
+/// [`TEST_SEGMENTS`] member, a `test-` prefix, or a `-test`/`-tests`/
+/// `-spec`/`-specs` suffix. Applied to every segment (including the
+/// basename), so `test-utils/`, `e2e-tests/`, and `test-setup.ts` all match
+/// while `spectrum/`, `attestation/`, and `contest.ts` do not.
+///
+/// One carve-out: the `test-` prefix does NOT claim an exact
+/// [`FIXTURE_SEGMENTS`] structural name (`test-data`). That directory holds
+/// test DATA, not test code, so it keeps the more specific `fixture` class
+/// (test still outranks fixture for every other segment).
+fn is_test_segment(segment: &str) -> bool {
+    TEST_SEGMENTS.contains(&segment)
+        || (segment.starts_with("test-") && !FIXTURE_SEGMENTS.contains(&segment))
+        || segment.ends_with("-test")
+        || segment.ends_with("-tests")
+        || segment.ends_with("-spec")
+        || segment.ends_with("-specs")
+}
+
+/// `test_*` | `test-*` | `*_test.*` | `*.test.*` | `*_spec.*` | `*.spec.*` |
+/// `*-spec.*` basename shapes.
 fn is_test_basename(basename: &str) -> bool {
     basename.starts_with("test_")
+        || basename.starts_with("test-")
         || basename.contains("_test.")
         || basename.contains(".test.")
         || basename.contains("_spec.")
+        || basename.contains(".spec.")
+        || basename.contains("-spec.")
 }
 
 /// `*.generated.*` | `*.pb.*` | `*_pb2.py` basename shapes.
@@ -116,6 +147,34 @@ mod tests {
             "TESTING/Foo.C",
         ] {
             assert_eq!(classify(path), PATH_TEST, "{path}");
+        }
+    }
+
+    #[test]
+    fn js_ts_test_naming_and_production_controls() {
+        // New (R-tb-020): JS/TS conventions join the `test` class.
+        for path in [
+            "packages/core/src/utils/fetch.spec.ts",
+            "packages/cli/test-setup.ts",
+            "packages/cli/test-utils/src/test-rig.ts",
+            "e2e-tests/a.ts",
+            "src/spec/thing.ts",
+            "src/foo-spec.ts",
+            "src/test_helper.ts",
+        ] {
+            assert_eq!(classify(path), PATH_TEST, "{path}");
+        }
+
+        // Production lookalikes must NOT flip.
+        for path in [
+            "src/latest.ts",
+            "src/contest.ts",
+            "src/attestation/x.ts",
+            "src/spectrum/a.ts",
+            "src/specification/a.ts",
+            "src/prospect.ts",
+        ] {
+            assert_eq!(classify(path), PATH_PRODUCTION, "{path}");
         }
     }
 

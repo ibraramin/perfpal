@@ -3,9 +3,10 @@
 //! This module is the SINGLE source of truth for the planted mutations behind
 //! the benchmark harness. Every rung is built by composing "units":
 //!
-//! - the `small` rung plants ONE true positive plus ONE silent control for
-//!   EVERY active rule in the 67-rule catalog (23 C + 22 Python + 22 Rust) —
-//!   plus the retired `PERF-RS-STR-001` always-silent control. The nine
+//! - the `small` rung plants at least one true positive plus one silent
+//!   control for EVERY active rule in the 78-rule catalog (23 C + 11 JS + 22
+//!   Python + 22 Rust) — plus the retired `PERF-RS-STR-001` always-silent
+//!   control. Rules with two implemented arms carry a TP per arm. The nine
 //!   existential gate constructs are lifted VERBATIM from the committed M1
 //!   corpus (`tests/fixtures/precision/`), with every function/definition name
 //!   parameterized by a per-replica suffix so replicas can never collide on
@@ -100,6 +101,18 @@ const PY_N1_001: &str = "PERF-PY-N1-001";
 const PY_PANDAS_001: &str = "PERF-PY-PANDAS-001";
 const PY_PANDAS_002: &str = "PERF-PY-PANDAS-002";
 const PY_STR_001: &str = "PERF-PY-STR-001";
+
+const JS_ALLOC_001: &str = "PERF-JS-ALLOC-001";
+const JS_ALLOC_003: &str = "PERF-JS-ALLOC-003";
+const JS_ARCH_001: &str = "PERF-JS-ARCH-001";
+const JS_ASYNC_001: &str = "PERF-JS-ASYNC-001";
+const JS_ASYNC_002: &str = "PERF-JS-ASYNC-002";
+const JS_CALL_001: &str = "PERF-JS-CALL-001";
+const JS_LOOP_001: &str = "PERF-JS-LOOP-001";
+const JS_LOOP_002: &str = "PERF-JS-LOOP-002";
+const JS_LOOP_007: &str = "PERF-JS-LOOP-007";
+const JS_STR_001: &str = "PERF-JS-STR-001";
+const JS_TYPE_001: &str = "PERF-JS-TYPE-001";
 
 /// 1-based line of `marker` inside `contents`; the marker MUST be unique —
 /// a duplicate or misplaced token fails loudly rather than silently anchoring
@@ -2409,6 +2422,252 @@ fn py_ext() -> (Vec<GenFile>, Vec<Label>) {
 }
 
 // ===========================================================================
+// JavaScript extension templates (plan `js-ts` B2-W2, the frozen 11-rule
+// disposition table in docs/architecture/js-ts.md §8). The benchmark units
+// are VERBATIM lifts of the committed precision fixtures
+// (`tests/fixtures/precision/js/`), with the TP marker appended inline on the
+// fixture's planted finding line so the marker-derived anchor stays exactly
+// equal to the M1 anchor in `tests/fixtures/precision/labels.json`.
+// ===========================================================================
+
+const JS_ALLOC001_TP: &str = include_str!("../fixtures/precision/js/alloc_001.js");
+const JS_ALLOC001_MARK: &str = "// TP PERF-JS-ALLOC-001";
+const JS_ALLOC001_SILENT: &str = include_str!("../fixtures/precision/js/alloc_001_silent.js");
+
+const JS_ALLOC003_TP: &str = include_str!("../fixtures/precision/js/alloc_003.js");
+const JS_ALLOC003_MARK: &str = "// TP PERF-JS-ALLOC-003";
+const JS_ALLOC003_SPREAD_TP: &str = include_str!("../fixtures/precision/js/alloc_003_spread.js");
+const JS_ALLOC003_SPREAD_MARK: &str = "// TP PERF-JS-ALLOC-003 spread";
+const JS_ALLOC003_SILENT: &str = include_str!("../fixtures/precision/js/alloc_003_silent.js");
+
+const JS_ARCH001_TP: &str = include_str!("../fixtures/precision/js/arch_001_b.js");
+const JS_ARCH001_PEER: &str = include_str!("../fixtures/precision/js/arch_001.js");
+const JS_ARCH001_MARK: &str = "// TP PERF-JS-ARCH-001";
+const JS_ARCH001_SILENT: &str = include_str!("../fixtures/precision/js/arch_001_silent.js");
+
+const JS_ASYNC001_TP: &str = include_str!("../fixtures/precision/js/async_001.js");
+const JS_ASYNC001_MARK: &str = "// TP PERF-JS-ASYNC-001";
+const JS_ASYNC001_SILENT: &str = include_str!("../fixtures/precision/js/async_001_silent.js");
+
+const JS_ASYNC002_TP: &str = include_str!("../fixtures/precision/js/async_002.js");
+const JS_ASYNC002_MARK: &str = "// TP PERF-JS-ASYNC-002";
+const JS_ASYNC002_SILENT: &str = include_str!("../fixtures/precision/js/async_002_silent.js");
+
+const JS_CALL001_TP: &str = include_str!("../fixtures/precision/js/call_001.js");
+const JS_CALL001_MARK: &str = "// TP PERF-JS-CALL-001";
+const JS_CALL001_SILENT: &str = include_str!("../fixtures/precision/js/call_001_silent.js");
+
+const JS_LOOP001_TP: &str = include_str!("../fixtures/precision/js/loop_001.js");
+const JS_LOOP001_MARK: &str = "// TP PERF-JS-LOOP-001";
+const JS_LOOP001_SILENT: &str = include_str!("../fixtures/precision/js/loop_001_silent.js");
+
+const JS_LOOP002_TP: &str = include_str!("../fixtures/precision/js/loop_002.js");
+const JS_LOOP002_MARK: &str = "// TP PERF-JS-LOOP-002";
+const JS_LOOP002_SILENT: &str = include_str!("../fixtures/precision/js/loop_002_silent.js");
+
+const JS_LOOP007_TP: &str = include_str!("../fixtures/precision/js/loop_007.js");
+const JS_LOOP007_MARK: &str = "// TP PERF-JS-LOOP-007";
+const JS_LOOP007_SILENT: &str = include_str!("../fixtures/precision/js/loop_007_silent.js");
+
+const JS_STR001_TP: &str = include_str!("../fixtures/precision/js/str_001.js");
+const JS_STR001_MARK: &str = "// TP PERF-JS-STR-001";
+const JS_STR001_ASSIGNMENT_TP: &str =
+    include_str!("../fixtures/precision/js/str_001_assignment.js");
+const JS_STR001_ASSIGNMENT_MARK: &str = "// TP PERF-JS-STR-001 assignment";
+const JS_STR001_SILENT: &str = include_str!("../fixtures/precision/js/str_001_silent.js");
+
+const JS_TYPE001_TP: &str = include_str!("../fixtures/precision/js/type_001.js");
+const JS_TYPE001_MARK: &str = "// TP PERF-JS-TYPE-001";
+const JS_TYPE001_SILENT: &str = include_str!("../fixtures/precision/js/type_001_silent.js");
+
+/// Append `marker` inline to 1-based `line` of a verbatim fixture lift and
+/// verify the marker-derived anchor is exactly that line. The line count is
+/// preserved, so the lift is byte-identical to the committed fixture up to the
+/// inline TP comment (which never moves a source construct).
+fn marked(contents: &str, line: u32, marker: &str) -> String {
+    let mut lines: Vec<String> = contents.lines().map(str::to_string).collect();
+    let index = usize::try_from(line).expect("anchor line fits usize");
+    assert!(
+        line >= 1 && index <= lines.len(),
+        "inline marker line {line} is outside the {}-line fixture",
+        lines.len()
+    );
+    lines[index - 1].push(' ');
+    lines[index - 1].push_str(marker);
+    let mut out = lines.join("\n");
+    if contents.ends_with('\n') {
+        out.push('\n');
+    }
+    assert_eq!(
+        anchor_line(&out, marker),
+        line,
+        "inline marker drift in fixture lift"
+    );
+    out
+}
+
+/// The 11 JavaScript rules: at least one committed precision fixture (lifted
+/// verbatim, marker inline) plus a committed silent control per frozen
+/// disposition-table entry (plan `js-ts` §8). ALLOC-003 and STR-001 each add a
+/// second TP fixture for their second implemented arm (spread accumulation /
+/// `x = x + <literal>`). Mirrors `py_ext()`.
+fn js_ext() -> (Vec<GenFile>, Vec<Label>) {
+    let alloc001 = marked(JS_ALLOC001_TP, 5, JS_ALLOC001_MARK);
+    let alloc001_sil = JS_ALLOC001_SILENT.to_string();
+    let alloc003 = marked(JS_ALLOC003_TP, 5, JS_ALLOC003_MARK);
+    let alloc003_spread = marked(JS_ALLOC003_SPREAD_TP, 5, JS_ALLOC003_SPREAD_MARK);
+    let alloc003_sil = JS_ALLOC003_SILENT.to_string();
+    let arch001 = marked(JS_ARCH001_TP, 1, JS_ARCH001_MARK);
+    let arch001_peer = JS_ARCH001_PEER.to_string();
+    let arch001_sil = JS_ARCH001_SILENT.to_string();
+    let async001 = marked(JS_ASYNC001_TP, 9, JS_ASYNC001_MARK);
+    let async001_sil = JS_ASYNC001_SILENT.to_string();
+    let async002 = marked(JS_ASYNC002_TP, 5, JS_ASYNC002_MARK);
+    let async002_sil = JS_ASYNC002_SILENT.to_string();
+    let call001 = marked(JS_CALL001_TP, 3, JS_CALL001_MARK);
+    let call001_sil = JS_CALL001_SILENT.to_string();
+    let loop001 = marked(JS_LOOP001_TP, 5, JS_LOOP001_MARK);
+    let loop001_sil = JS_LOOP001_SILENT.to_string();
+    let loop002 = marked(JS_LOOP002_TP, 7, JS_LOOP002_MARK);
+    let loop002_sil = JS_LOOP002_SILENT.to_string();
+    let loop007 = marked(JS_LOOP007_TP, 5, JS_LOOP007_MARK);
+    let loop007_sil = JS_LOOP007_SILENT.to_string();
+    let str001 = marked(JS_STR001_TP, 5, JS_STR001_MARK);
+    let str001_assignment = marked(JS_STR001_ASSIGNMENT_TP, 5, JS_STR001_ASSIGNMENT_MARK);
+    let str001_sil = JS_STR001_SILENT.to_string();
+    let type001 = marked(JS_TYPE001_TP, 3, JS_TYPE001_MARK);
+    let type001_sil = JS_TYPE001_SILENT.to_string();
+
+    let files = vec![
+        gf("js/alloc_001.js".to_string(), alloc001.clone()),
+        gf("js/alloc_001_silent.js".to_string(), alloc001_sil),
+        gf("js/alloc_003.js".to_string(), alloc003.clone()),
+        gf(
+            "js/alloc_003_spread.js".to_string(),
+            alloc003_spread.clone(),
+        ),
+        gf("js/alloc_003_silent.js".to_string(), alloc003_sil),
+        gf("js/arch_001.js".to_string(), arch001_peer),
+        gf("js/arch_001_b.js".to_string(), arch001.clone()),
+        gf("js/arch_001_silent.js".to_string(), arch001_sil),
+        gf("js/async_001.js".to_string(), async001.clone()),
+        gf("js/async_001_silent.js".to_string(), async001_sil),
+        gf("js/async_002.js".to_string(), async002.clone()),
+        gf("js/async_002_silent.js".to_string(), async002_sil),
+        gf("js/call_001.js".to_string(), call001.clone()),
+        gf("js/call_001_silent.js".to_string(), call001_sil),
+        gf("js/loop_001.js".to_string(), loop001.clone()),
+        gf("js/loop_001_silent.js".to_string(), loop001_sil),
+        gf("js/loop_002.js".to_string(), loop002.clone()),
+        gf("js/loop_002_silent.js".to_string(), loop002_sil),
+        gf("js/loop_007.js".to_string(), loop007.clone()),
+        gf("js/loop_007_silent.js".to_string(), loop007_sil),
+        gf("js/str_001.js".to_string(), str001.clone()),
+        gf(
+            "js/str_001_assignment.js".to_string(),
+            str001_assignment.clone(),
+        ),
+        gf("js/str_001_silent.js".to_string(), str001_sil),
+        gf("js/type_001.js".to_string(), type001.clone()),
+        gf("js/type_001_silent.js".to_string(), type001_sil),
+    ];
+
+    let labels = vec![
+        fire(
+            JS_ALLOC_001,
+            "js/alloc_001.js".to_string(),
+            &alloc001,
+            JS_ALLOC001_MARK,
+        ),
+        silent(JS_ALLOC_001, "js/alloc_001_silent.js".to_string()),
+        fire(
+            JS_ALLOC_003,
+            "js/alloc_003.js".to_string(),
+            &alloc003,
+            JS_ALLOC003_MARK,
+        ),
+        fire(
+            JS_ALLOC_003,
+            "js/alloc_003_spread.js".to_string(),
+            &alloc003_spread,
+            JS_ALLOC003_SPREAD_MARK,
+        ),
+        silent(JS_ALLOC_003, "js/alloc_003_silent.js".to_string()),
+        fire(
+            JS_ARCH_001,
+            "js/arch_001_b.js".to_string(),
+            &arch001,
+            JS_ARCH001_MARK,
+        ),
+        silent(JS_ARCH_001, "js/arch_001_silent.js".to_string()),
+        fire(
+            JS_ASYNC_001,
+            "js/async_001.js".to_string(),
+            &async001,
+            JS_ASYNC001_MARK,
+        ),
+        silent(JS_ASYNC_001, "js/async_001_silent.js".to_string()),
+        fire(
+            JS_ASYNC_002,
+            "js/async_002.js".to_string(),
+            &async002,
+            JS_ASYNC002_MARK,
+        ),
+        silent(JS_ASYNC_002, "js/async_002_silent.js".to_string()),
+        fire(
+            JS_CALL_001,
+            "js/call_001.js".to_string(),
+            &call001,
+            JS_CALL001_MARK,
+        ),
+        silent(JS_CALL_001, "js/call_001_silent.js".to_string()),
+        fire(
+            JS_LOOP_001,
+            "js/loop_001.js".to_string(),
+            &loop001,
+            JS_LOOP001_MARK,
+        ),
+        silent(JS_LOOP_001, "js/loop_001_silent.js".to_string()),
+        fire(
+            JS_LOOP_002,
+            "js/loop_002.js".to_string(),
+            &loop002,
+            JS_LOOP002_MARK,
+        ),
+        silent(JS_LOOP_002, "js/loop_002_silent.js".to_string()),
+        fire(
+            JS_LOOP_007,
+            "js/loop_007.js".to_string(),
+            &loop007,
+            JS_LOOP007_MARK,
+        ),
+        silent(JS_LOOP_007, "js/loop_007_silent.js".to_string()),
+        fire(
+            JS_STR_001,
+            "js/str_001.js".to_string(),
+            &str001,
+            JS_STR001_MARK,
+        ),
+        fire(
+            JS_STR_001,
+            "js/str_001_assignment.js".to_string(),
+            &str001_assignment,
+            JS_STR001_ASSIGNMENT_MARK,
+        ),
+        silent(JS_STR_001, "js/str_001_silent.js".to_string()),
+        fire(
+            JS_TYPE_001,
+            "js/type_001.js".to_string(),
+            &type001,
+            JS_TYPE001_MARK,
+        ),
+        silent(JS_TYPE_001, "js/type_001_silent.js".to_string()),
+    ];
+
+    (files, labels)
+}
+
+// ===========================================================================
 // Gate units (the nine M1 rules) — UNCHANGED, and the only units replicated
 // into the medium/large scale ladder.
 // ===========================================================================
@@ -2526,7 +2785,7 @@ fn gate_rust_unit(s: &str) -> (Vec<GenFile>, Vec<Label>) {
 const FILES_PER_UNIT: usize = 22;
 
 /// The `small` rung: the nine M1 gate constructs plus a true positive and a
-/// silent control for EVERY remaining rule in the 67-rule catalog.
+/// silent control for EVERY remaining rule in the 78-rule catalog.
 /// Precision FP-class fix fixtures (fixes 1-4): the committed M1
 /// silent-case + TP fixtures from `tests/fixtures/precision/`, lifted via
 /// `include_str!` — byte-verbatim BY CONSTRUCTION, so the M1 anchors can
@@ -2635,7 +2894,8 @@ pub fn small() -> Rung {
     files.append(&mut ff);
     labels.append(&mut fl);
 
-    // The 36 remaining rules: dedicated minimal files.
+    // The remaining non-gate rules: dedicated minimal files per language
+    // (C, Rust, Python, JavaScript).
     let (mut ef, mut el) = c_ext();
     files.append(&mut ef);
     labels.append(&mut el);
@@ -2644,6 +2904,10 @@ pub fn small() -> Rung {
     labels.append(&mut el);
 
     let (mut ef, mut el) = py_ext();
+    files.append(&mut ef);
+    labels.append(&mut el);
+
+    let (mut ef, mut el) = js_ext();
     files.append(&mut ef);
     labels.append(&mut el);
 

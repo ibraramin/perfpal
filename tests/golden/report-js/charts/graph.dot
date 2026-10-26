@@ -1,0 +1,26 @@
+digraph perfpal {
+  "01_alloc_churn.js";
+  "02_array_accumulation.js";
+  "03_string_build.js";
+  "04_deep_nesting.js";
+  "05_sync_io_loop.js";
+  "06_membership_scan.js";
+  "07_async_await.js";
+  "08_async_blocking.js";
+  "09_recursion.js";
+  "10_cycle_a.js" -> "11_cycle_b.js";
+  "10_cycle_a.js";
+  "10_cycle_a.js#format#6:8" -> "11_cycle_b.js" [style=dashed, label="formatFromB"];
+  "11_cycle_b.js" -> "10_cycle_a.js";
+  "11_cycle_b.js";
+  "11_cycle_b.js#formatFromB#5:8" -> "10_cycle_a.js" [style=dashed, label="format"];
+  "12_delete.js";
+  "13_controls.js" -> "04_deep_nesting.js";
+  "13_controls.js";
+  "13_controls.js#summarize#15:8" -> "04_deep_nesting.js" [style=dashed, label="score"];
+  "14_commonjs.cjs";
+  "component:." [shape=box, label=". (rank 1)"];
+  "index.js" -> "13_controls.js";
+  "index.js";
+  "index.js#boot#5:8" -> "13_controls.js" [style=dashed, label="summarize"];
+}

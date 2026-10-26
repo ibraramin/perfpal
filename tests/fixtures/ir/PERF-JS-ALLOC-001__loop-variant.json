@@ -1,0 +1,95 @@
+[
+  {
+    "file": {
+      "path": "neg/alloc_001_variant.js",
+      "language": "js",
+      "loc": {
+        "code": 1,
+        "comment": 0,
+        "blank": 0
+      },
+      "function_count": 1,
+      "global_var_count": 0,
+      "include_counts": {
+        "quoted": 0,
+        "angle": 0
+      }
+    },
+    "parse_health": {
+      "status": "ok",
+      "error_regions": [],
+      "error_node_count": 0
+    },
+    "includes": [],
+    "global_vars": [],
+    "structs": [],
+    "macros": [],
+    "functions": [
+      {
+        "record": {
+          "id": "neg/alloc_001_variant.js#build#1:1",
+          "name": "build",
+          "path": "neg/alloc_001_variant.js",
+          "span": {
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 9,
+            "end_col": 1
+          },
+          "param_count": 0,
+          "param_types": [],
+          "cyclomatic_complexity": 1,
+          "cognitive_complexity": 0,
+          "max_loop_depth": 1,
+          "alloc_site_count": 1,
+          "length_lines": 9,
+          "resolver_tier": "syntactic",
+          "is_async": false
+        },
+        "calls": [],
+        "assignments": [],
+        "binary_ops": [],
+        "comparisons": [],
+        "access_chains": [],
+        "loops": [
+          {
+            "kind": "for",
+            "depth": 1,
+            "induction_vars": [
+              "i"
+            ],
+            "span": {
+              "start_line": 3,
+              "start_col": 3,
+              "end_line": 8,
+              "end_col": 4
+            },
+            "resolver_tier": "syntactic",
+            "macro_origin": false
+          }
+        ],
+        "awaits": [],
+        "try_blocks": [],
+        "allocations": [
+          {
+            "span": {
+              "start_line": 5,
+              "start_col": 5,
+              "end_line": 5,
+              "end_col": 20
+            },
+            "in_loop_depth": 1,
+            "is_innermost": true,
+            "resolver_tier": "syntactic",
+            "macro_origin": false,
+            "kind": "object",
+            "referenced_names": [
+              "i"
+            ]
+          }
+        ],
+        "unaries": []
+      }
+    ]
+  }
+]

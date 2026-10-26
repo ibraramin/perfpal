@@ -747,6 +747,8 @@ fn func(
             resolver_tier: ResolverTier::Syntactic,
             is_async: false,
             is_module_scope: false,
+            // Synthetic fixture functions model declarations (B5).
+            name_is_lexical_binding: true,
             call_fanout: None,
             call_fanin: None,
             call_depth: None,
@@ -762,6 +764,7 @@ fn func(
             entry_kind: None,
             entry_confidence: None,
             reachable_from_entry: None,
+            entry_declared: None,
         },
         calls,
         assignments: Vec::new(),
@@ -771,6 +774,8 @@ fn func(
         loops,
         awaits: Vec::new(),
         try_blocks: Vec::new(),
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 

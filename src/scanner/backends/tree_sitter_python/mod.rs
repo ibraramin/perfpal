@@ -679,6 +679,8 @@ fn module_unit(
         resolver_tier: ResolverTier::default(),
         is_async: false,
         is_module_scope: true,
+        // `<module>` is a label, not a callable binding.
+        name_is_lexical_binding: false,
         // v1.4 step 2 (plan `divergence-revamp`): `idiom_hash` / `error_path` /
         // `alloc_family` are populated by the scanner post-pass
         // (`scanner::instrument::populate`, needs source text); call-shape
@@ -700,6 +702,9 @@ fn module_unit(
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
+        // Plan `js-ts`: module-entry declaration is JS-only; other backends
+        // leave it `None`.
+        entry_declared: None,
     };
     FunctionUnit {
         record,
@@ -711,6 +716,8 @@ fn module_unit(
         loops: result.loops,
         awaits: result.awaits,
         try_blocks: result.try_blocks,
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 
@@ -756,6 +763,8 @@ fn function_unit(
         resolver_tier: ResolverTier::default(),
         is_async: infer::is_async_fn(fdef),
         is_module_scope: false,
+        // A Python `def` binds its name in the enclosing scope.
+        name_is_lexical_binding: true,
         // v1.4 step 2 (plan `divergence-revamp`): `idiom_hash` / `error_path` /
         // `alloc_family` are populated by the scanner post-pass
         // (`scanner::instrument::populate`, needs source text); call-shape
@@ -777,6 +786,9 @@ fn function_unit(
         entry_kind: None,
         entry_confidence: None,
         reachable_from_entry: None,
+        // Plan `js-ts`: module-entry declaration is JS-only; other backends
+        // leave it `None`.
+        entry_declared: None,
     };
     FunctionUnit {
         record,
@@ -788,6 +800,8 @@ fn function_unit(
         loops: result.loops,
         awaits: result.awaits,
         try_blocks: result.try_blocks,
+        allocations: Vec::new(),
+        unaries: Vec::new(),
     }
 }
 

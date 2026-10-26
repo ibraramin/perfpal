@@ -71,6 +71,8 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 resolver_tier: ResolverTier::default(),
                 is_async: false,
                 is_module_scope: false,
+                // Synthetic fixture functions model declarations (B5).
+                name_is_lexical_binding: true,
                 call_fanout: None,
                 call_fanin: None,
                 call_depth: None,
@@ -86,6 +88,7 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 entry_kind: None,
                 entry_confidence: None,
                 reachable_from_entry: None,
+                entry_declared: None,
             },
             calls: vec![call],
             assignments: Vec::new(),
@@ -95,6 +98,8 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
             loops: Vec::new(),
             awaits: Vec::new(),
             try_blocks: Vec::new(),
+            allocations: Vec::new(),
+            unaries: Vec::new(),
         }],
     }
 }
@@ -269,6 +274,8 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                 resolver_tier: ResolverTier::default(),
                 is_async: false,
                 is_module_scope: false,
+                // Synthetic fixture functions model declarations (B5).
+                name_is_lexical_binding: true,
                 call_fanout: None,
                 call_fanin: None,
                 call_depth: None,
@@ -284,6 +291,7 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                 entry_kind: None,
                 entry_confidence: None,
                 reachable_from_entry: None,
+                entry_declared: None,
             },
             calls,
             assignments: Vec::new(),
@@ -293,6 +301,8 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
             loops: Vec::new(),
             awaits: Vec::new(),
             try_blocks: Vec::new(),
+            allocations: Vec::new(),
+            unaries: Vec::new(),
         }],
     }
 }
