@@ -1,9 +1,11 @@
 # Track D — Atlas Run (simulation)
 
-**Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (`feat/atlas-sim`, base `821b984`).
-**Start this tab:** open the worktree, first message:
+**Status:** **DONE — merged into `main` as `v0.4.0` in merge-train M2 (2026-10-27).** D1–D2 + S1–S4
+are complete and gated; the companion stays a companion (`ADR-0012`), A12 unchanged, no graduation
+claim. The branch/worktree is an archive; no further D session.
 
-> `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md and execute Session D1.`
+**Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (archive; `feat/atlas-sim`, base `821b984`,
+merged `main` `v0.4.0`).
 
 **Track handoff:** `state/tracks/atlas-sim/handoff.md` · **Vision:** `docs/research/atlas-run.md` · **Evidence:** `docs/evidence/atlas-sim/` · **Prototype:** `sim/` or `sim.html`.
 **Core:** make the map *feel like the program is running* — startup, flow, loops, work, end/stop — playable, scrubbable, speedable. **D1 is a static inferred run, not execution.** D2 is the runtime trace/replay product.

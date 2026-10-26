@@ -56,6 +56,17 @@ read-only archives; do not sync/merge inside them.
   graduation). Bump `Cargo.toml`/`Cargo.lock` to **0.4.0**; add `CHANGELOG [0.4.0]`; run the story
   gate (897 tests, `sim/gate.sh` 304/304, 3k 44/44, F5/F6) + the full gate; mark the story track done;
   update state/handoff; commit. **No push/tag.**
+- **M2 result (2026-10-27): DONE.** Merge `646597c`; twelve conflicts resolved semantically;
+  `Cargo.toml`/`Cargo.lock` **0.4.0**; layout/flow **1**, schema **1.8**; `feat/atlas-sim` is an
+  ancestor of `main`. Atlas ADRs renumbered (`ADR-0012-atlas-story-companion`,
+  `ADR-0013-atlas-branch-reconciliation`) with the founder-override addendum (direction C → merge
+  now; **no A12 change**; **no graduation claim**). Story state IDs final at `D-pf-267..274` /
+  `A-pf-131..132`; the ledger keeps the story records (no ID reuse; two-hop remap documented in
+  ADR-0013). Story gate on merged main: **1,089 tests** (897 at the branch snapshot + the JS/TS
+  suites), `sim/gate.sh` **304/304**, 3k **44/44**, F5/F6 PASS, page 463,490 B, first frame max
+  1,616 ms (`docs/evidence/atlas-sim/GATE.txt`); full gate green (`docs/evidence/merge-m2/gate.txt`).
+  Integration fix: clippy `let_and_return` in `footer_parts` (single footer source); story data
+  regenerated (metrics content hash only). Story track done; state/handoff updated; no push/tag.
 - **M3 — main finalization.** Verify `feat/agent-report`, `fix/agent-report-regen`, `feat/js-ts`,
   `feat/atlas-sim` are ancestors of main; remove the agent-report worktree; prune merged branches;
   full CI gate; verify `--version` (**0.4.0**, schema **1.8**), CHANGELOG, README, hot state ≤8 KB,
