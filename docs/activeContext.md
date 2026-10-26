@@ -9,7 +9,7 @@ ancestors of `main`. The agent-report worktree was archived to
 **branch refs were retained** (founder instruction: no permanent deletion). Full CI gate on `main` at
 `2c01c17`: fmt, clippy, tests, `cargo deny check licenses`, semantic clippy/tests all exit 0 —
 **2,180 passed / 0 failed / 2 ignored** (`docs/evidence/merge-m3/gate.txt`). Story gate re-run on the
-final tree at `978a623`: **PASS**, 1,089 tests (1 ignored), **304/304** checks, 3k scale PASS
+final tree at `978a623` (three docs/evidence commits before HEAD): **PASS**, 1,089 tests passed (1 ignored), **304/304** checks, 3k scale PASS
 (`docs/evidence/atlas-sim/GATE.txt`). `--version` = `perfpal 0.4.0 (metrics schema 1.8)`; CHANGELOG
 `[0.3.0]` + `[0.4.0]`; README at 0.4.0 with JS/TS and the Atlas Story; hot state 4,884 B ≤ 8 KB; ADR
 numbers unique (0001–0013); clean status; no tag. **No push, no tag.**

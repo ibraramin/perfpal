@@ -97,3 +97,31 @@ e0928b8
 ## 6. Clean status (captured before this file was added to the repo)
 $ git status --porcelain
 lines=0
+
+## 7. Post-gate diff scope (2c01c17..HEAD)
+$ git diff --name-only 2c01c17..HEAD
+CHANGELOG.md
+docs/activeContext.md
+docs/evidence/atlas-sim/GATE.txt
+docs/evidence/atlas-sim/checks.json
+docs/evidence/atlas-sim/cjson-io-inspector.png
+docs/evidence/atlas-sim/cjson-loop.png
+docs/evidence/atlas-sim/cjson-stores.png
+docs/evidence/atlas-sim/cjson-trust.png
+docs/evidence/atlas-sim/hyperfine-loop.png
+docs/evidence/atlas-sim/hyperfine-stores.png
+docs/evidence/atlas-sim/hyperfine-trust.png
+docs/evidence/atlas-sim/scale-1280.png
+docs/evidence/merge-m3/gate.txt
+docs/evidence/merge-m3/verify.txt
+docs/plans/merge-train.md
+state/archive/ledger.jsonl
+state/handoff/latest.md
+state/session-state.json
+
+$ git diff --name-only 2c01c17..HEAD | wc -l
+18
+
+No src/, Cargo.toml/Cargo.lock, src/schema or docs/schema, sim/data-*.json or test file appears in the
+post-gate diff: the CI gate at 2c01c17 and the story gate at 978a623 remain valid for the code tree;
+only docs/evidence/state changed afterwards.

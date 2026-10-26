@@ -3,8 +3,9 @@
 **Updated:** 2026-10-27
 **Repo:** `/home/shafin/Opencode/Perfpal`
 **Session:** merge-train M3 — finalize the three-line merge on `main` (plan `merge-train` / M3)
-**Verdicts:** M3 review panel (R1/R2 correctness + contract, Q1/Q2 verbatim scope + evidence); the
-final verdicts are recorded by the M3 close commit.
+**Verdicts:** `@reviewer` **APPROVED** (R1 correctness; R2 contract/determinism/security) ·
+`@requirements-reviewer` **APPROVED** (Q1 verbatim scope, round 2; Q2 acceptance/evidence, round 2) ·
+fresh confirmation **APPROVED** (R3 end-to-end). Zero blocking findings.
 
 **North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. M3 closes the merge
 train that landed JS/TS and the Atlas Story **companion** on `main` at **v0.4.0** without changing the
@@ -37,7 +38,7 @@ prune merged branches (worktree registrations), run the full CI gate + story gat
 | Semantic lint | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | clean | `0` |
 | Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 1,092 total (1,091 passed, 1 ignored) / 0 failed | `0` |
 | Full CI gate aggregate | `docs/evidence/merge-m3/gate.txt` at `2c01c17` | 6/6 commands `EXIT=0`; **2,180 passed / 0 failed / 2 ignored**; `OVERALL_FAIL=0` | `0` |
-| Story gate on the final tree | `bash sim/gate.sh` (HEAD `978a623`) | `verdict=PASS`; 1,089 tests (1 ignored); 304/304 checks; 3k scale PASS; `worktree_dirty_zero` pass | `0` |
+| Story gate on the tree at `978a623` (three docs/evidence commits before HEAD) | `bash sim/gate.sh` | `verdict=PASS`; 1,089 tests passed (1 ignored); 304/304 checks; 3k scale PASS; `worktree_dirty_zero` pass | `0` |
 | Version / schema | `./target/debug/perfpal --version` | `perfpal 0.4.0 (metrics schema 1.8)` | `0` |
 | Schema copies | `cmp src/schema/metrics.schema.v1.8.json docs/schema/metrics.schema.v1.8.json` | identical | `0` |
 | Cargo versions | `grep version Cargo.toml`; `Cargo.lock` | both `0.4.0` | `0` |
@@ -50,12 +51,14 @@ prune merged branches (worktree registrations), run the full CI gate + story gat
 | Byte-determinism guard | `grep -c preserve_order Cargo.lock` | 0 | `0` |
 | No tag | `git tag --points-at HEAD` | empty | `0` |
 | Clean status (post-close) | `git status --porcelain` after the close commit | empty; ancestry/worktree/tag/state/version outputs in `docs/evidence/merge-m3/verify.txt` | `0` |
+| Post-gate diff scope | `git diff --name-only 2c01c17..HEAD` | 18 paths, all docs/evidence/state; no `src/`, Cargo, schema, `sim/data-*.json` or test file — the gates remain valid for the code tree (`verify.txt` §7) | `0` |
 
 Non-runnable evidence:
 - `docs/evidence/merge-m3/gate.txt` — full CI gate transcript at `2c01c17` (all exit 0).
 - `docs/evidence/merge-m3/verify.txt` — post-close verification transcript (ancestry ×4, worktree list,
   branch refs, tag, version, hot-state bytes, state/ledger validity, duplicate-ID scan, clean status).
-- `docs/evidence/atlas-sim/GATE.txt` — story-gate transcript re-run on the final tree at `978a623`
+- `docs/evidence/atlas-sim/GATE.txt` — story-gate transcript re-run at `978a623` (three docs/evidence
+  commits before HEAD)
   (`verdict=PASS`).
 - `docs/evidence/atlas-sim/checks.json` — 304/304 DOM/story checks at `978a623`.
 - `docs/evidence/merge-m2/gate.txt`, `docs/evidence/merge-m2/resolutions.md` — M2 merge evidence.
@@ -73,7 +76,8 @@ Non-runnable evidence:
 - `docs/evidence/merge-m3/gate.txt` — full CI gate at `2c01c17`.
 - `docs/evidence/atlas-sim/{GATE.txt,checks.json,*.png}` — story-gate re-run at `978a623`.
 - Trash archive: `/home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27` (outside the repo;
-  reversible; the git worktree registration was pruned).
+  reversible; the git worktree registration was pruned). The archived copy retains a `.git` file that
+  points at the pruned admin dir — restore with `git worktree add`, or remove that file, if ever needed.
 
 ## Decisions (live)
 - `D-pf-276` — MERGE-TRAIN M3 DONE: all four lines ancestors of `main`; agent-report worktree archived
@@ -101,17 +105,23 @@ Non-runnable evidence:
    graduation (A12 unchanged).
 2. `A-pf-108`/`A-pf-125` — V7 re-triage / post-beta map work; F decision (`D-pf-251`).
 3. Publish gate (`B-pf-001`/`B-pf-002`) — founder-owned; tag/publish only on explicit founder go.
+4. Pre-existing docs drift (found by the M3 panel, **not** introduced here; fix before publish):
+   `README.md:43` still shows `gh release download v0.2.0-beta.1` (unpublished; only `v0.1.0` is
+   tagged), `docs/roadmap.md:71` still says js-ts "merge pending founder approval", and
+   `docs/cross-platform-verification.md:72` still expects `(metrics schema 1.3)`.
 
 ## Uncommitted files
 
 ```
-(none — the M3 docs/state/evidence close set is the final commit of this session)
+(none — `a636080` is the last evidence commit; this verdict record is the final docs commit)
 ```
 
 ## Commits (this session)
 - `978a623` — docs(evidence): M3 full CI gate on main at 2c01c17 (fmt/clippy/test/deny/semantic green)
 - `c84a3b2` — docs(evidence): story gate re-run at 978a623 (PASS; 1,089 tests, 304/304, scale PASS)
-- M3 close commit (this handoff) — state/handoff/EOL + plan done + CHANGELOG finalization
+- `a705c3c` — docs(merge-train): M3 close — v0.4.0 finalization, EOL state, plan done
+- `a636080` — docs(evidence): M3 post-close verification at a705c3c
+- final verdict commit (this commit) — docs(merge-train): record the APPROVED M3 panel verdicts
 
 **Resume in a fresh session:** the merge train is closed on `main` at v0.4.0; next work is `A-pf-133`
 (story packaging) or the founder-gated publish path. No push/tag has been made.

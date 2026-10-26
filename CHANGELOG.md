@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Atlas Story companion follow-ups:** package the companion as a self-contained artifact (inline data; no `fetch`/HTTP server) and add a `perfpal story <repo>` entry point before the §5 founder session; F8/A2 story read deferred (ADR-0012 Decision 5); no in-report graduation (A12 unchanged).
 - **Cross-platform verification:** run `scripts/verify-windows-compat.sh` after major/OS-facing
   changes and at milestones (not every session).
+- **Pre-existing docs drift (found by the M3 panel; not introduced by M3):** `README.md:43` shows an
+  unpublished `v0.2.0-beta.1` download, `docs/roadmap.md:71` still says js-ts "merge pending founder
+  approval", and `docs/cross-platform-verification.md:72` still expects `(metrics schema 1.3)`. Fix
+  before the next publish.
 
 ## [0.4.0] - 2026-10-27
 
@@ -126,7 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with its git registration pruned; branch refs were retained (no permanent deletion). Full CI gate on
   `main`: fmt, clippy, tests, `cargo deny check licenses`, semantic clippy and semantic tests all exit
   0 — **2,180 passed / 0 failed / 2 ignored** (`docs/evidence/merge-m3/gate.txt`). Story gate re-run on
-  the final tree: **PASS**, 1,089 tests, 304/304 checks, 3k scale PASS
+  the tree at `978a623`: **PASS**, 1,089 tests passed, 304/304 checks, 3k scale PASS
   (`docs/evidence/atlas-sim/GATE.txt`). `--version` = `perfpal 0.4.0 (metrics schema 1.8)`; hot state
   4,884 B; clean status; no push/tag.
 
