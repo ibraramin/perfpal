@@ -1,0 +1,99 @@
+# Merge Train M3 — post-close verification transcript
+
+Date: 2026-10-26T20:53:57Z
+Close commit: a705c3c (docs(merge-train): M3 close — v0.4.0 finalization, EOL state, plan done)
+Tree: 83ce868de48912099519e613fa1b09f463a734f6
+Branch: main
+Note: `git status --porcelain` was observed empty immediately before this transcript was
+added to the repo; the transcript is committed in the next docs/evidence commit.
+
+## 1. Ancestry of the four merged lines
+$ git merge-base --is-ancestor feat/agent-report main -> exit=0
+$ git merge-base --is-ancestor fix/agent-report-regen main -> exit=0
+$ git merge-base --is-ancestor feat/js-ts main -> exit=0
+$ git merge-base --is-ancestor feat/atlas-sim main -> exit=0
+
+$ git branch -vv
+  feat/agent-report      c7f0009 docs(agent-report): record the --ff-only merge into main
++ feat/atlas-sim         e3bd45e (/home/shafin/Opencode/Perfpal-atlas-sim) docs(merge-train): main-worktree plan + feature spec
++ feat/js-ts             2e483b1 (/home/shafin/Opencode/Perfpal-js-ts) docs(js-ts): record B5 commit hashes in track handoff
+  fix/agent-report-regen c73d6ff test(agent-report): prune root-bearing agent artifacts after golden regen
+* main                   a705c3c docs(merge-train): M3 close — v0.4.0 finalization, EOL state, plan done
+
+## 2. Worktrees and the archived agent-report tree
+$ git worktree list
+/home/shafin/Opencode/Perfpal           a705c3c [main]
+/home/shafin/Opencode/Perfpal-atlas-sim e3bd45e [feat/atlas-sim]
+/home/shafin/Opencode/Perfpal-js-ts     2e483b1 [feat/js-ts]
+
+$ ls -d /home/shafin/Opencode/Perfpal-agent-report 2>&1
+ls: cannot access '/home/shafin/Opencode/Perfpal-agent-report': No such file or directory
+
+$ ls /home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27 | head -6
+about.hbs
+about.toml
+AGENTS.md
+Cargo.lock
+Cargo.toml
+CHANGELOG.md
+
+$ test -f /home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27/about.toml -> exit=0
+exit=0
+
+## 3. Release contract
+$ ./target/debug/perfpal --version
+perfpal 0.4.0 (metrics schema 1.8)
+exit=0
+
+$ cmp src/schema/metrics.schema.v1.8.json docs/schema/metrics.schema.v1.8.json
+exit=0
+
+$ grep -n '^version' Cargo.toml | head -1
+3:version = "0.4.0"
+$ grep -A1 'name = "perfpal"' Cargo.lock
+name = "perfpal"
+version = "0.4.0"
+
+$ grep -c '^## \[0\.4\.0\] - 2026-10-27' CHANGELOG.md; grep -c '^## \[0\.3\.0\] - 2026-10-27' CHANGELOG.md
+1
+1
+
+$ README markers (beta version / schema 1.8 / Atlas Story / JS-TS section)
+1
+1
+2
+1
+
+## 4. State and ledger
+$ wc -c state/session-state.json
+4884 state/session-state.json
+$ jq -e . state/session-state.json >/dev/null -> exit=0
+exit=0
+$ jq -r '[.decisions[].id, .open_risks[].id, .next_actions[].id, .blocked_by[].id] | group_by(.) | map(select(length>1) | .[0])'
+[]
+
+$ python3 (validate every ledger line)
+ledger valid, lines: 753
+
+## 5. Repository invariants
+$ ls docs/adr/ADR-*.md | wc -l; ls docs/adr/ | sed -n '11,13p'
+13
+ADR-0011-js-ts-backend.md
+ADR-0012-atlas-story-companion.md
+ADR-0013-atlas-branch-reconciliation.md
+
+$ grep -c preserve_order Cargo.lock
+0
+0 (absent)
+
+$ git tag --points-at HEAD
+lines=0
+
+$ git log --oneline origin/main..main | wc -l  (nothing pushed)
+270
+$ git rev-parse --short origin/main
+e0928b8
+
+## 6. Clean status (captured before this file was added to the repo)
+$ git status --porcelain
+lines=0
