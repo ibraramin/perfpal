@@ -9,7 +9,8 @@ graduation claim, no push/tag. **M2 (`feat/atlas-sim` → v0.4.0) is next.**
 `cda9d5f`); `Cargo.toml`/`Cargo.lock` are **0.3.0**; metrics schema **1.8**; the js-ts plan is done;
 the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gate.txt`).
 
-**Commits:** `cda9d5f` (merge `feat/js-ts`) + this v0.3.0/state/evidence commit. **No push/tag.**
+**Commits:** `cda9d5f` (merge `feat/js-ts`) + `158c7b0` (v0.3.0 integration/goldens/state) + `8f7c5c4`
+(`.gitignore` for the pre-existing local Playwright scratch). **No push/tag.**
 
 ## This session — M1
 
@@ -40,6 +41,9 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
   synthetic envelope re-measured **77,713 B** (4,207 B / 5.1% headroom); six golden trees and the
   agent-report sample regenerated at **0.3.0**. Golden delta: `tool.version` in every tree plus main's agent-report nav links restored in the two
   new JS/TS `report.html` files; finding counts are unchanged (15/9/32/29/11/11).
+- **Stop-on-first-failure:** the `cargo test --locked` run was stopped at the first failure and the
+  failure was reported before any fix. The fix follows merge-train binding rule 5 (fix the
+  integration, never weaken the gate); the full gate was then rerun from the top.
 - **Plan:** `js-ts` marked done (`markPlanDone`) with the B6 result recorded in the plan.
 
 ## Measured evidence
@@ -50,11 +54,11 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
 | Branch merged | `git merge-base --is-ancestor feat/js-ts main` | exit 0 |
 | Version | `cargo run --locked --quiet -- --version` | `perfpal 0.3.0 (metrics schema 1.8)` |
 | Schema copy | `cmp src/schema/metrics.schema.v1.8.json docs/schema/metrics.schema.v1.8.json` | byte-identical |
-| B6 DoD + full gate | `docs/evidence/merge-m1/gate.txt` | every command exit 0 |
+| B6 DoD + full gate | `docs/evidence/merge-m1/gate.txt` | final rerun: every command exit 0; the first run failed (agent-report lock) and was fixed |
 | JS/TS determinism | double scan `examples-js` / `examples-ts` (masked provenance) | charts/schema byte-equal; metrics equal modulo provenance |
 | Agent-report lock | `cargo test --locked --lib reporter::agent_report::tests::` | 24 passed, 0 failed |
 | Goldens | `cargo test --locked --test p6_hardening` | 4 passed, 0 failed |
-| Hot state | `wc -c state/session-state.json` | 5,914 B (≤ 8,192) |
+| Hot state | `wc -c state/session-state.json` | 5,614 B (≤ 8,192) |
 
 ## Verification
 
@@ -66,6 +70,9 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
 | Licenses | `cargo deny check licenses` | exit 0 |
 | Semantic gate | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` + `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | exit 0 |
 | Native check | `CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target cargo check --locked --all-targets` | exit 0 |
+| Branch ancestor | `git merge-base --is-ancestor feat/js-ts main` | exit 0 (observed post-commit) |
+| Clean status | `git status --porcelain` | empty (observed; `.playwright-mcp/` is ignored by `8f7c5c4`) |
+| No tag | `git tag --points-at HEAD` | empty |
 | Plan done | `docs/plans/js-ts.md` frontmatter | `plan status: done` |
 | State valid | JSON parse of `state/session-state.json` + all `state/archive/ledger.jsonl` lines | all valid |
 
@@ -77,7 +84,8 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
 - **JS/TS accepted limitations** remain as published (no types, no path aliases, declaration files/
   minified bundles skipped, syntactic tier only); `R-tb-021` (ALLOC-001 noise) and `R-tb-022`..`024`
   stay live in the js-ts track handoff.
-- `.playwright-mcp/` is pre-existing untracked scratch; **not** part of this change set.
+- `.playwright-mcp/` is pre-existing local scratch, now ignored by `8f7c5c4`; **not** part of the
+  merge change set.
 
 ## Next
 
@@ -101,9 +109,11 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
   `tests/agent_report.rs` (1.8 schema + six languages),
   `docs/evidence/agent-report/sample/derive_sample.py` (78 rows),
   `docs/evidence/agent-report/sample/agent-{actions,report}.sample.*` (regenerated at 0.3.0).
-- **Goldens:** 24 files across `tests/golden/report*` (tool version only; counts unchanged).
-- **State/evidence:** `state/session-state.json` (compacted, 5,914 B),
-  `state/archive/ledger.jsonl` (10 append-only archive records),
+- **Goldens:** 24 files across `tests/golden/report*` (`tool.version` in every tree plus main's
+  agent-report nav links restored in the two new JS/TS `report.html` files; counts unchanged
+  15/9/32/29/11/11).
+- **State/evidence:** `state/session-state.json` (compacted, 5,614 B),
+  `state/archive/ledger.jsonl` (11 append-only archive records; 735 lines total),
   `state/handoff/latest.md`, `docs/activeContext.md`,
   `docs/evidence/merge-m1/{gate.txt,resolutions.md}`.
 - **Merge commit:** `cda9d5f` carries the six conflict resolutions and the js-ts feature tree.

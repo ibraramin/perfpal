@@ -5,7 +5,8 @@
 - **Merge:** `git merge --no-ff feat/js-ts` → merge commit `cda9d5f`
 - **Version:** `Cargo.toml` / `Cargo.lock` **0.3.0**; metrics schema **1.8**
 - **Gate:** js-ts B6 DoD + the full gate on the merged tree — transcript
-  [`gate.txt`](./gate.txt). Every command exits 0.
+  [`gate.txt`](./gate.txt). **Final rerun:** every command exits 0. The first run failed and was
+  fixed (see below); the transcript keeps both runs.
 - **Boundaries:** no `--force`, `-X ours/theirs`, `--no-verify`; no push/tag.
 
 ## Conflict resolutions (read both sides, combined features)
@@ -16,7 +17,8 @@
 | `docs/report/output-contract.md` | Atlas page contract; 1.7 schema names | discovery/language-token rule; 1.8 schema names | Union: added the discovery/language-token rule (global directory skips + JS/TS-only skips), all schema names at 1.8; kept the Atlas page contract. |
 | `docs/tracks/README.md` | C row: agent-report C1–C4 DONE/merged | B row: B5 committed + merge gate; stale C row | Kept main's C row; took the B B5/merge-gate row and recorded B6 merged into `main` `v0.3.0`; updated the start message and track-state paragraph. |
 | `src/reporter/mod.rs` | `pub(crate) HEURISTIC_CATALOG_V1` (agent_report depends on it); 67-rule text; Atlas v2 modules | 78-rule catalog with 11 `PERF-JS-*` entries; JS label wiring | Kept `pub(crate)` visibility and the 78-rule text/entries; both the Atlas v2 modules and the JS `import/require` label wiring are present (7 `pub mod`, one catalog). |
-| `state/archive/ledger.jsonl` | 14-line tail (`D-pf-*`, `A-pf-*`, `R-pf-109`) | 37-line tail (`D-tb-*`, `R-tb-*`, `B-tb-*`, `A-tb-*`) | Append-only union: main tail then branch tail. All 724 lines parse as JSON; no ID reuse across the two tails. |
+| `state/archive/ledger.jsonl` | 14-line tail (`D-pf-*`, `A-pf-*`, `R-pf-109`) | 37-line tail (`D-tb-*`, `R-tb-*`, `B-tb-*`, `A-tb-*`) | Append-only union: main tail then branch tail. All 724 lines parse as JSON; no cross-tail ID reuse
+  (append-only status pairs such as `A-tb-005` pending → done are intentional history). |
 | `tests/p6_hardening.rs` | agent-report prune block (`AGENT_REPORT_ARTIFACTS`); 17-artifact comment | six golden trees; 19-artifact set; both Atlas pages | Kept the prune block and six trees; took the 19-artifact set/both-Atlas-page comment; corrected the stale 17 count to 19. |
 
 ## Gate failure and integration fix (not a gate weakening)
@@ -37,7 +39,10 @@ schema 1.7 sample.
   restored in the two new JS/TS `report.html` files; finding counts are unchanged
   (15/9/32/29/11/11).
 
-No conflict was resolved by deleting a side; no gate was skipped or relaxed.
+No conflict was resolved by deleting a side; no gate was skipped or relaxed. The first
+`cargo test --locked` run was **stopped at the first failure and reported**; the fix is the
+merge-train binding rule 5 integration fix (fix the tree, never weaken the gate), after which the
+full gate was rerun from the top.
 
 ## Verification
 
@@ -52,4 +57,8 @@ No conflict was resolved by deleting a side; no gate was skipped or relaxed.
 | JS/TS determinism | double scan of `examples-js` / `examples-ts` (masked provenance; charts/schema byte-equal) | both deterministic |
 | Native check | `CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target cargo check --locked --all-targets` | exit 0 |
 | Version | `cargo run --locked --quiet -- --version` | `perfpal 0.3.0 (metrics schema 1.8)` |
+| Clean status | `git status --porcelain` | empty (observed; `.playwright-mcp/` ignored by `8f7c5c4`) |
+| No tag | `git tag --points-at HEAD` | empty |
+| Hot state | `wc -c state/session-state.json` | 5,614 B (≤ 8,192) |
+| Ledger | JSON parse of every line | 735 lines valid (724 union + 11 archive records) |
 | Plan | `js-ts` status | done |

@@ -30,13 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tests, and the B3/B4/B5 gate transcripts + real-code canary under `docs/evidence/`. The B6 merge
   gate merged `feat/js-ts` into `main` and reran the DoD on the merged tree.
 
-### Changed
-- **Version 0.3.0 (unreleased line; no tag or publish).** `Cargo.toml`/`Cargo.lock` move from
-  `0.2.0-beta.1` to `0.3.0`; the merge-train version train records v0.3.0 = JS/TS + schema 1.8
-  (v0.4.0 will carry the Atlas Story). README/roadmap name the five backends and six tokens. No
-  runtime dependency beyond the two exact-pinned grammars. C/Rust/Python finding sets are unchanged
-  on the existing corpora; the mechanical delta is the v1.8 artifact name, plus the documented
-  discovery skip beneath the new directory names.
 - **Agent report — LLM-facing artifacts from every scan (2026-10-24, `contract_version: 1`).** Each run
   now writes two artifacts beside the human report: `agent-actions.json` — every ranked action with its
   fix hint, evidence, cost anchor and a data-quality block (uncapped) — and `agent-report.md` — a fixed
@@ -51,6 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   root as provenance by design and are locked by the sample + the integration suite instead).
 
 ### Changed
+- **Version 0.3.0 (unreleased line; no tag or publish).** `Cargo.toml`/`Cargo.lock` move from
+  `0.2.0-beta.1` to `0.3.0`; the merge-train version train records v0.3.0 = JS/TS + schema 1.8
+  (v0.4.0 will carry the Atlas Story). README/roadmap name the five backends and six tokens. No
+  runtime dependency beyond the two exact-pinned grammars. C/Rust/Python finding sets are unchanged
+  on the existing corpora; the mechanical delta is the v1.8 artifact name, plus the documented
+  discovery skip beneath the new directory names.
 - **Atlas v2 step 15 — ship/docs pass (2026-10-26; docs/state only, no code).** The Atlas human map
   is documented as the product's human map (beta artifacts; publish gate founder-owned):
   `docs/report/output-contract.md` gains the `report.html#map`

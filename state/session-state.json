@@ -8,11 +8,6 @@
   "last_alignment_audit": "2026-10-16",
   "decisions": [
     {
-      "id": "D-pf-249",
-      "status": "archived",
-      "title": "RESTORED APPEND-ONLY RECORD: archived decisions D-pf-241/242/243/247/248/249/250/252/253/254 are in state/archive/ledger.jsonl; no history is lost. D-pf-250/252/253/254 were moved there by A5-step15 after the plan-done record (D-pf-258)."
-    },
-    {
       "id": "D-pf-251",
       "status": "live",
       "title": "F TREEMAP DECISION (2026-10-24): keep W1; F stays undecided. No F code ships in step 12; the Explorer treemap and all F data remain untouched; the prototype under docs/evidence/atlas-visual/v2/step12/ is retained as evidence for a later decision. Step 13 founder visual gate remains next; A2/ship blocked at the time (superseded by D-pf-253: A2 schedulable 2026-10-24)."
