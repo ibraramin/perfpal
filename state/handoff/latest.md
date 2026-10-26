@@ -3,7 +3,7 @@
 **Updated:** 2026-10-27
 **Repo:** `/home/shafin/Opencode/Perfpal`
 **Session:** merge-train M2 — merge the Atlas Story companion into `main` as v0.4.0 (plan `merge-train` / M2)
-**Verdicts:** `@reviewer` APPROVED (R1; R2 APPROVE with non-blocking notes) · `@requirements-reviewer` Q1 APPROVED; Q2 CHANGES_REQUESTED pending the clean-status close (round 3)
+**Verdicts:** `@reviewer` **APPROVED** (R1; R2 APPROVE with non-blocking notes; fresh confirmation APPROVED) · `@requirements-reviewer` **Q1 APPROVED**; **Q2 APPROVED** (final round after F1–F3)
 
 **North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. M2 integrates the Atlas
 Story **companion** (the temporal/data-flow showcase) into `main` as **v0.4.0** without changing the
@@ -42,7 +42,7 @@ story gate + full gate; mark the story track done and reconcile state/handoff; n
 | State JSON + ledger | `jq`/`json.loads` on hot state and all ledger lines | all valid; 750 ledger lines | `0` |
 | ADR numbers unique | `ls docs/adr/ADR-001*` | one `0011` (js-ts), one `0012` (Atlas Story), one `0013` (reconciliation) | `0` |
 | No tag | `git tag --points-at HEAD` | empty | `0` |
-| Clean status | `git status --porcelain` | empty (observed at `9dba314`; the close commit is docs/state only) | `0` |
+| Clean status | `git status --porcelain` | empty (observed at `9dba314`; `05030d1` close and `5bf7406` evidence alignment are docs/evidence-only) | `0` |
 
 Non-runnable evidence:
 - `docs/evidence/atlas-sim/GATE.txt` — story gate transcript at `433a837` (PASS, dirty 0).
@@ -119,7 +119,7 @@ Non-runnable evidence:
 ## Uncommitted files
 
 ```
-(empty — `git status --porcelain` produced no lines at `9dba314`)
+(empty — `git status --porcelain` produced no lines at `9dba314`; the post-observation commits are docs/evidence-only)
 ```
 
 ## Commits (this session)
@@ -130,7 +130,9 @@ Non-runnable evidence:
 - `7bad275` — fix(merge-train): M2 panel round 2 — ADR table truth, ledger pointer, docs
 - `433a837` — docs(evidence): M2 full gate at 7bad275
 - `9dba314` — docs(evidence): story gate at 433a837
-- final close commit — docs(merge-train): M2 handoff + round-3 verdicts
+- `05030d1` — docs(merge-train): M2 close — handoff, gate commits, clean status
+- `5bf7406` — docs(merge-train): align M2 evidence with the final re-gate
+- final verdict commit — docs(merge-train): record the APPROVED panel verdicts
 
 **Resume in a fresh session:** plan `merge-train`, next task **M3 — main finalization**, commit
-`9dba314` (gate-green tree; the close commit adds only this handoff + verdicts).
+`5bf7406` (gate-green tree; the verdict commit adds only this handoff).
