@@ -83,19 +83,21 @@ def compact_number(value: float) -> str:
 
 
 def stage_dom(page) -> str:
-    """Canonical #stage DOM: geometry attributes plus leaf text."""
+    """Canonical render DOM: #stage geometry plus the below-fold S4 panels."""
     return page.evaluate(
         """() => {
-            const stage = document.querySelector('#stage');
-            if (!stage) return '';
             const parts = [];
-            for (const el of [stage, ...stage.querySelectorAll('*')]) {
-                const attrs = [...el.attributes]
-                    .map((attr) => `${attr.name}=${attr.value}`)
-                    .sort()
-                    .join(';');
-                const text = el.children.length === 0 ? el.textContent : '';
-                parts.push(`${el.tagName}|${attrs}|${text}`);
+            for (const root of [document.querySelector('#stage'),
+                                document.querySelector('#s4-detail')]) {
+                if (!root) continue;
+                for (const el of [root, ...root.querySelectorAll('*')]) {
+                    const attrs = [...el.attributes]
+                        .map((attr) => `${attr.name}=${attr.value}`)
+                        .sort()
+                        .join(';');
+                    const text = el.children.length === 0 ? el.textContent : '';
+                    parts.push(`${el.tagName}|${attrs}|${text}`);
+                }
             }
             return parts.join('\\n');
         }"""
@@ -353,6 +355,11 @@ def main() -> int:
               str([action["anchor"] for action in payload["meta"]["actions"]
                    if not isinstance(action.get("scene"), str)
                    or action["scene"] != core_scene_of_action.get(action["anchor"])][:3]))
+        check(f"{case_id}: S4 action functions are carried",
+              all(isinstance(action.get("function"), str) and action["function"]
+                  for action in payload["meta"]["actions"]),
+              str([action.get("anchor") for action in payload["meta"]["actions"]
+                   if not isinstance(action.get("function"), str) or not action["function"]][:3]))
 
         # unresolved calls: grouped by drawn call-site file, sorted, capped
         unresolved_total = 0
@@ -560,6 +567,8 @@ def main() -> int:
                   str(response.status if response else None))
             page.wait_for_function("() => window.__sim && window.__sim.state().beats > 0",
                                    timeout=10000)
+            check("window.__sim.ready is true after the first render",
+                  page.evaluate("() => Boolean(window.__sim && window.__sim.ready)"))
 
             for case_id in REAL_CASES:
                 expected = payloads[case_id]
@@ -569,6 +578,68 @@ def main() -> int:
                 state = page.evaluate("() => window.__sim.state()")
                 check(f"{case_id}: beats derived", state["beats"] >= 6, f'{state["beats"]} beats')
                 check(f"{case_id}: case is not synthetic", state["synthetic"] is False)
+
+                purpose = expected.get("purpose") or {}
+                if purpose.get("kind") == "withheld":
+                    purpose_line = "Purpose withheld (README claim)."
+                elif purpose.get("kind") == "readme":
+                    purpose_line = f'{purpose["text"]} · from {purpose.get("source") or "README"}'
+                elif purpose.get("kind") == "structural":
+                    purpose_line = f'{purpose["text"]} · structural fallback'
+                else:
+                    purpose_line = "entry-flow map · static, profile to confirm"
+                subline = page.inner_text("#brand-subline").strip()
+                check(f"{case_id}: masthead purpose matches the projection",
+                      subline == purpose_line, subline[:140])
+
+                scene_meta = expected["sceneMeta"]
+                profile_meta = expected["profileMeta"]
+                trust_data = expected["trust"]
+                detail = page.evaluate(
+                    """() => {
+                        const section = document.querySelector('#s4-detail');
+                        const cards = [...document.querySelectorAll('#s4-scene-grid [data-scene]')];
+                        const queue = [...document.querySelectorAll('#s4-queue [data-profile-row]')];
+                        return {
+                            visible: !!section && !section.hidden
+                                && getComputedStyle(section).display !== 'none',
+                            cards: cards.length,
+                            cardPaths: cards.map((el) => el.getAttribute('data-scene')),
+                            scenesCaps: (document.querySelector('#s4-scenes-caps') || {}).textContent || '',
+                            profileCaps: (document.querySelector('#s4-profile-caps') || {}).textContent || '',
+                            queue: queue.length,
+                            queueFirst: queue.length ? queue[0].textContent : '',
+                            trust: (document.querySelector('#s4-trust-list') || {}).textContent || '',
+                            topFilesMax: Math.max(0, ...[...document.querySelectorAll(
+                                '#s4-scene-grid .s4-files')].map((el) => el.children.length)),
+                        };
+                    }"""
+                )
+                check(f"{case_id}: S4 detail visible for the real case", detail["visible"])
+                check(f"{case_id}: S4 scene cards match shownScenes",
+                      detail["cards"] == scene_meta["shownScenes"]
+                      and detail["cardPaths"] == [scene["path"] for scene in expected["scenes"]],
+                      f'{detail["cards"]}/{scene_meta["shownScenes"]} · {detail["cardPaths"][:3]}')
+                check(f"{case_id}: S4 scene caps disclose shown/total",
+                      f'{scene_meta["shownScenes"]} of {scene_meta["totalScenes"]}' in detail["scenesCaps"],
+                      detail["scenesCaps"][:160])
+                check(f"{case_id}: S4 scene top files stay capped",
+                      detail["topFilesMax"] <= 5, str(detail["topFilesMax"]))
+                check(f"{case_id}: S4 queue shows every carried row",
+                      detail["queue"] == profile_meta["shown"]
+                      and expected["profile"][0]["name"] in detail["queueFirst"],
+                      f'{detail["queue"]}/{profile_meta["shown"]} · {detail["queueFirst"][:90]}')
+                check(f"{case_id}: S4 profile caps disclose the candidate set",
+                      f'{profile_meta["shown"]} of {profile_meta["candidateTotal"]}' in detail["profileCaps"]
+                      and f'{profile_meta["demotedProduction"]:,} production rows demoted' in detail["profileCaps"],
+                      detail["profileCaps"][:160])
+                trust_panel = detail["trust"]
+                check(f"{case_id}: S4 trust panel carries scenes, profile and unresolved totals",
+                      f'{scene_meta["shownScenes"]} of {scene_meta["totalScenes"]} shown' in trust_panel
+                      and f'{profile_meta["shown"]} shown of {profile_meta["candidateTotal"]} candidates' in trust_panel
+                      and f'{trust_data["unresolvedCalls"]:,} on {trust_data["unresolvedFiles"]:,} files' in trust_panel
+                      and f'{purpose.get("kind", "not present")} · {purpose.get("source") or "no source"}' in trust_panel,
+                      trust_panel[:200])
 
                 rendered = page.evaluate(
                     "() => document.querySelectorAll('#stage g[role=\"button\"]').length")
@@ -646,6 +717,14 @@ def main() -> int:
                     page.wait_for_timeout(50)
                     body = page.inner_text("#narration-body").strip()
                     check(f"{case_id}: {kind} narration is non-empty", len(body) > 12, body[:90])
+
+                enter_index = kinds.index("enter")
+                page.evaluate("(i) => window.__sim.seekIndex(i)", enter_index)
+                page.wait_for_timeout(50)
+                enter_text = page.inner_text("#narration-body")
+                check(f"{case_id}: enter beat carries scene context",
+                      "Scene " in enter_text,
+                      enter_text[-140:])
 
                 # ---- S3: stores on the scene + trust line ---------------
                 io_node = next((node for node in expected["nodes"] if node.get("io")), None)
@@ -815,19 +894,31 @@ def main() -> int:
                 page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("profile"))
                 page.wait_for_timeout(50)
                 profile_text = page.inner_text("#narration-body").lower()
-                check(f"{case_id}: profile labels the drawn-slice basis",
-                      "top 3 per file" in profile_text
-                      and "static candidates, verify" in profile_text,
+                profile_title = page.inner_text("#narration-title").lower()
+                check(f"{case_id}: profile labels the whole-repo basis",
+                      "whole-repo" in profile_text
+                      and "drawn-slice" not in profile_text
+                      and "static candidates, verify" in profile_text
+                      and f'{profile_meta["candidateTotal"]:,}' in profile_text
+                      and str(profile_meta["demotedProduction"]) in profile_text
+                      and "whole-repo" in profile_title,
                       profile_text[:180])
                 actions = expected["meta"]["actions"][:3]
                 page.evaluate("(i) => window.__sim.seekIndex(i)", kinds.index("start-here"))
                 page.wait_for_timeout(50)
                 start_text = page.inner_text("#narration-body")
+                first_action = actions[0]
+                start_title = page.get_attribute("#start-actions", "title") or ""
                 check(f"{case_id}: start-here names up to 3 actions",
                       bool(actions)
                       and all(action["anchor"] in start_text for action in actions)
                       and ("on-canvas" in start_text or "off-canvas" in start_text),
                       start_text[:140])
+                check(f"{case_id}: start-here carries scene and the first full anchor",
+                      first_action["anchor"] in start_text
+                      and first_action["scene"] in start_text
+                      and first_action["anchor"] in start_title,
+                      f'{first_action["anchor"]} · {first_action["scene"]} · title={start_title[:90]}')
                 loop_index = kinds.index("loop")
                 page.evaluate("(i) => window.__sim.seekIndex(i)", loop_index)
                 page.wait_for_timeout(80)
@@ -851,6 +942,11 @@ def main() -> int:
                 page.evaluate("() => window.__sim.seekIndex(window.__sim.state().beats - 1)")
                 page.wait_for_timeout(80)
                 final_text = page.inner_text("body")
+                summary_text = page.inner_text("#narration-body")
+                first_action = expected["meta"]["actions"][0]
+                check(f"{case_id}: final summary names the first start action",
+                      f'Start: {first_action["anchor"]} — {first_action["title"]}.' in summary_text,
+                      summary_text[-140:])
                 final_claim = re.search(
                     r"\b\d+(?:\.\d+)?\s?(?:ms|µs|μs|milliseconds?|seconds?)\b", final_text, re.I)
                 check(f"{case_id}: no time units at the final beat", final_claim is None,
@@ -910,6 +1006,58 @@ def main() -> int:
                 reset = page.evaluate("() => window.__sim.state()")
                 check(f"{case_id}: reset returns to beat 0",
                       reset["index"] == 0 and reset["ms"] == 0, f'{reset["index"]} @ {reset["ms"]}')
+
+                # ---- S4: unresolved calls in the inspector --------------
+                unresolved_node = next(
+                    (node for node in expected["nodes"] if node.get("unresolvedCalls")), None)
+                check(f"{case_id}: S4 unresolved-call data is present",
+                      unresolved_node is not None)
+                if unresolved_node:
+                    page.evaluate(
+                        """(path) => {
+                            const node = document.querySelector(`#stage g[role="button"][data-node="${path}"]`);
+                            if (node) node.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+                        }""",
+                        unresolved_node["id"],
+                    )
+                    page.wait_for_timeout(50)
+                    selected_unresolved = page.evaluate("() => window.__sim.state().selected")
+                    insp_unresolved = page.inner_text("#inspector")
+                    rows_dom = page.evaluate(
+                        """() => [...document.querySelectorAll('#inspector [data-unresolved]')]
+                            .map((li) => ({
+                                line: li.getAttribute('data-unresolved-line'),
+                                text: li.textContent,
+                                title: li.title,
+                            }))"""
+                    )
+                    expected_rows = unresolved_node["unresolvedCalls"]["rows"]
+                    count = unresolved_node["unresolvedCalls"]["count"]
+                    check(f"{case_id}: S4 unresolved node opens the inspector",
+                          selected_unresolved == unresolved_node["id"],
+                          str(selected_unresolved))
+                    check(f"{case_id}: S4 inspector renders unresolved-call rows",
+                          "UNRESOLVED CALLS" in insp_unresolved
+                          and 0 < len(rows_dom) <= 6
+                          and len(rows_dom) == len(expected_rows),
+                          f"{len(rows_dom)}/{count} rows")
+                    check(f"{case_id}: S4 unresolved rows never guess a target",
+                          all(row["text"].startswith(f'L{row["line"]}')
+                              and "→" not in row["text"]
+                              and "guess" not in row["text"].lower()
+                              for row in rows_dom)
+                          and all(
+                              row["line"] == str(expected_row["line"])
+                              and expected_row["callee"] in row["text"]
+                              and row["title"] == expected_row["caller"]
+                              for row, expected_row in zip(rows_dom, expected_rows)
+                          ),
+                          str(rows_dom[:2]))
+                    if count > len(rows_dom):
+                        check(f"{case_id}: S4 unresolved rows disclose the cap",
+                              f'showing {len(rows_dom)} of {count:,}' in insp_unresolved,
+                              f'{len(rows_dom)}/{count}')
+                    page.keyboard.press("Escape")
 
                 # ---- inspector ------------------------------------------
                 target = expected["trace"][0]["path"]
@@ -989,6 +1137,14 @@ def main() -> int:
                     "id => window.__sim.state().caseId === id", arg=case_id, timeout=10000)
                 demo = page.evaluate("() => window.__sim.state()")
                 check(f"{case_id}: labelled synthetic", demo["synthetic"] is True)
+                check(f"{case_id}: synthetic purpose fallback unchanged",
+                      page.inner_text("#brand-subline").strip()
+                      == "entry-flow map · static, profile to confirm")
+                check(f"{case_id}: S4 detail hidden for the state demo",
+                      page.evaluate("""() => {
+                          const section = document.querySelector('#s4-detail');
+                          return !section || section.hidden;
+                      }"""))
                 check(f"{case_id}: stub panel visible", page.is_visible("#stub"))
                 check(f"{case_id}: no fabricated nodes",
                       page.evaluate("() => document.querySelectorAll('#stage g[role=\"button\"]').length") == 0)

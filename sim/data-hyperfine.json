@@ -2051,18 +2051,21 @@
   "actions": [
    {
     "anchor": "src/output/report.rs:144",
+    "function": "print",
     "onCanvas": false,
     "scene": "src/output",
     "title": "Heap allocation inside loop (Rust)"
    },
    {
     "anchor": "src/output/report.rs:49",
+    "function": "print",
     "onCanvas": false,
     "scene": "src/output",
     "title": "Heap allocation inside loop (Rust)"
    },
    {
     "anchor": "src/options.rs:304",
+    "function": "from_cli_arguments",
     "onCanvas": true,
     "scene": "src",
     "title": "Heap allocation inside loop (Rust)"

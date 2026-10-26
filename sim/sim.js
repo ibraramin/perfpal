@@ -148,15 +148,24 @@
       : included < total
         ? `${fmt(total)} findings in the scan (${fmt(included)} included in this data slice)`
         : `${fmt(total)} findings in the scan`;
-    return `${data.meta.path} · ${data.meta.caps} · ${findings}. Static cost units, not time; profile to confirm.`;
+    const action = (data.meta.actions || [])[0];
+    const start = action ? ` Start: ${action.anchor} — ${action.title}.` : '';
+    return `${data.meta.path} · ${data.meta.caps} · ${findings}.${start} Static cost units, not time; profile to confirm.`;
   }
 
   function profileText(data) {
     const rows = (data.profile || []).slice(0, 5);
-    if (rows.length === 0) return 'No drawn-slice static candidates recorded for this data slice.';
-    return `Top 3 per file shown; static candidates, verify: ${rows
+    const meta = data.profileMeta || {};
+    if (rows.length === 0) return 'No whole-repo static candidates recorded for this data slice.';
+    const shown = meta.shown ?? rows.length;
+    const candidate = meta.candidateTotal ?? rows.length;
+    const productionRanked = meta.productionRanked ?? candidate;
+    const totalRanked = meta.totalRanked ?? productionRanked;
+    const demoted = meta.demotedProduction ?? 0;
+    const queue = rows
       .map((fn) => `${fn.name} (${base(fn.path)} L${fn.line}) · ${fmt(fn.cost)} units`)
-      .join(' · ')}. Drawn-slice queue, not a whole-repo ranking.`;
+      .join(' · ');
+    return `Whole-repo queue: ${fmt(rows.length)} of ${fmt(shown)} carried · ${fmt(productionRanked)} production rows ranked · ${fmt(candidate)} production candidates · ${fmt(totalRanked)} functions ranked · ${fmt(demoted)} production rows demoted (startup/no-loop). Static candidates, verify: ${queue}.`;
   }
 
   function anchorPath(anchor) {
@@ -167,19 +176,29 @@
     const actions = (data.meta.actions || []).slice(0, 3);
     if (actions.length === 0) return 'No ranked actions recorded for this scan.';
     return `${actions
-      .map((action) => `${action.anchor} — ${action.title} (${action.onCanvas ? 'on-canvas' : 'off-canvas'})`)
+      .map((action) => {
+        const fn = action.function ? ` · ${action.function}` : '';
+        const scene = action.scene ? ` · scene ${action.scene}` : '';
+        return `${action.anchor} — ${action.title}${fn}${scene} (${action.onCanvas ? 'on-canvas' : 'off-canvas'})`;
+      })
       .join(' · ')}.`;
   }
 
   function trustText(data) {
     const trust = data.trust;
     if (!trust) return 'Trust: cap, parse and coverage accounting is not present in this data slice.';
+    const scenes = trust.scenes;
+    const profile = trust.profile;
+    const scale = scenes && profile
+      ? `scenes ${fmt(scenes.shown)}/${fmt(scenes.total)} · profile ${fmt(profile.shown)}/${fmt(profile.candidateTotal)} · unresolved calls ${fmt(trust.unresolvedCalls ?? 0)}`
+      : '';
     return [
       `caps: ${trust.caps}`,
-      `partial parse: ${trust.partialParse ? 'yes' : 'no'}`,
-      `non-production share: ${fmt(trust.nonProductionNodes)}/${fmt(trust.drawnNodes)} drawn files (test/bench)`,
-      `unknown-trip functions: ${fmt(trust.unknownTripFunctions)} (estimate incomplete)`,
-      `findings included: ${fmt(trust.findingsIncluded)}/${fmt(trust.findingsTotal)}`,
+      `partial: ${trust.partialParse ? 'yes' : 'no'}`,
+      `non-production: ${fmt(trust.nonProductionNodes)}/${fmt(trust.drawnNodes)} drawn (test/bench)`,
+      `unknown-trip: ${fmt(trust.unknownTripFunctions)} (incomplete)`,
+      `findings: ${fmt(trust.findingsIncluded)}/${fmt(trust.findingsTotal)}`,
+      scale,
       ioTrustText(trust.io),
     ].filter(Boolean).join(' · ') + '.';
   }
@@ -195,7 +214,7 @@
     const more = io.literal > examples.length ? `, +${io.literal - examples.length}` : '';
     const literal = `${fmt(io.literal)} literal${examples.length ? ` (${examples.join(', ')}${more})` : ''}`;
     const stdio = io.stdio ? `, ${fmt(io.stdio)} stdio` : '';
-    return `I/O: ${fmt(io.rows)} effect${io.rows === 1 ? '' : 's'} in ${fmt(io.files)} file${io.files === 1 ? '' : 's'} — ${literal}, ${fmt(io.unknownTarget)} target unknown${stdio}; call-name match`;
+    return `I/O: ${fmt(io.rows)} effect${io.rows === 1 ? '' : 's'} / ${fmt(io.files)} file${io.files === 1 ? '' : 's'} — ${literal}, ${fmt(io.unknownTarget)} target unknown${stdio}; call-name match`;
   }
 
   function storesText(node) {
@@ -256,6 +275,7 @@
 
     const trace = [...data.trace].sort((a, b) => a.step - b.step);
     const entry = byId.get(trace[0].path) || data.nodes[0];
+    const scenesById = new Map((data.scenes || []).map((scene) => [scene.path, scene]));
     beats.push({
       kind: 'boot',
       title: `Boot · ${base(entry.name)}`,
@@ -270,11 +290,19 @@
       const node = byId.get(step.path);
       if (!node) continue;
       const from = previous ? ` from ${base(previous)}` : '';
+      const scene = node.scene ? scenesById.get(node.scene) : null;
+      const sceneText = node.scene
+        ? scene
+          ? ` Scene ${node.scene} · ${fmt(scene.files)} files · ${fmt(scene.productionFiles)} production.`
+          : ` Scene ${node.scene}.`
+        : '';
+      const chips = [`step ${step.step}/${trace.length}`, 'inferred'];
+      if (node.scene) chips.push(`scene ${node.scene}`);
       beats.push({
         kind: 'enter',
         title: `Step ${step.step}/${trace.length} · ${base(node.name)}`,
-        narration: `${node.costText}${from}${node.ratioText ? ` · ${node.ratioText}` : ''}${node.topText ? ` · ${node.topText}` : ''}.${node.badge ? ` Annotation ${node.badge}.` : ''}${storesText(node)}`,
-        chips: [`step ${step.step}/${trace.length}`, 'inferred'],
+        narration: `${node.costText}${from}${node.ratioText ? ` · ${node.ratioText}` : ''}${node.topText ? ` · ${node.topText}` : ''}.${node.badge ? ` Annotation ${node.badge}.` : ''}${sceneText}${storesText(node)}`,
+        chips,
         step: step.step,
         focus: { node: node.id, edge: previous ? `${previous}->${node.id}` : null },
       });
@@ -340,13 +368,19 @@
     }
 
     const profile = (data.profile || []).slice(0, 5);
+    const profileTop = profile[0] || null;
+    const profileFocus = profileTop
+      ? (byId.has(profileTop.path)
+        ? { node: profileTop.path, fn: profileTop.id }
+        : { node: profileTop.path })
+      : {};
     beats.push({
       kind: 'profile',
-      title: profile.length > 0 ? 'Profile queue · drawn-slice candidates' : 'Profile queue',
+      title: profile.length > 0 ? 'Profile queue · whole-repo candidates' : 'Profile queue',
       narration: profileText(data),
       chips: ['static candidate', 'verify'],
       step: trace.length,
-      focus: profile.length > 0 ? { node: profile[0].path, fn: profile[0].id } : {},
+      focus: profileFocus,
     });
 
     const actions = (data.meta.actions || []).slice(0, 3);
@@ -605,8 +639,21 @@
   }
 
 
+  function purposeText(data) {
+    const purpose = data.purpose;
+    if (data.synthetic || !purpose) return 'entry-flow map · static, profile to confirm';
+    if (purpose.kind === 'withheld') return 'Purpose withheld (README claim).';
+    if (purpose.kind === 'readme') {
+      return `${purpose.text} · from ${purpose.source || 'README'}`;
+    }
+    return `${purpose.text} · structural fallback`;
+  }
+
   function renderMeta() {
     const meta = state.data.meta;
+    const subline = purposeText(state.data);
+    setText('#brand-subline', subline);
+    $('#brand-subline').title = subline;
     setText('#key-entry', meta.entry);
     setText('#key-caps', meta.caps);
     const hottest = (state.data.nodes || []).find((node) => node.hottest);
@@ -630,13 +677,22 @@
     starts.replaceChildren();
     if (!meta.actions || meta.actions.length === 0) {
       starts.textContent = 'no ranked actions recorded';
+      starts.removeAttribute('title');
     } else {
       for (const action of meta.actions) {
-        const span = html('span', { class: 'start' });
-        span.append(html('span', { class: 'start-anchor' }, action.anchor));
-        span.append(document.createTextNode(` — ${action.title}`));
+        const scene = action.scene ? ` · scene ${action.scene}` : '';
+        const fn = action.function ? ` · ${action.function}` : '';
+        const span = html('span', {
+          class: 'start',
+          title: `${action.anchor} — ${action.title}${fn}${scene} (${action.onCanvas ? 'on-canvas' : 'off-canvas'})`,
+        });
+        const anchor = html('span', { class: 'start-anchor', title: action.anchor }, action.anchor);
+        span.append(anchor);
+        span.append(document.createTextNode(` — ${action.title}${scene}`));
         starts.append(span);
       }
+      const first = meta.actions[0];
+      starts.title = `${first.anchor} — ${first.title} (${first.onCanvas ? 'on-canvas' : 'off-canvas'})`;
     }
     $('#synthetic-chip').hidden = !state.synthetic;
   }
@@ -841,6 +897,106 @@
     }
   }
 
+  /* ------------------------------------------------------------- S4 detail */
+
+  function renderDetail() {
+    const data = state.data;
+    const section = $('#s4-detail');
+    if (!section) return;
+    const scenes = data.scenes || [];
+    const profile = data.profile || [];
+    const sceneMeta = data.sceneMeta || {};
+    const profileMeta = data.profileMeta || {};
+    const trust = data.trust || {};
+    const visible = !data.synthetic && Boolean(trust) && (scenes.length > 0 || profile.length > 0);
+    section.hidden = !visible;
+    if (!visible) {
+      $('#s4-scene-grid').replaceChildren();
+      $('#s4-queue').replaceChildren();
+      $('#s4-trust-list').replaceChildren();
+      return;
+    }
+
+    const omitted = sceneMeta.omitted || {};
+    setText('#s4-scenes-caps',
+      `${fmt(sceneMeta.shownScenes ?? scenes.length)} of ${fmt(sceneMeta.totalScenes ?? scenes.length)} scenes · `
+      + `top ${fmt(sceneMeta.fileCap ?? 5)} files each · ${fmt(sceneMeta.totalFiles ?? 0)} source files · `
+      + `${fmt(omitted.scenes ?? 0)} scenes / ${fmt(omitted.files ?? 0)} files omitted`);
+
+    const grid = $('#s4-scene-grid');
+    grid.replaceChildren();
+    for (const scene of scenes) {
+      const card = html('article', { class: 's4-scene', 'data-scene': scene.path });
+      const head = html('div', { class: 's4-scene-head' });
+      head.append(html('span', { class: 's4-scene-path', title: scene.path }, scene.path));
+      if (scene.entry) head.append(html('span', { class: 's4-badge entry' }, 'ENTRY'));
+      if (scene.hottest) head.append(html('span', { class: 's4-badge hottest' }, 'HOTTEST'));
+      card.append(head);
+      const units = scene.scale || 'v2';
+      card.append(html('p', { class: 's4-scene-meta' },
+        `${fmt(scene.files)} files · ${fmt(scene.productionFiles)} production · `
+        + `${fmt(scene.cost)} static cost units (${units}) · ${fmt(scene.findings)} findings`));
+      const files = html('ul', { class: 's4-files' });
+      for (const file of scene.topFiles || []) {
+        const item = html('li', { title: file.path });
+        item.append(html('span', { class: 's4-file-name' }, file.name));
+        item.append(html('span', { class: 's4-file-meta' },
+          `${fmt(file.cost)} · ${file.production ? 'production' : 'test/bench'} · ${fmt(file.findings)} findings`));
+        files.append(item);
+      }
+      card.append(files);
+      if ((scene.topFiles || []).length < scene.files) {
+        card.append(html('p', { class: 's4-note' },
+          `showing top ${(scene.topFiles || []).length} of ${fmt(scene.files)}`));
+      }
+      grid.append(card);
+    }
+
+    setText('#s4-profile-caps',
+      `top ${fmt(profileMeta.shown ?? profile.length)} of ${fmt(profileMeta.candidateTotal ?? profile.length)} production candidates · `
+      + `${fmt(profileMeta.totalRanked ?? 0)} functions ranked · `
+      + `${fmt(profileMeta.demotedProduction ?? 0)} production rows demoted (startup/no-loop)`);
+    const queue = $('#s4-queue');
+    queue.replaceChildren();
+    for (const row of profile) {
+      const item = html('li', { class: 's4-queue-row', 'data-profile-row': row.id });
+      item.append(html('span', { class: 's4-rank' }, `#${row.rank}`));
+      item.append(html('span', { class: 's4-fn' }, row.name));
+      item.append(html('span', { class: 's4-loc' }, `${row.path}:${row.line}`));
+      item.append(html('span', { class: 's4-cost' }, row.costText || `${fmt(row.cost)} units`));
+      if (row.unknownTripLoops > 0) {
+        item.append(html('span', { class: 's4-note' },
+          `${fmt(row.unknownTripLoops)} unknown-trip loop${row.unknownTripLoops === 1 ? '' : 's'}`));
+      }
+      item.append(html('span', { class: 's4-pathclass' }, row.pathClass));
+      queue.append(item);
+    }
+
+    const dl = $('#s4-trust-list');
+    dl.replaceChildren();
+    const add = (term, value) => {
+      dl.append(html('dt', {}, term));
+      dl.append(html('dd', {}, value));
+    };
+    add('caps', trust.caps ?? 'not present');
+    add('partial parse', trust.partialParse ? 'yes' : 'no');
+    add('non-production share',
+      `${fmt(trust.nonProductionNodes ?? 0)}/${fmt(trust.drawnNodes ?? 0)} drawn files (test/bench)`);
+    add('unknown-trip functions',
+      `${fmt(trust.unknownTripFunctions ?? 0)} (estimate incomplete)`);
+    add('findings included', `${fmt(trust.findingsIncluded ?? 0)}/${fmt(trust.findingsTotal ?? 0)}`);
+    add('I/O coverage', trust.io ? ioTrustText(trust.io) : 'no fixed-table call-name match');
+    add('scenes', `${fmt(sceneMeta.shownScenes ?? 0)} of ${fmt(sceneMeta.totalScenes ?? 0)} shown · `
+      + `${fmt(sceneMeta.totalFiles ?? 0)} source files · ${fmt(omitted.scenes ?? 0)} scenes / `
+      + `${fmt(omitted.files ?? 0)} files omitted · ${fmt(sceneMeta.shownFiles ?? 0)} shown files`);
+    add('profile', `${fmt(profileMeta.shown ?? 0)} shown of ${fmt(profileMeta.candidateTotal ?? 0)} candidates · `
+      + `${fmt(profileMeta.totalRanked ?? 0)} ranked · `
+      + `${fmt(profileMeta.demotedProduction ?? 0)} production rows demoted`);
+    add('unresolved calls',
+      `${fmt(trust.unresolvedCalls ?? 0)} on ${fmt(trust.unresolvedFiles ?? 0)} files`);
+    add('purpose', `${data.purpose?.kind || 'not present'} · ${data.purpose?.source || 'no source'}`);
+  }
+
   /* ---------------------------------------------------------------- apply */
 
   function apply(ms) {
@@ -919,6 +1075,7 @@
       let variant = '';
       if (chip === 'inferred' || chip === 'synthetic') variant = ' inferred';
       else if (chip.startsWith('trip ')) variant = ' trip';
+      else if (chip.startsWith('scene ')) variant = ' scene';
       chips.append(html('span', { class: `chip${variant}` }, chip));
     }
 
@@ -1099,6 +1256,31 @@
       body.append(section);
     }
 
+    if (node.unresolvedCalls) {
+      const unresolved = node.unresolvedCalls;
+      const rows = unresolved.rows || [];
+      const section = html('div', { class: 'insp-section insp-section-unresolved' });
+      const capped = rows.length < unresolved.count
+        ? ` · showing ${rows.length} of ${fmt(unresolved.count)}`
+        : '';
+      section.append(html('h3', {}, `UNRESOLVED CALLS · ${fmt(unresolved.count)}${capped}`));
+      const list = html('ul', { class: 'insp-unresolved' });
+      for (const row of rows) {
+        const item = html('li', {
+          'data-unresolved': 'true',
+          'data-unresolved-line': String(row.line),
+          title: row.caller,
+        });
+        item.append(html('span', { class: 'un-line' }, `L${row.line}`));
+        item.append(html('span', { class: 'un-callee' }, row.callee));
+        list.append(item);
+      }
+      section.append(list);
+      section.append(html('p', { class: 'insp-note' },
+        'Callee or argument types unresolved (indirection/untyped) — never guessed.'));
+      body.append(section);
+    }
+
     body.append(html('p', { class: 'insp-why' },
       `Why: ${node.ratioText} and ${node.topText} by static cost. Cost and trip counts are inferred, not measured; profile to confirm.`));
   }
@@ -1148,6 +1330,7 @@
 
     renderMeta();
     renderGraph();
+    renderDetail();
 
     const stub = data.meta.stub;
     const stubPanel = $('#stub');
@@ -1164,6 +1347,7 @@
     const start = state.reduced ? state.beats.length - 1 : 0;
     setMs(beatStart(start));
     syncPlayButton();
+    if (window.__sim) window.__sim.ready = true;
   }
 
   function fillCases(cases) {
@@ -1239,6 +1423,7 @@
   }
 
   window.__sim = {
+    ready: false,
     state: () => ({
       caseId: state.caseId,
       index: state.index,

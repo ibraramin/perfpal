@@ -774,6 +774,7 @@ def build(case: str, layout_path: Path, metrics_path: Path) -> dict:
             {
                 "anchor": action["location"],
                 "title": action["rule"],
+                "function": action["function"],
                 "onCanvas": anchor_path(action["location"]) in drawn,
                 "scene": action["scene"],
             }

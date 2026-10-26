@@ -1458,18 +1458,21 @@
   "actions": [
    {
     "anchor": "cJSON_Utils.c:1188",
+    "function": "create_patches",
     "onCanvas": true,
     "scene": "(root)",
     "title": "Expensive setup or I/O call inside loop"
    },
    {
     "anchor": "cJSON_Utils.c:1203",
+    "function": "create_patches",
     "onCanvas": true,
     "scene": "(root)",
     "title": "Expensive setup or I/O call inside loop"
    },
    {
     "anchor": "cJSON_Utils.c:807",
+    "function": "apply_patch",
     "onCanvas": true,
     "scene": "(root)",
     "title": "High cyclomatic complexity"
