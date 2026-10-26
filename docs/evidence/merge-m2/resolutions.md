@@ -61,9 +61,9 @@ main's live/archived records); `D-pf-273` and `ADR-0013` preserve the mapping. N
 
 ## Evidence
 
-- `docs/evidence/atlas-sim/GATE.txt` — story gate on merged main (`ff276fd`): PASS, dirty 0,
+- `docs/evidence/atlas-sim/GATE.txt` — story gate on merged main (`433a837`): PASS, dirty 0,
   304/304, 3k 44/44, F5/F6, 1,089 tests (1,088 passed, 1 ignored), page 463,490 B, first frame max
-  1,616 ms.
+  1,612 ms.
 - `docs/evidence/merge-m2/gate.txt` — full gate: fmt/clippy/test/deny/semantic all exit 0;
   `perfpal 0.4.0 (metrics schema 1.8)`; schema copy identical.
 - `docs/evidence/merge-m1/resolutions.md` — M1 precedent.

@@ -64,7 +64,7 @@ read-only archives; do not sync/merge inside them.
   `A-pf-131..132`; the ledger keeps the story records (no ID reuse; two-hop remap documented in
   ADR-0013). Story gate on merged main: **1,089 tests** (897 at the branch snapshot + the JS/TS
   suites), `sim/gate.sh` **304/304**, 3k **44/44**, F5/F6 PASS, page 463,490 B, first frame max
-  1,616 ms (`docs/evidence/atlas-sim/GATE.txt`); full gate green (`docs/evidence/merge-m2/gate.txt`).
+  1,612 ms (`docs/evidence/atlas-sim/GATE.txt`); full gate green (`docs/evidence/merge-m2/gate.txt`).
   Integration fix: clippy `let_and_return` in `footer_parts` (single footer source); story data
   regenerated (metrics content hash only). Story track done; state/handoff updated; no push/tag.
 - **M3 — main finalization.** Verify `feat/agent-report`, `fix/agent-report-regen`, `feat/js-ts`,
