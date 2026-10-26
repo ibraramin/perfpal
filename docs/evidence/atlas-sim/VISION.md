@@ -109,3 +109,25 @@ Verdict: **PASS.**
   `…Option<Information>` is display-truncated (full payload in the tooltip); `name · literal-observed`
   grazes the `cJSON_Utils.c` border; the pre-existing `PATH · 3 steps · re…` chrome truncation;
   cJSON still has ~1/3 dead space. None are new and none block S2.
+
+## Read 7 — S3 re-read (I/O stores, trust line, inspector)
+
+- **Date:** 2026-10-26 · **Images (1440×900, gate-regenerated):**
+  `hyperfine-stores.png`, `hyperfine-trust.png`, `hyperfine-io-inspector.png`,
+  `cjson-stores.png`, `cjson-trust.png`, `cjson-io-inspector.png`;
+  regression: `hyperfine-end.png`, `cjson-end.png`.
+- **First pass: PASS-WITH-NITS.** Three nits: (1) the cJSON trust line omitted the 22 stdio
+  effects from the 24-effect total; (2) the hyperfine trust line said `3 literal` but showed only
+  two examples with no remainder marker; (3) inspector stdio rows rendered a bare `stream` in a
+  target-like column.
+- **Fixes:** the trust line now ends `— 0 literal, 2 target unknown, 22 stdio` (cJSON) and
+  `3 literal (env "NO_COLOR", env "TERM", +1)` (hyperfine); stdio inspector rows read
+  `stream · no path`; unknown text contrast raised to `#4a5560`.
+- **Re-read: PASS.** Sums reconcile (3+5=8; 0+2+22=24), both trust lines stay within the two-line
+  narration clamp with no ellipsis, and the inspector keeps the
+  `FINDINGS → TOP FUNCTIONS → DATA STORES → note → Why:` stack with aligned columns and no
+  collision. `target unknown` / `stream · no path` cannot be read as invented paths; literal values
+  stay quoted as written source text; the honesty strip is intact. No regression in the final frames.
+- **Carried nits (non-blocking):** the pre-existing `PATH · 3 steps · re…` chrome truncation; the S2
+  nits (detached cJSON `type-only` label, dense top band, payload display truncation, cJSON dead
+  space) are unchanged.

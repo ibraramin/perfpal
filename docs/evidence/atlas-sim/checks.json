@@ -141,6 +141,76 @@
       "ok": true
     },
     {
+      "check": "hyperfine: S3 io rows are projected",
+      "detail": "8 rows on 5 drawn files",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 io enums are respected",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 stdio rows never carry a path literal",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 literals are strings or null",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 per-file io counts reconcile",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 trust io reconciles with the nodes",
+      "detail": "{'files': 5, 'literal': 3, 'literals': [{'literal': 'NO_COLOR', 'target': 'env'}, {'literal': 'TERM', 'target': 'env'}, {'literal': '/dev/null', 'target': 'file'}], 'read': 5, 'rows': 8, 'stdio': 0, 'unknownTarget': 5, 'write': 3} vs 8 rows on 5 files",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 node io rows are sorted",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 io rows are projected",
+      "detail": "19 rows on 4 drawn files",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 io enums are respected",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 stdio rows never carry a path literal",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 literals are strings or null",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 per-file io counts reconcile",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 trust io reconciles with the nodes",
+      "detail": "{'files': 4, 'literal': 0, 'literals': [], 'read': 4, 'rows': 24, 'stdio': 22, 'unknownTarget': 2, 'write': 20} vs 24 rows on 4 files",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 node io rows are sorted",
+      "detail": "",
+      "ok": true
+    },
+    {
       "check": "hyperfine: hottestFunction is the global cost leader",
       "detail": "src/options.rs#from_cli_arguments#254:5 @ 165 vs src/options.rs#from_cli_arguments#254:5 @ 165",
       "ok": true
@@ -216,8 +286,58 @@
       "ok": true
     },
     {
+      "check": "hyperfine: core io is a flat array",
+      "detail": "list",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: core io rows stay on drawn call-site files",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: core io rows respect the enums",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: core io stdio rows carry no literal",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: core io rows are sorted",
+      "detail": "",
+      "ok": true
+    },
+    {
       "check": "cjson: core flow fidelity is syntactic",
       "detail": "1 \u00b7 'syntactic'",
+      "ok": true
+    },
+    {
+      "check": "cjson: core io is a flat array",
+      "detail": "list",
+      "ok": true
+    },
+    {
+      "check": "cjson: core io rows stay on drawn call-site files",
+      "detail": "[]",
+      "ok": true
+    },
+    {
+      "check": "cjson: core io rows respect the enums",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: core io stdio rows carry no literal",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: core io rows are sorted",
+      "detail": "",
       "ok": true
     },
     {
@@ -306,6 +426,81 @@
       "ok": true
     },
     {
+      "check": "hyperfine: S3 the data slice carries io rows",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 scene beats render stores",
+      "detail": "1 stores beats",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 every trace node with io has a stores beat",
+      "detail": "1 stores / 1 trace nodes with io",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 trust line carries I/O coverage",
+      "detail": "caps: 19 of 19 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: no \u00b7 non-production share: 5/19 drawn files (test/bench) \u00b7 unknown-trip functions: 16 (esti",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 a written literal target is rendered",
+      "detail": "TERM",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 a non-literal target is marked unknown",
+      "detail": "src/main.rs",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 trust line marks omitted literal examples",
+      "detail": "ed: 148/348 \u00b7 I/O: 8 effects in 5 files \u2014 3 literal (env \"NO_COLOR\", env \"TERM\", +1), 5 target unknown; call-name match.",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 trust line is not clipped",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 trust keyframe",
+      "detail": "279030 bytes",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 stores make no forbidden claim",
+      "detail": "58 static cost units (v2) \u00b7 8.3\u00d7 median function \u00b7 top 39% of files. Annotation ENTRY \u00b7 INFO \u00d78. Stores: 1 read \u2014 1 target unknown.",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 stores line is not clipped",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 stores keyframe",
+      "detail": "268703 bytes",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 inspector renders data stores",
+      "detail": "FILE INSPECTOR\n\u00d7\nsrc/options.rs\nclass: production\ncost: 276 static cost units (v2) \u00b7 39\u00d7 median function\nrank: top 10% of files\ngroup: src \u00b7",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 inspector marks a non-literal target",
+      "detail": "src/main.rs",
+      "ok": true
+    },
+    {
+      "check": "hyperfine: S3 inspector keyframe",
+      "detail": "337595 bytes",
+      "ok": true
+    },
+    {
       "check": "hyperfine: hottest beat names the global function",
       "detail": "Hottest file: command.rs \u00b7 611 static cost units (v2) \u00b7 87\u00d7 median function \u00b7 top 2% of files. Hottest function: from_cli_arguments (L254, src/options.rs) \u00b7 165 units. Top annotati",
       "ok": true
@@ -342,7 +537,7 @@
     },
     {
       "check": "hyperfine: loop keyframe",
-      "detail": "272337 bytes",
+      "detail": "254743 bytes",
       "ok": true
     },
     {
@@ -377,7 +572,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "352",
+      "detail": "351",
       "ok": true
     },
     {
@@ -417,17 +612,17 @@
     },
     {
       "check": "hyperfine: start keyframe",
-      "detail": "269649 bytes",
+      "detail": "269597 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: mid keyframe",
-      "detail": "258711 bytes",
+      "detail": "258639 bytes",
       "ok": true
     },
     {
       "check": "hyperfine: end keyframe",
-      "detail": "274381 bytes",
+      "detail": "274313 bytes",
       "ok": true
     },
     {
@@ -516,6 +711,81 @@
       "ok": true
     },
     {
+      "check": "cjson: S3 the data slice carries io rows",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 scene beats render stores",
+      "detail": "1 stores beats",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 every trace node with io has a stores beat",
+      "detail": "1 stores / 1 trace nodes with io",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 trust line carries I/O coverage",
+      "detail": "caps: 2 of 2 reachable files shown \u00b7 0 aggregated \u00b7 partial parse: yes \u00b7 non-production share: 1/7 drawn files (test/bench) \u00b7 unknown-trip functions: 6 (estimat",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 a non-literal target is marked unknown",
+      "detail": "fuzzing/afl.c",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 trust line discloses stdio effects",
+      "detail": "ete) \u00b7 findings included: 153/837 \u00b7 I/O: 24 effects in 4 files \u2014 0 literal, 2 target unknown, 22 stdio; call-name match.",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 trust line is not clipped",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 trust keyframe",
+      "detail": "147878 bytes",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 stores make no forbidden claim",
+      "detail": "v2) \u00b7 41\u00d7 median function \u00b7 top 17% of files. Annotation ENTRY \u00b7 INFO \u00d75 \u00b7 partial. Stores: 2 reads + 5 writes \u2014 1 target unknown \u00b7 6 stdio.",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 stores line is not clipped",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 stores keyframe",
+      "detail": "139885 bytes",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 inspector renders data stores",
+      "detail": "FILE INSPECTOR\n\u00d7\nfuzzing/afl.c\nclass: entry \u00b7 production\ncost: 81 static cost units (v2) \u00b7 41\u00d7 median function\nrank: top 17% of files\ngroup:",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 inspector marks a non-literal target",
+      "detail": "fuzzing/afl.c",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 inspector marks stdio as pathless",
+      "detail": "fuzzing/afl.c",
+      "ok": true
+    },
+    {
+      "check": "cjson: S3 inspector keyframe",
+      "detail": "217003 bytes",
+      "ok": true
+    },
+    {
       "check": "cjson: hottest beat names the global function",
       "detail": "Hottest file: testunity.c \u00b7 2,000,468 static cost units (v2) \u00b7 1,000,234\u00d7 median function \u00b7 top 1% of files. Hottest function: testFloatPrintingRandomSamples (L4557, tests/unity/te",
       "ok": true
@@ -547,7 +817,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "136853 bytes",
+      "detail": "136773 bytes",
       "ok": true
     },
     {
@@ -587,7 +857,7 @@
     },
     {
       "check": "cjson: play advances the clock",
-      "detail": "354",
+      "detail": "353",
       "ok": true
     },
     {
@@ -627,17 +897,17 @@
     },
     {
       "check": "cjson: start keyframe",
-      "detail": "139790 bytes",
+      "detail": "139732 bytes",
       "ok": true
     },
     {
       "check": "cjson: mid keyframe",
-      "detail": "151199 bytes",
+      "detail": "151165 bytes",
       "ok": true
     },
     {
       "check": "cjson: end keyframe",
-      "detail": "143982 bytes",
+      "detail": "143936 bytes",
       "ok": true
     },
     {
@@ -687,7 +957,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "68812 bytes",
+      "detail": "68740 bytes",
       "ok": true
     },
     {
@@ -747,7 +1017,7 @@
     },
     {
       "check": "capped: state keyframe",
-      "detail": "73011 bytes",
+      "detail": "72936 bytes",
       "ok": true
     },
     {
@@ -811,9 +1081,9 @@
       "ok": true
     }
   ],
-  "date": "2026-10-24",
+  "date": "2026-10-26",
   "failed": 0,
-  "passed": 162,
-  "total": 162,
+  "passed": 216,
+  "total": 216,
   "viewport": "1440x900"
 }
