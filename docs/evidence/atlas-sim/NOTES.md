@@ -172,16 +172,16 @@ frames `no-forward-path.png`, `empty.png`, `capped.png` (eleven 1440×900 frames
 - **3k fixture:** `sim/fixtures/gen-3k.py` — 3,000 scanned files (2,999 C + 1 Rust; 2,731 production +
   269 test/bench), 30 modules, nested subdirs, C function-pointer + Rust `dyn` files in the drawn slice,
   loops/I/O, README. Generated under `/var/tmp`; no repo data file.
-- **F7 numbers:** page **463,230 bytes** (index 7,049 + CSS 24,176 + JS 58,166 + `data-3k.json` 373,839)
-  vs 5 MB; first frame **max 1,570 ms** over three cold loads (1,570 / 420 / 413 ms) vs 2,000 ms; no
+- **F7 numbers:** page **463,490 bytes** (component breakdown in `GATE.txt`)
+  vs 5 MB; first frame **under the 2,000 ms budget** over three cold page loads (final transcript); no
   horizontal scroll at 1440×900 or 1280×800; 24 scene cards / 12 queue rows; 3k scan off/on/on2
-  3.82 / 4.10 / 4.19 s.
+  see GATE.txt.
 - **F2–F6:** every drawn edge labelled; C fn-pointer + Rust `dyn` unresolved rows visible and never
   guessed; no forbidden claim/time unit; double scan → identical layout/flow and data; two loads →
   identical DOM; story-off/on `report.html` byte-identical, `metrics.json` content-equal after
   provenance masking.
 - **Check delta:** S3 217 → S4 **302** checks (`sim/verify.py`), plus the separate 3k scale gate
-  **44/44** (`sim/scale.py`/`scale.sh`). 892 Rust tests. Gate on the S4 docs close commit: `dirty 0`,
+  **44/44** (`sim/scale.py`/`scale.sh`). 897 Rust tests. Gate on the S4 docs close commit: `dirty 0`,
   `verdict=PASS` (`GATE.txt`).
 - **F8:** founder A2 is **deferred**, not run or claimed; A2/ship remains behind the Atlas v2 step-13
   founder gate (R-pf-109 for the map).

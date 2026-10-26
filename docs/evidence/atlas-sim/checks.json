@@ -146,6 +146,11 @@
       "ok": true
     },
     {
+      "check": "hyperfine: S4 scene scales and flags are valid",
+      "detail": "[('src', 'v2', 1), ('src/export', 'v2', 2), ('src/output', 'v2', 2)]",
+      "ok": true
+    },
+    {
       "check": "hyperfine: S4 scene paths contain their top files",
       "detail": "[]",
       "ok": true
@@ -258,6 +263,11 @@
     {
       "check": "cjson: S4 scene top files are capped and sorted",
       "detail": "[3, 3, 5]",
+      "ok": true
+    },
+    {
+      "check": "cjson: S4 scene scales and flags are valid",
+      "detail": "[('(root)', 'v2', 0), ('fuzzing', 'v2', 1), ('tests', 'v2', 1)]",
       "ok": true
     },
     {
@@ -732,7 +742,7 @@
     },
     {
       "check": "hyperfine: S3 trust keyframe",
-      "detail": "280710 bytes",
+      "detail": "280684 bytes",
       "ok": true
     },
     {
@@ -747,7 +757,7 @@
     },
     {
       "check": "hyperfine: S3 stores keyframe",
-      "detail": "271248 bytes",
+      "detail": "271925 bytes",
       "ok": true
     },
     {
@@ -847,7 +857,7 @@
     },
     {
       "check": "hyperfine: play advances the clock",
-      "detail": "352",
+      "detail": "353",
       "ok": true
     },
     {
@@ -1107,7 +1117,7 @@
     },
     {
       "check": "cjson: S3 trust keyframe",
-      "detail": "149713 bytes",
+      "detail": "149704 bytes",
       "ok": true
     },
     {
@@ -1122,7 +1132,7 @@
     },
     {
       "check": "cjson: S3 stores keyframe",
-      "detail": "144581 bytes",
+      "detail": "144577 bytes",
       "ok": true
     },
     {
@@ -1147,7 +1157,7 @@
     },
     {
       "check": "cjson: S3 inspector keyframe",
-      "detail": "219452 bytes",
+      "detail": "219443 bytes",
       "ok": true
     },
     {
@@ -1187,7 +1197,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "137628 bytes",
+      "detail": "137618 bytes",
       "ok": true
     },
     {
@@ -1513,7 +1523,7 @@
   ],
   "date": "2026-10-26",
   "failed": 0,
-  "passed": 302,
-  "total": 302,
+  "passed": 304,
+  "total": 304,
   "viewport": "1440x900"
 }
