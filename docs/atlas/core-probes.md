@@ -35,7 +35,7 @@
 | # | Probe | Emits | Site (prototype) | Fidelity | Status |
 |---|---|---|---|---|---|
 | P1 | call-site payload | `flow.calls[]`: from, to, to_id, caller, callee, line, args[{expr,type,dir,named,literal}], unresolved; per-edge `payload`/`label` | `src/analysis/flow.rs` (new) | syntactic + local type table | **prototype** (`ea72a86`) |
-| P2 | I/O effects | `flow.io[]`: op read/write, target file/env/net/stdio, literal | same module | call-name + string-literal match | not started |
+| P2 | I/O effects | `flow.io[]`: op read/write, target file/env/net/stdio, literal | same module | call-name + string-literal match | **prototype** (`0ddf4ad`) |
 | P3 | signature summary | `flow.signatures[]`: id, name, path, line, params[{name,type,dir}], ret, unresolved[] | `src/analysis/flow.rs` (new) | types as written; macros/generics opaque | **prototype** (`2108117`) |
 | P4 | stage order | `stages[]`: order, label, files, depth, leaf | `src/reporter/atlas_layout.rs` (derived, no new parse) | derived | **prototype** |
 | P5 | layout emission | `atlas-layout.json`: canvas, columns, nodes, edges, hulls, aggregates, cap chips | `src/reporter/atlas_layout.rs` + `pub(crate)` layout helpers in `atlas_render.rs` | exact (same math as the SVG) | **prototype** |
@@ -90,7 +90,7 @@
 |---|---|---|
 | Geometry | `sim/extract.py` parsed `report.html` | **resolved** — P5 `atlas-layout.json`, HTML extraction deleted |
 | Story data | `extract.py` read rendered text | **resolved** — P4 + `AtlasView` |
-| Data movement | absent | **still absent** — P1 + P2 + P3 (S2/S3) |
+| Data movement | absent | **resolved (S2/S3)** — P1/P3 (`ea72a86`, `2108117`) + P2 (`0ddf4ad`) |
 | Scene aggregation | none (19-node canvas only) | **still absent** — S4 |
 
 ## S1 record (2026-10-24) — P4 + P5, status `prototype`
@@ -167,7 +167,7 @@
   `src/reporter/atlas_layout.rs` +18/−5, `src/reporter/mod.rs` +14, `tests/pipeline_e2e.rs` +74.
 - **Emitted:** `flow.flow_version = 1`, `flow.fidelity = "syntactic"`,
   `flow.signatures[] = {id, name, path, line, params[{name, type, dir}], ret, unresolved[]}`.
-  `calls` and `io` are **omitted** in S2 until P1/P2 land. `layout_version` stays 1.
+  `calls` and `io` were omitted from the first S2 cut; P1 landed in S2 (`ea72a86`) and P2 `io` in S3 (`0ddf4ad`). `layout_version` stays 1.
 - **Identity:** `id` is the canonical IR id (`path#name#start_line:start_col`, 1-based) copied
   from the backend builders, so a signature joins `nodes[].functions[].id` without a translation
   table (e2e asserts every id exists in `metrics.json` `stats.functions[].id`).
@@ -241,6 +241,51 @@
   residual after `ee74206`.
 - **Not changed:** `out` still unused; `unresolved` still means "callee unresolved or every
   argument untyped" (documented in the module).
+
+## S3 record (2026-10-26) — P2 `prototype`
+
+### P2 — I/O effects (`0ddf4ad`)
+
+- **Commit:** `0ddf4ad` `core(P2): io effects` · `git show --stat 0ddf4ad`:
+  `src/analysis/flow.rs` +481/−9, `tests/pipeline_e2e.rs` +110/−1.
+- **Emitted:** story-only `flow.io[] = {file, line, callee, op, target, literal}`.
+  `file` is the **call-site** drawn path (never the target); `op` ∈ `read|write`; `target` ∈
+  `file|env|net|stdio`; `literal` is `null` unless the designated argument is a plain
+  `string_literal`/`raw_string_literal`. `flow_version`/`layout_version` stay 1; no schema/dep change.
+- **Table:** fixed `IO_TABLE_VERSION = 1` in `src/analysis/flow.rs` (v1 is the first recorded
+  table; the review fixes below landed before this record, so no released v1 differs). Exact written
+  names only
+  (C `fopen/freopen/open/openat/creat/...`; Rust `File::open|create`, `std::fs::*`, `std::env::*`,
+  `TcpStream::connect`, `reqwest::get`, and exact `fs::…` forms). `fopen` direction comes from the
+  written mode (`r` read, `w/a` write, `+` ⇒ both); `open` direction from a written flag expression
+  (`O_WRONLY` write, `O_RDWR` both, `O_RDONLY`/`0` read); a variable, a non-zero numeric literal
+  (platform-specific bits) or a flags expression without an access mode emits **no row**.
+- **Guards (never classify by name alone):** a bare C name is skipped when any drawn file defines a
+  function with that name; the C bare-name rules are language-gated; a callee that resolves to any
+  local/parameter value (function pointer, typedef'd pointer or closure) is blocked; macros are
+  blocked. Rust paths match the complete written path, not a bare `read`/`write` (a drawn local
+  `File`/`fs` wrapper with the same path is the documented Rust path-ambiguity limit). `sprintf`/
+  `sscanf` are not I/O. Stdio rows never carry a literal (a format string is not a target).
+- **Fixtures:** hyperfine **8 rows / 5 drawn files** (5 read, 3 write; 3 literal: `TERM`, `NO_COLOR`,
+  `/dev/null`; 5 target-unknown); cJSON **24 rows / 4 drawn files** (4 read, 20 write; 0 literal,
+  2 target-unknown; 22 stdio). The story shows `Stores:` on the trace beats; each drawn file gets a
+  DATA STORES inspector section with up to 6 rows (disclosed as `showing N of M`), and the trust beat
+  aggregates coverage, stdio counts and up to two literal examples (with a `+N` remainder marker).
+- **Known limits:** a wrapper defined **outside** the drawn set can still match (documented
+  prototype limit); a Rust local `File`/`fs` wrapper with the same written path can still match until
+  imports/type resolution lands; `read`/`write` are fd-based so `target: file` is the call class (may
+  be a pipe/socket); `OpenOptions::new().open(...)`/`write_all(...)` are method calls and are not
+  matched; `env::args*` is recorded as an `env` read; `connect` is the outbound (`write`) net effect;
+  `std::fs::copy` emits read+write with no single literal (two path arguments), and `rename`/
+  `hard_link` emit no literal (source vs destination would be a guess); literal values are source
+  text with outer quotes removed (escapes not decoded, display-capped at 160); non-literal direction
+  is omitted rather than guessed.
+- **Real implementation must:** infer wrapper summaries/interprocedural effects, resolve imports and
+  Rust path ambiguity, capture this in the single scanner pass, and keep the runtime claim at zero
+  (syscall probes are post-beta D3).
+- **Evidence:** 862 tests; `cargo fmt`/`cargo clippy -D warnings` exit 0; story gate
+  `sim/verify.py` 211/211; `report.html` byte-identical with/without `--story`; two scans emit
+  identical `flow.io`; `flow.io` sorted `(file, line, callee, op, target, literal)`.
 
 ## Status legend
 

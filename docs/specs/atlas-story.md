@@ -125,7 +125,9 @@ DoD gate: `cargo fmt --all -- --check` && `cargo clippy --locked --all-targets -
   JSON; `extract.py` deleted. No visuals change. *Proves Atlas reads Perfpal, not HTML.*
 - **S2 — data on edges.** P3 (signatures) + P1 (call payloads) → edge labels + inspector; grey
   unresolved. First slice that answers "what moves".
-- **S3 — effects.** P2 (I/O read/write with literal targets) → data stores on scenes; trust line.
+- **S3 — effects (done 2026-10-26).** P2 (I/O read/write with literal targets) → data stores on
+  scenes; trust line. The core emits `flow.io[]` from a fixed v1 call-name table; a literal is only
+  a plain source string (never a formatted value), and a non-literal target stays `null`/unknown.
 - **S4 — scale + payoff.** Scenes/aggregation at 3k files, `profile` + `start-here` + `trust` beats,
   F1–F8 gate.
 

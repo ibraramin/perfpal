@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Atlas Story S3 — I/O effects (2026-10-26).** The core gains the story-only `flow.io[]` probe
+  (`0ddf4ad`): a fixed v1 call-name table classifies `read`/`write` effects on `file`/`env`/`net`/
+  `stdio`; a `literal` target is recorded only when the argument is a plain source string (never a
+  formatted/concatenated value), and a missing target stays `null` (never guessed). A drawn wrapper,
+  macro or function-pointer target is not classified by name. `layout_version`/`flow_version` stay 1;
+  no schema change, no new dependency; scans without `--story` are untouched. The sim renders
+  `Stores:` on trace beats, a per-file DATA STORES inspector section, and an I/O trust line with
+  literal examples (`9e23aa6`). Gate/vision/panel evidence in `docs/evidence/atlas-sim/`.
 - **Atlas Story S2 — data movement on the film's edges (2026-10-24).** The core gains an optional
   story-only `flow` block (`flow_version: 1`, `fidelity: "syntactic"`): P3 signature summaries
   (`2108117`) and P1 call-site payloads (`ea72a86`) record verbatim argument expressions, local types,

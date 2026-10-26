@@ -95,6 +95,11 @@ findings counts. It is **absent unless `--story` is passed**, so the fixed set a
 default. Consumers must treat it as optional, pin `layout_version`, and never use it as a substitute
 for `metrics.json` (still the machine source of truth). Minor additions are backward-compatible; the
 geometry is a projection of the same layout function the SVG renderer uses, not a second layout.
+The same artifact may carry an optional `flow` block (`flow_version: 1`, `fidelity: "syntactic"`):
+signature summaries, call-site payloads and I/O effects (`io[]` with `op`, `target`, `literal`).
+I/O targets are a fixed call-name match, never a runtime path; a literal is recorded only when the
+argument is a plain source string (formatted/built values stay `null`). Story-only and omitted on
+every non-`--story` scan.
 
 ## 5. `report.md` template outline
 

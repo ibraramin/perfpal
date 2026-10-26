@@ -1,11 +1,13 @@
-# Track D — Atlas Story · Session D2 + S1 + S2 handoff
+# Track D — Atlas Story · Session D2 + S1 + S2 + S3 handoff
 
 **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` · branch `feat/atlas-sim`
 **Track:** `/home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md`
 **Status:** **D2 done + S1 committed (`5faacb7..63914f9`) + S2 committed and gated
-(`2108117..b8359ae`), not pushed.** D1 presentation was accepted by the founder; the requirement was
-re-sealed as a core-fed temporal showcase (`docs/specs/atlas-story.md`); S1 made the story read core
-JSON, S2 added data movement on the edges. S3 (I/O effects) is next. No push, no merge to `main`.
+(`2108117..b8359ae`) + S3 committed (`0ddf4ad..9e23aa6`), not pushed.** D1 presentation was accepted
+by the founder; the requirement was re-sealed as a core-fed temporal showcase
+(`docs/specs/atlas-story.md`); S1 made the story read core JSON, S2 added data movement on the edges,
+S3 added I/O effects (P2) with the stores/trust render. S4 (scenes at 3k files) is next. No push, no
+merge to `main`.
 
 ## D2 outcome
 
@@ -36,7 +38,7 @@ JSON, S2 added data movement on the edges. S3 (I/O effects) is next. No push, no
   `metrics.json`, asserts the drawn-findings count against `findings_included`, and embeds the layout
   SHA-256 in `source.sha256`. `sim/extract.py` (HTML scraping) is **deleted**; `make-source.sh` scans
   with `--story` and rebuilds the data. The page itself is unchanged.
-- **Record:** `docs/atlas/core-probes.md` — P4/P5 are `prototype`; P1–P3 remain `not started` (S2/S3).
+- **Record:** `docs/atlas/core-probes.md` — P4/P5 are `prototype`; P1–P3 later landed in S2/S3 (records below).
   Merge protocol: one probe per commit, additive only, story-only emission, no golden churn.
 
 ## What S2 shipped
@@ -63,30 +65,75 @@ JSON, S2 added data movement on the edges. S3 (I/O effects) is next. No push, no
 - **Record:** `docs/atlas/core-probes.md` P3/P1 `prototype` + S2 fixes; evidence in
   `docs/evidence/atlas-sim/` (GATE, checks 162/162, VISION Read 6 PASS).
 
+## What S3 shipped
+
+- **Core (P2, `0ddf4ad` `core(P2): io effects`):** `src/analysis/flow.rs` emits the story-only
+  `flow.io[] = {file, line, callee, op, target, literal}` from a fixed **v1** call-name table:
+  `read`/`write` effects on `file`/`env`/`net`/`stdio`. Guards: a bare C name defined in the drawn
+  set, a macro or a local function-pointer is never matched; Rust matches the complete written path;
+  `fopen`/`open` direction comes from the written mode/flags, and a non-literal mode/flags expression
+  emits no row. A literal is recorded only when the argument is a plain `string_literal`/
+  `raw_string_literal` (never `format!`, `concat!`, adjacent C strings or `sprintf`); a missing
+  literal stays `null`. Stdio rows never carry a literal. Deterministic sort
+  `(file,line,callee,op,target,literal)`; `flow_version`/`layout_version` stay 1; no new dep.
+- **Story (`9e23aa6` `story(S3): io stores and trust line`):** `from-layout.py` projects per-node `io`
+  summaries and `trust.io`; `sim.js` adds `Stores:` to trace beats, a DATA STORES inspector section
+  (literal or `target unknown`; stdio = stream), and the I/O trust line with up to two literal
+  examples; `verify.py` adds 47 checks (data/core/DOM) and stores/trust/inspector keyframes;
+  `gate.sh` prints the io table summary.
+- **Fixtures:** hyperfine 8 rows / 5 drawn files (5 read, 3 write; literals `TERM`, `NO_COLOR`,
+  `/dev/null`; 5 target-unknown); cJSON 24 rows / 4 drawn files (4 read, 20 write; 0 literal,
+  2 target-unknown; 22 stdio). Trace beats render one stores line each; the inspector carries up to
+  6 rows per file (`showing N of M`) and the trust line carries the aggregate, stdio count and up to
+  two literal examples with a `+N` marker.
+- **Review fixes (`b63c6f6` core, `f3e8804` story):** `freopen` reads mode argument 1; only `0` and
+  symbolic access flags are decoded (non-zero numeric bits/variables emit no row); any local/parameter
+  value (including a typedef'd function pointer) blocks the I/O table; C bare-name rules are
+  language-gated; `std::fs::copy` is read+write with no single literal; the trust line adds stdio and a
+  `+N` literal-remainder marker; inspector stdio rows read `stream · no path`; the gate asserts the
+  full dirty count is 0 and masks `root_path` in F6.
+- **Record:** `docs/atlas/core-probes.md` P2 `prototype` (S3 record with commit, table rules, guards,
+  fixture counts, limits, real implementation); spec §9 S3 done; output contract names `flow`.
+- **Evidence:** `docs/evidence/atlas-sim/GATE.txt` (final transcript on the docs commit), `checks.json`
+  216/216, `hyperfine/cjson-stores.png`, `-trust.png`, `-io-inspector.png`, `VISION.md` Read 7 PASS.
+
 ## Verification
 
 | Claim | Command / artifact | Result |
 |---|---|---|
 | Core gate | `cargo fmt --all -- --check` | exit 0 |
 | Lint | `cargo clippy --locked --all-targets -- -D warnings` | exit 0 |
-| Tests | `cargo test --locked` | 853 passed, 0 failed, 1 ignored |
+| Tests (S2) | `cargo test --locked` | 853 passed, 0 failed, 1 ignored |
 | Licenses | `cargo deny check licenses` | exit 0 (`docs/evidence/atlas-sim/GATE.txt` §1) |
 | Existing outputs unchanged | `sha256sum` report.html, story-off vs story-on | identical: hyperfine `bd0b2055…`, cJSON `373e8087…` |
 | metrics.json unchanged | field diff of story-off vs story-on | content-equal after removing `scan.duration_ms`, `scan.started_at` |
 | Story artifact | `perfpal … --story` → `atlas-layout.json` | 1400×718; hyperfine 19/49/3 stages, findings 148/348; cJSON 7/5/2, 153/837 |
 | Column geometry matches the SVG | `columns[].x` vs the renderer header centre | hyperfine 250/430/610/790/970/1150; cJSON 520/700/880 (the S1 first cut was 90 px off; fixed) |
 | Data from core, not HTML | `sim/from-layout.py` | 2 files regenerated byte-stable; all 6 data files unchanged by the gate; `source.sha256` matches |
-| Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **162/162, exit 0** |
+| Story gate (S2) | `SIM_PORT=8770 python3 sim/verify.py` | **162/162, exit 0** |
 | sim parity vs D1 | field diff of regenerated `data-*.json` | nodes/edges/findings/hulls/columns(x)/trace identical |
 | Worktree clean | `git status --porcelain src/ docs/schema/` | empty after the commit (scope containment is proven by the story-off/on additive test, not by this command) |
 | S2 flow emit | `atlas-layout.json` on hyperfine | 191 signatures, 1586 call sites; labels 44 `unresolved` / 4 `type-only` / 1 `literal-observed` on 49 edges; cJSON 5 edges 1/2/2 |
 | S2 final frame | two independent page loads → `#stage` DOM SHA-256 | identical (hyperfine `2f1a3834…`, cJSON `65cd5446…`); double scan layout/flow identical |
 | S2 full gate | `bash sim/gate.sh` | `b8359ae`, tree `8889ecac…`, dirty 0, **verdict=PASS** |
 | S2 vision | `VISION.md` Read 6 | **PASS** (card-text collisions, grey contrast, de-stack, legend fixed; nits carried) |
+| S3 flow emit | `flow.io[]` on hyperfine | 8 rows / 5 files: read/env 3, read/file 2, write/file 3; 3 literal (`TERM`, `NO_COLOR`, `/dev/null`), 5 target-unknown |
+| S3 flow emit | `flow.io[]` on cJSON | 24 rows / 4 files: read/file 2, read/stdio 2, write/stdio 20; 0 literal, 2 target-unknown |
+| S3 guards | unit + e2e fixtures | drawn `read` wrapper, macro `fopen`, typedef fn-pointer and `sprintf` emit no row; `format!`/concat/non-literal path ⇒ `null`; stdio never literal; `freopen` mode arg 1; `fopen "r+"`/`O_RDWR` ⇒ both ops; non-zero numeric open flags ⇒ no row |
+| S3 story gate | `SIM_PORT=8770 python3 sim/verify.py` | **216/216**, exit 0 (data/core/DOM + stores/trust/inspector frames) |
+| S3 full gate | `bash sim/gate.sh` | final transcript on the S3 docs commit with `dirty 0` (the script now fails on a non-zero full dirty count), **verdict=PASS** |
+| S3 vision | `VISION.md` Read 7 | **PASS** (first pass PASS-WITH-NITS; three nits fixed and re-read PASS) |
+| S3 review | R1/R2/Q1/Q2 + fresh confirmation | round 1: R1/R2 CHANGES_REQUESTED (freopen index, numeric flags, typedef pointer), Q1 APPROVED, Q2 pending final gate; fixes `b63c6f6`/`f3e8804`; round 2 pending |
 
 Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerated by `bash sim/gate.sh`).
 
 ## Open risks / follow-ups
+
+- **S3 limits:** a wrapper defined outside the drawn set can still match; `read`/`write` are
+  fd-based (`target: file` is the call class, may be pipe/socket); method calls
+  (`OpenOptions::open`, `write_all`) are not matched; `env::args*` is an `env` read; `connect` is the
+  outbound `write` net effect; literal values are source text (quotes stripped, escapes not decoded,
+  display-capped at 160); stdio rows carry no literal.
 
 - `--story` builds the Atlas view twice (render + projection). Costs one extra O(files) pass; fix in a
   single-pass artifact assembly later.
@@ -122,11 +169,15 @@ Full command/exit/hash transcript: `docs/evidence/atlas-sim/GATE.txt` (regenerat
 - `ee74206` — `fix(flow): pointer returns and conservative resolution`
 - `c99fade` — `fix(sim): legible labels and honest hottest beat`
 - `eef9d99` — `fix(flow): function-pointer parameter list`
-- `b8359ae` — `docs(S2): record function-pointer fix` (gate run here); evidence/docs commits follow; **not pushed**.
+- `b8359ae` — `docs(S2): record function-pointer fix` (gate run here); evidence/docs commits follow.
+- `0ddf4ad` — `core(P2): io effects`
+- `b63c6f6` — `fix(P2): table guards and numeric flags`
+- `9e23aa6` — `story(S3): io stores and trust line`
+- `f3e8804` — `fix(S3): trust detail, inspector stdio and gate assertion`
+- S3 docs/evidence/state commits follow (gate transcript on the docs commit); **not pushed**.
 
 ## Next
 
-- **S3:** P2 I/O effects (read/write, target file/env/net/stdio, literal when written) → data stores
-  on scenes + trust line; one core commit + registry row.
-- **S4:** scenes/aggregation at 3k files + F1–F8; then the companion-vs-report ADR.
+- **S4:** scenes/aggregation at 3k files + F1–F8; then the companion-vs-report ADR (+A12 if
+  interactive). S3 is done and recorded.
 - Atlas v2 step 11 stays queued; A2/ship still blocked by the step-13 founder gate (R-pf-109).
