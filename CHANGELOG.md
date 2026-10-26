@@ -19,8 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **JS/TS follow-ups:** `PERF-JS-ALLOC-001` triviality gate; ALLOC-003 member-root attribution;
   CALL-001 guarded-recursion recall; reporter Markdown unknown-language escaping; deep-recursion
   stack safety; agent-report parity/size coverage for `report-js`/`report-ts`.
-- **Agent-report hardening:** `empty_doc` fixture still carries the pre-merge version strings;
-  `VERSION_SUFFIX` literal and `schema::SCHEMA_VERSION` are guarded only by a `contains` assertion.
+- **Agent-report hardening:** `empty_doc` fixture still carries the pre-merge version strings
+  (test-only); the `VERSION_SUFFIX` ↔ `schema::SCHEMA_VERSION` equality guard already exists and
+  must stay when the schema moves.
 - **Cross-platform verification:** run `scripts/verify-windows-compat.sh` after major/OS-facing
   changes and at milestones (not every session).
 
