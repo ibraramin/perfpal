@@ -5,72 +5,140 @@ plan status: active
 ---
 
 ## Idea
-Design and execute the reconciliation of all diverged worktrees into main as a versioned merge train (no beta-release nomenclature). Fact base (2026-10-26): main is c797004 at 0.2.0-beta.1 with agent-report and Atlas v2 already merged. feat/agent-report (c7f0009) and fix/agent-report-regen (c73d6ff) are both ancestors of main (0 ahead): no merge needed; remove the worktree after confirming no unique work. feat/js-ts (2e483b1) is 15 ahead / 20 behind main, base 9a94905, plan js-ts active with B5 done and B6 merge gate next; it owns schema v1.8 and ADR-0011-js-ts-backend. feat/atlas-sim (9e14507) is 65 ahead / 23 behind main, base 821b984, story S1-S4 gated (71d0d04), ADR-0011-atlas-story-companion + ADR-0012-atlas-branch-reconciliation, direction C recorded as Proposed (defer until the section-5 founder session). Founder has now chosen merge-now and feature-based versions: v0.3.0 for JS/TS, v0.4.0 for the Atlas Story companion. Merge order is js-ts first, then atlas-sim: js-ts has the newer base, the defined B6 gate, and owns src/reporter/mod.rs + goldens; atlas-sim must resolve against the post-js-ts renderer. Never merge in parallel, never merge atlas-sim first, and never merge a branch's stale state/handoff/activeContext files: keep main's canonical state and add the branch's track docs. Cross-branch ADR collision: js-ts owns ADR-0011 after M1; renumber Atlas ADR-0011 to ADR-0012 and Atlas ADR-0012 to ADR-0013 at M2, updating all references. Version train: v0.2.0 = current main (agent-report + Atlas v2 map); v0.3.0 = + JS/TS backends (schema 1.8); v0.4.0 = + Atlas Story companion (layout/flow 1, no schema change). No push/tag without explicit founder go; the beta-release plan's 0.2.0-beta.1 nomenclature is superseded and is updated separately.
+
+Integrate the diverged feature lines into `main` as one versioned line, **on main**, with semantic
+conflict resolution — not a mechanical merge. Fact base (2026-10-26):
+
+- **agent-report is already merged.** `feat/agent-report` (`c7f0009`) and `fix/agent-report-regen`
+  (`c73d6ff`) are ancestors of `main` (`c797004`, `0 ahead`). Verify and remove the worktree; no merge.
+- **`feat/js-ts`** (`2e483b1`): 15 ahead / 20 behind main, base `9a94905`; plan `js-ts` active, B5 done,
+  **B6 merge gate next**; owns schema `1.8`, JS/TS backends, `ADR-0011-js-ts-backend`.
+- **`feat/atlas-sim`** (`9e14507`): 65 ahead / 23 behind main, base `821b984`; story S1–S4 gated
+  (`71d0d04`); `ADR-0011-atlas-story-companion` + `ADR-0012-atlas-branch-reconciliation`; ADR-0012
+  recorded direction C (defer), now **overridden by the founder: merge the companion into main**. No
+  A12 change, no in-report graduation, no ship claim.
+
+**Merge order:** agent-report (already merged) → **js-ts (v0.3.0)** → **atlas-sim (v0.4.0)**. js-ts
+has the newer base, the defined B6 gate, and owns `src/reporter/mod.rs` + goldens; atlas-sim resolves
+against the post-js-ts renderer. Never merge in parallel, never atlas-sim first.
+
+**Versions:** v0.2.0 = current main (agent-report + Atlas v2 map; Cargo currently `0.2.0-beta.1`);
+v0.3.0 = + JS/TS backends (schema `1.8`); v0.4.0 = + Atlas Story companion (layout/flow `1`, no schema
+change). The old beta nomenclature is superseded; update `docs/plans/beta-release.md` separately.
+
+**Where:** all merge sessions run in `/home/shafin/Opencode/Perfpal` on `main`. Feature worktrees are
+read-only archives; do not sync/merge inside them.
 
 ## Implementation
-- M1 (js-ts worktree): merge main into feat/js-ts; resolve README, docs/report/output-contract.md, docs/tracks/README.md, src/reporter/mod.rs, state/archive/ledger.jsonl, tests/p6_hardening.rs; keep main's state/handoff/activeContext and add the js-ts track docs.
-- M1: bump Cargo.toml/Cargo.lock to 0.3.0, add the CHANGELOG [0.3.0] JS/TS section, confirm src/cli/mod.rs VERSION_SUFFIX is metrics schema 1.8, mark plan js-ts done, update the js-ts track handoff.
-- M1: run the js-ts B6 DoD from docs/plans/js-ts.md (files, fmt, clippy, test, deny, semantic, determinism, cargo check) plus the JS/TS suites/goldens/canary; commit the merge.
-- M1: from /home/shafin/Opencode/Perfpal (main worktree) run git merge --ff-only feat/js-ts, then the main gate (fmt/clippy/test/deny/semantic); update main state/handoff/activeContext; commit if needed; no push/tag.
-- M2 (atlas-sim worktree): merge main (now v0.3.0) into feat/atlas-sim; resolve README, output-contract, src/reporter/mod.rs, src/reporter/atlas_render.rs, state/activeContext.md, state/handoff/latest.md, state/session-state.json, state/archive/ledger.jsonl; keep main's state docs and preserve story-only code.
-- M2: renumber Atlas ADR-0011-atlas-story-companion.md -> ADR-0012, ADR-0012-atlas-branch-reconciliation.md -> ADR-0013 (js-ts claims ADR-0011); update every reference with rg; add a dated addendum recording the founder override of R-pf-112 direction C (merge now; no A12 change; no graduation claim; section-5 still required for in-report graduation).
-- M2: bump Cargo.toml/Cargo.lock to 0.4.0, add the CHANGELOG [0.4.0] Atlas Story companion section, update README; run the story gate (897 tests, sim/gate.sh 304/304, 3k 44/44, F5/F6) and the main gate; mark the story track done; commit the merge.
-- M2: from /home/shafin/Opencode/Perfpal run git merge --ff-only feat/atlas-sim, run the main gate again, update main state/handoff/activeContext, commit; no push/tag.
-- M3 (main worktree): verify feat/agent-report, fix/agent-report-regen, feat/js-ts and feat/atlas-sim are all ancestors of main; remove the agent-report worktree; prune merged branches; run the full CI gate; verify --version (0.4.0, schema 1.8), CHANGELOG, README, hot state <=8 KB, and git status clean.
-- M3: update state/handoff/latest.md + docs/activeContext.md + state/session-state.json (EOL), record the version train and the remaining post-merge follow-ups (story packaging + section-5, map-build/A1b, publish gate); no push/tag without explicit founder go.
+
+- **M1 — main worktree: `feat/js-ts` → v0.3.0.** `git merge --no-ff feat/js-ts`. Resolve the 6
+  conflicts semantically: `README`, `docs/report/output-contract.md`, `docs/tracks/README.md`,
+  `src/reporter/mod.rs`, `state/archive/ledger.jsonl`, `tests/p6_hardening.rs`. Keep main's canonical
+  `state/handoff/latest.md`/`activeContext`/`session-state`; add the js-ts track docs. Bump
+  `Cargo.toml`/`Cargo.lock` to **0.3.0**; add `CHANGELOG [0.3.0]`; confirm `VERSION_SUFFIX` is
+  metrics schema **1.8**; run the js-ts B6 DoD on the merged main tree + the full gate; mark plan
+  `js-ts` done; update state/handoff; commit. **No push/tag.**
+- **M2 — main worktree: `feat/atlas-sim` → v0.4.0.** `git merge --no-ff feat/atlas-sim`. Resolve
+  semantically against the post-js-ts main: `README`, `docs/report/output-contract.md`,
+  `src/reporter/mod.rs`, `src/reporter/atlas_render.rs`, `state/*`, `state/archive/ledger.jsonl`.
+  Keep main's canonical state; preserve story-only code; restore `strip_entry_line` to `pub(crate)`.
+  **Renumber Atlas `ADR-0011` → `ADR-0012` and `ADR-0012` → `ADR-0013`** (js-ts owns `ADR-0011`);
+  update every reference. Add a dated addendum recording the founder override of R-pf-112 direction
+  **C** (merge now; **no A12 change**; **no graduation claim**; §5 still required for in-report
+  graduation). Bump `Cargo.toml`/`Cargo.lock` to **0.4.0**; add `CHANGELOG [0.4.0]`; run the story
+  gate (897 tests, `sim/gate.sh` 304/304, 3k 44/44, F5/F6) + the full gate; mark the story track done;
+  update state/handoff; commit. **No push/tag.**
+- **M3 — main finalization.** Verify `feat/agent-report`, `fix/agent-report-regen`, `feat/js-ts`,
+  `feat/atlas-sim` are ancestors of main; remove the agent-report worktree; prune merged branches;
+  full CI gate; verify `--version` (**0.4.0**, schema **1.8**), CHANGELOG, README, hot state ≤8 KB,
+  `git status` clean; update `state/handoff/latest.md` + `docs/activeContext.md` +
+  `state/session-state.json` (EOL). No push/tag without founder go.
+
+## Semantic integration rules (binding)
+
+1. **No blind merging.** Never use `--force`, `-X ours`, `-X theirs`, `--no-verify`, or delete a
+   side to "resolve" a conflict. Every conflict gets a semantic resolution.
+2. **Read both sides, combine features.** For each conflict, inspect `git show main:path` and
+   `git show <feature>:path`, then write the union that preserves both features. Record the decision
+   in the merge commit body (and the merge-train resolution log).
+3. **Canonical state stays main's.** Do not merge stale branch `state/session-state.json`,
+   `state/handoff/latest.md` or `docs/activeContext.md`; keep main's, add the branch's track handoff
+   and plan, and update the hot state after the merge.
+4. **One ADR number per document.** js-ts keeps `ADR-0011`; Atlas renumbers to `0012`/`0013` in M2.
+   No two ADRs may share a number.
+5. **Gates are the arbiter.** If the combined tree fails a gate, fix the integration — do not weaken
+   the gate. Re-run the full gate after every merge.
+
+## Expected conflict decisions
+
+| Path | Main side | Feature side | Required combination |
+|---|---|---|---|
+| `src/reporter/mod.rs` | Atlas v2 renderer/rail/charts | js-ts language wiring; Atlas story `atlas_layout_json` | Keep all modules and wiring; no duplicate `pub mod`; story JSON remains opt-in |
+| `src/reporter/atlas_render.rs` | step 11/12 rail/charts | story geometry + `strip_entry_line` | Keep main's composition; `strip_entry_line` `pub(crate)` |
+| `src/cli/mod.rs` | current flags | `--story`, language/backend flags | Union of flags; `VERSION_SUFFIX` 1.8 |
+| `docs/report/output-contract.md` | Atlas v2 + agent-report | JS/TS v1.8 + story artifacts | All sections, no duplicate headings |
+| `README.md` | Atlas/agent-report | JS/TS + story | All feature sections |
+| `state/archive/ledger.jsonl` | main tail | branch tail | Append-only union; no ID reuse |
+| `tests/*` | main tests | js-ts/story tests | Keep both; no deletions |
 
 ## Version train
 
 | Version | Content | Session |
 |---|---|---|
-| **v0.2.0** | agent-report + Atlas v2 map (current main; Cargo currently says `0.2.0-beta.1`) | already in main |
-| **v0.3.0** | JS/TS backends, schema `1.8` (js-ts) | M1 |
-| **v0.4.0** | Atlas Story companion, `layout_version`/`flow_version` 1, no schema change (atlas-sim) | M2 |
-
-The old `0.2.0-beta.1` beta-release nomenclature is superseded; update `docs/plans/beta-release.md` separately
-if the founder wants a formal release note.
+| **v0.2.0** | agent-report + Atlas v2 map (current main; Cargo `0.2.0-beta.1`) | already in main |
+| **v0.3.0** | JS/TS backends, schema `1.8` | M1 |
+| **v0.4.0** | Atlas Story companion, layout/flow `1`, no schema change | M2 |
 
 ## Session signposts
 
-### M1 — JS-TS B6 → v0.3.0
+### M1 — JS-TS → v0.3.0 (main worktree)
 
-> **Worktree:** `/home/shafin/Opencode/Perfpal-js-ts` · **Branch:** `feat/js-ts` · **HEAD:** `2e483b1`
-> **Track:** Merge Train M1 · **Task:** JS-TS B6 merge gate → main **v0.3.0**.
-> **Read:** `docs/plans/js-ts.md` (B6), `state/tracks/js-ts/handoff.md`, `docs/specs/js-ts.md`,
-> `docs/adr/ADR-0011-js-ts-backend.md`, `docs/evidence/js-b5/gate.txt`.
-> **Goal:** merge `main` (`c797004`) into `feat/js-ts`; resolve `README`, `docs/report/output-contract.md`,
-> `docs/tracks/README.md`, `src/reporter/mod.rs`, `state/archive/ledger.jsonl`, `tests/p6_hardening.rs`;
-> keep main's `state/handoff/latest.md`/`activeContext`/`session-state` (the branch copies are stale) and add
-> the js-ts track docs; bump `Cargo.toml`/`Cargo.lock` to **0.3.0**; run the js-ts B6 DoD; mark plan `js-ts`
-> done; commit. Then from `/home/shafin/Opencode/Perfpal`: `git merge --ff-only feat/js-ts`, run the main gate,
-> update main state/handoff/activeContext, commit. **No push/tag.**
-> **DoD:** main v0.3.0; `feat/js-ts` is an ancestor of main; full gate green; state/handoff updated; clean status.
+> **Worktree:** `/home/shafin/Opencode/Perfpal` · **Branch:** `main` · **Base:** `c797004` (+ this plan)
+> **Track:** Merge Train M1 · **Task:** merge `feat/js-ts` into main → **v0.3.0**.
+> **Read:** `docs/plans/merge-train.md`, `docs/specs/merge-train.md`, the js-ts plan/spec/ADR/evidence
+> via `git show feat/js-ts:...`.
+> **Merge:** `git merge --no-ff feat/js-ts`. Resolve `README`, `docs/report/output-contract.md`,
+> `docs/tracks/README.md`, `src/reporter/mod.rs`, `state/archive/ledger.jsonl`, `tests/p6_hardening.rs`
+> semantically (rules above). Keep main's state/handoff/activeContext; add the js-ts track docs.
+> **Then:** bump `Cargo.toml`/`Cargo.lock` to **0.3.0**; `CHANGELOG [0.3.0]`; confirm `VERSION_SUFFIX`
+> is metrics schema **1.8**; run the js-ts B6 DoD on the merged main tree + full gate; mark `js-ts`
+> done; update state/handoff; commit. **No push/tag.**
+> **DoD:** main v0.3.0; `feat/js-ts` ancestor; full gate green; state/handoff updated; clean status.
 
-### M2 — Atlas Story → v0.4.0
+### M2 — Atlas Story → v0.4.0 (main worktree)
 
-> **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` · **Branch:** `feat/atlas-sim` · **HEAD:** `9e14507`
-> **Track:** Merge Train M2 · **Task:** Atlas Story merge → main **v0.4.0**.
-> **Read:** `docs/adr/ADR-0011-atlas-story-companion.md`, `docs/adr/ADR-0012-atlas-branch-reconciliation.md`,
-> `docs/specs/atlas-story.md`, `docs/plans/atlas-s4.md`, `state/tracks/atlas-sim/handoff.md`,
-> `docs/evidence/atlas-sim/`.
-> **Goal:** merge `main` (now v0.3.0) into `feat/atlas-sim`; resolve `README`, `output-contract`,
-> `src/reporter/mod.rs`, `src/reporter/atlas_render.rs`, state docs, ledger; keep main's state docs and preserve
-> story-only code; **renumber Atlas `ADR-0011` → `ADR-0012` and `ADR-0012` → `ADR-0013`** (js-ts owns ADR-0011),
-> update every reference; add a dated addendum recording the founder override of R-pf-112 direction **C**
-> (merge now; **no A12 change**; **no graduation claim**; §5 still required for in-report graduation); bump
-> `Cargo.toml`/`Cargo.lock` to **0.4.0**; run the story gate (897 tests, `sim/gate.sh` 304/304, 3k 44/44,
-> F5/F6) and the main gate; mark the story track done; commit. Then from main:
-> `git merge --ff-only feat/atlas-sim`, run the main gate, update main state/handoff/activeContext, commit.
-> **No push/tag.**
+> **Worktree:** `/home/shafin/Opencode/Perfpal` · **Branch:** `main` · **Base:** M1 close
+> **Track:** Merge Train M2 · **Task:** merge `feat/atlas-sim` into main → **v0.4.0**.
+> **Read:** `docs/plans/merge-train.md`, `docs/specs/merge-train.md`, Atlas ADR-0011/0012, story spec,
+> atlas-s4 plan, track handoff/evidence via `git show feat/atlas-sim:...`.
+> **Merge:** `git merge --no-ff feat/atlas-sim`. Resolve `README`, `output-contract`,
+> `src/reporter/mod.rs`, `src/reporter/atlas_render.rs`, `state/*`, ledger semantically. Keep main's
+> state; preserve story code; `strip_entry_line` `pub(crate)`.
+> **Renumber:** Atlas ADR-0011 → **0012**, ADR-0012 → **0013**; update every reference; add the
+> direction-C override addendum (merge now; no A12 change; no graduation claim).
+> **Then:** bump **0.4.0**; `CHANGELOG [0.4.0]`; run the story gate (897 tests, `sim/gate.sh` 304/304,
+> 3k 44/44, F5/F6) + full gate; mark the story track done; update state/handoff; commit. **No push/tag.**
 > **DoD:** main v0.4.0; story companion in main; no A2/ship/graduation claim; clean status.
 
-### M3 — mainline finalization
+### M3 — finalization (main worktree)
 
-> **Worktree:** `/home/shafin/Opencode/Perfpal` (main). Verify `feat/agent-report`,
-> `fix/agent-report-regen`, `feat/js-ts`, `feat/atlas-sim` are all ancestors of main; remove the
-> agent-report worktree; prune merged branches; run the full CI gate; verify `--version` (**0.4.0**, schema
-> **1.8**), CHANGELOG, README, hot state ≤8 KB, `git status` clean; update `state/handoff/latest.md` +
-> `docs/activeContext.md` + `state/session-state.json` (EOL); no push/tag without founder go.
+> **Worktree:** `/home/shafin/Opencode/Perfpal` · **Task:** verify all four branches are ancestors of
+> main; remove the agent-report worktree; prune merged branches; full CI gate; verify `--version`
+> (**0.4.0**, schema **1.8**), CHANGELOG, README, hot state ≤8 KB, `git status` clean; update
+> `state/handoff/latest.md` + `docs/activeContext.md` + `state/session-state.json` (EOL). No push/tag.
+
+## Definition of Done
+
+1. `git merge-base --is-ancestor <branch> main` exits 0 for `feat/agent-report`,
+   `fix/agent-report-regen`, `feat/js-ts`, `feat/atlas-sim`.
+2. `cargo fmt --all -- --check`, `cargo clippy --locked --all-targets -- -D warnings`,
+   `cargo test --locked`, `cargo deny check licenses`, semantic clippy/test — all exit 0 on main.
+3. js-ts B6 DoD and the story gate (897 tests, `sim/gate.sh` 304/304, 3k 44/44, F5/F6) exit 0.
+4. `perfpal --version` reports **0.4.0** with metrics schema **1.8**; CHANGELOG has `[0.3.0]` and
+   `[0.4.0]`; README describes JS/TS and the Atlas Story.
+5. No duplicate ADR numbers; no duplicate decision/risk/action IDs in hot state; no stale branch
+   state; hot state ≤8 KB; `git status` clean.
+6. No push/tag; no A2/ship/in-report-graduation claim.
 
 ## Required Specs
 <!-- SPECS_START -->
@@ -78,4 +146,5 @@ if the founder wants a formal release note.
 - divergence-study
 - evidence-beta-spec
 - maintainer-map
+- merge-train
 <!-- SPECS_END -->
