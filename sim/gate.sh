@@ -26,7 +26,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
   echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
   echo "Commit at run: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
   echo "Git tree: $(git rev-parse HEAD^{tree})"
-  echo "Dirty paths at run (excluding this transcript): $(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)"
+  echo "Dirty paths at run (excluding docs/evidence/atlas-sim/): $(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)"
   echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence or docs/state."
   echo "Fixtures: hyperfine $(git -C "$FIXTURES/hyperfine" rev-parse --short HEAD 2>/dev/null || echo '?') · cJSON $(git -C "$FIXTURES/cJSON" rev-parse --short HEAD 2>/dev/null || echo '?')"
   echo
@@ -168,6 +168,9 @@ PY
   DIRTY=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)
   echo "lines=$DIRTY"
   if [ "$DIRTY" -eq 0 ]; then echo "assert=pass worktree_clean"; else echo "assert=FAIL worktree_clean"; fi
+  if ! git status --porcelain >/dev/null 2>&1; then
+    echo "assert=FAIL git_status"
+  fi
   DIRTY_ALL=$(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)
   echo "all dirty paths=$DIRTY_ALL (the DoD requires 0)"
   if [ "$DIRTY_ALL" -eq 0 ]; then echo "assert=pass worktree_dirty_zero"; else echo "assert=FAIL worktree_dirty_zero"; fi

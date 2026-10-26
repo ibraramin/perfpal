@@ -240,7 +240,10 @@ def main() -> int:
               and trust_io.get("files") == len(io_nodes)
               and trust_io.get("read") == sum(node["io"]["read"] for node in io_nodes)
               and trust_io.get("write") == sum(node["io"]["write"] for node in io_nodes)
-              and trust_io.get("stdio") == sum(node["io"]["stdio"] for node in io_nodes),
+              and trust_io.get("stdio") == sum(node["io"]["stdio"] for node in io_nodes)
+              and trust_io.get("literal") == sum(node["io"]["literal"] for node in io_nodes)
+              and trust_io.get("unknownTarget") == sum(
+                  node["io"]["unknownTarget"] for node in io_nodes),
               f'{trust_io} vs {total} rows on {len(io_nodes)} files')
 
         def io_key(row: dict) -> tuple:
@@ -556,12 +559,31 @@ def main() -> int:
                           "DATA STORES" in insp
                           and f'L{inspector_node["io"]["rows"][0]["line"]}' in insp,
                           insp[:140])
-                    if unknown_node:
-                        check(f"{case_id}: S3 inspector marks a non-literal target",
-                              "unknown" in insp, unknown_node["id"])
+                    io_rows_dom = page.evaluate(
+                        """() => [...document.querySelectorAll('#inspector .insp-io li')]
+                            .map((li) => ({
+                                target: li.dataset.ioTarget,
+                                text: li.textContent,
+                                unknown: li.dataset.ioUnknown === 'true',
+                            }))"""
+                    )
+                    if any(row["literal"] is None and row["target"] != "stdio"
+                           for row in inspector_node["io"]["rows"]):
+                        check(f"{case_id}: S3 inspector marks a non-literal target row",
+                              all("target unknown" in row["text"] for row in io_rows_dom
+                                  if row["unknown"] and row["target"] != "stdio"),
+                              str([row for row in io_rows_dom if row["unknown"]][:2]))
                     if any(row["target"] == "stdio" for row in inspector_node["io"]["rows"]):
-                        check(f"{case_id}: S3 inspector marks stdio as pathless",
-                              "no path" in insp, inspector_node["id"])
+                        check(f"{case_id}: S3 inspector marks a stdio row pathless",
+                              all("stream · no path" in row["text"] for row in io_rows_dom
+                                  if row["target"] == "stdio"),
+                              str([row for row in io_rows_dom if row["target"] == "stdio"][:2]))
+                    shown_rows = len(inspector_node["io"]["rows"])
+                    total_rows = inspector_node["io"]["total"]
+                    if total_rows > shown_rows:
+                        check(f"{case_id}: S3 inspector discloses the row cap",
+                              f"showing {shown_rows} of {total_rows}" in insp,
+                              f"{shown_rows}/{total_rows}")
                     page.evaluate("() => document.activeElement && document.activeElement.blur()")
                     page.wait_for_timeout(150)
                     shot = EVIDENCE / f"{case_id}-io-inspector.png"

@@ -1073,6 +1073,11 @@
       const list = html('ul', { class: 'insp-io' });
       for (const row of node.io.rows) {
         const item = html('li');
+        item.dataset.ioLine = String(row.line);
+        item.dataset.ioOp = row.op;
+        item.dataset.ioTarget = row.target;
+        if (row.literal !== null) item.dataset.ioLiteral = row.literal;
+        else item.dataset.ioUnknown = 'true';
         item.append(html('span', { class: 'io-line' }, `L${row.line}`));
         item.append(html('span', { class: 'io-op' }, row.op));
         item.append(html('span', { class: 'io-target' }, row.target));
