@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `docs/evidence/atlas-visual/v2/gate-step15.txt`; lib 402, semantic 402, deny, determinism);
   the parallel panel is **APPROVED** after fixes — R1/R2/Q1/Q2 (round 2) + R3/R4 (round 3), zero
   unresolved blocking; **`atlas-build` is marked done (D-pf-258)**. No schema/JS/dependency/golden
-  change; **commit pending founder approval; no push**.
+  change; **committed `57d91a2`; no push**.
 - **Atlas v2 step 14 — A2 holdout executed (2026-10-24 timed reads; verification/panel 2026-10-26; delegated; no code change).** The application
   class was a fresh postgres scan (`856a659`; 2,566 files, 102,933 findings) and the library class the
   published `memchr` crate payload at `bd6068c3` (45 `.rs`; `benchmarks/` + `fuzz/` excluded). Four

@@ -8,12 +8,10 @@ no code, schema, JS, dependency, golden or visual-tuning change; F undecided (D-
 **Phase:** **Atlas v2 steps 9–15 are DONE; `atlas-build` is marked done 2026-10-26 (D-pf-258).**
 Step 13 approved (D-pf-253); A2 (step 14) delegated PASS (D-pf-255) closes the beta gate (D-pf-257);
 the memchr library fold is accepted as a documented beta residual (D-pf-256). DoD 1–13 PASS; the
-parallel panel is APPROVED with zero unresolved blocking findings. **Commit pending founder
-approval; no push.**
+parallel panel is APPROVED with zero unresolved blocking findings. **Committed `57d91a2`; no push.**
 
-**Commits:** HEAD `07f557c`. The step-15 change set (docs/state + `STEP15.md` + `gate-step15.txt`)
-is in the working tree, **uncommitted pending founder approval**. `.playwright-mcp/` is untracked
-scratch and is not part of the change set. **No push.**
+**Commits:** HEAD `57d91a2` (step 15: `docs(atlas): v2 step 15 docs/EOL - plan done`). The step-15 change set
+is committed; `.playwright-mcp/` is untracked scratch and is not part of the change set. **No push.**
 
 ## This session — step 15 (docs / EOL / ship-prep)
 
@@ -64,7 +62,7 @@ scratch and is not part of the change set. **No push.**
 | Schema unchanged | `test -z "$(git status --short src/schema/ docs/schema/)"` | exit 0 |
 | No code/deps | `test -z "$(git status --short src/ Cargo.toml Cargo.lock)"` | exit 0 |
 | Plan done | `plan status: done` in `docs/plans/atlas-build.md` | yes (markPlanDone) |
-| No commit/push | `git log --oneline -1` / `git status` | `07f557c`; docs uncommitted |
+| Commit/no push | `git log --oneline -1` / `git status` | `57d91a2`; committed |
 
 ## Panel record
 
@@ -94,7 +92,7 @@ scratch and is not part of the change set. **No push.**
   (structural LOW/MEDIUM honesty), A1b open; `map-build` not done.
 - **F:** undecided (D-pf-251); treemap candidate deferred, no F code ships.
 - **Publish gate:** B-pf-001 (contact) + B-pf-002 (minisign secrets) — founder-owned.
-- **Commit:** pending founder approval; **no push**.
+- **Commit:** `57d91a2`; **no push**.
 
 ## Next
 

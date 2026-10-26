@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "Atlas v2 steps 9-15 DONE; `atlas-build` plan DONE 2026-10-26; A2 delegated PASS closes the beta gate (D-pf-257); memchr fold accepted as beta residual (D-pf-256); R-pf-109 closed as a record; A-pf-118 done; F undecided; map-build not done; A1b open; publish gate B-pf-001/002 founder-owned; commit pending founder approval; no push.",
+  "current_phase": "Atlas v2 steps 9-15 DONE; `atlas-build` plan DONE 2026-10-26; A2 delegated PASS closes the beta gate (D-pf-257); memchr fold accepted as beta residual (D-pf-256); R-pf-109 closed as a record; A-pf-118 done; F undecided; map-build not done; A1b open; publish gate B-pf-001/002 founder-owned; commit `57d91a2`; no push.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 1,
@@ -35,7 +35,7 @@
     {
       "id": "D-pf-258",
       "status": "live",
-      "title": "ATLAS v2 STEP 15 DONE 2026-10-26: docs/EOL pass complete; DoD 1-13 PASS (gate-step15.txt; lib 402; semantic 402; deny; determinism; schema/evidence checks); parallel panel APPROVED (R1/R2/Q1/Q2 + R3/R4 after fixes; zero unresolved blocking); `atlas-build` plan DONE; R-pf-109 closed as a record; A-pf-118 done; commit pending founder approval; no push; F undecided, map-build not done, A1b open."
+      "title": "ATLAS v2 STEP 15 DONE 2026-10-26: docs/EOL pass complete; DoD 1-13 PASS (gate-step15.txt; lib 402; semantic 402; deny; determinism; schema/evidence checks); parallel panel APPROVED (R1/R2/Q1/Q2 + R3/R4 after fixes; zero unresolved blocking); `atlas-build` plan DONE; R-pf-109 closed as a record; A-pf-118 done; commit `57d91a2`; no push; F undecided, map-build not done, A1b open."
     }
   ],
   "open_risks": [
@@ -128,7 +128,7 @@
     {
       "id": "A-pf-118",
       "status": "done",
-      "action": "A2 (step 14) DONE 2026-10-24 (delegated PASS; evidence v8/a2.md). Step 15 docs/EOL DONE 2026-10-26; `atlas-build` plan DONE (D-pf-258); commit pending founder approval; no push."
+      "action": "A2 (step 14) DONE 2026-10-24 (delegated PASS; evidence v8/a2.md). Step 15 docs/EOL DONE 2026-10-26; `atlas-build` plan DONE (D-pf-258); commit `57d91a2`; no push."
     },
     {
       "id": "A-pf-122",
@@ -143,7 +143,7 @@
     {
       "id": "A-pf-124",
       "status": "active",
-      "action": "Commit the Atlas v2 step-15 docs/EOL change set after founder approval; no push. Then the founder-owned publish gate B-pf-001 (contact) / B-pf-002 (minisign secrets)."
+      "action": "Commit DONE 2026-10-26 (`57d91a2`); no push. Then the founder-owned publish gate B-pf-001 (contact) / B-pf-002 (minisign secrets)."
     },
     {
       "id": "A-pf-125",

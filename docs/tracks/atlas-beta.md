@@ -1,9 +1,8 @@
 # Track A — Atlas beta (main)
 
 **Status: Atlas v2 is DONE (2026-10-26).** `atlas-build` is marked done (D-pf-258); DoD 1–13 and the
-parallel panel are green; the step-15 docs/state change set is **uncommitted pending founder
-approval**; **no push**. Next: founder commit approval, then the founder-owned publish gate
-B-pf-001/002.
+parallel panel are green; the step-15 docs/state change set is **committed `57d91a2`**;
+**no push**. Next: the founder-owned publish gate B-pf-001/002.
 
 **Start this tab:** open `/home/shafin/Opencode/Perfpal` (branch `main`), read
 `state/handoff/latest.md` first. There is no further Atlas build session; see the handoff for the
@@ -42,8 +41,7 @@ of other branches. *(A2/step 14 is no longer blocked: step 13 was APPROVED 2026-
 - **A4 — step 14: A2 holdout.** memchr + django/postgres; animation on; 3 actions in <10 minutes; record the verdict. **DONE 2026-10-24/26 (delegated):** postgres + memchr payload, 4/4 blind lanes PASS, pause/reduced-motion/print PASS; `docs/evidence/map-vision/v8/a2.md`; memchr fold residual carried to step 15.
 - **A5 — step 15: ship/docs/EOL. DONE 2026-10-26 (D-pf-258).** README/output contract/specs/V7
   archive/CHANGELOG; full DoD 1–13 PASS; parallel panel approved; `atlas-build` marked done; memchr
-  fold accepted (D-pf-256); delegated A2 closes the beta gate (D-pf-257); **commit pending founder
-  approval; no push**. Publish gate B-pf-001/002 is founder-owned.
+  fold accepted (D-pf-256); delegated A2 closes the beta gate (D-pf-257); **committed `57d91a2`; no push**. Publish gate B-pf-001/002 is founder-owned.
 
 ## Guardrails / ownership
 

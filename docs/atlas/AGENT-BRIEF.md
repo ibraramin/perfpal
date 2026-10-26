@@ -8,7 +8,7 @@ answered understandable YES; pause/reduced-motion/print verified;
 beta**. Step 15 docs/EOL + DoD 1–13 + the parallel panel are complete. **Residual accepted:**
 memchr canvas bottom **1,282 px > the 900 px fold** (library class, 23-file UNREACHED column) is a
 documented beta residual (**D-pf-256**, fix trigger in `docs/evidence/accepted-limitations.md` §D),
-not a layout-contract pass. **Commit pending founder approval; no push.** F stays undecided; do not
+not a layout-contract pass. **Committed `57d91a2`; no push.** F stays undecided; do not
 retune the page without a new founder-approved layout plan.
 **Owner:** orchestrator. **Audience:** every agent touching `src/reporter/atlas_*`, the Atlas specs,
 the V8 evidence, or the Atlas plan.
@@ -107,7 +107,7 @@ the founder's eye. The data/model are fine.
 
 - **Plan `atlas-build` is DONE (D-pf-258).** `R-pf-109` is closed as a record; `R-pf-104` is closed
   (A2 delegated PASS); `A-pf-118` (A2) is done; step 15 is done. The step-15 change set is
-  **uncommitted pending founder approval**; **no push**.
+  **committed `57d91a2`**; **no push**.
 - **Done:** steps 9–10 (signed G system, first-page fit, key-metrics strip, chrome hygiene;
   founder-approved 2026-10-24), **step 11** (right detail rail, committed `189df91`), **step 12**
   (weight/blast/file/coverage charts; drills on `atlas-weight.html`/`atlas-q2.html`; `#map`

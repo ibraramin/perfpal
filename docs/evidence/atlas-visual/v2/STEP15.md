@@ -3,9 +3,8 @@
 **Status:** docs pass complete; **full DoD 1–13 PASS**; parallel panel **APPROVED** (round 1: 4/4
 CHANGES_REQUESTED → fixes; round 2: R1/R2/Q1/Q2 APPROVED, R3 transcript-reproducibility finding;
 round 3: R4 APPROVED + R3 re-review APPROVED). **`atlas-build` marked done 2026-10-26 (D-pf-258).**
-No code, schema, JS, dependency or golden change; no visual tuning. **Commit pending founder
-approval; no push.** **Date:** 2026-10-26. **Owner:** orchestrator.
-**Tree:** `main` HEAD `07f557c` + the working-tree docs/state change set.
+No code, schema, JS, dependency or golden change; no visual tuning. **Committed `57d91a2`; no push.** **Date:** 2026-10-26. **Owner:** orchestrator.
+**Tree:** `main` HEAD `07f557c` at the gate; committed `57d91a2` (docs/state/evidence).
 
 ## 1. Gate decisions
 
@@ -49,7 +48,7 @@ so an untainted founder re-run would need a fresh holdout. This is recorded, not
 | `docs/specs/map-animation.md` | Final frame = strip + canvas + rail + four charts; pause sits in the masthead outside the canvas; standalone drills are static |
 | `docs/evidence/map-vision/v7/README.md` | V7 prototypes marked **archived evidence** (G shipped, F undecided, not current output) |
 | `docs/evidence/accepted-limitations.md` | §D Atlas library-class first-page-fit limitation + fix trigger |
-| `CHANGELOG.md` | Step-15 entry (docs, decisions, DoD 1–13, panel approved, plan done, commit pending founder approval, no push) |
+| `CHANGELOG.md` | Step-15 entry (docs, decisions, DoD 1–13, panel approved, plan done, commit `57d91a2`, no push) |
 
 **"Whole-tenth" vs "one decimal":** no shipped doc carries "whole-tenth" as a rule; the stale phrase
 existed only in the step-13 evidence records (history, left intact). The binding wording is
@@ -122,5 +121,5 @@ APPROVED; zero unresolved blocking findings; DoD #13 PASS.**
 ## 5. Scope guard
 
 No `src/`, schema, JS, dependency or golden change; no page tuning; no feature. **`atlas-build` is
-marked done 2026-10-26 (D-pf-258); commit pending founder approval; no push.** `.playwright-mcp/` is
+marked done 2026-10-26 (D-pf-258); commit `57d91a2`; no push.** `.playwright-mcp/` is
 untracked scratch and is not part of the change set.

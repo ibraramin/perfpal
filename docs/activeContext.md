@@ -2,8 +2,7 @@
 
 ## Current Task
 **Atlas v2 steps 1–15 are DONE; `atlas-build` is marked done 2026-10-26 (D-pf-258).** Step 15
-docs/EOL + DoD 1–13 + the parallel panel are complete; the change set is uncommitted pending
-founder approval; no push.
+docs/EOL + DoD 1–13 + the parallel panel are complete; the change set is committed `57d91a2`; no push.
 - **Step 9–10:** signed Option A; G warm/sans/mono system; first-page fit (862 ≤ 900); key-metrics
   strip; chrome hygiene; founder-approved 2026-10-24.
 - **Step 11 (`189df91`):** G-style right rail (530px, 12 cards, roles, exact function/finding links,
@@ -24,12 +23,12 @@ founder approval; no push.
   archive/CHANGELOG); **memchr fold accepted as a documented beta residual** (D-pf-256, fix trigger);
   **delegated A2 closes the beta gate** (D-pf-257; founder V6 gold standard open, fresh holdout
   needed); DoD 1–13 PASS (`docs/evidence/atlas-visual/v2/gate-step15.txt`); parallel panel approved
-  after fixes; plan done; **commit pending founder approval; no push**. No schema/JS/deps/golden
+  after fixes; plan done; **committed `57d91a2`; no push**. No schema/JS/deps/golden
   change; no visual tuning.
 
 ## Recent Decisions
 - **D-pf-258 (live, 2026-10-26):** step 15 docs/EOL done; DoD 1–13 PASS; panel approved; `atlas-build`
-  done; commit pending founder approval; no push.
+  done; commit `57d91a2`; no push.
 - **D-pf-257 (live, 2026-10-26):** the delegated A2 PASS closes the A2 gate for this beta; the
   founder's own timed eye-test remains the V6 gold standard and needs a fresh holdout.
 - **D-pf-256 (live, 2026-10-26):** memchr library fold (1,282 px > 900) accepted as a documented beta
@@ -43,11 +42,10 @@ founder approval; no push.
 - **D-pf-249 (archived pointer):** archived decisions are in `state/archive/ledger.jsonl`.
 
 ## In Progress
-- The step-15 change set (docs/state + `STEP15.md` + `gate-step15.txt`) is uncommitted; **commit
-  pending founder approval**. No code, schema, JS, dependency or golden change; no push.
+- The step-15 change set is committed (`57d91a2`); **no push**. No code, schema, JS, dependency or
+  golden change.
 
 ## Next
-- **Founder approves the commit** → commit the step-15 docs/state/evidence; **no push**.
 - Publish gate B-pf-001 (contact) / B-pf-002 (minisign secrets) — founder-owned.
 - Post-beta: F decision (D-pf-251), memchr fold fix trigger (D-pf-256), `map-build`/A1b ranking
   recall (R-pf-105/106/108).
@@ -94,5 +92,5 @@ founder approval; no push.
   (1,282 > 900) carried to step 15; evidence committed `9631137`.
 - **Atlas v2 Session A5 (2026-10-26):** step 15 docs/EOL; D-pf-256 (memchr fold accepted), D-pf-257
   (delegated A2 closes beta gate), D-pf-258 (plan done); DoD 1–13 PASS; parallel panel R1/R2/Q1/Q2 +
-  R3/R4 approved after fixes; state/handoff/activeContext/track/brief updated; **commit pending
-  founder approval; no push**.
+  R3/R4 approved after fixes; state/handoff/activeContext/track/brief updated; **committed
+  `57d91a2`; no push**.
