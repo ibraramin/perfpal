@@ -287,9 +287,12 @@ def scenes_projection(layout: dict, metrics: dict) -> tuple[list[dict], dict]:
     if file_cap > SCENE_TOP_FILES:
         raise SystemExit(f"scenes.file_cap exceeds {SCENE_TOP_FILES}: {file_cap}")
     metrics_files = {file["path"]: file for file in metrics["files"]}
-    expected_total_files = sum(
-        1 for file in metrics["files"] if file["function_count"] > 0
+    source_files = [file for file in metrics["files"] if file["function_count"] > 0]
+    expected_total_files = len(source_files)
+    production_files_total = sum(
+        1 for file in source_files if file.get("path_class") == "production"
     )
+    non_production_files_total = expected_total_files - production_files_total
     if total_files != expected_total_files:
         raise SystemExit(
             f"scenes.total_files {total_files} != metrics files with functions "
@@ -385,6 +388,8 @@ def scenes_projection(layout: dict, metrics: dict) -> tuple[list[dict], dict]:
         "shownScenes": shown_scenes,
         "totalFiles": total_files,
         "shownFiles": shown_files,
+        "productionFiles": production_files_total,
+        "nonProductionFiles": non_production_files_total,
         "omitted": {
             "scenes": omitted["scenes"],
             "files": omitted_files,
@@ -822,6 +827,8 @@ def build(case: str, layout_path: Path, metrics_path: Path) -> dict:
                 "shown": scene_meta["shownScenes"],
                 "files": scene_meta["totalFiles"],
                 "shownFiles": scene_meta["shownFiles"],
+                "productionFiles": scene_meta["productionFiles"],
+                "nonProductionFiles": scene_meta["nonProductionFiles"],
                 "omitted": scene_meta["omitted"]["scenes"],
             },
             "unresolvedCalls": unresolved_total,

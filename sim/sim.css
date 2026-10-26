@@ -35,14 +35,14 @@ button,select,input{font:inherit;color:inherit}
 
 /* Masthead ---------------------------------------------------------------- */
 .masthead{
-  height:64px;
-  flex:0 0 64px;
+  min-height:64px;
+  flex:0 0 auto;
   display:flex;
   align-items:center;
   gap:14px;
   min-width:0;
 }
-.brand{width:248px;flex:0 0 248px;min-width:0}
+.brand{width:320px;flex:0 0 320px;min-width:0}
 .kicker{
   font-size:8px;
   line-height:1;
@@ -64,12 +64,12 @@ button,select,input{font:inherit;color:inherit}
 .subline{
   margin-top:3px;
   font-size:8.5px;
-  line-height:1.1;
+  line-height:1.25;
   color:var(--muted);
   letter-spacing:.02em;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  white-space:normal;
+  overflow:visible;
+  overflow-wrap:anywhere;
 }
 .transport{
   margin-left:auto;
@@ -1043,6 +1043,27 @@ button,select,input{font:inherit;color:inherit}
   .legend{font-size:7.8px;gap:6px}
   .key-caps{font-size:7.8px}
   .start-actions{font-size:7.8px}
+
+  /* 1280: let the key strip, footer and narration grow instead of clipping. */
+  .key-strip{height:auto;min-height:56px;flex:0 0 auto}
+  .key-row{flex-wrap:wrap;row-gap:2px;white-space:normal}
+  .key-top{height:auto;min-height:20px}
+  .key-mid{height:auto;min-height:19px}
+  .key-bottom{height:auto;min-height:16px}
+  .key{flex-wrap:wrap}
+  .key-value{white-space:normal;text-overflow:clip;overflow-wrap:anywhere}
+  .starts{flex-wrap:wrap;overflow:visible}
+  .start-actions{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+  .start-actions .start{overflow-wrap:anywhere}
+  .legend{flex-wrap:wrap;row-gap:2px}
+  .key-defs{flex-wrap:wrap;row-gap:2px;white-space:normal;overflow:visible}
+  .key-defs .definition,
+  .key-defs .caveat{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+  .canvas-footer{height:auto;min-height:19px;flex:0 0 auto;padding:2px 0;
+    line-height:1.35;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+  .narration{height:auto;min-height:44px;flex:0 0 auto;align-items:flex-start;padding:4px 2px}
+  .narration-title{white-space:normal;max-width:240px}
+  .narration-body{display:block;overflow:visible;-webkit-line-clamp:unset;line-height:1.4}
 }
 
 @media (max-width:900px){

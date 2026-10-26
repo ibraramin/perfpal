@@ -4361,6 +4361,7 @@
  },
  "sceneMeta": {
   "fileCap": 5,
+  "nonProductionFiles": 16,
   "omitted": {
    "cost": 0,
    "files": 0,
@@ -4368,6 +4369,7 @@
    "productionCost": 0,
    "scenes": 0
   },
+  "productionFiles": 35,
   "sceneCap": 24,
   "sceneVersion": 1,
   "shownFiles": 51,
@@ -5048,7 +5050,9 @@
   },
   "scenes": {
    "files": 51,
+   "nonProductionFiles": 16,
    "omitted": 0,
+   "productionFiles": 35,
    "shown": 11,
    "shownFiles": 51,
    "total": 11

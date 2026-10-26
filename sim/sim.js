@@ -642,11 +642,11 @@
   function purposeText(data) {
     const purpose = data.purpose;
     if (data.synthetic || !purpose) return 'entry-flow map · static, profile to confirm';
-    if (purpose.kind === 'withheld') return 'Purpose withheld (README claim).';
+    if (purpose.kind === 'withheld') return 'PURPOSE · Purpose withheld (README claim).';
     if (purpose.kind === 'readme') {
-      return `${purpose.text} · from ${purpose.source || 'README'}`;
+      return `PURPOSE · ${purpose.text} · from ${purpose.source || 'README'}`;
     }
-    return `${purpose.text} · structural fallback`;
+    return `PURPOSE · ${purpose.text} · structural fallback`;
   }
 
   function renderMeta() {
@@ -670,7 +670,10 @@
       setText('#key-hottest-path', meta.hottest);
       setText('#key-hottest-meta', '');
     }
-    setText('#key-path', meta.path);
+    const pathText = String(meta.path ?? '');
+    setText('#key-path', pathText.replace(/^\s*PATH\s*·\s*/i, ''));
+    const pathNode = $('#key-path');
+    if (pathNode) pathNode.title = pathText;
     setText('#canvas-footer', meta.footer);
 
     const starts = $('#start-actions');
@@ -918,10 +921,13 @@
     }
 
     const omitted = sceneMeta.omitted || {};
+    const nonProductionFiles = sceneMeta.nonProductionFiles
+      ?? trust.scenes?.nonProductionFiles ?? 0;
     setText('#s4-scenes-caps',
       `${fmt(sceneMeta.shownScenes ?? scenes.length)} of ${fmt(sceneMeta.totalScenes ?? scenes.length)} scenes · `
       + `top ${fmt(sceneMeta.fileCap ?? 5)} files each · ${fmt(sceneMeta.totalFiles ?? 0)} source files · `
-      + `${fmt(omitted.scenes ?? 0)} scenes / ${fmt(omitted.files ?? 0)} files omitted`);
+      + `${fmt(omitted.scenes ?? 0)} scenes / ${fmt(omitted.files ?? 0)} files omitted · `
+      + `${fmt(nonProductionFiles)} test/bench files`);
 
     const grid = $('#s4-scene-grid');
     grid.replaceChildren();
@@ -989,6 +995,8 @@
     add('scenes', `${fmt(sceneMeta.shownScenes ?? 0)} of ${fmt(sceneMeta.totalScenes ?? 0)} shown · `
       + `${fmt(sceneMeta.totalFiles ?? 0)} source files · ${fmt(omitted.scenes ?? 0)} scenes / `
       + `${fmt(omitted.files ?? 0)} files omitted · ${fmt(sceneMeta.shownFiles ?? 0)} shown files`);
+    add('non-production files',
+      `${fmt(nonProductionFiles)} of ${fmt(sceneMeta.totalFiles ?? 0)} source files (test/bench)`);
     add('profile', `${fmt(profileMeta.shown ?? 0)} shown of ${fmt(profileMeta.candidateTotal ?? 0)} candidates · `
       + `${fmt(profileMeta.totalRanked ?? 0)} ranked · `
       + `${fmt(profileMeta.demotedProduction ?? 0)} production rows demoted`);

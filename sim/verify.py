@@ -289,6 +289,12 @@ def main() -> int:
         scene_total = scene_meta.get("totalScenes")
         scene_files = scene_meta.get("totalFiles")
         scene_shown_files = scene_meta.get("shownFiles")
+        metrics_production_files = sum(
+            1 for file in metrics["files"]
+            if file["function_count"] > 0 and file.get("path_class") == "production")
+        metrics_non_production_files = sum(
+            1 for file in metrics["files"]
+            if file["function_count"] > 0 and file.get("path_class") != "production")
         check(f"{case_id}: S4 scene counts and caps reconcile",
               isinstance(scene_shown, int) and isinstance(scene_total, int)
               and isinstance(scene_files, int) and isinstance(scene_shown_files, int)
@@ -299,6 +305,15 @@ def main() -> int:
               and scene_files == sum(1 for file in metrics["files"] if file["function_count"] > 0)
               and omitted.get("scenes") == scene_total - scene_shown,
               str(scene_meta))
+        check(f"{case_id}: S4 scene production split reconciles with metrics",
+              scene_meta.get("productionFiles") == metrics_production_files
+              and scene_meta.get("nonProductionFiles") == metrics_non_production_files
+              and scene_meta["productionFiles"] + scene_meta["nonProductionFiles"] == scene_files
+              and trust_scenes.get("productionFiles") == metrics_production_files
+              and trust_scenes.get("nonProductionFiles") == metrics_non_production_files,
+              f"production={scene_meta.get('productionFiles')}/{metrics_production_files} "
+              f"non-production={scene_meta.get('nonProductionFiles')}/{metrics_non_production_files} "
+              f"trust={trust_scenes.get('productionFiles')}/{trust_scenes.get('nonProductionFiles')}")
         check(f"{case_id}: S4 scene top files are capped and sorted",
               all(len(row.get("topFiles") or []) <= 5 for row in scenes)
               and all(row["topFiles"] == sorted(
@@ -333,6 +348,8 @@ def main() -> int:
         check(f"{case_id}: S4 scene trust reconciles",
               trust_scenes == {"total": scene_total, "shown": scene_shown,
                                "files": scene_files, "shownFiles": scene_shown_files,
+                               "productionFiles": scene_meta.get("productionFiles"),
+                               "nonProductionFiles": scene_meta.get("nonProductionFiles"),
                                "omitted": omitted.get("scenes")},
               f"{trust_scenes} vs {scene_meta}")
         check(f"{case_id}: S4 scenes keep core order",
@@ -581,11 +598,11 @@ def main() -> int:
 
                 purpose = expected.get("purpose") or {}
                 if purpose.get("kind") == "withheld":
-                    purpose_line = "Purpose withheld (README claim)."
+                    purpose_line = "PURPOSE · Purpose withheld (README claim)."
                 elif purpose.get("kind") == "readme":
-                    purpose_line = f'{purpose["text"]} · from {purpose.get("source") or "README"}'
+                    purpose_line = f'PURPOSE · {purpose["text"]} · from {purpose.get("source") or "README"}'
                 elif purpose.get("kind") == "structural":
-                    purpose_line = f'{purpose["text"]} · structural fallback'
+                    purpose_line = f'PURPOSE · {purpose["text"]} · structural fallback'
                 else:
                     purpose_line = "entry-flow map · static, profile to confirm"
                 subline = page.inner_text("#brand-subline").strip()
@@ -623,6 +640,9 @@ def main() -> int:
                 check(f"{case_id}: S4 scene caps disclose shown/total",
                       f'{scene_meta["shownScenes"]} of {scene_meta["totalScenes"]}' in detail["scenesCaps"],
                       detail["scenesCaps"][:160])
+                check(f"{case_id}: S4 scene caps disclose test/bench files",
+                      f'{scene_meta["nonProductionFiles"]} test/bench files' in detail["scenesCaps"],
+                      detail["scenesCaps"][:200])
                 check(f"{case_id}: S4 scene top files stay capped",
                       detail["topFilesMax"] <= 5, str(detail["topFilesMax"]))
                 check(f"{case_id}: S4 queue shows every carried row",
@@ -640,6 +660,10 @@ def main() -> int:
                       and f'{trust_data["unresolvedCalls"]:,} on {trust_data["unresolvedFiles"]:,} files' in trust_panel
                       and f'{purpose.get("kind", "not present")} · {purpose.get("source") or "no source"}' in trust_panel,
                       trust_panel[:200])
+                check(f"{case_id}: S4 trust panel carries the scan-wide test/bench split",
+                      f'{scene_meta["nonProductionFiles"]} of {scene_meta["totalFiles"]} source files (test/bench)'
+                      in trust_panel,
+                      trust_panel[:260])
 
                 rendered = page.evaluate(
                     "() => document.querySelectorAll('#stage g[role=\"button\"]').length")
@@ -679,6 +703,12 @@ def main() -> int:
 
                 footer = page.inner_text("#canvas-footer")
                 check(f"{case_id}: footer matches the render", footer.strip() == expected["meta"]["footer"].strip())
+                path_text = page.inner_text("#key-path").strip()
+                path_title = page.get_attribute("#key-path", "title") or ""
+                check(f"{case_id}: key strip strips the duplicate PATH label",
+                      not re.match(r"^PATH\b", path_text, re.I)
+                      and path_title == expected["meta"]["path"],
+                      f"{path_text[:80]!r} · title={path_title[:80]!r}")
 
                 honesty = page.inner_text("#honesty").lower()
                 check(f"{case_id}: honesty label present",
