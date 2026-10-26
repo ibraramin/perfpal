@@ -598,6 +598,8 @@ fn module_unit(root: Node<'_>, path: &str, source: &[u8]) -> FunctionUnit {
         resolver_tier: ResolverTier::default(),
         is_async: false,
         is_module_scope: true,
+        // `<module>` is a label, not a callable binding.
+        name_is_lexical_binding: false,
         // v1.4/v1.5 whole-program fields are aggregator-owned: backends leave
         // them `None`.
         call_fanout: None,
@@ -676,6 +678,7 @@ fn function_unit(node: Node<'_>, path: &str, source: &[u8], dialect: &Dialect) -
         resolver_tier: ResolverTier::default(),
         is_async: infer::is_async_fn(node),
         is_module_scope: false,
+        name_is_lexical_binding: infer::name_is_lexical_binding(node),
         call_fanout: None,
         call_fanin: None,
         call_depth: None,

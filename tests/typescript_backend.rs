@@ -773,3 +773,70 @@ fn typeof_import_type_position_produces_no_finding_even_when_partial() {
         "the `typeof import` type position must produce no finding"
     );
 }
+
+// ---------------------------------------------------------------------------
+// (10) CALL-001 real-parse negative: a TS-wrapped member self-call is not a
+// bare direct recursion
+// ---------------------------------------------------------------------------
+
+#[test]
+fn call_001_real_parse_excludes_wrapped_member_receivers() {
+    let (root, units) = scan_tree(
+        "call001-ts",
+        &[(
+            "service.ts",
+            "export function dispose(store) {\n  return (this.storage as any).dispose(store);\n}\n",
+        )],
+    );
+
+    let file = unit(&units, "service.ts");
+    assert_eq!(file.parse_health.status, ParseStatus::Ok);
+    assert_eq!(file.parse_health.error_node_count, 0);
+
+    // `callee_name` is `dispose` (== the enclosing function name) and the
+    // receiver root is unresolvable, but the callee path is the TS-wrapped
+    // member chain `(this.storage as any).dispose`, not a bare `dispose`.
+    let findings: Vec<_> = analyze(&units)
+        .into_iter()
+        .filter(|f| f.rule_id == "PERF-JS-CALL-001")
+        .collect();
+    assert!(
+        findings.is_empty(),
+        "wrapped member self-call must stay silent: {findings:?}"
+    );
+
+    let doc = doc_for(&units);
+    let summary = doc.parse_health_summary.expect("parse_health_summary");
+    assert_eq!(summary.ok, 1, "fixture must parse cleanly");
+    assert_eq!(summary.partial, 0, "fixture must not be partial");
+
+    fs::remove_dir_all(&root).ok();
+}
+
+/// B5 review note R1: the fresh-object gate must see through TS transparent
+/// wrappers around the initializer (`const x = { … } as T` is a fresh literal).
+#[test]
+fn type_001_fresh_object_gate_strips_ts_wrappers() {
+    let (root, units) = scan_tree(
+        "type001-ts-fresh",
+        &[(
+            "fresh.ts",
+            "export function sanitize(config: Record<string, string>) {\n  const merged = { ...config } as Record<string, string>;\n  delete merged.unsafe;\n}\n",
+        )],
+    );
+
+    let file = unit(&units, "fresh.ts");
+    assert_eq!(file.parse_health.status, ParseStatus::Ok);
+    assert_eq!(file.parse_health.error_node_count, 0);
+
+    let findings: Vec<_> = analyze(&units)
+        .into_iter()
+        .filter(|f| f.rule_id == "PERF-JS-TYPE-001")
+        .collect();
+    assert!(
+        findings.is_empty(),
+        "a fresh TS-wrapped object literal must stay silent: {findings:?}"
+    );
+
+    fs::remove_dir_all(&root).ok();
+}

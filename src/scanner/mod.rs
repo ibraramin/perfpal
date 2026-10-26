@@ -147,9 +147,19 @@ const SKIP_DIRS: [&str; 6] = [
 ];
 
 /// JS/TS-only file-name patterns skipped during discovery (minified/bundled
-/// output). Names are JS-specific today; the predicate is applied to the whole
-/// JS family so a future `*.min.ts`-style rule has one home.
-const JS_SKIP_FILE_SUFFIXES: [&str; 4] = [".min.js", ".min.mjs", ".min.cjs", ".bundle.js"];
+/// output): the JavaScript forms `*.min.js`/`*.min.mjs`/`*.min.cjs`/
+/// `*.bundle.js` plus the TypeScript forms `*.min.ts`/`*.min.mts`/`*.min.cts`.
+/// The predicate is applied to the whole JS family so every minified suffix has
+/// one home.
+const JS_SKIP_FILE_SUFFIXES: [&str; 7] = [
+    ".min.js",
+    ".min.mjs",
+    ".min.cjs",
+    ".bundle.js",
+    ".min.ts",
+    ".min.mts",
+    ".min.cts",
+];
 
 /// Whether a file name is a JS skip pattern (minified/bundled output).
 fn has_js_skip_suffix(name: &str) -> bool {
@@ -186,7 +196,8 @@ const JS_MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
 /// file) into the IR stream.
 ///
 /// Single-file policy: a JS/TS-named target that discovery would skip is skipped
-/// here too — `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`, declaration-only
+/// here too — `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js` plus the
+/// TypeScript forms `*.min.ts`/`*.min.mts`/`*.min.cts`, declaration-only
 /// `.d.ts`/`.d.mts`/`.d.cts`, and (by the size cap) oversized minified files.
 /// `.ts`/`.mts`/`.cts`/`.tsx` are scanned normally. A genuinely unknown
 /// extension keeps the documented C fallback.

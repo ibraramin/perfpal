@@ -105,7 +105,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-ASYNC-001-07-async-await-js-11-19" data-path="07_async_await.js"><td>PERF-JS-ASYNC-001:07_async_await.js:11:19</td><td>PERF-JS-ASYNC-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_async_await.js:11:19</td><td>&lt;module&gt;</td><td class="wrap">an `await` runs inside a loop at depth 1 — awaiting each item sequentially serialises one microtask round-trip per iteration; collecting the promises and awaiting `Promise.all(items.map(...))` is a candidate optimization. Accepted FP class: deliberately sequential work (rate limiting, ordering)</td><td class="wrap">loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-ASYNC-001-07-async-await-js-11-19" data-path="07_async_await.js"><td>PERF-JS-ASYNC-001:07_async_await.js:11:19</td><td>PERF-JS-ASYNC-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>07_async_await.js:11:19</td><td>loadAll</td><td class="wrap">an `await` runs inside a loop at depth 1 — awaiting each item sequentially serialises one microtask round-trip per iteration; collecting the promises and awaiting `Promise.all(items.map(...))` is a candidate optimization. Accepted FP class: deliberately sequential work (rate limiting, ordering)</td><td class="wrap">loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -116,7 +116,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-ASYNC-002-08-async-blocking-js-7-10" data-path="08_async_blocking.js"><td>PERF-JS-ASYNC-002:08_async_blocking.js:7:10</td><td>PERF-JS-ASYNC-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>08_async_blocking.js:7:10</td><td>&lt;module&gt;</td><td class="wrap">synchronous &#39;readFileSync&#39; is called inside an `async` function — the blocking call stalls the single event-loop thread for every concurrent task; using the async equivalent (`fs/promises`, async `exec`/`spawn`) is a candidate optimization. Accepted FP class: a CLI single-shot path</td><td class="wrap">callee=readFileSync, loop_depth=0</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-ASYNC-002-08-async-blocking-js-7-10" data-path="08_async_blocking.js"><td>PERF-JS-ASYNC-002:08_async_blocking.js:7:10</td><td>PERF-JS-ASYNC-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>08_async_blocking.js:7:10</td><td>readConfig</td><td class="wrap">synchronous &#39;readFileSync&#39; is called inside an `async` function — the blocking call stalls the single event-loop thread for every concurrent task; using the async equivalent (`fs/promises`, async `exec`/`spawn`) is a candidate optimization. Accepted FP class: a CLI single-shot path</td><td class="wrap">callee=readFileSync, loop_depth=0</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -127,7 +127,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-LOOP-002-05-sync-io-loop-js-9-17" data-path="05_sync_io_loop.js"><td>PERF-JS-LOOP-002:05_sync_io_loop.js:9:17</td><td>PERF-JS-LOOP-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>05_sync_io_loop.js:9:17</td><td>&lt;module&gt;</td><td class="wrap">synchronous &#39;readFileSync&#39; runs inside a loop at depth 1 — each iteration performs a blocking syscall/serialization on the single event-loop thread; batching the work, using the async API (`fs/promises`, async `exec`), or making one call outside the loop is a candidate optimization. Accepted FP class: a startup-only loop</td><td class="wrap">callee=readFileSync, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-LOOP-002-05-sync-io-loop-js-9-17" data-path="05_sync_io_loop.js"><td>PERF-JS-LOOP-002:05_sync_io_loop.js:9:17</td><td>PERF-JS-LOOP-002</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>05_sync_io_loop.js:9:17</td><td>loadAll</td><td class="wrap">synchronous &#39;readFileSync&#39; runs inside a loop at depth 1 — each iteration performs a blocking syscall/serialization on the single event-loop thread; batching the work, using the async API (`fs/promises`, async `exec`), or making one call outside the loop is a candidate optimization. Accepted FP class: a startup-only loop</td><td class="wrap">callee=readFileSync, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -138,7 +138,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-LOOP-007-06-membership-scan-js-8-9" data-path="06_membership_scan.js"><td>PERF-JS-LOOP-007:06_membership_scan.js:8:9</td><td>PERF-JS-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>06_membership_scan.js:8:9</td><td>&lt;module&gt;</td><td class="wrap">&#39;seen.includes&#39; scans the collection linearly on every iteration at loop depth 1 — the nested linear scan makes the loop O(n²); building a `Set`/`Map` once and doing a keyed lookup is a candidate optimization. Accepted FP class: small (&lt; 16) collections</td><td class="wrap">callee=includes, loop_depth=1, receiver_root=seen</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-LOOP-007-06-membership-scan-js-8-9" data-path="06_membership_scan.js"><td>PERF-JS-LOOP-007:06_membership_scan.js:8:9</td><td>PERF-JS-LOOP-007</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>06_membership_scan.js:8:9</td><td>intersect</td><td class="wrap">&#39;seen.includes&#39; scans the collection linearly on every iteration at loop depth 1 — the nested linear scan makes the loop O(n²); building a `Set`/`Map` once and doing a keyed lookup is a candidate optimization. Accepted FP class: small (&lt; 16) collections</td><td class="wrap">callee=includes, loop_depth=1, receiver_root=seen</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -149,7 +149,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-STR-001-03-string-build-js-8-5" data-path="03_string_build.js"><td>PERF-JS-STR-001:03_string_build.js:8:5</td><td>PERF-JS-STR-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>03_string_build.js:8:5</td><td>&lt;module&gt;</td><td class="wrap">&#39;out&#39; accumulates a string with &#39;+=&#39; or &#39;out = out + ...&#39; inside a loop at depth 1 — this builds a cons-string chain; V8 ropes mitigate short chains, but flattening the rope at first use is linear and repeated concatenation is quadratic; collecting parts into an array and joining once (`parts.join(&quot;&quot;)`) is a candidate optimization. Accepted FP class: a tiny bounded loop (&lt; 8 iterations)</td><td class="wrap">loop_depth=1, target=out</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-STR-001-03-string-build-js-8-5" data-path="03_string_build.js"><td>PERF-JS-STR-001:03_string_build.js:8:5</td><td>PERF-JS-STR-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>03_string_build.js:8:5</td><td>render</td><td class="wrap">&#39;out&#39; accumulates a string with &#39;+=&#39; or &#39;out = out + ...&#39; inside a loop at depth 1 — this builds a cons-string chain; V8 ropes mitigate short chains, but flattening the rope at first use is linear and repeated concatenation is quadratic; collecting parts into an array and joining once (`parts.join(&quot;&quot;)`) is a candidate optimization. Accepted FP class: a tiny bounded loop (&lt; 8 iterations)</td><td class="wrap">loop_depth=1, target=out</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -160,7 +160,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-ALLOC-001-01-alloc-churn-js-9-20" data-path="01_alloc_churn.js"><td>PERF-JS-ALLOC-001:01_alloc_churn.js:9:20</td><td>PERF-JS-ALLOC-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.js:9:20</td><td>&lt;module&gt;</td><td class="wrap">an object literal is constructed on every iteration at loop depth 1 — V8 allocates it in the young generation and escape analysis rarely elides a per-iteration literal; hoisting the loop-invariant construction (or reusing one object) is a candidate optimization. Accepted FP class: a literal created once for a different reason but mutated per iteration</td><td class="wrap">kind=object, loop_depth=1, referenced_names=</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-ALLOC-001-01-alloc-churn-js-9-20" data-path="01_alloc_churn.js"><td>PERF-JS-ALLOC-001:01_alloc_churn.js:9:20</td><td>PERF-JS-ALLOC-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>01_alloc_churn.js:9:20</td><td>buildEnvelopes</td><td class="wrap">an object literal is constructed on every iteration at loop depth 1 — V8 allocates it in the young generation and escape analysis rarely elides a per-iteration literal; hoisting the loop-invariant construction (or reusing one object) is a candidate optimization. Accepted FP class: a literal created once for a different reason but mutated per iteration</td><td class="wrap">kind=object, loop_depth=1, referenced_names=</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -171,7 +171,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-ALLOC-003-02-array-accumulation-js-8-11" data-path="02_array_accumulation.js"><td>PERF-JS-ALLOC-003:02_array_accumulation.js:8:11</td><td>PERF-JS-ALLOC-003</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>02_array_accumulation.js:8:11</td><td>&lt;module&gt;</td><td class="wrap">&#39;acc = [...acc, ...]&#39; copies n elements per iteration at loop depth 1 — the spread materialises a fresh array each pass, making the loop O(n²); pushing into one array (`acc.push(x)`) or spreading once after the loop is a candidate optimization. Accepted FP class: a deliberate immutable snapshot per iteration</td><td class="wrap">kind=spread-accumulator, loop_depth=1, receiver_root=acc</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-ALLOC-003-02-array-accumulation-js-8-11" data-path="02_array_accumulation.js"><td>PERF-JS-ALLOC-003:02_array_accumulation.js:8:11</td><td>PERF-JS-ALLOC-003</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>02_array_accumulation.js:8:11</td><td>flatten</td><td class="wrap">&#39;acc = [...acc, ...]&#39; copies n elements per iteration at loop depth 1 — the spread materialises a fresh array each pass, making the loop O(n²); pushing into one array (`acc.push(x)`) or spreading once after the loop is a candidate optimization. Accepted FP class: a deliberate immutable snapshot per iteration</td><td class="wrap">kind=spread-accumulator, loop_depth=1, receiver_root=acc</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -193,7 +193,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-CALL-001-09-recursion-js-6-10" data-path="09_recursion.js"><td>PERF-JS-CALL-001:09_recursion.js:6:10</td><td>PERF-JS-CALL-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>09_recursion.js:6:10</td><td>&lt;module&gt;</td><td class="wrap">&#39;descend&#39; calls itself directly with no comparison guarding the call — each recursive frame grows the stack and repeats frame-setup cost; converting to a loop with an accumulator, or adding an explicit base-case guard, is a candidate optimization. Accepted FP class: a recursive tree walk with small depth</td><td class="wrap">function=descend, loop_depth=0</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-CALL-001-09-recursion-js-6-10" data-path="09_recursion.js"><td>PERF-JS-CALL-001:09_recursion.js:6:10</td><td>PERF-JS-CALL-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>09_recursion.js:6:10</td><td>descend</td><td class="wrap">&#39;descend&#39; calls itself directly with no visible base-case guard — each recursive frame grows the stack and repeats frame-setup cost; converting to a loop with an accumulator, or adding an explicit base-case guard, is a candidate optimization. Accepted FP class: a recursive tree walk with small depth, or a same-name wrapper assignment delegating to another function</td><td class="wrap">function=descend, loop_depth=0</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -204,7 +204,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-LOOP-001-04-deep-nesting-js-7-5" data-path="04_deep_nesting.js"><td>PERF-JS-LOOP-001:04_deep_nesting.js:7:5</td><td>PERF-JS-LOOP-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>04_deep_nesting.js:7:5</td><td>&lt;module&gt;</td><td class="wrap">loops nest 2 deep here (chain reaches depth 2) — every extra level multiplies the iteration count, so the body runs superlinearly; flattening the nesting, hoisting invariant work, or adding an early exit is a candidate optimization. Accepted FP class: matrix work where n² is inherent</td><td class="wrap">max_depth=2, nest_depth=2</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-LOOP-001-04-deep-nesting-js-7-5" data-path="04_deep_nesting.js"><td>PERF-JS-LOOP-001:04_deep_nesting.js:7:5</td><td>PERF-JS-LOOP-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>04_deep_nesting.js:7:5</td><td>score</td><td class="wrap">loops nest 2 deep here (chain reaches depth 2) — every extra level multiplies the iteration count, so the body runs superlinearly; flattening the nesting, hoisting invariant work, or adding an early exit is a candidate optimization. Accepted FP class: matrix work where n² is inherent</td><td class="wrap">max_depth=2, nest_depth=2</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -215,7 +215,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-JS-TYPE-001-12-delete-js-6-3" data-path="12_delete.js"><td>PERF-JS-TYPE-001:12_delete.js:6:3</td><td>PERF-JS-TYPE-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>12_delete.js:6:3</td><td>&lt;module&gt;</td><td class="wrap">&#39;delete&#39; removes a property from an object (&#39;prop&#39;), forcing a V8 hidden-class → dictionary-mode transition that slows every later access; setting the property to `undefined` or rebuilding the object is a candidate optimization. Accepted FP class: intentional cache eviction (rare)</td><td class="wrap">property=prop</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-JS-TYPE-001-12-delete-js-6-3" data-path="12_delete.js"><td>PERF-JS-TYPE-001:12_delete.js:6:3</td><td>PERF-JS-TYPE-001</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>12_delete.js:6:3</td><td>dropField</td><td class="wrap">&#39;delete&#39; removes a property from a long-lived object (&#39;prop&#39;), forcing a V8 hidden-class → dictionary-mode transition that slows every later access; setting the property to `undefined` on a fresh per-call copy or rebuilding the object is a candidate optimization. Accepted FP class: intentional cache eviction (rare) and `process.env.*` deletes (a host-owned global)</td><td class="wrap">property=prop</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>

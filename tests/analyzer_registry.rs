@@ -71,6 +71,8 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 resolver_tier: ResolverTier::default(),
                 is_async: false,
                 is_module_scope: false,
+                // Synthetic fixture functions model declarations (B5).
+                name_is_lexical_binding: true,
                 call_fanout: None,
                 call_fanin: None,
                 call_depth: None,
@@ -272,6 +274,8 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                 resolver_tier: ResolverTier::default(),
                 is_async: false,
                 is_module_scope: false,
+                // Synthetic fixture functions model declarations (B5).
+                name_is_lexical_binding: true,
                 call_fanout: None,
                 call_fanin: None,
                 call_depth: None,

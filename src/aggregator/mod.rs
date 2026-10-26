@@ -1579,19 +1579,44 @@ pub(crate) fn sort_distributions(entries: &mut Vec<DistributionEntry>) {
 }
 
 /// `findings[]` passthrough in the analyzer's total order, each lifted into
-/// its schema shape with the enclosing-function symbol resolved when one
-/// contains the finding span (schema-optional `symbol`; resolution is
-/// FIRST-HIT in backend emission order over the sorted units — deterministic
-/// per input, not a `(path, line, col)` ranking of candidates).
+/// its schema shape with the enclosing-function symbol resolved from the
+/// NARROWEST containing record (schema-optional `symbol`).
+///
+/// Rule (mirrors `src/reporter/views.rs`'s `Context::containing_function`):
+/// 1. keep records whose `[span.start_line, span.end_line]` LINE range
+///    contains the finding's `span.start_line`;
+/// 2. choose the smallest `end_line - start_line` (saturating);
+/// 3. tie-break on record `id` ascending.
+///
+/// Narrowest — not first-hit — matters for JS/TS: the backend emits the
+/// synthetic file-spanning `<module>` record FIRST, so a first-hit lookup
+/// would attribute every finding to `<module>`. The reporter's key views
+/// anchor cost to the narrowest enclosing function, and the aggregator must
+/// agree on the same record. `min_by` over `(width, id)` is input-order
+/// independent, so the result stays deterministic for a given input.
 fn findings_with_symbols(units_sorted: Vec<&FileUnit>, findings: &[Finding]) -> Vec<FindingEntry> {
     findings
         .iter()
         .map(|finding| {
+            let line = finding.span.start_line;
             let symbol = units_sorted
                 .iter()
                 .filter(|u| u.file.path == finding.path)
                 .flat_map(|u| u.functions.iter())
-                .find(|f| f.record.span.intersects(&finding.span))
+                .filter(|f| f.record.span.start_line <= line && line <= f.record.span.end_line)
+                .min_by(|a, b| {
+                    a.record
+                        .span
+                        .end_line
+                        .saturating_sub(a.record.span.start_line)
+                        .cmp(
+                            &b.record
+                                .span
+                                .end_line
+                                .saturating_sub(b.record.span.start_line),
+                        )
+                        .then_with(|| a.record.id.cmp(&b.record.id))
+                })
                 .map(|f| f.record.name.clone());
             schema::finding_entry(finding, symbol)
         })
@@ -1653,9 +1678,13 @@ mod tests {
         u
     }
 
-    /// The synthetic `<module>` record the JS backend emits first.
+    /// The synthetic `<module>` record the JS backend emits first. It spans
+    /// the whole file (a deliberately wide `end_line`), so narrowest-record
+    /// symbol resolution can never prefer it over a real function that
+    /// contains the finding.
     fn module_func(path: &str, entry_declared: Option<bool>) -> FunctionUnit {
         let mut f = func(path, "<module>", 1, 1);
+        f.record.span.end_line = 10_000;
         f.record.is_module_scope = true;
         f.record.entry_declared = entry_declared;
         f
@@ -1953,6 +1982,66 @@ mod tests {
             doc.findings[1].symbol, None,
             "no enclosing function ⇒ omitted"
         );
+    }
+
+    /// R-tb-019 (a): the `<module>` record is emitted FIRST and spans the
+    /// file, but a finding inside a real JS function must resolve to that
+    /// function — narrowest, not first-hit.
+    #[test]
+    fn js_finding_in_real_function_beats_file_spanning_module() {
+        let mut u = js_unit("src/app.js");
+        u.functions = vec![
+            module_func("src/app.js", Some(false)),
+            func("src/app.js", "handle", 10, 1),
+        ];
+
+        let doc = assemble(&[u], &[finding("src/app.js", 15, 1)], &prov());
+        assert_eq!(doc.findings[0].symbol.as_deref(), Some("handle"));
+    }
+
+    /// R-tb-019 (b): a nested function is narrower than its enclosing one;
+    /// the innermost containing record wins.
+    #[test]
+    fn nested_js_finding_resolves_to_innermost_record() {
+        let mut outer = func("src/nest.js", "outer", 5, 1);
+        outer.record.span.end_line = 40;
+        let mut inner = func("src/nest.js", "inner", 10, 1);
+        inner.record.span.end_line = 15;
+        let mut u = js_unit("src/nest.js");
+        u.functions = vec![module_func("src/nest.js", Some(false)), outer, inner];
+
+        let doc = assemble(&[u], &[finding("src/nest.js", 12, 1)], &prov());
+        assert_eq!(doc.findings[0].symbol.as_deref(), Some("inner"));
+    }
+
+    /// R-tb-019 (c): a module-level finding outside every real function
+    /// still falls through to the synthetic `<module>` record.
+    #[test]
+    fn module_level_finding_resolves_to_module_record() {
+        let mut u = js_unit("src/mod.js");
+        u.functions = vec![
+            module_func("src/mod.js", Some(false)),
+            func("src/mod.js", "later", 10, 1),
+        ];
+
+        let doc = assemble(&[u], &[finding("src/mod.js", 3, 1)], &prov());
+        assert_eq!(doc.findings[0].symbol.as_deref(), Some("<module>"));
+    }
+
+    /// R-tb-019 (d): equal-width candidates break by `id` ascending,
+    /// independent of emission order. `beta` is emitted first, yet the
+    /// lexicographically smaller `alpha` id wins.
+    #[test]
+    fn equal_width_candidates_break_by_id() {
+        let mut beta = func("src/tie.js", "beta", 8, 1);
+        beta.record.span.end_line = 18; // width 10
+        let mut alpha = func("src/tie.js", "alpha", 5, 1);
+        alpha.record.span.end_line = 15; // width 10
+        let mut u = js_unit("src/tie.js");
+        u.functions = vec![module_func("src/tie.js", Some(false)), beta, alpha];
+
+        let doc = assemble(&[u], &[finding("src/tie.js", 10, 1)], &prov());
+        assert_eq!(doc.findings[0].symbol.as_deref(), Some("alpha"));
     }
 
     #[test]

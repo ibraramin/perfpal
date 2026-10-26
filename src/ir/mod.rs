@@ -478,6 +478,21 @@ pub struct FunctionRecord {
     /// additive v1 field with `#[serde(default)]`, defaulting to `false`).
     #[serde(default)]
     pub is_module_scope: bool,
+    /// ADDITIVE IR-internal field (B5, `R-tb-017`): true when the record's
+    /// `name` is a LEXICAL BINDING visible inside the body, so a bare
+    /// `name(...)` call can actually be a self-call. True for function
+    /// declarations, named function expressions, and anonymous
+    /// function/arrow expressions bound by a `const`/`let`/`var` declarator
+    /// or a plain-identifier assignment. False for class/object methods and
+    /// property/field arrows, where the name is a property key rather than a
+    /// binding — `class X { f() { f(); } }` resolves `f` to an outer binding,
+    /// so the call is delegation, never recursion. The JS backend computes it;
+    /// the C/Rust/Python backends set it for their function records (a
+    /// declaration binds the name) and leave module record labels `false`.
+    /// The only consumer today is `PERF-JS-CALL-001`. `#[serde(default)]`
+    /// keeps older IR documents deserializing unchanged.
+    #[serde(default)]
+    pub name_is_lexical_binding: bool,
     /// ADDITIVE v1.4 skeleton (plan `divergence-revamp` step 1, specs
     /// `divergence-study`/`divergence-paper`): per-function call-shape —
     /// distinct direct-callee count. `Option` + `#[serde(default,
@@ -790,6 +805,17 @@ pub struct UnaryEvent {
     /// Operator text exactly as written (`"delete"` in v1).
     pub op: String,
     pub operand: Shape,
+    /// ADDITIVE IR-internal field (B5, `R-tb-018`): true when the operand's
+    /// receiver root is bound in the SAME function — by a declarator or an
+    /// assignment visited before this event, source order — to a fresh object
+    /// literal, array literal or `new` expression. `TYPE-001` uses it to
+    /// suppress the fresh-object FP class (the hidden-class cost applies to
+    /// long-lived/shared objects, not a per-call object that is rebuilt); a
+    /// receiver root that is a parameter, a global, `this`, or unknown stays
+    /// `false` and the rule still fires. `#[serde(default)]` keeps older IR
+    /// documents deserializing unchanged (`false` = not known fresh).
+    #[serde(default)]
+    pub operand_root_fresh: bool,
 }
 
 /// Call event (ir-v1.md §3.3).

@@ -87,6 +87,9 @@
     { "rule_id": "PERF-JS-ASYNC-002", "path": "js/async_002_silent.js", "expect": "silent" },
     { "rule_id": "PERF-JS-CALL-001", "path": "js/call_001.js", "line": 3, "expect": "fire" },
     { "rule_id": "PERF-JS-CALL-001", "path": "js/call_001_silent.js", "expect": "silent" },
+    { "rule_id": "PERF-JS-CALL-001", "path": "js/call_001_member_silent.js", "expect": "silent" },
+    { "rule_id": "PERF-JS-CALL-001", "path": "js/call_001_guard_silent.js", "expect": "silent" },
+    { "rule_id": "PERF-JS-CALL-001", "path": "js/call_001_delegation_silent.js", "expect": "silent" },
     { "rule_id": "PERF-JS-LOOP-001", "path": "js/loop_001.js", "line": 5, "expect": "fire" },
     { "rule_id": "PERF-JS-LOOP-001", "path": "js/loop_001_silent.js", "expect": "silent" },
     { "rule_id": "PERF-JS-LOOP-002", "path": "js/loop_002.js", "line": 7, "expect": "fire" },
@@ -97,6 +100,7 @@
     { "rule_id": "PERF-JS-STR-001", "path": "js/str_001_assignment.js", "line": 5, "expect": "fire" },
     { "rule_id": "PERF-JS-STR-001", "path": "js/str_001_silent.js", "expect": "silent" },
     { "rule_id": "PERF-JS-TYPE-001", "path": "js/type_001.js", "line": 3, "expect": "fire" },
-    { "rule_id": "PERF-JS-TYPE-001", "path": "js/type_001_silent.js", "expect": "silent" }
+    { "rule_id": "PERF-JS-TYPE-001", "path": "js/type_001_silent.js", "expect": "silent" },
+    { "rule_id": "PERF-JS-TYPE-001", "path": "js/type_001_fresh_silent.js", "expect": "silent" }
   ]
 }

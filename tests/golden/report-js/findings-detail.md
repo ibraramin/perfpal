@@ -22,49 +22,49 @@
 
 <a id="finding-PERF-JS-ASYNC-001-07-async-await-js-11-19"></a>
 #### \`await\` inside a loop  (`PERF\-JS\-ASYNC\-001:07\_async\_await\.js:11:19`)
-- Location: `07\_async\_await\.js:11` (\<module\>)
+- Location: `07\_async\_await\.js:11` (loadAll)
 - Message: an \`await\` runs inside a loop at depth 1 — awaiting each item sequentially serialises one microtask round\-trip per iteration; collecting the promises and awaiting \`Promise\.all\(items\.map\(\.\.\.\)\)\` is a candidate optimization\. Accepted FP class: deliberately sequential work \(rate limiting, ordering\)
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: loop\_depth=1
 
 <a id="finding-PERF-JS-ASYNC-002-08-async-blocking-js-7-10"></a>
 #### Synchronous blocking call inside \`async\` function  (`PERF\-JS\-ASYNC\-002:08\_async\_blocking\.js:7:10`)
-- Location: `08\_async\_blocking\.js:7` (\<module\>)
+- Location: `08\_async\_blocking\.js:7` (readConfig)
 - Message: synchronous 'readFileSync' is called inside an \`async\` function — the blocking call stalls the single event\-loop thread for every concurrent task; using the async equivalent \(\`fs/promises\`, async \`exec\`/\`spawn\`\) is a candidate optimization\. Accepted FP class: a CLI single\-shot path
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=readFileSync, loop\_depth=0
 
 <a id="finding-PERF-JS-LOOP-002-05-sync-io-loop-js-9-17"></a>
 #### Synchronous blocking I/O inside loop  (`PERF\-JS\-LOOP\-002:05\_sync\_io\_loop\.js:9:17`)
-- Location: `05\_sync\_io\_loop\.js:9` (\<module\>)
+- Location: `05\_sync\_io\_loop\.js:9` (loadAll)
 - Message: synchronous 'readFileSync' runs inside a loop at depth 1 — each iteration performs a blocking syscall/serialization on the single event\-loop thread; batching the work, using the async API \(\`fs/promises\`, async \`exec\`\), or making one call outside the loop is a candidate optimization\. Accepted FP class: a startup\-only loop
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=readFileSync, loop\_depth=1
 
 <a id="finding-PERF-JS-LOOP-007-06-membership-scan-js-8-9"></a>
 #### Linear membership scan inside loop  (`PERF\-JS\-LOOP\-007:06\_membership\_scan\.js:8:9`)
-- Location: `06\_membership\_scan\.js:8` (\<module\>)
+- Location: `06\_membership\_scan\.js:8` (intersect)
 - Message: 'seen\.includes' scans the collection linearly on every iteration at loop depth 1 — the nested linear scan makes the loop O\(n²\); building a \`Set\`/\`Map\` once and doing a keyed lookup is a candidate optimization\. Accepted FP class: small \(\< 16\) collections
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: callee=includes, loop\_depth=1, receiver\_root=seen
 
 <a id="finding-PERF-JS-STR-001-03-string-build-js-8-5"></a>
 #### String accumulation with \`\+=\` inside loop  (`PERF\-JS\-STR\-001:03\_string\_build\.js:8:5`)
-- Location: `03\_string\_build\.js:8` (\<module\>)
+- Location: `03\_string\_build\.js:8` (render)
 - Message: 'out' accumulates a string with '\+=' or 'out = out \+ \.\.\.' inside a loop at depth 1 — this builds a cons\-string chain; V8 ropes mitigate short chains, but flattening the rope at first use is linear and repeated concatenation is quadratic; collecting parts into an array and joining once \(\`parts\.join\(""\)\`\) is a candidate optimization\. Accepted FP class: a tiny bounded loop \(\< 8 iterations\)
 - Confidence: MEDIUM · Severity: warn · Resolver tier: syntactic
 - Evidence: loop\_depth=1, target=out
 
 <a id="finding-PERF-JS-ALLOC-001-01-alloc-churn-js-9-20"></a>
 #### Loop\-invariant object/array literal inside loop  (`PERF\-JS\-ALLOC\-001:01\_alloc\_churn\.js:9:20`)
-- Location: `01\_alloc\_churn\.js:9` (\<module\>)
+- Location: `01\_alloc\_churn\.js:9` (buildEnvelopes)
 - Message: an object literal is constructed on every iteration at loop depth 1 — V8 allocates it in the young generation and escape analysis rarely elides a per\-iteration literal; hoisting the loop\-invariant construction \(or reusing one object\) is a candidate optimization\. Accepted FP class: a literal created once for a different reason but mutated per iteration
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: kind=object, loop\_depth=1, referenced\_names=
 
 <a id="finding-PERF-JS-ALLOC-003-02-array-accumulation-js-8-11"></a>
 #### Superlinear spread accumulation in loop  (`PERF\-JS\-ALLOC\-003:02\_array\_accumulation\.js:8:11`)
-- Location: `02\_array\_accumulation\.js:8` (\<module\>)
+- Location: `02\_array\_accumulation\.js:8` (flatten)
 - Message: 'acc = \[\.\.\.acc, \.\.\.\]' copies n elements per iteration at loop depth 1 — the spread materialises a fresh array each pass, making the loop O\(n²\); pushing into one array \(\`acc\.push\(x\)\`\) or spreading once after the loop is a candidate optimization\. Accepted FP class: a deliberate immutable snapshot per iteration
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: kind=spread\-accumulator, loop\_depth=1, receiver\_root=acc
@@ -78,21 +78,21 @@
 
 <a id="finding-PERF-JS-CALL-001-09-recursion-js-6-10"></a>
 #### Direct recursion without a visible base case  (`PERF\-JS\-CALL\-001:09\_recursion\.js:6:10`)
-- Location: `09\_recursion\.js:6` (\<module\>)
-- Message: 'descend' calls itself directly with no comparison guarding the call — each recursive frame grows the stack and repeats frame\-setup cost; converting to a loop with an accumulator, or adding an explicit base\-case guard, is a candidate optimization\. Accepted FP class: a recursive tree walk with small depth
+- Location: `09\_recursion\.js:6` (descend)
+- Message: 'descend' calls itself directly with no visible base\-case guard — each recursive frame grows the stack and repeats frame\-setup cost; converting to a loop with an accumulator, or adding an explicit base\-case guard, is a candidate optimization\. Accepted FP class: a recursive tree walk with small depth, or a same\-name wrapper assignment delegating to another function
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: function=descend, loop\_depth=0
 
 <a id="finding-PERF-JS-LOOP-001-04-deep-nesting-js-7-5"></a>
 #### Nested loop depth ≥ 2  (`PERF\-JS\-LOOP\-001:04\_deep\_nesting\.js:7:5`)
-- Location: `04\_deep\_nesting\.js:7` (\<module\>)
+- Location: `04\_deep\_nesting\.js:7` (score)
 - Message: loops nest 2 deep here \(chain reaches depth 2\) — every extra level multiplies the iteration count, so the body runs superlinearly; flattening the nesting, hoisting invariant work, or adding an early exit is a candidate optimization\. Accepted FP class: matrix work where n² is inherent
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: max\_depth=2, nest\_depth=2
 
 <a id="finding-PERF-JS-TYPE-001-12-delete-js-6-3"></a>
 #### \`delete\` on an object property  (`PERF\-JS\-TYPE\-001:12\_delete\.js:6:3`)
-- Location: `12\_delete\.js:6` (\<module\>)
-- Message: 'delete' removes a property from an object \('prop'\), forcing a V8 hidden\-class → dictionary\-mode transition that slows every later access; setting the property to \`undefined\` or rebuilding the object is a candidate optimization\. Accepted FP class: intentional cache eviction \(rare\)
+- Location: `12\_delete\.js:6` (dropField)
+- Message: 'delete' removes a property from a long\-lived object \('prop'\), forcing a V8 hidden\-class → dictionary\-mode transition that slows every later access; setting the property to \`undefined\` on a fresh per\-call copy or rebuilding the object is a candidate optimization\. Accepted FP class: intentional cache eviction \(rare\) and \`process\.env\.\*\` deletes \(a host\-owned global\)
 - Confidence: MEDIUM · Severity: info · Resolver tier: syntactic
 - Evidence: property=prop

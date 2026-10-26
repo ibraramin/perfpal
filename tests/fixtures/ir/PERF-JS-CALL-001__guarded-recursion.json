@@ -44,7 +44,8 @@
           "alloc_site_count": 0,
           "length_lines": 9,
           "resolver_tier": "syntactic",
-          "is_async": false
+          "is_async": false,
+          "name_is_lexical_binding": true
         },
         "calls": [
           {
@@ -63,7 +64,8 @@
             "in_loop_depth": 0,
             "is_innermost": false,
             "resolver_tier": "syntactic",
-            "macro_origin": false
+            "macro_origin": false,
+            "callee_path": "walk"
           }
         ],
         "assignments": [],

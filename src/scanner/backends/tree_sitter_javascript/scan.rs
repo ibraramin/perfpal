@@ -14,6 +14,8 @@
 //! - function and class nodes are scope boundaries: their bodies belong to
 //!   their own records, never to the enclosing function's event stream.
 
+use std::collections::BTreeSet;
+
 use tree_sitter::Node;
 
 use super::infer;
@@ -95,6 +97,7 @@ pub(super) fn scan(start: Node<'_>, inputs: ScanInputs<'_>) -> ScanResult {
         try_blocks: Vec::new(),
         allocations: Vec::new(),
         unaries: Vec::new(),
+        fresh_bindings: BTreeSet::new(),
     };
     state.visit(start);
     ScanResult {
@@ -135,6 +138,12 @@ struct FuncScan<'a> {
     try_blocks: Vec<TryEvent>,
     allocations: Vec<AllocEvent>,
     unaries: Vec<UnaryEvent>,
+    /// Names bound to a fresh object/array literal or `new` expression by a
+    /// declarator/assignment already visited in this function. Function-local:
+    /// `scan` is invoked per function record (and once for module scope), so a
+    /// nested function can never see an outer binding. Feeds the additive
+    /// [`UnaryEvent::operand_root_fresh`] flag (B5, TYPE-001 fresh-object gate).
+    fresh_bindings: BTreeSet<String>,
 }
 
 impl FuncScan<'_> {
@@ -201,6 +210,14 @@ impl FuncScan<'_> {
             }
             "assignment_expression" => {
                 self.emit_assignment(node);
+                self.track_assignment_binding(node);
+                self.visit_children(node);
+            }
+            // A declarator binds a function-local name: track whether the
+            // initializer is a fresh object/array/`new` value for TYPE-001's
+            // fresh-object gate (B5, `R-tb-018`).
+            "variable_declarator" => {
+                self.track_declared_binding(node);
                 self.visit_children(node);
             }
             "augmented_assignment_expression" => {
@@ -570,11 +587,70 @@ impl FuncScan<'_> {
         let Some(argument) = node.child_by_field_name("argument") else {
             return;
         };
+        // TYPE-001 fresh-object gate (B5): a receiver root bound to a fresh
+        // literal/`new` in this function is per-call state, not a long-lived
+        // object — deleting a property from it cannot pollute a hidden class
+        // other code observes. `this`/params/globals resolve to no tracked
+        // name and keep firing.
+        let operand_root_fresh = infer::receiver_root_of(argument, self.source)
+            .is_some_and(|root| self.fresh_bindings.contains(&root));
         self.unaries.push(UnaryEvent {
             meta: self.meta_for(node),
             op: "delete".to_string(),
             operand: infer::shape_of_node(argument, self.source),
+            operand_root_fresh,
         });
+    }
+
+    /// Whether a value node creates a fresh object (`{}`, `[]`, `new X()`).
+    /// Transparent TS wrappers are stripped first so `const x = {} as Foo`
+    /// still counts as a fresh literal (B5 review note R1).
+    fn is_fresh_value(node: Node<'_>) -> bool {
+        matches!(
+            infer::strip_transparent_wrappers(node).kind(),
+            "object" | "array" | "new_expression"
+        )
+    }
+
+    /// Track `const x = <initializer>` / `let x = <initializer>` bindings.
+    /// Destructuring and non-identifier names are ignored (no root to match).
+    fn track_declared_binding(&mut self, node: Node<'_>) {
+        let Some(name) = node.child_by_field_name("name") else {
+            return;
+        };
+        if name.kind() != "identifier" {
+            return;
+        }
+        let name = text(name, self.source).to_string();
+        let fresh = node
+            .child_by_field_name("value")
+            .is_some_and(Self::is_fresh_value);
+        if fresh {
+            self.fresh_bindings.insert(name);
+        } else {
+            self.fresh_bindings.remove(&name);
+        }
+    }
+
+    /// Track plain-identifier assignment targets (`x = <rhs>`). A later
+    /// non-fresh assignment clears the binding, so a rebound name is not
+    /// reported as fresh by source-order approximation.
+    fn track_assignment_binding(&mut self, node: Node<'_>) {
+        let Some(left) = node.child_by_field_name("left") else {
+            return;
+        };
+        if left.kind() != "identifier" {
+            return;
+        }
+        let name = text(left, self.source).to_string();
+        let fresh = node
+            .child_by_field_name("right")
+            .is_some_and(Self::is_fresh_value);
+        if fresh {
+            self.fresh_bindings.insert(name);
+        } else {
+            self.fresh_bindings.remove(&name);
+        }
     }
 
     fn maybe_emit_access_chain(&mut self, node: Node<'_>) {

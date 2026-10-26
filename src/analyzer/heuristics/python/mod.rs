@@ -218,6 +218,8 @@ pub(crate) mod test_support {
                 resolver_tier: ResolverTier::Syntactic,
                 is_async,
                 is_module_scope: false,
+                // Test-helper records model `def` functions.
+                name_is_lexical_binding: true,
                 call_fanout: None,
                 call_fanin: None,
                 call_depth: None,

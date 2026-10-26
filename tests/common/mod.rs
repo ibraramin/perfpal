@@ -747,6 +747,8 @@ fn func(
             resolver_tier: ResolverTier::Syntactic,
             is_async: false,
             is_module_scope: false,
+            // Synthetic fixture functions model declarations (B5).
+            name_is_lexical_binding: true,
             call_fanout: None,
             call_fanin: None,
             call_depth: None,

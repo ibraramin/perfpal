@@ -260,6 +260,51 @@ pub(super) fn derive_name(node: Node<'_>, source: &[u8]) -> String {
     derived.unwrap_or_else(|| "<anonymous>".to_string())
 }
 
+/// Whether the record's derived name is a LEXICAL BINDING visible inside the
+/// body (so a bare `name(...)` call can actually be a self-call). See
+/// [`crate::ir::FunctionRecord::name_is_lexical_binding`]:
+///
+/// - `function_declaration` / `generator_function_declaration` — the
+///   declaration binds the name in the enclosing scope, including its own
+///   body → `true`;
+/// - a named `function_expression` / `generator_function` — the name is bound
+///   inside the function itself → `true`;
+/// - an anonymous function/arrow bound by a `const`/`let`/`var` declarator or
+///   a plain-identifier assignment → `true` (the binding is the declarator);
+/// - a class/object method (`method_definition`) or a property/field arrow
+///   (`pair`, `public_field_definition`, `field_definition`) → `false`: the
+///   name is a property key, never a binding, so a bare same-name call is
+///   delegation to an outer function, not recursion;
+/// - anything else (anonymous callback argument, `useCallback(fn)`, …) →
+///   `false`, the conservative value.
+pub(super) fn name_is_lexical_binding(node: Node<'_>) -> bool {
+    match node.kind() {
+        "function_declaration" | "generator_function_declaration" => true,
+        "function_expression" | "generator_function" => {
+            if node.child_by_field_name("name").is_some() {
+                return true;
+            }
+            bound_by_parent(node)
+        }
+        "arrow_function" => bound_by_parent(node),
+        // `method_definition` and every other function-ish node.
+        _ => false,
+    }
+}
+
+/// Anonymous function/arrow: the name comes from the parent declarator or a
+/// plain-identifier assignment (`const walk = () => …`, `walk = () => …`).
+/// Property values and field initializers do not bind.
+fn bound_by_parent(node: Node<'_>) -> bool {
+    match node.parent() {
+        Some(parent) if parent.kind() == "variable_declarator" => true,
+        Some(parent) if parent.kind() == "assignment_expression" => parent
+            .child_by_field_name("left")
+            .is_some_and(|left| left.kind() == "identifier"),
+        _ => false,
+    }
+}
+
 /// Name text of an identifier-ish node (`identifier`, `property_identifier`,
 /// `private_property_identifier`, string/number keys). String keys are
 /// unquoted.

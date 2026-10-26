@@ -214,6 +214,12 @@ fn discovery_skips_noise_directories_minified_names_and_oversize_js() {
             ("b.min.mjs", "export var b=1;\n"),
             ("c.min.cjs", "module.exports=1;\n"),
             ("d.bundle.js", "var d=1;\n"),
+            ("a.min.ts", "export const a = 1;\n"),
+            ("b.min.mts", "export const b = 1;\n"),
+            ("c.min.cts", "export const c = 1;\n"),
+            ("a.ts", "export const controlA = 1;\n"),
+            ("b.mts", "export const controlB = 1;\n"),
+            ("c.cts", "export const controlC = 1;\n"),
             ("big.js", &big_js),
             ("big.c", &big_c),
             ("vendor/mod.js", "export const v = 1;\n"),
@@ -229,8 +235,15 @@ fn discovery_skips_noise_directories_minified_names_and_oversize_js() {
     let paths: Vec<&str> = units.iter().map(|u| u.file.path.as_str()).collect();
     assert_eq!(
         paths,
-        ["big.c", "normal.js", "vendor/mod.js"],
-        "only the normal JS, the vendored JS, and the oversized C file survive"
+        [
+            "a.ts",
+            "b.mts",
+            "big.c",
+            "c.cts",
+            "normal.js",
+            "vendor/mod.js"
+        ],
+        "only the controls, the normal JS, the vendored JS, and the oversized C file survive"
     );
 
     fs::remove_dir_all(&root).ok();
@@ -743,6 +756,14 @@ fn single_file_minified_and_declaration_targets_are_skipped_silently() {
         fs::remove_dir_all(&root).ok();
     }
 
+    // B5: the TypeScript minified forms are skipped on the single-file path too.
+    for name in ["a.min.ts", "b.min.mts", "c.min.cts", "x.min.ts"] {
+        let root = write_tree("single-min-ts", &[(name, "export const x = 1;\n")]);
+        let units = scan(&root.join(name)).expect("single-file scan");
+        assert!(units.is_empty(), "{name} is a JS/TS skip name");
+        fs::remove_dir_all(&root).ok();
+    }
+
     // Declaration-only files are silent; value TS files are scanned with the
     // grammar-boundary token instead of falling back to C.
     for name in ["i.d.ts", "j.d.mts", "k.d.cts"] {
@@ -995,6 +1016,89 @@ fn two_js_scans_are_byte_identical_modulo_provenance() {
     fs::remove_dir_all(&root).ok();
     fs::remove_dir_all(out1.parent().expect("output parent")).ok();
     fs::remove_dir_all(out2.parent().expect("output parent")).ok();
+}
+
+// ---------------------------------------------------------------------------
+// (9c) CALL-001 real-parse negative: member/wrapped receivers and conditional
+// guards do not look like unguarded direct recursion
+// ---------------------------------------------------------------------------
+
+#[test]
+fn call_001_real_parse_excludes_member_receivers_and_guards() {
+    let root = write_tree(
+        "call001-real",
+        &[
+            // (a) Fires: a bare, unguarded direct self-call.
+            (
+                "walk.js",
+                "export function walk(node) { return walk(node.next); }\n",
+            ),
+            // (b) Silent: `callee_name` == `handle`, but the callee path is
+            // `this.router.handle`, not a bare `handle`. `receiver_root` is
+            // None because `this` is not an identifier root.
+            (
+                "handle.js",
+                "export function handle(router) { return this.router.handle(router); }\n",
+            ),
+            // (c) Silent: `callee_name` == `execute`, but the callee path is a
+            // `new`-expression chain, not a bare `execute`.
+            (
+                "execute.js",
+                "export function execute(cmd) { return new ListExtensionsCommand().execute(cmd); }\n",
+            ),
+            // (d) Silent: the self-call is inside an `if` branch (conditional
+            // guard) with no comparison event to rely on.
+            (
+                "defaults.js",
+                "export function getDefaults(definition) { if (definition.properties) return getDefaults(definition.properties); return {}; }\n",
+            ),
+            // (e) Silent: same-name DELEGATION. Object-property arrows and
+            // class methods derive their record name from a property key, not
+            // a lexical binding; the bare `resolve(...)` calls an outer
+            // function, never the enclosing method/property.
+            (
+                "delegation.js",
+                "export const resolve = (v) => v;\nexport const handlers = { resolve: (v) => resolve(v) };\nexport class Dispatcher { resolve(v) { return resolve(v); } }\n",
+            ),
+        ],
+    );
+
+    let (code, out) = run_pipeline("call001-real-out", &root);
+    assert_eq!(code, 0, "findings never affect the exit code");
+
+    let doc = read_json(&out.join("metrics.json"));
+    let findings: Vec<&serde_json::Value> = doc["findings"]
+        .as_array()
+        .expect("findings[]")
+        .iter()
+        .filter(|f| f["rule_id"] == "PERF-JS-CALL-001")
+        .collect();
+
+    assert_eq!(
+        findings.len(),
+        1,
+        "only the bare unguarded self-call fires: {findings:?}"
+    );
+    assert_eq!(findings[0]["path"], "walk.js");
+    assert_eq!(findings[0]["span"]["start_line"], 1);
+
+    assert_eq!(
+        doc["parse_health_summary"]["ok"], 5,
+        "fixture must parse cleanly: {doc:?}"
+    );
+    assert_eq!(
+        doc["parse_health_summary"]["partial"], 0,
+        "fixture must not be partial: {doc:?}"
+    );
+    for file in doc["files"].as_array().expect("files[]") {
+        assert_eq!(
+            file["parse_health"]["error_node_count"], 0,
+            "fixture must have zero error nodes: {file:?}"
+        );
+    }
+
+    fs::remove_dir_all(&root).ok();
+    fs::remove_dir_all(out.parent().expect("output parent")).ok();
 }
 
 // ---------------------------------------------------------------------------

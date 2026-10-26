@@ -120,6 +120,21 @@ fn assigned_within(func: &FunctionUnit, name: &str, span: &Span) -> bool {
     })
 }
 
+/// Whether an assignment inside `func` targets the identifier `root` and its
+/// span CONTAINS the literal `span` — i.e. the literal is (part of) `root`'s
+/// right-hand side (`root = [...root, x]`), not merely some other expression
+/// that happens to mention a loop-reassigned name
+/// (`throw new Error([...visited, current].join())`). Containment (not an
+/// exact-equality of spans) admits a wrapping expression on the RHS while
+/// still requiring the literal to belong to `root`'s assignment.
+fn assigned_from_literal(func: &FunctionUnit, root: &str, span: &Span) -> bool {
+    func.assignments.iter().any(|a| {
+        a.target.kind == ShapeKind::Identifier
+            && a.target.name.as_deref() == Some(root)
+            && super::span_contains(&a.meta.span, span)
+    })
+}
+
 /// Token for an [`AllocKind`] used as deterministic evidence text.
 fn alloc_kind_token(kind: AllocKind) -> &'static str {
     match kind {
@@ -225,7 +240,15 @@ pub(crate) fn js_alloc_001(units: &[FileUnit]) -> Vec<Finding> {
 ///   reassigns (`acc = acc.concat(x)`);
 /// - an array [`crate::ir::AllocEvent`] with a spread child
 ///   (`acc = [...acc, x]`, `has_spread`) whose `referenced_names` include a
-///   name the nearest enclosing loop reassigns (the accumulator root).
+///   name the nearest enclosing loop reassigns AND whose literal span is
+///   contained by an [`crate::ir::AssignmentEvent`] to that same identifier
+///   root — the accumulator root. The second condition is the B5 tightening:
+///   without it any loop-reassigned name mentioned in a spread literal fired,
+///   so a non-assignment expression such as
+///   `throw new Error([...visited, current].join())` (with `current`
+///   reassigned by the loop) was a false positive. A rebuild of a name the
+///   loop mutates but does not own (`[...visited, current]` outside an
+///   assignment to `visited`) now stays silent.
 ///
 /// A snapshot call/literal whose root is never reassigned in the loop stays
 /// silent (the deliberate immutable-snapshot accepted FP class). Evidence
@@ -286,7 +309,9 @@ pub(crate) fn js_alloc_003(units: &[FileUnit]) -> Vec<Finding> {
             }
             // Spread accumulation: `acc = [...acc, x]` in a loop. The literal
             // is an array `AllocEvent` carrying `has_spread`; the accumulator
-            // root is the one referenced name the same loop reassigns.
+            // root is a referenced name the same loop reassigns AND whose
+            // assignment span contains this literal (the literal is that
+            // root's RHS), so unrelated spread expressions stay silent.
             for alloc in &func.allocations {
                 if alloc.kind != AllocKind::Array
                     || alloc.meta.in_loop_depth == 0
@@ -297,11 +322,10 @@ pub(crate) fn js_alloc_003(units: &[FileUnit]) -> Vec<Finding> {
                 let Some(loop_node) = enclosing_loop(func, &alloc.meta.span) else {
                     continue;
                 };
-                let Some(root) = alloc
-                    .referenced_names
-                    .iter()
-                    .find(|name| assigned_within(func, name, &loop_node.span))
-                else {
+                let Some(root) = alloc.referenced_names.iter().find(|name| {
+                    assigned_within(func, name, &loop_node.span)
+                        && assigned_from_literal(func, name, &alloc.meta.span)
+                }) else {
                     continue;
                 };
                 findings.push(Finding {
@@ -768,12 +792,37 @@ pub(crate) fn js_async_002(units: &[FileUnit]) -> Vec<Finding> {
 
 /// JS-CALL-001 — Unguarded direct recursion, Info.
 ///
-/// A DIRECT call whose `callee_name` equals the enclosing function name and
-/// whose `receiver_root` is `None` (a bare self-call; `this.f()`/member calls
-/// carry a receiver and are excluded). Guard-gated: the rule fires ONLY when NO
-/// [`crate::ir::ComparisonEvent`] in the same function has a span strictly
-/// before the recursive call's span — i.e. no visible base-case check precedes
-/// it. Evidence `function`, `loop_depth`. Info/MEDIUM.
+/// A DIRECT **bare** self-call: the callee must be
+/// [`CalleeKind::Direct`], its final segment (`callee_name`) must equal the
+/// enclosing function name, its `receiver_root` must be `None`, AND its
+/// `callee_path` must be EXACTLY the function name. The last gate is the
+/// correctness fix (B5, `R-tb-017`): `receiver_root` alone is not a member
+/// discriminator because `receiver_root_of` returns `None` for every
+/// non-identifier root, so `this.foo()`, `new X().foo()` and
+/// `(this.x as any).foo()` all look "bare" while their callee text is not.
+/// Requiring `callee_path == Some(name)` admits only a call written as the
+/// bare identifier and rejects those member-name collisions (the canary's
+/// 152/180 production hit class).
+///
+/// Two guard gates keep the finding honest:
+/// - `!conditional_guarded` — an `if`/ternary/`catch`/`&&`/`||` ancestor is a
+///   visible base-case branch, so the truthiness-guarded shape
+///   (`if (x.prop) return f(x.prop)`) stays silent;
+/// - no [`crate::ir::ComparisonEvent`] in the same function has a span
+///   strictly before the call — i.e. no visible base-case check precedes it.
+///
+/// Accepted FP class: a same-name wrapper assignment (a local delegate named
+/// like the enclosing function shadows the recursion). Evidence `function`,
+/// `loop_depth`. Info/MEDIUM.
+///
+/// Lexical-binding gate (B5): `PERF-JS-CALL-001` additionally requires
+/// [`crate::ir::FunctionRecord::name_is_lexical_binding`]. A class/object
+/// method or a property/field arrow derives its record name from a property
+/// key, which is never a lexical binding, so a bare same-name call inside it
+/// resolves to an OUTER function — delegation, not recursion. The canary's
+/// remaining production hits (`resolve: (v) => resolve(v)`,
+/// `isKnownSafeCommand(...)` delegating to the free function) are exactly
+/// this class; the gate removes them without heuristic shadow tracking.
 pub(crate) fn js_call_001(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
@@ -782,6 +831,9 @@ pub(crate) fn js_call_001(units: &[FileUnit]) -> Vec<Finding> {
                 if call.callee_kind != CalleeKind::Direct
                     || call.callee_name != func.record.name
                     || call.receiver_root.is_some()
+                    || call.callee_path.as_deref() != Some(func.record.name.as_str())
+                    || call.conditional_guarded
+                    || !func.record.name_is_lexical_binding
                 {
                     continue;
                 }
@@ -798,12 +850,13 @@ pub(crate) fn js_call_001(units: &[FileUnit]) -> Vec<Finding> {
                     rule_id: JS_CALL_001_RULE_ID.to_string(),
                     title: "Direct recursion without a visible base case".to_string(),
                     message: format!(
-                        "'{}' calls itself directly with no comparison guarding \
-                         the call — each recursive frame grows the stack and \
-                         repeats frame-setup cost; converting to a loop with an \
-                         accumulator, or adding an explicit base-case guard, is \
-                         a candidate optimization. Accepted FP class: a recursive \
-                         tree walk with small depth",
+                        "'{}' calls itself directly with no visible base-case \
+                         guard — each recursive frame grows the stack and repeats \
+                         frame-setup cost; converting to a loop with an \
+                         accumulator, or adding an explicit base-case guard, is a \
+                         candidate optimization. Accepted FP class: a recursive \
+                         tree walk with small depth, or a same-name wrapper \
+                         assignment delegating to another function",
                         func.record.name
                     ),
                     severity: Severity::Info,
@@ -898,16 +951,29 @@ pub(crate) fn js_arch_001(units: &[FileUnit]) -> Vec<Finding> {
 /// JS-TYPE-001 — `delete obj.prop`, Info.
 ///
 /// A [`crate::ir::UnaryEvent`] with `op == "delete"` forces a hidden-class →
-/// dictionary-mode transition on the object. The subscript form
+/// dictionary-mode transition on a long-lived object. The subscript form
 /// (`delete obj["k"]`) is EXCLUDED per the frozen disposition: it is a
-/// different (keyed) operation and stays silent. Evidence `property`.
-/// Info/MEDIUM.
+/// different (keyed) operation and stays silent.
+///
+/// Fresh-object gate (B5, `R-tb-018`): [`crate::ir::UnaryEvent::operand_root_fresh`]
+/// is true when the receiver root was bound in the SAME function (declarator
+/// or assignment, source order) to an object literal, an array literal or
+/// `new`. Such an object is per-call state that the rule's own suggested fix
+/// rebuilds anyway, so deleting from it cannot pollute a hidden class another
+/// caller observes; the unary stays silent. `this`, parameters, globals and
+/// unknown roots are never tracked as fresh and still fire — `process.env.*`
+/// deletes are the residual accepted class (a host-owned global, deliberately
+/// not suppressed because `delete process.env.X` is the only real eviction
+/// idiom in the wild). Evidence `property`. Info/MEDIUM.
 pub(crate) fn js_type_001(units: &[FileUnit]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for unit in units {
         for func in &unit.functions {
             for unary in &func.unaries {
-                if unary.op != "delete" || unary.operand.kind != ShapeKind::MemberAccess {
+                if unary.op != "delete"
+                    || unary.operand.kind != ShapeKind::MemberAccess
+                    || unary.operand_root_fresh
+                {
                     continue;
                 }
                 let property = unary
@@ -921,11 +987,13 @@ pub(crate) fn js_type_001(units: &[FileUnit]) -> Vec<Finding> {
                     rule_id: JS_TYPE_001_RULE_ID.to_string(),
                     title: "`delete` on an object property".to_string(),
                     message: format!(
-                        "'delete' removes a property from an object ({}), forcing \
-                         a V8 hidden-class → dictionary-mode transition that slows \
-                         every later access; setting the property to `undefined` \
-                         or rebuilding the object is a candidate optimization. \
-                         Accepted FP class: intentional cache eviction (rare)",
+                        "'delete' removes a property from a long-lived object ({}), \
+                         forcing a V8 hidden-class → dictionary-mode transition that \
+                         slows every later access; setting the property to \
+                         `undefined` on a fresh per-call copy or rebuilding the \
+                         object is a candidate optimization. Accepted FP class: \
+                         intentional cache eviction (rare) and `process.env.*` \
+                         deletes (a host-owned global)",
                         if property.is_empty() {
                             "object property".to_string()
                         } else {

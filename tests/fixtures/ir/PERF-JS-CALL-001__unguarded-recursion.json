@@ -44,12 +44,14 @@
           "alloc_site_count": 0,
           "length_lines": 6,
           "resolver_tier": "syntactic",
-          "is_async": false
+          "is_async": false,
+          "name_is_lexical_binding": true
         },
         "calls": [
           {
             "callee_name": "walk",
             "callee_kind": "direct",
+            "callee_path": "walk",
             "args": [],
             "statement_role": "nested",
             "conditional_guarded": false,

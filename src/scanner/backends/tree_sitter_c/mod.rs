@@ -723,6 +723,9 @@ fn function_unit(
         resolver_tier: ResolverTier::default(),
         is_async: false,
         is_module_scope: false,
+        // A C function declaration is a file-scope binding; only the JS
+        // backend's CALL-001 consumer distinguishes method/property names.
+        name_is_lexical_binding: true,
         // v1.4 step 2 (plan `divergence-revamp`): `idiom_hash` / `error_path` /
         // `alloc_family` are populated by the scanner post-pass
         // (`scanner::instrument::populate`, needs source text); call-shape

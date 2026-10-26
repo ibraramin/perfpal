@@ -109,7 +109,10 @@ fn fixture_root() -> PathBuf {
 /// Run-varying-masked artifacts under comparison. metrics.json, report.md,
 /// findings-detail.md, report.html and findings-detail.html are compared as
 /// masked text; schema + SVGs + graph.dot carry no provenance and are
-/// compared byte-exact (verified by `regenerate_goldens`). report.html and
+/// compared byte-exact (verified by `regenerate_goldens`). The two Atlas
+/// pages (`atlas-q2.html`, `atlas-weight.html`) are in the fixed set too and
+/// are compared byte-exact: regeneration asserts they carry no provenance
+/// (no year-like RFC3339 fragment, no absolute fixture path). report.html and
 /// findings-detail.html carry no provenance by construction (schema/file/
 /// finding counts only), so their masks are the absolute-root substitution
 /// plus the Wave B1 resolved-ARCH-003 row neutralizer (see
@@ -122,13 +125,15 @@ fn fixture_root() -> PathBuf {
 /// semantic tier is covered by `tests/resolver_health.rs` and the
 /// double-run determinism suites instead.
 #[cfg(not(feature = "semantic-clang"))]
-const GOLDEN_ARTIFACTS: [&str; 17] = [
+const GOLDEN_ARTIFACTS: [&str; 19] = [
     "metrics.json",
     "metrics.schema.v1.8.json",
     "report.md",
     "report.html",
     "findings-detail.md",
     "findings-detail.html",
+    "atlas-q2.html",
+    "atlas-weight.html",
     "profile-queue.md",
     "profile-queue.html",
     "charts/include-graph.svg",
@@ -465,13 +470,15 @@ fn regenerate_goldens() {
         )
         .expect("write masked findings-detail.html");
 
-        // SVGs + DOT + schema: committed byte-exact; assert they carry no
-        // provenance (no year-like RFC3339 fragments, no absolute fixture
-        // path). The per-component detail pages join the fixed set here —
-        // discovered from the fresh output so the lock tracks the emission
-        // rule instead of a hardcoded count.
+        // SVGs + DOT + schema + the two Atlas pages: committed byte-exact;
+        // assert they carry no provenance (no year-like RFC3339 fragments, no
+        // absolute fixture path). The per-component detail pages join the
+        // fixed set here — discovered from the fresh output so the lock
+        // tracks the emission rule instead of a hardcoded count.
         let root_str = fixture.to_string_lossy().into_owned();
         let mut provenance_free = vec![
+            "atlas-q2.html".to_string(),
+            "atlas-weight.html".to_string(),
             "charts/include-graph.svg".to_string(),
             "charts/layer-file.svg".to_string(),
             "charts/layer-entry.svg".to_string(),

@@ -46,6 +46,9 @@ fn func(name: &str) -> FunctionUnit {
             name: name.to_string(),
             path: "m.js".to_string(),
             span: span(1, 1, 100, 1),
+            // Test records model a `function name() {}` declaration unless a
+            // test overrides it (CALL-001 lexical-binding gate, B5).
+            name_is_lexical_binding: true,
             ..FunctionRecord::default()
         },
         ..FunctionUnit::default()
@@ -175,6 +178,16 @@ fn unary(op: &str, operand: Shape, at: Span) -> UnaryEvent {
         meta: meta(at, 0),
         op: op.to_string(),
         operand,
+        operand_root_fresh: false,
+    }
+}
+
+/// A unary whose operand receiver root is a same-function fresh binding
+/// (declarator/assignment to `{}`/`[]`/`new`), the TYPE-001 silent class.
+fn unary_fresh(op: &str, operand: Shape, at: Span) -> UnaryEvent {
+    UnaryEvent {
+        operand_root_fresh: true,
+        ..unary(op, operand, at)
     }
 }
 
@@ -261,7 +274,8 @@ fn alloc_003_fires_on_spread_accumulator() {
     f.loops.push(loop_node(1, &["item"], None, loop_span()));
     f.allocations
         .push(spread_alloc(&["acc", "item"], point(5), 1));
-    f.assignments.push(assign("acc", point(6), 1));
+    // `acc = [...acc, item]`: the assignment span CONTAINS the literal.
+    f.assignments.push(assign("acc", span(5, 1, 5, 30), 1));
 
     let out = js_alloc_003(&[unit(vec![f])]);
     assert_eq!(out.len(), 1, "{out:?}");
@@ -275,6 +289,23 @@ fn alloc_003_fires_on_spread_accumulator() {
         out[0].evidence.get("receiver_root").map(String::as_str),
         Some("acc")
     );
+}
+
+#[test]
+fn alloc_003_silent_on_spread_in_non_assignment_expression() {
+    // `throw new Error([...visited, current].join())` inside a loop: the loop
+    // reassigns `current`, but NO assignment targets the literal's root — the
+    // spread is an argument expression, not an accumulator rebuild (R-tb-018
+    // tightening). Must stay silent.
+    let mut f = func("f");
+    f.loops.push(loop_node(1, &["item"], None, loop_span()));
+    f.allocations
+        .push(spread_alloc(&["current", "visited"], point(5), 1));
+    // `current` is reassigned by the loop body, but at a different span that
+    // does not contain the literal.
+    f.assignments.push(assign("current", point(7), 1));
+
+    assert!(js_alloc_003(&[unit(vec![f])]).is_empty());
 }
 
 #[test]
@@ -330,9 +361,10 @@ fn alloc_003_spread_arm_attributes_the_first_sorted_reassigned_name() {
     // Push the assignments in the OPPOSITE order to the sorted referenced
     // names: the rule iterates `referenced_names` (aaa first), not the
     // assignment stream, so a regression to assignment-order lookup would
-    // report `zzz` and fail the assertion.
-    f.assignments.push(assign("zzz", point(7), 1));
-    f.assignments.push(assign("aaa", point(6), 1));
+    // report `zzz` and fail the assertion. Both assignment spans must CONTAIN
+    // the literal (each is a candidate `name = [...name, …]` RHS).
+    f.assignments.push(assign("zzz", span(5, 1, 5, 40), 1));
+    f.assignments.push(assign("aaa", span(5, 1, 5, 35), 1));
 
     let out = js_alloc_003(&[unit(vec![f])]);
     assert_eq!(out.len(), 1, "{out:?}");
@@ -691,6 +723,48 @@ fn call_001_silent_when_guarded_or_member_call() {
     assert!(js_call_001(&[unit(vec![member])]).is_empty());
 }
 
+#[test]
+fn call_001_silent_on_member_name_collision() {
+    // The real-backend collision shape (R-tb-017): `receiver_root_of` returns
+    // None for a non-identifier root, so `this.walk()` arrives as
+    // `receiver_root: None` with a NON-bare `callee_path`. Only the exact
+    // bare-callee gate can reject it.
+    let mut this_member = func("walk");
+    let mut collision = call("walk", None, point(5), 0);
+    collision.callee_path = Some("this.walk".to_string());
+    this_member.calls.push(collision);
+    assert!(js_call_001(&[unit(vec![this_member])]).is_empty());
+
+    // `new X().walk()` — same shape, receiver root is the `new` expression.
+    let mut ctor_member = func("walk");
+    let mut ctor_call = call("walk", None, point(5), 0);
+    ctor_call.callee_path = Some("new X().walk".to_string());
+    ctor_member.calls.push(ctor_call);
+    assert!(js_call_001(&[unit(vec![ctor_member])]).is_empty());
+}
+
+#[test]
+fn call_001_silent_when_conditional_guarded() {
+    // `if (node.next) return walk(node.next)` — the truthiness guard is a
+    // visible base case even though it contributes no ComparisonEvent.
+    let mut conditioned = func("walk");
+    let mut guarded_call = call("walk", None, point(5), 0);
+    guarded_call.conditional_guarded = true;
+    conditioned.calls.push(guarded_call);
+    assert!(js_call_001(&[unit(vec![conditioned])]).is_empty());
+}
+
+#[test]
+fn call_001_silent_when_name_is_not_a_lexical_binding() {
+    // A class/object method or property arrow derives its record name from a
+    // property key, never a binding: the bare same-name call is delegation to
+    // an outer function, not recursion.
+    let mut delegating = func("resolve");
+    delegating.record.name_is_lexical_binding = false;
+    delegating.calls.push(call("resolve", None, point(5), 0));
+    assert!(js_call_001(&[unit(vec![delegating])]).is_empty());
+}
+
 // ---------------------------------------------------------------------------
 // ARCH-001
 // ---------------------------------------------------------------------------
@@ -728,7 +802,7 @@ fn arch_001_silent_without_cycle_or_when_unresolved() {
 #[test]
 fn type_001_fires_on_member_delete() {
     let mut f = func("f");
-    f.unaries.push(unary(
+    let mut event = unary(
         "delete",
         Shape {
             kind: ShapeKind::MemberAccess,
@@ -736,7 +810,9 @@ fn type_001_fires_on_member_delete() {
             ..Shape::default()
         },
         point(4),
-    ));
+    );
+    event.operand_root_fresh = false; // not a same-function fresh binding
+    f.unaries.push(event);
 
     let out = js_type_001(&[unit(vec![f])]);
     assert_eq!(out.len(), 1, "{out:?}");
@@ -747,6 +823,24 @@ fn type_001_fires_on_member_delete() {
         Some("prop"),
         "TYPE-001 must carry the deleted property name as evidence"
     );
+}
+
+#[test]
+fn type_001_silent_on_fresh_object_delete() {
+    // `const merged = { ...config }; delete merged.unsafeField` — the receiver
+    // root is a per-call fresh object, so no long-lived hidden class is
+    // polluted (R-tb-018).
+    let mut f = func("sanitize");
+    f.unaries.push(unary_fresh(
+        "delete",
+        Shape {
+            kind: ShapeKind::MemberAccess,
+            name: Some("unsafeField".to_string()),
+            ..Shape::default()
+        },
+        point(4),
+    ));
+    assert!(js_type_001(&[unit(vec![f])]).is_empty());
 }
 
 #[test]

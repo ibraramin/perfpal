@@ -218,6 +218,87 @@ fn delete_unary_event_only() {
     );
 }
 
+/// TYPE-001 fresh-object gate (B5): `operand_root_fresh` is true only when the
+/// receiver root was bound in the same function to a fresh object/array/`new`
+/// value before the `delete`.
+#[test]
+fn delete_operand_root_fresh_flag_tracks_fresh_bindings() {
+    // Declarator-bound object literal at module scope → fresh.
+    let ex = extract_js("const merged = { a: 1 };\ndelete merged.a;\n");
+    let module = function(&ex, "<module>");
+    assert_eq!(module.unaries.len(), 1, "{:?}", module.unaries);
+    assert!(
+        module.unaries[0].operand_root_fresh,
+        "a declarator-bound object literal is fresh"
+    );
+
+    // A parameter is caller-owned shared state → not fresh.
+    let ex = extract_js("function f(record) {\n  delete record.prop;\n}\n");
+    let f = function(&ex, "f");
+    assert_eq!(f.unaries.len(), 1, "{:?}", f.unaries);
+    assert!(
+        !f.unaries[0].operand_root_fresh,
+        "a parameter receiver is not fresh"
+    );
+
+    // A copy built from a spread object literal is itself fresh.
+    let ex =
+        extract_js("function g(shared) {\n  const copy = { ...shared };\n  delete copy.x;\n}\n");
+    let g = function(&ex, "g");
+    assert_eq!(g.unaries.len(), 1, "{:?}", g.unaries);
+    assert!(
+        g.unaries[0].operand_root_fresh,
+        "a spread object literal binding is fresh"
+    );
+
+    // Rebinding to a non-fresh value clears the flag (source order).
+    let ex = extract_js("function h() {\n  let o = {};\n  o = getGlobal();\n  delete o.x;\n}\n");
+    let h = function(&ex, "h");
+    assert_eq!(h.unaries.len(), 1, "{:?}", h.unaries);
+    assert!(
+        !h.unaries[0].operand_root_fresh,
+        "a later non-fresh assignment must clear the binding"
+    );
+
+    // A delete BEFORE the fresh assignment is not fresh (source order).
+    let ex = extract_js("function i() {\n  delete o.x;\n  o = {};\n}\n");
+    let i = function(&ex, "i");
+    assert_eq!(i.unaries.len(), 1, "{:?}", i.unaries);
+    assert!(
+        !i.unaries[0].operand_root_fresh,
+        "a fresh assignment after the delete must not back-date the flag"
+    );
+}
+
+/// B5 (`R-tb-017`): only a LEXICAL BINDING can be the target of a bare
+/// self-call. Declarations and named function expressions bind their name;
+/// `const`/assignment-bound-anonymous functions inherit the declarator binding.
+/// Class/object methods and property/field arrows are property keys, not
+/// bindings, so a bare same-name call inside them is delegation.
+#[test]
+fn name_is_lexical_binding_distinguishes_declarations_from_method_properties() {
+    let src = "function declared() {}\n\
+               const arrow = () => {};\n\
+               const named = function inner() {};\n\
+               const anonymous = function () {};\n\
+               class C { method() {} }\n\
+               const obj = { property: () => {}, method() {}, fn: function () {} };\n\
+               class F { field = () => {}; }\n";
+    let ex = extract_js(src);
+    for name in ["declared", "arrow", "inner", "anonymous"] {
+        assert!(
+            function(&ex, name).record.name_is_lexical_binding,
+            "{name} must be a lexical binding"
+        );
+    }
+    for name in ["method", "property", "fn", "field"] {
+        assert!(
+            !function(&ex, name).record.name_is_lexical_binding,
+            "{name} is a property name, not a binding"
+        );
+    }
+}
+
 /// `new`, object and array literals each emit an `AllocEvent` and count toward
 /// `alloc_site_count`; `referenced_names` is sorted/deduped and excludes keys;
 /// only array literals with a spread child set `has_spread`.
