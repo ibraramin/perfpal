@@ -581,6 +581,21 @@ def finish() -> int:
     f26 = ", ".join(f"{key}={'pass' if value[1] == 0 else 'FAIL'}"
                     for key, value in sorted(groups.items()))
     scans = " ".join(f"{name}={value:.2f}s" for name, value in SCAN_SECONDS.items())
+    try:
+        projected = json.loads((WORK / "data-3k.json").read_text())
+        scene_meta = projected.get("sceneMeta") or {}
+        profile_meta = projected.get("profileMeta") or {}
+        omitted = scene_meta.get("omitted") or {}
+        print(
+            "detail: "
+            f"scenes={scene_meta.get('shownScenes')}/{scene_meta.get('totalScenes')} "
+            f"omitted={omitted.get('scenes')}/{omitted.get('files')} "
+            f"source_files={scene_meta.get('totalFiles')} "
+            f"queue={profile_meta.get('shown')}/{profile_meta.get('candidateTotal')} "
+            f"ranked={profile_meta.get('totalRanked')}"
+        )
+    except (OSError, ValueError, TypeError):
+        pass
     print(f"summary: page_bytes={PAGE_BYTES:,} first_frame_max_ms={FIRST_FRAME_MAX:.0f} "
           f"scans={scans or 'n/a'} F2-F6=[{f26 or 'n/a'}] failed={failed}")
     print("F8 deferred: founder A2 session; not claimed")

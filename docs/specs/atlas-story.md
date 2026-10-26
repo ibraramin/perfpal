@@ -151,6 +151,8 @@ Each slice = one commit per probe + evidence + probe-registry row status flip.
 3. **Companion vs in-report: deferred to after S2.** If in-report with controls → new ADR + A12
    amendment (A12 already permits CSS/SMIL, not a second script).
 4. **CLI shape:** S1 ships `--story` on the existing command; the target entry point remains
-   `perfpal story <repo>` (S4). Recorded as a deviation in `docs/atlas/core-probes.md`.
+   `perfpal story <repo>` (S4). **S4 status (2026-10-26):** S4 shipped the `--story` flag only; the
+   `perfpal story <repo>` subcommand is **deferred**, not delivered, and is recorded as a deviation
+   in `docs/atlas/core-probes.md`. The S4 acceptance does not claim the subcommand.
 5. **`stages` placement:** derived stages ship inside `atlas-layout.json` (they are a projection of the
    same layout), not in the `flow` block; §4 was corrected 2026-10-24.

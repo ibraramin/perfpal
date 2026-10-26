@@ -141,8 +141,12 @@ Verdict: **PASS.**
   `PURPOSE · A command-line benchmarking tool. · from README.md` (hyperfine) and
   `PURPOSE · Ultralightweight JSON parser in ANSI C. · from README.md` (cJSON); the first action is
   fully legible (`src/output/report.rs:144 — Heap allocation inside loop (Rust)`;
-  `cJSON_Utils.c:1188 — Expensive setup or I/O call inside loop`). The `PURPOSE` prefix + README
-  provenance make the F1 sentence unambiguous; the static-inference honesty strip is intact.
+  `cJSON_Utils.c:1188 — Expensive setup or I/O call inside loop`). A follow-up entry-leg re-read of
+  the same frames read the ENTRY field verbatim: hyperfine `ENTRY production main · src/main.rs:88
+  main · confidence HIGH · 0 alternatives`; cJSON `ENTRY production main · fuzzing/afl.c:85 main ·
+  confidence HIGH · 1 alternative`. Purpose + entry + `path:line` are all present and legible. The
+  `PURPOSE` prefix + README provenance make the F1 sentence unambiguous; the static-inference
+  honesty strip is intact.
 - **Scale read (vis-3): PASS-WITH-NITS, no blockers.** The 1280 legend is visible on its own row;
   START, footer and summary wrap without a mid-word cut; no horizontal scroll or overlaps. The 3k
   purpose is fully readable at 1440 and 1280. The scenes caps and trust accounting now carry the

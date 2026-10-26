@@ -1,9 +1,9 @@
 # Session handoff — Atlas Story (D2 + S1 + S2 + S3 + S4)
 
 - **Date:** 2026-10-26 · **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` (`feat/atlas-sim`)
-- **Track:** Atlas Run · **Status:** **S4 built and gated at `5f13b04`** (dirty 0, 892 tests, 302/302,
-  3k 44/44, `verdict=PASS`); docs/evidence close and the final 4-lane panel are in progress. **Not
-  pushed, not merged.**
+- **Track:** Atlas Run · **Status:** **S4 built and gated at `61ef8c9`** (dirty 0, 892 tests, 302/302,
+  3k 44/44, `verdict=PASS`; evidence `97c4cda`); the final 4-lane panel is running. **Not pushed,
+  not merged.**
 - **Detail:** `state/tracks/atlas-sim/handoff.md` · **Requirement:** `docs/specs/atlas-story.md`
   (sealed) · **Plan:** `docs/plans/atlas-s4.md` · **Probes:** `docs/atlas/core-probes.md` (P6–P8)
 - **State:** `state/session-state.json` · **Evidence:** `docs/evidence/atlas-sim/`
@@ -57,7 +57,7 @@ a scale-aware trust line, with the 3k F2–F7 gate.
 - **3k fixture + scale gate (`4006315`, `5f7579d`):** deterministic 3,000 scanned files (2,999 C + 1
   Rust; 2,731 production + 269 test/bench), C fn-pointer + Rust `dyn` engineered into the drawn slice,
   loops/I/O/README; `sim/scale.py`/`scale.sh` F2–F7. Page **463,230 bytes**; first frame **max
-  1,649 ms** (1,649/475/467); no h-scroll at 1280/1440; double-scan/load determinism; story-off/on
+  1,570 ms** (1,570/420/413); no h-scroll at 1280/1440; double-scan/load determinism; story-off/on
   byte identity.
 - **Docs/evidence:** `core-probes` P6–P8, spec §9 S4, output contract, `NOTES` S4, `VISION` Read 8
   (two independent reads: PASS-WITH-NITS, no blockers), `CHANGELOG`.
@@ -93,7 +93,7 @@ a scale-aware trust line, with the 3k F2–F7 gate.
 | F6 additive | story-off vs story-on | `report.html` byte-identical; `metrics.json` content-equal after provenance masking |
 | Core determinism | two `--story` scans | `atlas-layout.json` byte-identical; layout/flow/data sorted |
 | Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **302/302**, exit 0 |
-| 3k scale gate | `bash sim/scale.sh` | **44/44**, exit 0; page 463,230 bytes; first frame max 1,649 ms; no h-scroll; F2–F6 PASS |
+| 3k scale gate | `bash sim/scale.sh` | **44/44**, exit 0; page 463,230 bytes; first frame max 1,570 ms (1,570/420/413); no h-scroll; F2–F6 PASS |
 | Full gate | `bash sim/gate.sh` | `5f13b04` · tree in `GATE.txt` · dirty 0 · 892 tests · 302/302 · 3k 44/44 · **verdict=PASS** |
 | Vision | `VISION.md` Read 8 (F1 + scale) | **PASS-WITH-NITS, no blockers**; purpose/1280/scene/queue/trust fixes landed; carried nits listed |
 | 3k fixture | `sim/fixtures/gen-3k.py` + `sim/scale.py` | 3,000 files; C fn-pointer + Rust `dyn` drawn and unresolved; 24 scene cards / 12 queue rows |

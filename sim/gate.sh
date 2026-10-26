@@ -27,7 +27,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
   echo "Commit at run: $(git rev-parse --short HEAD) ($(git log -1 --format=%s))"
   echo "Git tree: $(git rev-parse HEAD^{tree})"
   echo "Dirty paths at run (excluding docs/evidence/atlas-sim/): $(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)"
-  echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence or docs/state."
+  echo "Note: this transcript is committed separately; commits after the one above add only docs/evidence, docs/state or docs records."
   echo "Fixtures: hyperfine $(git -C "$FIXTURES/hyperfine" rev-parse --short HEAD 2>/dev/null || echo '?') · cJSON $(git -C "$FIXTURES/cJSON" rev-parse --short HEAD 2>/dev/null || echo '?')"
   echo
 
@@ -160,7 +160,7 @@ PY
 
   echo "## 4. 3k scale gate (F2-F7)"
   echo '$ bash sim/scale.sh'
-  bash sim/scale.sh 2>&1 | tail -80
+  bash sim/scale.sh 2>&1 | tail -180
   SCALE_STATUS=${PIPESTATUS[0]}
   echo "exit=$SCALE_STATUS"
   if [ "$SCALE_STATUS" -eq 0 ]; then
@@ -184,7 +184,7 @@ PY
     echo "assert=FAIL git_status"
   fi
   DIRTY_ALL=$(git status --porcelain | grep -v 'docs/evidence/atlas-sim/' | wc -l)
-  echo "all dirty paths=$DIRTY_ALL (the DoD requires 0)"
+  echo "all non-evidence dirty paths=$DIRTY_ALL (evidence/transcript excluded; the DoD requires 0)"
   if [ "$DIRTY_ALL" -eq 0 ]; then echo "assert=pass worktree_dirty_zero"; else echo "assert=FAIL worktree_dirty_zero"; fi
 } > "$EVIDENCE/GATE.txt" 2>&1
 

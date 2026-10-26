@@ -73,8 +73,9 @@ stop 2.0s, trust 2.4s, summary 3.0s. Beat counts are derived per case
 - **hottest** — the hottest **file** and the globally hottest drawn **function** (name, `L<line>`, path,
   static units), with the top annotation from the global findings list. A test/bench hot file is
   disclosed by its path and the trust line; it is never called production.
-- **profile** — the drawn-slice candidate queue (top 3 per file, production-only), each row a
-  `static candidate, verify`; explicitly not a whole-repo KV3 ranking.
+- **profile** — **S2-era:** the drawn-slice candidate queue (top 3 per file, production-only), each
+  row a `static candidate, verify`; explicitly not a whole-repo KV3 ranking. **S4 supersedes this**
+  with the authoritative whole-repo KV3 queue (addendum below).
 - **start-here** — KV1's three actions verbatim, each marked `on-canvas` / `off-canvas`.
 - **stop** — a static leaf / no forward path / partial parse / capped, from the real state flags.
 - **trust** — caps, partial parse, non-production share, unknown-trip function count, findings
@@ -172,9 +173,9 @@ frames `no-forward-path.png`, `empty.png`, `capped.png` (eleven 1440×900 frames
   269 test/bench), 30 modules, nested subdirs, C function-pointer + Rust `dyn` files in the drawn slice,
   loops/I/O, README. Generated under `/var/tmp`; no repo data file.
 - **F7 numbers:** page **463,230 bytes** (index 7,049 + CSS 24,176 + JS 58,166 + `data-3k.json` 373,839)
-  vs 5 MB; first frame **max 1,649 ms** over three cold loads (1,649 / 475 / 467 ms) vs 2,000 ms; no
+  vs 5 MB; first frame **max 1,570 ms** over three cold loads (1,570 / 420 / 413 ms) vs 2,000 ms; no
   horizontal scroll at 1440×900 or 1280×800; 24 scene cards / 12 queue rows; 3k scan off/on/on2
-  8.83 / 6.52 / 5.09 s.
+  3.82 / 4.10 / 4.19 s.
 - **F2–F6:** every drawn edge labelled; C fn-pointer + Rust `dyn` unresolved rows visible and never
   guessed; no forbidden claim/time unit; double scan → identical layout/flow and data; two loads →
   identical DOM; story-off/on `report.html` byte-identical, `metrics.json` content-equal after

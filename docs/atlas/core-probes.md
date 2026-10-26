@@ -168,7 +168,9 @@
   1. **P4 + P5 share one emitter and shipped in one commit.** The one-probe-per-commit rule is waived
      because neither is independently useful; cherry-pick the pair.
   2. **`stages` live in `atlas-layout.json`, not the `flow` block.** Spec §4 corrected 2026-10-24.
-  3. **CLI is `--story` on the existing command.** `perfpal story <repo>` remains the S4 entry point.
+  3. **CLI is `--story` on the existing command; the `perfpal story <repo>` subcommand is deferred.**
+     Decision 4 named it the S4 target, but the approved S4 plan and build shipped only the flag; no
+     CLI subcommand was added. Recorded deviation — the subcommand remains a later CLI slice.
   4. **The artifact carries more than geometry:** presentation strings, state flags, top functions and
      KV1 actions. The beats need them; re-deriving them in the sim would be a second source of truth.
 - **Emitted by:** `perfpal <repo> -o <dir> --story` → `atlas-layout.json` (story-only; no other
@@ -431,6 +433,17 @@ whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8
   `AtlasNode.cost` equals the shared `file_cost`; all scene sums reconcile; two scans/double projection
   byte-identical.
 
+### S4 deviations (recorded, not silent)
+
+1. **The `perfpal story <repo>` subcommand is deferred.** Spec §11 decision 4 names it the S4 target,
+   but the approved S4 plan and build shipped the `--story` flag only; no CLI subcommand was added.
+   S4 does not claim it. See also S1 deviation 3 and the spec §11 status note.
+2. **`nodes[].scene` is additive beyond the plan's literal `actions[].scene` wording.** It is the
+   minimal data for the enter-beat scene context (plan step 6), story-only, and uses the same
+   `SceneBlock::scene_for` partition as actions.
+3. **Scene caps are fixed (depth-2, 24 scenes, 5 top files).** These are the approved plan defaults,
+   not configurable in S4; the omitted totals are printed.
+
 ### S4 scale fixture and evidence
 
 - **Fixture:** `sim/fixtures/gen-3k.py` (committed) — deterministic 3,000 scanned source files (2,999 C
@@ -439,15 +452,17 @@ whole-repo profile queue, scene-aware start-here/trust, and F1–F7 evidence. F8
   file (`src/mod29/sub08/f09.rs`) engineered into the drawn slice, loops/I/O and a README. Generated
   under `/var/tmp/opencode/atlas-3k-fixture`; never committed.
 - **F7:** page **463,230 bytes** (index 7,049 + CSS 24,176 + JS 58,166 + `data-3k.json` 373,839) vs
-  5 MB budget; first frame **max 1,649 ms** over three cold loads (budget 2,000); no horizontal scroll
+  5 MB budget; first frame **max 1,570 ms** over three cold loads (budget 2,000); no horizontal scroll
   at 1440×900 or 1280×800; 24 scene cards / 12 queue rows.
 - **F2–F6:** every drawn edge labelled; unresolved C fn-pointer + Rust `dyn` rows are visible and never
   guessed; no forbidden claim/time unit in the data or final frame; two scans → identical layout/flow;
   two loads → identical DOM; story-off vs story-on `report.html` identical and `metrics.json`
   content-equal after provenance masking.
 - **F1:** `@vision` Read 8, two independent reads (F1 frames + scale frames): **PASS-WITH-NITS, no
-  blockers**. Hyperfine/cJSON purpose sentences and the first `path:line` were named; the 3k purpose
-  is fully readable; 1280 legend/START/footer wrap; scan-wide test/bench counts present. Carried nits:
+  blockers**. Hyperfine `PURPOSE · A command-line benchmarking tool. · from README.md`, entry
+  `src/main.rs:88 main`; cJSON `PURPOSE · Ultralightweight JSON parser in ANSI C. · from README.md`,
+  entry `fuzzing/afl.c:85 main`; both first `path:line` actions legible; the 3k purpose is fully
+  readable; 1280 legend/START/footer wrap; scan-wide test/bench counts present. Carried nits:
   third START item tail, PATH meta ellipsis at 1440, dense depth-1/edge labels, findings run-on, cJSON
   unreached START/empty canvas (pre-existing).
 - **F8:** **deferred** — founder A2 session; not run or claimed. A2/ship remains behind the Atlas v2
