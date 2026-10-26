@@ -158,11 +158,23 @@ PY
   echo "assert_exit=$?"
   echo
 
-  echo "## 4. Story gate"
+  echo "## 4. 3k scale gate (F2-F7)"
+  echo '$ bash sim/scale.sh'
+  bash sim/scale.sh 2>&1 | tail -80
+  SCALE_STATUS=${PIPESTATUS[0]}
+  echo "exit=$SCALE_STATUS"
+  if [ "$SCALE_STATUS" -eq 0 ]; then
+    echo "assert=pass scale_gate"
+  else
+    echo "assert=FAIL scale_gate"
+  fi
+  echo
+
+  echo "## 5. Story gate"
   echo "\$ SIM_PORT=$PORT python3 sim/verify.py"
   SIM_PORT="$PORT" python3 sim/verify.py 2>&1 | tail -3; echo "exit=${PIPESTATUS[0]}"
   echo
-  echo "## 5. Worktree clean (scope containment is proven in section 2)"
+  echo "## 6. Worktree clean (scope containment is proven in section 2)"
   echo '$ git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock'
   git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock
   DIRTY=$(git status --porcelain src/ docs/schema/ Cargo.toml Cargo.lock | wc -l)
