@@ -241,8 +241,8 @@ re-execution limitation (transcript-only in their sandbox; the orchestrator ran 
 ## Committed files
 
 `1b23198` (feat) holds the rule/IR/aggregator/scanner/test/golden changes; this docs commit holds the
-evidence, docs and track state. `git status --short` is clean apart from the pre-existing unrelated
-untracked `.playwright-mcp/` (NOT part of B5; exclude from any commit).
+evidence, docs and track state. `git status --short` is clean apart from the pre-existing local `.playwright-mcp/`
+scratch (now git-ignored by `8f7c5c4`; NOT part of B5; exclude from any commit).
 
 - Feat `1b23198`: `src/aggregator/{mod.rs,path_class.rs}`, `src/analyzer/heuristics/js/{mod.rs,tests.rs}`,
   `src/analyzer/heuristics/python/mod.rs`, `src/ir/mod.rs`, `src/scanner/mod.rs`,
@@ -253,7 +253,7 @@ untracked `.playwright-mcp/` (NOT part of B5; exclude from any commit).
   `tests/fixtures/precision/labels.json`, nine golden files under `tests/golden/{report-js,report-ts,report-python}/`,
   plus the docs listed in §8 (including `docs/tracks/README.md`).
 - Docs commit: `docs/evidence/js-b5/{real-code-canary.md,gate.txt}` and the docs/state listed in §8.
-- Untracked (NOT part of B5): `.playwright-mcp/` — excluded.
+- Local scratch (NOT part of B5; now git-ignored): `.playwright-mcp/` — excluded.
 
 ## Commits (this session)
 

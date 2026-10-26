@@ -10,7 +10,8 @@ graduation claim, no push/tag. **M2 (`feat/atlas-sim` → v0.4.0) is next.**
 the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gate.txt`).
 
 **Commits:** `cda9d5f` (merge `feat/js-ts`) + `158c7b0` (v0.3.0 integration/goldens/state) + `8f7c5c4`
-(`.gitignore` for the pre-existing local Playwright scratch). **No push/tag.**
+(`.gitignore` for the pre-existing local Playwright scratch); the docs/state reconciliation commits
+`228b19c`/`ea06d9a` carry the handoff/state corrections. **No push/tag.**
 
 ## This session — M1
 
@@ -26,7 +27,7 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
   - `src/reporter/mod.rs` — `pub(crate) HEURISTIC_CATALOG_V1` (agent_report needs it) with the
     78-rule text and 11 JS entries; Atlas v2 modules and JS label wiring both present.
   - `state/archive/ledger.jsonl` — append-only union (main tail then branch tail); 724 lines,
-    all valid JSON, no ID reuse.
+    all valid JSON, no cross-tail ID reuse (append-only status pairs are intentional).
   - `tests/p6_hardening.rs` — six golden trees + the agent-report prune block; 19-artifact set
     with both Atlas pages; stale 17 count corrected.
   Full log: `docs/evidence/merge-m1/resolutions.md`.
@@ -34,15 +35,16 @@ the B6 DoD + full gate are green on the merged tree (`docs/evidence/merge-m1/gat
   `perfpal 0.3.0 (metrics schema 1.8)`; `CHANGELOG [0.3.0]` added (JS/TS, schema 1.8, B5
   precision fixes, no tag/publish); README/roadmap live version markers updated (the published
   v0.2.0-beta.1 download reference stays, because no 0.3.0 release exists).
-- **Gate failure (first run) and fix — not a gate weakening:** `cargo test --locked` failed 5
-  `agent_report` unit tests and 3 integration tests because main's Track C (landed after the
-  js-ts base) hardcoded the old 67-rule catalog and a schema-1.7 sample. Fix: 11 curated
+- **Gate failure (first run) and fix — not a gate weakening:** the first `cargo test --locked` run
+  failed 5 `agent_report` unit tests; the first rerun then exposed 3 integration-test failures from
+  the same root cause — main's Track C (landed after the js-ts base) hardcoded the old 67-rule
+  catalog and a schema-1.7 sample. Fix: 11 curated
   `PERF-JS-*` hints + 78-id completeness lock; spec §8/§12 and `derive_sample.py` updated; the
   synthetic envelope re-measured **77,713 B** (4,207 B / 5.1% headroom); six golden trees and the
   agent-report sample regenerated at **0.3.0**. Golden delta: `tool.version` in every tree plus main's agent-report nav links restored in the two
   new JS/TS `report.html` files; finding counts are unchanged (15/9/32/29/11/11).
-- **Stop-on-first-failure:** the `cargo test --locked` run was stopped at the first failure and the
-  failure was reported before any fix. The fix follows merge-train binding rule 5 (fix the
+- **Stop-on-first-failure:** the first gate command (`cargo test --locked`) failed; work stopped and
+  the failure was reported before any fix. The fix follows merge-train binding rule 5 (fix the
   integration, never weaken the gate); the full gate was then rerun from the top.
 - **Plan:** `js-ts` marked done (`markPlanDone`) with the B6 result recorded in the plan.
 
