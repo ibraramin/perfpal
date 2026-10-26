@@ -742,7 +742,7 @@
     },
     {
       "check": "hyperfine: S3 trust keyframe",
-      "detail": "280684 bytes",
+      "detail": "280786 bytes",
       "ok": true
     },
     {
@@ -757,7 +757,7 @@
     },
     {
       "check": "hyperfine: S3 stores keyframe",
-      "detail": "271254 bytes",
+      "detail": "271334 bytes",
       "ok": true
     },
     {
@@ -817,7 +817,7 @@
     },
     {
       "check": "hyperfine: loop keyframe",
-      "detail": "255911 bytes",
+      "detail": "255999 bytes",
       "ok": true
     },
     {
@@ -1117,7 +1117,7 @@
     },
     {
       "check": "cjson: S3 trust keyframe",
-      "detail": "149710 bytes",
+      "detail": "149698 bytes",
       "ok": true
     },
     {
@@ -1132,7 +1132,7 @@
     },
     {
       "check": "cjson: S3 stores keyframe",
-      "detail": "144587 bytes",
+      "detail": "144577 bytes",
       "ok": true
     },
     {
@@ -1157,7 +1157,7 @@
     },
     {
       "check": "cjson: S3 inspector keyframe",
-      "detail": "219455 bytes",
+      "detail": "219443 bytes",
       "ok": true
     },
     {
@@ -1197,7 +1197,7 @@
     },
     {
       "check": "cjson: loop keyframe",
-      "detail": "137628 bytes",
+      "detail": "137618 bytes",
       "ok": true
     },
     {
