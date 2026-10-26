@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bottom is **1,282 px > the 900 px fold** (23-file UNREACHED column) — carried to step 15 to resolve
   or explicitly accept; no visual tuning. Step 15 (ship/docs/EOL) is schedulable; the plan is not
   done. Evidence: `docs/evidence/map-vision/v8/a2.md`, `a2/` (frames, JSON, setup/gate logs,
-  `lanes/MANIFEST.txt`), `a2_verify.py`.
+  `lanes/MANIFEST.txt`), `a2_verify.py`. Committed `9631137`.
 - **Atlas v2 step 13 — founder visual gate evidence (2026-10-24, no code change).** The reworked
   `report.html#map` was measured and rendered at 1440×900 and 1280×800 (session-private fresh scans on merged `main` `c73d6ff`, byte-identical to the shared
   `perfpal-test` outputs; Track C's two below-the-fold nav links change only `-charts`/`-full`). **All DOM/render assertions

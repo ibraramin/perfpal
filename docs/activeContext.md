@@ -34,8 +34,7 @@ step 15 (ship/docs/EOL) is schedulable; ship stays blocked on the memchr library
   `state/archive/ledger.jsonl`.
 
 ## In Progress
-- A2 evidence/docs/state are in the working tree, **uncommitted pending founder approval**; HEAD
-  `ce14a3d`; no push.
+- A2 evidence/docs/state are committed as `9631137`; no push.
 - Panel round 1: R1 APPROVED, Q1 APPROVED; R2/Q2 CHANGES_REQUESTED → fixes applied; confirmation lanes
   running. No unresolved blocker is silently waived.
 
