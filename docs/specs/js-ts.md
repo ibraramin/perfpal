@@ -21,6 +21,19 @@ edges. The real-code canary was re-run on the pinned express/execa/gemini-cli co
 negative are published limitations/tests, not silent behaviour. No schema, rule, reporter-count or
 dependency change.
 
+**B5 close-out (real-code gate fixes).** The B4 canary's merge gate is cleared without a catalog, schema,
+severity or dependency change (catalog stays **78**; 11 JS rules). `PERF-JS-CALL-001` now requires
+`callee_path` to be exactly the bare function name, `!conditional_guarded`, and
+`FunctionRecord::name_is_lexical_binding == true` (class/object methods and property/arrow fields are
+delegation, not recursion); production hits fall 180 → 2 on the pinned corpora, both genuine recursion.
+`PERF-JS-TYPE-001` skips a delete whose receiver root was bound in the same function to an object/array
+literal or `new` (`UnaryEvent.operand_root_fresh`); production 14 → 2. `PERF-JS-ALLOC-003`'s spread arm
+now requires the literal to be the RHS of an assignment to the attributed root (`assigned_from_literal`);
+production 20 → 18. Cross-cutting: `findings[].symbol` resolves the narrowest containing record, and
+`path_class` recognizes `.spec.`/`-spec.` basenames and `test-*`/`*-test(s)`/`*-spec(s)` segments; the
+JS/TS minified skip list is now seven suffixes. Evidence: `docs/evidence/js-b5/real-code-canary.md`; no
+schema/catalog-count change.
+
 **B3 close-out (committed `9dd19bb`).** TypeScript and TSX are first-class backends without a second
 visitor: the JS backend is parameterized by a grammar/token/flavor `Dialect` and the new
 `src/scanner/backends/tree_sitter_typescript/` binds `LANGUAGE_TYPESCRIPT` (`ts`) and `LANGUAGE_TSX`
@@ -132,7 +145,8 @@ Extension map (longest suffix first; unknown extensions still dropped silently a
 (`src/scanner/mod.rs:314-354` walks directories, then filters file names). Skip directories named
 `node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage`. Dot-directories are already skipped
 today, so `.next`, `.nuxt`, `.svelte-kit`, `.cache` need no entries. File-level skips apply to **JS/TS files
-only**: `*.min.js`, `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, and files larger than **2 MiB** (minified
+only**: `*.min.js`, `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, `*.min.ts`, `*.min.mts`, `*.min.cts`, and
+files larger than **2 MiB** (minified
 bundles). All skips are silent and deterministic (path/metadata-based, no content sniffing). Skip counters
 are **not** added to the schema in v1.8.
 
@@ -214,7 +228,7 @@ landed with the registry block, and the count/equality/Appendix-A locks moved by
 | Candidate id | Mechanism (why it costs) | Frozen disposition (B2-W0) |
 |---|---|---|
 | `PERF-JS-ALLOC-001` | Object/array literal constructed per iteration inside a hot loop → young-gen churn; escape analysis rarely removes it | **KEEP — reframed** (loop-invariance gate mandatory, Info-first) |
-| `PERF-JS-ALLOC-003` | `concat`/spread/`slice` accumulation in a loop copies n elements per iteration → quadratic | **KEEP (Info)** |
+| `PERF-JS-ALLOC-003` | `concat`/spread/`slice` accumulation in a loop copies n elements per iteration → quadratic | **KEEP (Info)** — spread arm gated on the literal being an assignment RHS to the accumulator (`assigned_from_literal`, B5) |
 | `PERF-JS-STR-001` | `+=` string accumulation in a loop → cons-string flattening cost at first use (MEDIUM; V8 ropes mitigate) | **KEEP (MEDIUM)** — honest V8-rope caveat |
 | `PERF-JS-LOOP-001` | Nested loop depth ≥ 2 → superlinear iteration with no early exit | **KEEP (Info)** |
 | `PERF-JS-LOOP-002` | Synchronous blocking I/O in a loop (`readFileSync`, `execSync`, `spawnSync`, sync `crypto`) | **KEEP (MEDIUM)** |
@@ -222,9 +236,9 @@ landed with the registry block, and the count/equality/Appendix-A locks moved by
 | `PERF-JS-LOOP-007` | Linear membership/index scan (`indexOf`/`includes`/`find`) inside a loop → O(n²) | **KEEP — flagship** |
 | `PERF-JS-ASYNC-001` | Sequential `await` inside a loop over independent work → latency serialization; fix = `Promise.all` | **KEEP — flagship** |
 | `PERF-JS-ASYNC-002` | Synchronous blocking call inside an `async` function → event-loop stall | **KEEP — flagship** (async-function gate mandatory; test-skewed) |
-| `PERF-JS-CALL-001` | Direct recursion (self-call) with no visible base-case guard | **KEEP (Info) — guard-gated** |
+| `PERF-JS-CALL-001` | Direct recursion (self-call) with no visible base-case guard | **KEEP (Info) — guard-gated**; B5: bare `callee_path == function name`, `!conditional_guarded`, lexical-binding record — production 180 → 2 |
 | `PERF-JS-ARCH-001` | Import cycle between modules | **KEEP (Info)** — relative-only graph limitation published |
-| `PERF-JS-TYPE-001` | `delete obj.prop` → hidden-class/dictionary-mode transition | **KEEP (Info)** |
+| `PERF-JS-TYPE-001` | `delete obj.prop` → hidden-class/dictionary-mode transition | **KEEP (Info)**; B5 fresh-object gate (`operand_root_fresh`) — production 14 → 2 |
 
 **Explicitly cut or deferred (with reason):** `arr.length` hoisting (V8 does not re-read it cost-wise —
 folklore); `new RegExp(literal)` in a loop (V8 keeps a regexp compilation cache — the Python `re.compile`
@@ -324,8 +338,9 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
 ## 10. CLI behavior
 
 - No new flags. Auto-detection by extension is the only entry path. A single-file target with a JS suffix
-  is scanned normally **except** the JS skip names (`*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`),
-  which are skipped silently. A single-file target with a **declaration-only** TypeScript suffix
+  is scanned normally **except** the JS skip names (`*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`/
+  `*.min.ts`/`*.min.mts`/`*.min.cts`), which are skipped silently. A single-file target with a
+  **declaration-only** TypeScript suffix
   (`.d.ts`, `.d.mts`, `.d.cts`) is skipped silently — never parsed as C; `.ts`/`.mts`/`.cts`/`.tsx` are
   scanned with their `ts`/`tsx` tokens (B3). A genuinely unknown extension keeps the documented C fallback.
 - `--version` suffix moves to `(metrics schema 1.8)` with the schema bump; the `about` line widens from
@@ -351,10 +366,11 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
    name in every golden tree. The global directory skip is documented as an intentional discovery change.
 7. Parallel review panel: >= 2 reviewer + >= 2 requirements-reviewer lanes, >= 1 APPROVE per family, zero
    unresolved blocking findings.
-8. B4 evidence: `docs/heuristics/js-catalog.md` exists and matches the implemented 11 rules;
-   `docs/evidence/js-b4/real-code-canary.md` records the pinned-corpus re-run; the reporter label tests and
-   the real-parse STR-001 negative pass; README/roadmap/modules/output-contract/Cargo.toml name the JS/TS
-   tier and the six tokens.
+8. B4/B5 evidence: `docs/heuristics/js-catalog.md` exists and matches the implemented 11 rules;
+   `docs/evidence/js-b5/real-code-canary.md` records the gate-fixed pinned-corpus re-run (the B4 baseline
+   remains at `docs/evidence/js-b4/real-code-canary.md`); the reporter label tests and the real-parse
+   STR-001 negative pass; README/roadmap/modules/output-contract/Cargo.toml name the JS/TS tier and the six
+   tokens.
 
 ## 12. Accepted limitations (must be published in the report/docs)
 
@@ -372,50 +388,46 @@ when absent — not mirrored in `metrics.json`); **TSX generic arrows** — the 
 `<T,>(x: T) => x` and `<T>(x: T) => x` at expression position, with `<T,>` the portable form (the limitation
 is re-checked by `tests/typescript_backend.rs` on any grammar upgrade); **`.d.ts` skipping** makes
 type-only modules invisible, so imports that only resolve through them become unresolved-internal data-only;
-a **minified file under 2 MiB** that is not named `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`
-is still parsed and can fire rules;
+a **minified file under 2 MiB** that is not named `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`/
+`*.min.ts`/`*.min.mts`/`*.min.cts` is still parsed and can fire rules;
 **extension matching is case-sensitive**, so `.JS`/`.TS` are silently dropped. **Single-file targets follow
-the discovery skip policy:** the four JS min/bundle names and declaration-only `.d.ts`/`.d.mts`/`.d.cts` are
-skipped silently, while `.ts`/`.mts`/`.cts`/`.tsx` are scanned and a genuinely unknown extension keeps the C
-fallback. **Class bodies are not event owners:**
+the discovery skip policy:** the seven JS min/bundle names and declaration-only `.d.ts`/`.d.mts`/`.d.cts`
+are skipped silently, while `.ts`/`.mts`/`.cts`/`.tsx` are scanned and a genuinely unknown extension keeps
+the C fallback. **Class bodies are not event owners:**
 methods and arrow-function fields are their own records, but non-arrow field-initializer expressions and
 `class_static_block` bodies are not event-scanned at all.
 
-**B4-published limitations and locks:**
+**B4-published limitations and locks (B5 supersedes the fixed gates):**
 
-- **Spread-root attribution (`ALLOC-003`):** the IR records `referenced_names` but not which name was the
-  spread operand. When more than one referenced name is reassigned in the loop, the rule reports the
-  alphabetically first one as `receiver_root`, not necessarily the actual accumulator (`acc`); member/`this`
-  accumulators are not detected. Pinned by an IR test and documented in `docs/heuristics/js-catalog.md`.
+- **Spread-arm attribution (`ALLOC-003`, B5):** the spread literal must be (part of) the RHS of an
+  assignment to the attributed root (`assigned_from_literal`); a spread in an arbitrary expression is
+  silent, and a member-target accumulator (`currentTurn.content.parts = [...]`) is silent rather than
+  mis-attributed. When several loop-reassigned referenced names also satisfy the gate, the first in the
+  IR's sorted `referenced_names` is reported, not necessarily the spread operand; member/`this`
+  accumulators remain undetected (a member-root attribution field is a recorded follow-up).
 - **STR-001 assignment arm:** the `x = x + "…"` form fires only when the binary is the **whole** RHS.
   `s = f(s + "x")` is silent by design (the `+` is nested in a call), locked by a real-parse integration
   test. `s += "x"` remains the `+=` arm.
 - **Reporter labels:** JS/TS/TSX render as the shared `import/require` mechanism and
   ``JavaScript/TypeScript `import`/`require` bindings``; `PERF-TS-*` remains reserved/empty, so no
   TypeScript-only label is claimed.
-- **Real-code canary:** the B4 re-run measures hits and a hand-verified sample on three pinned repositories;
-  it is not a corpus-wide precision claim, and the synthetic 1.0/1.0 KPI remains synthetic-only
-  (`R-tb-016`). The canary does not change the rule set.
-- **B4 canary findings (merge-gate follow-ups, no rule change in B4):** `PERF-JS-CALL-001` is **not
-  merge-ready** — 150 strict (+2 wrapped) of 180 production hits are member/method-name collisions (`this.foo()` inside
-  `foo()`, `new X().foo()` inside `foo()`) because the extractor's `receiver_root_of` returns `None` for
-  non-identifier receivers, so the rule's receiver gate never fires; 3/3 express FPs and 1/1 execa TP were
-  hand-verified. `PERF-JS-TYPE-001` has a fresh-object FP class (~10/14 production hits delete from a
-  just-built/copied object); `PERF-JS-ALLOC-001` remains noisy but gated (503 production hits; trivial
-  option bags/reset literals in the sample). `PERF-JS-ARCH-001` remains structurally blind in alias
-  monorepos (0 on gemini-cli, 4 execa cycles); `PERF-JS-ASYNC-002` remains test-skewed (153 production vs
-  1,028 non-production). Cross-cutting: `path_class` does not recognize `.spec.` / hyphenated test dirs,
-  and `findings[].symbol` reports `<module>` for every JS/TS finding in `metrics.json`. The ranked action
-  list/key views resolve the narrowest enclosing function; the full-detail rows inherit the `symbol` field
-  and still show `<module>` until the aggregator fix (`A-tb-008`). The evidence is
-  `docs/evidence/js-b4/real-code-canary.md`; the merge gate must not clear until `CALL-001` is fixed and
-  the canary is re-run.
-- **`metrics.json` `findings[].symbol` for JS/TS (B4-discovered, merge-gate follow-up):** the aggregator
-  resolves a finding's symbol by **first-hit** over the file's function records
-  (`src/aggregator/mod.rs::findings_with_symbols`). The JS/TS backend emits a synthetic `<module>` record
-  spanning the whole file **first**, so every JS/TS finding currently reports `symbol: "<module>"` in
-  `metrics.json`. The ranked action list/key views resolve the narrowest enclosing function; the
-  full-detail rows inherit `metrics.json`'s `symbol` and still show `<module>` until the aggregator fix.
-  Fixing this requires choosing the narrowest containing record in the aggregator and re-baselining the
-  JS/TS goldens; it is **out of B4's docs/label scope** and is tracked as a merge-gate follow-up in the
-  track handoff, not hidden.
+- **Real-code canary:** the B5 re-run measures hits and a hand-verified sample on three pinned
+  repositories; it is not a corpus-wide precision claim, and the synthetic 1.0/1.0 KPI remains
+  synthetic-only (`R-tb-016`). The canary does not change the rule set.
+- **B5 gate close-out (no schema/catalog change):** `PERF-JS-CALL-001` is **merge-ready** — production
+  180 → 2, both genuine recursion; the B4 member/method-name collision class is removed by requiring
+  `callee_path` to equal the bare function name, `!conditional_guarded`, and a lexical-binding record.
+  The accepted false-negative class is recursion guarded only by an `if`/`catch` ancestor (11 observed:
+  10 gemini-cli production + 1 execa catch-retry). `PERF-JS-TYPE-001` adds the fresh-object gate
+  (`operand_root_fresh`), production 14 → 2; `PERF-JS-ALLOC-003` tightens the spread arm, production
+  20 → 18. `PERF-JS-ALLOC-001` remains noisy but gated (485 production hits); `PERF-JS-ARCH-001` remains
+  structurally blind in alias monorepos (0 gemini-cli, 4 execa cycles); `PERF-JS-ASYNC-002` remains
+  test-skewed (134 production vs 1,047 non-production). Cross-cutting: `path_class` now recognizes
+  `.spec.`/`-spec.` basenames and `test-*`/`*-test(s)`/`*-spec(s)` segments (production total 1,336 →
+  1,178; `src/test-data` stays `fixture`), and `findings[].symbol` resolves the narrowest containing
+  record. Evidence: `docs/evidence/js-b5/real-code-canary.md`.
+- **`metrics.json` `findings[].symbol` for JS/TS (B5 fixed):** the aggregator chooses the **narrowest
+  containing** function record (line containment, width, then id; `src/aggregator/mod.rs::findings_with_symbols`)
+  instead of first-hit. In the JS/TS goldens 10/11 findings resolve to a real function and the single
+  `<module>` is the module-level `ARCH-001` cycle anchor; Python goldens improved the same way. The ranked
+  action list/key views and `metrics.json` therefore agree.

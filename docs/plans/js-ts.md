@@ -24,6 +24,16 @@ Add JavaScript (B2), then TypeScript/TSX (B3), as first-class Perfpal backends i
   from member/method-name collisions)**, documented as `R-tb-017` and not fixed in B4 (docs/label
   scope). Plan DoD green; parallel panel **APPROVED (R1/R2/R3 + Q1/Q2)**; B4 commit `6d6bcdf`;
   merge remains `A-tb-006` + founder approval.
+
+  **B5 result (2026-10-26):** post-B4 correctness pass. `PERF-JS-CALL-001` production hits **180 → 2**
+  (exact bare `callee_path` + `!conditional_guarded` + additive `FunctionRecord.name_is_lexical_binding`);
+  `PERF-JS-TYPE-001` production **14 → 2** (additive `UnaryEvent.operand_root_fresh`); `PERF-JS-ALLOC-003`
+  spread arm requires an assignment RHS (24 → 22 total); `findings[].symbol` resolves the narrowest record
+  (JS/TS/Python goldens re-baselined); `path_class` now catches `.spec.`/`test-*` (canary production
+  1,336 → 1,178); `.min.ts`/`.min.mts`/`.min.cts` skip gap closed; p6 compares both Atlas pages
+  (`GOLDEN_ARTIFACTS` 17 → 19). Canary re-run + exact pre/post diff: `docs/evidence/js-b5/real-code-canary.md`;
+  DoD transcript: `docs/evidence/js-b5/gate.txt`. No schema/catalog-count/dependency/rule-id change;
+  78 rules. Committed `1b23198` (+ docs record); merge remains `A-tb-006`.
 - Gate + merge: rebase on `main` after A step 12, run the Definition of Done below (every command exits 0), dispatch the parallel review panel (>=2 reviewer + >=2 requirements-reviewer, disjoint lanes) and require >=1 APPROVE per family with zero unresolved blocking findings; merge to `main` only with explicit founder approval.
 
 ## Required Specs

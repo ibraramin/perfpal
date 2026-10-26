@@ -2,13 +2,15 @@
 
 **Start this tab:** open `/home/shafin/Opencode/Perfpal-js-ts` (`feat/js-ts`), first message:
 
-> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute the merge gate (B4 is complete; see the handoff).`
+> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B6 — merge gate (B5 is committed `1b23198`; see the handoff).`
 
 **Next-session signpost (merge gate):** branch `feat/js-ts`, base `main @ 9a94905`; W0 `e7f5332`, W1 `90d5677`,
-W2 `edfc98a`, B3 `9dd19bb`, **B4 committed `6d6bcdf` (docs/contract/canary + label polish; plan DoD
-green; panel APPROVED: R1/R2/R3 + Q1/Q2).** The merge gate `A-tb-006` remains blocked on **founder approval** and on the B4-canary
-`PERF-JS-CALL-001` gate fix (`R-tb-017`: 150/180 production FPs from member/method-name collisions). No
-push. See `state/tracks/js-ts/handoff.md` for the full B4 record.
+W2 `edfc98a`, B3 `9dd19bb`, **B4 committed `6d6bcdf` (docs/contract/canary + label polish; panel
+APPROVED: R1/R2/R3 + Q1/Q2), **B5 committed `1b23198` (feat; plan DoD green, canary re-run, panel
+APPROVED R1/R2/R3 + Q1/Q2, recorded in the handoff; docs/state record).** `PERF-JS-CALL-001` production
+180 → 2 and `TYPE-001` 14 → 2, both remaining sets hand-verified true positives. The merge gate `A-tb-006`
+now remains blocked only on **founder approval** (+ the merge mechanics: rebase on current `main`, final DoD
+on the rebased tree). No push. See `state/tracks/js-ts/handoff.md` for the full B5 record.
 
 **Track handoff:** `state/tracks/js-ts/handoff.md` · **Spec:** `docs/specs/js-ts.md` · **Plan:** `docs/plans/js-ts.md` · **ADR:** `docs/adr/ADR-0011-js-ts-backend.md` · **Inventory:** `docs/architecture/js-ts.md` · **Canary evidence:** `docs/evidence/js-canary.md` · **Base:** `9a94905` (rebased on `main` @ `9a94905`; B1 base `821b984`).
 **Scope:** add JS, then TS/TSX, as first-class backends in the existing Rust core — like C/Rust/Python. **Not a rewrite.** A later release; not beta-blocking.
@@ -68,7 +70,8 @@ or schema bump yet.
 loops/trips, alloc/unary/await/try events, entry guards); wired `LanguageKind::Js` + longest-suffix
 `language_of` + `extract_unit`/`failed_unit`/`SUPPORTED_LANGUAGES` (`["c","js","python","rust"]`); implemented
 global directory skips (`node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage`) plus the
-JS-only `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js` and >2 MiB file guards; added the relative-specifier
+JS-only `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js` (B5 adds `*.min.ts`/`*.min.mts`/`*.min.cts`) and
+>2 MiB file guards; added the relative-specifier
 resolver (`.ts/.tsx/.js/.jsx/.mjs/.cjs/.mts/.cts` + `index.*`, bare = external, internal miss = `to: null`)
 and `package.json` `main`/`bin` entry declarations (`entry_declared`, IR-internal) with in-source
 `require.main === module` / `import.meta.url` guards; added the aggregator JS entry ladder (`script` HIGH /
@@ -209,11 +212,33 @@ Q1/Q2 APPROVED**, zero unresolved blocking findings; record in `state/tracks/js-
 **Next:** merge gate `A-tb-006` — founder approval + CALL-001 gate fix + canary re-run + full DoD on the
 rebased tree. No push until then.
 
-## Sessions B2–B4 (signposts)
+## Session B5 — post-B4 correctness follow-up — **committed `1b23198`; full DoD green; panel APPROVED (R1/R2/R3 + Q1/Q2)** (2026-10-26)
+
+**Goal:** close the B4 merge-gate blocker and the approved follow-ups without a schema, catalog-count,
+dependency or rule-id change; re-run the pinned canary; re-baseline the goldens.
+
+**Close-out:** `PERF-JS-CALL-001` production **180 → 2** (both verified true recursion) via exact bare
+`callee_path`, `!conditional_guarded`, and additive `FunctionRecord.name_is_lexical_binding`;
+`PERF-JS-TYPE-001` production **14 → 2** via additive `UnaryEvent.operand_root_fresh` (fresh-object gate);
+`PERF-JS-ALLOC-003` spread arm requires the literal to be an assignment RHS (24 → 22 total; error-message
+FP gone, member-target accumulators silent rather than mis-attributed); `findings[].symbol` resolves the
+narrowest record (JS/TS/Python goldens re-baselined; all other trees byte-identical); `path_class` catches
+`.spec.`/`test-*` (canary production denominator 1,336 → 1,178); `.min.ts`/`.min.mts`/`.min.cts` skip gap
+closed; p6 compares both Atlas pages (`GOLDEN_ARTIFACTS` 17 → 19). Evidence:
+`docs/evidence/js-b5/real-code-canary.md` (exact pre/post diff against the B4 binary) and
+`docs/evidence/js-b5/gate.txt` (66 suites / 991 passed; semantic 994; fmt/clippy/deny/double-run/native
+green). **Panel APPROVED** (R1/R2/R3 + Q1/Q2), recorded in `state/tracks/js-ts/handoff.md`; zero unresolved
+blocking findings. Committed `1b23198` (feat) + this docs record; no push;
+merge remains `A-tb-006` + founder approval.
+
+## Sessions B2–B5 (signposts)
 
 - **B2 — JS backend.** Parser + language detection + rules + schema values + fixtures/goldens; full gate; panel.
 - **B3 — TS/TSX backend.** Same for TS/TSX; reuse the JS path where possible; schema/ADR update only if needed.
-- **B4 — docs/contract/canary.** Golden/label pass, `js-catalog.md`, README/roadmap/modules/output-contract, semver + CHANGELOG note, real-code canary; review panel. **Implemented; panel APPROVED (R1/R2/R3 + Q1/Q2); merge remains founder-gated.**
+- **B4 — docs/contract/canary.** Golden/label pass, `js-catalog.md`, README/roadmap/modules/output-contract, semver + CHANGELOG note, real-code canary; review panel. **Implemented; panel APPROVED (R1/R2/R3 + Q1/Q2).**
+- **B5 — correctness follow-up.** CALL-001/TYPE-001/ALLOC-003 gates, symbol/path_class fixes, minified-TS
+  skip gap, Atlas golden comparison, canary re-run, goldens. **Committed `1b23198`; merge remains
+  founder-gated.**
 - Merge after A step 12; B is a later release.
 
 ## Guardrails / ownership

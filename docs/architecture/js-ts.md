@@ -256,7 +256,16 @@ the wire:
   the shared `EventMeta` (span, loop depth, innermost) and sorted/deduped `referenced_names` for the
   future loop-invariance gate.
 - `FunctionUnit.unaries: Vec<UnaryEvent>` — v1's only emitter is `delete obj.prop` (`op == "delete"`);
-  the operand is a `Shape`.
+  the operand is a `Shape`. B5 adds the additive `operand_root_fresh: bool` (serde-default): true when the
+  operand's receiver root was bound in the same function, in source order, to an object/array literal or
+  `new`. `TYPE-001` uses it to suppress the fresh-object FP class; params/globals/`this`/unknown roots stay
+  `false` and the rule fires.
+- `FunctionRecord.name_is_lexical_binding: bool` (B5, serde-default) — true when the record name is a
+  lexical binding visible inside the body (function declaration, named function expression, or an anonymous
+  function/arrow bound by a declarator or plain-identifier assignment). False for class/object methods and
+  property/field arrows, where the name is a property key: a bare same-name call there is delegation to an
+  outer function, not recursion. `PERF-JS-CALL-001` consumes it; C/Rust/Python set it for their function
+  records and leave module-record labels `false`.
 - `FunctionRecord.entry_declared: Option<bool>` — `Some(true)` on a synthetic `<module>` record proven to
   be an entry by a `package.json` `main`/`bin` target or an in-source `require.main === module` /
   `import.meta.url` guard; `Some(false)` on other JS module records; `None` on real functions and every
@@ -274,7 +283,8 @@ different. **Implemented in B2-W1:**
   `coverage`. Dot-directories (`.next`, `.nuxt`, `.svelte-kit`, `.cache`, …) were already skipped by the
   existing rule, so they have no entries.
 - **File-level skips are JS/TS-only** (`JS_SKIP_FILE_SUFFIXES` + `JS_MAX_FILE_BYTES`): `*.min.js`,
-  `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, and JS/TS files larger than **2 MiB** (the cap is checked with
+  `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, `*.min.ts`, `*.min.mts`, `*.min.cts`, and JS/TS files larger
+  than **2 MiB** (the cap is checked with
   `fs::metadata` before reading, so oversized bundles are never parsed). The bounded `package.json` walk
   (`src/scanner/mod.rs:847-884`) filters **directories only** (dot-dirs, the global skip set, symlinks); it
   does not apply the file-name/size filter.
@@ -388,12 +398,12 @@ counter twice and `cmp`s the output).
 | `R-tb-013` | Malformed/unreadable `package.json` could escalate a per-file problem to exit 3 | **mitigated (B2-W1):** malformed/unreadable manifests are ignored, the conventional/in-source ladder still runs, and the scan exits 0 (locked by the integration test) |
 | `R-tb-014` | Pinned TS grammar `0.23.2` cannot parse `f<typeof import("x")>()` (220 of 229 gemini-cli parse failures in the canary) | degrade honestly (partial parse); upgrade only via the ADR-0001 G5 node-types review; B3 snapshot tests |
 | `R-tb-015` | **Schema staging (two surfaces):** B2-W1 emitted `files[].language == "js"` against a bundled v1.7 artifact whose enums listed only `c`/`rust`/`python` | **resolved (B2-W2):** v1.8 landed in `src/schema/` + byte-identical `docs/schema/` copy; both enums hold all six tokens; v1.7 retained; version-pin sweep applied. A W1 build remains non-shippable (historical) |
-| `R-tb-017` | **`CALL-001` member-receiver gate (B4 canary, HIGH):** 150 of 180 production hits are member/method-name collisions (`this.foo()` inside `foo()`, `new X().foo()` inside `foo()`) because `receiver_root_of` returns `None` for non-identifier receivers; the rule's `receiver_root.is_some()` gate never sees them. 3/3 express FPs, 1/1 execa TP, 147/176 gemini strict member calls (+2 wrapped = 149/176 member-class) hand-verified | **merge-gate blocker:** fix the rule gate (bare `callee_path == function name` and/or `this`/`new` receiver roots), re-run the B4 canary, re-baseline the JS/TS goldens; not fixed in B4 (docs/label scope) |
-| `R-tb-018` | **`TYPE-001` fresh-object FP class (B4 canary, MEDIUM):** ~10 of 14 production hits delete from a just-built/copied object (the rule's own suggested rebuild), so the hidden-class mechanism does not apply | document the observed class and/or gate on a shared/receiver object; Info severity, not a merge blocker |
-| `R-tb-019` | **`findings[].symbol` first-hit (B4 canary, MEDIUM, JS/TS-specific):** the aggregator resolves symbols by first-hit over function records; the synthetic `<module>` record spans the file and is emitted first, so `metrics.json` reports `<module>` for every JS/TS finding. The ranked action list/key views resolve the narrowest function; full-detail rows still show `<module>` | fix `findings_with_symbols` to choose the narrowest containing record, re-baseline the JS/TS goldens; out of B4 scope (`A-tb-008`) |
-| `R-tb-020` | **`path_class` `.spec.` gap (B4 canary, MEDIUM, cross-language):** the classifier catches `.test.`/`_test.`/`_spec.` but not `.spec.` or hyphenated test dirs; ≥34 gemini-cli test-ish files (98 findings) are labelled `production`, skewing production-first ranking | extend `is_test_basename`/segment classification; cross-language, not JS-specific |
-| `R-tb-021` | **`ALLOC-001` trivial-literal noise (B4 canary, LOW):** 503 production hits, 2.25/kLOC; the loop-invariance gate cut the W0 candidate count roughly in half, but trivial option bags/reset/fallback objects still fire | the rule is Info/MEDIUM and remains within the W0 "noise cannon" warning; a later triviality gate is optional |
-| `R-tb-016` | **Lexical rule gates:** `ALLOC-001` models loop-invariance, not a separate escape analysis; `CALL-001` treats any earlier comparison as a visible base case; `LOOP-001` cannot test for an early exit (no break/return events in IR); `LOOP-007` proxies the frozen "small collection" class with loop trip count | **canary recorded (B4):** `docs/evidence/js-b4/real-code-canary.md`; the synthetic 1.0/1.0 KPI remains synthetic-only; the CALL-001/TYPE-001/ALLOC-001 findings are R-tb-017/018/021 |
+| `R-tb-017` | **`CALL-001` member-receiver gate (B4 canary, HIGH):** 150 of 180 production hits were member/method-name collisions (`this.foo()` inside `foo()`, `new X().foo()` inside `foo()`); `receiver_root_of` returns `None` for non-identifier receivers, so the old gate never saw them | **resolved (B5):** the rule now also requires `callee_path == function name` (exact bare callee), `!conditional_guarded`, and `FunctionRecord.name_is_lexical_binding` (methods/property arrows are not bindings, so bare same-name calls there are delegation). Canary production **180 → 2**, both verified true recursion; removed 167 member/wrapped + 11 guarded + 32 test delegation. Residual accepted FN: recursion guarded only by an `if`/`catch` ancestor. Evidence `docs/evidence/js-b5/real-code-canary.md` §3 |
+| `R-tb-018` | **`TYPE-001` fresh-object FP class (B4 canary, MEDIUM):** ~10 of 14 production hits deleted from a just-built/copied object (the rule's own suggested rebuild) | **resolved (B5):** additive `UnaryEvent.operand_root_fresh` (same-function literal/`new` binding) gates the rule. Canary production **14 → 2**, both parameter-object TPs; total 78 → 40. `process.env.*` deletes stay firing (residual accepted class) |
+| `R-tb-019` | **`findings[].symbol` first-hit (B4 canary, MEDIUM, JS/TS-specific):** the aggregator resolved symbols by first-hit, so the file-spanning `<module>` record won for every JS/TS finding | **resolved (B5):** `findings_with_symbols` now selects the narrowest containing record (line containment, width, id) mirroring the reporter key views. JS/TS goldens: 10/11 findings resolve to a real function and the single `<module>` is the module-level `ARCH-001` anchor; Python goldens improved the same way; only `report-js`/`report-ts`/`report-python` were re-baselined |
+| `R-tb-020` | **`path_class` `.spec.` gap (B4 canary, MEDIUM, cross-language):** `.spec.` basenames and hyphenated test dirs were labelled `production` | **resolved (B5):** `.spec.`/`-spec.` basenames, `test-*` basenames, and `test-*`/`*-test(s)`/`*-spec(s)` segments now classify as `test`. Canary production 1,336 → 1,178 (113 execa `test-d/` + 45 gemini-cli files); `src/test-data` keeps `fixture`; `latest`/`contest`/`attestation`/`spectrum`/`specification`/`prospect` stay production (unit-locked) |
+| `R-tb-021` | **`ALLOC-001` trivial-literal noise (B4 canary, LOW):** 503 production hits, 2.25/kLOC; the loop-invariance gate cut the W0 candidate count roughly in half, but trivial option bags/reset/fallback objects still fire | **still open (unchanged gate):** B5 canary 485 production / 2.30 per kLOC on the re-based denominator (18 hits moved to non-prod by `path_class`); a later triviality gate is optional |
+| `R-tb-016` | **Lexical rule gates:** `ALLOC-001` models loop-invariance, not a separate escape analysis; `CALL-001` uses exact-bare-callee + lexical-binding + conditional-guard gates; `LOOP-001` cannot test for an early exit (no break/return events in IR); `LOOP-007` proxies the frozen "small collection" class with loop trip count | **canary recorded (B5):** `docs/evidence/js-b5/real-code-canary.md` (supersedes the B4 run for rule gates); the synthetic 1.0/1.0 KPI remains synthetic-only. CALL-001 accepted FNs and TYPE-001 residual `process.env.*` are published limitations |
 
 **Accepted limitations added by B2-W1:**
 
@@ -401,9 +411,9 @@ counter twice and `cmp`s the output).
   their own function records; a non-arrow field-initializer expression and a `class_static_block` body belong
   to no record and are not event-scanned at all (so their calls/allocs never reach `stats.functions[]`).
 - **Single-file targets follow the same JS/TS skip policy as discovery.** `*.min.js`/`*.min.mjs`/`*.min.cjs`/
-  `*.bundle.js` and declaration-only `.d.ts`/`.d.mts`/`.d.cts` are skipped silently instead of being parsed
-  as C; `.ts`/`.mts`/`.cts`/`.tsx` are scanned normally (B3) and a genuinely unknown extension keeps the
-  documented C fallback.
+  `*.bundle.js`/`*.min.ts`/`*.min.mts`/`*.min.cts` and declaration-only `.d.ts`/`.d.mts`/`.d.cts` are skipped
+  silently instead of being parsed as C; `.ts`/`.mts`/`.cts`/`.tsx` are scanned normally (B3) and a
+  genuinely unknown extension keeps the documented C fallback.
 
 **Accepted limitations added by B3:**
 
@@ -440,9 +450,10 @@ on `main` @ `9a94905`. TS/TSX scanning landed in B3, so `SUPPORTED_LANGUAGES` is
 | `PERF-JS-LOOP-007` | warn | `js_loop_007` | `indexOf`/`includes`/`find`/`findIndex`/`some`/`every`/`filter` in a loop with a non-empty receiver root; silent on a canonical trip count < 16; unknown trip fires |
 | `PERF-JS-ASYNC-001` | warn | `js_async_001` | `await` at loop depth ≥ 1, only inside a function with `is_async` |
 | `PERF-JS-ASYNC-002` | warn | `js_async_002` | known synchronous Node API anywhere in an `is_async` function; **no loop requirement** |
-| `PERF-JS-CALL-001` | info | `js_call_001` | bare direct self-call (no receiver root); fires only when no comparison in the function starts before the call span — a visible base case is enough to stay silent |
+| `PERF-JS-CALL-001` | info | `js_call_001` | DIRECT bare self-call: `callee_name` == function name, `receiver_root` None, `callee_path` EXACTLY the function name (rejects `this.f`/`new X().f`/wrapped members), not `conditional_guarded` (if/ternary/catch/`&&`/`||` ancestor), enclosing record `name_is_lexical_binding` (methods/property arrows are delegation), and no `ComparisonEvent` before the call |
 | `PERF-JS-ARCH-001` | info | `js_arch_001` | resolved relative-import cycles via `break_cycles`; one finding per broken edge at that pair's earliest retained directive span |
-| `PERF-JS-TYPE-001` | info | `js_type_001` | `delete obj.prop` with a `MemberAccess` operand; the subscript form (`delete obj["k"]`) and a bare identifier (`delete x`) are excluded |
+| `PERF-JS-TYPE-001` | info | `js_type_001` | `delete obj.prop` with a `MemberAccess` operand; the subscript form (`delete obj["k"]`), a bare identifier, and a fresh same-function object root (`operand_root_fresh`) are excluded |
+| `PERF-JS-ALLOC-003` | info | `js_alloc_003` | `concat`/`slice` whose accumulator root the same loop reassigns, or a spread array literal that is the RHS of an assignment to the loop-reassigned root (`assigned_from_literal`); snapshots and non-accumulator spreads stay silent |
 
 Wiring: constants in `src/analyzer/finding.rs`; the ascending `PERF-JS-*` registry block and
 `RuleLanguage::{Js,Ts}` in `src/analyzer/mod.rs`; the `js|ts|tsx` partition to `js_units` (`Ts` is reserved
@@ -487,9 +498,11 @@ and empty in v1); 11 catalog entries and the 67 → 78 count/equality locks in `
 - **Findings are optimization candidates, not proven bottlenecks.** The tier is syntactic; no type
   information and no semantic resolver claim.
 - **`ALLOC-003` member/`this` accumulators and spread-root attribution:** `assigned_within` matches plain
-  identifier targets only, so `this.items = [...this.items, x]` is not detected; the spread arm reports
-  the alphabetically first loop-reassigned referenced name as `receiver_root` (the spread operand itself
-  is not identified in v1). Both are documented accepted limitations.
+  identifier targets only, so `this.items = [...this.items, x]` is not detected. B5's `assigned_from_literal`
+  additionally requires the spread literal to be the RHS of an assignment to the attributed root, so a
+  member-target accumulation (`currentTurn.content.parts = [...]`) is now silent rather than mis-attributed
+  to `currentTurn`; the spread operand itself is still not identified in v1. Both are documented accepted
+  limitations.
 - **Count synchronization is test-locked:** the reporter count, the benchmark active set, and the golden
   artifact sets move together when a rule lands; the 78 count is asserted in both suites.
 
@@ -620,7 +633,7 @@ languages keep the forward-compatible escaped fallback. The reporter unit test
   gemini-cli, 4 execa cycles). Cross-cutting: `path_class` misses `.spec.` / hyphenated test dirs, and
   `findings[].symbol` is `<module>` in `metrics.json` (the ranked action list/key views resolve the
   narrowest function; full-detail rows still show `<module>` until `A-tb-008`). See `R-tb-017`…
-  `R-tb-021`; the merge gate must not clear until `CALL-001` is fixed and the canary is re-run.
+  `R-tb-021`; **B5 resolved the `CALL-001` blocker and the cross-cutting data-quality follow-ups** (§17.5).
 - `report-js`/`report-ts` goldens are regenerated for the label change; the other four trees are
   byte-identical.
 - **B4-discovered data-quality follow-up (merge gate):** `findings[].symbol` in `metrics.json` is
@@ -637,3 +650,43 @@ deny, semantic-feature lint/tests, `examples-js`/`examples-ts` double-run, nativ
 targeted suites and the **parallel review panel: R1 + R2 + R3 + Q1 + Q2 all APPROVED, zero unresolved
 blocking findings** (the canary `CALL-001` defect remains the merge-gate follow-up `B-tb-004`/`A-tb-007`).
 B4 commit: `6d6bcdf`.
+
+## 18. Session B5 — post-B4 correctness follow-up
+
+**Goal:** close the B4 merge-gate blocker and the approved follow-ups without a schema, catalog-count,
+dependency or rule-id change; re-run the pinned canary; re-baseline the goldens.
+
+### 18.1 Rule-gate fixes
+
+- **`PERF-JS-CALL-001`** now requires the exact bare callee path (`callee_path == function name`), no
+  conditional ancestor, and a lexical name binding (§3 table; `R-tb-017` resolved). The two helper fields
+  are IR-internal and serde-defaulted: `FunctionRecord.name_is_lexical_binding` (JS computes it;
+  C/Rust/Python set it for function records) and `UnaryEvent.operand_root_fresh` (TYPE-001).
+- **`PERF-JS-TYPE-001`** gates the fresh-object class (`R-tb-018` resolved); `process.env.*` stays the
+  published residual class.
+- **`PERF-JS-ALLOC-003`** spread arm requires the literal to be the RHS of an assignment to the attributed
+  root; the error-message FP is gone and member-target accumulators are silent rather than mis-attributed.
+
+### 18.2 Aggregator and discovery
+
+- `findings[].symbol` resolves the narrowest containing record (mirrors `views.rs::containing_function`);
+  the JS/TS goldens now show real function names, with one module-level `ARCH-001` per tree.
+- `path_class` recognizes `.spec.`/`-spec.` basenames, `test-*` basenames and
+  `test-*`/`*-test(s)`/`*-spec(s)` segments (`R-tb-020` resolved); `test-d/` type tests are no longer
+  production. `src/test-data` keeps `fixture`.
+- The JS-family skip list grows to seven suffixes (`*.min.ts`/`*.min.mts`/`*.min.cts` added).
+
+### 18.3 Evidence and verification
+
+`docs/evidence/js-b5/real-code-canary.md` — same three pinned corpora, final B5 binary, exact pre/post
+finding-set diff against the B4 binary. Headline: production `CALL-001` 180 → 2 and `TYPE-001` 14 → 2,
+both remaining sets hand-verified true positives; production denominator 1,336 → 1,178 after the
+`path_class` correction. All three corpora are byte-deterministic modulo provenance.
+`docs/evidence/js-b5/gate.txt` — plan `js-ts` DoD transcript: fmt/clippy clean, 66 suites / 991 passed
+(semantic feature: 994), `cargo deny` green, `examples-js`/`examples-ts` double-runs identical, native
+check green. Goldens changed only in `report-js`/`report-ts`/`report-python` (narrowest symbols); all
+finding counts and chart/Atlas artifacts are unchanged.
+
+**Panel:** **APPROVED (R1/R2/R3 + Q1/Q2)**; zero unresolved blocking findings. The Q lanes' round-1 bookkeeping
+items (main-ledger revert + panel record + stale citations + commit inventory) were fixed and re-confirmed. B5 is committed `1b23198` (+ this docs record); merge remains `A-tb-006` (founder approval),
+no push.

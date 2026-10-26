@@ -1,0 +1,144 @@
+# Session B5 — plan `js-ts` Definition of Done transcript
+
+Tree: `feat/js-ts`, working tree of session B5 (base `main @ 9a94905`; B4 `6d6bcdf` + docs `683adab`).
+Date: 2026-10-26. `cargo` is not on the non-interactive PATH; all commands used
+`/home/shafin/.cargo/bin/cargo`. B5 feat commit `1b23198`; the docs record follows.
+
+## 1. Docs/state completeness
+
+```
+$ test -s docs/specs/js-ts.md && test -s docs/plans/js-ts.md \
+   && test -s docs/adr/ADR-0011-js-ts-backend.md \
+   && test -s docs/architecture/js-ts.md \
+   && test -s state/tracks/js-ts/session-state.json \
+   && test -s state/tracks/js-ts/handoff.md && echo "files: OK"
+files: OK
+```
+
+## 2. Format, lint, tests, licences
+
+```
+$ cargo fmt --all -- --check
+(no output)                                                        exit 0
+
+$ cargo clippy --locked --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s)     exit 0
+
+$ cargo test --locked
+    66 suites, 991 passed, 0 failed, 0 ignored                     exit 0
+    (lib tests 468; includes the new CALL-001/TYPE-001/ALLOC-003, aggregator symbol,
+     path_class, minified-TS and p6-Atlas locks)
+
+$ cargo deny check licenses
+    licenses ok                                                    exit 0
+```
+
+## 3. Semantic feature gate (default OFF; must stay green)
+
+```
+$ cargo clippy --locked --all-targets --features semantic-clang -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s)     exit 0
+
+$ PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang
+    66 suites, 994 passed, 0 failed                                exit 0
+```
+
+## 4. Byte-determinism (identical modulo `scan.started_at` / `scan.duration_ms`)
+
+```
+$ for corpus in examples-js examples-ts; do … twice into fresh dirs … done
+deterministic (modulo provenance): examples-js
+deterministic (modulo provenance): examples-ts
+```
+
+`diff -r charts/`, `cmp` on the bundled schema and `jq -S 'del(.scan.started_at,.scan.duration_ms)'`
+`diff` on `metrics.json` were all empty for both corpora.
+
+## 5. Native check (separate target dir; not a cross-compile)
+
+```
+$ CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target cargo check --locked --all-targets
+    Checking perfpal v0.2.0-beta.1
+    Finished `dev` profile [unoptimized + debuginfo] target(s)     exit 0
+```
+
+## 6. Targeted suites (post-panel re-run of the changed surfaces)
+
+```
+$ cargo test --locked --test javascript_backend
+    22 passed, 0 failed
+$ cargo test --locked --test typescript_backend
+    19 passed, 0 failed
+$ cargo test --locked --test examples_js_coverage
+    1 passed, 0 failed
+$ cargo test --locked --test examples_ts_coverage
+    1 passed, 0 failed
+$ cargo test --locked --test determinism_js
+    1 passed, 0 failed
+$ cargo test --locked --test determinism_ts
+    1 passed, 0 failed
+$ cargo test --locked --test precision_kpi
+    1 passed, 0 failed
+$ cargo test --locked --test js_ir_fixtures
+    1 passed, 0 failed
+$ cargo test --locked --test p6_hardening
+    4 passed, 0 failed (6 golden trees; Atlas pages now compared)
+$ cargo test --locked --lib aggregator
+    34 passed, 0 failed
+$ cargo test --locked --lib analyzer::heuristics::js
+    33 passed, 0 failed
+$ cargo test --locked --lib tree_sitter_javascript
+    27 passed, 0 failed
+```
+
+## 7. Golden surface
+
+```
+$ git diff --stat -- tests/golden
+ tests/golden/report-js/findings-detail.html     | 20 ++++-----
+ tests/golden/report-js/findings-detail.md       | 24 +++++------
+ tests/golden/report-js/metrics.json             |  2 +-
+ tests/golden/report-python/findings-detail.html | 56 ++++++++++++-------------
+ tests/golden/report-python/findings-detail.md   | 50 +++++++++++-----------
+ tests/golden/report-python/metrics.json         |  2 +-
+ tests/golden/report-ts/findings-detail.html     | 20 ++++-----
+ tests/golden/report-ts/findings-detail.md       | 24 +++++------
+ tests/golden/report-ts/metrics.json             |  2 +-
+ 9 files changed, 100 insertions(+), 100 deletions(-)
+```
+
+Only the narrowest-symbol re-baseline changed: the three trees whose findings previously resolved to
+`<module>` (JS/TS) or first-hit records (Python). Finding counts are unchanged in all six trees
+(`report` 15, `mixed` 9, `rust` 32, `python` 29, `js` 11, `ts` 11). `report`, `report-mixed`,
+`report-rust` and every `charts/`/Atlas artifact are byte-identical.
+
+## 8. Canary re-run (pinned corpora; full record in `real-code-canary.md`)
+
+```
+$ cargo build --locked                       (CARGO_TARGET_DIR=/var/tmp/perfpal-b5-canary)
+    Finished `dev` profile …                 exit 0
+
+$ for r in express execa gemini-cli; do scan twice + compare; done
+express charts identical / schema identical / metrics identical (masked)
+execa   charts identical / schema identical / metrics identical (masked)
+gemini-cli charts identical / schema identical / metrics identical (masked)
+```
+
+| corpus | files | prod | parse ok/partial | CALL-001 prod (B4 → B5) | TYPE-001 prod (B4 → B5) |
+|---|---:|---:|---|---:|---:|
+| express | 142 | 7 | 142/0 | 3 → 0 | 1 → 0 |
+| execa | 548 | 106 | 547/1 | 1 → 0 | 2 → 2 |
+| gemini-cli | 2,297 | 1,065 | 2,068/229 | 176 → 2 | 11 → 0 |
+| **total** | **2,987** | **1,178** | **2,757/230** | **180 → 2** | **14 → 2** |
+
+The two remaining `CALL-001` hits and the two remaining `TYPE-001` hits were reviewed in full; all four are
+true positives. The exact pre/post finding-set diff (B4 binary vs B5 binary) is in `real-code-canary.md` §3.
+A final post-review rebuild re-scanned all three corpora once more: the masked `metrics.json` files are
+byte-identical to the recorded two-run pair, so the table above is the final binary's output.
+
+## 9. Notes
+
+- `scripts/gates/task-gate.sh` is not present in this repo; the plan's commands were run directly and are
+  recorded above (L4 claim → evidence is satisfied by this transcript).
+- The canary writes only to `/var/tmp`; no corpus was modified and no network fetch was needed.
+- B5 is committed `1b23198` (feat) + this docs record; no push/rebase/merge was performed.

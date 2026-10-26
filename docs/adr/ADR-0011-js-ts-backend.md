@@ -63,7 +63,8 @@ duplicating ~12 implementations and two diverging catalogs.
 **Discovery:** directory skips are **global** because discovery is language-blind at directory level — skip
 `node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage` (dot-directories such as `.next`,
 `.nuxt`, `.svelte-kit`, `.cache` are already skipped today). File-level skips are **JS/TS-only**:
-`*.min.js`, `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, and files larger than **2 MiB** (minified bundles).
+`*.min.js`, `*.min.mjs`, `*.min.cjs`, `*.bundle.js`, `*.min.ts`, `*.min.mts`, `*.min.cts` (seven
+suffixes), and files larger than **2 MiB** (minified bundles).
 Without this, vendored JS dominates every finding and multi-megabyte minified files stall the scan. The
 existing C/Rust/Python corpora contain none of the skipped directories, so their finding sets and goldens do
 not move; the behavior change is documented in the output contract.

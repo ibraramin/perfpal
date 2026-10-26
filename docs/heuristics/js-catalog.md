@@ -1,7 +1,8 @@
 # Perfpal — JavaScript / TypeScript Performance Heuristic Catalog (`PERF-JS-*`)
 
-- **Status:** LANDED — plan `js-ts` B2-W2 (rules + catalog), extended by B3 (TS/TSX backend) and closed by B4
-  (docs/contract/canary). Every entry below was transcribed **read-code-first** from the implemented rule
+- **Status:** LANDED — plan `js-ts` B2-W2 (rules + catalog), extended by B3 (TS/TSX backend), closed by B4
+  (docs/contract/canary) and re-verified by B5 (real-code gate fixes to `CALL-001`, `TYPE-001` and
+  `ALLOC-003`; no catalog/schema/count change). Every entry below was transcribed **read-code-first** from the implemented rule
   functions (`src/analyzer/heuristics/js/mod.rs`), their parser-free IR tests
   (`src/analyzer/heuristics/js/tests.rs`), and the backend extraction seam
   (`src/scanner/backends/tree_sitter_javascript/`, parameterized by `Dialect` for TS/TSX).
@@ -96,19 +97,26 @@ entry. `PERF-TS-*` is reserved and empty: the canary produced no TS-only candida
   1. a `concat`/`slice` call whose non-empty `receiver_root` the same loop reassigns
      (`acc = acc.concat(x)`); or
   2. an array `AllocEvent` with `has_spread == true` whose `referenced_names` include a name the nearest
-     enclosing loop reassigns (`acc = [...acc, x]`).
+     enclosing loop reassigns **and whose assignment span contains the literal** (`assigned_from_literal`:
+     the assignment's identifier target equals the attributed root) — `acc = [...acc, x]`.
 - A snapshot call/literal whose root is never reassigned in the loop stays silent (the deliberate
   immutable-snapshot accepted FP class). `this.items = [...this.items, x]` is **not** detected
   (`assigned_within` matches plain identifier targets only).
-- **Spread-root attribution limitation:** the IR carries `referenced_names` only, not which name was the
-  spread operand. The spread arm reports the **alphabetically first** loop-reassigned referenced name as
-  `receiver_root` (the IR sorts the names), not necessarily the actual accumulator. This is documented and
-  pinned by an IR test; it is not fixed in v1. `ALLOC-003` member/`this` accumulators are likewise
-  undetected.
+- **Spread-arm assignment gate (B5):** the spread literal must be (part of) an assignment RHS to the
+  attributed root. A spread nested in an arbitrary expression
+  (`throw new Error(\`… ${[...visited, current].join(' -> ')}\`)`) is silent; a member-target accumulator
+  (`currentTurn.content.parts = [...]`) is also silent because the assignment target is not a plain
+  identifier, so it is no longer mis-attributed to `currentTurn`.
+- **Spread-root attribution (residual):** when several loop-reassigned referenced names also satisfy the
+  assignment gate, the rule reports the first matching name in the IR's sorted `referenced_names`, not
+  necessarily the actual accumulator. Member/`this` accumulators remain undetected (a member-root
+  attribution field is a recorded follow-up).
 - Evidence: `receiver_root`, `callee` (call arm) **or** `kind="spread-accumulator"` (spread arm),
   `loop_depth`.
 - B2-W0 context: 16 production hits vs 32 outside-loop mutation controls — loop-gating roughly halves the
-  candidate set and is load-bearing.
+  candidate set and is load-bearing. B5 canary: production 20 → 18 (total 24 → 22) — 17 `slice`/`concat`
+  consumption + 1 `concat` accumulator; the synthetic `acc = [...acc, item]` precision fixture still fires
+  (`docs/evidence/js-b5/real-code-canary.md` §4).
 
 **PERF-JS-STR-001 — String accumulation with `+=` inside loop** `(syntactic)`
 - Detects two syntactic shapes in a loop, both gated on a **string/template-literal RHS** (the B2-W0
@@ -175,19 +183,29 @@ entry. `PERF-TS-*` is reserved and empty: the canary produced no TS-only candida
   discriminates.
 
 **PERF-JS-CALL-001 — Direct recursion without a visible base case** `(syntactic)`
-- Detects: a **bare direct** self-call (`callee_kind == Direct`, `callee_name == enclosing function name`,
-  no receiver root) that fires **only when no comparison event in the function starts before the call
-  span**. Any earlier comparison is accepted as a visible base case. **B4 canary caveat (`R-tb-017`):** the
-  intended "member/`this` calls are excluded" gate is not effective — `receiver_root_of` returns `None`
-  for non-identifier receivers, so `this.foo()` inside `foo()` and `new X().foo()` inside `foo()` still
-  pass. 150 strict (+2 wrapped) of 180 production hits on the pinned corpora are this class; the fix is a merge-gate follow-up,
-  not a catalog change.
+- Detects: a **bare direct** self-call that satisfies ALL gates (B5, `R-tb-017`):
+  1. `callee_kind == Direct`, `callee_name == enclosing function name`, and `receiver_root` is `None`;
+  2. `callee_path` is **EXACTLY** the bare function name — `this.f`, `new X().f` and `(this.x as any).f`
+     are rejected because their callee text is not the bare identifier;
+  3. the call is **not** `conditional_guarded` (no `if`/ternary/`catch`/`&&`/`||` ancestor — a visible
+     base-case branch keeps it silent);
+  4. the enclosing record has `name_is_lexical_binding == true`. A class/object method or a
+     property/field arrow derives its name from a **property key**, not a binding, so a bare same-name
+     call there resolves to an outer function — delegation, not recursion; and
+  5. no `ComparisonEvent` in the same function starts before the call span (a visible base case).
 - Why: each recursive frame grows the stack and repeats frame setup; convert to a loop with an accumulator
   or add an explicit base-case guard.
 - Evidence: `function`, `loop_depth`.
-- Accepted FP class: a recursive tree walk with small depth.
+- Accepted FP class: a same-name wrapper assignment (a local delegate named like the enclosing function
+  shadows the recursion), plus a recursive tree walk with small depth.
+- Accepted **false-negative** class (documented, B5): recursion whose only guard is an `if`/`catch`
+  ancestor is silenced. The B5 canary observed 11 such sites (10 gemini-cli production + 1 execa
+  catch-retry); the rule is Info severity and the pre-fix FP rate made the extra recall worthless.
 - B2-W0 context: 102 of 108 production self-calls are guarded; only 6 are unguarded, so the visible-base-case
   predicate is load-bearing. The predicate is intentionally coarse (any earlier comparison counts).
+- B5 canary: production 180 → 2 (total 212 → 2); both remaining hits are genuine recursion
+  (`trackerService.ts` `check` const-arrow DFS and `process-utils.ts` `getAllDescendants` const-arrow tree
+  walk) — 100% of production hits (`docs/evidence/js-b5/real-code-canary.md` §3).
 
 **PERF-JS-ARCH-001 — Import cycle** `(syntactic)`
 - Detects: cycles over **resolved relative-import edges only** (`edge.resolved` with `to_path`), one finding
@@ -203,50 +221,62 @@ entry. `PERF-TS-*` is reserved and empty: the canary produced no TS-only candida
   reason to overstate the 6.
 
 **PERF-JS-TYPE-001 — `delete` on an object property** `(syntactic)`
-- Detects: a `UnaryEvent` with `op == "delete"` and a `MemberAccess` operand. The subscript form
-  (`delete obj["k"]`) and a bare identifier (`delete x`) are excluded.
+- Detects: a `UnaryEvent` with `op == "delete"` and a `MemberAccess` operand that is **not** a fresh-object
+  receiver (see gate). The subscript form (`delete obj["k"]`) and a bare identifier (`delete x`) are
+  excluded.
+- **Fresh-object gate (B5, `R-tb-018`):** silent when `UnaryEvent.operand_root_fresh` is true — the
+  deleted member's receiver root was bound in the same function, in source order, to an object literal,
+  an array literal or `new`. A per-call object is the rule's own suggested rebuild, so no long-lived
+  hidden class is polluted. `this`, parameters, globals and unknown roots are never tracked as fresh and
+  still fire.
 - Why: deleting a property forces a V8 hidden-class → dictionary-mode transition that slows every later
   access. Setting the property to `undefined` or rebuilding the object is the candidate fix.
 - Evidence: `property` (empty string when the property name is unavailable).
-- Accepted FP class: intentional cache eviction (rare).
+- Accepted FP class: intentional cache eviction (rare), plus a `process.env.*` delete — the residual
+  accepted class (`delete process.env.X` is the real eviction idiom; most subscript forms were already
+  excluded).
 - B2-W0 context: 31 production hits vs 182 `.delete(...)` member-call controls (the control is broad: it does
   not prove the receiver is a `Map`/`Set`).
+- B5 canary: production 14 → 2 (total 78 → 40); both remaining hits delete from a parameter — execa
+  `delete error.maxBufferInfo` and `delete state.currentIterable`. Suppressed: 6 `mergedConfig` deletes,
+  2 `newPart` deletes and 1 express per-call `opts` delete (plus test-file fresh deletes)
+  (`docs/evidence/js-b5/real-code-canary.md` §5).
 
 ---
 
-## 4. Real-code evidence (B4 re-run)
+## 4. Real-code evidence (B5 re-run)
 
-The B2-W0 canary measured candidate frequency; the **B4 re-run measures the implemented rules** on the same
-pinned corpora (express `v5.1.0`, execa `v9.6.1`, gemini-cli `v0.65.0`), split by `path_class`, with a
-deterministic hand-verified sample per rule. Results and the exact commands live in
-[`docs/evidence/js-b4/real-code-canary.md`](../evidence/js-b4/real-code-canary.md). The measurement is
-**hits + sample FP rate**, not a corpus-wide precision claim: a bounded sample cannot replace labeled
-ground truth, and the synthetic 1.0/1.0 KPI remains synthetic-only (`R-tb-016`).
+The B2-W0 canary measured candidate frequency; the **B4 re-run** measured the implemented rules and the
+**B5 re-run closed the B4 merge-gate blockers** on the same pinned corpora (express `v5.1.0`, execa
+`v9.6.1`, gemini-cli `v0.65.0`), split by `path_class`. Results and the exact commands live in
+[`docs/evidence/js-b5/real-code-canary.md`](../evidence/js-b5/real-code-canary.md); the pre-fix B4 result
+stays in [`docs/evidence/js-b4/real-code-canary.md`](../evidence/js-b4/real-code-canary.md). The
+measurement is **hits + a hand-verified sample**, not a corpus-wide precision claim: a bounded sample cannot
+replace labeled ground truth, and the synthetic 1.0/1.0 KPI remains synthetic-only (`R-tb-016`).
 
-**Observed B4 result (2026-10-26).** All 11 rules fired across the pinned corpora; the canary's main
-finding is a rule-gate defect, not a catalog change:
+**Observed B5 result (2026-10-26).** The B5 tree fixes the three rule-gate defects; the catalog
+(78 = 23 C + 11 JS + 22 PY + 22 RS), the 11-rule set, rule ids/severities, schema v1.8 and dependencies are
+unchanged:
 
-- **`PERF-JS-CALL-001` is not merge-ready.** 180 production hits; 150 are member/method-name collisions
-  (`this.foo()` inside `foo()`, `new X().foo()` inside `foo()`) because the JS extractor's
-  `receiver_root_of` returns `None` for non-identifier receivers, so the `receiver_root.is_some()` gate
-  never sees them. 3/3 express and the sampled gemini-cli member calls are FPs; 1/1 execa is a genuine
-  unguarded self-call. The fix belongs in the rule gate (`callee_path == function name` and/or a
-  `receiver_root_of` fix for `this`/`new`) and is a **merge-gate follow-up**, not a B4 change.
-- **`PERF-JS-TYPE-001`** has a fresh-object FP class: deleting a property from a just-created/copied object
-  (the rule's own suggested rebuild) is ~10 of 14 production hits. Info severity; document or gate later.
-- **`PERF-JS-ALLOC-001`** remains noisy but gated: 503 production hits, mostly real per-iteration
-  literals, with trivial option bags/reset literals in the sample. Info/MEDIUM; the W0 noise warning
-  stands.
-- **`PERF-JS-ALLOC-003`** is mostly the intended `slice`-consumption shape (17/20); one error-message
-  spread is an FP. The spread-root attribution limitation is visible.
-- **`PERF-JS-ASYNC-002`** is test-skewed as predicted (153 production vs 1,028 non-production).
+- **`PERF-JS-CALL-001` is merge-ready.** Production 180 → 2 (total 212 → 2); both remaining hits are
+  genuine recursion. The 210 removed findings are 167 member/wrapped calls + 43 bare calls (11 guarded
+  production/target + 32 test delegation). The accepted false-negative class is `if`/`catch`-guarded
+  recursion (§3 of the evidence doc).
+- **`PERF-JS-TYPE-001`** production 14 → 2, both parameter-object TPs; total 78 → 40. The fresh-object
+  gate (§5 of the evidence doc) suppresses the 6 `mergedConfig` + 2 `newPart` + 1 express `opts` class;
+  `process.env.*` deletes remain the residual accepted class.
+- **`PERF-JS-ALLOC-003`** production 20 → 18 (total 24 → 22): 17 `slice`/`concat` consumption + 1
+  `concat` accumulator; the error-message spread FP and the member-target mis-attribution are gone (§4).
+  `ALLOC-001` remains noisy but gated (485 production hits; the W0 noise warning stands).
+- **`PERF-JS-ASYNC-002`** remains test-skewed (134 production vs 1,047 non-production).
 - **`PERF-JS-ARCH-001`** remains structurally blind in alias monorepos (0 on gemini-cli; 4 execa cycles).
 
-Cross-cutting canary findings (tracked in the handoff, not rule defects): `path_class` does not recognize
-`.spec.` / hyphenated test dirs, and `findings[].symbol` in `metrics.json` reports `<module>` for every
-JS/TS finding because the aggregator resolves symbols by first-hit over the synthetic `<module>` record.
-The ranked action list/key views resolve the narrowest function; full-detail rows still show `<module>`
-until `A-tb-008`.
+Cross-cutting B5 fixes (evidence §6): `path_class` now recognizes `.spec.`/`-spec.` basenames, `test-*`
+basenames and `test-*`/`*-test(s)`/`*-spec(s)` segments (production total 1,336 → 1,178; `src/test-data`
+stays `fixture` and `latest`/`contest`/`attestation`/`spectrum`/`specification`/`prospect` stay
+production); `findings[].symbol` resolves the **narrowest** containing function record (line containment,
+width, then id), so 10/11 JS/TS golden findings resolve to a real function and the single `<module>` is the
+module-level `ARCH-001` anchor (Python goldens improved the same way).
 
 The re-run does not change the catalog. Any future rule change must re-run that evidence and update this
 section; the dispositions in `docs/architecture/js-ts.md` §8 remain the frozen baseline.
@@ -259,8 +289,8 @@ section; the dispositions in `docs/architecture/js-ts.md` §8 remain the frozen 
 - Relative specifiers only; bare specifiers, `node:` and URLs are external. Unresolved internal imports stay
   data-only (no finding).
 - Declaration-only `.d.ts`/`.d.mts`/`.d.cts` files and minified bundles (`*.min.js`, `*.min.mjs`,
-  `*.min.cjs`, `*.bundle.js`) are skipped; an unlabeled minified file under 2 MiB is still parsed.
-  `.min.ts`/`.min.mts`/`.min.cts` are **not** in the skip list (known gap, `A-tb-009`).
+  `*.min.cjs`, `*.bundle.js`, `*.min.ts`, `*.min.mts`, `*.min.cts` — seven suffixes) are skipped for both
+  discovery and single-file targets; an unlabeled minified file under 2 MiB is still parsed.
 - JSX is parsed structurally, not semantically; CJS/ESM kind is not inferred; dynamic `require`/`import()`
   with computed specifiers is invisible.
 - **Type land is never scored:** interfaces, type aliases, ambient `declare` blocks, overload signatures, and
@@ -268,8 +298,13 @@ section; the dispositions in `docs/architecture/js-ts.md` §8 remain the frozen 
   position while emitting no finding from it.
 - **Type-only edges are erased:** `import type`/`import typeof`/`export type` produce no include edge, so
   ARCH-001 cannot report a type-only cycle (inline `{ type X, y }` specifiers keep the value edge).
-- **Spread-root attribution** reports the alphabetically first loop-reassigned referenced name, not the
-  spread operand (see ALLOC-003); member/`this` accumulators are undetected.
+- **Spread-arm attribution** requires the literal to be the RHS of an assignment to the attributed root
+  (`assigned_from_literal`); when several candidates match, the first in sorted `referenced_names` is
+  reported, not necessarily the spread operand. Member-target accumulators (`x.y = [...]`) are now silent
+  rather than mis-attributed; member/`this` accumulators remain undetected (see ALLOC-003).
+- **Fresh-object `delete`:** `TYPE-001` suppresses a delete whose receiver root is bound in the same
+  function to an object/array literal or `new`; a parameter, global, `this` or unknown receiver still
+  fires, and `process.env.*` deletes are the residual accepted class.
 - **Class bodies are not event owners:** methods and arrow-function fields are their own records; non-arrow
   field-initializer expressions and `class_static_block` bodies are not event-scanned.
 - **Pinned TS grammar limitation:** `f<typeof import("x")>()` fails to parse on
@@ -286,6 +321,7 @@ section; the dispositions in `docs/architecture/js-ts.md` §8 remain the frozen 
 - B2-W0 frequency evidence: [`docs/evidence/js-canary.md`](../evidence/js-canary.md) ·
   `docs/evidence/js-canary/run.sh` · `tools/js_canary.rs`
 - B4 real-code re-run: [`docs/evidence/js-b4/real-code-canary.md`](../evidence/js-b4/real-code-canary.md)
+- B5 real-code re-run (gate fixes): [`docs/evidence/js-b5/real-code-canary.md`](../evidence/js-b5/real-code-canary.md)
 - Spec / plan / ADR: [`docs/specs/js-ts.md`](../specs/js-ts.md) ·
   [`docs/plans/js-ts.md`](../plans/js-ts.md) · [`ADR-0011`](../adr/ADR-0011-js-ts-backend.md)
 - Cross-language model: [`catalog-v1.md`](./catalog-v1.md) · [`rust-catalog.md`](./rust-catalog.md)
