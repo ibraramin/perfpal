@@ -7,8 +7,8 @@ snapshot; `main` is the completed Atlas v2 line. `ADR-0012` records the recommen
 merge now. The next implementation (after founder approval) is a **main→branch sync** (7 conflicted
 paths) followed by the **story packaging slice** (self-contained `story.html` + `perfpal story
 <repo>` CLI) and then §5. No push, no merge, no A2/ship claim.
-- **Actual divergence:** 63 story commits ahead / 23 main commits behind (the recorded 61/8 was
-  stale); merge base `821b984`.
+- **Actual divergence at the `988aea2` snapshot:** 63 story commits ahead / 23 main commits behind
+  (the recorded 61/8 was stale; 64 ahead at the record commit); merge base `821b984`.
 - **Main v2 is DONE:** steps 11–15 (`189df91`, `9a94905`, step 13 `86c0537`/D-pf-253, A2 `D-pf-255`,
   step 15 `57d91a2`/D-pf-256/257/258); `atlas-build` done; `R-pf-109` closed as a record. **Do not
   re-run step 11 on this branch.**
@@ -16,7 +16,7 @@ paths) followed by the **story packaging slice** (self-contained `story.html` + 
   463,490 B, first frame 1,706 ms); ADR-0011 decided companion, A12 unchanged; F8 deferred.
 - **IDs remapped** to avoid main collisions: D-pf-251..255 → D-pf-260..264; A-pf-124/125 →
   A-pf-126/127; D-pf-259 (ADR-0011) and D-pf-265 (ADR-0012) are live; D-pf-266 is the archive
-  pointer. The ledger keeps the old IDs + a `decision_id_remap` entry.
+  pointer. The ledger keeps the old IDs as cold `superseded` records with a `ref` to the new IDs.
 - **Not yet:** the story is not shipped; the companion still `fetch()`es data and has no CLI entry.
 
 ## Core-integration rule (live, founder 2026-10-24)

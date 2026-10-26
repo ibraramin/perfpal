@@ -265,7 +265,8 @@ change; `layout_version`/`flow_version` stay 1.
 **Why.** S4 proves the mechanism (F1–F7; 3k 44/44; 304/304; page 463,490 B; first frame 1,706 ms;
 F6 byte-identity; F5 double-scan determinism), and the F1/scale reads are PASS-WITH-NITS, no
 blockers. But the founder has **not used the post-S4 story**: the 2026-10-24 D2 session reviewed
-**D1** (presentation accepted, information not insightful: D-pf-251), and F8 is deferred. The
+**D1** (presentation accepted, information not insightful: D-pf-260, formerly D-pf-251), and F8 is
+deferred. The
 pre-registered **§5 graduation session on the post-S4 artifact** has not run. In-report controls also
 require a second script + data channel + deterministic/offline gates and a port of the `sim.js`
 player into the Rust emitter. The companion itself is not shipped: it `fetch()`es its data and needs
@@ -327,9 +328,30 @@ and `build_atlas_view` survive on main.
 `D-pf-255→264`; `A-pf-124→126`, `A-pf-125→127`. `D-pf-259` (ADR-0011) unchanged; `D-pf-265` records
 this reconciliation; `D-pf-266` is the hot-state archive pointer for `D-pf-238..243`. `R-pf-109`
 is closed on this branch as a main-line record; `R-pf-112` stays open until the sync/packaging lands.
-The ledger keeps the old IDs plus a `decision_id_remap` entry.
+The ledger keeps the old IDs as cold `superseded` records with a `ref` to the new IDs.
 
 **Direction (recommended, pending approval).** **C** — no story→main merge until the §5 founder
 session; next is a `main`→branch sync, then the self-contained story + CLI packaging slice. A/B are
 recorded in ADR-0012 with tradeoffs and "what would change my mind"; A would use the merge-based A′
 (not a literal rebase) to preserve evidence SHAs.
+
+### Panel record (R-pf-112)
+
+- **Round 1** (4 lanes): R1 **APPROVE**; R2/Q1/Q2 **CHANGES_REQUESTED** — terminal statuses in the
+  hot state, archive claims not backed by the ledger, schema-invalid custom remap record, stale
+  canonical handoff, unanchored evidence, `current_phase` >120 chars.
+- **Fixes:** hot state now has only live/open/active entries (6,337 B); the ledger was rebuilt from
+  `988aea2` with schema-conformant records (archived D-pf-238..243; superseded D-pf-251..255,
+  including a new D-pf-252 record alongside the preserved legacy wrapper; superseded A-pf-124/125;
+  resolved R-pf-104/109 attributed to main; settled A-pf-118/120/126/127); `current_phase` 97 chars;
+  canonical handoff regenerated; plan and AGENT-BRIEF banners added.
+- **Round 2:** Q1 **APPROVED**; R2/Q2/fresh **CHANGES_REQUESTED** — missing D-pf-252 superseded
+  record, stale custom-remap prose in activeContext/track handoff, pre-claimed close commit,
+  non-runnable status-contract row. Fixed: D-pf-252 record appended; prose corrected; handoff
+  commands anchored; close claims marked pending.
+- **Round 3:** R2 **APPROVE**; Q2 and the fresh lane **CHANGES_REQUESTED** only on a pre-claimed
+  round-3 line (no verdict followed). Fixed: this line records the actual verdicts; Q2's evidence
+  checks and the fresh lane's contract checks otherwise passed.
+- **Final confirmation:** R-final lane **CHANGES_REQUESTED** only on this pre-claim line → corrected
+  here; no state/ledger/code finding. The record is truthful: the close commit is the one containing
+  this handoff.

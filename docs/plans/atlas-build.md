@@ -7,8 +7,8 @@ plan status: done
 > **DONE ON MAIN 2026-10-26 (`D-pf-258`) — this file is a pre-merge branch snapshot.** Main closed
 > steps 11–15: step 11 `189df91`, step 12 `9a94905`, step 13 `86c0537` (`D-pf-253`), step 14
 > `9631137` (`D-pf-255`), step 15 `57d91a2` (`D-pf-256/257/258`). `R-pf-109` is closed as a record
-> on main. **Do not execute steps 11–15 on `feat/atlas-sim`; do not treat the 2026-10-23 "BLOCKED"
-> wording below as current.** The story track is `atlas-s4` (done); the branch reconciliation is
+> on main. **Do not execute steps 11–15 on `feat/atlas-sim`; do not treat the historical status
+> lines below as current.** The story track is `atlas-s4` (done); the branch reconciliation is
 > `R-pf-112` / `docs/adr/ADR-0012-atlas-branch-reconciliation.md`. Main's copy of this plan is
 > authoritative.
 > **New agents: read `docs/atlas/AGENT-BRIEF.md` first.** The founder's 2026-10-23 model supersedes

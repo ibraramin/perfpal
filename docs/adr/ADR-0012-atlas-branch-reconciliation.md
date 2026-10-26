@@ -12,10 +12,11 @@
 
 - **Snapshot.** `feat/atlas-sim` is at `988aea2` (story S1–S4 + ADR-0011); `main` is at `c797004`
   (Atlas v2 DONE). Merge base `821b984` (v2 steps 9–10).
-- **Actual divergence: 63 story commits ahead, 23 main commits behind** (`git rev-list --left-right
-  --count main...HEAD` → `23 63`). The recorded "61 ahead / 8 behind" in
-  `state/tracks/atlas-sim/handoff.md` and `docs/activeContext.md` is stale; this ADR's count is
-  authoritative.
+- **Actual divergence at the snapshot: 63 story commits ahead, 23 main commits behind**
+  (`git rev-list --left-right --count main...988aea2` → `23 63`). This record commit adds one docs
+  commit, so at `5250451` the branch is 64 ahead; the reconciliation facts use `988aea2`. The
+  recorded "61 ahead / 8 behind" in `state/tracks/atlas-sim/handoff.md` and `docs/activeContext.md`
+  is stale; this ADR's count is authoritative.
 - **Main is the completed v2 line.** Steps 11–15 are done on main: step 11 `189df91`, step 12
   `9a94905`, step 13 `86c0537` (approved `D-pf-253`), step 14 `9631137` (A2 delegated pass
   `D-pf-255`), step 15 `57d91a2` (memchr residual `D-pf-256`; A2 closure `D-pf-257`; plan done
@@ -25,9 +26,9 @@
   the story remains a standalone companion; A12 is unchanged; the §5 founder session has not run;
   the companion is fetch/HTTP-only, has no `perfpal story` entry point, and is not shipped. F8 is
   deferred.
-- **The branch's own status is stale.** Its `atlas-build` copy is `active` with a 2026-10-23
-  "BLOCKED … steps 14–15" banner; its state says "step 11 next" and `R-pf-109` open. Main has
-  already closed steps 11–15. **Do not re-run step 11 from this branch.**
+- **The branch's own status was stale.** At the snapshot, its `atlas-build` copy was `active` with a
+  2026-10-23 "BLOCKED … steps 14–15" banner; its state said "step 11 next" and `R-pf-109` open.
+  Main has already closed steps 11–15. **Do not re-run step 11 from this branch.**
 - **A one-pass sync is feasible but not free.** `git merge-tree --write-tree --name-only main HEAD`
   reports seven conflicted paths: `README.md`, `docs/activeContext.md`,
   `src/reporter/atlas_render.rs`, `src/reporter/mod.rs`, `state/archive/ledger.jsonl`,
@@ -40,8 +41,8 @@
 - **IDs collide across the two lines.** Branch `D-pf-251/252/253/254/255` mean D2 verdict / S1 / S2 /
   S3 / S4; main uses the same IDs for F-treemap / archived / step-13 approval / archived / A2 PASS.
   Branch `A-pf-124/125` (S4 / ADR-0011) collide with main's commit-publish action and post-beta
-  follow-ups. `R-pf-109` is open here and closed on main. `D-pf-259` is unique to the branch (main's
-  highest is 258).
+  follow-ups. At the snapshot, `R-pf-109` was open here and is closed on main. `D-pf-259` is unique
+  to the branch (main's highest is 258).
 - **Product constraint.** `beta-release` is active but the publish gate is founder-owned and parked
   (`B-pf-001` contact, `B-pf-002` signing secrets). Merging the story now would put an HTTP-only,
   unshipped companion and the opt-in `--story` flag on the release line before the founder has used
@@ -129,8 +130,12 @@
 - **`atlas-build`:** marked **done** (matching main `D-pf-258`) with a snapshot banner: this branch's
   copy is a pre-merge snapshot; **do not execute steps 11–15 here**. The story track is `atlas-s4`
   (done).
-- **Historical ledger:** old IDs stay in `state/archive/ledger.jsonl` as history; a
-  `decision_id_remap` entry records the mapping. Live docs/state use the new IDs.
+- **Historical ledger:** old IDs stay in `state/archive/ledger.jsonl` as `superseded` records with a
+  `ref` to the new ID; `D-pf-265` records the remap. Live docs/state use the new IDs. This is a
+  one-time exception to `STATE-SCHEMA.md` §2 ("never reused or renumbered"): the branch and main
+  independently allocated the same IDs while divergent, and the branch is unpushed. No further
+  renumbering is authorized. The hot file keeps only live/open/active entries; closed/done records
+  are cold (`resolved`/`settled`/`archived`).
 
 ## Risks
 
@@ -152,13 +157,15 @@
 
 | Claim | Command / artifact | Result |
 |---|---|---|
-| Divergence | `git rev-list --left-right --count main...HEAD` | `23 63` (main-only / branch-only) |
-| Merge base | `git merge-base main HEAD` | `821b984` |
-| Conflict set | `git merge-tree --write-tree --name-only main HEAD` | 7 paths (listed above) |
+| Divergence (snapshot) | `git rev-list --left-right --count main...988aea2` | `23 63` (main-only / branch-only) |
+| Divergence (record HEAD) | `git rev-list --left-right --count main...5250451` | `23 64` (the record commit adds one) |
+| Merge base | `git merge-base main 988aea2` | `821b984` |
+| Conflict set | `git merge-tree --write-tree --name-only main 988aea2` | 7 paths (listed above) |
 | Main v2 status | `git show main:docs/plans/atlas-build.md`; `git show main:state/session-state.json` | plan done; `D-pf-258`; `R-pf-109` closed |
-| Branch gate | `docs/evidence/atlas-sim/GATE.txt` | PASS; 897 tests; 304/304; 3k 44/44 |
-| State JSON | `jq empty state/session-state.json` | exit 0 |
-| Record scope | `git diff --name-status` | docs/state only; no `src/`, `sim/`, schema, Cargo |
+| Branch gate | `docs/evidence/atlas-sim/GATE.txt`; `NOTES.md:184` | PASS; 897 tests (NOTES), 304/304, 3k 44/44 |
+| State JSON + budget | `jq empty state/session-state.json`; `test "$(wc -c < state/session-state.json)" -le 8192` | exit 0; 6,337 B at the close |
+| Record scope | `git diff --name-status 988aea2..5250451` | docs/state only; no `src/`, `sim/`, schema, Cargo |
+| Worktree | `git status --porcelain` | pending at write time; expected 0 lines after the close commit |
 
 ## References
 

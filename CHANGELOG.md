@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Branch reconciliation record — `R-pf-112` (2026-10-26, ADR-0012; docs/state only).**
-  `feat/atlas-sim` is **63 story commits ahead / 23 behind** `main` (the recorded 61/8 was stale;
-  merge base `821b984`). Main's Atlas v2 steps 11–15 and `R-pf-109` closure are authoritative.
+  `feat/atlas-sim` is **63 story commits ahead / 23 behind** `main` at the `988aea2` snapshot
+  (the recorded 61/8 was stale; 64 ahead at the record commit; merge base `821b984`). Main's Atlas v2 steps 11–15 and `R-pf-109` closure are authoritative.
   ADR-0012 records the recommended direction **C**: keep the story branch separate until the §5
   founder session; next is a main→branch sync plus the self-contained story + CLI packaging slice,
   not a story→main merge. Colliding IDs are remapped (`D-pf-251..255` → `260..264`,

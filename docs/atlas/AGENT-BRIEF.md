@@ -1,7 +1,12 @@
 # Atlas — new-agent brief (read this first)
 
-**Status:** Atlas steps 1–8 implemented; **A2/steps 9–10 BLOCKED** by the 2026-10-23 visual
-regression audit (`R-pf-109`). Do **not** run A2, ship, or mark the plan done.
+> **2026-10-26 status (authoritative):** main closed Atlas v2 steps 11–15 (`D-pf-258`); step 13
+> approved (`D-pf-253`); A2 delegated pass (`D-pf-255/257`); `R-pf-109` closed as a record. This
+> brief is the 2026-10-23 audit snapshot. On `feat/atlas-sim`, **do not re-run steps 11–15**; the
+> branch reconciliation is `R-pf-112` / `docs/adr/ADR-0012-atlas-branch-reconciliation.md`.
+
+**Status (at the 2026-10-23 audit):** Atlas steps 1–8 implemented; **A2/steps 9–10 BLOCKED** by the
+2026-10-23 visual regression audit (`R-pf-109`). Do **not** run A2, ship, or mark the plan done.
 **Owner:** orchestrator. **Audience:** every agent touching `src/reporter/atlas_*`, the Atlas specs,
 the V8 evidence, or the Atlas plan.
 
@@ -91,10 +96,10 @@ the founder's eye. The data/model are fine.
 - Do **not** delete the F treemap or the weight data; F is undecided, not rejected.
 - Do **not** mark `map-build` done; A1b stays open; holdouts stay vaulted.
 
-## 5. Current status and next step
+## 5. Status at the 2026-10-23 audit (historical)
 
-- `R-pf-109` (high) is open; `A-pf-118` (steps 9–10) is **blocked**.
-- Next session is **visual rework**, not A2:
+- At the audit, `R-pf-109` (high) was open; `A-pf-118` (steps 9–10) was **blocked**.
+- The next session at that time was **visual rework**, not A2:
   1. Side-by-side G vs Atlas; agree the first-page composition with the founder.
   2. Fix the objective defects: fold fit, duplicate chrome, clipped footer, truncation, edge
      labels/path contrast, unreached label, page height.
