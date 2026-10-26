@@ -3,7 +3,7 @@
 **Worktree:** `/home/shafin/Opencode/Perfpal-atlas-sim` · branch `feat/atlas-sim`
 **Track:** `/home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md`
 **Status:** **D2 done + S1 committed (`5faacb7..63914f9`) + S2 committed and gated
-(`2108117..b8359ae`) + S3 committed (`0ddf4ad..9e23aa6`), not pushed.** D1 presentation was accepted
+(`2108117..b8359ae`) + S3 committed (`0ddf4ad..f3e8804`), not pushed.** D1 presentation was accepted
 by the founder; the requirement was re-sealed as a core-fed temporal showcase
 (`docs/specs/atlas-story.md`); S1 made the story read core JSON, S2 added data movement on the edges,
 S3 added I/O effects (P2) with the stores/trust render. S4 (scenes at 3k files) is next. No push, no
@@ -95,7 +95,7 @@ merge to `main`.
 - **Record:** `docs/atlas/core-probes.md` P2 `prototype` (S3 record with commit, table rules, guards,
   fixture counts, limits, real implementation); spec §9 S3 done; output contract names `flow`.
 - **Evidence:** `docs/evidence/atlas-sim/GATE.txt` (final transcript on the docs commit), `checks.json`
-  216/216, `hyperfine/cjson-stores.png`, `-trust.png`, `-io-inspector.png`, `VISION.md` Read 7 PASS.
+  217/217, `hyperfine/cjson-stores.png`, `-trust.png`, `-io-inspector.png`, `VISION.md` Read 7 PASS.
 
 ## Verification
 
@@ -120,8 +120,8 @@ merge to `main`.
 | S3 flow emit | `flow.io[]` on hyperfine | 8 rows / 5 files: read/env 3, read/file 2, write/file 3; 3 literal (`TERM`, `NO_COLOR`, `/dev/null`), 5 target-unknown |
 | S3 flow emit | `flow.io[]` on cJSON | 24 rows / 4 files: read/file 2, read/stdio 2, write/stdio 20; 0 literal, 2 target-unknown |
 | S3 guards | unit + e2e fixtures | drawn `read` wrapper, macro `fopen`, typedef fn-pointer and `sprintf` emit no row; `format!`/concat/non-literal path ⇒ `null`; stdio never literal; `freopen` mode arg 1; `fopen "r+"`/`O_RDWR` ⇒ both ops; non-zero numeric open flags ⇒ no row |
-| S3 story gate | `SIM_PORT=8770 python3 sim/verify.py` | **216/216**, exit 0 (data/core/DOM + stores/trust/inspector frames) |
-| S3 full gate | `bash sim/gate.sh` | final transcript on the S3 docs commit with `dirty 0` (the script now fails on a non-zero full dirty count), **verdict=PASS** |
+| S3 story gate | `SIM_PORT=8770 python3 sim/verify.py` | **217/217**, exit 0 (data/core/DOM + stores/trust/inspector frames) |
+| S3 full gate | `bash sim/gate.sh` | final `GATE.txt` on the S3 close commit: dirty 0, 862 tests, **verdict=PASS** (the script fails on a non-zero full dirty count) |
 | S3 vision | `VISION.md` Read 7 | **PASS** (first pass PASS-WITH-NITS; three nits fixed and re-read PASS) |
 | S3 review | R1/R2/Q1/Q2 + fresh confirmation | round 1: R1/R2 CHANGES_REQUESTED (freopen index, numeric flags, typedef pointer), Q1 APPROVED, Q2 pending final gate; fixes `b63c6f6`/`f3e8804`; round 2 pending |
 

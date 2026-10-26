@@ -284,7 +284,7 @@
   Rust path ambiguity, capture this in the single scanner pass, and keep the runtime claim at zero
   (syscall probes are post-beta D3).
 - **Evidence:** 862 tests; `cargo fmt`/`cargo clippy -D warnings` exit 0; story gate
-  `sim/verify.py` 211/211; `report.html` byte-identical with/without `--story`; two scans emit
+  `sim/verify.py` 217/217; `report.html` byte-identical with/without `--story`; two scans emit
   identical `flow.io`; `flow.io` sorted `(file, line, callee, op, target, literal)`.
 
 ## Status legend

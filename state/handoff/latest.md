@@ -59,7 +59,7 @@ trace beats, a per-file DATA STORES inspector, and an I/O trust line.
 - **Story (`9e23aa6` + `f3e8804`):** `sim/from-layout.py` projects per-node `io` summaries +
   `trust.io` (totals, stdio, literal examples); `sim/sim.js` renders `Stores:` on trace beats, a
   DATA STORES inspector section (up to 6 rows/file, `showing N of M`; stdio = `stream · no path`),
-  and the I/O trust line (literal examples, `+N` remainder, stdio count); `sim/verify.py` adds 54
+  and the I/O trust line (literal examples, `+N` remainder, stdio count); `sim/verify.py` adds 55
   checks and stores/trust/inspector keyframes; `sim/gate.sh` prints the io summary and asserts the
   full dirty count is 0. Regenerated `sim/data-hyperfine.json` / `sim/data-cjson.json`.
 - **Fixture rows:** hyperfine 8 rows / 5 drawn files (5 read, 3 write; literal `TERM`, `NO_COLOR`,
@@ -96,8 +96,8 @@ trace beats, a per-file DATA STORES inspector, and an I/O trust line.
 | Licenses | `cargo deny check licenses` | exit 0 (`licenses ok`) |
 | F6 additive | story-off vs story-on | `report.html` byte-identical hyperfine + cJSON; `metrics.json` content-equal after masking scan provenance |
 | Core flow determinism | two `--story` scans | `atlas-layout.json` byte-identical; `flow.io` sorted `(file,line,callee,op,target,literal)` |
-| Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **216/216**, exit 0 |
-| Full gate | `bash sim/gate.sh` | final transcript on the S3 docs commit, `dirty 0`, **verdict=PASS** (pending at this commit; the gate now fails on a non-zero full dirty count) |
+| Story gate | `SIM_PORT=8770 python3 sim/verify.py` | **217/217**, exit 0 |
+| Full gate | `bash sim/gate.sh` | `4ef35cd` · tree `506aa38f…` · dirty 0 · 862 tests · 217/217 · **verdict=PASS** (`GATE.txt`; the gate fails on a non-zero full dirty count) |
 | Vision | `docs/evidence/atlas-sim/VISION.md` Read 7 | **PASS** (first pass PASS-WITH-NITS; stdio total, `+N` marker and `stream · no path` fixed; re-read PASS) |
 | Review panel | R1/R2/Q1/Q2 + fresh confirmation | round 1: R1/R2 CHANGES_REQUESTED (freopen index, numeric flags, typedef pointer), Q1 APPROVED, Q2 pending final gate; fixes `b63c6f6`/`f3e8804`; round 2 pending |
 
