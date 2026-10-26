@@ -5,8 +5,8 @@
 > `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute the merge gate (B4 is complete; see the handoff).`
 
 **Next-session signpost (merge gate):** branch `feat/js-ts`, base `main @ 9a94905`; W0 `e7f5332`, W1 `90d5677`,
-W2 `edfc98a`, B3 `9dd19bb`, **B4 implemented (docs/contract/canary + label polish; plan DoD green; panel
-APPROVED: R1/R2/R3 + Q1/Q2).** The merge gate `A-tb-006` remains blocked on **founder approval** and on the B4-canary
+W2 `edfc98a`, B3 `9dd19bb`, **B4 committed `6d6bcdf` (docs/contract/canary + label polish; plan DoD
+green; panel APPROVED: R1/R2/R3 + Q1/Q2).** The merge gate `A-tb-006` remains blocked on **founder approval** and on the B4-canary
 `PERF-JS-CALL-001` gate fix (`R-tb-017`: 150/180 production FPs from member/method-name collisions). No
 push. See `state/tracks/js-ts/handoff.md` for the full B4 record.
 
@@ -174,7 +174,7 @@ semantic-feature, double-run over `examples-js` + `examples-ts`, native check) �
 TS parameter annotations recorded (IR-internal). `D-tb-019` — `R-tb-010` narrowed: both `<T,>` and `<T>`
 generic arrows parse cleanly at expression position on the pinned TSX grammar.
 
-## Session B4 — docs/contract/canary — **implemented; plan DoD green; panel APPROVED (R1/R2/R3 + Q1/Q2)** (2026-10-26)
+## Session B4 — docs/contract/canary — **committed `6d6bcdf`; plan DoD green; panel APPROVED (R1/R2/R3 + Q1/Q2)** (2026-10-26)
 
 **Goal:** close the docs/contract/label pass and re-run the real-code canary before merge, without a
 schema, rule, reporter-count or dependency change.

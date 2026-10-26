@@ -22,8 +22,8 @@ Add JavaScript (B2), then TypeScript/TSX (B3), as first-class Perfpal backends i
   changed); real-code canary re-run (`docs/evidence/js-b4/real-code-canary.md`) — **it found a
   merge-gate blocker in `PERF-JS-CALL-001` (150/180 strict member FPs + 2 wrapped = 152 member-class
   from member/method-name collisions)**, documented as `R-tb-017` and not fixed in B4 (docs/label
-  scope). Plan DoD green; parallel panel **APPROVED (R1/R2/R3 + Q1/Q2)**; merge remains `A-tb-006` +
-  founder approval.
+  scope). Plan DoD green; parallel panel **APPROVED (R1/R2/R3 + Q1/Q2)**; B4 commit `6d6bcdf`;
+  merge remains `A-tb-006` + founder approval.
 - Gate + merge: rebase on `main` after A step 12, run the Definition of Done below (every command exits 0), dispatch the parallel review panel (>=2 reviewer + >=2 requirements-reviewer, disjoint lanes) and require >=1 APPROVE per family with zero unresolved blocking findings; merge to `main` only with explicit founder approval.
 
 ## Required Specs

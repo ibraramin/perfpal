@@ -2,7 +2,7 @@
 
 > **Session:** B4 — docs/contract/canary + label polish. Plan `js-ts`; branch `feat/js-ts`; base
 > `main @ 9a94905`; prior commits W0 `e7f5332`, W1 `90d5677`, W2 `edfc98a`, B3 `9dd19bb` (+ docs
-> `21ede53`). **B4 implemented; plan DoD green; parallel panel APPROVED (R1/R2/R3 + Q1/Q2).** No push. Merge remains
+> `21ede53`). **B4 committed `6d6bcdf`; plan DoD green; parallel panel APPROVED (R1/R2/R3 + Q1/Q2).** No push. Merge remains
 > `A-tb-006` + founder approval, and now also requires the B4-canary `CALL-001` gate fix (`B-tb-004`).
 
 ## North-star / scope discipline
@@ -201,35 +201,13 @@ approval. Non-blocking fixes are applied as listed above; the final-tree executi
 
 ## Uncommitted files
 
-```
- M Cargo.toml
- M README.md
- M docs/architecture/js-ts.md
- M docs/architecture/modules.md
- M docs/plans/js-ts.md
- M docs/report/output-contract.md
- M docs/roadmap.md
- M docs/specs/js-ts.md
- M docs/tracks/README.md
- M docs/tracks/js-ts.md
- M src/analyzer/heuristics/js/tests.rs
- M src/reporter/mod.rs
- M state/archive/ledger.jsonl
- M state/tracks/js-ts/handoff.md
- M state/tracks/js-ts/session-state.json
- M tests/golden/report-js/report.html
- M tests/golden/report-js/report.md
- M tests/golden/report-ts/report.html
- M tests/golden/report-ts/report.md
- M tests/javascript_backend.rs
-?? .playwright-mcp/   (unrelated browser-tool residue; NOT part of B4)
-?? docs/evidence/js-b4/
-?? docs/heuristics/js-catalog.md
-```
+None after the B4 feature commit `6d6bcdf` and this docs-record commit. The only working-tree residue is
+untracked `.playwright-mcp/` (unrelated browser-tool output; NOT part of B4).
 
 ## Commits (this session)
 
-- **Pending founder go-ahead** (no commit made in B4 yet; no push).
+- `6d6bcdf` — `feat(js-ts): B4 docs, contract, labels and real-code canary` (23 files, +1,290/−255).
+- The docs-record commit follows: `docs(js-ts): record B4 commit hash in track handoff`. No push.
 
 ## CHANGELOG note for Track A (apply at merge; do not land on this branch)
 
@@ -274,4 +252,4 @@ release owner cuts the next version. Track B is a later release and does not del
 
 **Resume in a fresh session:** plan `js-ts`, next task **merge gate `A-tb-006`** after **`A-tb-007`
 (CALL-001 fix + canary re-run)**; branch `feat/js-ts`, base `main @ 9a94905`, W0 `e7f5332`, W1 `90d5677`,
-W2 `edfc98a`, B3 `9dd19bb`, B4 commit `<pending>`.
+W2 `edfc98a`, B3 `9dd19bb`, **B4 `6d6bcdf`**.

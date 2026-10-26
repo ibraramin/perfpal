@@ -636,3 +636,4 @@ Recorded in the track handoff / `docs/evidence/js-b4/gate.txt`: plan `js-ts` DoD
 deny, semantic-feature lint/tests, `examples-js`/`examples-ts` double-run, native check), plus the B4
 targeted suites and the **parallel review panel: R1 + R2 + R3 + Q1 + Q2 all APPROVED, zero unresolved
 blocking findings** (the canary `CALL-001` defect remains the merge-gate follow-up `B-tb-004`/`A-tb-007`).
+B4 commit: `6d6bcdf`.

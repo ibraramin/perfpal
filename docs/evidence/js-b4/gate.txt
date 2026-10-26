@@ -98,4 +98,5 @@ Post-panel verification:
 - `git diff --check`: OK; state bytes: 7544
 
 Panel: R1/R2/R3 + Q1/Q2 all APPROVED after the post-panel fixes; zero unresolved blocking findings.
+B4 feature commit: 6d6bcdf
 FINAL: ALL OK (post-panel; merge still blocked by B-tb-004 / R-tb-017 + founder approval)
