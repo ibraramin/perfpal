@@ -7,6 +7,16 @@
 //! `flow.signatures[].id` / `flow.calls[].caller` to `metrics.json`
 //! `stats.functions[].id` (the canonical IR identity `path#name#line:col`).
 //!
+//! S3 adds the P2 I/O effects (`flow.io[]`): a fixed, versioned call-name table
+//! ([`IO_TABLE_VERSION`] = 1) classifies call sites in the drawn files as a
+//! `read`/`write` effect on `file`/`env`/`net`/`stdio`. A `literal` target is
+//! recorded only when the designated argument is a **plain string literal**
+//! (`string_literal` / `raw_string_literal`); values built by formatting,
+//! macro concatenation or C adjacent-string concatenation are never targets.
+//! This is a name match, not a runtime path: an I/O wrapper defined outside the
+//! drawn set can still be misclassified, which is why the row carries no
+//! observed-path claim and the story renders a missing target as `unknown`.
+//!
 //! Known limits (deliberate, part of the probe contract):
 //!
 //! - Types are the source text: macros are never expanded, and generics /
@@ -36,12 +46,24 @@
 //!   expressions such as `&cfg` have `named: null`.
 //! - Recursion is capped at [`MAX_DEPTH`]: a pathologically deep expression
 //!   yields fewer rows rather than a stack overflow.
+//! - I/O rows are call sites inside drawn functions only. A bare C name is
+//!   skipped when any drawn file defines a function with that name (a wrapper
+//!   must never be classified by name alone); a wrapper defined outside the
+//!   drawn set is the documented prototype limit. `fopen`-style calls with a
+//!   non-literal mode, and `open`-style calls with non-literal flags, emit no
+//!   row because the direction is unknown — never guessed. `read`/`write` are
+//!   fd-based: their `file` target is the call class and may be a pipe/socket.
+//!   Stdio rows never carry a literal (a format string is not a target).
+//! - `literal` is the source text of a plain string literal with the outer
+//!   quotes removed; escape sequences are **not** decoded and values are
+//!   display-capped. It is a written literal, not an observed runtime value.
 //! - This is static inference: the flow says what the source *writes*, not
 //!   what the program does at runtime.
 //!
 //! Determinism: only the caller-supplied drawn paths are parsed (C/Rust
-//! extensions), and output is sorted `(path, line, name, id)` for signatures
-//! and `(from, line, callee, to, caller)` for calls, with `BTreeSet`-backed
+//! extensions), and output is sorted `(path, line, name, id)` for signatures,
+//! `(from, line, callee, to, caller)` for calls and
+//! `(file, line, callee, op, target, literal)` for I/O, with `BTreeSet`-backed
 //! `unresolved` lists and `BTreeMap`-backed edge classification. Unreadable or
 //! unparsable files are skipped silently.
 
@@ -67,6 +89,23 @@ pub(crate) struct Flow {
     pub(crate) fidelity: &'static str,
     pub(crate) signatures: Vec<Signature>,
     pub(crate) calls: Vec<Call>,
+    pub(crate) io: Vec<Io>,
+}
+
+/// One I/O effect at a call site in a drawn file (P2, Atlas Story S3).
+#[derive(Debug, Serialize)]
+pub(crate) struct Io {
+    /// Call-site file (a drawn repo-relative path), never the target path.
+    pub(crate) file: String,
+    pub(crate) line: u32,
+    pub(crate) callee: String,
+    /// `read` or `write`.
+    pub(crate) op: &'static str,
+    /// `file`, `env`, `net` or `stdio`.
+    pub(crate) target: &'static str,
+    /// Plain string-literal target as written (quotes removed, escapes kept);
+    /// `None` when the argument is not a plain literal — never guessed.
+    pub(crate) literal: Option<String>,
 }
 
 /// One call site in a drawn file, with resolved target only when the callee is
@@ -110,6 +149,16 @@ struct RawCall {
     caller: String,
     callee: String,
     direct_name: Option<String>,
+    /// True for a C macro invocation or a local function-pointer value: never
+    /// table-matched as I/O.
+    blocked: bool,
+    /// Per-argument plain string-literal value (quotes removed), aligned with
+    /// `args`; `None` for non-literals such as `format!(...)`.
+    literals: Vec<Option<String>>,
+    /// Per-argument collapsed source text, aligned with `args`. Used to read
+    /// `open`-style flag expressions (`O_WRONLY` is an identifier, not a
+    /// string literal).
+    arg_texts: Vec<String>,
     line: u32,
     args: Vec<CallArg>,
 }
@@ -127,6 +176,216 @@ struct LocalType {
     type_text: String,
     dir: &'static str,
 }
+
+/// Version of the fixed I/O call-name table below. Bump when a name, target or
+/// direction rule changes; the emitted `flow` shape does not change. The story
+/// artifact does not carry the number, so the constant is the merge-contract
+/// marker (tests assert it).
+#[allow(dead_code)]
+pub(crate) const IO_TABLE_VERSION: u8 = 1;
+
+/// Longest recorded literal target (characters). Longer values are display-
+/// capped with `...`; this is a display bound, not a runtime value.
+const LITERAL_LIMIT: usize = 160;
+
+/// How a table row derives its operation(s).
+#[derive(Clone, Copy)]
+enum OpRule {
+    Read,
+    Write,
+    /// `fopen`-style mode argument: `+` modes are read+write, otherwise the
+    /// first character decides (`r` ⇒ read, `w`/`a` ⇒ write). A non-literal
+    /// mode yields no row (direction unknown, never guessed).
+    Mode(usize),
+    /// `open`-style flags argument: `O_WRONLY` ⇒ write, `O_RDWR` ⇒ read+write,
+    /// otherwise (including `O_RDONLY`/`0`) ⇒ read. A non-literal flags
+    /// argument yields no row.
+    Flags(usize),
+}
+
+/// One row of the fixed v1 I/O table: written callee, effect class and the
+/// argument that may carry a path/name/URL literal.
+struct IoRule {
+    /// The complete written callee: a bare C name (`fopen`) or an exact Rust
+    /// path (`File::open`, `std::env::var_os`). Never a suffix match.
+    name: &'static str,
+    op: OpRule,
+    /// `file`, `env`, `net` or `stdio`.
+    target: &'static str,
+    /// Argument index for a path/name/URL literal; `None` for fd/stream calls
+    /// and for stdio (a format string is not a target).
+    literal_arg: Option<usize>,
+    /// True for bare C names: skip when a drawn file defines the same name
+    /// (a user wrapper must never be classified by name alone).
+    bare: bool,
+}
+
+impl OpRule {
+    fn resolve(self, literals: &[Option<String>], texts: &[String]) -> Vec<&'static str> {
+        match self {
+            OpRule::Read => vec!["read"],
+            OpRule::Write => vec!["write"],
+            OpRule::Mode(index) => {
+                let Some(mode) = literals.get(index).and_then(Option::as_deref) else {
+                    return Vec::new();
+                };
+                let both = mode.contains('+');
+                match mode.chars().next() {
+                    Some('r') if both => vec!["read", "write"],
+                    Some('r') => vec!["read"],
+                    Some('w' | 'a') if both => vec!["read", "write"],
+                    Some('w' | 'a') => vec!["write"],
+                    _ => Vec::new(),
+                }
+            }
+            OpRule::Flags(index) => {
+                let Some(flags) = texts.get(index) else {
+                    return Vec::new();
+                };
+                if !written_flag_expression(flags) {
+                    return Vec::new();
+                }
+                if flags.contains("O_RDWR") {
+                    vec!["read", "write"]
+                } else if flags.contains("O_WRONLY") {
+                    vec!["write"]
+                } else {
+                    vec!["read"]
+                }
+            }
+        }
+    }
+}
+
+/// Whether an `open`-style flags argument is a written flag expression
+/// (`0`, `O_WRONLY`, `O_CREAT | O_WRONLY`, `0x241`) rather than a variable or
+/// call. Only a written expression can state the access mode; a bare `flags`
+/// identifier yields no row (direction unknown, never guessed).
+fn written_flag_expression(text: &str) -> bool {
+    let mut saw_token = false;
+    for part in text.split('|') {
+        let token = part.trim();
+        if token.is_empty() {
+            return false;
+        }
+        if token.starts_with("O_") {
+            saw_token = true;
+            continue;
+        }
+        if token.chars().all(|character| {
+            character.is_ascii_digit() || matches!(character, 'x' | 'X' | 'u' | 'U' | 'l' | 'L')
+        }) {
+            saw_token = true;
+            continue;
+        }
+        return false;
+    }
+    saw_token
+}
+
+/// Fixed, versioned call-name table (v1). Every entry is an explicit API name;
+/// there is no fuzzy matching. New names require a table bump and a test.
+#[rustfmt::skip]
+const IO_RULES: &[IoRule] = &[
+    // --- C: files (paths / fd) -------------------------------------------
+    IoRule { name: "fopen", op: OpRule::Mode(1), target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "freopen", op: OpRule::Mode(2), target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "open", op: OpRule::Flags(1), target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "openat", op: OpRule::Flags(2), target: "file", literal_arg: Some(1), bare: true },
+    IoRule { name: "creat", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "read", op: OpRule::Read, target: "file", literal_arg: None, bare: true },
+    IoRule { name: "pread", op: OpRule::Read, target: "file", literal_arg: None, bare: true },
+    IoRule { name: "write", op: OpRule::Write, target: "file", literal_arg: None, bare: true },
+    IoRule { name: "pwrite", op: OpRule::Write, target: "file", literal_arg: None, bare: true },
+    IoRule { name: "stat", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "lstat", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "access", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "unlink", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "remove", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true },
+    IoRule { name: "rename", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true },
+    // --- C: stdio streams (no path literal) ------------------------------
+    IoRule { name: "fread", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "fwrite", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "fgets", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "fputs", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "puts", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "printf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "fprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "vprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "vfprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "putchar", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "scanf", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "fscanf", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "getchar", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
+    // --- C: environment and network --------------------------------------
+    IoRule { name: "getenv", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: true },
+    IoRule { name: "setenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true },
+    IoRule { name: "putenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true },
+    IoRule { name: "unsetenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true },
+    IoRule { name: "connect", op: OpRule::Write, target: "net", literal_arg: None, bare: true },
+    IoRule { name: "send", op: OpRule::Write, target: "net", literal_arg: None, bare: true },
+    IoRule { name: "sendto", op: OpRule::Write, target: "net", literal_arg: None, bare: true },
+    IoRule { name: "recv", op: OpRule::Read, target: "net", literal_arg: None, bare: true },
+    IoRule { name: "recvfrom", op: OpRule::Read, target: "net", literal_arg: None, bare: true },
+    // --- Rust: files (exact written paths; never a bare `read`) ----------
+    IoRule { name: "File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::read", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::read", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::read_to_string", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::read_to_string", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::read_dir", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::read_dir", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::symlink_metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::symlink_metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::write", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::write", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::create_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::create_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::create_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::create_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::remove_file", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::remove_file", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::remove_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::remove_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::rename", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::rename", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::copy", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::copy", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::hard_link", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::hard_link", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::fs::set_permissions", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "fs::set_permissions", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    // --- Rust: environment and network -----------------------------------
+    IoRule { name: "std::env::var", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "env::var", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::env::var_os", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "env::var_os", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::env::vars", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "env::vars", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "std::env::args", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "env::args", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "std::env::args_os", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "env::args_os", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "std::env::current_dir", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "env::current_dir", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
+    IoRule { name: "std::env::set_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "env::set_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::env::remove_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "env::remove_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
+    IoRule { name: "TcpStream::connect", op: OpRule::Write, target: "net", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::net::TcpStream::connect", op: OpRule::Write, target: "net", literal_arg: Some(0), bare: false },
+    IoRule { name: "reqwest::get", op: OpRule::Read, target: "net", literal_arg: Some(0), bare: false },
+    IoRule { name: "reqwest::blocking::get", op: OpRule::Read, target: "net", literal_arg: Some(0), bare: false },
+];
 
 /// One function signature, keyed by the canonical IR function id.
 #[derive(Debug, Serialize)]
@@ -229,6 +488,7 @@ pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flo
             .push((signature.id.clone(), signature.path.clone()));
     }
     let mut calls = Vec::with_capacity(raw_calls.len());
+    let mut io = Vec::new();
     for raw in raw_calls {
         let resolved = raw
             .direct_name
@@ -245,6 +505,32 @@ pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flo
                     .args
                     .iter()
                     .any(|arg| arg.type_text.is_some() || arg.literal));
+
+        // P2: fixed-table I/O effects. A bare name defined by any drawn
+        // function is a local wrapper, not the library call; macros and
+        // function-pointer values are blocked. No rule ⇒ no row.
+        for rule in IO_RULES {
+            if raw.blocked || raw.callee != rule.name {
+                continue;
+            }
+            if rule.bare && by_name.contains_key(rule.name) {
+                continue;
+            }
+            let literal = rule
+                .literal_arg
+                .and_then(|index| raw.literals.get(index).cloned().flatten());
+            for op in rule.op.resolve(&raw.literals, &raw.arg_texts) {
+                io.push(Io {
+                    file: raw.from.clone(),
+                    line: raw.line,
+                    callee: raw.callee.clone(),
+                    op,
+                    target: rule.target,
+                    literal: literal.clone(),
+                });
+            }
+        }
+
         calls.push(Call {
             from: raw.from,
             to,
@@ -272,11 +558,21 @@ pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flo
             .then(a.to.cmp(&b.to))
             .then(a.caller.cmp(&b.caller))
     });
+    io.sort_by(|a, b| {
+        a.file
+            .cmp(&b.file)
+            .then(a.line.cmp(&b.line))
+            .then(a.callee.cmp(&b.callee))
+            .then(a.op.cmp(b.op))
+            .then(a.target.cmp(b.target))
+            .then(a.literal.cmp(&b.literal))
+    });
     Flow {
         flow_version: FLOW_VERSION,
         fidelity: "syntactic",
         signatures,
         calls,
+        io,
     }
 }
 
@@ -477,11 +773,15 @@ fn collect_calls(node: Node<'_>, context: &CallContext<'_>, out: &mut Vec<RawCal
 fn build_call(node: Node<'_>, context: &CallContext<'_>) -> Option<RawCall> {
     let function = node.child_by_field_name("function")?;
     let arguments = node.child_by_field_name("arguments")?;
-    let (callee, direct_name) = callee_of(function, context);
+    let (callee, direct_name, blocked) = callee_of(function, context);
     let mut args = Vec::new();
+    let mut literals = Vec::new();
+    let mut arg_texts = Vec::new();
     let mut cursor = arguments.walk();
     for child in arguments.named_children(&mut cursor) {
         args.push(build_arg(child, context));
+        literals.push(plain_string_literal(child, context.source));
+        arg_texts.push(collapse(text(child, context.source)));
     }
     let line = u32::try_from(node.start_position().row + 1).ok()?;
     Some(RawCall {
@@ -489,6 +789,9 @@ fn build_call(node: Node<'_>, context: &CallContext<'_>) -> Option<RawCall> {
         caller: context.caller.to_string(),
         callee,
         direct_name,
+        blocked,
+        literals,
+        arg_texts,
         line,
         args,
     })
@@ -496,8 +799,9 @@ fn build_call(node: Node<'_>, context: &CallContext<'_>) -> Option<RawCall> {
 
 /// `callee` is the call target as written; `direct_name` is `Some` only for a
 /// plain identifier or a Rust scoped identifier's final segment, and only when
-/// the target is not a macro and not a local function-pointer value.
-fn callee_of(function: Node<'_>, context: &CallContext<'_>) -> (String, Option<String>) {
+/// the target is not a macro and not a local function-pointer value. `blocked`
+/// marks a macro/function-pointer target so the I/O table cannot match it.
+fn callee_of(function: Node<'_>, context: &CallContext<'_>) -> (String, Option<String>, bool) {
     let written = collapse(text(function, context.source));
     match (context.language, function.kind()) {
         (_, "identifier") => {
@@ -507,9 +811,9 @@ fn callee_of(function: Node<'_>, context: &CallContext<'_>) -> (String, Option<S
                 .get(&name)
                 .is_some_and(|local| is_function_pointer(&local.type_text));
             if context.macro_names.contains(&name) || function_pointer {
-                (written, None)
+                (written, None, true)
             } else {
-                (written, Some(name))
+                (written, Some(name), false)
             }
         }
         (Language::Rust, "scoped_identifier") => {
@@ -525,10 +829,28 @@ fn callee_of(function: Node<'_>, context: &CallContext<'_>) -> (String, Option<S
             } else {
                 None
             };
-            (written, name)
+            (written, name, false)
         }
-        _ => (written, None),
+        _ => (written, None, false),
     }
+}
+
+/// Value of a **plain** string literal with the outer quotes removed (escapes
+/// left as written). `None` for anything built at runtime: `format!`/`concat!`,
+/// C adjacent-string concatenation (`concatenated_string`), identifiers and
+/// expressions. This is the one gate that keeps a formatted value from being
+/// shown as an observed target.
+fn plain_string_literal(node: Node<'_>, source: &[u8]) -> Option<String> {
+    if !matches!(node.kind(), "string_literal" | "raw_string_literal") {
+        return None;
+    }
+    let written = text(node, source);
+    let start = written.find('"')?;
+    let end = written.rfind('"')?;
+    if end <= start {
+        return None;
+    }
+    Some(truncate(&written[start + 1..end], LITERAL_LIMIT))
 }
 
 /// First segment of a Rust scoped path (`crate`, `self`, `super`, or a crate
@@ -1633,5 +1955,155 @@ mod tests {
                 .any(|signature| signature.name == "caller")
         );
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn c_io_rows_carry_ops_targets_and_literals() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-io-c-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(
+            &dir,
+            "io.c",
+            "int main(void) {\n\
+                 FILE *in = fopen(\"cfg.ini\", \"r\");\n\
+                 FILE *out = fopen(\"out.log\", \"w\");\n\
+                 FILE *both = fopen(\"log.txt\", \"r+\");\n\
+                 FILE *unknown = fopen(path, mode);\n\
+                 int n = read(fd, buf, 4);\n\
+                 FILE *wonly = open(\"w.log\", O_WRONLY);\n\
+                 FILE *rw = open(\"rw.log\", O_RDWR);\n\
+                 open(path, flags);\n\
+                 printf(\"%d\\n\", n);\n\
+                 sprintf(buf, \"%d\", n);\n\
+                 const char *home = getenv(\"HOME\");\n\
+                 setenv(\"MODE\", \"1\", 1);\n\
+                 connect(fd, addr, len);\n\
+                 return 0;\n\
+             }\n",
+        );
+
+        let flow = flow_for(&dir, &["io.c"]);
+        let rows: Vec<(&str, &str, &str, Option<&str>)> = flow
+            .io
+            .iter()
+            .map(|row| {
+                (
+                    row.callee.as_str(),
+                    row.op,
+                    row.target,
+                    row.literal.as_deref(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            rows,
+            vec![
+                ("fopen", "read", "file", Some("cfg.ini")),
+                ("fopen", "write", "file", Some("out.log")),
+                ("fopen", "read", "file", Some("log.txt")),
+                ("fopen", "write", "file", Some("log.txt")),
+                ("read", "read", "file", None),
+                ("open", "write", "file", Some("w.log")),
+                ("open", "read", "file", Some("rw.log")),
+                ("open", "write", "file", Some("rw.log")),
+                // stdio: a format string is never a target.
+                ("printf", "write", "stdio", None),
+                ("getenv", "read", "env", Some("HOME")),
+                ("setenv", "write", "env", Some("MODE")),
+                ("connect", "write", "net", None),
+            ],
+            "non-literal modes/flags emit no row; `sprintf` is not I/O"
+        );
+        assert_eq!(flow.io[0].line, 2);
+        assert_eq!(flow.io.last().map(|row| row.line), Some(14));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn c_io_never_classifies_wrappers_macros_or_formatted_targets() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-io-w-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(
+            &dir,
+            "wrap.c",
+            "#include <stdio.h>\n\
+             #define fopen(path, mode) my_open(path, mode)\n\
+             int read(int fd) { return fd; }\n\
+             int main(void) {\n\
+                 read(0);\n\
+                 fopen(\"x\", \"r\");\n\
+                 open(concat_path(), 0);\n\
+                 return 0;\n\
+             }\n",
+        );
+
+        let flow = flow_for(&dir, &["wrap.c"]);
+        let rows: Vec<(&str, &str, Option<&str>)> = flow
+            .io
+            .iter()
+            .map(|row| (row.callee.as_str(), row.op, row.literal.as_deref()))
+            .collect();
+        assert_eq!(
+            rows,
+            vec![("open", "read", None)],
+            "a drawn `read` wrapper and a macro `fopen` are not I/O; a non-literal path stays unknown"
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn rust_io_matches_exact_paths_and_rejects_formatted_targets() {
+        let dir = std::env::temp_dir().join(format!("perfpal-flow-io-r-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("temp dir");
+        write(
+            &dir,
+            "io.rs",
+            "use std::fs::File;\n\
+             use std::env;\n\
+             fn main() {\n\
+                 let f = File::open(\"cfg.toml\");\n\
+                 let out = File::create(\"/dev/null\");\n\
+                 let home = env::var_os(\"HOME\");\n\
+                 let text = std::fs::read_to_string(path);\n\
+                 let _ = std::fs::write(\"out.txt\", b\"x\");\n\
+                 let _ = File::open(format!(\"{}/x\", dir));\n\
+             }\n",
+        );
+
+        let flow = flow_for(&dir, &["io.rs"]);
+        let rows: Vec<(&str, &str, &str, Option<&str>)> = flow
+            .io
+            .iter()
+            .map(|row| {
+                (
+                    row.callee.as_str(),
+                    row.op,
+                    row.target,
+                    row.literal.as_deref(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            rows,
+            vec![
+                ("File::open", "read", "file", Some("cfg.toml")),
+                ("File::create", "write", "file", Some("/dev/null")),
+                ("env::var_os", "read", "env", Some("HOME")),
+                ("std::fs::read_to_string", "read", "file", None),
+                ("std::fs::write", "write", "file", Some("out.txt")),
+                // `format!` is a built value, never a literal target.
+                ("File::open", "read", "file", None),
+            ]
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn io_table_names_are_unique() {
+        let mut names: Vec<&str> = IO_RULES.iter().map(|rule| rule.name).collect();
+        names.sort_unstable();
+        names.dedup();
+        assert_eq!(names.len(), IO_RULES.len());
+        assert_eq!(IO_TABLE_VERSION, 1);
     }
 }

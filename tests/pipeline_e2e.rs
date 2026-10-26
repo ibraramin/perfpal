@@ -659,7 +659,8 @@ fn story_flow_signatures_join_metrics_function_ids() {
     assert_eq!(flow["flow_version"], 1);
     assert_eq!(flow["fidelity"], "syntactic");
     assert!(flow["calls"].is_array(), "P1 calls array missing");
-    assert!(flow.get("io").is_none(), "P2 io is not part of S2/P3");
+    assert!(flow["io"].is_array(), "P2 io array missing");
+    assert_eq!(flow["io"], serde_json::json!([]), "no I/O in this fixture");
 
     let signatures = flow["signatures"]
         .as_array()
@@ -788,6 +789,114 @@ fn story_flow_calls_and_edge_labels_are_story_only() {
         .expect("main.c → util.c edge");
     assert_eq!(edge["label"], "type-only");
     assert_eq!(edge["payload"], "int");
+}
+
+/// S3/P2: `--story` emits the flat, sorted `flow.io[]` rows; every row belongs
+/// to a drawn file, literals are plain string targets, and built values
+/// (`sprintf`) never appear.
+#[test]
+fn story_flow_io_effects_are_story_only_and_conservative() {
+    let root = temp_dir("flow-io-src");
+    fs::write(
+        root.join("io.c"),
+        "#include <stdio.h>\n\
+         #include <stdlib.h>\n\
+         int main(void) {\n\
+             FILE *f = fopen(\"cfg.ini\", \"r\");\n\
+             const char *home = getenv(\"HOME\");\n\
+             FILE *out = fopen(home, \"w\");\n\
+             char buf[8];\n\
+             sprintf(buf, \"%s\", home);\n\
+             printf(\"%s\\n\", home);\n\
+             return f != 0;\n\
+         }\n",
+    )
+    .expect("write io.c");
+
+    let out = temp_dir("flow-io-out").join("perfpal-report");
+    let code = run_with(argv(&[
+        "--output",
+        out.to_string_lossy().as_ref(),
+        "--story",
+        root.to_string_lossy().as_ref(),
+    ]));
+    assert_eq!(code, 0);
+
+    let raw = fs::read_to_string(out.join("atlas-layout.json")).expect("layout JSON");
+    let layout: serde_json::Value = serde_json::from_str(&raw).expect("layout JSON parses");
+    let drawn: Vec<&str> = layout["nodes"]
+        .as_array()
+        .expect("nodes array")
+        .iter()
+        .filter_map(|node| node["path"].as_str())
+        .collect();
+    let io = layout["flow"]["io"].as_array().expect("flow.io array");
+
+    let rows: Vec<(u64, &str, &str, &str, Option<&str>)> = io
+        .iter()
+        .map(|row| {
+            (
+                row["line"].as_u64().expect("io line"),
+                row["callee"].as_str().expect("io callee"),
+                row["op"].as_str().expect("io op"),
+                row["target"].as_str().expect("io target"),
+                row["literal"].as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            (4, "fopen", "read", "file", Some("cfg.ini")),
+            (5, "getenv", "read", "env", Some("HOME")),
+            (6, "fopen", "write", "file", None),
+            (9, "printf", "write", "stdio", None),
+        ],
+        "sprintf is not I/O; a non-literal path stays null; stdio has no target literal"
+    );
+    for row in io {
+        assert_eq!(
+            row["file"].as_str(),
+            Some("io.c"),
+            "io.file must be a drawn call-site path: {row}"
+        );
+        assert!(
+            drawn.contains(&row["file"].as_str().expect("io file")),
+            "io.file is not drawn: {row}"
+        );
+        assert!(
+            matches!(row["op"].as_str(), Some("read" | "write")),
+            "io op outside read/write: {row}"
+        );
+        assert!(
+            matches!(
+                row["target"].as_str(),
+                Some("file" | "env" | "net" | "stdio")
+            ),
+            "io target outside the contract: {row}"
+        );
+        if row["target"] == "stdio" {
+            assert!(
+                row["literal"].is_null(),
+                "stdio rows never carry a path literal: {row}"
+            );
+        }
+    }
+    let order: Vec<(String, u64, String, String)> = io
+        .iter()
+        .map(|row| {
+            (
+                row["file"].as_str().expect("io file").to_string(),
+                row["line"].as_u64().expect("io line"),
+                row["callee"].as_str().expect("io callee").to_string(),
+                row["op"].as_str().expect("io op").to_string(),
+            )
+        })
+        .collect();
+    assert!(
+        order.windows(2).all(|pair| pair[0] <= pair[1]),
+        "flow.io must be sorted (file, line, callee, op): {order:?}"
+    );
 }
 
 /// Slice `text` from the END of the `start` marker up to the `end` marker.
