@@ -8,22 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Pending
-- Housekeeping follow-ups: Cargo.toml SPDX, modules §8 drift, distributions
-- Examples follow-ups: examples/README.md + ARCH-001 hub extension
-- R3 follow-ups: Rust resolver, TYPE-002 repr(C), CI schema validator
-- R5 deferred MINORs to pick up in a later session
-- R5 deferred MINOR test items still OPEN
-- B6: publish GitHub pre-release (prerelease flag, tag discipline, smoke)
-- 5 R5 deferred MINOR test items remain OPEN
-- Founder: create/refresh MINISIGN repo secrets
-- B6: publish pre-release + smoke-test + hand inventory to website
-- B6 next: resolve pre-tag placeholders + secrets + tag discipline
-- Founder hard gates before tagging: contact + MINISIGN secrets
-- B6 founder-gated finish: contact, secrets, tag, publish, review
-- M2 candidates: semantic USR guard, LOOP-008 deref, re-run KPI
-- Remaining milestones: M3 Python, M4 showcase, M5 release, M6+
-- M2 follow-ups: single-key assert, expose rule-id accessor, ladder
-- python-backend roadmap: W1 ✅ (grammar pin + link test + backend doc) / W2 ✅ (backend + inference) / W3 ✅ (`PERF-PY-*` catalog + schema 1.3); NEXT = W4 examples-python / precision KPI / benchmark / goldens + dual review
+- **Merge Train M2:** `feat/atlas-sim` → `v0.4.0` (Atlas Story companion; ADR renumber `0011` → `0012`,
+  `0012` → `0013`; story gate + full gate; no push/tag).
+- **Merge Train M3:** finalization — verify all four branches are ancestors of `main`, remove the
+  agent-report worktree, prune merged branches, full CI gate, EOL; no push/tag.
+- **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002
+  `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` before any tag.
+- **Post-beta map/ranking:** F treemap decision (D-pf-251), memchr fold fix trigger (D-pf-256),
+  `map-build`/A1b ranking recall (R-pf-105/106/108).
+- **JS/TS follow-ups:** `PERF-JS-ALLOC-001` triviality gate; ALLOC-003 member-root attribution;
+  CALL-001 guarded-recursion recall; reporter Markdown unknown-language escaping; deep-recursion
+  stack safety; agent-report parity/size coverage for `report-js`/`report-ts`.
+- **Agent-report hardening:** `empty_doc` fixture still carries the pre-merge version strings;
+  `VERSION_SUFFIX` literal and `schema::SCHEMA_VERSION` are guarded only by a `contains` assertion.
+- **Cross-platform verification:** run `scripts/verify-windows-compat.sh` after major/OS-facing
+  changes and at milestones (not every session).
 
 ## [0.3.0] - 2026-10-27
 
