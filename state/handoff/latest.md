@@ -36,19 +36,19 @@ story gate + full gate; mark the story track done and reconcile state/handoff; n
 | Semantic lint | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | clean | `0` |
 | Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 1,091 total (1,090 passed, 1 ignored) / 0 failed | `0` |
 | Schema copy | `cmp src/schema/metrics.schema.v1.8.json docs/schema/metrics.schema.v1.8.json` | identical | `0` |
-| Story gate | `bash sim/gate.sh` (`docs/evidence/atlas-sim/GATE.txt`) | `verdict=PASS`; 1,089 tests (1,088 passed, 1 ignored); 304/304 checks; 3k 44/44; F5/F6 PASS; page 463,490 B; first frame max 1,616 ms; dirty 0 | `0` |
-| Full gate | `docs/evidence/merge-m2/gate.txt` | every command exit 0; story gate PASS | `0` |
+| Story gate | `bash sim/gate.sh` (`docs/evidence/atlas-sim/GATE.txt` at `433a837`) | `verdict=PASS`; 1,089 tests (1,088 passed, 1 ignored); 304/304 checks; 3k 44/44; F5/F6 PASS; page 463,490 B; first frame max 1,612 ms; dirty 0 | `0` |
+| Full gate | `docs/evidence/merge-m2/gate.txt` at `7bad275` | every command exit 0; story gate PASS (`433a837`) | `0` |
 | Hot state | `wc -c state/session-state.json` | 5,094 B (≤ 8,192) | `0` |
 | State JSON + ledger | `jq`/`json.loads` on hot state and all ledger lines | all valid; 750 ledger lines | `0` |
 | ADR numbers unique | `ls docs/adr/ADR-001*` | one `0011` (js-ts), one `0012` (Atlas Story), one `0013` (reconciliation) | `0` |
 | No tag | `git tag --points-at HEAD` | empty | `0` |
-| Clean status | `git status --porcelain` | empty after the close commit | `0` |
+| Clean status | `git status --porcelain` | empty (observed at `9dba314`; the close commit is docs/state only) | `0` |
 
 Non-runnable evidence:
-- `docs/evidence/atlas-sim/GATE.txt` — story gate transcript at `ff276fd` (PASS, dirty 0).
-- `docs/evidence/merge-m2/gate.txt` — full gate on merged `main`.
+- `docs/evidence/atlas-sim/GATE.txt` — story gate transcript at `433a837` (PASS, dirty 0).
+- `docs/evidence/merge-m2/gate.txt` — full gate at `7bad275`.
 - `docs/evidence/merge-m2/resolutions.md` — 12 semantic resolutions + two-hop state-ID remap.
-- `docs/evidence/atlas-sim/checks.json` — 304/304 DOM/story checks.
+- `docs/evidence/atlas-sim/checks.json` — 304/304 DOM/story checks at `433a837`.
 - `docs/adr/ADR-0013-atlas-branch-reconciliation.md` — founder override addendum + final ID table.
 
 ## Deliverables (changed / added)
@@ -119,7 +119,7 @@ Non-runnable evidence:
 ## Uncommitted files
 
 ```
-<filled at the close commit — expected empty>
+(empty — `git status --porcelain` produced no lines at `9dba314`)
 ```
 
 ## Commits (this session)
@@ -127,7 +127,10 @@ Non-runnable evidence:
 - `e1b4f1b` — release: v0.4.0 — Atlas Story companion, ADR renumber, goldens/state
 - `ff276fd` — fix(reporter): clippy let_and_return in footer_parts; regen story data at 0.4.0
 - `3829e33` — fix(merge-train): M2 panel round 1 — contract truth, version/ADR sweep, ledger records
-- final evidence/state commit — docs(merge-train): M2 evidence + panel verdicts
+- `7bad275` — fix(merge-train): M2 panel round 2 — ADR table truth, ledger pointer, docs
+- `433a837` — docs(evidence): M2 full gate at 7bad275
+- `9dba314` — docs(evidence): story gate at 433a837
+- final close commit — docs(merge-train): M2 handoff + round-3 verdicts
 
 **Resume in a fresh session:** plan `merge-train`, next task **M3 — main finalization**, commit
-`ff276fd` (gate-green tree); the evidence/state close commit is the parent of the next session.
+`9dba314` (gate-green tree; the close commit adds only this handoff + verdicts).
