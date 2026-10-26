@@ -456,8 +456,8 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <section id="explorer">
 <h2>Explorer</h2>
 <figure class="pz" data-chart="include-graph">
-<a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal ts, tsx dependencies between scanned files."></a>
-<figcaption>Dependency graph — internal ts, tsx dependencies between scanned files.</figcaption>
+<a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal import/require dependencies between scanned files."></a>
+<figcaption>Dependency graph — internal import/require dependencies between scanned files.</figcaption>
 </figure>
 <figure class="pz" data-chart="layer-file">
 <a href="charts/layer-file.svg"><img src="charts/layer-file.svg" alt="File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first)."></a>
@@ -491,7 +491,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <ul>
 <li><a href="charts/component-01-root.svg">Component detail — per-file hot-path map.</a></li>
 </ul>
-<p>The dependency graph reflects resolved internal include/module edges between scanned files — ts module edges and tsx module edges; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
+<p>The dependency graph reflects resolved internal include/module edges between scanned files — JavaScript/TypeScript `import`/`require` bindings; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 </p>
 <p>Machine-readable graph: <a href="charts/graph.dot">graph.dot</a> — deterministic DOT export of the include/call/component graphs (same source data as the figures above).</p>
 <p>Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).</p>

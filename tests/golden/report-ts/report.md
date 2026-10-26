@@ -135,7 +135,7 @@ Distribution — max\_loop\_depth:
 | `PERF\-JS\-TYPE\-001` | 1 | 0 | 0 | 1 | \`delete\` on an object property (`PERF\-JS\-TYPE\-001:12\_delete\.ts:6:3`) — `12\_delete\.ts:6:3` |
 
 ## 5. Explorer
-[Dependency graph — internal ts, tsx dependencies between scanned files.](charts/include-graph.svg)
+[Dependency graph — internal import/require dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
 [Entry-stratified cost map — files stratified by resolved entry reachability, heat by candidate function cost; LOW-confidence call edges excluded.](charts/layer-entry.svg)
 [Component coupling — cross-file call edges between components.](charts/component-coupling.svg)
@@ -154,7 +154,7 @@ Component detail pages (one per component above):
 
 [Component \. — per-file hot-path map.](charts/component-01-root.svg)
 
-The dependency graph reflects resolved internal include/module edges between scanned files — ts module edges and tsx module edges; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
+The dependency graph reflects resolved internal include/module edges between scanned files — JavaScript/TypeScript `import`/`require` bindings; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
 Coupling heat blends edge counts with per-function cost (cost = cyclomatic + cognitive + 2·max_loop_depth + 3·alloc_site_count + call fanout/fanin/depth, +2 if recursive, +1 each for error_path / alloc_family; each edge weighs 1 + mean endpoint cost normalized by the scan maximum) — charts remain pure functions of metrics.json.
 Machine-readable graph: [graph.dot](charts/graph.dot) — deterministic DOT export of the include/call/component graphs (same source data as the SVGs above).
 Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).

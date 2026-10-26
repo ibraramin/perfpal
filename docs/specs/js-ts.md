@@ -10,6 +10,17 @@ schema v1.8 + fixtures/goldens); **B3 committed `9dd19bb`** (full DoD green, fiv
 **Owners:** Track B owns this spec, `docs/plans/js-ts.md`, the JS/TS ADR, the grammar pins, the JS/TS
 fixtures/goldens, and the `src/schema` language values. Track A owns `views.rs`/`mod.rs` wiring until A step 12.
 
+**B4 close-out (docs/contract/canary pass).** The JS/TS tier is documented as shipped: `modules.md`
+§1/§3.2/§4.2/§5.2/§5.3/§7 carry the six-token matrix and the five backend directories,
+`output-contract.md` publishes the language vocabulary + discovery skips, `README.md`/`roadmap.md`/
+`Cargo.toml` name the JS/TS backends and the 78-rule catalog, and `docs/heuristics/js-catalog.md` is the
+read-code-first 11-rule reference. Reporter label polish renders the shared family as
+`import/require` / ``JavaScript/TypeScript `import`/`require` bindings`` instead of bare `js`/`ts` module
+edges. The real-code canary was re-run on the pinned express/execa/gemini-cli corpora; see
+`docs/evidence/js-b4/real-code-canary.md`. Spread-root attribution and the `s = f(s + "x")` STR-001
+negative are published limitations/tests, not silent behaviour. No schema, rule, reporter-count or
+dependency change.
+
 **B3 close-out (committed `9dd19bb`).** TypeScript and TSX are first-class backends without a second
 visitor: the JS backend is parameterized by a grammar/token/flavor `Dialect` and the new
 `src/scanner/backends/tree_sitter_typescript/` binds `LANGUAGE_TYPESCRIPT` (`ts`) and `LANGUAGE_TSX`
@@ -24,7 +35,7 @@ tests), 17 backend unit tests (incl. wrapper callee/receiver decomposition and c
 `tests/golden/report-ts/` (20 artifacts; `GOLDEN_TREES` 5 → 6).
 No schema bump, no new rules, no dependency change. Verification: `docs/evidence/js-b3/gate.txt`.
 
-**B2-W2 close-out (implemented; uncommitted).** 11 `PERF-JS-*` rules landed in
+**B2-W2 close-out (committed `edfc98a`).** 11 `PERF-JS-*` rules landed in
 `src/analyzer/heuristics/js/mod.rs` with 27 parser-free IR unit tests; constants in
 `src/analyzer/finding.rs`; `RuleLanguage::{Js,Ts}`, the ascending registry block, and the `js|ts|tsx`
 partition in `src/analyzer/mod.rs` (`Ts` is reserved and empty in v1); 11 catalog entries in
@@ -35,7 +46,7 @@ landed in the same change as the registry block. Schema v1.8 landed:
 retained; both language enums are `["c","js","python","rust","ts","tsx"]`; `tests/schema_1_7.rs` is
 renamed `tests/schema_1_8.rs` and the version-pin sweep is applied. DoD (recorded): `cargo test --locked`
 63 suites / 935 passed / 0 failed; `cargo deny check licenses` ok; semantic-feature and native checks
-green. Panel: round 1 R2/Q1/Q2 APPROVED, R1 CHANGES_REQUESTED -> fixed; round 2 R1/R3 APPROVED, Q2 doc fixes applied; final confirmation pending. Commit: **pending founder approval**.
+green. Panel: round 1 R2/Q1/Q2 APPROVED, R1 CHANGES_REQUESTED -> fixed; round 2 R1/R3 APPROVED, Q2 doc fixes applied; final confirmation **APPROVED**. Commit `edfc98a`.
 
 **B2-W2 review-panel R1 close-out (implemented).** The two blocking rule-gate defects are fixed
 in the same change: `PERF-JS-STR-001` is **string-gated** on the B2-W0 canary predicate (RHS must be a
@@ -161,6 +172,10 @@ golden regeneration instead of two).
 - `rule_id` is an open pattern: new `PERF-JS-*`/`PERF-TS-*` ids need no schema change.
 - No new metric fields. `function_cost_v2`, `trip_count_source`, `known_trip_value`, `path_class` are reused
   as-is. `docs/schema/metrics-json-v1.md` gains the v1.7→v1.8 delta entry.
+- **Semver position:** the JS/TS track is a **later release** (non-blocking for the beta). Its schema change
+  is an **additive MINOR** (v1.7 → v1.8): no required list grows, no field is removed or retyped, and a
+  re-marked v1.7 document validates. The crate version stays `0.2.0-beta.1` until the release owner cuts the
+  next version; B4 does not bump it.
 
 ## 6. Rule catalog
 
@@ -299,6 +314,12 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
   maskers. Each suite compares the full artifact set: `metrics.json` (provenance masked), `report.md`,
   `report.html`, `findings-detail.md/.html`, `profile-queue.md/.html`, `charts/*`, and the bundled schema
   artifact. `.length`/ordering checks on every new visitor; a golden tree alone is not a double-run.
+- **B4 locks:** `tests/javascript_backend.rs` gains the real-parse negative
+  `str_001_real_parse_ignores_a_string_plus_nested_in_a_call` (the `s = f(s + "x")` assignment arm stays
+  silent while `s = s + "x"` fires); `src/analyzer/heuristics/js/tests.rs` pins the documented
+  spread-root attribution order; the reporter unit test `dependency_labels_cover_the_js_family` locks the
+  `import/require` caption/family prose and the unknown-language fallback. Golden trees `report-js` and
+  `report-ts` are regenerated for the label change; the other four trees stay byte-identical.
 
 ## 10. CLI behavior
 
@@ -330,6 +351,10 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
    name in every golden tree. The global directory skip is documented as an intentional discovery change.
 7. Parallel review panel: >= 2 reviewer + >= 2 requirements-reviewer lanes, >= 1 APPROVE per family, zero
    unresolved blocking findings.
+8. B4 evidence: `docs/heuristics/js-catalog.md` exists and matches the implemented 11 rules;
+   `docs/evidence/js-b4/real-code-canary.md` records the pinned-corpus re-run; the reporter label tests and
+   the real-parse STR-001 negative pass; README/roadmap/modules/output-contract/Cargo.toml name the JS/TS
+   tier and the six tokens.
 
 ## 12. Accepted limitations (must be published in the report/docs)
 
@@ -355,3 +380,42 @@ skipped silently, while `.ts`/`.mts`/`.cts`/`.tsx` are scanned and a genuinely u
 fallback. **Class bodies are not event owners:**
 methods and arrow-function fields are their own records, but non-arrow field-initializer expressions and
 `class_static_block` bodies are not event-scanned at all.
+
+**B4-published limitations and locks:**
+
+- **Spread-root attribution (`ALLOC-003`):** the IR records `referenced_names` but not which name was the
+  spread operand. When more than one referenced name is reassigned in the loop, the rule reports the
+  alphabetically first one as `receiver_root`, not necessarily the actual accumulator (`acc`); member/`this`
+  accumulators are not detected. Pinned by an IR test and documented in `docs/heuristics/js-catalog.md`.
+- **STR-001 assignment arm:** the `x = x + "…"` form fires only when the binary is the **whole** RHS.
+  `s = f(s + "x")` is silent by design (the `+` is nested in a call), locked by a real-parse integration
+  test. `s += "x"` remains the `+=` arm.
+- **Reporter labels:** JS/TS/TSX render as the shared `import/require` mechanism and
+  ``JavaScript/TypeScript `import`/`require` bindings``; `PERF-TS-*` remains reserved/empty, so no
+  TypeScript-only label is claimed.
+- **Real-code canary:** the B4 re-run measures hits and a hand-verified sample on three pinned repositories;
+  it is not a corpus-wide precision claim, and the synthetic 1.0/1.0 KPI remains synthetic-only
+  (`R-tb-016`). The canary does not change the rule set.
+- **B4 canary findings (merge-gate follow-ups, no rule change in B4):** `PERF-JS-CALL-001` is **not
+  merge-ready** — 150 strict (+2 wrapped) of 180 production hits are member/method-name collisions (`this.foo()` inside
+  `foo()`, `new X().foo()` inside `foo()`) because the extractor's `receiver_root_of` returns `None` for
+  non-identifier receivers, so the rule's receiver gate never fires; 3/3 express FPs and 1/1 execa TP were
+  hand-verified. `PERF-JS-TYPE-001` has a fresh-object FP class (~10/14 production hits delete from a
+  just-built/copied object); `PERF-JS-ALLOC-001` remains noisy but gated (503 production hits; trivial
+  option bags/reset literals in the sample). `PERF-JS-ARCH-001` remains structurally blind in alias
+  monorepos (0 on gemini-cli, 4 execa cycles); `PERF-JS-ASYNC-002` remains test-skewed (153 production vs
+  1,028 non-production). Cross-cutting: `path_class` does not recognize `.spec.` / hyphenated test dirs,
+  and `findings[].symbol` reports `<module>` for every JS/TS finding in `metrics.json`. The ranked action
+  list/key views resolve the narrowest enclosing function; the full-detail rows inherit the `symbol` field
+  and still show `<module>` until the aggregator fix (`A-tb-008`). The evidence is
+  `docs/evidence/js-b4/real-code-canary.md`; the merge gate must not clear until `CALL-001` is fixed and
+  the canary is re-run.
+- **`metrics.json` `findings[].symbol` for JS/TS (B4-discovered, merge-gate follow-up):** the aggregator
+  resolves a finding's symbol by **first-hit** over the file's function records
+  (`src/aggregator/mod.rs::findings_with_symbols`). The JS/TS backend emits a synthetic `<module>` record
+  spanning the whole file **first**, so every JS/TS finding currently reports `symbol: "<module>"` in
+  `metrics.json`. The ranked action list/key views resolve the narrowest enclosing function; the
+  full-detail rows inherit `metrics.json`'s `symbol` and still show `<module>` until the aggregator fix.
+  Fixing this requires choosing the narrowest containing record in the aggregator and re-baselining the
+  JS/TS goldens; it is **out of B4's docs/label scope** and is tracked as a merge-gate follow-up in the
+  track handoff, not hidden.

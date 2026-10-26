@@ -996,3 +996,83 @@ fn two_js_scans_are_byte_identical_modulo_provenance() {
     fs::remove_dir_all(out1.parent().expect("output parent")).ok();
     fs::remove_dir_all(out2.parent().expect("output parent")).ok();
 }
+
+// ---------------------------------------------------------------------------
+// (10) STR-001 real-parse negative: a `+` nested in a call is not an
+// accumulator assignment
+// ---------------------------------------------------------------------------
+
+#[test]
+fn str_001_real_parse_ignores_a_string_plus_nested_in_a_call() {
+    // Both loops use `i < xs.length` (unknown trip count) so the tiny-loop
+    // floor never suppresses; both functions are top-level so the loop gate
+    // applies. `s = f(s + "x")` must stay SILENT (the `+` is contained in the
+    // call, not the whole RHS); `s = s + "x"` must FIRE once.
+    let root = write_tree(
+        "str001-nested",
+        &[(
+            "str.js",
+            "function run(xs) {\n\
+               for (let i = 0; i < xs.length; i++) {\n\
+                 s = f(s + \"x\");\n\
+               }\n\
+               return s;\n\
+             }\n\
+             function runDirect(xs) {\n\
+               for (let i = 0; i < xs.length; i++) {\n\
+                 s = s + \"x\";\n\
+               }\n\
+               return s;\n\
+             }\n",
+        )],
+    );
+
+    let (code, out) = run_pipeline("str001-nested-out", &root);
+    assert_eq!(code, 0, "findings never affect the exit code");
+
+    let doc = read_json(&out.join("metrics.json"));
+    let findings: Vec<&serde_json::Value> = doc["findings"]
+        .as_array()
+        .expect("findings[]")
+        .iter()
+        .filter(|f| f["rule_id"] == "PERF-JS-STR-001")
+        .collect();
+
+    assert_eq!(
+        findings.len(),
+        1,
+        "only the direct accumulator fires: {findings:?}"
+    );
+    // The finding is the direct accumulator at line 9, inside `runDirect`
+    // (the nested `s = f(s + "x")` at line 3 is silent).
+    assert_eq!(findings[0]["span"]["start_line"], 9);
+
+    // `metrics.json` `findings[].symbol` uses the aggregator's documented
+    // FIRST-HIT resolution over `FunctionUnit`s; every JS file emits the
+    // synthetic `<module>` record (spanning the whole file) before the real
+    // functions, so that field reports `<module>` for every JS finding. The
+    // ranked action list resolves the narrowest enclosing function; the full
+    // detail rows still inherit `<module>` until the aggregator fix. Assert the
+    // ranked-list attribution to `runDirect` here.
+    assert_eq!(
+        doc["parse_health_summary"]["ok"], 1,
+        "fixture must parse cleanly (no dropped nested binary ops): {doc:?}"
+    );
+    assert_eq!(
+        doc["parse_health_summary"]["partial"], 0,
+        "fixture must not be partial: {doc:?}"
+    );
+    assert_eq!(
+        doc["files"][0]["parse_health"]["error_node_count"], 0,
+        "fixture must have zero error nodes: {doc:?}"
+    );
+    let detail = fs::read_to_string(out.join("findings-detail.md"))
+        .expect("findings-detail.md must be emitted");
+    assert!(
+        detail.contains("| `runDirect` |"),
+        "finding must be attributed to runDirect:\n{detail}"
+    );
+
+    fs::remove_dir_all(&root).ok();
+    fs::remove_dir_all(out.parent().expect("output parent")).ok();
+}

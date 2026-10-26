@@ -388,7 +388,12 @@ counter twice and `cmp`s the output).
 | `R-tb-013` | Malformed/unreadable `package.json` could escalate a per-file problem to exit 3 | **mitigated (B2-W1):** malformed/unreadable manifests are ignored, the conventional/in-source ladder still runs, and the scan exits 0 (locked by the integration test) |
 | `R-tb-014` | Pinned TS grammar `0.23.2` cannot parse `f<typeof import("x")>()` (220 of 229 gemini-cli parse failures in the canary) | degrade honestly (partial parse); upgrade only via the ADR-0001 G5 node-types review; B3 snapshot tests |
 | `R-tb-015` | **Schema staging (two surfaces):** B2-W1 emitted `files[].language == "js"` against a bundled v1.7 artifact whose enums listed only `c`/`rust`/`python` | **resolved (B2-W2):** v1.8 landed in `src/schema/` + byte-identical `docs/schema/` copy; both enums hold all six tokens; v1.7 retained; version-pin sweep applied. A W1 build remains non-shippable (historical) |
-| `R-tb-016` | **Lexical rule gates:** `ALLOC-001` models loop-invariance, not a separate escape analysis; `CALL-001` treats any earlier comparison as a visible base case; `LOOP-001` cannot test for an early exit (no break/return events in IR); `LOOP-007` proxies the frozen "small collection" class with loop trip count | gates documented exactly as implemented; 1.0/1.0 is the synthetic precision corpus only — re-run the real-code canary before merge |
+| `R-tb-017` | **`CALL-001` member-receiver gate (B4 canary, HIGH):** 150 of 180 production hits are member/method-name collisions (`this.foo()` inside `foo()`, `new X().foo()` inside `foo()`) because `receiver_root_of` returns `None` for non-identifier receivers; the rule's `receiver_root.is_some()` gate never sees them. 3/3 express FPs, 1/1 execa TP, 147/176 gemini strict member calls (+2 wrapped = 149/176 member-class) hand-verified | **merge-gate blocker:** fix the rule gate (bare `callee_path == function name` and/or `this`/`new` receiver roots), re-run the B4 canary, re-baseline the JS/TS goldens; not fixed in B4 (docs/label scope) |
+| `R-tb-018` | **`TYPE-001` fresh-object FP class (B4 canary, MEDIUM):** ~10 of 14 production hits delete from a just-built/copied object (the rule's own suggested rebuild), so the hidden-class mechanism does not apply | document the observed class and/or gate on a shared/receiver object; Info severity, not a merge blocker |
+| `R-tb-019` | **`findings[].symbol` first-hit (B4 canary, MEDIUM, JS/TS-specific):** the aggregator resolves symbols by first-hit over function records; the synthetic `<module>` record spans the file and is emitted first, so `metrics.json` reports `<module>` for every JS/TS finding. The ranked action list/key views resolve the narrowest function; full-detail rows still show `<module>` | fix `findings_with_symbols` to choose the narrowest containing record, re-baseline the JS/TS goldens; out of B4 scope (`A-tb-008`) |
+| `R-tb-020` | **`path_class` `.spec.` gap (B4 canary, MEDIUM, cross-language):** the classifier catches `.test.`/`_test.`/`_spec.` but not `.spec.` or hyphenated test dirs; ≥34 gemini-cli test-ish files (98 findings) are labelled `production`, skewing production-first ranking | extend `is_test_basename`/segment classification; cross-language, not JS-specific |
+| `R-tb-021` | **`ALLOC-001` trivial-literal noise (B4 canary, LOW):** 503 production hits, 2.25/kLOC; the loop-invariance gate cut the W0 candidate count roughly in half, but trivial option bags/reset/fallback objects still fire | the rule is Info/MEDIUM and remains within the W0 "noise cannon" warning; a later triviality gate is optional |
+| `R-tb-016` | **Lexical rule gates:** `ALLOC-001` models loop-invariance, not a separate escape analysis; `CALL-001` treats any earlier comparison as a visible base case; `LOOP-001` cannot test for an early exit (no break/return events in IR); `LOOP-007` proxies the frozen "small collection" class with loop trip count | **canary recorded (B4):** `docs/evidence/js-b4/real-code-canary.md`; the synthetic 1.0/1.0 KPI remains synthetic-only; the CALL-001/TYPE-001/ALLOC-001 findings are R-tb-017/018/021 |
 
 **Accepted limitations added by B2-W1:**
 
@@ -478,7 +483,7 @@ and empty in v1); 11 catalog entries and the 67 → 78 count/equality locks in `
   to `js` because the JS grammar embeds JSX. `SUPPORTED_LANGUAGES` is the six-value set.
 - **Non-arrow class-field initializers and `class_static_block` bodies are not event-scanned** (`D-tb-016`);
   they belong to no function record, so their calls/allocs never reach `stats.functions[]`.
-- **Reporter dependency clause** currently renders a JS corpus as bare "js module edges"; label polish is B4.
+- **Reporter dependency clause** rendered a JS corpus as bare "js module edges" through B3; **B4 resolved it** — the shared family now renders as `import/require` (caption) and ``JavaScript/TypeScript `import`/`require` bindings`` (prose), with `js`/`ts`/`tsx` deduped to one fragment and unknown languages keeping the escaped `<name> module edges` fallback.
 - **Findings are optimization candidates, not proven bottlenecks.** The tier is syntactic; no type
   information and no semantic resolver claim.
 - **`ALLOC-003` member/`this` accumulators and spread-root attribution:** `assigned_within` matches plain
@@ -566,3 +571,68 @@ Full transcript: `docs/evidence/js-b3/gate.txt` §9 (final tree): 66 suites / **
 semantic-feature **976 passed**, DoD double-run over `examples-js` + `examples-ts`, native check, golden
 identity (five pre-existing trees unchanged), and all guards. Panel (final): **R1, R2, R3, Q1 and Q2 all
 APPROVED**, zero unresolved blocking findings; verdict and fix history in the track handoff.
+
+## 17. Session B4 — docs/contract/canary close-out
+
+**State:** docs/contract pass + reporter label polish + real-code canary re-run; no schema, rule,
+reporter-count, or dependency change. Gate: plan `js-ts` Definition of Done + parallel panel; commit and
+merge remain founder-gated (`A-tb-006`).
+
+### 17.1 Docs/contract
+
+- `docs/architecture/modules.md` §1/§3.2/§4.2/§5.2/§5.3/§7 now describe the six-token vocabulary
+  (`c`, `js`, `python`, `rust`, `ts`, `tsx`), the five backend directories, the global directory skips and
+  JS/TS file/size caps, the v1.8 schema, and the JS/TS close-out.
+- `docs/report/output-contract.md` publishes the language-token vocabulary, the dependency-label
+  vocabulary, the discovery-skip policy, and v1.8 schema references. `README.md`/`docs/roadmap.md`/
+  `Cargo.toml` name the JS/TS backends, the 78-rule catalog (23 C + 11 JS + 22 PY + 22 RS), the six-value
+  zero-file fallback, and the semver position (later release, additive minor).
+- `docs/heuristics/js-catalog.md` is the read-code-first 11-rule reference: gates, evidence keys,
+  mechanisms/fixes/accepted FP classes, baseline stats, published limitations, and the B4 canary pointer.
+- The CHANGELOG note is recorded in `state/tracks/js-ts/handoff.md` for Track A to apply at merge; the
+  branch CHANGELOG is intentionally untouched (it trails `main`).
+
+### 17.2 Label polish (`B-tb-001`)
+
+`dependency_mechanisms`/`dependency_clause` in `src/reporter/mod.rs` recognize the JS family once:
+`import/require` in the include-graph caption and ``JavaScript/TypeScript `import`/`require` bindings`` in
+the architecture prose. `js`/`ts`/`tsx` no longer render as three separate bare fragments; unknown
+languages keep the forward-compatible escaped fallback. The reporter unit test
+`dependency_labels_cover_the_js_family` locks the mapping and order.
+
+### 17.3 B4 tests and evidence
+
+- `tests/javascript_backend.rs` — real-parse STR-001 negative: `s = f(s + "x")` is silent while
+  `s = s + "x"` fires exactly once.
+- `src/analyzer/heuristics/js/tests.rs` — pins the documented spread-root attribution order
+  (`ALLOC-003` reports the alphabetically first loop-reassigned name, not the spread operand).
+- `docs/evidence/js-b4/real-code-canary.md` — pinned express `v5.1.0` / execa `v9.6.1` /
+  gemini-cli `v0.65.0` re-run with per-rule production counts, parse health, determinism, and a
+  hand-verified sample. The result is hits + sample FP rate, not a corpus-wide precision claim.
+
+  **Result (important):** all 11 rules fire across the pinned corpora. The canary found a **merge-gate
+  blocker**: `PERF-JS-CALL-001` has 150/180 strict member FPs (+2 wrapped) from member/method-name collisions
+  (`this.foo()` inside `foo()`, `new X().foo()` inside `foo()`) because `receiver_root_of` returns `None`
+  for non-identifier receivers; 3/3 express are FPs, 1/1 execa is a TP. It also observed a `TYPE-001`
+  fresh-object FP class (~10/14), the expected `ALLOC-001` trivial-literal noise (503 production hits),
+  `ALLOC-003`'s `slice`-consumption breadth (17/20, one error-message spread FP), the expected
+  `ASYNC-002` test skew (153 prod vs 1,028 non-prod), and `ARCH-001`'s alias-monorepo blindness (0 on
+  gemini-cli, 4 execa cycles). Cross-cutting: `path_class` misses `.spec.` / hyphenated test dirs, and
+  `findings[].symbol` is `<module>` in `metrics.json` (the ranked action list/key views resolve the
+  narrowest function; full-detail rows still show `<module>` until `A-tb-008`). See `R-tb-017`…
+  `R-tb-021`; the merge gate must not clear until `CALL-001` is fixed and the canary is re-run.
+- `report-js`/`report-ts` goldens are regenerated for the label change; the other four trees are
+  byte-identical.
+- **B4-discovered data-quality follow-up (merge gate):** `findings[].symbol` in `metrics.json` is
+  first-hit over function records, so the JS/TS synthetic `<module>` record (emitted first, spanning the
+  file) wins for every JS/TS finding. The ranked action list/key views resolve the narrowest enclosing
+  function; the full-detail rows still inherit `<module>` until the aggregator fix. The fix belongs in
+  `src/aggregator/mod.rs::findings_with_symbols` (narrowest containing record) and is deliberately not
+  part of the B4 docs/label pass (`A-tb-008`).
+
+### 17.4 Verification
+
+Recorded in the track handoff / `docs/evidence/js-b4/gate.txt`: plan `js-ts` DoD (fmt, clippy, full suite,
+deny, semantic-feature lint/tests, `examples-js`/`examples-ts` double-run, native check), plus the B4
+targeted suites and the **parallel review panel: R1 + R2 + R3 + Q1 + Q2 all APPROVED, zero unresolved
+blocking findings** (the canary `CALL-001` defect remains the merge-gate follow-up `B-tb-004`/`A-tb-007`).

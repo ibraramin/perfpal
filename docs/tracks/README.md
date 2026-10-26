@@ -5,7 +5,7 @@ Four tracks, four worktrees, four sessions. **One session per worktree; never tw
 | Track | Worktree | Branch | Base | First session | Track handoff |
 |---|---|---|---|---|---|
 | **A Atlas beta** | `/home/shafin/Opencode/Perfpal` | `main` | `821b984` | **A1** step 11 rail | `state/handoff/latest.md` |
-| **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` | `feat/js-ts` | `9a94905` (rebased on `main` @ `9a94905`) | **B3** TS/TSX backend | `state/tracks/js-ts/handoff.md` |
+| **B JS/TS backend** | `/home/shafin/Opencode/Perfpal-js-ts` | `feat/js-ts` | `9a94905` (rebased on `main` @ `9a94905`) | **B4 implemented (panel APPROVED; commit pending); merge gate** (`A-tb-006`, founder approval) | `state/tracks/js-ts/handoff.md` |
 | **C Agent report** | `/home/shafin/Opencode/Perfpal-agent-report` | `feat/agent-report` | `821b984` (rebase after A step 12) | **C1** spec/contract | `state/tracks/agent-report/handoff.md` |
 | **D Atlas Run** | `/home/shafin/Opencode/Perfpal-atlas-sim` | `feat/atlas-sim` | `821b984` | **D1** static run-story prototype | `state/tracks/atlas-sim/handoff.md` |
 
@@ -14,15 +14,18 @@ Four tracks, four worktrees, four sessions. **One session per worktree; never tw
 Open opencode in the track worktree and send **one** first message:
 
 1. **A:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-beta.md and execute Session A1.`
-2. **B:** `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B3.`
+2. **B:** `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute the merge gate (B4 implemented; see the handoff).`
 3. **C:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/agent-report.md and execute Session C1.`
 4. **D:** `Read /home/shafin/Opencode/Perfpal/docs/tracks/atlas-run.md and execute Session D1.`
 
 The track file is the brief. Do not paste this README into a tab; it is the shared rulebook.
 
 **Track B branch state:** B2-W0/B2-W1/B2-W2 are committed (`e7f5332`/`90d5677`/`edfc98a`); **B3 is
-implemented in the working tree and uncommitted** (full DoD green, panel recorded, commit pending);
-`feat/js-ts` is rebased on `main` @ `9a94905`. B4 is the next session.
+committed `9dd19bb`** (full DoD green, panel APPROVED); **B4 is implemented in the working tree** (docs/
+contract/canary + label polish; plan DoD green; panel APPROVED: R1/R2/R3 + Q1/Q2; commit pending
+founder go-ahead).
+`feat/js-ts` is based on `main` @ `9a94905`. The merge gate is `A-tb-006` + the B4-canary `CALL-001`
+fix (`B-tb-004`/`A-tb-007`) + founder approval.
 
 ## Shared rules (all tracks)
 

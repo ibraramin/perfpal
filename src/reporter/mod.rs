@@ -2788,8 +2788,17 @@ fn chart_caption(stem: &str, languages: &[String]) -> String {
     }
 }
 
+/// True for the JavaScript/TypeScript family (`js` | `ts` | `tsx`). All three
+/// share one dependency mechanism (`import`/`require`) and one prose fragment,
+/// so they render as a single family rather than three bare language names.
+fn is_js_family(language: &str) -> bool {
+    matches!(language, "js" | "ts" | "tsx")
+}
+
 /// Dependency mechanisms of the scanned languages in PINNED order
-/// (c → rust → python, then any other language sorted ascending by name).
+/// (c → rust → python → the js/ts/tsx family, then any other language sorted
+/// ascending by name). The JS family contributes exactly one `import/require`
+/// fragment even when several of `js`/`ts`/`tsx` were scanned.
 /// Pure function of the language list — deterministic regardless of document
 /// order. Unknown languages pass through as bare names (escaped by the
 /// caller — see [`dependency_clause`]).
@@ -2804,9 +2813,14 @@ fn dependency_mechanisms(languages: &[String]) -> Vec<String> {
     if languages.iter().any(|l| l == "python") {
         parts.push("import".to_string());
     }
+    if languages.iter().any(|l| is_js_family(l)) {
+        parts.push("import/require".to_string());
+    }
     let mut others: Vec<&String> = languages
         .iter()
-        .filter(|l| l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python")
+        .filter(|l| {
+            l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python" && !is_js_family(l)
+        })
         .collect();
     others.sort();
     others.dedup();
@@ -2849,11 +2863,12 @@ fn oxford_join(mut parts: Vec<String>) -> String {
 
 /// Edge-kind clause for the architecture paragraph ("C `#include`
 /// directives and Rust `mod`/`use` module paths"), conditioned on the ACTUAL
-/// scanned languages — same registry as [`dependency_mechanisms`]. `None`
-/// when no language names an edge kind (the paragraph then falls back to the
-/// generic sentence). Known-language fragments are pinned static text (they
-/// carry backticks that must render as Markdown code spans / literal HTML);
-/// unknown language names are document-derived and go through `escape`.
+/// scanned languages — same registry as [`dependency_mechanisms`], including
+/// the pinned c → rust → python → js/ts/tsx family order. `None` when no
+/// language names an edge kind (the paragraph then falls back to the generic
+/// sentence). Known-language fragments are pinned static text (they carry
+/// backticks that must render as Markdown code spans / literal HTML); unknown
+/// language names are document-derived and go through `escape`.
 #[must_use]
 fn dependency_clause(languages: &[String], escape: impl Fn(&str) -> String) -> Option<String> {
     let mut parts: Vec<String> = Vec::new();
@@ -2866,9 +2881,14 @@ fn dependency_clause(languages: &[String], escape: impl Fn(&str) -> String) -> O
     if languages.iter().any(|l| l == "python") {
         parts.push("Python `import` bindings".to_string());
     }
+    if languages.iter().any(|l| is_js_family(l)) {
+        parts.push("JavaScript/TypeScript `import`/`require` bindings".to_string());
+    }
     let mut others: Vec<&String> = languages
         .iter()
-        .filter(|l| l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python")
+        .filter(|l| {
+            l.as_str() != "c" && l.as_str() != "rust" && l.as_str() != "python" && !is_js_family(l)
+        })
         .collect();
     others.sort();
     others.dedup();
@@ -3108,5 +3128,49 @@ mod tests {
                 "retired Python rule id must not be registered/cataloged: {retired}"
             );
         }
+    }
+
+    /// B4 label polish lock: `js`/`ts`/`tsx` are ONE family — a single
+    /// `import/require` mechanism fragment and one prose clause, never bare
+    /// `js module edges` / `ts module edges` / `tsx module edges`. Pinned
+    /// order is c → rust → python → JS family, and unknown languages keep the
+    /// forward-compat `<name> module edges` escape path.
+    #[test]
+    fn dependency_labels_cover_the_js_family() {
+        // (a) one fragment only, no duplicates, for all three languages.
+        assert_eq!(
+            dependency_mechanisms(&["js".to_string(), "ts".to_string(), "tsx".to_string()]),
+            vec!["import/require".to_string()]
+        );
+
+        // (b) caption is the exact expected JS-family caption.
+        assert_eq!(
+            include_graph_caption(&["js".to_string(), "ts".to_string(), "tsx".to_string()]),
+            "Dependency graph — internal import/require dependencies between scanned files."
+        );
+
+        // (c) prose clause names the family once.
+        assert_eq!(
+            dependency_clause(
+                &["js".to_string(), "ts".to_string(), "tsx".to_string()],
+                |s| { s.to_string() }
+            ),
+            Some("JavaScript/TypeScript `import`/`require` bindings".to_string())
+        );
+
+        // (d) pinned order: C fragment before the JS family fragment.
+        assert_eq!(
+            dependency_clause(&["js".to_string(), "c".to_string()], |s| s.to_string()),
+            Some(
+                "C `#include` directives and JavaScript/TypeScript `import`/`require` bindings"
+                    .to_string()
+            )
+        );
+
+        // (e) unknown languages still take the module-edges escape path.
+        assert_eq!(
+            dependency_clause(&["zig".to_string()], |s| s.to_string()),
+            Some("zig module edges".to_string())
+        );
     }
 }

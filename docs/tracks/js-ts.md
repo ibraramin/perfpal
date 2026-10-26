@@ -2,14 +2,13 @@
 
 **Start this tab:** open `/home/shafin/Opencode/Perfpal-js-ts` (`feat/js-ts`), first message:
 
-> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B4.`
+> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute the merge gate (B4 is complete; see the handoff).`
 
-**Next-session signpost (B4):** branch `feat/js-ts`, base `main @ 9a94905`; W0 `e7f5332`, W1 `90d5677`,
-W2 `edfc98a`, **B3 committed `9dd19bb` (full DoD green, five-lane panel APPROVED).** B4 scope: docs/contract pass (`modules.md` §4.2/5.2 + §1, output-contract
-labels, README/roadmap/`Cargo.toml` description), `docs/heuristics/js-catalog.md`, CHANGELOG note for A,
-semver note, **real-code canary re-run on the 11 rules**, real-parse negative `s = f(s + "x")`, spread-root
-attribution limitation, JS/TS dependency-label polish (`B-tb-001`). Gate: plan `js-ts` DoD + parallel panel;
-no push; merge remains `A-tb-006` (B4 + founder approval).
+**Next-session signpost (merge gate):** branch `feat/js-ts`, base `main @ 9a94905`; W0 `e7f5332`, W1 `90d5677`,
+W2 `edfc98a`, B3 `9dd19bb`, **B4 implemented (docs/contract/canary + label polish; plan DoD green; panel
+APPROVED: R1/R2/R3 + Q1/Q2).** The merge gate `A-tb-006` remains blocked on **founder approval** and on the B4-canary
+`PERF-JS-CALL-001` gate fix (`R-tb-017`: 150/180 production FPs from member/method-name collisions). No
+push. See `state/tracks/js-ts/handoff.md` for the full B4 record.
 
 **Track handoff:** `state/tracks/js-ts/handoff.md` · **Spec:** `docs/specs/js-ts.md` · **Plan:** `docs/plans/js-ts.md` · **ADR:** `docs/adr/ADR-0011-js-ts-backend.md` · **Inventory:** `docs/architecture/js-ts.md` · **Canary evidence:** `docs/evidence/js-canary.md` · **Base:** `9a94905` (rebased on `main` @ `9a94905`; B1 base `821b984`).
 **Scope:** add JS, then TS/TSX, as first-class backends in the existing Rust core — like C/Rust/Python. **Not a rewrite.** A later release; not beta-blocking.
@@ -80,7 +79,7 @@ loops/cost provenance, alloc/error/idiom facts, exact include-graph edges, zero 
 determinism). **No `src/reporter`/Atlas edits, no schema bump, no main state.** Verification:
 `state/tracks/js-ts/handoff.md`. Next: **B2-W2** (rules + schema v1.8 + fixtures/goldens; `B-tb-003`).
 
-## Session B2-W2 — rules + schema v1.8 — **implemented (uncommitted)** (2026-10-24)
+## Session B2-W2 — rules + schema v1.8 — **committed `edfc98a`; full DoD green; panel APPROVED** (2026-10-24)
 
 **Goal:** ship the frozen 11 `PERF-JS-*` rules, land the catalog atomically, bump the schema to v1.8, and
 add the corpora/fixtures/goldens. Branch `feat/js-ts` rebased on `main` @ `9a94905`.
@@ -120,7 +119,7 @@ silent controls stay silent. Precision corpus: all 11 rules 1.0 / 1.0 (25 JS fix
 double-run is byte-identical modulo `scan.started_at`/`scan.duration_ms`. Gate transcript:
 `docs/evidence/js-w2/gate.txt` (recorded in the tree). **Panel:** round 1 R2/Q1/Q2 APPROVED, R1
 CHANGES_REQUESTED (two rule-gate defects) → fixed; round 2 R1 and a fresh R3 APPROVED, Q2 asked for
-documentation fixes → applied; final confirmation pending. **Commit: pending founder approval. Merge gate
+documentation fixes → applied; final confirmation pending. **Committed `edfc98a`. Merge gate
 `A-tb-006` still requires founder approval; `B-tb-002` stays open.**
 
 **Decisions:** `D-tb-017` — `B-tb-003` resolved: the founder approved the atomic catalog-only B edit in the
@@ -175,14 +174,46 @@ semantic-feature, double-run over `examples-js` + `examples-ts`, native check) �
 TS parameter annotations recorded (IR-internal). `D-tb-019` — `R-tb-010` narrowed: both `<T,>` and `<T>`
 generic arrows parse cleanly at expression position on the pinned TSX grammar.
 
-**Next:** **B4** (docs/contract/label pass, `js-catalog.md`, real-code canary re-run before merge;
-`A-tb-006` merge gate still needs founder approval).
+## Session B4 — docs/contract/canary — **implemented; plan DoD green; panel APPROVED (R1/R2/R3 + Q1/Q2)** (2026-10-26)
+
+**Goal:** close the docs/contract/label pass and re-run the real-code canary before merge, without a
+schema, rule, reporter-count or dependency change.
+
+**Close-out:** `docs/architecture/modules.md` §1/§3.2/§4.2/§5.2/§5.3/§7 now carry the six-token matrix,
+the five backend directories, discovery skips and v1.8; `docs/report/output-contract.md` publishes the
+language vocabulary, dependency labels and discovery policy; `README.md`/`docs/roadmap.md`/`Cargo.toml`
+name the JS/TS tier and the 78-rule catalog; new `docs/heuristics/js-catalog.md` is the read-code-first
+11-rule reference. Reporter `dependency_mechanisms`/`dependency_clause` render the shared family as
+`import/require` / ``JavaScript/TypeScript `import`/`require` bindings`` (deduped `js`/`ts`/`tsx`); the
+`report-js`/`report-ts` goldens were regenerated (the other four trees are byte-identical). Tests:
+`dependency_labels_cover_the_js_family`, the real-parse STR-001 negative
+(`s = f(s + "x")` silent; `s = s + "x"` fires), and the spread-root attribution pin. The B4 canary
+(`docs/evidence/js-b4/real-code-canary.md`) scanned the pinned express/execa/gemini-cli corpora twice:
+deterministic (charts/schema/metrics byte-identical; `report.md` provenance only), 2,987 files, 230
+partial parses (the known type-query limitation), and **11/11 rules firing**. It found a **merge-gate
+blocker**: `PERF-JS-CALL-001` has 150/180 production FPs from member/method-name collisions
+(`this.foo()` inside `foo()`, `new X().foo()` inside `foo()`) because `receiver_root_of` returns `None`
+for non-identifier receivers. `TYPE-001` has a fresh-object FP class (~10/14), `ALLOC-001` remains noisy
+but gated (503 prod), `ALLOC-003` is mostly the intended `slice`-consumption shape (17/20, one
+error-message spread FP), `ASYNC-002` remains test-skewed (153 prod vs 1,028 non-prod), and `ARCH-001`
+remains blind in alias monorepos (0 gemini, 4 execa). Cross-cutting: `path_class` misses `.spec.` /
+hyphenated test dirs, and `findings[].symbol` is `<module>` in `metrics.json` (the ranked action
+list/key views resolve the narrowest function; full-detail rows still show `<module>` until `A-tb-008`).
+**No rule/schema/code fix was made in B4** (docs/label scope); the CALL-001 fix is the merge-gate
+follow-up (`R-tb-017`, `A-tb-007`).
+
+**Gate:** plan `js-ts` DoD green (fmt, clippy, full suite, deny, semantic-feature, `examples-js`/
+`examples-ts` double-run, native check); transcript `docs/evidence/js-b4/gate.txt`. Panel: **R1/R2/R3 +
+Q1/Q2 APPROVED**, zero unresolved blocking findings; record in `state/tracks/js-ts/handoff.md`.
+
+**Next:** merge gate `A-tb-006` — founder approval + CALL-001 gate fix + canary re-run + full DoD on the
+rebased tree. No push until then.
 
 ## Sessions B2–B4 (signposts)
 
 - **B2 — JS backend.** Parser + language detection + rules + schema values + fixtures/goldens; full gate; panel.
 - **B3 — TS/TSX backend.** Same for TS/TSX; reuse the JS path where possible; schema/ADR update only if needed.
-- **B4 — tests/goldens/docs.** New JS/TS golden trees; report language labels; output contract; semver; review panel.
+- **B4 — docs/contract/canary.** Golden/label pass, `js-catalog.md`, README/roadmap/modules/output-contract, semver + CHANGELOG note, real-code canary; review panel. **Implemented; panel APPROVED (R1/R2/R3 + Q1/Q2); merge remains founder-gated.**
 - Merge after A step 12; B is a later release.
 
 ## Guardrails / ownership

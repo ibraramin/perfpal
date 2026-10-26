@@ -1,15 +1,15 @@
 # Perfpal
 
-> **Beta — `0.2.0-beta.1`.** Pre-release evaluation build (C + Rust backends), provided for **noncommercial evaluation only — not for commercial or production use at this beta**. Use is governed by the [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE). See also the [privacy statement](PRIVACY.md). **Binaries are unsigned** — see [Beta status, code signing, and privacy](#beta-status-code-signing-and-privacy).
+> **Beta — `0.2.0-beta.1`.** Pre-release evaluation build (C, Rust, Python, JavaScript and TypeScript/TSX backends), provided for **noncommercial evaluation only — not for commercial or production use at this beta**. Use is governed by the [`EULA`](EULA.md), which supplements the PolyForm Strict 1.0.0 [`LICENSE`](LICENSE). See also the [privacy statement](PRIVACY.md). **Binaries are unsigned** — see [Beta status, code signing, and privacy](#beta-status-code-signing-and-privacy).
 
-Perfpal is a static-analysis CLI that scans C and Rust codebases for performance-relevant patterns and writes a self-contained `perfpal-report/` directory: a versioned, LLM-consumable `metrics.json`, a human-readable `report.md`, and three deterministic SVG architecture charts. It is built for AI-generated codebases — high file volume, frequently non-compiling trees, missing headers and build configuration — where a compiler-based pipeline is often not viable. Parsing runs on a tree-sitter syntactic tier (ADR-0001): no build flags, compile database, or macro expansion are required. All output is framed as **optimization candidates for review, never certainties**.
+Perfpal is a static-analysis CLI that scans C, Rust, Python, JavaScript and TypeScript/TSX codebases for performance-relevant patterns and writes a self-contained `perfpal-report/` directory: a versioned, LLM-consumable `metrics.json`, a human-readable `report.md`, a designed **Atlas** human map (`report.html#map`), LLM-facing `agent-report.md` / `agent-actions.json`, and deterministic SVG architecture charts. It is built for AI-generated codebases — high file volume, frequently non-compiling trees, missing headers and build configuration — where a compiler-based pipeline is often not viable. Parsing runs on a tree-sitter syntactic tier (ADR-0001): no build flags, compile database, or macro expansion are required. All output is framed as **optimization candidates for review, never certainties**.
 
 ## How it works
 
-- **Scan** — recursive discovery in lexicographic order (dot-directories skipped, symlinks not followed): `.c`/`.h` files are parsed by the bundled `tree-sitter-c` backend and `.rs` files by the bundled `tree-sitter-rust` backend. Both backends are fully live: C ships 23 `PERF-C-*` catalog heuristics, Rust ships 23 `PERF-RS-*` catalog heuristics, and the Rust module/`use` graph resolves with Cargo.toml-aware crate roots. Parse health (ok / partial / failed) is captured per file; quoted includes are resolved against the filesystem, and in-repo angle-bracket hits also count as internal coupling (ADR-0002); unresolvable angle-bracket includes are bucketed as external.
-- **Analyze** — 46 catalog heuristics (23 `PERF-C-*` C + 23 `PERF-RS-*` Rust) run as pure functions over the parser-agnostic IR. Every finding carries mandatory `confidence` and `severity`; documented downgrade hooks (macro origin, parse-error overlap, name-based cross-file matching) cap confidence and set flags instead of silently dropping or trusting data.
+- **Scan** — recursive discovery in lexicographic order (dot-directories skipped, symlinks not followed): `.c`/`.h` files are parsed by the bundled `tree-sitter-c` backend, `.rs` by `tree-sitter-rust`, `.py`/`.pyi` by `tree-sitter-python`, `.js`/`.jsx`/`.mjs`/`.cjs` by `tree-sitter-javascript` (token `js`; JSX is embedded), and `.ts`/`.mts`/`.cts`/`.tsx` by `tree-sitter-typescript` (tokens `ts`/`tsx`). Declaration-only `.d.ts`/`.d.mts`/`.d.cts` files are skipped. Discovery also skips `node_modules`, `bower_components`, `dist`, `build`, `out`, `coverage`, plus JS/TS `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js` and files over 2 MiB. All five backends are live: 78 catalog heuristics in total (23 C + 22 Rust + 22 Python + 11 JS/TS); the Rust module/`use` graph resolves with Cargo.toml-aware crate roots, Python imports resolve best-effort, and JS/TS relative imports resolve with `package.json` entry declarations. Parse health (ok / partial / failed) is captured per file; quoted includes are resolved against the filesystem, and in-repo angle-bracket hits also count as internal coupling (ADR-0002); unresolvable angle-bracket includes are bucketed as external.
+- **Analyze** — 78 catalog heuristics (23 `PERF-C-*` C + 22 `PERF-RS-*` Rust + 22 `PERF-PY-*` Python + 11 `PERF-JS-*` shared by JavaScript/TypeScript/TSX) run as pure functions over the parser-agnostic IR. Every finding carries mandatory `confidence` and `severity`; documented downgrade hooks (macro origin, parse-error overlap, name-based cross-file matching) cap confidence and set flags instead of silently dropping or trusting data.
 - **Aggregate** — the include graph, the cross-file call graph (name-based, confidence locked LOW), component ranking, and per-function statistics are assembled into one `metrics.json` document with every sort order explicitly owned.
-- **Render** — `report.md` is rendered from a fixed template; the three SVG charts are pure functions of `metrics.json` structures and are byte-deterministic.
+- **Render** — `report.md` and the Atlas page are rendered from fixed templates; the SVG charts are pure functions of `metrics.json` structures and are byte-deterministic.
 - **Write** — the report directory is swapped into place atomically; an interrupted run never leaves a half-written report.
 
 ## Install
@@ -66,7 +66,7 @@ The toolchain is pinned to Rust 1.92.0 (`rust-toolchain.toml`).
 
 ## Quickstart
 
-Scan a directory (a single `.c`/`.h`/`.rs` file also works):
+Scan a directory (a single `.c`/`.h`/`.rs`/`.py`/`.pyi`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.ts`/`.mts`/`.cts`/`.tsx` file also works; declaration-only `.d.*` files are skipped silently):
 
 ```
 $ perfpal path/to/your-c-project
@@ -92,20 +92,26 @@ perfpal-report/
 ├── findings-detail.html      # same detail as HTML tables
 ├── profile-queue.md          # complete cost-ranked function list (KV3 drill)
 ├── profile-queue.html        # same list as an HTML table
+├── atlas-weight.html         # Atlas weight drill (complete file/component share detail)
+├── atlas-q2.html             # Atlas blast-radius drill (dependents + component DSM)
+├── agent-report.md           # bounded LLM-facing triage report
+├── agent-actions.json        # complete machine action list
 └── charts/                   # static visualizations (set defined by ADR-0002)
     └── <chart-name>.svg      # e.g. include-graph.svg
 ```
 
-The key views (`report.html#map`) are answer-first: KV1 ranked brief, KV2 dependents bars, KV3 cost bars, backed by the complete `findings-detail.*` action list and `profile-queue.*` function list. The eight Explorer stems (`#explorer`) are `include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, and `layer-findings.svg`, plus per-component detail pages (`component-<rank>-<slug>.svg`) and the `graph.dot` export; each chart is emitted only when its source section is present and non-empty (with deterministic stubs where the source exists but is empty), so `charts/` may be empty. Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy); humans can start at `report.md`. Never parse data out of the SVGs — they are advisory.
+The **Atlas page** (`report.html#map`) is the product's human map (beta artifacts; publish gate founder-owned): a key-metrics strip (entry, HOTTEST file, three START actions, one caveat, one legend/unit definition) above a graph-only entry-flow canvas with a right-hand detail rail, followed by four designed charts — weight share, blast radius, file detail, and coverage/links. Depth is one click away: `atlas-weight.html` (complete weight detail) and `atlas-q2.html` (reverse drill: what breaks if I touch the file), plus the complete ranked action list (`findings-detail.*`) and the complete cost-ranked function list (`profile-queue.*`). The page also links `agent-report.md` and `agent-actions.json`, the bounded and complete LLM-facing artifacts. The canvas draws the default-tier **structural** call graph (`LOW name-based + MEDIUM semantic`) and every view is framed as optimization candidates to confirm with a profiler — never runtime truth.
+
+The eight Explorer stems (`#explorer`) are `include-graph.svg`, `layer-file.svg`, `layer-entry.svg`, `component-coupling.svg`, `hot-components.svg`, `layer-workspace.svg`, `layer-bands.svg`, and `layer-findings.svg`, plus per-component detail pages (`component-<rank>-<slug>.svg`) and the `graph.dot` export; each chart is emitted only when its source section is present and non-empty (with deterministic stubs where the source exists but is empty), so `charts/` may be empty. Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy) or `agent-report.md` / `agent-actions.json`; humans can start at `report.html#map` or `report.md`. Never parse data out of the SVGs — they are advisory.
 
 ## CLI reference
 
 | Flag | Argument | Default | Meaning |
 |---|---|---|---|
-| `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs`/`.py`/`.pyi` file |
+| `<path>` (positional) | `PATH` | `.` | Scan target: a directory or a single `.c`/`.h`/`.rs`/`.py`/`.pyi`/`.js`/`.jsx`/`.mjs`/`.cjs`/`.ts`/`.mts`/`.cts`/`.tsx` file (declaration-only `.d.*` skipped) |
 | `-o`, `--output` | `DIR` | `perfpal-report` | Report directory; internal layout is fixed (output-contract §2) |
 | `--force` | — | off | Allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
-| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0-beta.1 (metrics schema 1.3)`), exit 0 |
+| `--version` | — | — | Print `perfpal <version> (metrics schema <schema_version>)` (e.g. `perfpal 0.2.0-beta.1 (metrics schema 1.8)`), exit 0 |
 | `-h`, `--help` | — | — | Usage text, exit 0; prints a beta evaluation-notice footer |
 
 stdout carries the short plain-text summary shown above; all diagnostics, warnings, and progress go to stderr. The summary and stderr diagnostics carry no color or cursor control — output stays pipe-clean (interactive `--help`/`--version` rendering is clap's own and disables itself when piped). Machine consumption starts at `metrics.json`, never stdout parsing.
@@ -114,16 +120,16 @@ stdout carries the short plain-text summary shown above; all diagnostics, warnin
 
 | Code | Meaning |
 |---|---|
-| `0` | Success — report written. Findings never affect the exit code (they are data). Zero-file scans succeed with a valid empty report (`scan.languages` = the supported set `["c","python","rust"]`). |
+| `0` | Success — report written. Findings never affect the exit code (they are data). Zero-file scans succeed with a valid empty report (`scan.languages` = the supported set `["c","js","python","rust","ts","tsx"]`). |
 | `1` | Usage error — unknown flag; missing/unreadable target path. |
 | `2` | Output error — cannot create output dir; safety-guard refusal without `--force`; disk/write failure. |
 | `3` | Internal error — unexpected panic/crash, always a bug (this also covers a `metrics.json` serialization failure). |
 
 ## Heuristics
 
-Perfpal's catalog defines **67** heuristics — 23 C (`PERF-C-*`), 22 Rust (`PERF-RS-*`), and 22 Python (`PERF-PY-*`) — all of which fire on the syntactic resolver tier. On `semantic-clang` builds with libclang present, proven semantic facts upgrade C findings above their catalog defaults — resolved ARCH-003 cross-file edges report MEDIUM instead of LOW (the syntactic tier stays LOW); the Rust and Python backends are **syntactic-tier only** (the libclang resolver is C-only), so no Rust or Python finding is ever upgraded. Without libclang every build degrades gracefully to the syntactic tier. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
+Perfpal's catalog defines **78** heuristics — 23 C (`PERF-C-*`), 22 Rust (`PERF-RS-*`), 22 Python (`PERF-PY-*`), and 11 shared JavaScript/TypeScript (`PERF-JS-*`) — all of which fire on the syntactic resolver tier. On `semantic-clang` builds with libclang present, proven semantic facts upgrade C findings above their catalog defaults — resolved ARCH-003 cross-file edges report MEDIUM instead of LOW (the syntactic tier stays LOW); the Rust, Python and JS/TS backends are **syntactic-tier only** (the libclang resolver is C-only), so no Rust, Python or JS/TS finding is ever upgraded. Without libclang every build degrades gracefully to the syntactic tier. `PERF-TS-*` is reserved for TypeScript-only constructs and v1 ships none: JS/TS/TSX share the `PERF-JS-*` ids because the V8/Node mechanism is identical. Every finding carries mandatory `confidence` (HIGH / MEDIUM / LOW) and `severity` (`hot` / `warn` / `info`); both are prioritization hints, and every finding remains an optimization candidate. The tables show each rule's catalog defaults; documented per-rule hooks shift severity (e.g. `free()` in a loop escalates warn → hot when allocation co-occurs in the same function; conditionally guarded I/O lowers hot → warn), and downgrade rules cap confidence (macro origin or parse-error overlap caps at MEDIUM; name-based cross-file edges are LOW).
 
-Thresholds are named constants documented in the catalogs (`docs/heuristics/catalog-v1.md` for C, `docs/heuristics/rust-catalog.md` for Rust; the Python per-rule notes and disposition table live in `docs/architecture/python-backend.md`) and are not runtime-configurable.
+Thresholds are named constants documented in the catalogs (`docs/heuristics/catalog-v1.md` for C, `docs/heuristics/rust-catalog.md` for Rust, `docs/heuristics/js-catalog.md` for JavaScript/TypeScript; the Python per-rule notes and disposition table live in `docs/architecture/python-backend.md`) and are not runtime-configurable.
 
 ### ALLOC — allocation churn
 
@@ -246,11 +252,31 @@ The Python backend ships **22** `PERF-PY-*` rules: **13 transferred/reframed mir
 
 Every finding remains an optimization candidate. A `try`/`except`-in-loop (`LOOP-009`) is an info-grade readability/robustness signal: the zero-cost-`try` premise is version-dependent (CPython ≥ 3.11).
 
+### JavaScript / TypeScript backend (`PERF-JS-*`)
+
+JavaScript, TypeScript and TSX share **11** `PERF-JS-*` rules: the TS/TSX backend reuses the JS visitor (a grammar/token/flavor dialect) rather than duplicating rule implementations. The token follows the grammar boundary (`js` for `.js`/`.jsx`/`.mjs`/`.cjs`, `ts` for `.ts`/`.mts`/`.cts`, `tsx` for `.tsx`); declaration-only `.d.*` files are skipped. **The JS/TS tier is syntactic-only** — no type information, no `node_modules`/`tsconfig` path resolution, no framework semantics. Type land is never event-scanned (interfaces, type aliases, ambient `declare` blocks and overload signatures emit no events), `as`/`satisfies`/`!`/`<T>expr` are transparent, and type-only imports produce no include edge (so a type-only cycle is not reported). Per-rule gates, evidence keys and accepted false-positive classes live in `docs/heuristics/js-catalog.md`.
+
+| Rule | Detects | Severity | Confidence |
+|---|---|---|---|
+| `PERF-JS-ALLOC-001` | Object/array literal in a loop; silent when a constructed name is the loop induction variable or is reassigned in that loop (loop-invariance gate) | info | MEDIUM |
+| `PERF-JS-ALLOC-003` | `concat`/`slice`/spread accumulation whose accumulator root the same loop reassigns; immutable snapshots stay silent | info | MEDIUM |
+| `PERF-JS-STR-001` | String/template-literal `+=` or `x = x + "…"` in a loop (numeric/identifier RHS and canonical <8-trip loops silent) | warn | MEDIUM |
+| `PERF-JS-LOOP-001` | Loop nesting depth ≥ 2 (one finding per function at the earliest loop; `max_depth` scoped to that loop) | info | MEDIUM |
+| `PERF-JS-LOOP-002` | Known synchronous Node API (`readFileSync`, `execSync`, sync crypto, …) in a loop | warn | MEDIUM |
+| `PERF-JS-LOOP-007` | Membership scan (`indexOf`/`includes`/`find`) in a loop with a non-empty receiver (canonical <16-trip loops silent) | warn | MEDIUM |
+| `PERF-JS-ASYNC-001` | `await` inside a loop, only inside an `async` function | warn | MEDIUM |
+| `PERF-JS-ASYNC-002` | Known synchronous Node API anywhere inside an `async` function (event-loop stall; no loop requirement) | warn | MEDIUM |
+| `PERF-JS-CALL-001` | Direct self-call with no visible base-case guard (any earlier comparison suppresses) | info | MEDIUM |
+| `PERF-JS-ARCH-001` | Cycle over resolved relative-import edges (one finding per broken edge) | info | MEDIUM |
+| `PERF-JS-TYPE-001` | `delete obj.prop` with a member operand (subscript form and bare identifier excluded) | info | MEDIUM |
+
+Unresolved internal JS/TS imports stay data-only, so `PERF-JS-ARCH-001` is structurally blind in alias-based monorepos (bare specifiers are external by design). Minified bundles and declaration files are skipped rather than analysed. Every JS/TS finding remains an optimization candidate.
+
 ## Output contract
 
 - **One scan → one directory.** A completed report directory contains exactly the artifacts of that run; nothing stale survives.
 - **`metrics.json` is the source of truth.** `report.md` and `charts/` are derived artifacts — pure functions of `metrics.json` (plus the reporter's frozen built-in catalog for Appendix A). If they ever disagree, `metrics.json` wins.
-- **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory; there is no separate report-format version. The bundled `metrics.schema.v1.2.json` is a byte-copy of the exact schema for that version (its `$id` is the canonical URI, not the local filename — a mismatch is expected).
+- **Single version marker.** The `schema_version` inside `metrics.json` governs the entire directory; there is no separate report-format version. The bundled `metrics.schema.v1.8.json` is a byte-copy of the exact schema for that version (its `$id` is the canonical URI, not the local filename — a mismatch is expected).
 - **Atomic regeneration.** The report is built in a temporary sibling directory and swapped into place (rename-aside-then-swap). A crashed or interrupted run leaves the previous complete report intact; stale temp directories are removed on the next successful run.
 - **Safety guard.** If the target directory exists and does not contain `metrics.json`, Perfpal refuses to replace it unless `--force` is given — user data is never silently destroyed.
 - **Encoding and paths.** All text artifacts are UTF-8, LF line endings, trailing newline. Paths are repo-relative POSIX paths reused verbatim; embedded paths/titles/messages are escaped so scanned filenames cannot inject Markdown or XML.
@@ -272,14 +298,22 @@ Perfpal `0.2.0-beta.1` is a non-GA pre-release evaluation build. It is provided 
 
 **No telemetry.** Perfpal makes no network calls and collects no data — it runs entirely offline. See [`PRIVACY.md`](PRIVACY.md) for the full statement.
 
+**Known beta limitation — Atlas first-page fit (library class).** A library-class scan with a large UNREACHED column (the published `memchr` crate payload is the reference) renders an Atlas canvas whose bottom extends below the 1440×900 fold (**1,282 px**). The strip, rail and charts still yield three concrete actions (A2: 4/4 blind lanes, 87–120 s), and the limitation is **accepted for this beta** with a named fix trigger in [`docs/evidence/accepted-limitations.md`](docs/evidence/accepted-limitations.md) §D. Application-class scans fit (postgres: 871 px).
+
 ## Project docs
 
 - `docs/architecture/modules.md` — module decomposition, determinism ownership, CLI surface (§8)
 - `docs/architecture/rust-backend.md` — the Rust backend design record (plan `rust-backend`, R0–R5)
 - `docs/report/output-contract.md` — the `perfpal-report/` directory contract
+- `docs/specs/atlas-feature.md`, `docs/specs/atlas-layout.md`, `docs/specs/atlas-metrics.md` — the Atlas human-map contract (feature, composition, display metrics)
+- `docs/atlas/AGENT-BRIEF.md` — the Atlas contributor brief (visual system, rules, residuals)
+- `docs/specs/agent-report.md` — the LLM-facing `agent-report.md` / `agent-actions.json` contract
 - `docs/heuristics/catalog-v1.md` — the full 23-rule C catalog with thresholds and false-positive classes
-- `docs/heuristics/rust-catalog.md` — the full 23-rule Rust (`PERF-RS-*`) catalog with reframings and false-positive classes
-- `docs/schema/metrics-json-v1.md` + `docs/schema/metrics.schema.v1.2.json` — the `metrics.json` data contract and versioning policy
+- `docs/heuristics/rust-catalog.md` — the full 22-rule Rust (`PERF-RS-*`) catalog with reframings and false-positive classes
+- `docs/schema/metrics-json-v1.md` + `docs/schema/metrics.schema.v1.8.json` — the `metrics.json` data contract and versioning policy
+- `docs/heuristics/js-catalog.md` — the full 11-rule JavaScript/TypeScript (`PERF-JS-*`) catalog with gates and false-positive classes
+- `docs/specs/js-ts.md`, `docs/plans/js-ts.md`, `docs/adr/ADR-0011-js-ts-backend.md` — the JS/TS backend spec, plan and decision record
+- `docs/architecture/js-ts.md` — the JS/TS backend design record and node-kind → IR map
 - `docs/adr/ADR-0001-parser-strategy.md` — tree-sitter-first behind a parser-agnostic IR
 - `docs/adr/ADR-0002-visualization.md` — the deterministic SVG chart set
 - `docs/architecture/ir-v1.md` — the parser-agnostic IR the heuristics consume

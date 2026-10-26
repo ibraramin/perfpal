@@ -314,6 +314,35 @@ fn alloc_003_silent_without_accumulator_assignment() {
     assert!(js_alloc_003(&[unit(vec![no_spread])]).is_empty());
 }
 
+#[test]
+fn alloc_003_spread_arm_attributes_the_first_sorted_reassigned_name() {
+    // Pins the DOCUMENTED B4 limitation — NOT desired behaviour and
+    // intentionally not fixed in B4: the spread arm uses
+    // `referenced_names.iter().find(...)`, so when several referenced names are
+    // reassigned in the loop it reports the FIRST one in the vector (the IR
+    // keeps `referenced_names` sorted), not necessarily the actual spread
+    // operand. Here `aaa` sorts before `zzz`, so the finding attributes `aaa`
+    // even though the conceptual accumulator may be `zzz`.
+    let mut f = func("f");
+    f.loops.push(loop_node(1, &["i"], None, loop_span()));
+    f.allocations
+        .push(spread_alloc(&["aaa", "zzz"], point(5), 1));
+    // Push the assignments in the OPPOSITE order to the sorted referenced
+    // names: the rule iterates `referenced_names` (aaa first), not the
+    // assignment stream, so a regression to assignment-order lookup would
+    // report `zzz` and fail the assertion.
+    f.assignments.push(assign("zzz", point(7), 1));
+    f.assignments.push(assign("aaa", point(6), 1));
+
+    let out = js_alloc_003(&[unit(vec![f])]);
+    assert_eq!(out.len(), 1, "{out:?}");
+    assert_eq!(
+        out[0].evidence.get("receiver_root").map(String::as_str),
+        Some("aaa"),
+        "documented limitation: first sorted reassigned name wins"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // STR-001
 // ---------------------------------------------------------------------------
