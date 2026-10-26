@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 
 use tree_sitter::Node;
 
-use super::text;
+use super::{Flavor, text};
 use crate::ir::{Shape, ShapeKind};
 
 /// Every node kind the backend treats as a function record AND as a scope
@@ -31,33 +31,108 @@ pub(super) fn is_function_kind(kind: &str) -> bool {
 
 /// Class containers are scope boundaries for event ownership: methods and
 /// arrow-function fields are their own records, never part of the enclosing
-/// module/function. Accepted limitation: a non-arrow field initializer
-/// expression and a `class_static_block` body are not event-scanned at all
-/// (they belong to no record).
+/// module/function. `abstract_class_declaration` is TypeScript-only and never
+/// appears in the JS grammar; matching it here is harmless for JS.
+/// Accepted limitation: a non-arrow field initializer expression and a
+/// `class_static_block` body are not event-scanned at all (they belong to no
+/// record).
 pub(super) fn is_class_kind(kind: &str) -> bool {
-    matches!(kind, "class_declaration" | "class")
+    matches!(
+        kind,
+        "class_declaration" | "class" | "abstract_class_declaration"
+    )
+}
+
+/// Node kinds that live entirely in TypeScript's type land. They may not be
+/// event-scanned: `type_query` contains `call_expression`, and
+/// `interface_body`/`object_type` contain `method_signature` →
+/// `formal_parameters` → `identifier`. The JS grammar never produces these
+/// kinds, so this list is inert there.
+pub(super) const TYPE_ONLY_KINDS: [&str; 42] = [
+    "type_annotation",
+    "type_predicate_annotation",
+    "asserts_annotation",
+    "type_arguments",
+    "type_parameters",
+    "implements_clause",
+    "extends_type_clause",
+    "interface_declaration",
+    "interface_body",
+    "type_alias_declaration",
+    "ambient_declaration",
+    "function_signature",
+    "method_signature",
+    "abstract_method_signature",
+    "index_signature",
+    "call_signature",
+    "construct_signature",
+    "property_signature",
+    "object_type",
+    "function_type",
+    "constructor_type",
+    "type_query",
+    "conditional_type",
+    "infer_type",
+    "mapped_type_clause",
+    "generic_type",
+    "union_type",
+    "intersection_type",
+    "array_type",
+    "tuple_type",
+    "optional_type",
+    "rest_type",
+    "parenthesized_type",
+    "literal_type",
+    "type_identifier",
+    "predefined_type",
+    "this_type",
+    "lookup_type",
+    "index_type_query",
+    "template_literal_type",
+    "nested_type_identifier",
+    "readonly_type",
+];
+
+/// Whether `kind` belongs to type land and must never be event-scanned.
+pub(super) fn is_type_only_kind(kind: &str) -> bool {
+    TYPE_ONLY_KINDS.contains(&kind)
 }
 
 /// Parameter extraction from a `formal_parameters` node.
-#[derive(Default)]
-pub(super) struct ParamInfo {
+#[derive(Debug, Default, PartialEq, Eq)]
+pub(crate) struct ParamInfo {
     /// Raw annotation text per parameter. JavaScript has no annotations, so
     /// every entry is `"unknown"` — mirroring the Python backend's unannotated
-    /// convention (tree_sitter_python/infer.rs `collect_params`). A later TS
-    /// backend supplies real types.
+    /// convention (tree_sitter_python/infer.rs `collect_params`). The TS
+    /// dialect supplies the annotation text without its leading `:`.
     pub types: Vec<String>,
     /// Parameter names in declaration order.
     pub names: Vec<String>,
 }
 
-/// Walk a `formal_parameters` node collecting one `(name, "unknown")` entry per
-/// NAMED parameter, including identifier-less destructuring patterns. Comments
-/// are named extras in the tree but are not parameters and are excluded. A
-/// destructuring pattern counts as ONE parameter (its leftmost identifier
-/// becomes the name); when no identifier is derivable (`{}`, `[]`) the name is
-/// empty but the parameter is still counted, matching the Python backend's
-/// splat handling.
-pub(super) fn collect_params(params: Node<'_>, source: &[u8]) -> ParamInfo {
+/// Walk a `formal_parameters` node collecting one entry per parameter, in
+/// declaration order. The two dialects have different parameter shapes:
+///
+/// - JavaScript: direct named children (`identifier`, patterns); every type is
+///   `"unknown"`.
+/// - TypeScript: `required_parameter` / `optional_parameter` wrappers with
+///   `pattern`, `name`, and `type` fields. A `this` parameter is skipped (it is
+///   erased at runtime); the type annotation's text minus the leading `:` is
+///   the reported type, or `"unknown"` when absent.
+///
+/// Comments are named extras in the tree but are not parameters and are
+/// excluded. A destructuring pattern counts as ONE parameter (its leftmost
+/// identifier becomes the name); when no identifier is derivable (`{}`, `[]`)
+/// the name is empty but the parameter is still counted, matching the Python
+/// backend's splat handling.
+pub(crate) fn collect_params(params: Node<'_>, source: &[u8], flavor: Flavor) -> ParamInfo {
+    match flavor {
+        Flavor::JavaScript => collect_params_js(params, source),
+        Flavor::TypeScript => collect_params_ts(params, source),
+    }
+}
+
+fn collect_params_js(params: Node<'_>, source: &[u8]) -> ParamInfo {
     let mut info = ParamInfo::default();
     let mut cursor = params.walk();
     if cursor.goto_first_child() {
@@ -74,6 +149,47 @@ pub(super) fn collect_params(params: Node<'_>, source: &[u8]) -> ParamInfo {
         }
     }
     info
+}
+
+fn collect_params_ts(params: Node<'_>, source: &[u8]) -> ParamInfo {
+    let mut info = ParamInfo::default();
+    let mut cursor = params.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let param = cursor.node();
+            if !param.is_named() || param.is_extra() {
+                // `,`/`(` are anonymous; comments are extras.
+            } else if param.kind() == "required_parameter" || param.kind() == "optional_parameter" {
+                let pattern = param.child_by_field_name("pattern");
+                if pattern.is_some_and(|p| p.kind() == "this") {
+                    // `this` is a type-only parameter; erased at runtime.
+                } else {
+                    let name = pattern
+                        .or_else(|| param.child_by_field_name("name"))
+                        .and_then(|p| pattern_name(p, source))
+                        .unwrap_or_default();
+                    let ty = param
+                        .child_by_field_name("type")
+                        .map(|annotation| annotation_type_text(annotation, source))
+                        .filter(|ty| !ty.is_empty())
+                        .unwrap_or_else(|| "unknown".to_string());
+                    info.types.push(ty);
+                    info.names.push(name);
+                }
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    info
+}
+
+/// Type text of a `type_annotation` node without its leading `:`. The
+/// annotation node's source text includes the colon (`: string`).
+fn annotation_type_text(annotation: Node<'_>, source: &[u8]) -> String {
+    let raw = text(annotation, source).trim();
+    raw.strip_prefix(':').unwrap_or(raw).trim().to_string()
 }
 
 /// Name bound by one parameter/declarator pattern node.
@@ -134,6 +250,7 @@ pub(super) fn derive_name(node: Node<'_>, source: &[u8]) -> String {
             .and_then(|k| node_text_name(k, source)),
         "field_definition" | "public_field_definition" => parent
             .child_by_field_name("property")
+            .or_else(|| parent.child_by_field_name("name"))
             .and_then(|p| node_text_name(p, source)),
         "assignment_expression" => parent
             .child_by_field_name("left")
@@ -177,8 +294,10 @@ pub(super) fn leftmost_identifier(node: Node<'_>, source: &[u8]) -> Option<Strin
 }
 
 /// Receiver root of a `member_expression`/`subscript_expression` callee chain
-/// (`self.results.append` ⇒ `self`; `df.groupby` ⇒ `df`).
+/// (`self.results.append` ⇒ `self`; `df.groupby` ⇒ `df`). Transparent TS
+/// wrappers are stripped at every level (`arr!.includes` ⇒ `arr`).
 pub(super) fn receiver_root_of(chain: Node<'_>, source: &[u8]) -> Option<String> {
+    let chain = strip_transparent_wrappers(chain);
     match chain.kind() {
         "member_expression" => chain
             .child_by_field_name("object")
@@ -193,6 +312,7 @@ pub(super) fn receiver_root_of(chain: Node<'_>, source: &[u8]) -> Option<String>
 
 /// Final segment of a callee expression (`a.b.c` ⇒ `c`, `xs[i]` ⇒ `xs`).
 pub(super) fn final_segment_of(node: Node<'_>, source: &[u8]) -> String {
+    let node = strip_transparent_wrappers(node);
     match node.kind() {
         "member_expression" => node
             .child_by_field_name("property")
@@ -211,8 +331,19 @@ pub(super) fn final_segment_of(node: Node<'_>, source: &[u8]) -> String {
 }
 
 /// Shape descriptor for an expression node (ir-v1.md §3.4 vocabulary).
+///
+/// TypeScript expression wrappers (`as`, `satisfies`, `!`, `<T>expr`) are
+/// transparent for shape purposes: the shape of the wrapped value is taken, so
+/// `make() as Foo` is still a call and `{...} satisfies T` is still an object.
 pub(super) fn shape_of_node(node: Node<'_>, source: &[u8]) -> Shape {
     match node.kind() {
+        "as_expression" | "satisfies_expression" | "non_null_expression" | "type_assertion" => {
+            // `type_assertion` puts `type_arguments` first; `type_arguments` is
+            // type-only, so the first non-type named child is the expression.
+            value_child(node)
+                .map(|inner| shape_of_node(inner, source))
+                .unwrap_or_default()
+        }
         "number" | "string" | "template_string" | "true" | "false" | "null" | "undefined"
         | "regex" => Shape::literal(text(node, source)),
         "identifier"
@@ -263,6 +394,45 @@ pub(super) fn shape_of_node(node: Node<'_>, source: &[u8]) -> Shape {
     }
 }
 
+/// First named child that is NOT type land (the value expression of a TS
+/// expression wrapper).
+pub(super) fn value_child(node: Node<'_>) -> Option<Node<'_>> {
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            if child.is_named() && !child.is_extra() && !is_type_only_kind(child.kind()) {
+                return Some(child);
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    None
+}
+
+/// Strip TypeScript expression wrappers that do not change the runtime value:
+/// `as`, `satisfies`, non-null `!`, `<T>expr` (type assertion), and redundant
+/// parentheses. Used by callee/receiver decomposition so `(fn as Foo)()` and
+/// `arr!.includes(x)` keep the underlying identifier/member chain. The type
+/// child is never entered (`value_child` skips type land).
+pub(super) fn strip_transparent_wrappers(mut node: Node<'_>) -> Node<'_> {
+    loop {
+        match node.kind() {
+            "as_expression"
+            | "satisfies_expression"
+            | "non_null_expression"
+            | "type_assertion"
+            | "parenthesized_expression" => match value_child(node) {
+                Some(inner) => node = inner,
+                None => return node,
+            },
+            _ => return node,
+        }
+    }
+}
+
 /// Chain depth of member/subscript nesting rooted at `node`.
 pub(super) fn chain_depth(node: Node<'_>) -> u32 {
     match node.kind() {
@@ -288,6 +458,30 @@ pub(super) fn collect_identifier_names(node: Node<'_>, source: &[u8]) -> Vec<Str
 }
 
 fn collect_identifiers_into(node: Node<'_>, source: &[u8], out: &mut BTreeSet<String>) {
+    // TypeScript type land is not a runtime reference: `typeof someVar` in a
+    // type position (`typeof` test / `type_query`) must not count as a
+    // referenced name for the loop-invariance gates. The wrappers
+    // (`as`/`satisfies`/`!`/<T>expr) are NOT type-only, so their value child
+    // is still visited.
+    if is_type_only_kind(node.kind()) {
+        return;
+    }
+    // `as`/`satisfies`/`!`/<T>expr wrap a value and a type. Only the value is a
+    // runtime reference; entering the type child would treat
+    // `typeof someVar` / `import("x").T` as a referenced name.
+    if matches!(
+        node.kind(),
+        "as_expression"
+            | "satisfies_expression"
+            | "non_null_expression"
+            | "type_assertion"
+            | "parenthesized_expression"
+    ) {
+        if let Some(value) = value_child(node) {
+            collect_identifiers_into(value, source, out);
+        }
+        return;
+    }
     if matches!(
         node.kind(),
         "identifier" | "shorthand_property_identifier" | "shorthand_property_identifier_pattern"
@@ -392,10 +586,11 @@ pub(super) fn collect_local_names(body: Node<'_>, source: &[u8]) -> Vec<String> 
 }
 
 /// Preorder walk of `node`'s subtree that does NOT descend into function or
-/// class bodies (scope boundaries).
+/// class bodies (scope boundaries) or into TypeScript type land.
 fn walk_scope(node: Node<'_>, visit: &mut impl FnMut(Node<'_>)) {
     visit(node);
-    if is_function_kind(node.kind()) || is_class_kind(node.kind()) {
+    if is_function_kind(node.kind()) || is_class_kind(node.kind()) || is_type_only_kind(node.kind())
+    {
         return;
     }
     let mut cursor = node.walk();
@@ -485,10 +680,12 @@ fn condition_has_import_meta_url(condition: Node<'_>, source: &[u8]) -> bool {
     false
 }
 
-/// Preorder walk of the module body, stopping at function/class boundaries.
+/// Preorder walk of the module body, stopping at function/class boundaries and
+/// at TypeScript type land.
 fn walk_module_body(node: Node<'_>, visit: &mut impl FnMut(Node<'_>)) {
     visit(node);
-    if is_function_kind(node.kind()) || is_class_kind(node.kind()) {
+    if is_function_kind(node.kind()) || is_class_kind(node.kind()) || is_type_only_kind(node.kind())
+    {
         return;
     }
     let mut cursor = node.walk();

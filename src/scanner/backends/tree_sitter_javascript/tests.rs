@@ -424,7 +424,7 @@ fn destructured_parameter_names_are_reported() {
         .expect("pinned grammar links");
     let tree = parser.parse(source, None).expect("parse");
     let params = find_kind(tree.root_node(), "formal_parameters").expect("parameters");
-    let info = infer::collect_params(params, source.as_bytes());
+    let info = infer::collect_params(params, source.as_bytes(), Flavor::JavaScript);
     assert_eq!(info.names, ["a", "rest"], "{:?}", info.names);
     assert!(info.names.iter().all(|name| !name.is_empty()));
     assert_eq!(info.types.len(), 2);
@@ -463,7 +463,7 @@ fn identifier_less_destructured_params_still_count() {
         .expect("pinned grammar links");
     let tree = parser.parse(source, None).expect("parse");
     let params = find_kind(tree.root_node(), "formal_parameters").expect("parameters");
-    let info = infer::collect_params(params, source.as_bytes());
+    let info = infer::collect_params(params, source.as_bytes(), Flavor::JavaScript);
     assert_eq!(info.types.len(), 2);
     assert_eq!(info.names, ["", ""], "{:?}", info.names);
 }

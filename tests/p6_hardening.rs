@@ -1,7 +1,7 @@
 //! P6 hardening gates (modules.md §7): finding-id uniqueness (composite-id
 //! contract, modules.md §1 analyzer row) and golden-report locking.
 //!
-//! Golden flow (five committed trees, see [`GOLDEN_TREES`]): each tree is a
+//! Golden flow (six committed trees, see [`GOLDEN_TREES`]): each tree is a
 //! FULL pipeline output over its fixture, masked in place for every
 //! run-varying field. Regenerate ALL trees with:
 //!
@@ -50,12 +50,13 @@ struct GoldenTree {
     snapshot_exclude: Option<&'static str>,
 }
 
-/// The five locked trees. `c` is the original (T1 uniqueness stays pointed
+/// The six locked trees. `c` is the original (T1 uniqueness stays pointed
 /// here); `mixed` (`.c` + `.h` + `.rs`) and `rust` (`examples-rust/`) are the
 /// R5 Wave 2 additions; `python` (`examples-python/`) is the plan
 /// `python-backend` W4 Lane 5 addition; `js` (`examples-js/`) is the plan
-/// `js-ts` B2-W2 addition.
-const GOLDEN_TREES: [GoldenTree; 5] = [
+/// `js-ts` B2-W2 addition; `ts` (`examples-ts/`) is the plan `js-ts` B3-WP2
+/// addition.
+const GOLDEN_TREES: [GoldenTree; 6] = [
     GoldenTree {
         tag: "c",
         fixture: "tests/fixtures/e2e",
@@ -84,6 +85,12 @@ const GOLDEN_TREES: [GoldenTree; 5] = [
         tag: "js",
         fixture: "examples-js",
         golden: "tests/golden/report-js",
+        snapshot_exclude: None,
+    },
+    GoldenTree {
+        tag: "ts",
+        fixture: "examples-ts",
+        golden: "tests/golden/report-ts",
         snapshot_exclude: None,
     },
 ];
@@ -183,6 +190,8 @@ const EXPECTED_COMPONENT_PAGES: &[(&str, &[&str])] = &[
     // `examples-js` is flat (all sources at the package root), so its single
     // component is the root component.
     ("js", &["charts/component-01-root.svg"]),
+    // `examples-ts` is likewise flat; one root component.
+    ("ts", &["charts/component-01-root.svg"]),
 ];
 
 /// Assert a tree's page set is EXACTLY the pinned expectation (no

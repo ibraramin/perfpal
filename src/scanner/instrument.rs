@@ -75,7 +75,7 @@ impl AllocFamily {
 ///   `str` ⇒ [`AllocFamily::EmptyCtor`] iff zero args else
 ///   [`AllocFamily::Serialize`]; `open`/`DataFrame`/`Series`/`array`/
 ///   `ndarray` ⇒ [`AllocFamily::RealAlloc`].
-/// - JavaScript: qualified `Buffer.alloc`/`Buffer.from`/`Array.from`/
+/// - JavaScript/TypeScript/TSX (same V8/Node mechanism): qualified `Buffer.alloc`/`Buffer.from`/`Array.from`/
 ///   `Object.assign` and bare `structuredClone` ⇒ [`AllocFamily::RealAlloc`];
 ///   bare `Array`/`Object`/`Map`/`Set`/`WeakMap`/`WeakSet` ⇒
 ///   [`AllocFamily::EmptyCtor`] iff zero args else
@@ -170,7 +170,7 @@ pub(crate) fn classify_alloc_call(
                 }
             }
         }
-        "js" => {
+        "js" | "ts" | "tsx" => {
             if is_macro {
                 return None;
             }
@@ -321,8 +321,8 @@ pub(crate) fn idiom_hash(body: &str, language: &str) -> String {
 ///   `perror`/`stderr` all hit; case-sensitive by C convention);
 /// - Python: `raise ` / `raise(` (explicit raise; `except` is covered by
 ///   `try_blocks`);
-/// - JavaScript: `throw ` / `throw(` (explicit throw; `try`/`catch` is
-///   covered by `try_blocks`).
+/// - JavaScript/TypeScript/TSX: `throw ` / `throw(` (explicit throw; `try`/`catch`
+///   is covered by `try_blocks`).
 ///
 /// Heuristic limits (documented, NOT branch-sensitive): the checks are
 /// textual over the normalized body — a `?` in dead code still flags, and
@@ -364,7 +364,9 @@ pub(crate) fn detect_error_path(
                     .any(|token| collapsed_body.contains(token))
         }
         "python" => collapsed_body.contains("raise ") || collapsed_body.contains("raise("),
-        "js" => collapsed_body.contains("throw ") || collapsed_body.contains("throw("),
+        "js" | "ts" | "tsx" => {
+            collapsed_body.contains("throw ") || collapsed_body.contains("throw(")
+        }
         _ => false,
     }
 }
@@ -695,6 +697,57 @@ mod tests {
             false,
             false
         ));
+    }
+
+    #[test]
+    fn ts_and_tsx_mirror_js_alloc_and_error_path() {
+        let direct = CalleeKind::Direct;
+        let body = "const a = Buffer.alloc(4);\nthrow new Error('x');";
+        for lang in ["js", "ts", "tsx"] {
+            assert_eq!(
+                classify_alloc_call(lang, Some("Buffer.alloc"), "alloc", direct, false, 1, ""),
+                Some(AllocFamily::RealAlloc),
+                "{lang}: qualified allocation"
+            );
+            assert_eq!(
+                classify_alloc_call(lang, None, "Map", direct, false, 0, ""),
+                Some(AllocFamily::EmptyCtor),
+                "{lang}: zero-arg container ctor"
+            );
+            assert_eq!(
+                classify_alloc_call(
+                    lang,
+                    Some("JSON.stringify"),
+                    "stringify",
+                    direct,
+                    false,
+                    1,
+                    ""
+                ),
+                Some(AllocFamily::Serialize),
+                "{lang}: serialize-shaped"
+            );
+            assert!(
+                detect_error_path(
+                    lang,
+                    "function f() { throw new Error('x'); }",
+                    0,
+                    false,
+                    false
+                ),
+                "{lang}: throw is an error path"
+            );
+            assert!(
+                !detect_error_path(lang, "const x = 1; return x;", 0, false, false),
+                "{lang}: quiet body is not an error path"
+            );
+            // Same runtime mechanism ⇒ same token normalization/hash.
+            assert_eq!(
+                idiom_hash(body, lang),
+                idiom_hash(body, "js"),
+                "{lang}: idiom hash matches js"
+            );
+        }
     }
 
     #[test]

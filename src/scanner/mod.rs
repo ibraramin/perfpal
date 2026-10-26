@@ -9,9 +9,11 @@
 //!   symlinks not followed (v1); per-file failures become `ParseHealth{failed}`
 //!   records, never run aborts (total target failure = [`ScanError`], which
 //!   cli maps to exit 1).
-//! - Language detection by extension: `.c`/`.h` are C, `.rs` is Rust and
-//!   `.py`/`.pyi` are Python; others skipped silently. `scan.file_count` =
-//!   `len(files[])`.
+//! - Language detection by extension: `.c`/`.h` are C, `.rs` is Rust,
+//!   `.py`/`.pyi` are Python, `.js`/`.jsx`/`.mjs`/`.cjs` are JavaScript,
+//!   `.ts`/`.mts`/`.cts` are TypeScript and `.tsx` is TSX; declaration files
+//!   (`.d.ts`/`.d.mts`/`.d.cts`) are skipped silently; other extensions are
+//!   skipped silently. `scan.file_count` = `len(files[])`.
 //! - Parse via the bound backend; capture ParseHealth (status, error regions,
 //!   error node count).
 //! - **C** include resolution against the filesystem (includer-relative first,
@@ -115,18 +117,21 @@ pub enum ScanError {
 /// `scan.languages` fallback (aggregator). Per-file language tokens are
 /// emitted by each backend (and `failed_unit`); a new language must update
 /// those backends AND this const — nothing enforces that in lockstep.
-pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "js", "python", "rust"];
+pub const SUPPORTED_LANGUAGES: &[&str] = &["c", "js", "python", "rust", "ts", "tsx"];
 // "python" landed with the 1.3 schema bump (W3); .py files emit "python" via FileRecord.
 // "js" landed with the `js-ts` wiring wave (B2-W1); .js/.jsx/.mjs/.cjs emit "js".
+// "ts"/"tsx" landed with the B3 TS/TSX backend; .ts/.mts/.cts emit "ts" and .tsx emits "tsx".
 
 /// Source language selected by extension (plan `rust-backend` R1; JS added by
-/// plan `js-ts` B3).
+/// plan `js-ts` B2, TS/TSX by B3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum LanguageKind {
     C,
     Rust,
     Python,
     Js,
+    Ts,
+    Tsx,
 }
 
 /// Global directory names skipped during discovery, for EVERY language
@@ -142,14 +147,9 @@ const SKIP_DIRS: [&str; 6] = [
 ];
 
 /// JS/TS-only file-name patterns skipped during discovery (minified/bundled
-/// output). Applied only when [`language_of`] already selected JS.
+/// output). Names are JS-specific today; the predicate is applied to the whole
+/// JS family so a future `*.min.ts`-style rule has one home.
 const JS_SKIP_FILE_SUFFIXES: [&str; 4] = [".min.js", ".min.mjs", ".min.cjs", ".bundle.js"];
-
-/// TypeScript/declaration suffixes this wave deliberately does not parse
-/// (B3 owns the TS backend). A single-file target with one of these names is
-/// skipped silently instead of falling through to the C parser.
-const UNSUPPORTED_TS_SUFFIXES: [&str; 7] =
-    [".ts", ".mts", ".cts", ".tsx", ".d.ts", ".d.mts", ".d.cts"];
 
 /// Whether a file name is a JS skip pattern (minified/bundled output).
 fn has_js_skip_suffix(name: &str) -> bool {
@@ -158,25 +158,38 @@ fn has_js_skip_suffix(name: &str) -> bool {
         .any(|suffix| name.ends_with(suffix))
 }
 
-/// Whether a file name carries an unsupported TypeScript/declaration suffix.
-fn has_unsupported_ts_suffix(name: &str) -> bool {
-    UNSUPPORTED_TS_SUFFIXES
-        .iter()
-        .any(|suffix| name.ends_with(suffix))
+/// Whether a file name is TypeScript declaration-only (no runtime code).
+fn is_declaration_file(name: &str) -> bool {
+    name.ends_with(".d.ts") || name.ends_with(".d.mts") || name.ends_with(".d.cts")
 }
 
-/// JS-only per-file size cap: 2 MiB of source. Larger files are minified
+/// Whether a language token belongs to the JS runtime family (`js`/`ts`/`tsx`).
+/// Used for the shared 2 MiB cap, the import resolver, entry declarations and
+/// the scan-level JS-family trigger.
+fn is_js_family(language: &str) -> bool {
+    matches!(language, "js" | "ts" | "tsx")
+}
+
+/// Whether a detected language belongs to the JS runtime family.
+fn is_js_family_kind(lang: LanguageKind) -> bool {
+    matches!(
+        lang,
+        LanguageKind::Js | LanguageKind::Ts | LanguageKind::Tsx
+    )
+}
+
+/// JS-family per-file size cap: 2 MiB of source. Larger files are minified
 /// bundles; they are skipped silently (plan `js-ts` §4).
 const JS_MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
 
-/// Scan a target path (directory or single `.c`/`.h`/`.rs`/`.py`/`.pyi`/JS file)
-/// into the IR stream.
+/// Scan a target path (directory or single `.c`/`.h`/`.rs`/`.py`/`.pyi`/JS/TS
+/// file) into the IR stream.
 ///
 /// Single-file policy: a JS/TS-named target that discovery would skip is skipped
-/// here too — `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`, and every
-/// unsupported TypeScript/declaration suffix (`.ts`, `.mts`, `.cts`, `.tsx`,
-/// `.d.ts`, `.d.mts`, `.d.cts`). A genuinely unknown extension keeps the
-/// documented C fallback.
+/// here too — `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`, declaration-only
+/// `.d.ts`/`.d.mts`/`.d.cts`, and (by the size cap) oversized minified files.
+/// `.ts`/`.mts`/`.cts`/`.tsx` are scanned normally. A genuinely unknown
+/// extension keeps the documented C fallback.
 ///
 /// Determinism (modules.md §1): discovered files are emitted in lexicographic
 /// order of their repo-relative POSIX paths; dot-prefixed directories are
@@ -227,20 +240,22 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
         // for the JS/TS suffix policy above; a genuinely unknown extension
         // keeps the pre-R1 default of C.
         let lang = if single_file {
-            if has_unsupported_ts_suffix(rel) {
+            // Declaration-only files carry no runtime code and are skipped
+            // silently instead of falling through to the C parser.
+            if is_declaration_file(rel) {
                 continue;
             }
             let lang = language_of(rel).unwrap_or(LanguageKind::C);
-            if lang == LanguageKind::Js && has_js_skip_suffix(rel) {
+            if is_js_family_kind(lang) && has_js_skip_suffix(rel) {
                 continue;
             }
             lang
         } else {
             language_of(rel).unwrap_or(LanguageKind::C)
         };
-        // JS-only 2 MiB cap: minified bundles are skipped silently. Metadata
-        // is consulted only for JS; C/Rust/Python read paths are unchanged.
-        if lang == LanguageKind::Js
+        // JS-family 2 MiB cap: minified bundles are skipped silently. Metadata
+        // is consulted only for JS/TS; C/Rust/Python read paths are unchanged.
+        if is_js_family_kind(lang)
             && let Ok(metadata) = fs::metadata(abs)
             && metadata.len() > JS_MAX_FILE_BYTES
         {
@@ -294,13 +309,13 @@ pub fn scan(target: &Path) -> Result<Vec<FileUnit>, ScanError> {
         resolve_python_edges(&mut units);
     }
 
-    // JavaScript import resolution + package.json entry declarations (plan
-    // `js-ts` §8) run over the WHOLE unit set after extraction, in the same
-    // pipeline position as the Python pass. Relative-specifier edges are
+    // JavaScript/TypeScript import resolution + package.json entry declarations
+    // (plan `js-ts` §8) run over the WHOLE unit set after extraction, in the
+    // same pipeline position as the Python pass. Relative-specifier edges are
     // resolved against the scanned-path set; bare/absolute/URL specifiers were
     // already classified `Angle` by the backend. Data only — no findings are
     // emitted here.
-    if units.iter().any(|u| u.file.language == "js") {
+    if units.iter().any(|u| is_js_family(&u.file.language)) {
         resolve_js_edges(&mut units);
         mark_js_entry_declarations(&mut units, &root);
     }
@@ -347,8 +362,8 @@ fn discover(root: &Path) -> Vec<PathBuf> {
                 }
             } else if let Some(lang) = language_of(name) {
                 // Minified/bundled JS is noise: skip by file name only (never
-                // content sniffing), and only for JS-selected files.
-                if lang == LanguageKind::Js && has_js_skip_suffix(name) {
+                // content sniffing), for the whole JS family.
+                if is_js_family_kind(lang) && has_js_skip_suffix(name) {
                     continue;
                 }
                 out.push(path);
@@ -359,16 +374,13 @@ fn discover(root: &Path) -> Vec<PathBuf> {
 }
 
 /// Language detection by file NAME, longest suffix first. `.c`/`.h` are C,
-/// `.rs` is Rust, `.py`/`.pyi` are Python, and `.js`/`.jsx`/`.mjs`/`.cjs` are
-/// JS. Declaration-only TypeScript (`.d.ts`/`.d.mts`/`.d.cts`) is skipped, and
-/// every other TS suffix (`.ts`/`.mts`/`.cts`/`.tsx`) stays `None` in this wave
-/// (B2-W1; the TS backend is B3). Matching is case-sensitive.
+/// `.rs` is Rust, `.py`/`.pyi` are Python, `.js`/`.jsx`/`.mjs`/`.cjs` are JS,
+/// `.tsx` is TSX and `.ts`/`.mts`/`.cts` are TypeScript. Declaration-only
+/// TypeScript (`.d.ts`/`.d.mts`/`.d.cts`) is skipped; unknown extensions stay
+/// `None`. Matching is case-sensitive.
 fn language_of(file_name: &str) -> Option<LanguageKind> {
-    // Declaration-only files carry no runtime code.
-    if file_name.ends_with(".d.ts")
-        || file_name.ends_with(".d.mts")
-        || file_name.ends_with(".d.cts")
-    {
+    // Declaration-only files carry no runtime code; check before `.ts`.
+    if is_declaration_file(file_name) {
         return None;
     }
     if file_name.ends_with(".js")
@@ -378,12 +390,11 @@ fn language_of(file_name: &str) -> Option<LanguageKind> {
     {
         return Some(LanguageKind::Js);
     }
-    if file_name.ends_with(".ts")
-        || file_name.ends_with(".mts")
-        || file_name.ends_with(".cts")
-        || file_name.ends_with(".tsx")
-    {
-        return None;
+    if file_name.ends_with(".tsx") {
+        return Some(LanguageKind::Tsx);
+    }
+    if file_name.ends_with(".ts") || file_name.ends_with(".mts") || file_name.ends_with(".cts") {
+        return Some(LanguageKind::Ts);
     }
     let ext = Path::new(file_name).extension()?;
     if ext == "rs" {
@@ -414,6 +425,8 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
         LanguageKind::Rust => backends::tree_sitter_rust::extract(rel_path, source),
         LanguageKind::Python => backends::tree_sitter_python::extract(rel_path, source),
         LanguageKind::Js => backends::tree_sitter_javascript::extract(rel_path, source),
+        LanguageKind::Ts => backends::tree_sitter_typescript::extract(rel_path, source),
+        LanguageKind::Tsx => backends::tree_sitter_typescript::extract_tsx(rel_path, source),
     };
     let mut unit = FileUnit {
         file: ex.file,
@@ -434,6 +447,8 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
         LanguageKind::Rust => "rust",
         LanguageKind::Python => "python",
         LanguageKind::Js => "js",
+        LanguageKind::Ts => "ts",
+        LanguageKind::Tsx => "tsx",
     };
     for func in &mut unit.functions {
         let body = instrument::body_text(source, &func.record.span);
@@ -454,6 +469,8 @@ fn failed_unit(rel_path: &str, lang: LanguageKind) -> FileUnit {
                 LanguageKind::Rust => "rust".to_string(),
                 LanguageKind::Python => "python".to_string(),
                 LanguageKind::Js => "js".to_string(),
+                LanguageKind::Ts => "ts".to_string(),
+                LanguageKind::Tsx => "tsx".to_string(),
             },
             loc: Default::default(),
             function_count: 0,
@@ -646,14 +663,13 @@ fn python_package(path: &str) -> String {
         .unwrap_or_default()
 }
 
-/// JS probe extensions in deterministic order (plan `js-ts` §8). This is the
-/// documented v1 order; TypeScript suffixes are listed first but only JS
-/// targets exist in the scanned set this wave (B3 makes the TS entries
-/// resolvable).
+/// JS/TS probe extensions in deterministic order (plan `js-ts` §8). This is the
+/// documented v1 order: TypeScript suffixes are probed first, then JavaScript,
+/// then the module/CommonJS variants.
 const JS_RESOLVE_EXTS: [&str; 8] = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"];
 
-/// Resolve JavaScript relative-specifier imports over the whole unit set (plan
-/// `js-ts` §8). The backend emits RAW specifier text in `to_path`,
+/// Resolve JavaScript/TypeScript relative-specifier imports over the whole unit
+/// set (plan `js-ts` §8). The backend emits RAW specifier text in `to_path`,
 /// [`IncludeForm::Quoted`] for `./`/`../` and `Angle` for bare/absolute/URL/
 /// `node:` specifiers. This pass handles `Quoted` edges only:
 ///
@@ -670,11 +686,11 @@ const JS_RESOLVE_EXTS: [&str; 8] = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"
 fn resolve_js_edges(units: &mut [FileUnit]) {
     let scanned: BTreeSet<String> = units
         .iter()
-        .filter(|u| u.file.language == "js")
+        .filter(|u| is_js_family(&u.file.language))
         .map(|u| u.file.path.clone())
         .collect();
 
-    for unit in units.iter_mut().filter(|u| u.file.language == "js") {
+    for unit in units.iter_mut().filter(|u| is_js_family(&u.file.language)) {
         let includer = includer_dir(&unit.file.path);
         for edge in &mut unit.includes {
             if edge.form != IncludeForm::Quoted {
@@ -760,7 +776,7 @@ fn join_within_root(base_dir: &str, target: &str) -> Option<String> {
 /// Max directory depth probed for `package.json` (bounded walk).
 const PACKAGE_JSON_WALK_MAX_DEPTH: usize = 24;
 
-/// Mark the synthetic `<module>` record of every JS file named by a
+/// Mark the synthetic `<module>` record of every JS/TS file named by a
 /// `package.json` `main`/`bin` field (`entry_declared = Some(true)`), plan
 /// `js-ts` §8.
 ///
@@ -777,7 +793,7 @@ const PACKAGE_JSON_WALK_MAX_DEPTH: usize = 24;
 fn mark_js_entry_declarations(units: &mut [FileUnit], root: &Path) {
     let scanned: BTreeSet<String> = units
         .iter()
-        .filter(|u| u.file.language == "js")
+        .filter(|u| is_js_family(&u.file.language))
         .map(|u| u.file.path.clone())
         .collect();
     if scanned.is_empty() {
@@ -833,7 +849,7 @@ fn mark_js_entry_declarations(units: &mut [FileUnit], root: &Path) {
     if entry_paths.is_empty() {
         return;
     }
-    for unit in units.iter_mut().filter(|u| u.file.language == "js") {
+    for unit in units.iter_mut().filter(|u| is_js_family(&u.file.language)) {
         if !entry_paths.contains(&unit.file.path) {
             continue;
         }
@@ -900,10 +916,10 @@ fn js_entry_candidates(package_dir: &str, raw: &str) -> Vec<String> {
     };
     let mut candidates: BTreeSet<String> = BTreeSet::new();
     candidates.insert(base.clone());
-    for ext in [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"] {
+    for ext in [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"] {
         candidates.insert(format!("{base}{ext}"));
     }
-    for ext in [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"] {
+    for ext in [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"] {
         candidates.insert(join_dir(&base, &format!("index{ext}")));
     }
     candidates.into_iter().collect()

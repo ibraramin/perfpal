@@ -5,10 +5,25 @@ Scope: feature
 # Spec: js-ts
 
 **Scope:** feature. **Track:** B (`feat/js-ts`). **Status:** B1/B2-W0 complete; **B2-W1 committed
-`90d5677` (pre-rebase `7fdfa1a`)**; **B2-W2 implemented — DoD applicable subset green (examples-ts is B3); uncommitted; panel final confirmation pending** (11 `PERF-JS-*` rules +
-catalog landing + schema v1.8 + fixtures/goldens). **B3 (TS/TSX) next.**
+`90d5677` (pre-rebase `7fdfa1a`)**; **B2-W2 committed `edfc98a`** (11 `PERF-JS-*` rules + catalog landing +
+schema v1.8 + fixtures/goldens); **B3 implemented, full DoD green, panel recorded — uncommitted; commit
+pending founder approval** (TypeScript/TSX backend + `examples-ts` + `report-ts` golden).
 **Owners:** Track B owns this spec, `docs/plans/js-ts.md`, the JS/TS ADR, the grammar pins, the JS/TS
 fixtures/goldens, and the `src/schema` language values. Track A owns `views.rs`/`mod.rs` wiring until A step 12.
+
+**B3 close-out (implemented; uncommitted).** TypeScript and TSX are first-class backends without a second
+visitor: the JS backend is parameterized by a grammar/token/flavor `Dialect` and the new
+`src/scanner/backends/tree_sitter_typescript/` binds `LANGUAGE_TYPESCRIPT` (`ts`) and `LANGUAGE_TSX`
+(`tsx`). Scanner wiring adds `LanguageKind::{Ts,Tsx}`, the longest-suffix map (`.d.*` still skipped), the
+six-value `SUPPORTED_LANGUAGES`, and the whole family in the shared 2 MiB cap, resolver, entry declarations
+and instrument arms. Type-land is never event-scanned (critical: `type_query` contains `call_expression`);
+`as`/`satisfies`/`!`/`<T>expr` are transparent; TS parameters carry real annotation text; `import type` /
+`export type` produce no include edge (runtime-erased). Corpora: `examples-ts/` (17 sources: 15 `.ts` + 2
+`.tsx`) fires all 11 shared rules exactly once (0 hot / 5 warn / 6 info) with 18 silent controls;
+`tests/examples_ts_coverage.rs`, `tests/determinism_ts.rs`, `tests/typescript_backend.rs` (17 integration
+tests), 17 backend unit tests (incl. wrapper callee/receiver decomposition and comment extras), and
+`tests/golden/report-ts/` (20 artifacts; `GOLDEN_TREES` 5 → 6).
+No schema bump, no new rules, no dependency change. Verification: `docs/evidence/js-b3/gate.txt`.
 
 **B2-W2 close-out (implemented; uncommitted).** 11 `PERF-JS-*` rules landed in
 `src/analyzer/heuristics/js/mod.rs` with 27 parser-free IR unit tests; constants in
@@ -133,12 +148,14 @@ golden regeneration instead of two).
 - `$id`, `title`, `description`, `schema_version.const` (`src/schema/metrics.schema.v1.7.json:12`), and
   **both** enum descriptions are rewritten to v1.8 (the v1.7 text still names the old set at
   `:3-5,35-37,71`). The `scan.languages` description must describe the fallback **generically** ("the
-  binary's supported set"), not hardcode six, because B2 emits four values on a zero-file scan (D-tb-010).
+  binary's supported set"), not hardcode six, so it tracks the staged `SUPPORTED_LANGUAGES` (four in B2,
+  six after B3; D-tb-010).
 - `SCHEMA_VERSION`, `SCHEMA_ARTIFACT_NAME`, `EMBEDDED_SCHEMA`, and the CLI `VERSION_SUFFIX` move together;
   the CLI's `"(metrics schema 1.7)"` assertion (`src/cli/mod.rs:396-410`) flags with them.
-- **`SUPPORTED_LANGUAGES` is staged:** B2 → `["c", "js", "python", "rust"]` (no TS backend yet);
-  B3 → `["c", "js", "python", "rust", "ts", "tsx"]`. The schema enum already admits all six; the zero-file
-  fallback reports what the scanner can actually detect. Pinned tests update in B2 and B3 respectively.
+- **`SUPPORTED_LANGUAGES` (staged, now landed):** B2 → `["c", "js", "python", "rust"]` (no TS backend
+  yet); **B3 → `["c", "js", "python", "rust", "ts", "tsx"]` (implemented)**. The schema enum already admits
+  all six; the zero-file fallback reports what the scanner can actually detect. Pinned tests updated in B2
+  and B3 respectively (`tests/schema_1_4.rs`, `tests/exit_code_matrix.rs`, aggregator unit tests).
 - All four existing golden trees regenerate: the 17 artifacts are unchanged **except one filename** —
   `GOLDEN_ARTIFACTS` (`tests/p6_hardening.rs:113`) and the regenerator's `provenance_free` list (`:465`)
   replace `metrics.schema.v1.7.json` with `metrics.schema.v1.8.json` (same 17 entries).
@@ -240,11 +257,20 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
 - **W1 test inventory:** `tests/javascript_backend.rs` (20 integration tests over the real grammar,
   scanner, aggregator and CLI) + the backend unit tests in
   `src/scanner/backends/tree_sitter_javascript/tests.rs` (grammar node kinds, loop context, params, events).
+- **B3 test inventory:** `tests/typescript_backend.rs` (17 integration tests: detection/tokens, mixed trees,
+  discovery skips, parse health, entry ladder, TS/TSX import resolution, type-only edge erasure, single-file
+  policy, parameter types, TSX generic arrows, non-vacuous cross-language scoring, IR leak guard, double-run) + 17
+  unit tests in `src/scanner/backends/tree_sitter_typescript/tests.rs` (node-kind locks, TS parameters,
+  type-land silence, wrappers incl. callee/receiver decomposition, type-position silence and comment extras, abstract
+  classes, enums, JSX, ternary, commented type-import erasure) + committed negatives in
+  `tests/fixtures/typescript/` (`type_only.ts`, `type_edges.ts`, `typeof_import.ts`).
 - **Grammar link tests:** `tests/javascript_grammar_link.rs` and `tests/typescript_grammar_link.rs` —
   assert the grammar ABI is inside the runtime's accepted window, `set_language` succeeds, a representative
   source parses with zero `ERROR`/missing nodes, and a malformed source is non-vacuously degraded.
-- **Corpora:** `examples-js/` (Node-style ESM + CJS mix, one module per rule family, explicit silent
-  controls) and `examples-ts/` (`.ts` + `.tsx`, type-only constructs that must NOT fire).
+- **Corpora:** `examples-js/` (15 scanned sources: 14 `.js` + 1 `.cjs`, one module per rule family,
+  explicit silent controls) and **`examples-ts/` (17 scanned sources: 15 `.ts` + 2 `.tsx`, typed
+  equivalents of the same rule mechanisms plus a type-only module, a JSX component and generic arrows;
+  every one of the 11 shared rules fires exactly once, 18 silent controls)**.
 - **Goldens:** `tests/golden/report-js/` and `tests/golden/report-ts/`; `GOLDEN_TREES` grows 4 → 5 in B2
   (`report-js`) and 5 → 6 in B3 (`report-ts`); the
   pinned detail-page set is extended per tree; regen via `PERFPAL_REGEN_GOLDEN=1`.
@@ -279,9 +305,9 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
 
 - No new flags. Auto-detection by extension is the only entry path. A single-file target with a JS suffix
   is scanned normally **except** the JS skip names (`*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`),
-  which are skipped silently. A single-file target with an unsupported TypeScript/declaration suffix
-  (`.ts`, `.mts`, `.cts`, `.tsx`, `.d.ts`, `.d.mts`, `.d.cts`) is skipped silently too — never parsed as C.
-  A genuinely unknown extension keeps the documented C fallback.
+  which are skipped silently. A single-file target with a **declaration-only** TypeScript suffix
+  (`.d.ts`, `.d.mts`, `.d.cts`) is skipped silently — never parsed as C; `.ts`/`.mts`/`.cts`/`.tsx` are
+  scanned with their `ts`/`tsx` tokens (B3). A genuinely unknown extension keeps the documented C fallback.
 - `--version` suffix moves to `(metrics schema 1.8)` with the schema bump; the `about` line widens from
   "C/Rust codebase" to name JS/TS. These string changes are forced by the schema bump (precedent:
   `python-backend` W3).
@@ -312,11 +338,21 @@ No type information; no path aliases or `node_modules` resolution; declaration f
 skipped; no framework semantics; JSX is parsed structurally but not semantically; dynamic `require`/`import()`
 with computed specifiers is invisible; static analysis is approximate and profile-to-confirm. Additional
 language-specific limits: **CJS/ESM module kind is not inferred** (no `package.json` `"type"` analysis);
-**TSX vs generic-arrow ambiguity** can degrade parse health for `<T,>` constructs; **`.d.ts` skipping** makes
+**type-only imports are erased** — `import type`/`import typeof`/`export type` produce no include edge, so
+`PERF-JS-ARCH-001` cannot report a type-only cycle (inline `{ type X, y }` specifiers keep the value edge);
+**type land is never scored** — interfaces, type aliases, ambient `declare` blocks, overload signatures and
+`typeof import("…")` type positions emit no events/records, and a file may be `Partial` because of such a
+type position while still emitting no finding from it; **`declare class`** emits no `StructDef`;
+**TS parameter types are IR-internal** (`param_types`, raw annotation text, `this` erased, `"unknown"`
+when absent — not mirrored in `metrics.json`); **TSX generic arrows** — the pinned TSX grammar resolves both
+`<T,>(x: T) => x` and `<T>(x: T) => x` at expression position, with `<T,>` the portable form (the limitation
+is re-checked by `tests/typescript_backend.rs` on any grammar upgrade); **`.d.ts` skipping** makes
 type-only modules invisible, so imports that only resolve through them become unresolved-internal data-only;
-a **minified file under 2 MiB** that is not named `*.min.*`/`*.bundle.js` is still parsed and can fire rules;
+a **minified file under 2 MiB** that is not named `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`
+is still parsed and can fire rules;
 **extension matching is case-sensitive**, so `.JS`/`.TS` are silently dropped. **Single-file targets follow
-the discovery skip policy:** `*.min.*`/`.bundle.js` and unsupported TS/declaration suffixes are skipped
-silently, while a genuinely unknown extension keeps the C fallback. **Class bodies are not event owners:**
+the discovery skip policy:** the four JS min/bundle names and declaration-only `.d.ts`/`.d.mts`/`.d.cts` are
+skipped silently, while `.ts`/`.mts`/`.cts`/`.tsx` are scanned and a genuinely unknown extension keeps the C
+fallback. **Class bodies are not event owners:**
 methods and arrow-function fields are their own records, but non-arrow field-initializer expressions and
 `class_static_block` bodies are not event-scanned at all.

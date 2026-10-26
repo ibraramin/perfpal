@@ -2,7 +2,15 @@
 
 **Start this tab:** open `/home/shafin/Opencode/Perfpal-js-ts` (`feat/js-ts`), first message:
 
-> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B3.`
+> `Read /home/shafin/Opencode/Perfpal-js-ts/docs/tracks/js-ts.md and execute Session B4.`
+
+**Next-session signpost (B4):** branch `feat/js-ts`, base `main @ 9a94905`; W0 `e7f5332`, W1 `90d5677`,
+W2 `edfc98a`, **B3 implemented in the working tree (full DoD green, panel APPROVED, uncommitted — commit
+pending founder approval)**. B4 scope: docs/contract pass (`modules.md` §4.2/5.2 + §1, output-contract
+labels, README/roadmap/`Cargo.toml` description), `docs/heuristics/js-catalog.md`, CHANGELOG note for A,
+semver note, **real-code canary re-run on the 11 rules**, real-parse negative `s = f(s + "x")`, spread-root
+attribution limitation, JS/TS dependency-label polish (`B-tb-001`). Gate: plan `js-ts` DoD + parallel panel;
+no push; merge remains `A-tb-006` (B4 + founder approval).
 
 **Track handoff:** `state/tracks/js-ts/handoff.md` · **Spec:** `docs/specs/js-ts.md` · **Plan:** `docs/plans/js-ts.md` · **ADR:** `docs/adr/ADR-0011-js-ts-backend.md` · **Inventory:** `docs/architecture/js-ts.md` · **Canary evidence:** `docs/evidence/js-canary.md` · **Base:** `9a94905` (rebased on `main` @ `9a94905`; B1 base `821b984`).
 **Scope:** add JS, then TS/TSX, as first-class backends in the existing Rust core — like C/Rust/Python. **Not a rewrite.** A later release; not beta-blocking.
@@ -132,6 +140,44 @@ real-code canary re-run is owed before merge.
 `LANGUAGE_TSX`), `SUPPORTED_LANGUAGES` to six values, `examples-ts/`, `report-ts` golden (`GOLDEN_TREES`
 5 → 6), TS type-only negative fixtures incl. `<T,>`, and TS coverage + determinism suites; no schema bump
 and no duplicated rule implementations.
+
+## Session B3 — TS/TSX backend + wiring + corpora/goldens — **implemented (uncommitted; gated; panel recorded)** (2026-10-26)
+
+**Goal:** TypeScript/TSX as first-class backends without a second visitor, no schema bump, no new rules.
+
+**Close-out:** the JS backend is parameterized by `Dialect { language, token, flavor }`
+(`tree_sitter_javascript::{Dialect,Flavor,extract_with}`); new
+`src/scanner/backends/tree_sitter_typescript/` binds `LANGUAGE_TYPESCRIPT` (`ts` for `.ts`/`.mts`/`.cts`)
+and `LANGUAGE_TSX` (`tsx` for `.tsx`). TS-specific handling: `required_parameter`/`optional_parameter`
+unwrapping with real annotation text (leading `:` stripped, `this` erased, `"unknown"` when absent);
+`ternary_expression`; `abstract_class_declaration`; `public_field_definition.name`;
+`as`/`satisfies`/`!`/`<T>expr` transparent; **type land skipped before any event match** (critical:
+`type_query` contains `call_expression`); type-only `import type`/`import typeof`/`export type` produce no
+`IncludeEdge`; `declare class` produces no `StructDef`; `declare`/overloads/interfaces/type aliases produce
+no records. Scanner: `LanguageKind::{Ts,Tsx}`, longest-suffix detection with `.d.*` still skipped,
+one `is_js_family` predicate for the 2 MiB cap + resolver + entry declarations, `SUPPORTED_LANGUAGES` six,
+and `extract_unit`/`failed_unit` tokens. Instrument `classify_alloc_call`/`detect_error_path` arms are
+`"js" | "ts" | "tsx"` (idiom hash/normalization identical to JS); aggregator `entry_scoped` +
+`detect_js_entries` cover the family. **No schema, catalog, rule, reporter or dependency change.**
+
+**Tests/corpora:** `tests/typescript_backend.rs` (17 integration tests) + 17 backend unit tests
+(`tree_sitter_typescript/tests.rs`) + committed negatives `tests/fixtures/typescript/` (`type_only.ts`,
+`type_edges.ts`, `typeof_import.ts`); `examples-ts/` 17 sources (15 `.ts` + 2 `.tsx`) with all 11 shared
+rules firing **exactly once** (0 hot / 5 warn / 6 info) and 18 silent controls;
+`tests/examples_ts_coverage.rs`, `tests/determinism_ts.rs`; `tests/golden/report-ts/` (20 artifacts,
+`GOLDEN_TREES` 5 → 6, pinned `charts/component-01-root.svg`). The existing five golden trees were unchanged
+by the regeneration.
+
+**Verification:** full plan `js-ts` Definition of Done green (fmt, clippy, full suite, deny,
+semantic-feature, double-run over `examples-js` + `examples-ts`, native check) — transcript
+`docs/evidence/js-b3/gate.txt`. Panel: see `state/tracks/js-ts/handoff.md`.
+
+**Decisions:** `D-tb-018` — B3 implemented as a dialect over the JS visitor; type-only edges erased;
+TS parameter annotations recorded (IR-internal). `D-tb-019` — `R-tb-010` narrowed: both `<T,>` and `<T>`
+generic arrows parse cleanly at expression position on the pinned TSX grammar.
+
+**Next:** **B4** (docs/contract/label pass, `js-catalog.md`, real-code canary re-run before merge;
+`A-tb-006` merge gate still needs founder approval).
 
 ## Sessions B2–B4 (signposts)
 

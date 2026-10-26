@@ -1,0 +1,260 @@
+# B3 gate transcript — plan js-ts Definition of Done
+# date: 2026-10-26T04:26:40Z  branch: feat/js-ts  head: b2f6eae
+
+## 1. Docs/state completeness
+files: OK
+
+## 2a. cargo fmt --all -- --check
+fmt: OK
+
+## 2b. cargo clippy --locked --all-targets -- -D warnings
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.48s
+
+## 2c. cargo test --locked
+     Running tests/wave_c_fixtures.rs (target/debug/deps/wave_c_fixtures-2b73992d86758a98)
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/writer_concurrency.rs (target/debug/deps/writer_concurrency-70b3a309e388846e)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+full-suite: OK
+
+## 2d. cargo deny check licenses
+   │    ━━━ unmatched license allowance
+
+licenses ok
+
+## 3a. semantic-feature clippy
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.16s
+
+## 3b. semantic-feature tests
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+semantic-tests: OK
+
+## 4. DoD double-run (masked provenance)
+scanned 15 files (15 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.rjKfIX46Ko/a
+scanned 15 files (15 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.rjKfIX46Ko/b
+deterministic (modulo provenance): examples-js
+scanned 17 files (17 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.pP1sxliBR7/a
+scanned 17 files (17 ok, 0 partial, 0 failed) · 11 findings (0 hot, 5 warn, 6 info)
+report: /var/tmp/tmp.pP1sxliBR7/b
+deterministic (modulo provenance): examples-ts
+
+## 5. native check (separate target dir)
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.18s
+
+## 6. guards
+guard: no preserve_order: OK
+guard: no dependency drift: OK
+guard: whitespace: OK
+guard: state JSON valid: OK
+guard: state bytes: 8118 (budget 8192)
+
+GATE: ALL OK
+
+## 7. Round-2 fixes (panel R1/Q1/Q2 blocking findings)
+**SUPERSEDED by §9** — this intermediate run predates the 17th unit test and the TS golden regeneration; §9 is the authoritative final-tree run.
+# date: 2026-10-26T04:58:31Z
+
+### 7a. formatter / linter after fixes
+fmt: OK
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+
+### 7b. full suite after fixes
+   Compiling perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.17s
+     Running unittests src/lib.rs (target/debug/deps/perfpal-38b8a3ad4c0d2bc2)
+     Running unittests src/main.rs (target/debug/deps/perfpal-8dad80d326260a08)
+     Running tests/alloc001_fixtures.rs (target/debug/deps/alloc001_fixtures-5fca66ca813e3241)
+     Running tests/analyzer_registry.rs (target/debug/deps/analyzer_registry-d0085cbd4df55a1c)
+     Running tests/arch_fixtures.rs (target/debug/deps/arch_fixtures-89b0d90d2ff931b3)
+     Running tests/atlas_charts.rs (target/debug/deps/atlas_charts-29596d614881082b)
+     Running tests/atlas_rail.rs (target/debug/deps/atlas_rail-9f9c87681833a214)
+     Running tests/atlas_render.rs (target/debug/deps/atlas_render-d08c095bf0d9f461)
+     Running tests/atlas_states.rs (target/debug/deps/atlas_states-a58da465f09784e3)
+     Running tests/atlas_vision.rs (target/debug/deps/atlas_vision-8b086b9fb7d58f00)
+     Running tests/benchmark.rs (target/debug/deps/benchmark-020f427a841f687f)
+     Running tests/charts_render.rs (target/debug/deps/charts_render-21a2c830bbc399ae)
+     Running tests/determinism_guard.rs (target/debug/deps/determinism_guard-58b4e42a3f787e20)
+     Running tests/determinism_js.rs (target/debug/deps/determinism_js-1e7c2bf62a57cdc1)
+     Running tests/determinism_ts.rs (target/debug/deps/determinism_ts-808d5e66a0b78891)
+     Running tests/examples_js_coverage.rs (target/debug/deps/examples_js_coverage-fb84a7a153dfcb64)
+     Running tests/examples_python_coverage.rs (target/debug/deps/examples_python_coverage-d8660c69b8fde945)
+     Running tests/examples_rust_coverage.rs (target/debug/deps/examples_rust_coverage-a8b1cc73bb8fde31)
+     Running tests/examples_ts_coverage.rs (target/debug/deps/examples_ts_coverage-ef46e58822b23cda)
+     Running tests/exit_code_matrix.rs (target/debug/deps/exit_code_matrix-f7cf3f0b8c00e9c1)
+error: unexpected argument '--definitely-not-a-flag' found
+
+  tip: to pass '--definitely-not-a-flag' as a value, use '-- --definitely-not-a-flag'
+
+Usage: perfpal [OPTIONS] [PATH]
+
+For more information, try '--help'.
+     Running tests/findings_detail_split.rs (target/debug/deps/findings_detail_split-599d553401d43e60)
+     Running tests/guarded_content.rs (target/debug/deps/guarded_content-cef2cec2f0fa68b7)
+     Running tests/harness_smoke.rs (target/debug/deps/harness_smoke-3b9d2c52f169cf03)
+     Running tests/i1a_entry_c.rs (target/debug/deps/i1a_entry_c-d17fd0a212235414)
+     Running tests/i1b_entry_rust.rs (target/debug/deps/i1b_entry_rust-e3e64be4988f1e8d)
+     Running tests/i1c_entry_python.rs (target/debug/deps/i1c_entry_python-c78502840ca769ca)
+     Running tests/i2_cost_v2.rs (target/debug/deps/i2_cost_v2-5b159e8d35548b42)
+     Running tests/i2b_trip_rust.rs (target/debug/deps/i2b_trip_rust-afa1625c93ee8f1f)
+     Running tests/i2c_trip_python.rs (target/debug/deps/i2c_trip_python-2851284aa86e1e64)
+     Running tests/i3_map_layer.rs (target/debug/deps/i3_map_layer-5702aa7fc0f13325)
+     Running tests/i4_annotations.rs (target/debug/deps/i4_annotations-fb1f59b0788dad51)
+     Running tests/javascript_backend.rs (target/debug/deps/javascript_backend-a4c5ef84ab964424)
+     Running tests/javascript_grammar_link.rs (target/debug/deps/javascript_grammar_link-3f12c79e8258934c)
+     Running tests/js_ir_fixtures.rs (target/debug/deps/js_ir_fixtures-091eea2c01ae3233)
+     Running tests/key_views.rs (target/debug/deps/key_views-6bee4c7fe29d0933)
+     Running tests/mixed_language_e2e.rs (target/debug/deps/mixed_language_e2e-e8e47c3315490273)
+     Running tests/p4_determinism.rs (target/debug/deps/p4_determinism-754813b4c056495e)
+     Running tests/p6_hardening.rs (target/debug/deps/p6_hardening-a25d423cfd524a0c)
+     Running tests/pipeline_e2e.rs (target/debug/deps/pipeline_e2e-9c2256bb114ddde3)
+error: unexpected argument '--bogus-flag' found
+
+  tip: to pass '--bogus-flag' as a value, use '-- --bogus-flag'
+
+Usage: perfpal [OPTIONS] [PATH]
+
+For more information, try '--help'.
+     Running tests/precision_kpi.rs (target/debug/deps/precision_kpi-9161f12fcbc1276e)
+     Running tests/python_backend.rs (target/debug/deps/python_backend-959ed87af8465909)
+     Running tests/python_grammar_link.rs (target/debug/deps/python_grammar_link-8c9acaa8b7b90024)
+     Running tests/python_negative_fixtures.rs (target/debug/deps/python_negative_fixtures-82ca0db10a73565a)
+     Running tests/report_html.rs (target/debug/deps/report_html-5d8d9d017a5cf866)
+     Running tests/reporter_render.rs (target/debug/deps/reporter_render-abd8b6bf75913851)
+     Running tests/reporter_rust.rs (target/debug/deps/reporter_rust-91c3227bca8a9436)
+     Running tests/resolver_health.rs (target/debug/deps/resolver_health-74d08e026826ccd3)
+     Running tests/rust_backend.rs (target/debug/deps/rust_backend-c1549402384d0fec)
+     Running tests/rust_backend_r3.rs (target/debug/deps/rust_backend_r3-a7e35c3502c7315d)
+     Running tests/rust_grammar_link.rs (target/debug/deps/rust_grammar_link-6a1345a8a297f443)
+     Running tests/rust_module_graph.rs (target/debug/deps/rust_module_graph-b7eac83ea708c644)
+     Running tests/rust_negative_fixtures.rs (target/debug/deps/rust_negative_fixtures-efa4ae2decf6052a)
+     Running tests/rust_wave_c1.rs (target/debug/deps/rust_wave_c1-d51b76b67c728678)
+     Running tests/rust_wave_c2.rs (target/debug/deps/rust_wave_c2-95f87df9f1d7f60c)
+     Running tests/scanner_pipeline.rs (target/debug/deps/scanner_pipeline-8706fa00a1a65582)
+     Running tests/schema_1_4.rs (target/debug/deps/schema_1_4-8946596550c68bdf)
+     Running tests/schema_1_8.rs (target/debug/deps/schema_1_8-500914e06fc295a1)
+     Running tests/semantic_b2.rs (target/debug/deps/semantic_b2-b760466ec50017f2)
+     Running tests/typescript_backend.rs (target/debug/deps/typescript_backend-0f17f1555ad662e6)
+     Running tests/typescript_grammar_link.rs (target/debug/deps/typescript_grammar_link-e0ec20aad9a98c55)
+     Running tests/v14_step2.rs (target/debug/deps/v14_step2-e91394393a2c99ed)
+     Running tests/wave_a_fixtures.rs (target/debug/deps/wave_a_fixtures-5329001c88214a20)
+     Running tests/wave_b_fixtures.rs (target/debug/deps/wave_b_fixtures-10b4bb2528880f2e)
+     Running tests/wave_c_fixtures.rs (target/debug/deps/wave_c_fixtures-2b73992d86758a98)
+     Running tests/writer_concurrency.rs (target/debug/deps/writer_concurrency-70b3a309e388846e)
+   Doc-tests perfpal
+suites: 66
+passed: 972
+failed suites: 0
+no failures
+
+### 7c. targeted suites
+typescript_backend: test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+examples_ts_coverage: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+determinism_ts: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+p6_hardening: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.42s
+javascript_backend: test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+examples_js_coverage: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+lib-tree_sitter_typescript: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 439 filtered out; finished in 0.00s
+
+### 7d. golden identity (criterion 6 evidence)
+git status --short -- tests/golden:
+?? tests/golden/report-ts/
+git diff --stat -- tests/golden (tracked):
+report-ts artifact count: 20
+schema: report OK
+schema: report-mixed OK
+schema: report-rust OK
+schema: report-python OK
+schema: report-js OK
+schema: report-ts OK
+
+### 7e. native check (separate target dir, command echoed)
+CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target ~/.cargo/bin/cargo check --locked --all-targets
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.49s
+
+### 7f. guards after fixes
+guard: no preserve_order: OK
+guard: no dependency drift: OK
+guard: whitespace: OK
+guard: state JSON valid: OK
+guard: state bytes: 8118
+
+ROUND-2: ALL OK
+
+## 8. Final tree re-run (after the last evidence/test edits)
+# date: 2026-10-26T05:15:53Z
+# note: the `unexpected argument` / usage lines emitted by exit-code-matrix negative cases are EXPECTED stderr from tests that assert exit code 2; they are not gate failures.
+
+### 8a. files / fmt / clippy
+files: OK
+fmt: OK
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.99s
+
+### 8b. full suite (final tree)
+
+## 9. Final gate re-run (after the TS golden regeneration)
+# date: 2026-10-26T05:17:31Z
+# note: section 8 was aborted by a stale TS golden after a corpus comment edit; the golden was regenerated (existing five unchanged) and the whole gate re-run here. Exit-code-matrix usage errors below are EXPECTED stderr, not failures.
+
+### 9a. files / fmt / clippy
+files: OK
+fmt: OK
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+
+### 9b. full suite (final tree)
+suites: 66
+passed: 973
+failed suites: 0
+no failures
+lib: test result: ok. 456 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+### 9c. targeted suites (final tree)
+typescript_backend: test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+examples_ts_coverage: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+determinism_ts: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+p6_hardening: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+javascript_backend: test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+examples_js_coverage: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+schema_1_8: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+exit_code_matrix: test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+lib-tree_sitter_typescript: test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 439 filtered out; finished in 0.00s
+
+### 9d. licences + semantic feature (final tree)
+
+licenses ok
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.02s
+semantic suites: 66
+semantic passed: 976
+semantic failed suites: 0
+
+### 9e. DoD double-run (final tree)
+deterministic (modulo provenance): examples-js
+deterministic (modulo provenance): examples-ts
+
+### 9f. native check (separate target dir, command echoed)
+CARGO_TARGET_DIR=/var/tmp/perfpal-js-ts-target ~/.cargo/bin/cargo check --locked --all-targets
+    Checking perfpal v0.2.0-beta.1 (/home/shafin/Opencode/Perfpal-js-ts)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.98s
+
+### 9g. golden identity + guards (final tree)
+git status --short -- tests/golden:
+?? tests/golden/report-ts/
+git diff --stat -- tests/golden:
+guard: no preserve_order: OK
+guard: no dependency drift: OK
+guard: whitespace: OK
+guard: state JSON valid: OK
+guard: state bytes: 8118
+
+FINAL: ALL OK

@@ -139,10 +139,18 @@ struct FuncScan<'a> {
 
 impl FuncScan<'_> {
     fn visit(&mut self, node: Node<'_>) {
+        // TypeScript type land is never runtime: `type_query` contains
+        // `call_expression` and interface/object-type bodies contain
+        // `method_signature` → `formal_parameters` → `identifier`, which would
+        // otherwise manufacture events. Inert for the JS grammar.
+        if infer::is_type_only_kind(node.kind()) {
+            return;
+        }
         match node.kind() {
             // Branch nodes mirror the Python backend's decision-point policy:
             // `if`/`catch`/`switch_case` add nesting-weighted cognitive load;
-            // `conditional_expression` and logical `&&`/`||` add flat load.
+            // ternary and logical `&&`/`||` add flat load. The TS grammar names
+            // the ternary `ternary_expression`; JS uses `conditional_expression`.
             "if_statement" => {
                 self.cyclomatic += 1;
                 self.cognitive += 1 + self.nesting;
@@ -157,7 +165,7 @@ impl FuncScan<'_> {
                 self.visit_children(node);
                 self.nesting -= 1;
             }
-            "conditional_expression" => {
+            "conditional_expression" | "ternary_expression" => {
                 self.cyclomatic += 1;
                 self.cognitive += 1;
                 self.visit_children(node);
@@ -222,6 +230,18 @@ impl FuncScan<'_> {
                 });
                 self.alloc_site_count += 1;
                 self.visit_children(node);
+            }
+            // TypeScript expression wrappers carry a value AND a type child.
+            // Only the value is runtime; visiting both would emit a spurious
+            // `import(...)` call from a type position (`x as import("./m").T`).
+            "as_expression"
+            | "satisfies_expression"
+            | "non_null_expression"
+            | "type_assertion"
+            | "parenthesized_expression" => {
+                if let Some(value) = infer::value_child(node) {
+                    self.visit(value);
+                }
             }
             // Scope boundaries: nested functions/classes are separate records
             // (or file-level records) — their bodies are never attributed to
@@ -413,6 +433,9 @@ impl FuncScan<'_> {
         let Some(callee) = node.child_by_field_name(field) else {
             return (String::new(), CalleeKind::Unknown, None, None);
         };
+        // TS wrappers do not change the callee: `(fn as Foo)()` and `<Any>fn()`
+        // are still direct calls of `fn`.
+        let callee = infer::strip_transparent_wrappers(callee);
         let kind = match callee.kind() {
             "identifier" | "member_expression" => CalleeKind::Direct,
             "subscript_expression" => CalleeKind::Indirect,
@@ -453,15 +476,31 @@ impl FuncScan<'_> {
         shapes
     }
 
-    /// A call is `Primary` only when it IS the entire expression statement;
-    /// every other position is `Nested`.
+    /// A call is `Primary` only when it IS the whole expression statement
+    /// (transparent TS wrappers around it included); every other position is
+    /// `Nested`.
     fn call_position(&self, node: Node<'_>) -> (StatementRole, bool) {
-        let role = if node.parent().is_some_and(|parent| {
+        let mut current = node;
+        while let Some(parent) = current.parent() {
+            if matches!(
+                parent.kind(),
+                "as_expression"
+                    | "satisfies_expression"
+                    | "non_null_expression"
+                    | "type_assertion"
+                    | "parenthesized_expression"
+            ) {
+                current = parent;
+            } else {
+                break;
+            }
+        }
+        let role = if current.parent().is_some_and(|parent| {
             parent.kind() == "expression_statement"
                 && parent.named_child_count() == 1
                 && parent
                     .named_child(0)
-                    .is_some_and(|child| child.id() == node.id())
+                    .is_some_and(|child| child.id() == current.id())
         }) {
             StatementRole::Primary
         } else {
@@ -834,7 +873,9 @@ fn conditional_guarded(node: Node<'_>) -> bool {
             return false;
         }
         match kind {
-            "if_statement" | "conditional_expression" | "catch_clause" => return true,
+            "if_statement" | "conditional_expression" | "ternary_expression" | "catch_clause" => {
+                return true;
+            }
             "binary_expression" => {
                 // The operator token's kind IS its source text in this grammar.
                 let operator = parent

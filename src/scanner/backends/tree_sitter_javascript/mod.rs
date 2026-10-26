@@ -26,9 +26,12 @@
 //!
 //! Wiring is part of the B2-W1 change: `LanguageKind::Js` selects `.js`/`.jsx`/
 //! `.mjs`/`.cjs`, `extract_unit` dispatches here, and `SUPPORTED_LANGUAGES`
-//! carries the `js` token. The TS/TSX dispatch is B3.
+//! carries the `js` token. Wave B3 reuses this visitor for TypeScript/TSX by
+//! parameterizing it with a [`Dialect`] (grammar + token + [`Flavor`]); the
+//! TypeScript backend module owns only grammar selection and the `ts`/`tsx`
+//! tokens.
 
-mod infer;
+pub(crate) mod infer;
 mod scan;
 #[cfg(test)]
 mod tests;
@@ -45,23 +48,55 @@ use crate::scanner::FunctionUnit;
 use infer::ParamInfo;
 use scan::ScanInputs;
 
+/// Source-language family that changes extraction details while sharing the
+/// same tree-sitter visitor. JavaScript has no type annotations and no
+/// expression wrappers; TypeScript adds both (see `infer.rs`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Flavor {
+    JavaScript,
+    TypeScript,
+}
+
+/// One grammar binding for the shared JS extraction visitor.
+pub(crate) struct Dialect {
+    /// Grammar constructor (`LANGUAGE` / `LANGUAGE_TYPESCRIPT` / `LANGUAGE_TSX`).
+    pub(crate) language: fn() -> tree_sitter::Language,
+    /// `FileRecord.language` token emitted for this dialect.
+    pub(crate) token: &'static str,
+    /// Extraction-detail family.
+    pub(crate) flavor: Flavor,
+}
+
+/// The pinned JavaScript grammar (`.js`/`.jsx`/`.mjs`/`.cjs`).
+const JS: Dialect = Dialect {
+    language,
+    token: "js",
+    flavor: Flavor::JavaScript,
+};
+
 /// Extract one file's IR records/events from parsed JavaScript source.
 ///
 /// Never panics on malformed or JSX-bearing input: syntax errors surface as
 /// `ParseHealth{partial}` with error regions/count.
 #[must_use]
 pub fn extract(path: &str, source: &[u8]) -> Extraction {
+    extract_with(&JS, path, source)
+}
+
+/// Extract using an explicit [`Dialect`] (the TypeScript/TSX backends reuse the
+/// visitor through this seam).
+pub(crate) fn extract_with(dialect: &Dialect, path: &str, source: &[u8]) -> Extraction {
     let mut parser = Parser::new();
     // `set_language` only fails on ABI mismatch, which the pinned-pair link
     // test guards; falling back to a `failed` health keeps this total.
-    let parse_result = if parser.set_language(&language()).is_ok() {
+    let parse_result = if parser.set_language(&(dialect.language)()).is_ok() {
         parser.parse(source, None)
     } else {
         None
     };
 
     let Some(tree) = parse_result else {
-        return failed_extraction(path);
+        return failed_extraction(path, dialect.token);
     };
 
     let root = tree.root_node();
@@ -77,7 +112,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
     let mut includes = Vec::new();
     preorder(root, &mut |node| match node.kind() {
         "import_statement" | "export_statement" => {
-            push_source_edge(node, path, source, &mut includes);
+            push_source_edge(node, path, source, &mut includes, dialect.flavor);
         }
         "call_expression" => push_require_edge(node, path, source, &mut includes),
         _ => {}
@@ -87,6 +122,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
     let mut global_vars = Vec::new();
     preorder(root, &mut |node| {
         if infer::is_class_kind(node.kind())
+            && !has_ambient_ancestor(node)
             && let Some(def) = class_def(node, path, source)
         {
             structs.push(def);
@@ -105,7 +141,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
     functions.push(module_unit(root, path, source));
     preorder(root, &mut |node| {
         if infer::is_function_kind(node.kind()) {
-            functions.push(function_unit(node, path, source));
+            functions.push(function_unit(node, path, source, dialect));
         }
     });
 
@@ -135,7 +171,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
     };
     let file = FileRecord {
         path: path.to_string(),
-        language: "js".to_string(),
+        language: dialect.token.to_string(),
         loc,
         function_count: u32::try_from(functions.len()).unwrap_or(u32::MAX),
         global_var_count: u32::try_from(global_vars.len()).unwrap_or(u32::MAX),
@@ -164,11 +200,11 @@ pub fn language() -> tree_sitter::Language {
     tree_sitter_javascript::LANGUAGE.into()
 }
 
-fn failed_extraction(path: &str) -> Extraction {
+fn failed_extraction(path: &str, token: &str) -> Extraction {
     Extraction {
         file: FileRecord {
             path: path.to_string(),
-            language: "js".to_string(),
+            language: token.to_string(),
             ..FileRecord::default()
         },
         parse_health: ParseHealth {
@@ -300,14 +336,73 @@ fn split_lines(source: &[u8]) -> impl Iterator<Item = &[u8]> {
 /// `import_statement` / `export_statement` `source` string → [`IncludeEdge`].
 /// Only a literal `source` field yields an edge (dynamic/computed specifiers
 /// are deliberately skipped).
-fn push_source_edge(node: Node<'_>, path: &str, source: &[u8], out: &mut Vec<IncludeEdge>) {
-    let Some(specifier) = node
-        .child_by_field_name("source")
-        .and_then(|s| infer::unquote(text(s, source)))
+///
+/// TypeScript `import type` / `import typeof` / `export type` statements are
+/// runtime-erased, so they must not create IncludeEdges. The grammar renders
+/// the `type`/`typeof` marker as an anonymous child token at index 1; detection
+/// is structural, never textual.
+fn push_source_edge(
+    node: Node<'_>,
+    path: &str,
+    source: &[u8],
+    out: &mut Vec<IncludeEdge>,
+    flavor: Flavor,
+) {
+    if flavor == Flavor::TypeScript && is_type_only_import(node) {
+        return;
+    }
+    let Some(specifier) = source_specifier(node).and_then(|s| infer::unquote(text(s, source)))
     else {
         return;
     };
     push_edge(out, path, &specifier, ir_span(node, source));
+}
+
+/// Whether an `import`/`export` statement carries the erased type marker
+/// (`import type …`, `import typeof …`, `export type …`).
+///
+/// Comments are named extra nodes, so the marker cannot be read by fixed child
+/// index: skip extras, find the `import`/`export` keyword, then inspect the
+/// next non-extra child.
+fn is_type_only_import(node: Node<'_>) -> bool {
+    let mut after_keyword = false;
+    for index in 0..node.child_count() as u32 {
+        let Some(child) = node.child(index) else {
+            continue;
+        };
+        if child.is_extra() {
+            continue;
+        }
+        if !after_keyword {
+            if matches!(child.kind(), "import" | "export") {
+                after_keyword = true;
+            }
+            continue;
+        }
+        return matches!(child.kind(), "type" | "typeof");
+    }
+    false
+}
+
+/// Literal `source` of an import/export statement. `import x = require("…")`
+/// nests the field on `import_require_clause`, so that child is inspected too.
+fn source_specifier<'a>(node: Node<'a>) -> Option<Node<'a>> {
+    if let Some(source) = node.child_by_field_name("source") {
+        return Some(source);
+    }
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            if child.kind() == "import_require_clause" {
+                return child.child_by_field_name("source");
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    None
 }
 
 /// Static `require("…")` call → [`IncludeEdge`]. The callee must be exactly the
@@ -358,9 +453,11 @@ fn push_edge(out: &mut Vec<IncludeEdge>, path: &str, specifier: &str, span: Span
     });
 }
 
-/// `class_declaration` / `class` → [`StructDef`]. Anonymous classes carry the
-/// empty name. Members are `field_definition`/`public_field_definition`
-/// properties only (methods are functions, not layout members).
+/// `class_declaration` / `abstract_class_declaration` / `class` → [`StructDef`].
+/// Anonymous classes carry the empty name. Members are class-field definitions
+/// only (methods are functions, not layout members). The JS `field_definition`
+/// exposes the member name as `property`; the TS `public_field_definition`
+/// exposes it as `name`, so either field is accepted.
 fn class_def(node: Node<'_>, path: &str, source: &[u8]) -> Option<StructDef> {
     let name = node
         .child_by_field_name("name")
@@ -375,7 +472,9 @@ fn class_def(node: Node<'_>, path: &str, source: &[u8]) -> Option<StructDef> {
                 if matches!(
                     member.kind(),
                     "field_definition" | "public_field_definition"
-                ) && let Some(property) = member.child_by_field_name("property")
+                ) && let Some(property) = member
+                    .child_by_field_name("property")
+                    .or_else(|| member.child_by_field_name("name"))
                     && let Some(member_name) = member_name(property, source)
                 {
                     members.push(StructMember {
@@ -414,6 +513,22 @@ fn member_name(property: Node<'_>, source: &[u8]) -> Option<String> {
             }
         }
     }
+}
+
+/// Whether a declaration sits inside a `declare …` ambient context. Such
+/// declarations have no runtime code, so no [`StructDef`] is emitted for them.
+fn has_ambient_ancestor(node: Node<'_>) -> bool {
+    let mut current = node.parent();
+    while let Some(parent) = current {
+        if parent.kind() == "ambient_declaration" {
+            return true;
+        }
+        if parent.kind() == "program" {
+            break;
+        }
+        current = parent.parent();
+    }
+    false
 }
 
 /// A declaration is top-level iff its parent is the `program` or an
@@ -521,9 +636,9 @@ fn module_unit(root: Node<'_>, path: &str, source: &[u8]) -> FunctionUnit {
 
 /// One real function node (declaration, expression, arrow, method, generator,
 /// or class-field arrow) → [`FunctionUnit`].
-fn function_unit(node: Node<'_>, path: &str, source: &[u8]) -> FunctionUnit {
+fn function_unit(node: Node<'_>, path: &str, source: &[u8], dialect: &Dialect) -> FunctionUnit {
     let name = infer::derive_name(node, source);
-    let params = function_params(node, source);
+    let params = function_params(node, source, dialect.flavor);
     let span = ir_span(node, source);
 
     let body = node.child_by_field_name("body");
@@ -592,12 +707,12 @@ fn function_unit(node: Node<'_>, path: &str, source: &[u8]) -> FunctionUnit {
     }
 }
 
-/// Parameters of any JS function shape: `formal_parameters` (declarations,
+/// Parameters of any function shape: `formal_parameters` (declarations,
 /// methods, parenthesized arrows) or the single-identifier `parameter` field of
 /// an unparenthesized arrow.
-fn function_params(node: Node<'_>, source: &[u8]) -> ParamInfo {
+pub(crate) fn function_params(node: Node<'_>, source: &[u8], flavor: Flavor) -> ParamInfo {
     if let Some(params) = node.child_by_field_name("parameters") {
-        return infer::collect_params(params, source);
+        return infer::collect_params(params, source, flavor);
     }
     if let Some(param) = node.child_by_field_name("parameter")
         && let Some(name) = infer::pattern_name(param, source)

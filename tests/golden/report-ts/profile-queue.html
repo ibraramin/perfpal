@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Perfpal Profile Queue — schema 1.8</title>
+<style>
+body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}
+th{background:#eee}
+#profile-queue tbody td{white-space:nowrap}
+#profile-queue td.wrap,#profile-queue th{white-space:normal;overflow-wrap:anywhere}
+nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+.kv{margin:1.25rem 0 1.75rem}
+.kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
+.kv-action{margin:.15rem 0 .75rem;color:#444}
+.kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
+.kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}
+.kv-rank{font-size:1.5rem;font-weight:700;line-height:1}
+.kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}
+.kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.kv-loc{font-weight:700;color:#111;text-decoration:none}
+.kv-loc:hover{text-decoration:underline}
+.kv-title{font-weight:600}
+.kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}
+.kv-caption{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}
+.kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}
+.kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}
+.sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}
+.sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}
+.sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}
+.kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}
+.kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}
+.kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}
+.kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}
+.kv-more{margin:.5rem 0 .2rem;font-weight:600}
+.kv-bars{max-width:100%}
+.kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}
+.kv-brow:last-child{border-bottom:1px solid #999}
+.kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}
+.kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}
+.kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}
+.kv-fill.demoted{background:#a0aec0}
+.kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}
+.kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}
+.kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}
+@media print{.kv-row,.kv-brow{break-inside:avoid}}
+         </style>
+</head>
+<body>
+<header>
+<h1>Perfpal Profile Queue</h1>
+<p>54 functions ranked by static cost — candidates, confirm with a profiler</p>
+</header>
+<nav>
+<ul>
+<li><a href="report.html">Report</a></li>
+<li><a href="#profile-queue">Profile queue</a></li>
+</ul>
+</nav>
+<section id="profile-queue">
+<h2>Complete cost-ranked list</h2>
+<div class="table-scroll">
+<table>
+<thead><tr><th>rank</th><th>function</th><th>location</th><th>path class</th><th>cost</th><th>notes</th></tr></thead>
+<tbody>
+<tr id="fn-06-membership-scan-ts-smallWindow-19-8"><td>1</td><td class="wrap">smallWindow</td><td class="wrap">06_membership_scan.ts:19</td><td>production</td><td class="wrap">19 static cost units (v2) · 19× median · top 2%</td><td class="wrap"><span class="kv-badge known">known trip ×4 — verify it actually runs</span></td></tr>
+<tr id="fn-04-deep-nesting-ts-score-7-8"><td>2</td><td class="wrap">score</td><td class="wrap">04_deep_nesting.ts:7</td><td>production</td><td class="wrap">18 static cost units (v2) · 18× median · top 4%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×2 — estimate incomplete</span></td></tr>
+<tr id="fn-03-string-build-ts-tinyPrefix-13-8"><td>3</td><td class="wrap">tinyPrefix</td><td class="wrap">03_string_build.ts:13</td><td>production</td><td class="wrap">15 static cost units (v2) · 15× median · top 6%</td><td class="wrap"><span class="kv-badge known">known trip ×5 — verify it actually runs</span></td></tr>
+<tr id="fn-01-alloc-churn-ts-buildEnvelopes-11-8"><td>4</td><td class="wrap">buildEnvelopes</td><td class="wrap">01_alloc_churn.ts:11</td><td>production</td><td class="wrap">13 static cost units (v2) · 13× median · top 7%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-01-alloc-churn-ts-buildIndexed-19-8"><td>5</td><td class="wrap">buildIndexed</td><td class="wrap">01_alloc_churn.ts:19</td><td>production</td><td class="wrap">13 static cost units (v2) · 13× median · top 9%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-01-alloc-churn-ts-buildLabelled-27-8"><td>6</td><td class="wrap">buildLabelled</td><td class="wrap">01_alloc_churn.ts:27</td><td>production</td><td class="wrap">13 static cost units (v2) · 13× median · top 11%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-02-array-accumulation-ts-flatten-5-8"><td>7</td><td class="wrap">flatten</td><td class="wrap">02_array_accumulation.ts:5</td><td>production</td><td class="wrap">13 static cost units (v2) · 13× median · top 13%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-06-membership-scan-ts-intersect-5-8"><td>8</td><td class="wrap">intersect</td><td class="wrap">06_membership_scan.ts:5</td><td>production</td><td class="wrap">13 static cost units (v2) · 13× median · top 15%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-07-async-await-ts-loadAll-9-8"><td>9</td><td class="wrap">loadAll</td><td class="wrap">07_async_await.ts:9</td><td>production</td><td class="wrap">11 static cost units (v2) · 11× median · top 17%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-02-array-accumulation-ts-snapshotRows-13-8"><td>10</td><td class="wrap">snapshotRows</td><td class="wrap">02_array_accumulation.ts:13</td><td>production</td><td class="wrap">10 static cost units (v2) · 10× median · top 19%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-05-sync-io-loop-ts-loadAll-6-8"><td>11</td><td class="wrap">loadAll</td><td class="wrap">05_sync_io_loop.ts:6</td><td>production</td><td class="wrap">10 static cost units (v2) · 10× median · top 20%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-13-controls-ts-chunk-7-8"><td>12</td><td class="wrap">chunk</td><td class="wrap">13_controls.ts:7</td><td>production</td><td class="wrap">10 static cost units (v2) · 10× median · top 22%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-03-string-build-ts-render-5-8"><td>13</td><td class="wrap">render</td><td class="wrap">03_string_build.ts:5</td><td>production</td><td class="wrap">7 static cost units (v2) · 7.0× median · top 24%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-03-string-build-ts-sumValues-26-8"><td>14</td><td class="wrap">sumValues</td><td class="wrap">03_string_build.ts:26</td><td>production</td><td class="wrap">7 static cost units (v2) · 7.0× median · top 26%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-04-deep-nesting-ts-scoreFlat-17-8"><td>15</td><td class="wrap">scoreFlat</td><td class="wrap">04_deep_nesting.ts:17</td><td>production</td><td class="wrap">7 static cost units (v2) · 7.0× median · top 28%</td><td class="wrap"><span class="kv-badge trip">unknown-trip ×1 — estimate incomplete</span></td></tr>
+<tr id="fn-09-recursion-ts-countdown-13-8"><td>16</td><td class="wrap">countdown</td><td class="wrap">09_recursion.ts:13</td><td>production</td><td class="wrap">7 static cost units (v2) · 7.0× median · top 30%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-11-cycle-b-ts-formatFromB-5-8"><td>17</td><td class="wrap">formatFromB</td><td class="wrap">11_cycle_b.ts:5</td><td>production</td><td class="wrap">6 static cost units (v2) · 6.0× median · top 31%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-09-recursion-ts-descend-9-8"><td>18</td><td class="wrap">descend</td><td class="wrap">09_recursion.ts:9</td><td>production</td><td class="wrap">5 static cost units (v2) · 5.0× median · top 33%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-10-cycle-a-ts-format-6-8"><td>19</td><td class="wrap">format</td><td class="wrap">10_cycle_a.ts:6</td><td>production</td><td class="wrap">5 static cost units (v2) · 5.0× median · top 35%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-14-types-only-ts-module-1-1"><td>20</td><td class="wrap">&lt;module&gt;</td><td class="wrap">14_types_only.ts:1</td><td>production</td><td class="wrap">5 static cost units (v2) · 5.0× median · top 37%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-07-async-await-ts-fetchJson-5-1"><td>21</td><td class="wrap">fetchJson</td><td class="wrap">07_async_await.ts:5</td><td>production</td><td class="wrap">4 static cost units (v2) · 4.0× median · top 39%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-13-controls-ts-summarize-15-8"><td>22</td><td class="wrap">summarize</td><td class="wrap">13_controls.ts:15</td><td>production</td><td class="wrap">4 static cost units (v2) · 4.0× median · top 41%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-15-component-tsx-Badge-9-8"><td>23</td><td class="wrap">Badge</td><td class="wrap">15_component.tsx:9</td><td>production</td><td class="wrap">3 static cost units (v2) · 3.0× median · top 43%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-07-async-await-ts-loadOne-17-8"><td>24</td><td class="wrap">loadOne</td><td class="wrap">07_async_await.ts:17</td><td>production</td><td class="wrap">2 static cost units (v2) · 2.0× median · top 44%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-index-ts-boot-6-8"><td>25</td><td class="wrap">boot</td><td class="wrap">index.ts:6</td><td>production</td><td class="wrap">2 static cost units (v2) · 2.0× median · top 46%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-01-alloc-churn-ts-module-1-1"><td>26</td><td class="wrap">&lt;module&gt;</td><td class="wrap">01_alloc_churn.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 48%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-02-array-accumulation-ts-module-1-1"><td>27</td><td class="wrap">&lt;module&gt;</td><td class="wrap">02_array_accumulation.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 50%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-02-array-accumulation-ts-merge-22-8"><td>28</td><td class="wrap">merge</td><td class="wrap">02_array_accumulation.ts:22</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 52%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-03-string-build-ts-module-1-1"><td>29</td><td class="wrap">&lt;module&gt;</td><td class="wrap">03_string_build.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 54%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-03-string-build-ts-appendOnce-21-8"><td>30</td><td class="wrap">appendOnce</td><td class="wrap">03_string_build.ts:21</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 56%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-04-deep-nesting-ts-module-1-1"><td>31</td><td class="wrap">&lt;module&gt;</td><td class="wrap">04_deep_nesting.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 57%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-05-sync-io-loop-ts-module-1-1"><td>32</td><td class="wrap">&lt;module&gt;</td><td class="wrap">05_sync_io_loop.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 59%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-05-sync-io-loop-ts-loadOnce-14-8"><td>33</td><td class="wrap">loadOnce</td><td class="wrap">05_sync_io_loop.ts:14</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 61%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-06-membership-scan-ts-module-1-1"><td>34</td><td class="wrap">&lt;module&gt;</td><td class="wrap">06_membership_scan.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 63%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-06-membership-scan-ts-containsOnce-15-8"><td>35</td><td class="wrap">containsOnce</td><td class="wrap">06_membership_scan.ts:15</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 65%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-07-async-await-ts-module-1-1"><td>36</td><td class="wrap">&lt;module&gt;</td><td class="wrap">07_async_await.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 67%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-08-async-blocking-ts-module-1-1"><td>37</td><td class="wrap">&lt;module&gt;</td><td class="wrap">08_async_blocking.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 69%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-08-async-blocking-ts-readConfig-6-8"><td>38</td><td class="wrap">readConfig</td><td class="wrap">08_async_blocking.ts:6</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 70%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-08-async-blocking-ts-readConfigSync-10-8"><td>39</td><td class="wrap">readConfigSync</td><td class="wrap">08_async_blocking.ts:10</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 72%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-09-recursion-ts-module-1-1"><td>40</td><td class="wrap">&lt;module&gt;</td><td class="wrap">09_recursion.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 74%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-10-cycle-a-ts-module-1-1"><td>41</td><td class="wrap">&lt;module&gt;</td><td class="wrap">10_cycle_a.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 76%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-11-cycle-b-ts-module-1-1"><td>42</td><td class="wrap">&lt;module&gt;</td><td class="wrap">11_cycle_b.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 78%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-12-delete-ts-module-1-1"><td>43</td><td class="wrap">&lt;module&gt;</td><td class="wrap">12_delete.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 80%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-12-delete-ts-dropField-5-8"><td>44</td><td class="wrap">dropField</td><td class="wrap">12_delete.ts:5</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 81%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-12-delete-ts-dropKey-9-8"><td>45</td><td class="wrap">dropKey</td><td class="wrap">12_delete.ts:9</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 83%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-13-controls-ts-module-1-1"><td>46</td><td class="wrap">&lt;module&gt;</td><td class="wrap">13_controls.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 85%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-13-controls-ts-mergeDefaults-19-8"><td>47</td><td class="wrap">mergeDefaults</td><td class="wrap">13_controls.ts:19</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 87%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-14-types-only-ts-anonymous-45-25"><td>48</td><td class="wrap">&lt;anonymous&gt;</td><td class="wrap">14_types_only.ts:45</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 89%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-14-types-only-ts-parse-26-8"><td>49</td><td class="wrap">parse</td><td class="wrap">14_types_only.ts:26</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 91%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-15-component-tsx-module-1-1"><td>50</td><td class="wrap">&lt;module&gt;</td><td class="wrap">15_component.tsx:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 93%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-16-generic-arrow-tsx-module-1-1"><td>51</td><td class="wrap">&lt;module&gt;</td><td class="wrap">16_generic_arrow.tsx:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 94%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-16-generic-arrow-tsx-identity-4-25"><td>52</td><td class="wrap">identity</td><td class="wrap">16_generic_arrow.tsx:4</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 96%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-16-generic-arrow-tsx-identityBare-6-29"><td>53</td><td class="wrap">identityBare</td><td class="wrap">16_generic_arrow.tsx:6</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 98%</td><td class="wrap"><span class="kv-dem">no-loop — demoted</span></td></tr>
+<tr id="fn-index-ts-module-1-1"><td>54</td><td class="wrap">&lt;module&gt;</td><td class="wrap">index.ts:1</td><td>production</td><td class="wrap">1 static cost units (v2) · 1.0× median · top 100%</td><td class="wrap"><span class="kv-dem">startup + no-loop — demoted</span></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<footer>
+<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+</footer>
+<script>
+(function(){
+"use strict";
+function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+function enhance(fig){
+var img=fig.querySelector("img");if(!img){return;}
+var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+var drag=null;
+img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+img.addEventListener("pointerup",function(){drag=null;});
+img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+var bar=document.createElement("div");
+bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+fig.appendChild(bar);
+}
+function boot(){
+var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
+var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
+var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
+if(!label||!clear||rows.length===0){return;}
+function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
+function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
+clear.addEventListener("click",reset);
+function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
+wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
+wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})
+</script>
+</body>
+</html>

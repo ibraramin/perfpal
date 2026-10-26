@@ -4,7 +4,7 @@
 //! | # | Case                                        | Argv / setup                                          | Expected | Contract |
 //! |---|---------------------------------------------|-------------------------------------------------------|----------|----------|
 //! | 1 | Happy path                                  | scan tests/fixtures/e2e into fresh temp output         | 0        | §8.2 row 0 — report written; findings are data |
-//! | 2 | Empty-dir scan (zero files)                 | empty temp dir as target                               | 0        | §8.2 row 0 + modules.md Principle 4 — valid empty report, `languages: ["c","js","python","rust"]` |
+//! | 2 | Empty-dir scan (zero files)                 | empty temp dir as target                               | 0        | §8.2 row 0 + modules.md Principle 4 — valid empty report, `languages: ["c","js","python","rust","ts","tsx"]` |
 //! | 3 | `--help`                                    | `--help`                                               | 0        | §8.1 flag table — usage text, exit 0 |
 //! | 4 | `--version`                                 | `--version`                                            | 0        | §8.1 flag table — version payload, exit 0 |
 //! | 5 | Unknown flag                                | `--definitely-not-a-flag`                              | 1        | §8.2 row 1 — usage error (clap's default 2 is remapped) |
@@ -72,8 +72,9 @@ fn case1_happy_path_exit_0() {
 #[test]
 fn case2_empty_dir_scan_exit_0_with_valid_empty_report() {
     // §8.2 row 0 + Principle 4: a zero-file scan succeeds with a valid
-    // empty report (`languages: ["c","js","python","rust"]` — the supported
-    // set; Python admitted by plan `python-backend` W3, JS by `js-ts`).
+    // empty report (`languages: ["c","js","python","rust","ts","tsx"]` — the
+    // supported set; Python admitted by plan `python-backend` W3, JS/TS by
+    // `js-ts`).
     let root = temp_dir("empty");
     let target = root.join("no-c-files-here");
     fs::create_dir_all(&target).expect("empty scan target");
@@ -89,7 +90,7 @@ fn case2_empty_dir_scan_exit_0_with_valid_empty_report() {
             .expect("valid empty report");
     assert_eq!(
         doc["scan"]["languages"],
-        serde_json::json!(["c", "js", "python", "rust"])
+        serde_json::json!(["c", "js", "python", "rust", "ts", "tsx"])
     );
     assert_eq!(doc["scan"]["file_count"], 0);
     cleanup(&root);

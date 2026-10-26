@@ -135,7 +135,7 @@ fn json_stat<'a>(doc: &'a serde_json::Value, path: &str, name: &str) -> &'a serd
 // ---------------------------------------------------------------------------
 
 #[test]
-fn detection_selects_js_suffixes_and_skips_typescript() {
+fn detection_selects_js_and_typescript_suffixes_and_skips_declarations() {
     let (root, units) = scan_tree(
         "detect",
         &[
@@ -143,7 +143,8 @@ fn detection_selects_js_suffixes_and_skips_typescript() {
             ("b.jsx", "const b = <div />;\n"),
             ("c.mjs", "export const c = 1;\n"),
             ("d.cjs", "module.exports = 1;\n"),
-            // TypeScript is B3: every suffix below must stay invisible.
+            // TypeScript landed in B3: value files are discovered with their
+            // grammar-boundary tokens; declaration files stay invisible.
             ("e.ts", "export const e: number = 1;\n"),
             ("f.tsx", "export const f = <div />;\n"),
             ("g.d.ts", "declare const g: number;\n"),
@@ -155,17 +156,19 @@ fn detection_selects_js_suffixes_and_skips_typescript() {
     let paths: Vec<&str> = units.iter().map(|u| u.file.path.as_str()).collect();
     assert_eq!(
         paths,
-        ["a.js", "b.jsx", "c.mjs", "d.cjs"],
-        "only .js/.jsx/.mjs/.cjs are discovered; .ts/.tsx/.d.* are not; sorted"
+        ["a.js", "b.jsx", "c.mjs", "d.cjs", "e.ts", "f.tsx"],
+        "js/ts value files are discovered; .d.* are not; sorted"
     );
     assert!(paths.windows(2).all(|w| w[0] <= w[1]), "sorted emission");
 
+    let tokens: Vec<&str> = units.iter().map(|u| u.file.language.as_str()).collect();
+    assert_eq!(tokens, ["js", "js", "js", "js", "ts", "tsx"]);
+
     let doc = doc_for(&units);
-    assert_eq!(doc.scan.languages, ["js"], "JS-only tree reports [\"js\"]");
-    assert!(
-        doc.files.iter().all(|f| f.language == "js"),
-        "every files[].language is \"js\": {:?}",
-        doc.files.iter().map(|f| &f.language).collect::<Vec<_>>()
+    assert_eq!(
+        doc.scan.languages,
+        ["js", "ts", "tsx"],
+        "grammar-boundary tokens are reported sorted"
     );
 
     fs::remove_dir_all(&root).ok();
@@ -732,7 +735,7 @@ fn extensionless_and_directory_imports_resolve_through_the_probe_order() {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn single_file_minified_and_typescript_targets_are_skipped_silently() {
+fn single_file_minified_and_declaration_targets_are_skipped_silently() {
     for name in ["a.min.js", "b.min.mjs", "c.min.cjs", "d.bundle.js"] {
         let root = write_tree("single-min", &[(name, "var x=1;\n")]);
         let units = scan(&root.join(name)).expect("single-file scan");
@@ -740,15 +743,27 @@ fn single_file_minified_and_typescript_targets_are_skipped_silently() {
         fs::remove_dir_all(&root).ok();
     }
 
-    for name in [
-        "e.ts", "f.mts", "g.cts", "h.tsx", "i.d.ts", "j.d.mts", "k.d.cts",
-    ] {
-        let root = write_tree("single-ts", &[(name, "export const x: number = 1;\n")]);
+    // Declaration-only files are silent; value TS files are scanned with the
+    // grammar-boundary token instead of falling back to C.
+    for name in ["i.d.ts", "j.d.mts", "k.d.cts"] {
+        let root = write_tree("single-ts-decl", &[(name, "export type X = number;\n")]);
         let units = scan(&root.join(name)).expect("single-file scan");
         assert!(
             units.is_empty(),
-            "{name} is an unsupported TS/declaration suffix (must not fall back to C)"
+            "{name} is a declaration-only file (must not fall back to C)"
         );
+        fs::remove_dir_all(&root).ok();
+    }
+    for (name, token) in [
+        ("e.ts", "ts"),
+        ("f.mts", "ts"),
+        ("g.cts", "ts"),
+        ("h.tsx", "tsx"),
+    ] {
+        let root = write_tree("single-ts", &[(name, "export const x = 1;\n")]);
+        let units = scan(&root.join(name)).expect("single-file scan");
+        assert_eq!(units.len(), 1, "{name} must be scanned");
+        assert_eq!(units[0].file.language, token, "{name} token");
         fs::remove_dir_all(&root).ok();
     }
 

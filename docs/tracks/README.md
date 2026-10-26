@@ -20,8 +20,9 @@ Open opencode in the track worktree and send **one** first message:
 
 The track file is the brief. Do not paste this README into a tab; it is the shared rulebook.
 
-**Track B branch state:** B2-W2 is implemented in the working tree and **uncommitted** (review panel and
-commit pending); `feat/js-ts` is rebased on `main` @ `9a94905`. B3 is the next session.
+**Track B branch state:** B2-W0/B2-W1/B2-W2 are committed (`e7f5332`/`90d5677`/`edfc98a`); **B3 is
+implemented in the working tree and uncommitted** (full DoD green, panel recorded, commit pending);
+`feat/js-ts` is rebased on `main` @ `9a94905`. B4 is the next session.
 
 ## Shared rules (all tracks)
 

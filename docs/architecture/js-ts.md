@@ -1,12 +1,11 @@
 # Perfpal — JS/TS backend (Track B — inventory and freeze record)
 
 **Status:** B1 planning complete; **B2-W0 complete** (exact pins, grammar-link tests, canary freeze);
-**B2-W1 committed `90d5677` (pre-rebase `7fdfa1a`)** (panel APPROVED); **B2-W2 implemented — uncommitted, commit and review gate
-pending; B3 next.** B2-W2 adds the 11 `PERF-JS-*` rules + helpers, the registry and catalog entries
-(catalog 67 → 78), schema v1.8 with both language enums
-`["c","js","python","rust","ts","tsx"]`, `examples-js/`, parser-free IR fixtures, the `report-js` golden
-tree, and precision/benchmark/determinism coverage. The review panel is **pending** and the merge gate
-`A-tb-006` still requires founder approval. Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`,
+**B2-W1 committed `90d5677` (pre-rebase `7fdfa1a`)**; **B2-W2 committed `edfc98a`** (11 `PERF-JS-*` rules,
+catalog 78, schema v1.8, `examples-js`, `report-js` golden); **B3 implemented — uncommitted, full DoD green,
+panel recorded; commit pending founder approval.** B3 adds the TypeScript/TSX backend (dialect over the JS
+visitor), the six-value `SUPPORTED_LANGUAGES`, `examples-ts/` and the `report-ts` golden (§16). The merge
+gate `A-tb-006` still requires founder approval. Execution plan: `docs/adr/ADR-0011-js-ts-backend.md`,
 `docs/specs/js-ts.md`, `docs/plans/js-ts.md`.
 **Branch:** `feat/js-ts`, rebased on `main` @ `9a94905`; B1 commits `3adf115` + `3e414e3`; B2 base `821b984`.
 
@@ -53,9 +52,9 @@ Line numbers are current-tree (`821b984`) and are evidence; re-read before editi
 | 3 | `src/scanner/mod.rs:287-292` | `extract_unit` dispatch match | add three arms |
 | 4 | `src/scanner/mod.rs:307-311` | `instrument::populate` language token | add `"js"`/`"ts"`/`"tsx"` |
 | 5 | `src/scanner/mod.rs:322-330` | `failed_unit` language token arm | add three arms |
-| 6 | `src/scanner/mod.rs:107` | `SUPPORTED_LANGUAGES = ["c","python","rust"]` | B2 `["c","js","python","rust"]`; B3 adds `"ts"`/`"tsx"` (staged — never advertise a backend that does not exist) |
+| 6 | `src/scanner/mod.rs:107` | `SUPPORTED_LANGUAGES = ["c","python","rust"]` | B2 `["c","js","python","rust"]`; **B3 landed six** `["c","js","python","rust","ts","tsx"]` (staged — never advertise a backend that does not exist) |
 | 7 | `src/scanner/mod.rs:188-213` | per-language whole-scan passes | add JS/TS import-resolution pass |
-| 8 | `src/scanner/mod.rs:166` | single-file unknown extension → `C` | unknown extensions keep `C`; single-file JS skip names and unsupported TS/declaration suffixes are skipped silently |
+| 8 | `src/scanner/mod.rs:166` | single-file unknown extension → `C` | unknown extensions keep `C`; single-file JS skip names and declaration-only TS files (`.d.ts`/`.d.mts`/`.d.cts`) are skipped silently — `.ts`/`.mts`/`.cts`/`.tsx` are scanned (B3) |
 | 9 | `src/scanner/backends/mod.rs:16-18` | three `pub mod` declarations | add JS + TS modules |
 
 ### 4.2 Backend contract
@@ -137,7 +136,7 @@ family module `src/analyzer/heuristics/js/mod.rs`. Detail in §13.
 | # | File:line | Current | Change |
 |---|---|---|---|
 | 1 | `src/schema/mod.rs:96-109` | `SCHEMA_VERSION = "1.7"`, artifact name, `EMBEDDED_SCHEMA` | `1.8` + `metrics.schema.v1.8.json` |
-| 2 | `src/schema/metrics.schema.v1.7.json:3-5,12,35-37,71` | `$id`/`title`/`description` name v1.7 + the old language set; `schema_version.const "1.7"`; `enum ["c","rust","python"]` ×2 | v1.8 file with `$id`, `title`, `description`, `schema_version.const` and both enums moved; the `files[].language` and `scan.languages` descriptions name the six values, but the **fallback clause stays generic** ("the supported set") because B2's empty-scan fallback is four values (D-tb-010) |
+| 2 | `src/schema/metrics.schema.v1.7.json:3-5,12,35-37,71` | `$id`/`title`/`description` name v1.7 + the old language set; `schema_version.const "1.7"`; `enum ["c","rust","python"]` ×2 | v1.8 file with `$id`, `title`, `description`, `schema_version.const` and both enums moved; the `files[].language` and `scan.languages` descriptions name the six values, and the **fallback clause stays generic** ("the supported set") so it tracks `SUPPORTED_LANGUAGES` (four in B2, six after B3; D-tb-010) |
 | 3 | `docs/schema/metrics.schema.v1.7.json` | byte-identical doc copy | v1.8 copy, byte-identical |
 | 4 | `src/schema/mod.rs:667-686` | drift + artifact-name locks | unchanged logic, new names |
 | 5 | `src/cli/mod.rs:39` | `VERSION_SUFFIX` hardcodes `1.7` | `1.8` (locked by `src/cli/mod.rs:396-410`, which also hardcodes `"(metrics schema 1.7)"`) |
@@ -218,7 +217,12 @@ Longest suffix first; unknown extensions stay dropped (existing behaviour).
 | async | `await_expression` inside `for_statement`/`for_in_statement`/`while_statement`; `function_declaration`, `method_definition`, or `arrow_function` with an `async` token |
 | error path | `throw_statement`, `try_statement`, `catch_clause` |
 | string build | `binary_expression` with `+`, `template_string`, `augmented_assignment_expression` with `+=` |
-| TS-only (non-runtime) | `interface_declaration`, `type_alias_declaration`, `type_annotation`, `type_parameters`, `as_expression`, `satisfies_expression`, `non_null_expression` → **no rule input** |
+| TS-only (non-runtime) | `interface_declaration`, `interface_body`, `type_alias_declaration`, `ambient_declaration`, `type_annotation*`, `type_parameters`, `type_arguments`, `implements_clause`, `function_signature`, `method_signature`, `abstract_method_signature`, `index_signature`, `call_signature`, `construct_signature`, `property_signature`, `object_type`, `function_type`, `constructor_type`, `type_query`, `conditional_type`, `infer_type`, `mapped_type_clause`, `generic_type`, `union_type`, `intersection_type`, `array_type`, `tuple_type`, `optional_type`, `rest_type`, `parenthesized_type`, `literal_type`, `type_identifier`, `predefined_type`, `this_type`, `lookup_type`, `index_type_query`, `template_literal_type`, `nested_type_identifier`, `readonly_type` → **skipped before any event match** (B3) |
+| TS expression wrappers | `as_expression`, `satisfies_expression`, `non_null_expression`, `type_assertion` → **transparent**: the value child is visited/shaped, the type child is skipped (B3) |
+| TS parameters | `required_parameter` / `optional_parameter` with `pattern` (or `name`), `type`; a `this` parameter is erased; the `unknown` sentinel is kept when unannotated (B3) |
+| TS branches | `ternary_expression` (the TS grammar names ternaries this; `conditional_expression` is JS-only) |
+| TS class layout | `abstract_class_declaration` → `StructDef`; members read `public_field_definition.name` (JS uses `field_definition.property`); `declare class` under `ambient_declaration` → no `StructDef` |
+| type-only imports | `import type` / `import typeof` / `export type` → **no `IncludeEdge`** (runtime-erased; structural child-1 `type`/`typeof` token) |
 | JSX | `jsx_element`, `jsx_self_closing_element`, `jsx_attribute`, `jsx_expression` |
 | parse health | `ERROR` / `MISSING` nodes → `ParseStatus::{Partial,Failed}` exactly like the three existing backends |
 
@@ -232,6 +236,17 @@ self-call `this.f()` is a `member_expression` whose object kind is `this`; `dele
 candidate construct). The pinned TS grammar cannot parse `f<typeof import("x")>()` (220 of
 the canary's 229 gemini-cli parse failures); this is accepted degradation under `R-tb-014`,
 not a reason to bump the pin without an ADR-0001 G5 review.
+
+**B3 confirmations (pinned `tree-sitter-typescript =0.23.2`).** TypeScript/TSX reuse the JS visitor through
+a `Dialect { language, token, flavor }`; the TS module owns only the two grammar bindings and the `ts`/`tsx`
+tokens. The differences that are handled explicitly: parameters are `required_parameter`/`optional_parameter`
+wrappers (`pattern`/`name` + `type`); ternaries are `ternary_expression`; class fields expose `name` (not
+`property`); abstract classes are `abstract_class_declaration`; and **type land is never event-scanned** —
+this is not cosmetic: `type_query`'s children include `call_expression`, and `interface_body`/`object_type`
+contain `method_signature` → `formal_parameters` → `identifier`, so a naive walk manufactures events from
+type positions. `as`/`satisfies`/`!`/`<T>expr` stay transparent (value child only). Observed on the pinned
+TSX grammar: both `<T,>(x: T) => x` and `<T>(x: T) => x` parse cleanly at expression position; `<T,>` stays
+the portable form and the limitation is recorded rather than assumed (`R-tb-010`).
 
 **Additive IR-internal facts emitted in B2-W1 (no schema/DTO change).** The backend adds three
 serde-defaulted IR fields that carry the JS evidence the analyzer consumes in B2-W2; none is mirrored in
@@ -368,7 +383,7 @@ counter twice and `cmp`s the output).
 | `R-tb-007` | Build time/binary size +2 C parsers | accepted; no feature gate |
 | `R-tb-008` | Global directory skips change C/Rust/Python discovery for repos with those dirs | documented behavior change; existing corpora contain none; acceptance criterion 6 restated |
 | `R-tb-009` | Reporter `HEURISTIC_CATALOG_V1` is A-owned but mechanically required (panics on uncatalogued rule ids, 67-count locks) | **resolved (B2-W2, `D-tb-017`):** founder-approved atomic catalog-only B edit; the 11 entries landed with the registry block and the count/equality/Appendix-A locks moved by exactly 11 |
-| `R-tb-010` | TSX vs generic-arrow ambiguity (`<T,>`) degrades parse health | record parse-health degradation honestly; do not score unparsed regions; `.tsx` snapshot tests |
+| `R-tb-010` | TSX vs generic-arrow ambiguity (`<T,>`) degrades parse health | **narrowed (B3):** the pinned TSX grammar 0.23.2 resolves both `<T,>(x: T) => x` and `<T>(x: T) => x` cleanly at expression position (locked by `tests/typescript_backend.rs` + the grammar-link test); `<T,>` remains the portable form, other positions are not claimed |
 | `R-tb-011` | CJS/ESM module kind is not inferred; entry detection mixes `require.main` and `import.meta.url` | document as a limitation; entry candidates are sorted/deduped/first-match; no `package.json` `"type"` claim |
 | `R-tb-012` | `.d.ts` skip makes type-only modules invisible (imports become unresolved-internal data-only); an unlabeled minified file < 2 MiB is still parsed; extension matching is case-sensitive | documented limitations; no finding emitted for unresolved-internal; size cap bounds the worst case |
 | `R-tb-013` | Malformed/unreadable `package.json` could escalate a per-file problem to exit 3 | **mitigated (B2-W1):** malformed/unreadable manifests are ignored, the conventional/in-source ladder still runs, and the scan exits 0 (locked by the integration test) |
@@ -382,9 +397,22 @@ counter twice and `cmp`s the output).
   their own function records; a non-arrow field-initializer expression and a `class_static_block` body belong
   to no record and are not event-scanned at all (so their calls/allocs never reach `stats.functions[]`).
 - **Single-file targets follow the same JS/TS skip policy as discovery.** `*.min.js`/`*.min.mjs`/`*.min.cjs`/
-  `*.bundle.js` and every unsupported TypeScript/declaration suffix (`.ts`, `.mts`, `.cts`, `.tsx`, `.d.ts`,
-  `.d.mts`, `.d.cts`) are skipped silently instead of being parsed as C; a genuinely unknown extension keeps
-  the documented C fallback.
+  `*.bundle.js` and declaration-only `.d.ts`/`.d.mts`/`.d.cts` are skipped silently instead of being parsed
+  as C; `.ts`/`.mts`/`.cts`/`.tsx` are scanned normally (B3) and a genuinely unknown extension keeps the
+  documented C fallback.
+
+**Accepted limitations added by B3:**
+
+- **Type-only imports are erased.** `import type` / `import typeof` / `export type` produce no
+  `IncludeEdge`, so `PERF-JS-ARCH-001` cannot report a type-only cycle (there is no runtime cycle).
+  Inline type specifiers (`import { type X, y }`) keep the value edge.
+- **Type land is never scored.** Interfaces, type aliases, ambient `declare` blocks, overload signatures,
+  and `typeof import("…")` type positions emit no calls/allocs/loops and no function records; `declare class`
+  emits no `StructDef`. A file that the pinned grammar marks partial because of a type position still emits
+  no finding from that region.
+- **TS parameter types are IR-internal.** `param_types` carries the raw annotation text (leading `:`
+  stripped, `this` erased, `"unknown"` when absent); it is not mirrored in `metrics.json` and no rule
+  consumes it.
 
 **Accepted limitations (publish in report/docs):** no type checking; no path aliases/`node_modules`; `.d.ts`
 and minified bundles skipped; no framework semantics; JSX parsed structurally only; computed
@@ -392,9 +420,9 @@ and minified bundles skipped; no framework semantics; JSX parsed structurally on
 
 ## 13. Session B2-W2 implementation (rules + schema v1.8)
 
-**State:** implemented in the working tree; **uncommitted**, review panel **pending**, commit pending
-founder approval. Branch `feat/js-ts` rebased on `main` @ `9a94905`. TS/TSX scanning is B3, so
-`SUPPORTED_LANGUAGES` is still `["c","js","python","rust"]`; the schema admits all six tokens in advance.
+**State:** implemented, gated and reviewed; commit pending founder approval. Branch `feat/js-ts` rebased
+on `main` @ `9a94905`. TS/TSX scanning landed in B3, so `SUPPORTED_LANGUAGES` is now the six-value set
+`["c","js","python","rust","ts","tsx"]` (§16).
 
 ### 13.1 Rule → code (all confidence MEDIUM)
 
@@ -447,8 +475,8 @@ and empty in v1); 11 catalog entries and the 67 → 78 count/equality locks in `
 
 ### 13.4 Accepted limitations added or still live
 
-- **TS/TSX scanning is B3.** `.ts`/`.mts`/`.cts`/`.tsx` are not in `SUPPORTED_LANGUAGES` yet; `.jsx` maps to
-  `js` because the JS grammar embeds JSX.
+- **TS/TSX scanning landed in B3.** `.ts`/`.mts`/`.cts` → `ts`, `.tsx` → `tsx`, `.d.*` skipped; `.jsx` maps
+  to `js` because the JS grammar embeds JSX. `SUPPORTED_LANGUAGES` is the six-value set.
 - **Non-arrow class-field initializers and `class_static_block` bodies are not event-scanned** (`D-tb-016`);
   they belong to no function record, so their calls/allocs never reach `stats.functions[]`.
 - **Reporter dependency clause** currently renders a JS corpus as bare "js module edges"; label polish is B4.
@@ -498,3 +526,44 @@ PATH in this environment; the full `~/.cargo/bin/cargo` path is required.)
 5. Who lands `HEURISTIC_CATALOG_V1` — Track A before B2, or a founder-approved catalog-only edit by B?
    **Resolved (B2-W2, `D-tb-017`):** the founder approved the atomic catalog-only B edit; the 11 entries
    landed with the registry block, so the frozen set is **11** entries, not 12 (`B-tb-003` closed).
+
+## 16. Session B3 implementation (TypeScript/TSX backend)
+
+**State:** implemented, full DoD green, parallel panel recorded; commit pending founder approval. Branch
+`feat/js-ts`, base `main @ 9a94905`. No schema bump (v1.8 already admits `ts`/`tsx`), no new rules, no
+catalog change, no dependency change.
+
+### 16.1 Reuse shape
+
+- `src/scanner/backends/tree_sitter_javascript/` is parameterized by
+  `Dialect { language: fn() -> Language, token, flavor }`; the public `extract` binds the JS dialect and is
+  byte-compatible with B2 (`tests/javascript_backend.rs` and the 22 parser-free IR fixtures stay green).
+- `src/scanner/backends/tree_sitter_typescript/` owns only the grammar bindings
+  (`LANGUAGE_TYPESCRIPT` for `ts`, `LANGUAGE_TSX` for `tsx`), the tokens, and the two entry points
+  (`extract`/`extract_tsx`). TypeScript-specific extraction details live beside the JS visitor they modify
+  (parameters, wrappers, type-land suppression, ternary, class-field naming, type-only edges).
+- Scanner wiring: `LanguageKind::{Ts,Tsx}`, longest-suffix detection (`.tsx` → `tsx`,
+  `.ts/.mts/.cts` → `ts`, `.d.*` → skipped), `extract_unit`/`failed_unit`, a single `is_js_family`
+  predicate for the shared 2 MiB cap, the relative-specifier resolver, `package.json` entry declarations,
+  and `SUPPORTED_LANGUAGES` = six. Instrument alloc-family/error-path arms are `"js" | "ts" | "tsx"`.
+- Aggregator `detect_js_entries` and `entry_scoped` cover the whole family; `PERF-JS-ARCH-001`,
+  `PERF-JS-LOOP-*`, `PERF-JS-ASYNC-*` etc. are unchanged and receive `js|ts|tsx` units in the same slice.
+
+### 16.2 Test and corpus inventory (B3)
+
+| Artifact | Content |
+|---|---|
+| `src/scanner/backends/tree_sitter_typescript/tests.rs` | 17 unit tests: node-kind locks, TS params (`this`/optional/rest/destructured), typed canonical `for` trip count, type-land silence, `import type`/`export type` erasure, wrapper transparency, abstract-class members, `declare class`, enums, JSX embedded expressions, ternary complexity, clean parse/tokens, wrapper-aware callee/receiver decomposition, type-position wrapper silence, comment extras, commented `import type` erasure |
+| `tests/typescript_backend.rs` | 17 integration tests: detection/tokens, mixed tree, discovery skips (TS + 2 MiB), parse health, package.json `main` HIGH (`.ts` and `.mts`), conventional `index.tsx` MEDIUM, relative import probes (`.ts`→`.tsx`→`/index.ts`), type-only edge erasure, single-file policy, params in metrics, `<T,>`/`<T>` TSX parse health, non-vacuous cross-language scoring (one known LOOP-007 hit), IR-internal field leak guard, double-run determinism, plus the committed negative fixtures (`type_only.ts`, `type_edges.ts`, `typeof_import.ts`) |
+| `examples-ts/` | 17 scanned sources (15 `.ts` + 2 `.tsx`) + `package.json`; all 11 shared rules fire exactly once (0 hot / 5 warn / 6 info); type-only/JSX/generic modules silent; 18 documented silent controls |
+| `tests/examples_ts_coverage.rs` | exact 11-id set, zero cross-language ids, `["ts","tsx"]`, 15/2 split, 11 findings, per-rule 1, `report.md` §4 catalog, silent-control triple check |
+| `tests/determinism_ts.rs` | masked double-run over `examples-ts`; artifact set + bytes identical |
+| `tests/golden/report-ts/` | 20-artifact golden tree; `GOLDEN_TREES` 5 → 6; pinned component page `charts/component-01-root.svg` |
+| `tests/p6_hardening.rs` | six-tree comparator; existing five trees unchanged by the B3 regeneration |
+
+### 16.3 Recorded verification
+
+Full transcript: `docs/evidence/js-b3/gate.txt` §9 (final tree): 66 suites / **973 passed** (lib 456),
+semantic-feature **976 passed**, DoD double-run over `examples-js` + `examples-ts`, native check, golden
+identity (five pre-existing trees unchanged), and all guards. Panel (final): **R1, R2, R3, Q1 and Q2 all
+APPROVED**, zero unresolved blocking findings; verdict and fix history in the track handoff.

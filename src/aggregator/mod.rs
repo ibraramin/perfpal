@@ -239,7 +239,8 @@ fn function_stats(
     let mut records: Vec<(bool, &FunctionUnit)> = units
         .iter()
         .flat_map(|u| {
-            let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python" | "js");
+            let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python")
+                || is_js_family(&u.file.language);
             u.functions.iter().map(move |f| (entry_scoped, f))
         })
         .collect();
@@ -1154,7 +1155,14 @@ fn python_reachable(
     entry_reachable(entries, edges)
 }
 
-/// JavaScript entry-point detection (plan `js-ts` §8).
+/// Whether a language token belongs to the JS runtime family. Kept local
+/// rather than imported from the scanner (which owns detection) so the
+/// aggregator stays a pure consumer of emitted tokens.
+fn is_js_family(language: &str) -> bool {
+    matches!(language, "js" | "ts" | "tsx")
+}
+
+/// JavaScript/TypeScript entry-point detection (plan `js-ts` §8).
 ///
 /// Mirrors [`detect_python_entries`] with the JS module split:
 /// 1. declared module entries — a synthetic `<module>` record carrying
@@ -1163,18 +1171,18 @@ fn python_reachable(
 ///    `main`/`bin` hit resolved by the scanner): `(script, HIGH)`;
 /// 2. conventional module roots — an unclaimed `<module>` record in a file
 ///    whose stem is `index`/`main`/`server`/`app`: `(script, MEDIUM)`;
-/// 3. lib-roots — real JS functions (never the synthetic `<module>`) with no
+/// 3. lib-roots — real JS/TS functions (never the synthetic `<module>`) with no
 ///    leading underscore, in a file with no declared/conventional entry:
 ///    `(lib-root, MEDIUM)`;
-/// 4. honest `unknown-entry` stub — when steps 1–3 yield ZERO entries but JS
-///    functions exist, EVERY JS function becomes `(unknown-entry, LOW)` so
+/// 4. honest `unknown-entry` stub — when steps 1–3 yield ZERO entries but
+///    JS/TS functions exist, EVERY one becomes `(unknown-entry, LOW)` so
 ///    reachability stays total instead of silently empty.
 ///
-/// JS non-entries are ABSENT from the map (`None`/omitted on the wire).
+/// JS/TS non-entries are ABSENT from the map (`None`/omitted on the wire).
 fn detect_js_entries(units: &[FileUnit]) -> BTreeMap<String, (String, String)> {
     let mut js_functions: Vec<&FunctionRecord> = units
         .iter()
-        .filter(|u| u.file.language.as_str() == "js")
+        .filter(|u| is_js_family(u.file.language.as_str()))
         .flat_map(|u| u.functions.iter().map(|f| &f.record))
         .collect();
     // Defensive input sort (matching the other detectors): deterministic
@@ -1950,7 +1958,10 @@ mod tests {
     #[test]
     fn zero_file_scan_yields_valid_empty_document() {
         let doc = assemble(&[], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c", "js", "python", "rust"]);
+        assert_eq!(
+            doc.scan.languages,
+            ["c", "js", "python", "rust", "ts", "tsx"]
+        );
         assert_eq!(doc.scan.file_count, 0);
         assert!(doc.files.is_empty());
         assert!(doc.findings.is_empty());
@@ -2018,7 +2029,10 @@ mod tests {
     #[test]
     fn scan_languages_empty_scan_uses_supported_set() {
         let doc = assemble(&[], &[], &prov());
-        assert_eq!(doc.scan.languages, ["c", "js", "python", "rust"]);
+        assert_eq!(
+            doc.scan.languages,
+            ["c", "js", "python", "rust", "ts", "tsx"]
+        );
     }
 
     /// call_graph assembly: a genuine cross-file Direct call maps field-for-
@@ -2466,6 +2480,36 @@ mod tests {
             Some(&("unknown-entry".to_string(), "LOW".to_string()))
         );
         assert_eq!(entries.len(), 1);
+    }
+
+    /// Plan `js-ts` B3: a mixed TypeScript + TSX unit set gets the same entry
+    /// ladder as JS (declared `<module>` HIGH, lib-root MEDIUM).
+    #[test]
+    fn detect_js_entries_covers_mixed_ts_and_tsx_units() {
+        let mut ts = js_unit("src/cli.ts");
+        ts.file.language = "ts".to_string();
+        ts.functions = vec![module_func("src/cli.ts", Some(true))];
+
+        let mut tsx = js_unit("src/App.tsx");
+        tsx.file.language = "tsx".to_string();
+        tsx.functions = vec![
+            module_func("src/App.tsx", Some(false)),
+            func("src/App.tsx", "render", 4, 1),
+        ];
+
+        let entries = detect_js_entries(&[ts, tsx]);
+        assert_eq!(
+            entries.get("src/cli.ts#<module>#1:1"),
+            Some(&("script".to_string(), "HIGH".to_string()))
+        );
+        assert_eq!(
+            entries.get("src/App.tsx#render#4:1"),
+            Some(&("lib-root".to_string(), "MEDIUM".to_string()))
+        );
+        assert!(
+            !entries.contains_key("src/App.tsx#<module>#1:1"),
+            "unclaimed module record is not an entry"
+        );
     }
 
     /// Plan `js-ts` §8: the JS edge set is honestly empty (no function-level
