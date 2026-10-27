@@ -199,12 +199,24 @@ fn payload_value(doc: &MetricsDocument, layout: &Value, layout_json: &str) -> Va
 
     let scene_omitted = scene_meta.get("omitted").cloned().unwrap_or(Value::Null);
     let scene_omitted_scenes = field(&scene_omitted, "scenes");
+    // The complete drawn-slice count, not the per-file top-3 projection
+    // carried on `nodes[].functions` (which is a sample).
+    let loop_bearing_functions = doc
+        .stats
+        .functions
+        .iter()
+        .filter(|function| {
+            drawn.contains(&function.path)
+                && (function.max_loop_depth > 0 || function.unknown_trip_loops > 0)
+        })
+        .count();
     let trust = json!({
         "caps": field(&meta, "caps_text"),
         "partialParse": field(&state, "partial_parse"),
         "nonProductionNodes": non_production_nodes,
         "drawnNodes": nodes.len(),
         "unknownTripFunctions": unknown_trips,
+        "loopBearingFunctions": loop_bearing_functions,
         "io": io_trust,
         "findingsIncluded": findings_included,
         "findingsTotal": findings_total,

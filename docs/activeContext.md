@@ -10,16 +10,18 @@ reduced-motion/print final frame, S4 whole-repo detail as a closed `<details>`, 
 layout-only. Schema **1.8**, no new dependency, byte-determinism preserved.
 Evidence: `docs/evidence/polish-report/H1/{gate.txt,report-check.txt,budget.txt,VISION.md}`;
 `docs/evidence/atlas-sim/GATE.txt` (304/304, 3k 44/44, verdict PASS). Full gate: fmt/clippy/test/
-deny/semantic all exit 0. Budget: hyperfine 333,246 B/124 ms, cJSON 264,624 B/136 ms, 3k
-510,160 B/144 ms — inside ADR-0014 ceilings. Vision: 1440/3072 PASS-WITH-NITS, JS-off PASS.
-Panel: round 1 returned R2 APPROVED and R1/Q1/Q2/R3 CHANGES_REQUESTED; the JS-off summary counts and
-close-step truth items are fixed, and round 2 is in progress. Final verdicts: `PANEL.md`.
+deny/semantic all exit 0. Budget: hyperfine 333,492 B/128 ms, cJSON 264,718 B/156 ms, 3k
+510,255 B/128 ms — inside ADR-0014 ceilings. Vision: 1440/3072 PASS-WITH-NITS, JS-off PASS.
+Panel: round 1 returned R2 APPROVED and R1/Q1/Q2/R3 CHANGES_REQUESTED. The JS-off counts now use the
+complete drawn-slice loop count and the stop reason is explicit; round-2 verdicts are appended in
+`PANEL.md` at close.
 **No push, no tag.**
 
 ## Recent Decisions
-- **D-pf-277 (live, 2026-10-27):** H1 done — seven blocks + full-width hero + always-on in-report
-  story (ADR-0014; A12 amended; F6a/b/c); schema 1.8/no deps; gates + vision + panel approved; H2
-  next.
+- **D-pf-277 (live, 2026-10-27):** H1 implementation complete — seven blocks + full-width hero +
+  always-on in-report story (ADR-0014; A12 amended; F6a/b/c); schema 1.8/no deps; gates + vision
+  green; panel round 2 changes requested on the JS-off counts/stop reason; fixes applied; final
+  panel/close pending; H2 next.
 - **D-pf-276 (live):** M3 done — the merge train closed at v0.4.0/schema 1.8.
 - **D-pf-251 (live):** F treemap remains undecided; keep W1.
 - **ADR-0014** supersedes ADR-0012 D5 for the in-report decision; ADR-0012 remains the companion

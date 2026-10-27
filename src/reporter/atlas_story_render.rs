@@ -116,7 +116,7 @@ fn narrative(payload: &Value, doc: &MetricsDocument) -> String {
         .unwrap_or("no ranked action on the drawn slice");
 
     format!(
-        "<noscript>\n<p class=\"atlas-story-noscript\">The interactive run story needs JavaScript; the complete static Atlas map is above. Inferred run: entry <strong>{entry}</strong>, {stage_phrase} along <code>{path}</code>; {loop_phrase}; {io_phrase}; stop state: {stop}; first action: <code>{action}</code>. Continue in <a href=\"atlas-weight.html\">the weight drill</a>, <a href=\"atlas-q2.html\">the Q2 reverse drill</a>, <a href=\"findings-detail.html#ranked-actions\">ranked actions</a>, or <a href=\"profile-queue.html\">the profile queue</a>.</p>\n</noscript>\n",
+        "<noscript>\n<p class=\"atlas-story-noscript\">The interactive run story needs JavaScript; the complete static Atlas map is above. Inferred run: entry <strong>{entry}</strong>, {stage_phrase} along <code>{path}</code>; {loop_phrase}; {io_phrase}; stop reason: {stop}; first action: <code>{action}</code>. Continue in <a href=\"atlas-weight.html\">the weight drill</a>, <a href=\"atlas-q2.html\">the Q2 reverse drill</a>, <a href=\"findings-detail.html#ranked-actions\">ranked actions</a>, or <a href=\"profile-queue.html\">the profile queue</a>.</p>\n</noscript>\n",
         entry = escape_html(&entry),
         stage_phrase = escape_html(&stage_phrase),
         path = escape_html(path),
@@ -136,31 +136,8 @@ fn summary_counts(payload: &Value) -> (u64, u64) {
         .and_then(Value::as_u64)
         .unwrap_or(0);
     let loops = payload
-        .get("nodes")
-        .and_then(Value::as_array)
-        .map(|nodes| {
-            nodes
-                .iter()
-                .flat_map(|node| {
-                    node.get("functions")
-                        .and_then(Value::as_array)
-                        .into_iter()
-                        .flatten()
-                })
-                .filter(|function| {
-                    function
-                        .get("maxLoopDepth")
-                        .and_then(Value::as_u64)
-                        .unwrap_or(0)
-                        > 0
-                        || function
-                            .get("unknownTripLoops")
-                            .and_then(Value::as_u64)
-                            .unwrap_or(0)
-                            > 0
-                })
-                .count() as u64
-        })
+        .pointer("/trust/loopBearingFunctions")
+        .and_then(Value::as_u64)
         .unwrap_or(0);
     (loops, io)
 }
@@ -170,7 +147,10 @@ fn stop_state(state: &Value) -> String {
     const FLAGS: &[(&str, &str)] = &[
         ("empty", "empty scan (no source files)"),
         ("noEntry", "no production entry"),
-        ("library", "library (no entry)"),
+        (
+            "library",
+            "no forward path: the elected entry is a library root",
+        ),
         ("allTest", "all-test scan"),
         ("capped", "capped at the render budget"),
         ("partialParse", "partial parse"),
@@ -182,7 +162,7 @@ fn stop_state(state: &Value) -> String {
         .map(|(_, label)| *label)
         .collect();
     if labels.is_empty() {
-        "inferred run reaches its stop beat".to_string()
+        "static leaf (the representative path ends at a static leaf)".to_string()
     } else {
         labels.join(", ")
     }
@@ -387,14 +367,25 @@ mod tests {
     #[test]
     fn summary_counts_reads_io_rows_and_all_loop_bearing_functions() {
         let payload = serde_json::json!({
-            "trust": {"io": {"rows": 4}},
-            "nodes": [{"functions": [
-                {"maxLoopDepth": 1, "unknownTripLoops": 0},
-                {"maxLoopDepth": 0, "unknownTripLoops": 2},
-                {"maxLoopDepth": 0, "unknownTripLoops": 0}
-            ]}]
+            "trust": {"io": {"rows": 4}, "loopBearingFunctions": 2}
         });
         assert_eq!(summary_counts(&payload), (2, 4));
+    }
+
+    #[test]
+    fn stop_state_names_the_reason() {
+        assert_eq!(
+            stop_state(&serde_json::json!({})),
+            "static leaf (the representative path ends at a static leaf)"
+        );
+        assert_eq!(
+            stop_state(&serde_json::json!({"capped": true})),
+            "capped at the render budget"
+        );
+        assert_eq!(
+            stop_state(&serde_json::json!({"library": true})),
+            "no forward path: the elected entry is a library root"
+        );
     }
 
     #[test]

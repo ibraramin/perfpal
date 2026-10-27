@@ -1,6 +1,6 @@
 # H1 review panel
 
-Date: 2026-10-27 · Tree: H1 final (code `8cf425d`, state `7dee471`)
+Date: 2026-10-27 · Round-1 tree: code `8cf425d`, state `7dee471`
 
 ## Round 1 — pre-fix verdicts
 

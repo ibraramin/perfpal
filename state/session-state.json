@@ -20,7 +20,7 @@
     {
       "id": "D-pf-277",
       "status": "live",
-      "title": "POLISH-REPORT H1 DONE 2026-10-27: seven branch blocks restored (answer/actions/weight/blast/cards/noise/links) + full-width hero (rail beside 1440, below >=1600) + always-on in-report Atlas story (ADR-0014; A12 amended: 3 script elements, inline JSON, no fetch/eval, JS-off canvas+noscript, S4 details closed, --story layout-only, F6a/b/c); schema 1.8, no new deps. Full gate + story gate PASS; vision 1440/3072 PASS-WITH-NITS, JS-off PASS; panel APPROVED. H2 next; no push/tag."
+      "title": "POLISH-REPORT H1 IMPLEMENTATION COMPLETE 2026-10-27: seven branch blocks restored + full-width hero + always-on in-report Atlas story (ADR-0014; A12 amended: 3 scripts, inline JSON, no fetch/eval, JS-off canvas+noscript, S4 details closed, --story layout-only, F6a/b/c); schema 1.8/no deps; gates+vision green; panel round 2 changes requested on JS-off counts/stop reason, fixes applied; final panel/close pending; H2 next; no push/tag."
     }
   ],
   "open_risks": [
