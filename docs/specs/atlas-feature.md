@@ -65,11 +65,14 @@ Surfaces:
   proxy on postgres + the `memchr` crate payload (4/4 blind lanes PASS; D-pf-255). **D-pf-257
   records that this delegated PASS closes the A2 gate for this beta;** the founder's own timed run
   remains the V6 gold standard and would need a fresh holdout because the holdout is now released.
-- **A12** — no new JavaScript: the Atlas canvas and animation blocks contain no `<script>` and no
-  event handlers; the report's existing single fixed enhancement script (`REPORT_SCRIPT`, fixed
-  source, no interpolated data, no network) is unchanged. `report.html` has exactly one script
-  block; the canvas/SVG/animation artifacts have zero. **Status 2026-10-26:** unchanged; the Atlas
-  Story stays a companion (`ADR-0012`), so no second script ships in the report.
+- **A12 (as amended by ADR-0014)** — no new JavaScript in the Atlas artifacts: the Atlas canvas and
+  animation blocks contain no `<script>` and no event handlers; they still add zero scripts.
+  `report.html` has exactly three script elements (ADR-0014): the unchanged fixed `REPORT_SCRIPT`
+  (fixed source, no interpolated data, no network), one fixed `STORY_SCRIPT`, and one inline
+  `<script type="application/json">` data block for the always-embedded Atlas story. The story
+  script/data are the only additions. **Status 2026-10-27:** amended by `ADR-0014`; the story is
+  in-report and always on, `--story` only emits `atlas-layout.json`, and the canvas/SVG/animation
+  artifacts are unchanged.
 - **A4** — double scan → byte-identical HTML/SVG (excluding run provenance).
 - **A7/A11** — no bare measured number; every `×`/`%` states its denominator; no time units.
 - **A8 (amended; step-12 re-baselined)** — first block = key-metrics strip + canvas; the strip is

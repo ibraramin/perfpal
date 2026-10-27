@@ -196,8 +196,9 @@ pub fn render_actions(view: &AtlasView, doc: &MetricsDocument) -> String {
         out.push_str(&format!("<p>{}</p>\n", escape_html(&no_action_text(&kv1))));
     } else {
         out.push_str("<ol class=\"atlas-action-list\">\n");
+        let shown = kv1.rows.len().min(3);
         let mut seen_locations: BTreeMap<(String, u32), usize> = BTreeMap::new();
-        for row in &kv1.rows {
+        for row in kv1.rows.iter().take(shown) {
             let finding = &doc.findings[row.finding_index];
             let same_as = seen_locations
                 .get(&(finding.path.clone(), finding.span.start_line))
@@ -261,7 +262,7 @@ pub fn render_actions(view: &AtlasView, doc: &MetricsDocument) -> String {
         out.push_str("</ol>\n");
         out.push_str(&format!(
             "<p class=\"atlas-counts\">showing {} of {} ranked actions (production-first) · {} · {} in the full list</p>\n",
-            kv1.rows.len(),
+            shown,
             kv1.total_actions,
             escape_html(&if view.coverage.demoted_files == 1 {
                 format!(
@@ -295,7 +296,7 @@ pub fn render_actions(view: &AtlasView, doc: &MetricsDocument) -> String {
 pub fn render_weight(view: &AtlasView) -> String {
     let mut out = String::new();
     out.push_str("<div class=\"atlas-block\" data-atlas-block=\"weight\" id=\"atlas-weight\">\n");
-    out.push_str("<h3>Where is the mass? — share of scanned static cost</h3>\n");
+    out.push_str("<h3>Weight — the share in words</h3>\n");
     out.push_str(
         "<p class=\"atlas-caption\">Production files first; non-production cost is counted in the labelled band, never dropped.</p>\n",
     );
@@ -382,7 +383,7 @@ pub fn render_weight(view: &AtlasView) -> String {
 pub fn render_blast(view: &AtlasView) -> String {
     let mut out = String::new();
     out.push_str("<div class=\"atlas-block\" data-atlas-block=\"blast\" id=\"atlas-blast\">\n");
-    out.push_str("<h3>What breaks if I touch it? — blast radius</h3>\n");
+    out.push_str("<h3>Blast radius — the dependents in words</h3>\n");
     let blast = &view.blast_radius;
     match &blast.target {
         Some(target) => {

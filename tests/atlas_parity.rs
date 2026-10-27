@@ -70,6 +70,13 @@ fn report_contains_every_branch_block_and_the_story_in_order() {
         );
     }
 
+    // The ranked-actions block is the requested top-3 digest, not the branch's
+    // five-row list (plan polish-report H1 Step 1).
+    assert!(
+        html.matches("class=\"atlas-action\"").count() <= 3,
+        "ranked actions must stay at the top 3"
+    );
+
     // The drills stay standalone pages, linked from the blocks.
     assert!(!html.contains("id=\"atlas-drill-"));
     for href in [

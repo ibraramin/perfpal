@@ -49,7 +49,7 @@
    1. the existing fixed `REPORT_SCRIPT` (unchanged bytes and behaviour);
    2. one fixed `STORY_SCRIPT` whose source is committed in the repository (minified or not is a
       build detail; it is a constant, not generated per scan);
-   3. one inline `<script type="application/json" id="atlas-story-data">` carrying that scan's
+   3. one inline `<script type="application/json" id="perfpal-atlas-story-data">` carrying that scan's
       payload (no JavaScript execution; not a data fetch).
    No other `<script>` element, no `<script src>`, no `<link>` to an external asset. The Atlas
    canvas/SVG artifacts themselves still add **zero** scripts, and no inline `on*` attributes are
@@ -89,16 +89,18 @@
      with and without `--story`. Only `atlas-layout.json` appears.
    - **F6b (double-render identity):** two scans of the same input produce byte-identical
      `report.html`, including the inline data and story script.
-   - **F6c (data integrity):** the inline JSON parses; its `source.sha256` matches the emitted
-     `atlas-layout.json`; `source.metricsContentSha256` matches the canonical metrics projection;
-     the story section and all three script elements are present in every report.
+   - **F6c (data integrity):** the inline JSON parses; its `source.layoutFingerprint` is the
+     FNV-1a 64-bit hash of the emitted `atlas-layout.json` bytes (the writer-normalized trailing LF);
+     `source.metricsContentFingerprint` is the same hash over the canonical metrics projection; the
+     story section and all three script elements are present in every report. F6c does not add a
+     hash dependency (see the addendum).
 8. **Measured size / first-paint budget.** Baselines measured 2026-10-27 at 1440×900, headless
    Brave, `file://`, median of three (SHA `020c48a`):
 
    | Fixture | `report.html` baseline | FCP baseline | Story-on ceiling (bytes) | Story-on FCP ceiling |
    |---|---|---|---|---|
    | hyperfine (`c516152`) | 133,985 B | 108 ms | **≤ 393,216 B (384 KiB)** | **≤ 300 ms** |
-   | cJSON (`6d9f244`) | 105,243 B | 128 ms | **≤ 327,680 B (320 KiB)** | **≤ 300 ms** |
+   | cJSON (`6d9f244`) | 105,243 B | 136 ms | **≤ 327,680 B (320 KiB)** | **≤ 300 ms** |
    | 3k fixture (`gen-3k.py`) | 108,752 B | 108 ms | **≤ 524,288 B (512 KiB)** | **≤ 400 ms** |
 
    The ceilings are baseline + player (58 KB) + CSS (24 KB) + the projected payload, with headroom.
@@ -138,9 +140,9 @@
 
 ## Gates
 
-- Report: F6a–F6c; structural parity (seven `data-atlas-block` values + story); no
-  `fetch`/XHR/`eval`/`http://`; JSON parses; JS-off fallback present; double-render identity; 1280
-  no-hscroll.
+- Report: F6a–F6c; structural parity (all seven branch blocks, the four charts and the story — 12
+  `data-atlas-block` values in order); no `fetch`/XHR/`eval`/`http://`; JSON parses; JS-off fallback
+  present (shell hidden, canvas + narrative); double-render identity; 1280/1440/3072 no-hscroll.
 - Story prototype: `bash sim/gate.sh` (304/304 + 3k scale). The standalone `sim/` player is not
   the shipped surface; it remains the reference implementation.
 - Full CI gate + semantic features as in `AGENTS.md`.
@@ -168,8 +170,11 @@ This addendum records what shipped in H1. It narrows, but does not weaken, the D
    bundle (`root = None`, named empty flow/purpose stubs) and the CLI builds the full bundle once.
    The projection replaces `sim/from-layout.py` at runtime; the Python remains the evidence/prototype
    generator. No new dependency: the `source` block carries **FNV-1a 64-bit** fingerprints
-   (`layoutFingerprint`, `metricsContentFingerprint`), not SHA-256. F6c checks both are 16 hex and
-   that the payload totals match the document.
+   (`layoutFingerprint`, `metricsContentFingerprint`), not SHA-256. `layoutFingerprint` hashes the
+   writer-normalized emitted bytes (`layout_json` + one trailing LF), so a consumer can verify the
+   `--story` artifact; `source.artifact` is `"inline"` because the layout file is optional. F6c
+   checks both are 16 hex, that the layout fingerprint matches the emitted file, and that the
+   payload totals match the document.
 3. **Player reuse and the prototype (Decision 3).** `sim/sim.js` is the fixed `STORY_SCRIPT` and is
    network-free (no `fetch`/XHR/`http://`/`eval`/`Function`). The standalone prototype supplies its
    data through a small inline HTTP adapter in `sim/index.html` (the 3k scale harness copies only
@@ -181,8 +186,8 @@ This addendum records what shipped in H1. It narrows, but does not weaken, the D
    player retains page-wide shortcuts.
 5. **S4 whole-repo detail (Decision 9).** In-report, the player's S4 panels (scenes, profile queue,
    trust accounting) are a **closed `<details>`** with an accessible summary; opening it restores the
-   full 1,191 px panel. Content is preserved, but the default story height is 996 px (canvas 718 px)
-   instead of 2,134 px. The standalone player keeps the section expanded. The report's own cards /
+   full 1,191 px panel. Content is preserved, but the default story height is 1,032 px (canvas 718 px)
+   instead of ~2,170 px. The standalone player keeps the section expanded. The report's own cards /
    actions / noise blocks remain the primary surfaces; `profile-queue.html` stays the canonical
    complete KV3 list.
 6. **Measured budget (Decision 8).** 1440×900, headless Brave, `file://`, median of 3, at
@@ -190,15 +195,15 @@ This addendum records what shipped in H1. It narrows, but does not weaken, the D
 
    | Fixture | `report.html` | Ceiling | FCP | FCP ceiling |
    |---|---|---|---|---|
-   | hyperfine (`c516152`) | **334,062 B** | 393,216 B | **148 ms** | 300 ms |
-   | cJSON (`6d9f244`) | **264,311 B** | 327,680 B | **128 ms** | 300 ms |
-   | 3k fixture | **509,913 B** | 524,288 B | **132 ms** | 400 ms |
+   | hyperfine (`c516152`) | **333,246 B** | 393,216 B | **124 ms** | 300 ms |
+   | cJSON (`6d9f244`) | **264,624 B** | 327,680 B | **136 ms** | 300 ms |
+   | 3k fixture | **510,160 B** | 524,288 B | **144 ms** | 400 ms |
 
    All within budget. Runtime smoke: `window.__sim.ready === true`, 19 nodes at hyperfine, final
    beat reachable, **zero XHR/fetch**, no console errors, `scrollWidth == clientWidth` at 1280 and
    1440. The pure `render_html` golden path also renders (2 nodes, no errors).
-7. **Page height (Decision 9).** At 1440: document **18,841 px** (map 3,821 + story 996 + explorer
-   8,999 + components/files/findings). At 3072: **20,739 px** (map 5,764 + story 996). With the S4
+7. **Page height (Decision 9).** At 1440: document **18,747 px** (map 3,692 + story 1,032 + explorer
+   8,999 + components/files/findings). At 3072: **20,646 px** (map 5,634 + story 1,032). With the S4
    details open, add 1,138 px. The A8 first-page fold (answer bottom 427 px at 1440; 416 px at 3072)
    is unchanged; the story is below the map. No horizontal scroll at 1280/1440/3072.
 8. **Residual / follow-up.** The story section is 1,400 px wide at 3072 while the hero canvas is

@@ -15,11 +15,13 @@ only carrier of information: everything visible mid-animation is visible in the 
 
 ## Contract
 
-- **No new JavaScript.** The Atlas canvas/SVG/animation artifacts contain no `<script>` and no
+- **No new JavaScript in the Atlas canvas/SVG/animation artifacts.** The Atlas canvas/SVG/animation artifacts contain no `<script>` and no
   event handlers. Animation is CSS keyframes and/or SVG SMIL only. The static SVG remains the
-  canonical chart artifact. The report already ships exactly one fixed enhancement script
-  (`REPORT_SCRIPT`, pan/zoom/filter; fixed source, no interpolated data, no network); it is
-  unchanged and outside the animation clause.
+  canonical chart artifact. The report ships the unchanged fixed enhancement script
+  (`REPORT_SCRIPT`, pan/zoom/filter; fixed source, no interpolated data, no network) plus, per
+  `ADR-0014`, one fixed `STORY_SCRIPT` and one inline `application/json` data block for the
+  always-on Atlas story; the story player is outside the animation clause, and no new animation is
+  added to the report beyond that player.
 - **Deterministic timeline.** Delays/durations are a deterministic function of the view model
   (BFS depth, rank, path position) with fixed constants. No randomness, no wall-clock input.
   The generated HTML/SVG bytes are byte-identical across runs; the animation runtime is not part of
@@ -59,11 +61,12 @@ prototypes may proceed under this spec.
   action, no blockers.
 - A2: founder timed test passes with animation; pause + reduced-motion + print show the complete
   final frame.
-- A3: **no new JavaScript.** The Atlas canvas/SVG/animation artifacts contain no `<script>` and no
-  event-handler attributes; no network refs. The report already ships exactly one fixed
-  enhancement script (`REPORT_SCRIPT`, fixed source, no interpolated document data, no network);
-  it is unchanged and outside the animation clause. The gate asserts exactly one block in
-  `report.html` and zero in the canvas/SVG/animation artifacts.
+- A3: **no new JavaScript** in the Atlas canvas/SVG/animation artifacts. They contain no `<script>`
+  and no event-handler attributes; no network refs. The report ships the unchanged fixed
+  enhancement script (`REPORT_SCRIPT`, fixed source, no interpolated document data, no network)
+  plus, per `ADR-0014`, the fixed `STORY_SCRIPT` and one inline `application/json` data block for
+  the always-on Atlas story (outside the animation clause). The gate asserts exactly three script
+  elements in `report.html` and zero in the canvas/SVG/animation artifacts.
 - A4: double-scan byte-identical for the emitted HTML/SVG (excluding run provenance).
 - A5: no information exists only mid-animation; the final frame is complete.
 
@@ -85,6 +88,7 @@ step-12 amendment; the v1 seven-block brief is retired).
 Animation is presentation only: the canvas is readable with animation disabled, and no metric or
 answer exists only mid-animation. The metric contract (`docs/specs/atlas-metrics.md`) applies to
 every frame: no time units, units + anchors present, one measured encoding (cost). ADR-0010 records
-the ADR-0002 amendment for the shipped renderer. The report's existing single fixed
-`REPORT_SCRIPT` enhancement (pan/zoom + click-to-filter) is unchanged and is not part of the
-animation; no new script is added for the Atlas.
+the ADR-0002 amendment for the shipped renderer. The report ships the unchanged fixed
+`REPORT_SCRIPT` enhancement (pan/zoom + click-to-filter) plus, per ADR-0014, the fixed
+`STORY_SCRIPT` and inline JSON data block for the always-on Atlas story; none of that is animation,
+and no new animation is added for the Atlas.

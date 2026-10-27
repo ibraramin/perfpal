@@ -882,6 +882,7 @@
       group.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
+          event.stopPropagation();
           selectNode(node.id);
         }
       });
@@ -1420,7 +1421,8 @@
       const storyRoot = document.getElementById('atlas-story');
       if (storyRoot && !storyRoot.contains(document.activeElement)) return;
       const tag = (event.target.tagName || '').toLowerCase();
-      if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+      // Let native activation win on controls/links/summaries.
+      if (['input', 'select', 'textarea', 'button', 'a', 'summary'].includes(tag)) return;
       if (event.key === ' ') {
         event.preventDefault();
         if (state.playing) pause(); else play();

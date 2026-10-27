@@ -842,3 +842,9 @@
 #atlas-story details.s4-detail[open]{display:flex;flex-direction:column;gap:10px}
 #atlas-story details.s4-detail>summary.s4-summary{cursor:pointer;list-style:revert;margin:0 0 8px;padding:6px 8px;border:1px dashed var(--line);border-radius:4px;font-size:9px;font-weight:700;color:var(--muted);background:var(--card-2)}
 #atlas-story details.s4-detail>summary.s4-summary:hover{border-color:var(--hot);color:var(--ink)}
+#atlas-story .story-head{max-width:1400px;margin:0 auto;padding:4px 12px 6px}
+#atlas-story .story-kicker{font-size:8px;font-weight:800;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+#atlas-story .story-head h2{margin:2px 0;font-size:16px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+#atlas-story .story-sub{margin:0;font-size:9px;color:var(--muted)}
+#atlas-story .masthead{min-height:40px;justify-content:flex-end}
+#atlas-story .masthead .brand{display:none}

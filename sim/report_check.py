@@ -104,6 +104,7 @@ def check(widths, url: str) -> dict:
                 svgs: document.querySelectorAll('svg').length,
                 noscript_visible: text.includes('The interactive run story needs JavaScript'),
                 static_canvas: !!document.querySelector('#atlas-canvas svg'),
+                shell_display: getComputedStyle(document.querySelector('#atlas-story .page')).display,
               };
             }"""
         )
@@ -111,6 +112,8 @@ def check(widths, url: str) -> dict:
             fail("JS disabled: noscript narrative is missing")
         if not out["js_off"]["static_canvas"]:
             fail("JS disabled: the static Atlas canvas is missing")
+        if out["js_off"]["shell_display"] != "none":
+            fail("JS disabled: the dead player shell is still visible")
         browser.close()
     return out
 

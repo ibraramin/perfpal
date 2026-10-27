@@ -136,7 +136,8 @@
   "js_off": {
     "svgs": 1,
     "noscript_visible": true,
-    "static_canvas": true
+    "static_canvas": true,
+    "shell_display": "none"
   },
   "static_svgs": 1
 }

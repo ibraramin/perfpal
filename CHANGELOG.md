@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **In-report, always-on Atlas story (ADR-0014; supersedes ADR-0012 D5).** `report.html` now embeds
+  the self-contained interactive story on every scan, and its composition restores the seven
+  `data-atlas-block` parity blocks plus the full-width hero. Exactly three script elements ship (A12
+  as amended by ADR-0014): the unchanged fixed `REPORT_SCRIPT`, one fixed `STORY_SCRIPT`, and one
+  inline `<script type="application/json">` payload projected once in Rust from the typed
+  document/Atlas blocks. No `fetch`/XHR/`eval`/HTTP, no new dependency; schema stays **1.8** and
+  `layout_version`/`flow_version` stay **1**. `--story` is layout-only: it emits
+  `atlas-layout.json` and changes no shared artifact. JS-off falls back to the canonical static
+  canvas plus a `<noscript>` beat narrative; reduced motion and print show the final frame; the
+  in-report S4 panels are a closed `<details>` (the standalone `sim/` player stays the
+  reference/evidence player, with the section expanded). Measured 2026-10-27 at 1440×900, headless
+  Brave, `file://` (median of 3, `c57ce8b` + H1): hyperfine **333,246 B / 124 ms** FCP, cJSON
+  **264,624 B / 136 ms**, 3k fixture **510,160 B / 144 ms** — all inside the ADR-0014 ceilings;
+  zero XHR/fetch and no horizontal scroll at 1280/1440. F6 is redefined as F6a flag purity / F6b
+  double-render identity / F6c inline-data integrity; gates per the ADR-0014 §Gates (full `cargo`
+  suite, semantic feature gate, `sim/gate.sh` 304/304 and 3k scale 44/44). Vision and review-panel
+  verdicts pending.
+
 ### Pending
 - **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002
   `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` before any tag.
@@ -18,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Agent-report hardening:** `empty_doc` fixture still carries the pre-merge version strings
   (test-only); the `VERSION_SUFFIX` ↔ `schema::SCHEMA_VERSION` equality guard already exists and
   must stay when the schema moves.
-- **Atlas Story companion follow-ups:** package the companion as a self-contained artifact (inline data; no `fetch`/HTTP server) and add a `perfpal story <repo>` entry point before the §5 founder session; F8/A2 story read deferred (ADR-0012 Decision 5); no in-report graduation (A12 unchanged).
+- **Atlas Story follow-ups:** the in-report story ships (ADR-0014); the standalone `sim/` player remains the reference/evidence player; the §5 founder read/F8 remains deferred (not claimed), and a `perfpal story <repo>` entry point is not added by H1.
 - **Cross-platform verification:** run `scripts/verify-windows-compat.sh` after major/OS-facing
   changes and at milestones (not every session).
 - **Pre-existing docs drift (found by the M3 panel; not introduced by M3):** `README.md:43` shows an

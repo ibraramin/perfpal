@@ -2,7 +2,7 @@
 //!
 //! One deterministic [`StoryBundle`] from a finished [`MetricsDocument`]:
 //!
-//! - `layout_json` is the exact `atlas-layout.json` bytes produced by
+//! - `layout_json` is the `atlas-layout.json` payload produced by
 //!   [`crate::reporter::atlas_layout::to_json`] — the Rust side never
 //!   re-derives geometry here;
 //! - `payload_json` is the camelCase projection consumed by `sim/sim.js`. It
@@ -22,8 +22,9 @@
 //! The Python converter used SHA-256 from the standard library. This crate
 //! deliberately keeps its dependency closure pinned, so integrity fields use a
 //! deterministic FNV-1a 64-bit hash rendered as 16 lowercase hex characters.
-//! The names say what they are: `layoutFingerprint` hashes the exact
-//! `layout_json` bytes; `metricsContentFingerprint` hashes the canonical
+//! The names say what they are: `layoutFingerprint` hashes the emitted file
+//! bytes (the writer-normalised `layout_json` + trailing LF);
+//! `metricsContentFingerprint` hashes the canonical
 //! metrics JSON with `scan.started_at`, `scan.duration_ms` and
 //! `scan.root_path` removed (those change per run/machine). They are
 //! change-detection tokens, not cryptographic digests.
@@ -131,6 +132,16 @@ pub fn build(doc: &MetricsDocument, root: Option<&Path>) -> StoryBundle {
 }
 
 /// Project the Python converter's `build()` return shape.
+/// Fingerprint of the emitted `atlas-layout.json` bytes.
+///
+/// The writer enforces one trailing LF on every text artifact; hash the same
+/// normalised bytes so a consumer can verify the file against the inline
+/// `source.layoutFingerprint` (ADR-0014 F6c).
+#[must_use]
+pub fn layout_fingerprint(layout_json: &str) -> String {
+    fnv1a64_hex(format!("{layout_json}\n").as_bytes())
+}
+
 fn payload_value(doc: &MetricsDocument, layout: &Value, layout_json: &str) -> Value {
     let nodes = array_at(layout, "nodes");
     let edges = array_at(layout, "edges");
@@ -284,9 +295,9 @@ fn payload_value(doc: &MetricsDocument, layout: &Value, layout_json: &str) -> Va
         "synthetic": false,
         "stage": layout.get("canvas").cloned().unwrap_or(Value::Null),
         "source": {
-            "artifact": "atlas-layout.json",
+            "artifact": "inline",
             "layoutVersion": field(layout, "layout_version"),
-            "layoutFingerprint": fnv1a64_hex(layout_json.as_bytes()),
+            "layoutFingerprint": layout_fingerprint(layout_json),
             "metricsContentFingerprint": metrics_content_fingerprint(doc),
         },
         "meta": {
@@ -1312,6 +1323,11 @@ mod tests {
             assert!(value.bytes().all(|byte| byte.is_ascii_hexdigit()));
             assert_eq!(value, second_payload["source"][key].as_str().unwrap());
         }
+        assert_eq!(
+            first_payload["source"]["layoutFingerprint"],
+            layout_fingerprint(&first.layout_json),
+            "layout fingerprint must cover the emitted trailing newline"
+        );
         // A changed finding message is provenance, not geometry: the metrics
         // fingerprint moves while the layout fingerprint stays put.
         let mut changed = doc.clone();

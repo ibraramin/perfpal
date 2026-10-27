@@ -44,7 +44,7 @@ fn report_carries_one_complete_story_embed() {
     // Exactly one section and one block marker.
     assert_eq!(
         html.matches(
-            "<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\">"
+            "<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\""
         )
         .count(),
         1,

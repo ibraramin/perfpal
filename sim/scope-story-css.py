@@ -105,6 +105,12 @@ def main() -> None:
         f"{SCOPE} details.s4-detail[open]{{display:flex;flex-direction:column;gap:10px}}\n"
         f"{SCOPE} details.s4-detail>summary.s4-summary{{cursor:pointer;list-style:revert;margin:0 0 8px;padding:6px 8px;border:1px dashed var(--line);border-radius:4px;font-size:9px;font-weight:700;color:var(--muted);background:var(--card-2)}}\n"
         f"{SCOPE} details.s4-detail>summary.s4-summary:hover{{border-color:var(--hot);color:var(--ink)}}\n"
+        f"{SCOPE} .story-head{{max-width:1400px;margin:0 auto;padding:4px 12px 6px}}\n"
+        f"{SCOPE} .story-kicker{{font-size:8px;font-weight:800;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}}\n"
+        f"{SCOPE} .story-head h2{{margin:2px 0;font-size:16px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}}\n"
+        f"{SCOPE} .story-sub{{margin:0;font-size:9px;color:var(--muted)}}\n"
+        f"{SCOPE} .masthead{{min-height:40px;justify-content:flex-end}}\n"
+        f"{SCOPE} .masthead .brand{{display:none}}\n"
     )
     OUT.write_text(header + scoped + overrides)
 

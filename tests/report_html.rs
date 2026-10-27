@@ -390,7 +390,7 @@ fn fixed_script_and_linked_chart_references() {
     // Story placement: after #map, before #explorer.
     let map = html.find("<section id=\"map\">").expect("#map");
     let story = html
-        .find("<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\">")
+        .find("<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\"")
         .expect("#atlas-story");
     let explorer = html.find("<section id=\"explorer\">").expect("#explorer");
     assert!(map < story && story < explorer, "story placement wrong");

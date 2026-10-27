@@ -53,10 +53,10 @@ pub fn render_story_section(doc: &MetricsDocument, bundle: &StoryBundle) -> Stri
     let inline = inline_story_json(&bundle.payload_json);
 
     let mut out = String::with_capacity(STORY_CSS.len() + STORY_SCRIPT.len() + inline.len() + 4096);
-    out.push_str("<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\">\n");
-    // Accessible section heading; visually hidden so the report's own heading
-    // scale is untouched and no second brand competes with the masthead.
-    out.push_str("<h2 class=\"sr-only\">Atlas story: the inferred run from entry to stop</h2>\n");
+    out.push_str("<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\" aria-labelledby=\"atlas-story-title\">\n");
+    // Visible story heading; the player's duplicate brand is hidden in-report.
+    out.push_str("<div class=\"story-head\"><div class=\"story-kicker\">ATLAS STORY</div><h2 id=\"atlas-story-title\">The inferred run, beat by beat</h2><p class=\"story-sub\">Static inference · profile to confirm · entry → stages → loops → I/O → stop</p></div>\n");
+    out.push_str("<noscript><style>#atlas-story .page,#atlas-story #s4-detail{display:none!important}</style></noscript>\n");
     out.push_str("<style>\n");
     out.push_str(STORY_CSS);
     out.push_str("</style>\n");
@@ -103,6 +103,19 @@ fn narrative(payload: &Value, doc: &MetricsDocument) -> String {
         .map_or(0, Vec::len);
     let stage_phrase = format!("{stages} stage{}", if stages == 1 { "" } else { "s" });
     let stop = stop_state(payload.get("state").unwrap_or(&Value::Null));
+    let loops = payload
+        .pointer("/trust/unknownTripFunctions")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let io = payload
+        .pointer("/trust/io/total")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let loop_phrase = format!(
+        "{loops} loop-bearing function{}",
+        if loops == 1 { "" } else { "s" }
+    );
+    let io_phrase = format!("{io} I/O site{}", if io == 1 { "" } else { "s" });
     let action = payload
         .pointer("/meta/actions/0/anchor")
         .and_then(Value::as_str)
@@ -110,10 +123,12 @@ fn narrative(payload: &Value, doc: &MetricsDocument) -> String {
         .unwrap_or("no ranked action on the drawn slice");
 
     format!(
-        "<noscript>\n<p class=\"atlas-story-noscript\">The interactive run story needs JavaScript; the complete static Atlas map is above. Inferred run: entry <strong>{entry}</strong>, {stage_phrase} along <code>{path}</code>; stop state: {stop}; first action: <code>{action}</code>. Continue in <a href=\"atlas-weight.html\">the weight drill</a>, <a href=\"atlas-q2.html\">the Q2 reverse drill</a>, <a href=\"findings-detail.html#ranked-actions\">ranked actions</a>, or <a href=\"profile-queue.html\">the profile queue</a>.</p>\n</noscript>\n",
+        "<noscript>\n<p class=\"atlas-story-noscript\">The interactive run story needs JavaScript; the complete static Atlas map is above. Inferred run: entry <strong>{entry}</strong>, {stage_phrase} along <code>{path}</code>; {loop_phrase}; {io_phrase}; stop state: {stop}; first action: <code>{action}</code>. Continue in <a href=\"atlas-weight.html\">the weight drill</a>, <a href=\"atlas-q2.html\">the Q2 reverse drill</a>, <a href=\"findings-detail.html#ranked-actions\">ranked actions</a>, or <a href=\"profile-queue.html\">the profile queue</a>.</p>\n</noscript>\n",
         entry = escape_html(&entry),
         stage_phrase = escape_html(&stage_phrase),
         path = escape_html(path),
+        loop_phrase = escape_html(&loop_phrase),
+        io_phrase = escape_html(&io_phrase),
         stop = escape_html(&stop),
         action = escape_html(action),
     )
@@ -302,6 +317,13 @@ fn debug_assert_story_script_safe() {
         "story script has an HTTPS URL"
     );
     debug_assert!(!STORY_SCRIPT.contains("eval("), "story script evals");
+    debug_assert!(!STORY_CSS.contains("</style"), "story CSS closes its tag");
+    debug_assert!(!STORY_CSS.contains("http://"), "story CSS has an HTTP URL");
+    debug_assert!(
+        !STORY_CSS.contains("https://"),
+        "story CSS has an HTTPS URL"
+    );
+    debug_assert!(!STORY_CSS.contains("@import"), "story CSS imports");
     debug_assert!(
         !STORY_SCRIPT.contains("Function("),
         "story script builds functions"
@@ -329,6 +351,17 @@ mod tests {
             );
         }
         debug_assert_story_script_safe();
+    }
+
+    #[test]
+    fn story_css_is_scoped_and_offline() {
+        assert!(STORY_CSS.contains("#atlas-story"));
+        for banned in ["</style", "http://", "https://", "@import"] {
+            assert!(
+                !STORY_CSS.contains(banned),
+                "banned string {banned:?} in the scoped story CSS"
+            );
+        }
     }
 
     #[test]

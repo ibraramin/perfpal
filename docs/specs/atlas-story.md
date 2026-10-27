@@ -142,19 +142,19 @@ Each slice = one commit per probe + evidence + probe-registry row status flip.
 | Indirection (fn-ptrs, `dyn`) hides real data movement | high | grey + count them; F3 fixture; disclose N unresolved calls |
 | 3k-file scenes still unreadable | medium | top-N per scene + counts; F7 budget |
 | "Film" tempts a runtime claim | high | honesty table in §5 is a gate (F4) |
-| Story scope creep into the static report | medium | companion first; report only after S2 proves value (ADR + A12 if interactive) |
+| Story scope creep into the static report | medium | decided in-report and always embedded (ADR-0014); the fixed `STORY_SCRIPT` + inline JSON are the only additions, and A12 is amended to exactly three script elements |
 
 ## 11. Decisions (founder, 2026-10-24)
 
 1. **`flow` emission: story-mode only.** Existing scans stay byte-identical (§4).
 2. **Slice order: pipeline first.** S1 (P4 stages + P5 layout) shipped before data movement (S2/S3).
-3. **Companion vs in-report: deferred to after S2.** If in-report with controls → new ADR + A12
-   amendment (A12 already permits CSS/SMIL, not a second script).
-   **Resolved 2026-10-26 (ADR-0012):** the story **remains a standalone companion**; it does not
-   graduate into the static report, and A12 is unchanged. The founder-ratified graduation
-   conditions (the §5 graduation session on the post-S4 story — distinct from the 2026-10-24 D1
-   review — the report's visual gate, a deterministic player, and an explicit A12 amendment) are
-   recorded in `docs/adr/ADR-0012-atlas-story-companion.md` Decision 4.
+3. **Companion vs in-report: decided in-report (ADR-0014, founder 2026-10-27).** The story is
+   **always embedded** in `report.html`; ADR-0014 supersedes ADR-0012 Decision 5 (and its D1/D2
+   stance) and amends A12 to exactly three script elements. `--story` is layout-only and no longer
+   gates the page. The standalone `sim/` player remains the reference/evidence implementation (not
+   the shipped surface). One report-only presentation difference: the in-report S4 panels (scenes,
+   profile queue, trust accounting) are a closed `<details>` with an accessible summary, whereas the
+   standalone player keeps the section expanded (ADR-0014 addendum §5).
 4. **CLI shape:** S1 ships `--story` on the existing command; the target entry point remains
    `perfpal story <repo>` (S4). **S4 status (2026-10-26):** S4 shipped the `--story` flag only; the
    `perfpal story <repo>` subcommand is **deferred**, not delivered, and is recorded as a deviation

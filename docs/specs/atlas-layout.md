@@ -250,13 +250,14 @@ Per `map-animation` (mandatory) and the pending ADR-0010:
   the canvas element; only nodes/edges/labels/legend/caps.
 - **A10 (state-unconditional):** all §5 states render the same canvas + chart stack (step 12; the
   v1 seven blocks are retired).
-- **A12 (no new JS):** the Atlas canvas and animation blocks contain no `<script>` and no event
-  handlers; the report's existing single fixed enhancement script (`REPORT_SCRIPT`, fixed source,
-  no interpolated data, no network) is unchanged and inventoried. `grep` asserts exactly one block
-  in `report.html` and zero in the canvas/SVG/animation artifacts.
-  **Status 2026-10-26:** A12 is **unchanged**; the Atlas Story remains a standalone companion and
-  does not graduate into `report.html` (`ADR-0012`). Any in-report interactive story would need an
-  explicit A12 amendment and founder ratification.
+- **A12 (no new JS; as amended by ADR-0014):** the Atlas canvas and animation blocks contain no
+  `<script>` and no event handlers; they still add zero scripts. The report now carries exactly three
+  script elements (ADR-0014): the unchanged fixed `REPORT_SCRIPT`, one fixed `STORY_SCRIPT`, and one
+  inline `<script type="application/json">` data block. `grep` asserts exactly those three in
+  `report.html` and zero in the canvas/SVG/animation artifacts.
+  **Status 2026-10-27:** amended by `ADR-0014` (not unchanged); the Atlas Story ships in-report and
+  is always embedded, while `--story` only emits `atlas-layout.json`. The canvas/SVG/animation
+  artifacts remain script-free.
 - **A4 (determinism):** double scan → byte-identical HTML/SVG (excluding run provenance).
 - **A7/A11:** metrics spec §10.
 

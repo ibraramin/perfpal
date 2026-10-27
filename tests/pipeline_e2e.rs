@@ -644,7 +644,7 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
     let story_html_text = fs::read_to_string(story.join("report.html")).expect("story report.html");
     assert!(
         story_html_text.contains(
-            "<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\">"
+            "<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\""
         ),
         "inline story section missing from report.html"
     );
@@ -692,6 +692,19 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
             "story source {key} must be hex"
         );
     }
+    // F6c: the inline layout fingerprint must match the emitted file bytes
+    // (the writer normalises one trailing LF).
+    let layout_bytes = fs::read(story.join("atlas-layout.json")).expect("emitted layout");
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    for byte in &layout_bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    assert_eq!(
+        payload["source"]["layoutFingerprint"].as_str(),
+        Some(format!("{hash:016x}").as_str()),
+        "story layoutFingerprint must match the emitted atlas-layout.json bytes"
+    );
 
     let function_ids: Vec<&str> = metrics_doc["stats"]["functions"]
         .as_array()

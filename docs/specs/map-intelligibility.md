@@ -342,8 +342,10 @@ the composition is `docs/specs/atlas-layout.md`; the ADRs are ADR-0009 (core) an
 animation) and the V8 amendments in this section: the A8 first-screen amendment (first block =
 canvas carrying entry + HOTTEST + path; the one `path:line` action in the first scroll, answer line
 + KV1), the structural-edge disclosure (LOW name-based + MEDIUM semantic, `N MEDIUM / M LOW`
-printed, never `resolved`/`reachable_from_entry` for that set), and A12 (exactly one fixed existing
-`REPORT_SCRIPT`; zero new scripts in the Atlas canvas/SVG/animation artifacts).
+printed, never `resolved`/`reachable_from_entry` for that set), and A12 (as amended by ADR-0014:
+exactly three script elements in `report.html` — the unchanged fixed `REPORT_SCRIPT`, the fixed
+`STORY_SCRIPT`, and the inline JSON data block; the story is always-on; zero new scripts in the
+Atlas canvas/SVG/animation artifacts).
 
 > **Step-12 placement amendment (2026-10-24, implemented):** the seven-block brief is retired. On
 > the Atlas page the masthead + key-metrics strip above the canvas is the first answer-bearing
