@@ -1,0 +1,198 @@
+# Spec: report-format
+
+Scope: feature
+
+# Spec: report-format (feature)
+
+**Status:** proposed (design lock for the `polish-report` program)
+**Owns:** the contract for every human/agent-facing artifact Perfpal emits into `perfpal-report/` —
+roles, rank keys, formatting, Atlas composition, and display scaling.
+**Does not own:** the metrics schema (`docs/schema/metrics.schema.v1.8.json`), the analyzer, or the
+Atlas story companion (ADR-0012 — stays out of the report).
+
+## 1. Principles
+
+1. **One audience per artifact.** Every emitted file names its consumer. No file exists "because we
+   already had it". No two artifacts carry the same complete list.
+2. **One ranking.** All action artifacts use the shipped KV1 order; all function/profile artifacts use
+   KV3. No renderer may re-rank.
+3. **No silent caps.** Every bounded view prints `N of M` and names the cap in
+   `data_quality.caps`; the complete list lives in exactly one machine contract
+   (`agent-actions.json`).
+4. **Canonical data once.** `metrics.json` is the only data source. Markdown/HTML renderings are pure
+   functions of it; they never introduce facts.
+5. **Static means static.** No network, no telemetry, no external assets, no timestamps/durations in
+   byte-deterministic surfaces, no absolute paths except the verbatim CLI `root_path` provenance.
+6. **The map is the product.** The Atlas section answers "where do I look first, what breaks if I
+   touch it, where might time go"; everything else supports or drills into that answer.
+
+## 2. Artifact roles (binding matrix)
+
+| Artifact | Audience | Role | Cap | Canonical? |
+|---|---|---|---|---|
+| `metrics.json` | tools / LLM / downstream | canonical scan record (schema 1.8) | none | **yes** |
+| `agent-actions.json` | agents / tools | complete machine action list + profile top 100 (`profile_queue_cap`) | actions uncapped; profile 100 | complete action list |
+| `agent-report.md` | LLM / human triage | bounded digest: top 25 actions, per-rule rollup, top 25 profile rows, limits | 25 / 25 / 100 | no (digest) |
+| `report.md` | human | narrative report + Atlas summary + methodology; **no full findings appendix** | summary caps named | no |
+| `report.html` | human | designed Atlas-first page (self-contained, one fixed script) | summary caps named | no |
+| `findings-detail.html` | human | **canonical complete human detail**: ranked actions + all findings, filterable | none | human detail |
+| `findings-detail.md` | human / diffing | optional plain-text mirror; keep only while a consumer exists | none | no |
+| `profile-queue.{md,html}` | human | complete KV3 function list (cost-ranked, honest badges) | none | KV3 detail |
+| `atlas-weight.html`, `atlas-q2.html` | human | drill pages linked from the Atlas charts | complete per metric | no |
+| `charts/*.svg` | human / diff | deterministic chart stems (workspace/file/entry/coupling/hot/bands/findings/component-*), `graph.dot` | top-50 / named | chart data |
+| `metrics.schema.v1.8.json` | tools | shipped schema copy for validation | n/a | mirrors `src/schema/` |
+
+Rules:
+- `report.md` Appendix C (full findings) is **removed**; it links `findings-detail` instead.
+- `findings-detail.md` is kept only if a concrete consumer (e.g. text-only diffing) is named in S1;
+  otherwise it is dropped. HTML is the canonical human detail.
+- The schema copy stays only if the output contract requires it (validation without the repo).
+- MD/HTML pairs are intentional format variants of the same content — they must be generated from the
+  same section model, never hand-written twice.
+
+## 3. Rank keys and caps
+
+- **KV1 (actions)** — verbatim shipped order. `agent-actions.json.actions` is complete; every Markdown
+  view that shows fewer must print `showing top N of M actions; the complete list is
+  agent-actions.json` (or the per-artifact equivalent).
+- **KV3 (profile)** — verbatim shipped order. `profile-queue.*` is complete; JSON profile is capped at
+  100 with the cap named in-file.
+- **Cap policy:** 25 detail actions / 25 profile rows in `agent-report.md` is ratified D1
+  (`docs/specs/agent-report.md:27`). Rationale: an inline complete index is ~170k tokens on a
+  7.5k-finding scan; the digest must stay loadable. Keep 25 as the default; do not add a flag unless a
+  real consumer asks. Disclose the cap and the full-list pointer in the header, not only the footer.
+
+## 4. Formatting contract
+
+All human artifacts share one style token set:
+
+- **Heading scale:** H1 artifact title; H2 numbered top-level sections; H3 subsections; H4 row labels.
+  No skipped levels; no heading-shaped content generated from user data (escape or fence it).
+- **Typography:** Atlas warm-paper palette for HTML; monospace only for code/paths; tabular numerals
+  for counts and costs. A single type scale, defined once in a shared CSS/const block.
+- **Escaping:** every interpolated path/title/message passes the shared escaper. Markdown renderers
+  structure-escape backticks/pipes/headings; HTML renderers escape `&<>"'`. Quoted analyzer provenance
+  is verbatim in JSON, escaped in Markdown/HTML.
+- **Tables:** same column conventions (rank, location, class, cost/why), same alignment, same
+  `N of M` header note. Links use one style (relative paths, `#anchors`, no trailing punctuation).
+- **Empty states:** every artifact renders a named stub (e.g. `no findings recorded`), never a blank
+  section or a broken table.
+- **Section order:** fixed per artifact and asserted by tests. Markdown and HTML siblings render the
+  same sections in the same order.
+- **Determinism:** no clock, no random, no set iteration; sorted traversals; byte-identical output for
+  the same inputs on repeated runs (the existing determinism suite is the arbiter).
+
+## 5. Atlas composition (report.html)
+
+Answer-first order, top to bottom:
+
+1. Header: schema/version + file/finding counts (no clock).
+2. **Answer line** (restored): one sentence naming the elected entry, why, the largest static-cost
+   file, the single first action, and the structural caveat.
+3. **Atlas map**: canvas + detail rail (current step-11/12 composition), then the four charts
+   (weight, blast radius, file detail, coverage).
+4. **Ranked actions** (restored): top KV1 actions with severity/confidence, path class, anchor,
+   why/trip provenance, same-location dedupe; link to the complete list.
+5. Components → files → findings (group-and-fold), with honest `N of M` notes.
+6. Footer: noise/confidence detail restored (`files_without_functions`, `partial_parse_files`, plus
+   the existing seven phrases), caveats.
+
+`#explorer` is **removed from the report's main flow**. The eight legacy chart stems move to a
+separate `explorer.html` (breadcrumb back to `report.html#map`), linked once from the footer or the
+coverage line. No chart is deleted from `charts/`.
+
+**Branch parity (binding).** The pre-merge `feat/atlas-sim` report (schema 1.7) exposed seven
+`data-atlas-block` surfaces — `answer`, `actions`, `weight`, `blast`, `cards`, `noise`, `links` —
+plus the inline `atlas-drill-q2` / `atlas-drill-weight` sections and a 1400px graph-only hero. Every
+one must have a main equivalent after H1: rendered in place, or exposed through an equivalent linked
+surface with the same content. Nothing branch-authored may be silently dropped. Main's rail and four
+charts stay as additions; they must not replace a branch block.
+
+| Branch block | Required main equivalent |
+|---|---|
+| `answer` | one-sentence answer line (entry, why, largest cost, first action, caveat) |
+| `actions` | ranked-actions block: top KV1 rows with severity/confidence, path class, anchor, why/trip, dedupe |
+| `weight` | weight chart **plus** the branch share/coverage prose (not chart-only) |
+| `blast` | blast-radius chart **plus** the branch dependent/coverage prose |
+| `cards` | file cards with per-function list + dominant finding (rail stays as a summary) |
+| `noise` | noise/confidence disclosure incl. `files_without_functions` / `partial_parse_files` |
+| `links` | drills block linking the complete lists and drill pages |
+| hero | full-width canvas (fluid; rail below or beside at wide widths) |
+| inline drills | inline collapsible sections **or** the existing separate pages with a prominent link block — content-equivalent, decided in H1 |
+
+**Story integration (founder decision 2026-10-27).** The interactive story is **included in the
+report**, superseding ADR-0012 Decision 5. Step 0 must record a new ADR naming: the second fixed
+script (or one merged fixed script), the inline data channel, the redefined F6 (story-off vs
+story-on byte-identity no longer applies), the size/first-paint budget, the JS-disabled static
+fallback, and `--story` semantics. Preconditions (ADR-0012 D4 + oracle): a self-contained player
+(no fetch/HTTP), scoped playback (reduced motion, print, 1280 no-hscroll, double-render equality),
+and a measured budget. If a precondition fails, fall back to a self-contained `story.html` linked
+from the report by a **constant pointer** (preserves A12/F6) and record the blocker — do not ship a
+fetch-based report.
+
+Constraints: **A12 as amended** — fixed report script + fixed story script/data channel, no
+fetch/HTTP, no eval; story data inline; JS-disabled usable via a static fallback; offline; page-height
+budget re-baselined only with the founder's approval.
+
+## 6. Resolution and display scaling
+
+**Current defect:** the report is laid out for a fixed width — `SVG_W = 1400`, `PAGE_GRAPH_W = 868`,
+`#atlas-canvas { flex: 0 0 868px; max-width: 868px }`, `body { max-width: 90rem }`, charts
+`max-width: 1408px`, and 8–10 px type. All output is vector (no raster in `report.html`), so this is
+a **layout/legibility** problem, not blur: on a 3072×1920 display the page caps at 1440 px and the
+canvas at 868 px, so most of the screen is empty and the type reads small at 100%.
+
+**Policy:**
+- **Default = responsive.** `body` uses a fluid max width; the Atlas canvas is `width:100%` with its
+  `viewBox` preserved; chart figures scale to their container; type uses a fluid scale (`clamp()`).
+  The report fills 1280 → 3072 px without re-layout code.
+- **Optional fixed width.** Add `--report-width <px>` (accepted values: `auto` (default), `1280`,
+  `1440`, `1920`, `2560`, `3072`) for users who want a fixed design width. This is a render hint, not
+  a scan setting; it changes only the layout constants, never the data.
+- **No scan-machine resolution detection as the default.** A report is a static file opened later,
+  possibly on another machine; baking the scanning display's resolution would be wrong more often
+  than right. If the founder wants a "match my display" convenience, it must be an explicit flag
+  (e.g. `--report-width auto` stays responsive; a future `--report-width=native` is a separate
+  decision).
+- **High-DPI:** vector output is DPR-independent; keep it that way (no rasterization of charts, no
+  `image-rendering` hacks). Any future raster asset must ship at 2× or be replaced by vector.
+- **Page height:** the A8/page-height budget is evaluated at each supported width; a wider layout must
+  not simply stretch — density targets are re-baselined with evidence.
+- **Acceptance:** render and review at 1280, 1440, 1920, 2560, 3072 CSS px and at DPR 1 and 2;
+  `@vision` sign-off at 1440 and 3072; no horizontal scroll at 1280; no clipped SVG labels.
+
+## 7. Invariants (must not break)
+
+- Schema stays 1.8 unless a deliberate contract change is approved (prefer none).
+- A12 as amended: fixed report script + fixed story script/data channel; no fetch/HTTP, no eval; story data inline; JS-disabled static fallback.
+- No network/external assets; no telemetry.
+- Byte-determinism: repeated runs are byte-identical on deterministic surfaces.
+- Output-contract §2 layout: fixed filenames; any removal/merge is an explicit contract change with
+  golden regeneration and ADR/spec update.
+- Static analysis stays framed as optimization candidates, not ground truth.
+
+## 8. Acceptance tests
+
+1. Artifact matrix test: every emitted filename has a role entry; no two artifacts carry the same
+   complete list; every cap is printed and named in `data_quality.caps`.
+2. Formatting snapshot: heading scale/section order/escaping asserted per artifact.
+3. Atlas composition: answer line → map → ranked actions → components/files/findings order asserted;
+   `#explorer` absent from `report.html`; `explorer.html` exists and links back.
+4. Resolution: render at the five widths above; assert no horizontal overflow at 1280, canvas fills
+   its container, and the page is usable with JS disabled.
+5. Determinism: existing byte-determinism suite green; no `preserve_order`.
+6. Gates: `cargo fmt`, `cargo clippy`, `cargo test`, `cargo deny check licenses`, semantic
+   clippy/tests, story gate (`sim/gate.sh`), golden regeneration.
+7. Vision: `@vision` APPROVED at 1440 and 3072 before any formatting claim is considered done.
+
+## 9. Open decisions (H1)
+
+- **Decided (founder, 2026-10-27): include the interactive story in-report.** Step 0 records the ADR
+  amendment and the fallback condition (self-contained `story.html` + constant link if a precondition
+  fails). This spec covers the report blocks plus the in-report story.
+- Inline drill sections vs the existing separate drill pages (content-equivalent).
+- Rail placement at wide widths (below the full-width graph vs alongside).
+- Keep or drop `findings-detail.md` (needs a named consumer).
+- Keep or drop the shipped schema copy.
+- Whether `--report-width` is exposed in v0.4.x or documented as an internal render hint.
+- Exact A8/page-height target at 3072.
