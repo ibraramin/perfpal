@@ -26,3 +26,6 @@ __pycache__/
 
 # Atlas sim source renders (regenerate with sim/make-source.sh)
 /sim/source/
+
+# Generated scan output
+perfpal-report/
