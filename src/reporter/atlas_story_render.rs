@@ -142,30 +142,35 @@ fn summary_counts(payload: &Value) -> (u64, u64) {
     (loops, io)
 }
 
-/// Readable label for the payload's state flags (never a runtime claim).
+/// Readable stop reason for the payload's state flags.
+///
+/// Mirrors the player's `stopText`: the path/state reason comes first and the
+/// parse/test/file caveats are appended as notes. `partialParse` is not a
+/// primary stop reason (the cJSON fixture is partial but still ends at a leaf).
 fn stop_state(state: &Value) -> String {
-    const FLAGS: &[(&str, &str)] = &[
-        ("empty", "empty scan (no source files)"),
-        ("noEntry", "no production entry"),
-        (
-            "library",
-            "no forward path: the elected entry is a library root",
-        ),
-        ("allTest", "all-test scan"),
-        ("capped", "capped at the render budget"),
-        ("partialParse", "partial parse"),
-        ("singleFile", "single-file scan"),
-    ];
-    let labels: Vec<&str> = FLAGS
-        .iter()
-        .filter(|(key, _)| state.get(*key).and_then(Value::as_bool) == Some(true))
-        .map(|(_, label)| *label)
-        .collect();
-    if labels.is_empty() {
-        "static leaf (the representative path ends at a static leaf)".to_string()
+    let on = |key: &str| state.get(key).and_then(Value::as_bool) == Some(true);
+    let primary = if on("empty") {
+        "empty scan (no source files)"
+    } else if on("noEntry") {
+        "no production entry"
+    } else if on("library") {
+        "no forward path: the elected entry is a library root"
+    } else if on("capped") {
+        "capped at the render budget"
     } else {
-        labels.join(", ")
+        "static leaf (the representative path ends at a static leaf)"
+    };
+    let mut parts = vec![primary.to_string()];
+    if on("partialParse") {
+        parts.push("partial parse".to_string());
     }
+    if on("allTest") {
+        parts.push("all-test scan".to_string());
+    }
+    if on("singleFile") {
+        parts.push("single-file scan".to_string());
+    }
+    parts.join("; ")
 }
 
 /// Safe entry fallback when the payload carries none (e.g. an empty scan).
@@ -385,6 +390,18 @@ mod tests {
         assert_eq!(
             stop_state(&serde_json::json!({"library": true})),
             "no forward path: the elected entry is a library root"
+        );
+        assert_eq!(
+            stop_state(&serde_json::json!({"partialParse": true})),
+            "static leaf (the representative path ends at a static leaf); partial parse"
+        );
+        assert_eq!(
+            stop_state(&serde_json::json!({"allTest": true})),
+            "static leaf (the representative path ends at a static leaf); all-test scan"
+        );
+        assert_eq!(
+            stop_state(&serde_json::json!({"singleFile": true})),
+            "static leaf (the representative path ends at a static leaf); single-file scan"
         );
     }
 

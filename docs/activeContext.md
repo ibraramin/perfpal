@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Task
-**polish-report H1 DONE 2026-10-27.** `report.html` now restores all seven pre-merge branch blocks
+**polish-report H1 implementation complete 2026-10-27; final panel/close pending.** `report.html` now restores all seven pre-merge branch blocks
 (answer, actions, weight, blast, cards, noise, links) plus the full-width hero (rail beside at 1440,
 below at ≥1600), and carries the **always-on Atlas story** (ADR-0014): one fixed report script, one
 fixed story script and one inline JSON payload (three script elements; A12 as amended), no
@@ -29,8 +29,8 @@ complete drawn-slice loop count and the stop reason is explicit; round-2 verdict
 - Archived decisions live in `state/archive/ledger.jsonl` (D-pf-249 pointer).
 
 ## In Progress
-- Nothing in flight. H1 is closed on `main`; the working tree is clean at the close commit.
-  **No push, no tag** — both remain founder-gated.
+- H1 implementation is complete; the final panel/close is in progress. The tree is clean at the current
+  evidence commit. **No push, no tag** — both remain founder-gated.
 
 ## Next
 1. **polish-report H2 — responsive scale & cross-width acceptance:** fluid canvas/charts/viewBox,
