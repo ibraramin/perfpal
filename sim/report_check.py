@@ -57,11 +57,19 @@ def check(widths, url: str) -> dict:
                   const de = document.documentElement;
                   const story = document.querySelector('#atlas-story');
                   const stage = document.querySelector('#atlas-story #stage');
+                  const canvasNodes = [...document.querySelectorAll('#atlas-canvas .atlas-node')];
+                  const canvasVisible = canvasNodes.filter((node) => {
+                    const rect = node.getBoundingClientRect();
+                    const style = getComputedStyle(node);
+                    return rect.width > 0 && rect.height > 0 && style.opacity !== '0';
+                  }).length;
                   return {
                     viewport: de.clientWidth,
                     scrollWidth: de.scrollWidth,
                     canvas_svgs: document.querySelectorAll('#atlas-canvas svg').length,
                     story_stage: !!document.querySelector('#atlas-story #stage'),
+                    canvas_nodes: canvasNodes.length,
+                    canvas_nodes_visible: canvasVisible,
                     stories: document.querySelectorAll('#atlas-story').length,
                     scripts: document.querySelectorAll('script').length,
                     ready: !!(window.__sim && window.__sim.ready),

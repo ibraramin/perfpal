@@ -19,8 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   canvas plus a `<noscript>` beat narrative; reduced motion and print show the final frame; the
   in-report S4 panels are a closed `<details>` (the standalone `sim/` player stays the
   reference/evidence player, with the section expanded). Measured 2026-10-27 at 1440×900, headless
-  Brave, `file://` (median of 3, `c57ce8b` + H1): hyperfine **333,246 B / 124 ms** FCP, cJSON
-  **264,624 B / 136 ms**, 3k fixture **510,160 B / 144 ms** — all inside the ADR-0014 ceilings;
+  Brave, `file://` (median of 3, `c57ce8b` + H1): hyperfine **333,492 B / 128 ms** FCP, cJSON
+  **264,718 B / 156 ms**, 3k fixture **510,255 B / 128 ms** — all inside the ADR-0014 ceilings;
   zero XHR/fetch and no horizontal scroll at 1280/1440. F6 is redefined as F6a flag purity / F6b
   double-render identity / F6c inline-data integrity; gates per the ADR-0014 §Gates (full `cargo`
   suite, semantic feature gate, `sim/gate.sh` 304/304 and 3k scale 44/44). Vision: 1440/3072

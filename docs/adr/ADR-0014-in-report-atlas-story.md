@@ -100,7 +100,7 @@
    | Fixture | `report.html` baseline | FCP baseline | Story-on ceiling (bytes) | Story-on FCP ceiling |
    |---|---|---|---|---|
    | hyperfine (`c516152`) | 133,985 B | 108 ms | **≤ 393,216 B (384 KiB)** | **≤ 300 ms** |
-   | cJSON (`6d9f244`) | 105,243 B | 136 ms | **≤ 327,680 B (320 KiB)** | **≤ 300 ms** |
+   | cJSON (`6d9f244`) | 105,243 B | 156 ms | **≤ 327,680 B (320 KiB)** | **≤ 300 ms** |
    | 3k fixture (`gen-3k.py`) | 108,752 B | 108 ms | **≤ 524,288 B (512 KiB)** | **≤ 400 ms** |
 
    The ceilings are baseline + player (58 KB) + CSS (24 KB) + the projected payload, with headroom.
@@ -195,9 +195,9 @@ This addendum records what shipped in H1. It narrows, but does not weaken, the D
 
    | Fixture | `report.html` | Ceiling | FCP | FCP ceiling |
    |---|---|---|---|---|
-   | hyperfine (`c516152`) | **333,246 B** | 393,216 B | **124 ms** | 300 ms |
-   | cJSON (`6d9f244`) | **264,624 B** | 327,680 B | **136 ms** | 300 ms |
-   | 3k fixture | **510,160 B** | 524,288 B | **144 ms** | 400 ms |
+   | hyperfine (`c516152`) | **333,492 B** | 393,216 B | **128 ms** | 300 ms |
+   | cJSON (`6d9f244`) | **264,718 B** | 327,680 B | **156 ms** | 300 ms |
+   | 3k fixture | **510,255 B** | 524,288 B | **128 ms** | 400 ms |
 
    All within budget. Runtime smoke: `window.__sim.ready === true`, 19 nodes at hyperfine, final
    beat reachable, **zero XHR/fetch**, no console errors, `scrollWidth == clientWidth` at 1280 and
