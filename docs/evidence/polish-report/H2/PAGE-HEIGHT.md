@@ -1,10 +1,10 @@
 # H2 page height and A8 re-baseline — 2026-10-28
 
-Report: `report.html` generated from each fixture at the H2 worktree (`--story`),
+Report: `report.html` generated from each fixture at the final H2 code (`4d401db`, `--story`),
 opened over `file://` in headless Brave at DPR 1, viewport height 900. Method:
 Playwright `document.documentElement.scrollHeight` and `getBoundingClientRect()`
 after a 500 ms settle; all sections are fully laid out. Raw JSON:
-`/var/tmp/opencode/h2/{hyperfine,cjson,3k}-height4.json` (final run4 artifacts).
+`/var/tmp/opencode/h2/{hyperfine,cjson,3k}-height5.json` (final run4 artifacts).
 
 ## Hyperfine (A8 comparator fixture)
 

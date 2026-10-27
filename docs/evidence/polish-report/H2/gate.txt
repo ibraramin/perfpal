@@ -1,6 +1,6 @@
-# H2 full gate — 2026-10-28 @ 43dfeb9
+# H2 full gate — 2026-10-28 @ 4d401db
 
-Worktree: `/home/shafin/Opencode/Perfpal` · branch `main` · code commit `43dfeb9`
+Worktree: `/home/shafin/Opencode/Perfpal` · branch `main` · code commit `4d401db`
 (`feat(report): responsive 1280-3072 scale and --report-width`).
 
 Every command below was run on the committed tree (clean except this evidence
@@ -14,7 +14,7 @@ $ cargo clippy --locked --all-targets -- -D warnings
 EXIT=0
 
 $ cargo test --locked
-1,110 passed; 0 failed
+1,111 passed; 0 failed
 EXIT=0
 
 $ ~/.cargo/bin/cargo-deny check licenses
@@ -25,12 +25,20 @@ $ cargo clippy --locked --all-targets --features semantic-clang -- -D warnings
 EXIT=0
 
 $ PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang
-1,112 passed; 0 failed
+1,113 passed; 0 failed
 EXIT=0
 
 $ cargo build --locked --offline
 EXIT=0
 ```
+
+## Scrollbar safety
+
+The 100vw/50vw full-bleed breakout was replaced by `--page-gutter` negative margins so
+`#map` follows the body/client width under a classic scrollbar. `tests/report_html.rs`
+has a static regression assertion and `sim/report_check.py` injects a 15 px root shrink
+on every interactive context; the band must not exceed the body width. Run5 evidence
+is in `report-check.txt` (`stress_map/body` columns).
 
 ## Story gate
 
@@ -40,7 +48,7 @@ EXIT=0
 verdict=PASS
 ```
 
-`docs/evidence/atlas-sim/GATE.txt` at `43dfeb9` records: story verify
+`docs/evidence/atlas-sim/GATE.txt` at `4d401db` records: story verify
 **304/304** checks, 3k scale **44/44**, story-off vs story-on `report.html`
 byte-identical, `layout_deterministic`, `metrics_content_equal`, `F6_report_identical`,
 `scale_gate`, and `worktree_dirty_zero` (all non-evidence dirty paths = 0).

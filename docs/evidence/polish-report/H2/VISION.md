@@ -1,7 +1,7 @@
 # H2 vision gate — 1440 / 3072 / JS-off
 
-Date: 2026-10-28 · Report: hyperfine fixture, final H2 artifact (run4, code
-`43dfeb9`) · Reviewer: `@vision`
+Date: 2026-10-28 · Report: hyperfine fixture, final H2 artifact (run4/run5, code
+`4d401db`) · Reviewer: `@vision`
 
 ## Verdicts (final)
 
@@ -26,7 +26,10 @@ Date: 2026-10-28 · Report: hyperfine fixture, final H2 artifact (run4, code
 
 **Overall: APPROVED-WITH-NITS.** No blocking visual defect. The 1440 anchor is
 unchanged; all four H1 nits are resolved or substantially resolved at 3072; the
-JS-off static canvas is complete at both widths.
+JS-off static canvas is complete at both widths. The final scrollbar-safety patch
+(`4d401db`) changes only the full-bleed breakout math; under the overlay
+scrollbars used for these captures the 1440/3072 layout is identical, so these
+captures remain the final visual gate.
 
 ## H1 nits at 3072
 

@@ -1,18 +1,19 @@
-# H2 report acceptance — 2026-10-28 (final run4)
-# $ python3 sim/report_check.py /var/tmp/opencode/h2/run4/hyperfine/report.html
+# H2 report acceptance — 2026-10-28 (final run5, code 4d401db)
+# $ python3 sim/report_check.py /var/tmp/opencode/h2/run5/hyperfine/report.html
 # command exit=0; static_svgs=1; PASS: report acceptance checks
-# matrix: 5 widths x DPR 1/2 (interactive) + 5 widths x DPR 1/2 (JS-off)
+# matrix: 5 widths x DPR 1/2 (interactive) + 5 widths x DPR 1/2 (JS-off);
+# plus a classic-scrollbar stress (html width -15px): the #map band must follow body width.
 auto:
-  1280@1    viewport=1280 scrollWidth=1280 canvas=1256.00 svg=1254.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1280@2    viewport=1280 scrollWidth=1280 canvas=1256.00 svg=1254.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1440@1    viewport=1440 scrollWidth=1440 canvas= 908.41 svg= 906.41 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1440@2    viewport=1440 scrollWidth=1440 canvas= 908.41 svg= 906.41 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1920@1    viewport=1920 scrollWidth=1920 canvas=1728.00 svg=1726.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1920@2    viewport=1920 scrollWidth=1920 canvas=1728.00 svg=1726.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  2560@1    viewport=2560 scrollWidth=2560 canvas=2368.00 svg=2366.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  2560@2    viewport=2560 scrollWidth=2560 canvas=2368.00 svg=2366.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  3072@1    viewport=3072 scrollWidth=3072 canvas=2880.00 svg=2878.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  3072@2    viewport=3072 scrollWidth=3072 canvas=2880.00 svg=2878.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
+  1280@1    viewport=1280 scrollWidth=1280 canvas=1256.00 svg=1254.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1265/1265
+  1280@2    viewport=1280 scrollWidth=1280 canvas=1256.00 svg=1254.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1265/1265
+  1440@1    viewport=1440 scrollWidth=1440 canvas= 908.41 svg= 906.41 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1425/1425
+  1440@2    viewport=1440 scrollWidth=1440 canvas= 908.41 svg= 906.41 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1425/1425
+  1920@1    viewport=1920 scrollWidth=1920 canvas=1728.00 svg=1726.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1905/1905
+  1920@2    viewport=1920 scrollWidth=1920 canvas=1728.00 svg=1726.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1905/1905
+  2560@1    viewport=2560 scrollWidth=2560 canvas=2368.00 svg=2366.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=2545/2545
+  2560@2    viewport=2560 scrollWidth=2560 canvas=2368.00 svg=2366.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=2545/2545
+  3072@1    viewport=3072 scrollWidth=3072 canvas=2880.00 svg=2878.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=3057/3057
+  3072@2    viewport=3072 scrollWidth=3072 canvas=2880.00 svg=2878.00 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=3057/3057
   JS-off:
   1280@1    scrollWidth=1280 viewport=1280 nodes=19/19 noscript=True static_canvas=True shell=none
   1280@2    scrollWidth=1280 viewport=1280 nodes=19/19 noscript=True static_canvas=True shell=none
@@ -26,19 +27,19 @@ auto:
   3072@2    scrollWidth=3072 viewport=3072 nodes=19/19 noscript=True static_canvas=True shell=none
 
 # pinned variant: --report-width 1440 (layout hint)
-# $ python3 sim/report_check.py /var/tmp/opencode/h2/run4-pinned/hyperfine/report.html
+# $ python3 sim/report_check.py /var/tmp/opencode/h2/run5-pinned/hyperfine/report.html
 # command exit=0; PASS
 pinned_1440:
-  1280@1    viewport=1280 scrollWidth=1280 canvas= 783.28 svg= 781.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1280@2    viewport=1280 scrollWidth=1280 canvas= 783.28 svg= 781.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1440@1    viewport=1440 scrollWidth=1440 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1440@2    viewport=1440 scrollWidth=1440 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1920@1    viewport=1920 scrollWidth=1920 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  1920@2    viewport=1920 scrollWidth=1920 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  2560@1    viewport=2560 scrollWidth=2560 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  2560@2    viewport=2560 scrollWidth=2560 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  3072@1    viewport=3072 scrollWidth=3072 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
-  3072@2    viewport=3072 scrollWidth=3072 canvas= 888.89 svg= 886.89 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0
+  1280@1    viewport=1280 scrollWidth=1280 canvas= 813.69 svg= 811.69 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1265/1265
+  1280@2    viewport=1280 scrollWidth=1280 canvas= 813.69 svg= 811.69 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1265/1265
+  1440@1    viewport=1440 scrollWidth=1440 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1425/1425
+  1440@2    viewport=1440 scrollWidth=1440 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1425/1425
+  1920@1    viewport=1920 scrollWidth=1920 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1440/1440
+  1920@2    viewport=1920 scrollWidth=1920 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1440/1440
+  2560@1    viewport=2560 scrollWidth=2560 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1440/1440
+  2560@2    viewport=2560 scrollWidth=2560 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1440/1440
+  3072@1    viewport=3072 scrollWidth=3072 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1440/1440
+  3072@2    viewport=3072 scrollWidth=3072 canvas= 919.28 svg= 917.28 clipped=0 scripts=3 story_final=summary 15/16 console=0 dynamic=0 stress_map/body=1440/1440
   JS-off:
   1280@1    scrollWidth=1280 viewport=1280 nodes=19/19 noscript=True static_canvas=True shell=none
   1280@2    scrollWidth=1280 viewport=1280 nodes=19/19 noscript=True static_canvas=True shell=none

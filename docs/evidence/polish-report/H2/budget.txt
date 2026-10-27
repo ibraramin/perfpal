@@ -1,18 +1,18 @@
-# H2 report budget — 2026-10-28 (final run4)
+# H2 report budget — 2026-10-28 (final run5, code 4d401db)
 # $ python3 sim/report_budget.py <report.html> --ceiling-bytes N --ceiling-fcp-ms N
 # viewport 1440x900 and 3072x900; 3 runs each; headless Brave file://
 
-hyperfine: bytes=338141 ceiling=393216 verdict=PASS commit_at_run=7c4c59cd34589d0cb1abed2ff1f927a3f6a7c9a2
-  width=1440 runs=[140.0, 132.0, 120.0] median=132.0 ceiling=300 pass=True
-  width=3072 runs=[128.0, 128.0, 112.0] median=128.0 ceiling=300 pass=True
+hyperfine: bytes=338100 ceiling=393216 verdict=PASS commit_at_run=4d401db5cacc0ff374f87217a36c86d11eddca82
+  width=1440 runs=[132.0, 120.0, 116.0] median=120.0 ceiling=300 pass=True
+  width=3072 runs=[128.0, 136.0, 112.0] median=128.0 ceiling=300 pass=True
 
-cjson: bytes=269404 ceiling=327680 verdict=PASS commit_at_run=7c4c59cd34589d0cb1abed2ff1f927a3f6a7c9a2
-  width=1440 runs=[144.0, 112.0, 124.0] median=124.0 ceiling=300 pass=True
-  width=3072 runs=[132.0, 128.0, 108.0] median=128.0 ceiling=300 pass=True
+cjson: bytes=269363 ceiling=327680 verdict=PASS commit_at_run=4d401db5cacc0ff374f87217a36c86d11eddca82
+  width=1440 runs=[152.0, 128.0, 124.0] median=128.0 ceiling=300 pass=True
+  width=3072 runs=[152.0, 132.0, 132.0] median=132.0 ceiling=300 pass=True
 
-3k: bytes=514879 ceiling=524288 verdict=PASS commit_at_run=7c4c59cd34589d0cb1abed2ff1f927a3f6a7c9a2
-  width=1440 runs=[148.0, 108.0, 120.0] median=120.0 ceiling=400 pass=True
-  width=3072 runs=[144.0, 152.0, 128.0] median=144.0 ceiling=400 pass=True
+3k: bytes=514838 ceiling=524288 verdict=PASS commit_at_run=4d401db5cacc0ff374f87217a36c86d11eddca82
+  width=1440 runs=[152.0, 124.0, 124.0] median=124.0 ceiling=400 pass=True
+  width=3072 runs=[152.0, 132.0, 128.0] median=132.0 ceiling=400 pass=True
 
 Ceilings: hyperfine 384 KiB / 300 ms; cJSON 320 KiB / 300 ms; 3k 512 KiB / 400 ms.
 All per-width medians and byte counts are inside their ceilings; every command exited 0.
