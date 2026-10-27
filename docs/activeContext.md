@@ -11,7 +11,7 @@ layout-only. Schema **1.8**, no new dependency, byte-determinism preserved.
 Evidence: `docs/evidence/polish-report/H1/{gate.txt,report-check.txt,budget.txt,VISION.md}`;
 `docs/evidence/atlas-sim/GATE.txt` (304/304, 3k 44/44, verdict PASS). Full gate: fmt/clippy/test/
 deny/semantic all exit 0. Budget: hyperfine 333,544 B/144 ms, cJSON 264,746 B/160 ms, 3k
-510,282 B/144 ms — inside ADR-0014 ceilings. Vision: 1440/3072 PASS-WITH-NITS, JS-off PASS.
+510,282 B/156 ms — inside ADR-0014 ceilings. Vision: 1440/3072 PASS-WITH-NITS, JS-off PASS.
 Panel: round 1 returned R2 APPROVED and R1/Q1/Q2/R3 CHANGES_REQUESTED. The JS-off counts now use the
 complete drawn-slice loop count and the stop reason is explicit; round-2 verdicts are appended in
 `PANEL.md` at close.

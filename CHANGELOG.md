@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in-report S4 panels are a closed `<details>` (the standalone `sim/` player stays the
   reference/evidence player, with the section expanded). Measured 2026-10-27 at 1440×900, headless
   Brave, `file://` (median of 3, `c57ce8b` + H1): hyperfine **333,544 B / 144 ms** FCP, cJSON
-  **264,746 B / 160 ms**, 3k fixture **510,282 B / 144 ms** — all inside the ADR-0014 ceilings;
+  **264,746 B / 160 ms**, 3k fixture **510,282 B / 156 ms** — all inside the ADR-0014 ceilings;
   zero XHR/fetch and no horizontal scroll at 1280/1440. F6 is redefined as F6a flag purity / F6b
   double-render identity / F6c inline-data integrity; gates per the ADR-0014 §Gates (full `cargo`
   suite, semantic feature gate, `sim/gate.sh` 304/304 and 3k scale 44/44). Vision: 1440/3072
