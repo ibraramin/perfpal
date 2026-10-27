@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hint: only `report.html` (its CSS and the `data-report-width` layout marker) changes; metrics, story payload, scripts (A12: three) and every
   other artifact stay byte-identical. The A8/page-height budget is re-baselined at each supported
   width with evidence (`docs/evidence/polish-report/H2/`); vector output stays DPR-independent.
+  The full-bleed band is anchored to the page body (not `100vw`), so a classic scrollbar cannot
+  create a horizontal overflow.
 
 ### Pending
 - **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002

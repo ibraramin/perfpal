@@ -167,8 +167,8 @@ than right. A future "match my display" convenience would be an explicit separat
 no `image-rendering` hacks). Acceptance runs at DPR 1 and 2.
 
 **Page height (A8 re-baseline, 2026-10-28).** The first-page fold target is unchanged: the answer
-line must end above the fold at every supported width (measured bottom: 427 px at 1280/1440,
-436 px at 3072). The document-height budget is re-baselined with evidence on the hyperfine fixture:
+line must end above the fold at every supported width (measured bottom: 427 px at 1280/1440, 428 at 1920,
+424 at 2560, 436 at 3072). The document-height budget is re-baselined with evidence on the hyperfine fixture:
 16,927 px at 1440 and 21,241 px at 3072 (H1: 18,747 / 20,646); the story section is 1,029 px at
 1440 and 1,875 px at 3072 (full-width canvas). The 1440 height is lower than H1 because the
 legacy Explorer pan/zoom figures now downscale to their figure (no internal overflow); the 3072

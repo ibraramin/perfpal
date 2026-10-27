@@ -1,58 +1,66 @@
-# Handoff — polish-report H1 CLOSED; H2 next (`main` @ close commit; 2026-10-27)
+# Handoff — polish-report H2 CLOSED; H3 next (`main` @ close commit; 2026-10-28)
 
-**Objective:** complete H1 of `polish-report` — restore the seven pre-merge Atlas blocks, full-width
-hero, and the always-on in-report Atlas story (ADR-0014; A12 amended), with tests/goldens/budget/vision.
-**Status:** **H1 CLOSED**. Panel **R1/R2/Q1/Q2 + fresh R3 APPROVED**. Code **2eeca42**; schema **1.8**;
-no new deps. **No push, no tag.**
-**Plan/phase:** `polish-report` H1 · next: H2 responsive scale (plan line 28; spec §6).
+**Objective:** complete H2 of `polish-report` — responsive scale from 1280 to 3072 CSS px with a
+public layout-only `--report-width` hint, cross-width/DPR acceptance, scrollbar-safe full bleed,
+and an evidence-backed A8/page-height re-baseline, while keeping the H1 Atlas/parity/story
+contract, byte-determinism and A12.
+**Status:** **H2 CLOSED**. Panel **R1/R2/Q1/Q2 + fresh R3 APPROVED** (round 3 after the
+classic-scrollbar fix). Code **4d401db**; evidence **1df5286**; schema **1.8**; no new deps.
+**No push, no tag.**
+**Plan/phase:** `polish-report` H2 · next: H3 artifact consolidation/formatting (plan line 29).
 
 ## Delivered
 
-- **ADR-0014** (`901db22`): supersedes ADR-0012 D5; amended A12 = fixed `REPORT_SCRIPT` + fixed
-  `STORY_SCRIPT` + inline JSON; no fetch/XHR/eval/HTTP; offline; JS-off canvas + `<noscript>`;
-  `--story` layout-only; F6a/b/c; budget; oracle counter-case/fallback.
-- **Seven parity blocks + full-width hero** (`c57ce8b`): answer, actions (top 3 KV1), weight+chart,
-  blast+chart, cards, noise, links; rail beside 1440 / below ≥1600; four charts kept; drills linked.
-- **Always-on story** (`f8be249`, `2eeca42`): Rust payload projection, inline data, scoped CSS,
-  JS-off shell hidden + all static nodes visible, S4 whole-repo detail as a closed `<details>`.
-- **Counts/stop reason** (`0bfb386`, `2eeca42`): `trust.loopBearingFunctions` from
-  `doc.stats.functions` across drawn paths (complete, not top-3; goldens 7/15/15/20/26/2);
-  `trust.io.rows`; `stop_state` names the reason and keeps partial/all-test/single-file as notes.
-- Docs/contracts/README/CHANGELOG/specs updated to the amended A12; spec §9 rail decision recorded.
+- **Responsive scale:** fluid body/page with `--page-gutter`, full-bleed `#map` anchored to the
+  body (not `100vw`, so classic scrollbars cannot overflow), canvas `width:100%` with preserved
+  viewBox, Atlas charts/figures fluid, legacy Explorer figures downscaled but never upscaled, and
+  a `clamp()` type ramp anchored at 1440 (1.5× ceiling at 3072). Story `.page`/`.canvas-shell`
+  full-width, content-driven (`min-height:0`).
+- **Public `--report-width <auto|1280|1440|1920|2560|3072>`** (default `auto`): layout-only; only
+  `report.html` (CSS + `data-report-width` marker) changes; values pinned in CLI help/README/
+  modules/output-contract; invalid values exit 1.
+- **Acceptance:** `sim/report_check.py` covers 5 widths × DPR 1/2 interactive + JS-off (auto and
+  pinned 1440), canvas fill, no clipped labels, story final, zero network/console errors, and a
+  15 px classic-scrollbar stress (`map == body`).
+- **Budget:** `sim/report_budget.py --widths` covers 1440/3072 for hyperfine, cJSON and 3k.
+- **Goldens:** six report.html regenerated; no other golden artifact changed.
+- **Docs:** spec §6/§9 (resolved decisions, A8 re-baseline), output-contract §2, README CLI,
+  modules §8.1, CHANGELOG; evidence under `docs/evidence/polish-report/H2/`.
 
 ## Verification (claim → evidence → result)
 
 | Claim | Evidence | Result |
 |---|---|---|
-| Full gate | `docs/evidence/polish-report/H1/gate.txt` @db29612 (code 2eeca42) | 6/6 EXIT=0 |
-| Budget | `budget.txt` @2eeca42, final4 | hyperfine 333,544 B/132 ms; cJSON 264,807/136; 3k 510,282/164 — PASS |
-| Report acceptance | `report-check.txt` @2eeca42 | 1280/1440/3072 no hscroll; 3 scripts; one static SVG; 0 dynamic requests; 19/19 JS-off nodes; final summary |
-| Story gate | `docs/evidence/atlas-sim/GATE.txt` @89c7123 | 304/304, 3k 44/44, verdict PASS (final code 2eeca42 is report-only; full gate/report-check cover the delta) |
-| Vision | `docs/evidence/polish-report/H1/VISION.md` @8cf425d | 1440/3072 PASS-WITH-NITS, JS-off PASS (final JS-off text change covered by tests/report-check; JS-on frames unchanged) |
-| Panel | `docs/evidence/polish-report/H1/PANEL.md` | R1b/R2/Q1/Q2/R3 **APPROVED** |
-| Clean/tag | `docs/evidence/polish-report/H1/close.txt` | tree clean; tag empty; no push/tag |
+| Full gate | `docs/evidence/polish-report/H2/gate.txt` @4d401db | fmt/clippy/test **1,111**/deny/semantic clippy/semantic test **1,113** all EXIT=0 |
+| Story gate | `docs/evidence/atlas-sim/GATE.txt` @4d401db | 304/304, 3k 44/44, `worktree_dirty_zero`, verdict **PASS** |
+| Report acceptance | `docs/evidence/polish-report/H2/report-check.txt` @4d401db | 5×2 interactive + 5×2 JS-off, auto + pinned; no hscroll; canvas fill; no clipped labels; story final; 19/19 JS-off; stress map==body |
+| Budget | `docs/evidence/polish-report/H2/budget.txt` @4d401db | hyperfine 338,100 B/120–128 ms; cJSON 269,363/128–132; 3k 514,838/124–132 — PASS |
+| A8/page height | `docs/evidence/polish-report/H2/PAGE-HEIGHT.md` @4d401db | doc 16,927 @1440 / 21,241 @3072; story 1,029/1,875; answer bottom ≤436 |
+| Vision | `docs/evidence/polish-report/H2/VISION.md` @4d401db | 1440/3072/JS-off **APPROVED-WITH-NITS**; H1 nits resolved |
+| Panel | `docs/evidence/polish-report/H2/PANEL.md` | R1/R2/Q1/Q2/R3 **APPROVED** |
+| Clean/tag | `docs/evidence/polish-report/H2/close.txt` | tree clean; tag empty; no push/tag |
 
 ## Panel / close notes
 
-- Q2 approved the story-gate/vision coverage argument: the only code after the story gate (`89c7123`)
-  is `2eeca42`, a report-only JS-off narrative change; final full gate @db29612 and report-check
-  @2eeca42 cover it. VISION @8cf425d is a JS-on layout gate; final JS-off text is unit/pipeline/
-  report-check covered.
-- Q2 correction recorded: report-check shows **19/19** static nodes for the hyperfine report (not
-  20/20); the assertion is all-nodes and passes.
-- `perfpal-report/` is the untracked self-scan output (ignored via `.gitignore`); it is not part of H1.
-- `PANEL.md` round 2 records the final approvals; `close.txt` records the clean/tag check.
+- R3 caught a real classic-scrollbar overflow that the overlay-scrollbar test browser hid:
+  `#map{margin:0 calc(50% - 50vw)}` exceeded the client width by 15 px. Fixed at `4d401db` with a
+  body-anchored gutter, a static regression test, and a runtime 15 px-shrink stress; R3 then
+  independently reproduced the old failure and the fixed state.
+- Accepted non-blocking nits: 1440 Explorer fitted labels ~6 px (`.pz` zoom is the escape);
+  full-width body copy; letterboxed story artwork; inert `Pause` in JS-off; PAGE-HEIGHT raw JSON is
+  under `/var/tmp` (the committed Markdown table is the evidence).
 
 ## Next
 
-1. **H2 — responsive scale & cross-width acceptance** (separate session; plan line 28, spec §6):
-   fluid canvas/charts/viewBox, fluid type ramp, optional `--report-width`
-   `<auto|1280|1440|1920|2560|3072>`, acceptance at 1280/1440/1920/2560/3072 and DPR 1/2; vision at
-   1440/3072; goldens + determinism + story gate. Do not start H3 before H2 closes.
-2. **H3** artifact consolidation/formatting; **H4** explorer.html final composition; **H5** finalize.
+1. **H3 — artifact consolidation + formatting** (separate session; plan line 29): role matrix,
+   `report.md` Appendix C duplication, one canonical human detail rendering, style contract across
+   Markdown/HTML artifacts; update output-contract §2 and goldens; no schema change.
+2. **H4** `report.html` final composition (`#explorer` → `explorer.html`, order, A8 re-baseline);
+   **H5** finalize (full gate, story gate, docs, state, EOL).
 3. **Post-beta map/ranking:** F treemap (D-pf-251), memchr fold (D-pf-256), map-build/A1b recall.
-4. **Publish gate (founder-owned):** B-pf-001 contact + B-pf-002 minisign secrets; no push/tag until cleared.
+4. **Publish gate (founder-owned):** B-pf-001 contact + B-pf-002 minisign secrets; no push/tag until
+   cleared.
 
 ## Uncommitted files / state
 
-None at the H1 close; code `2eeca42`; close evidence `close.txt`; **no push/tag**.
+None at the H2 close; code `4d401db`; evidence `1df5286`; **no push/tag**.

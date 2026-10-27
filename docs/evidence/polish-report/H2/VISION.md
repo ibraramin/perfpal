@@ -1,7 +1,7 @@
 # H2 vision gate — 1440 / 3072 / JS-off
 
-Date: 2026-10-28 · Report: hyperfine fixture, final H2 artifact (run4/run5, code
-`4d401db`) · Reviewer: `@vision`
+Date: 2026-10-28 · Report: hyperfine fixture, final H2 artifact (captures run4; layout-identical at
+code `4d401db`) · Reviewer: `@vision`
 
 ## Verdicts (final)
 

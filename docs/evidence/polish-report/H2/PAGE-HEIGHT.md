@@ -4,7 +4,7 @@ Report: `report.html` generated from each fixture at the final H2 code (`4d401db
 opened over `file://` in headless Brave at DPR 1, viewport height 900. Method:
 Playwright `document.documentElement.scrollHeight` and `getBoundingClientRect()`
 after a 500 ms settle; all sections are fully laid out. Raw JSON:
-`/var/tmp/opencode/h2/{hyperfine,cjson,3k}-height5.json` (final run4 artifacts).
+`/var/tmp/opencode/h2/{hyperfine,cjson,3k}-height5.json` (final run5 artifacts).
 
 ## Hyperfine (A8 comparator fixture)
 
@@ -35,7 +35,7 @@ stretched them to 2,974 px made the page 30,470 px and was rejected.
 
 - **First-page fold (unchanged):** the answer line must end above the fold at
   every supported width. Measured bottoms: 427 px at 1280/1440, 428 at 1920,
-  424 at 2560, 436 at 3072 — all ≤ 500 px, so the A8 fold target is unchanged.
+  424 at 2560, 436 at 3072 — all ≤ 436 px, so the A8 fold target is unchanged.
 - **Document height (re-baselined with evidence):** 16,927 px at 1440 and
   21,241 px at 3072 on hyperfine; cJSON 24,092/27,379; 3k 29,511/34,882. The
   budget is per-fixture and content-driven; the layout must not stretch legacy
