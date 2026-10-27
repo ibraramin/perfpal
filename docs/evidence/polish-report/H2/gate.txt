@@ -1,0 +1,54 @@
+# H2 full gate — 2026-10-28 @ 43dfeb9
+
+Worktree: `/home/shafin/Opencode/Perfpal` · branch `main` · code commit `43dfeb9`
+(`feat(report): responsive 1280-3072 scale and --report-width`).
+
+Every command below was run on the committed tree (clean except this evidence
+directory). All exit 0.
+
+```
+$ cargo fmt --all -- --check
+EXIT=0
+
+$ cargo clippy --locked --all-targets -- -D warnings
+EXIT=0
+
+$ cargo test --locked
+1,110 passed; 0 failed
+EXIT=0
+
+$ ~/.cargo/bin/cargo-deny check licenses
+licenses ok
+EXIT=0
+
+$ cargo clippy --locked --all-targets --features semantic-clang -- -D warnings
+EXIT=0
+
+$ PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang
+1,112 passed; 0 failed
+EXIT=0
+
+$ cargo build --locked --offline
+EXIT=0
+```
+
+## Story gate
+
+```
+$ bash sim/gate.sh
+EXIT=0
+verdict=PASS
+```
+
+`docs/evidence/atlas-sim/GATE.txt` at `43dfeb9` records: story verify
+**304/304** checks, 3k scale **44/44**, story-off vs story-on `report.html`
+byte-identical, `layout_deterministic`, `metrics_content_equal`, `F6_report_identical`,
+`scale_gate`, and `worktree_dirty_zero` (all non-evidence dirty paths = 0).
+
+## Dependency / schema posture
+
+- `Cargo.toml` / `Cargo.lock` unchanged; no new dependency (`cargo deny licenses` green).
+- Schema stays `1.8`; `preserve_order` absent from `Cargo.lock`.
+- Exactly three script elements in every golden `report.html` (A12 as amended).
+- Six goldens regenerated: `tests/golden/{report,report-mixed,report-rust,report-python,report-js,report-ts}/report.html`;
+  no other golden artifact changed.
