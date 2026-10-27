@@ -1231,6 +1231,17 @@ fn story_flow_io_effects_are_story_only_and_conservative() {
         ],
         "sprintf is not I/O; a non-literal path stays null; stdio has no target literal"
     );
+    // F6c/JS-off: the in-report narrative must use the emitted I/O rows, not a
+    // missing trust.io.total (the ADR-0014 Decision 5 honesty check).
+    let report = fs::read_to_string(out.join("report.html")).expect("report.html");
+    assert!(
+        report.contains("4 I/O sites"),
+        "JS-off narrative must report the four emitted I/O effects"
+    );
+    assert!(
+        !report.contains("0 I/O sites"),
+        "JS-off narrative must not report an empty I/O count when rows exist"
+    );
     for row in io {
         assert_eq!(
             row["file"].as_str(),

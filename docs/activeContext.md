@@ -12,7 +12,8 @@ Evidence: `docs/evidence/polish-report/H1/{gate.txt,report-check.txt,budget.txt,
 `docs/evidence/atlas-sim/GATE.txt` (304/304, 3k 44/44, verdict PASS). Full gate: fmt/clippy/test/
 deny/semantic all exit 0. Budget: hyperfine 333,246 B/124 ms, cJSON 264,624 B/136 ms, 3k
 510,160 B/144 ms — inside ADR-0014 ceilings. Vision: 1440/3072 PASS-WITH-NITS, JS-off PASS.
-Panel: R1/R2/Q1/Q2 + fresh R3 **APPROVED** (recorded in `docs/evidence/polish-report/H1/PANEL.md`).
+Panel: round 1 returned R2 APPROVED and R1/Q1/Q2/R3 CHANGES_REQUESTED; the JS-off summary counts and
+close-step truth items are fixed, and round 2 is in progress. Final verdicts: `PANEL.md`.
 **No push, no tag.**
 
 ## Recent Decisions

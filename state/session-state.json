@@ -101,7 +101,7 @@
     {
       "id": "A-pf-133",
       "status": "active",
-      "action": "Atlas Story packaging follow-up (ADR-0012 Decision 5): self-contained companion (inline data, no fetch/HTTP server) + a `perfpal story <repo>` entry point before the §5 founder graduation session; F8/A2 story read deferred; no in-report graduation (A12 unchanged)."
+      "action": "Atlas Story companion follow-up: the in-report story ships (ADR-0014); keep the standalone sim as the reference/evidence player and add a perfpal story <repo> entry point if pursued; F8/A2 story read deferred; no A12 reversal."
     },
     {
       "id": "A-pf-134",

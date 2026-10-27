@@ -199,7 +199,8 @@ canvas at 868 px, so most of the screen is empty and the type reads small at 100
   (self-contained `story.html` + constant link) is explicit if a precondition or budget fails.
 - Inline drill sections vs the existing separate drill pages (content-equivalent): **decided in H1 —
   keep the separate pages plus a prominent links block** (`answer`/`links` blocks link them).
-- Rail placement at wide widths (below the full-width graph vs alongside).
+- **Decided (H1, 2026-10-27):** the canvas is full-width; the detail rail sits beside it at 1440 px
+  and below it at ≥1600 px (stacked below 1360). Recorded in ADR-0014 and the vision evidence.
 - Keep or drop `findings-detail.md` (needs a named consumer).
 - Keep or drop the shipped schema copy.
 - Whether `--report-width` is exposed in v0.4.x or documented as an internal render hint.

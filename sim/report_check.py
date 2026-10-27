@@ -90,6 +90,12 @@ def check(widths, url: str) -> dict:
                 fail(f"{width}px: dynamic requests in an offline report: {network}")
             page.evaluate("() => window.__sim.applyFinal()")
             state["final"] = page.evaluate("() => window.__sim.state()")
+            if state["final"]["index"] != state["final"]["beats"] - 1:
+                fail(f"{width}px: final beat not reached: {state['final']}")
+            if state["final"]["kind"] != "summary":
+                fail(f"{width}px: final beat is not the summary: {state['final']}")
+            if state["canvas_nodes"] == 0:
+                fail(f"{width}px: static canvas has no nodes")
             out["widths"][str(width)] = state
             page.close()
 
@@ -122,8 +128,13 @@ def check(widths, url: str) -> dict:
             fail("JS disabled: the static Atlas canvas is missing")
         if out["js_off"]["shell_display"] != "none":
             fail("JS disabled: the dead player shell is still visible")
-        if out["js_off"]["canvas_nodes_visible"] <= 0:
-            fail("JS disabled: the static canvas final frame has no visible nodes")
+        if out["js_off"]["canvas_nodes"] == 0:
+            fail("JS disabled: the static canvas final frame has no nodes")
+        if out["js_off"]["canvas_nodes_visible"] != out["js_off"]["canvas_nodes"]:
+            fail(
+                "JS disabled: not all static canvas nodes are visible "
+                f"({out['js_off']['canvas_nodes_visible']}/{out['js_off']['canvas_nodes']})"
+            )
         browser.close()
     return out
 

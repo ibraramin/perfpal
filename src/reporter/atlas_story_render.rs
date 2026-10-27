@@ -103,14 +103,7 @@ fn narrative(payload: &Value, doc: &MetricsDocument) -> String {
         .map_or(0, Vec::len);
     let stage_phrase = format!("{stages} stage{}", if stages == 1 { "" } else { "s" });
     let stop = stop_state(payload.get("state").unwrap_or(&Value::Null));
-    let loops = payload
-        .pointer("/trust/unknownTripFunctions")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
-    let io = payload
-        .pointer("/trust/io/total")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
+    let (loops, io) = summary_counts(payload);
     let loop_phrase = format!(
         "{loops} loop-bearing function{}",
         if loops == 1 { "" } else { "s" }
@@ -132,6 +125,44 @@ fn narrative(payload: &Value, doc: &MetricsDocument) -> String {
         stop = escape_html(&stop),
         action = escape_html(action),
     )
+}
+
+/// Counts used by the JS-off narrative: every node function with a loop
+/// (`maxLoopDepth > 0`) or an unknown trip count, and the emitted I/O rows.
+/// The player's `trust.io.rows` is the canonical count (there is no `total`).
+fn summary_counts(payload: &Value) -> (u64, u64) {
+    let io = payload
+        .pointer("/trust/io/rows")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    let loops = payload
+        .get("nodes")
+        .and_then(Value::as_array)
+        .map(|nodes| {
+            nodes
+                .iter()
+                .flat_map(|node| {
+                    node.get("functions")
+                        .and_then(Value::as_array)
+                        .into_iter()
+                        .flatten()
+                })
+                .filter(|function| {
+                    function
+                        .get("maxLoopDepth")
+                        .and_then(Value::as_u64)
+                        .unwrap_or(0)
+                        > 0
+                        || function
+                            .get("unknownTripLoops")
+                            .and_then(Value::as_u64)
+                            .unwrap_or(0)
+                            > 0
+                })
+                .count() as u64
+        })
+        .unwrap_or(0);
+    (loops, io)
 }
 
 /// Readable label for the payload's state flags (never a runtime claim).
@@ -351,6 +382,19 @@ mod tests {
             );
         }
         debug_assert_story_script_safe();
+    }
+
+    #[test]
+    fn summary_counts_reads_io_rows_and_all_loop_bearing_functions() {
+        let payload = serde_json::json!({
+            "trust": {"io": {"rows": 4}},
+            "nodes": [{"functions": [
+                {"maxLoopDepth": 1, "unknownTripLoops": 0},
+                {"maxLoopDepth": 0, "unknownTripLoops": 2},
+                {"maxLoopDepth": 0, "unknownTripLoops": 0}
+            ]}]
+        });
+        assert_eq!(summary_counts(&payload), (2, 4));
     }
 
     #[test]
