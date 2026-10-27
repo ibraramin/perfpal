@@ -1,0 +1,14 @@
+# H2 close — 2026-10-27T19:34:35Z
+
+$ git status --porcelain
+(empty)
+
+$ git tag --points-at HEAD
+(empty)
+
+$ git log --oneline -1
+eceebe9 docs(state): close H2 — panel approved; H3 next
+
+# Code: 4d401db. Evidence: 1df5286 (+ eceebe9 close docs).
+# Panel: R1/R2/Q1/Q2 + fresh R3 APPROVED.
+# This close evidence file is committed immediately after the check; the final H2 close commit adds it.
