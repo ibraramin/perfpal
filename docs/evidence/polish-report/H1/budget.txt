@@ -1,52 +1,52 @@
-# H1 size/FCP budget — 2026-10-27T14:18:48Z @ 0bfb386
+# H1 size/FCP budget — 2026-10-27T14:29:22Z @ 2eeca42
 # fixture report path and ceiling; ADR-0014 Decision 8
 
-$ python3 sim/report_budget.py /var/tmp/opencode/h1/final3-hyperfine/report.html --ceiling-bytes 393216 --ceiling-fcp-ms 300
+$ python3 sim/report_budget.py /var/tmp/opencode/h1/final4-hyperfine/report.html --ceiling-bytes 393216 --ceiling-fcp-ms 300
 {
-  "commit": "0bfb386f8ee005c3c7f63c1168f23cb4845b6901",
-  "report": "/var/tmp/opencode/h1/final3-hyperfine/report.html",
+  "commit": "2eeca42e4e7f86add35373678479b1d1a1af3268",
+  "report": "/var/tmp/opencode/h1/final4-hyperfine/report.html",
   "bytes": 333544,
   "ceiling_bytes": 393216,
   "fcp_ms_runs": [
-    152.0,
-    144.0,
-    128.0
+    132.0,
+    116.0,
+    132.0
   ],
-  "fcp_ms_median": 144.0,
+  "fcp_ms_median": 132.0,
   "ceiling_fcp_ms": 300,
   "verdict": "PASS"
 }
 EXIT=0
 
-$ python3 sim/report_budget.py /var/tmp/opencode/h1/final3-cjson/report.html --ceiling-bytes 327680 --ceiling-fcp-ms 300
+$ python3 sim/report_budget.py /var/tmp/opencode/h1/final4-cjson/report.html --ceiling-bytes 327680 --ceiling-fcp-ms 300
 {
-  "commit": "0bfb386f8ee005c3c7f63c1168f23cb4845b6901",
-  "report": "/var/tmp/opencode/h1/final3-cjson/report.html",
-  "bytes": 264746,
+  "commit": "2eeca42e4e7f86add35373678479b1d1a1af3268",
+  "report": "/var/tmp/opencode/h1/final4-cjson/report.html",
+  "bytes": 264807,
   "ceiling_bytes": 327680,
   "fcp_ms_runs": [
-    180.0,
-    160.0,
-    156.0
+    152.0,
+    116.0,
+    136.0
   ],
-  "fcp_ms_median": 160.0,
+  "fcp_ms_median": 136.0,
   "ceiling_fcp_ms": 300,
   "verdict": "PASS"
 }
 EXIT=0
 
-$ python3 sim/report_budget.py /var/tmp/opencode/h1/final3-3k/report.html --ceiling-bytes 524288 --ceiling-fcp-ms 400
+$ python3 sim/report_budget.py /var/tmp/opencode/h1/final4-3k/report.html --ceiling-bytes 524288 --ceiling-fcp-ms 400
 {
-  "commit": "0bfb386f8ee005c3c7f63c1168f23cb4845b6901",
-  "report": "/var/tmp/opencode/h1/final3-3k/report.html",
+  "commit": "2eeca42e4e7f86add35373678479b1d1a1af3268",
+  "report": "/var/tmp/opencode/h1/final4-3k/report.html",
   "bytes": 510282,
   "ceiling_bytes": 524288,
   "fcp_ms_runs": [
-    176.0,
-    148.0,
-    156.0
+    172.0,
+    164.0,
+    140.0
   ],
-  "fcp_ms_median": 156.0,
+  "fcp_ms_median": 164.0,
   "ceiling_fcp_ms": 400,
   "verdict": "PASS"
 }
