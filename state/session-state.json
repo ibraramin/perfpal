@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "Merge Train M3 DONE 2026-10-27; v0.4.0 (schema 1.8); all four lines merged; no push/tag.",
+  "current_phase": "polish-report H1 DONE 2026-10-27; H2 next; no push/tag.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 2,
@@ -16,6 +16,11 @@
       "id": "D-pf-276",
       "status": "live",
       "title": "MERGE-TRAIN M3 DONE 2026-10-27: four lines verified as ancestors of main; agent-report worktree archived to /home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27 and its registration pruned, branch refs retained (no deletions, founder instruction); full CI gate green at 2c01c17 (2,180 passed / 0 failed / 2 ignored; deny licenses clean; semantic feature green); story gate re-run PASS at 978a623 (1,089 tests, 304/304, scale PASS); v0.4.0 / schema 1.8; CHANGELOG/README verified; hot state <=8 KB; clean status; no push/tag."
+    },
+    {
+      "id": "D-pf-277",
+      "status": "live",
+      "title": "POLISH-REPORT H1 DONE 2026-10-27: seven branch blocks restored (answer/actions/weight/blast/cards/noise/links) + full-width hero (rail beside 1440, below >=1600) + always-on in-report Atlas story (ADR-0014; A12 amended: 3 script elements, inline JSON, no fetch/eval, JS-off canvas+noscript, S4 details closed, --story layout-only, F6a/b/c); schema 1.8, no new deps. Full gate + story gate PASS; vision 1440/3072 PASS-WITH-NITS, JS-off PASS; panel APPROVED. H2 next; no push/tag."
     }
   ],
   "open_risks": [
@@ -97,6 +102,11 @@
       "id": "A-pf-133",
       "status": "active",
       "action": "Atlas Story packaging follow-up (ADR-0012 Decision 5): self-contained companion (inline data, no fetch/HTTP server) + a `perfpal story <repo>` entry point before the §5 founder graduation session; F8/A2 story read deferred; no in-report graduation (A12 unchanged)."
+    },
+    {
+      "id": "A-pf-134",
+      "status": "active",
+      "action": "polish-report H2-H5: responsive scale/cross-width (H2), artifact consolidation/formatting (H3), explorer.html final composition (H4), finalize (H5); one session per plan step."
     }
   ],
   "last_updated": "2026-10-27"

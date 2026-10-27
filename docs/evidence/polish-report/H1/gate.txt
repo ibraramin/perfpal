@@ -1,18 +1,17 @@
-# H1 full gate — 2026-10-27T13:13:27Z @ a9ddf61
+# H1 full gate — 2026-10-27T13:34:05Z @ 8cf425d
 
 $ cargo fmt --all -- --check
 EXIT=0
 
 $ cargo clippy --locked --all-targets -- -D warnings
-    Checking perfpal v0.4.0 (/home/shafin/Opencode/Perfpal)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.75s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
 EXIT=0
 
 $ cargo test --locked
-test padding_waste_fires_info_low_only_above_threshold ... ok
 test pointer_param_and_small_struct_params_stay_silent ... ok
-test two_by_value_params_aggregate_into_one_finding ... ok
 test shallow_chain_and_out_of_loop_chain_stay_silent ... ok
+test out_of_loop_indirect_and_direct_calls_stay_silent ... ok
+test two_by_value_params_aggregate_into_one_finding ... ok
 test wave_c_messages_never_frame_as_bug_or_unsafe ... ok
 
 test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
@@ -60,17 +59,17 @@ EXIT=0
 
 $ cargo clippy --locked --all-targets --features semantic-clang -- -D warnings
     Checking perfpal v0.4.0 (/home/shafin/Opencode/Perfpal)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.84s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.46s
 EXIT=0
 
 $ PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang
+test pointer_param_and_small_struct_params_stay_silent ... ok
 test out_of_loop_and_local_target_writes_stay_silent ... ok
 test out_of_loop_indirect_and_direct_calls_stay_silent ... ok
-test all_four_sizeof_misuse_classes_fire_warn_medium ... ok
-test non_literal_block_ops_fire_info_outer_and_warn_innermost ... ok
+test literal_and_non_pointer_sizeof_allocs_stay_silent ... ok
 test wave_c_messages_never_frame_as_bug_or_unsafe ... ok
 
-test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
      Running tests/writer_concurrency.rs (target/debug/deps/writer_concurrency-38b11653011e6346)
 

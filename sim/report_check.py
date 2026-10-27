@@ -93,18 +93,26 @@ def check(widths, url: str) -> dict:
             out["widths"][str(width)] = state
             page.close()
 
-        context = browser.new_context(java_script_enabled=False)
+        context = browser.new_context(java_script_enabled=False, reduced_motion='reduce')
         page = context.new_page()
         page.goto(url, wait_until="load")
         page.wait_for_timeout(200)
         out["js_off"] = page.evaluate(
             """() => {
               const text = document.body.innerText || '';
+              const nodes = [...document.querySelectorAll('#atlas-canvas .atlas-node')];
+              const visible = nodes.filter((node) => {
+                const rect = node.getBoundingClientRect();
+                const style = getComputedStyle(node);
+                return rect.width > 0 && rect.height > 0 && style.opacity !== '0';
+              }).length;
               return {
                 svgs: document.querySelectorAll('svg').length,
                 noscript_visible: text.includes('The interactive run story needs JavaScript'),
                 static_canvas: !!document.querySelector('#atlas-canvas svg'),
                 shell_display: getComputedStyle(document.querySelector('#atlas-story .page')).display,
+                canvas_nodes: nodes.length,
+                canvas_nodes_visible: visible,
               };
             }"""
         )
@@ -114,6 +122,8 @@ def check(widths, url: str) -> dict:
             fail("JS disabled: the static Atlas canvas is missing")
         if out["js_off"]["shell_display"] != "none":
             fail("JS disabled: the dead player shell is still visible")
+        if out["js_off"]["canvas_nodes_visible"] <= 0:
+            fail("JS disabled: the static canvas final frame has no visible nodes")
         browser.close()
     return out
 
