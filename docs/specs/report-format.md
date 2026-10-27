@@ -6,9 +6,10 @@ Scope: feature
 
 **Status:** proposed (design lock for the `polish-report` program)
 **Owns:** the contract for every human/agent-facing artifact Perfpal emits into `perfpal-report/` —
-roles, rank keys, formatting, Atlas composition, and display scaling.
+roles, rank keys, formatting, Atlas composition, display scaling, and the in-report Atlas story
+(ADR-0014).
 **Does not own:** the metrics schema (`docs/schema/metrics.schema.v1.8.json`), the analyzer, or the
-Atlas story companion (ADR-0012 — stays out of the report).
+standalone prototype player in `sim/` (evidence/reference only).
 
 ## 1. Principles
 
@@ -34,7 +35,7 @@ Atlas story companion (ADR-0012 — stays out of the report).
 | `agent-actions.json` | agents / tools | complete machine action list + profile top 100 (`profile_queue_cap`) | actions uncapped; profile 100 | complete action list |
 | `agent-report.md` | LLM / human triage | bounded digest: top 25 actions, per-rule rollup, top 25 profile rows, limits | 25 / 25 / 100 | no (digest) |
 | `report.md` | human | narrative report + Atlas summary + methodology; **no full findings appendix** | summary caps named | no |
-| `report.html` | human | designed Atlas-first page (self-contained, one fixed script) | summary caps named | no |
+| `report.html` | human | designed Atlas-first page + always-on story (self-contained; fixed report script + fixed story script + inline JSON data) | summary caps named | no |
 | `findings-detail.html` | human | **canonical complete human detail**: ranked actions + all findings, filterable | none | human detail |
 | `findings-detail.md` | human / diffing | optional plain-text mirror; keep only while a consumer exists | none | no |
 | `profile-queue.{md,html}` | human | complete KV3 function list (cost-ranked, honest badges) | none | KV3 detail |
@@ -120,19 +121,22 @@ charts stay as additions; they must not replace a branch block.
 | hero | full-width canvas (fluid; rail below or beside at wide widths) |
 | inline drills | inline collapsible sections **or** the existing separate pages with a prominent link block — content-equivalent, decided in H1 |
 
-**Story integration (founder decision 2026-10-27).** The interactive story is **included in the
-report**, superseding ADR-0012 Decision 5. Step 0 must record a new ADR naming: the second fixed
-script (or one merged fixed script), the inline data channel, the redefined F6 (story-off vs
-story-on byte-identity no longer applies), the size/first-paint budget, the JS-disabled static
-fallback, and `--story` semantics. Preconditions (ADR-0012 D4 + oracle): a self-contained player
-(no fetch/HTTP), scoped playback (reduced motion, print, 1280 no-hscroll, double-render equality),
-and a measured budget. If a precondition fails, fall back to a self-contained `story.html` linked
-from the report by a **constant pointer** (preserves A12/F6) and record the blocker — do not ship a
-fetch-based report.
-
-Constraints: **A12 as amended** — fixed report script + fixed story script/data channel, no
-fetch/HTTP, no eval; story data inline; JS-disabled usable via a static fallback; offline; page-height
-budget re-baselined only with the founder's approval.
+**Story integration (ADR-0014; founder decision 2026-10-27).** The interactive story is **always
+embedded** in `report.html`; ADR-0012 Decision 5 is superseded. The amended A12 script contract is
+exactly three elements: the unchanged fixed `REPORT_SCRIPT`, one fixed `STORY_SCRIPT`, and one
+inline `<script type="application/json">` data block. The player is self-contained (no fetch/HTTP,
+no eval/`Function`, no timers/randomness, no `innerHTML`), scoped under `#atlas-story`, starts at
+the final frame under reduced motion, prints the final frame, and works from `file://`. The JS-off
+fallback is the complete static Atlas canvas (canonical final frame) plus a `<noscript>` beat
+narrative and drill links — no second SVG, no raster. The story payload is projected once in Rust
+from the typed document/Atlas blocks; `sim/` remains the evidence prototype. `--story` no longer
+gates the page; it only emits `atlas-layout.json` and must leave every shared artifact byte-identical.
+F6 is redefined as flag purity (F6a), double-render identity (F6b) and inline-data integrity (F6c).
+Measured budget (1440×900, `file://`, median of 3): `report.html` ≤ 384 KiB at hyperfine
+(134 KB baseline, 108 ms FCP), ≤ 320 KiB at cJSON (105 KB, 128 ms), ≤ 512 KiB at the 3k fixture
+(109 KB, 108 ms); story-on FCP ≤ 300 ms (≤ 400 ms at 3k). Any breach triggers the explicit
+fallback: a self-contained `story.html` linked by a constant pointer, with the blocker recorded in
+ADR-0014. Do not ship a fetch-based report.
 
 ## 6. Resolution and display scaling
 
@@ -164,7 +168,10 @@ canvas at 868 px, so most of the screen is empty and the type reads small at 100
 ## 7. Invariants (must not break)
 
 - Schema stays 1.8 unless a deliberate contract change is approved (prefer none).
-- A12 as amended: fixed report script + fixed story script/data channel; no fetch/HTTP, no eval; story data inline; JS-disabled static fallback.
+- A12 as amended (ADR-0014): exactly three script elements in `report.html` — the unchanged fixed
+  `REPORT_SCRIPT`, the fixed `STORY_SCRIPT`, and one inline `application/json` data block; no
+  fetch/HTTP, no eval/`Function`, no timers/randomness; story data inline; JS-disabled static
+  fallback (canonical canvas + `<noscript>` narrative); `--story` changes no shared artifact.
 - No network/external assets; no telemetry.
 - Byte-determinism: repeated runs are byte-identical on deterministic surfaces.
 - Output-contract §2 layout: fixed filenames; any removal/merge is an explicit contract change with
@@ -187,10 +194,11 @@ canvas at 868 px, so most of the screen is empty and the type reads small at 100
 
 ## 9. Open decisions (H1)
 
-- **Decided (founder, 2026-10-27): include the interactive story in-report.** Step 0 records the ADR
-  amendment and the fallback condition (self-contained `story.html` + constant link if a precondition
-  fails). This spec covers the report blocks plus the in-report story.
-- Inline drill sections vs the existing separate drill pages (content-equivalent).
+- **Decided (founder, 2026-10-27; ADR-0014): include the interactive story in-report, always
+  embedded.** `--story` is layout-artifact-only and must not change shared artifacts. The fallback
+  (self-contained `story.html` + constant link) is explicit if a precondition or budget fails.
+- Inline drill sections vs the existing separate drill pages (content-equivalent): **decided in H1 —
+  keep the separate pages plus a prominent links block** (`answer`/`links` blocks link them).
 - Rail placement at wide widths (below the full-width graph vs alongside).
 - Keep or drop `findings-detail.md` (needs a named consumer).
 - Keep or drop the shipped schema copy.

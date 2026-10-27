@@ -23,7 +23,7 @@ perfpal-report/
 ├── metrics.json              # raw machine-readable data (schema v1.8)
 ├── metrics.schema.v1.8.json  # byte-copy of the exact schema for this schema_version
 ├── report.md                 # human-readable report (bounded: groups + links only, zero per-finding rows)
-├── report.html               # static self-contained HTML sibling (Atlas map + Explorer; one fixed <script>; groups only)
+├── report.html               # static self-contained HTML sibling (Atlas map + seven parity blocks + always-on story; fixed report/story scripts + inline JSON data; groups only)
 ├── findings-detail.md        # uncapped per-finding Markdown detail + ranked action list (C-split companion to report.md §4/Appendix C)
 ├── findings-detail.html      # uncapped per-finding HTML tables + ranked action list (companion to report.html #findings)
 ├── profile-queue.md          # complete cost-ranked function list (KV3 drill companion)
@@ -51,7 +51,21 @@ Layout rules:
 - **Bundled-schema `$id`.** The `$id` inside the schema copy is the canonical URI, not the local filename — a mismatch between `$id` and filename is expected, not corruption.
 - **Paths.** All file paths in any artifact are repo-relative POSIX paths exactly as emitted in `metrics.json`; `scan.root_path` itself is recorded verbatim as given to the CLI (may be absolute) and is rendered as provenance only. `report.md` and chart labels reuse these paths verbatim — no path rewriting. Paths, titles, and messages are escaped when embedded in Markdown so metacharacters in scanned filenames cannot inject links or formatting.
 - **Discovery and language tokens.** The closed language vocabulary is `c`, `js`, `python`, `rust`, `ts`, `tsx`, following the grammar boundary: `.c`/`.h` → `c`; `.js`/`.jsx`/`.mjs`/`.cjs` → `js` (`.jsx` stays `js` because the JS grammar embeds JSX); `.py`/`.pyi` → `python`; `.rs` → `rust`; `.ts`/`.mts`/`.cts` → `ts`; `.tsx` → `tsx`; declaration-only `.d.ts`/`.d.mts`/`.d.cts` are skipped. Discovery is language-blind at directory level and skips `node_modules`, `bower_components`, `dist`, `build`, `out`, and `coverage`; JS/TS files named `*.min.js`/`*.min.mjs`/`*.min.cjs`/`*.bundle.js`/`*.min.ts`/`*.min.mts`/`*.min.cts` (seven suffixes) or larger than **2 MiB** are also skipped. Skips are silent and deterministic (path/metadata-based, no content sniffing); C/Rust/Python files beneath a skipped directory are no longer discovered (documented behavior change, `js-ts` spec acceptance criterion 6).
-- **Atlas page.** `report.html#map` is the shipped human map (Atlas): a key-metrics strip above a graph-only entry-flow canvas, a right-hand detail rail, then four designed below-graph charts (weight, blast radius, file detail, coverage/links). The page shape is state-unconditional; the canvas draws the default-tier **structural** call graph (`LOW name-based + MEDIUM semantic`), never a runtime claim. The page links `atlas-weight.html`, `atlas-q2.html`, the complete action/profile drills, and the LLM-facing `agent-report.md` / `agent-actions.json`. Contract: `docs/specs/atlas-layout.md`, `docs/specs/atlas-metrics.md`, `docs/specs/atlas-feature.md`.
+- **Atlas page.** `report.html#map` is the shipped human map (Atlas): a key-metrics strip above a
+  full-width graph-only entry-flow canvas (the detail rail sits beside the canvas at 1440 px and
+  below it at ≥1600 px), then the seven restored branch blocks (answer, ranked actions, weight,
+  blast, file cards, noise/confidence, links) and four designed below-graph charts (weight, blast
+  radius, file detail, coverage/links). The page shape is state-unconditional; the canvas draws the
+  default-tier **structural** call graph (`LOW name-based + MEDIUM semantic`), never a runtime
+  claim. Below the charts sits the **always-on Atlas story** (ADR-0014): one fixed `STORY_SCRIPT`
+  and one inline `application/json` payload, no fetch/HTTP, no eval, reduced-motion/print at the
+  final frame, JS-off fallback to the static canvas plus a `<noscript>` beat narrative. The amended
+  A12 contract allows exactly three script elements (the unchanged fixed `REPORT_SCRIPT`, the fixed
+  `STORY_SCRIPT`, the inline JSON block); `--story` only emits `atlas-layout.json` and changes no
+  shared artifact. The page links `atlas-weight.html`, `atlas-q2.html`, the complete action/profile
+  drills, and the LLM-facing `agent-report.md` / `agent-actions.json`. Contract:
+  `docs/specs/atlas-layout.md`, `docs/specs/atlas-metrics.md`, `docs/specs/atlas-feature.md`,
+  `docs/adr/ADR-0014-in-report-atlas-story.md`.
 
 ## 3. File naming & stability
 
