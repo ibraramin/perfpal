@@ -4,6 +4,7 @@
 //! script elements (fixed REPORT_SCRIPT + fixed STORY_SCRIPT + inline JSON),
 //! a `<noscript>` narrative, and no banned executable APIs.
 
+#[allow(dead_code)]
 mod atlas_fixtures;
 
 use atlas_fixtures::application;
