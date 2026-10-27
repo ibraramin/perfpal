@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "polish-report H1 code-complete 2026-10-27 (code 2eeca42); final Q1/Q2 requirements-lane sign-off + close pending; no push/tag.",
+  "current_phase": "polish-report H1 DONE 2026-10-27; panel R1/R2/Q1/Q2/R3 APPROVED; H2 next; no push/tag.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 2,
@@ -21,6 +21,11 @@
       "id": "D-pf-277",
       "status": "live",
       "title": "POLISH-REPORT H1 IMPLEMENTATION COMPLETE 2026-10-27: seven branch blocks restored + full-width hero + always-on in-report Atlas story (ADR-0014; A12 amended: 3 scripts, inline JSON, no fetch/eval, JS-off canvas+noscript, S4 details closed, --story layout-only, F6a/b/c); schema 1.8/no deps; gates+vision green; panel round 2 changes requested on JS-off counts/stop reason, fixes applied; final panel/close pending; H2 next; no push/tag."
+    },
+    {
+      "id": "D-pf-278",
+      "status": "live",
+      "title": "POLISH-REPORT H1 CLOSED 2026-10-27: code 2eeca42; panel R1/R2/Q1/Q2/R3 APPROVED; full gate 6/6 @db29612; final4 budget 333,544/132, 264,807/136, 510,282/164; story gate 304/304+3k; vision 1440/3072 PASS-WITH-NITS, JS-off PASS; schema 1.8/no deps; H2 next; no push/tag."
     }
   ],
   "open_risks": [

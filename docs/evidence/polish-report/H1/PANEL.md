@@ -17,11 +17,11 @@ Date: 2026-10-27 · Round-1 tree: code `8cf425d`, state `7dee471`
 - R1b counts: **APPROVED** — complete drawn-slice count (`trust.loopBearingFunctions`), goldens
   7/15/15/20/26/2 match the profile queues.
 - R2 contract/security: **APPROVED**.
-- R3 stop reason: changes addressed in `2eeca42` (partial/all-test/single-file are notes, not the
-  primary reason); final scoped confirmation pending.
-- Q1 truth: 3k FCP corrected to 164 ms in docs; spec §9/A-pf-133 fixed; story gate @89c7123;
-  H1 status set to implementation-complete/final-panel-pending; final confirmation pending.
-- Q2 evidence: final4 budget/report-check @2eeca42; full gate 6/6 @db29612; story gate @89c7123;
-  vision JS-on 1440/3072 unchanged; final confirmation pending.
+- R3 stop reason: **APPROVED** — primary reason + notes; unit test covers
+  normal/capped/library/partial/allTest/singleFile; cJSON partial-parse fixed in `2eeca42`.
+- Q1 truth: **APPROVED** — spec §9/A-pf-133/status corrected; 3k FCP 164 ms; no remaining FAIL.
+- Q2 evidence: **APPROVED** — final4 budget/report-check @2eeca42; full gate 6/6 @db29612;
+  story/vision coverage accepted; no blocking evidence gap.
+- **Panel verdict: APPROVED (R1b / R2 / Q1 / Q2 / R3).**
 
 Final full gate: `docs/evidence/polish-report/H1/gate.txt` @db29612 (code 2eeca42). No push/tag.

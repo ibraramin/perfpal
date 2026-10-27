@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Task
-**polish-report H1 implementation complete 2026-10-27; final panel/close pending.** `report.html` now restores all seven pre-merge branch blocks
+**polish-report H1 DONE 2026-10-27.** `report.html` now restores all seven pre-merge branch blocks
 (answer, actions, weight, blast, cards, noise, links) plus the full-width hero (rail beside at 1440,
 below at ≥1600), and carries the **always-on Atlas story** (ADR-0014): one fixed report script, one
 fixed story script and one inline JSON payload (three script elements; A12 as amended), no
@@ -12,16 +12,16 @@ Evidence: `docs/evidence/polish-report/H1/{gate.txt,report-check.txt,budget.txt,
 `docs/evidence/atlas-sim/GATE.txt` (304/304, 3k 44/44, verdict PASS). Full gate: fmt/clippy/test/
 deny/semantic all exit 0. Budget: hyperfine 333,544 B/132 ms, cJSON 264,807 B/136 ms, 3k
 510,282 B/164 ms — inside ADR-0014 ceilings. Vision: 1440/3072 PASS-WITH-NITS, JS-off PASS.
-Panel: round 1 returned R2 APPROVED and R1/Q1/Q2/R3 CHANGES_REQUESTED. The JS-off counts now use the
-complete drawn-slice loop count and the stop reason is explicit; round-2 verdicts are appended in
-`PANEL.md` at close.
+Panel: R1/R2/Q1/Q2 + fresh R3/R1b **APPROVED**; round-2 verdicts are in `PANEL.md`.
 **No push, no tag.**
 
 ## Recent Decisions
 - **D-pf-277 (live, 2026-10-27):** H1 implementation complete — seven blocks + full-width hero +
   always-on in-report story (ADR-0014; A12 amended; F6a/b/c); schema 1.8/no deps; gates + vision
-  green; panel round 2 changes requested on the JS-off counts/stop reason; fixes applied; final
-  panel/close pending; H2 next.
+  green; panel approved after the JS-off counts/stop-reason fixes.
+- **D-pf-278 (live, 2026-10-27):** H1 **CLOSED** — panel R1/R2/Q1/Q2/R3 approved; full gate 6/6
+  @db29612; final4 budget 333,544/132, 264,807/136, 510,282/164; story gate 304/304+3k; vision
+  1440/3072 PASS-WITH-NITS, JS-off PASS; H2 next; no push/tag.
 - **D-pf-276 (live):** M3 done — the merge train closed at v0.4.0/schema 1.8.
 - **D-pf-251 (live):** F treemap remains undecided; keep W1.
 - **ADR-0014** supersedes ADR-0012 D5 for the in-report decision; ADR-0012 remains the companion
@@ -29,8 +29,8 @@ complete drawn-slice loop count and the stop reason is explicit; round-2 verdict
 - Archived decisions live in `state/archive/ledger.jsonl` (D-pf-249 pointer).
 
 ## In Progress
-- H1 implementation is complete; the final panel/close is in progress. The tree is clean at the current
-  evidence commit. **No push, no tag** — both remain founder-gated.
+- Nothing in flight. H1 is closed on `main` at the close commit. **No push, no tag** — both remain
+  founder-gated.
 
 ## Next
 1. **polish-report H2 — responsive scale & cross-width acceptance:** fluid canvas/charts/viewBox,

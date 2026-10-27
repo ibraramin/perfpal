@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   zero XHR/fetch and no horizontal scroll at 1280/1440. F6 is redefined as F6a flag purity / F6b
   double-render identity / F6c inline-data integrity; gates per the ADR-0014 §Gates (full `cargo`
   suite, semantic feature gate, `sim/gate.sh` 304/304 and 3k scale 44/44). Vision: 1440/3072
-  PASS-WITH-NITS, JS-off PASS; review-panel round-2 verdicts are appended in `PANEL.md` at close.
+  PASS-WITH-NITS, JS-off PASS; review panel **APPROVED** (R1/R2/Q1/Q2 + fresh R3).
 
 ### Pending
 - **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002
