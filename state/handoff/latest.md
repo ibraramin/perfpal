@@ -1,127 +1,53 @@
-# Handoff — Merge Train M3 finalization (`main` @ v0.4.0; 2026-10-27)
+# Handoff — polish-report H1 code-complete; final requirements sign-off pending (`main` @ e684650; 2026-10-27)
 
-**Updated:** 2026-10-27
-**Repo:** `/home/shafin/Opencode/Perfpal`
-**Session:** merge-train M3 — finalize the three-line merge on `main` (plan `merge-train` / M3)
-**Verdicts:** `@reviewer` **APPROVED** (R1 correctness; R2 contract/determinism/security) ·
-`@requirements-reviewer` **APPROVED** (Q1 verbatim scope, round 2; Q2 acceptance/evidence, round 2) ·
-fresh confirmation **APPROVED** (R3 end-to-end). Zero blocking findings.
+**Objective:** complete H1 of `polish-report` — restore the seven pre-merge Atlas blocks, full-width hero,
+and the always-on in-report Atlas story (ADR-0014; A12 amended), with tests/goldens/budget/vision.
+**Phase/plan:** `polish-report` H1 · code **2eeca42** · evidence **e684650** · schema 1.8 · no new deps.
+**No push, no tag.**
 
-**North-star:** `docs/NORTH-STAR.md` — the birdseye map is the core feature. M3 closes the merge
-train that landed JS/TS and the Atlas Story **companion** on `main` at **v0.4.0** without changing the
-report, the map, the schema or A12. **No drift:** no in-report graduation, no A2/ship claim, no
-push/tag.
+## Delivered
 
-## Objective
-
-Verify all four feature lines are ancestors of `main`; remove the agent-report worktree (reversibly);
-prune merged branches (worktree registrations), run the full CI gate + story gate, verify
-**0.4.0**/schema **1.8**, CHANGELOG/README, hot state ≤8 KB and clean status; update state/handoff
-(EOL); no push/tag without founder go.
-
-## Phase / plan
-- Plan: `merge-train` · M3 · status: **done** (M1, M2, M3 all complete)
-- Previous milestones: M1 `158c7b0` (v0.3.0) · M2 `646597c` (v0.4.0)
-- Task spec: `docs/specs/merge-train.md` (R1–R10)
+- **ADR-0014** (first commit `901db22`): supersedes ADR-0012 D5; amended A12 = fixed `REPORT_SCRIPT` +
+  fixed `STORY_SCRIPT` + inline JSON; no fetch/XHR/eval/HTTP; offline; JS-off canvas + `<noscript>`;
+  `--story` layout-only; F6a/b/c; budget; oracle counter-case/fallback.
+- **Seven parity blocks + full-width hero** (`c57ce8b`): answer, actions (top 3 KV1), weight+chart,
+  blast+chart, cards, noise, links; rail beside 1440 / below ≥1600; four charts kept; drills linked.
+- **Always-on story** (`f8be249`, `2eeca42`): Rust payload projection, inline data, scoped CSS,
+  JS-off shell hidden + 19/19 static nodes visible, S4 whole-repo detail as a closed `<details>`.
+- **Counts/stop reason** (`0bfb386`, `2eeca42`): `trust.loopBearingFunctions` from
+  `doc.stats.functions` across drawn paths (complete, not top-3; goldens 7/15/15/20/26/2);
+  `trust.io.rows`; `stop_state` names the reason and keeps partial/all-test/single-file as notes.
+- Docs/contracts/README/CHANGELOG/specs updated to the amended A12; spec §9 rail decision recorded.
 
 ## Verification (claim → evidence)
 
-| Claim | Command | Observed result | Exit |
-|---|---|---|---|
-| All four lines are ancestors of `main` | `git merge-base --is-ancestor <b> main` for `feat/agent-report`, `fix/agent-report-regen`, `feat/js-ts`, `feat/atlas-sim` | all four printed `ANCESTOR` | `0` |
-| Agent-report worktree removed (reversibly) | `mv /home/shafin/Opencode/Perfpal-agent-report /home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27 && git worktree prune` | archive present in trash; `git worktree list` shows main + atlas-sim + js-ts only | `0` |
-| Branch refs retained (no deletions) | `git branch -vv` | `feat/agent-report`, `fix/agent-report-regen`, `feat/js-ts`, `feat/atlas-sim` all present | `0` |
-| Format | `cargo fmt --all -- --check` | clean | `0` |
-| Lint | `cargo clippy --locked --all-targets -- -D warnings` | clean | `0` |
-| Tests | `cargo test --locked` | 1,090 total (1,089 passed, 1 ignored) / 0 failed | `0` |
-| Licenses | `cargo deny check licenses` | clean; five `license-not-encountered` allowance warnings (all allowlisted) | `0` |
-| Semantic lint | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | clean | `0` |
-| Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 1,092 total (1,091 passed, 1 ignored) / 0 failed | `0` |
-| Full CI gate aggregate | `docs/evidence/merge-m3/gate.txt` at `2c01c17` | 6/6 commands `EXIT=0`; **2,180 passed / 0 failed / 2 ignored**; `OVERALL_FAIL=0` | `0` |
-| Story gate on the tree at `978a623` (three docs/evidence commits before HEAD) | `bash sim/gate.sh` | `verdict=PASS`; 1,089 tests passed (1 ignored); 304/304 checks; 3k scale PASS; `worktree_dirty_zero` pass | `0` |
-| Version / schema | `./target/debug/perfpal --version` | `perfpal 0.4.0 (metrics schema 1.8)` | `0` |
-| Schema copies | `cmp src/schema/metrics.schema.v1.8.json docs/schema/metrics.schema.v1.8.json` | identical | `0` |
-| Cargo versions | `grep version Cargo.toml`; `Cargo.lock` | both `0.4.0` | `0` |
-| CHANGELOG | `grep '^## \[0.4.0\] - 2026-10-27'` / `[0.3.0]` | one each | `0` |
-| README | `grep` markers | `Beta — 0.4.0`, metrics schema 1.8, Atlas Story companion, JS/TS sections present | `0` |
-| Hot state | `wc -c state/session-state.json` | **4,884 B** (≤ 8,192) | `0` |
-| State + ledger validity | `jq` / `json.loads` on hot state and every ledger line | valid; 753 ledger lines | `0` |
-| No duplicate hot IDs | `jq group_by` on decisions/risks/actions/blockers | `[]` | `0` |
-| ADR numbers unique | `ls docs/adr/` | `0001`–`0013`, one file each | `0` |
-| Byte-determinism guard | `grep -c preserve_order Cargo.lock` | 0 | `0` |
-| No tag | `git tag --points-at HEAD` | empty | `0` |
-| Clean status (post-close) | `git status --porcelain` after the close commit | empty; ancestry/worktree/tag/state/version outputs in `docs/evidence/merge-m3/verify.txt` | `0` |
-| Post-gate diff scope | `git diff --name-only 2c01c17..HEAD` | 18 paths, all docs/evidence/state; no `src/`, Cargo, schema, `sim/data-*.json` or test file — the gates remain valid for the code tree (`verify.txt` §7) | `0` |
+| Claim | Command/evidence | Result |
+|---|---|---|
+| Full gate | `docs/evidence/polish-report/H1/gate.txt` @db29612 (code 2eeca42) | 6/6 EXIT=0 |
+| Budget | `budget.txt` @2eeca42, final4 | hyperfine 333,544 B/132 ms; cJSON 264,807/136; 3k 510,282/164 — PASS |
+| Report acceptance | `report-check.txt` @2eeca42 | 1280/1440/3072 no hscroll; 3 scripts; one static SVG; 0 dynamic requests; 19/19 JS-off nodes; final summary |
+| Story gate | `docs/evidence/atlas-sim/GATE.txt` @89c7123 | 304/304, 3k 44/44, verdict PASS (final code 2eeca42 is report-only; not re-run after it) |
+| Vision | `docs/evidence/polish-report/H1/VISION.md` @8cf425d | 1440/3072 PASS-WITH-NITS, JS-off PASS (final JS-off text changed; JS-on frames unchanged) |
+| Panel | `docs/evidence/polish-report/H1/PANEL.md` | R2/R1b APPROVED; R3/Q1/Q2 last CHANGES; fixes applied; final requirements-lane sign-off pending |
+| Clean/tag | `git status --porcelain` clean at e684650; `git tag --points-at HEAD` empty | no push/tag |
 
-Non-runnable evidence:
-- `docs/evidence/merge-m3/gate.txt` — full CI gate transcript at `2c01c17` (all exit 0).
-- `docs/evidence/merge-m3/verify.txt` — post-close verification transcript (ancestry ×4, worktree list,
-  branch refs, tag, version, hot-state bytes, state/ledger validity, duplicate-ID scan, clean status).
-- `docs/evidence/atlas-sim/GATE.txt` — story-gate transcript re-run at `978a623` (three docs/evidence
-  commits before HEAD)
-  (`verdict=PASS`).
-- `docs/evidence/atlas-sim/checks.json` — 304/304 DOM/story checks at `978a623`.
-- `docs/evidence/merge-m2/gate.txt`, `docs/evidence/merge-m2/resolutions.md` — M2 merge evidence.
-- `state/archive/ledger.jsonl` — cold record: `D-pf-275` archived, `A-pf-127` done, `PHASE-pf-004`.
+## Remaining (fresh session)
 
-## Deliverables (changed / added)
+1. **Final Q1/Q2 requirements-lane sign-off** on code `2eeca42` / `e684650`; if they accept, append
+   the final verdicts to `PANEL.md`. Optional scoped R3 confirmation of the partial-parse stop note.
+2. **Close:** update activeContext/state to final approved, write `close.txt` with
+   `git status --porcelain` + `git tag --points-at HEAD`, final docs/state commit. No push/tag.
+3. **H2** only after H1 is signed off.
 
-- `state/session-state.json` — M3 phase label; live decision `D-pf-276`; `A-pf-127` closed; M2
-  decision `D-pf-275` demoted to the cold ledger; **4,884 B**.
-- `state/archive/ledger.jsonl` — append-only: `D-pf-275` (archived), `A-pf-127` (done),
-  `PHASE-pf-004` (M3 record); 753 lines; valid JSONL.
-- `state/handoff/latest.md`, `docs/activeContext.md` — M3 close / EOL.
-- `docs/plans/merge-train.md` — M3 result; plan marked done.
-- `CHANGELOG.md` — M3 pending item removed; `[0.4.0]` **Finalization** entry added.
-- `docs/evidence/merge-m3/gate.txt` — full CI gate at `2c01c17`.
-- `docs/evidence/atlas-sim/{GATE.txt,checks.json,*.png}` — story-gate re-run at `978a623`.
-- Trash archive: `/home/shafin/Opencode/.trash/Perfpal-agent-report-2026-10-27` (outside the repo;
-  reversible; the git worktree registration was pruned). The archived copy retains a `.git` file that
-  points at the pruned admin dir — restore with `git worktree add`, or remove that file, if ever needed.
+## Uncommitted files at handoff
 
-## Decisions (live)
-- `D-pf-276` — MERGE-TRAIN M3 DONE: all four lines ancestors of `main`; agent-report worktree archived
-  (registration pruned; branch refs retained per the founder); full CI gate 2,180/0/2; story gate
-  re-run PASS at `978a623`; v0.4.0 / schema 1.8; clean status; no push/tag.
-- `D-pf-251` — F treemap remains undecided; no F code ships.
-- Story-line records are cold: `D-pf-267..274`, `A-pf-131/132`; M2 `D-pf-275` is now cold too.
+None (tree clean at `e684650`); no push/tag.
 
-## Risks (open)
-- `R-pf-063` (high) — MINISIGN secrets must exist/match before tag.
-- `R-pf-067` (high) — EULA/PRIVACY contact placeholder before beta tag.
-- `R-pf-105` (medium) — V4 shipped-key recall; V7 re-triage.
-- `R-pf-106` (medium) — static cost cannot surface per-byte/per-call Q3 leaves.
-- `R-pf-108` (high) — structural LOW/MEDIUM edges on the hero canvas (option A reversal trigger).
-- Story-specific accepted limits (cold, `state/tracks/atlas-sim/handoff.md`): fetch/HTTP-only
-  companion, no `perfpal story` entry, 12-row queue, 24/5 scenes, synthetic 3k fixture, F8 deferred.
+## Cautions
 
-## Blockers
-- `B-pf-001` — founder contact address for EULA/PRIVACY before tag.
-- `B-pf-002` — repo secrets `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` before tag.
-
-## Next actions
-1. `A-pf-133` — story packaging: self-contained companion (inline data, no `fetch`/server) +
-   `perfpal story <repo>` before the §5 founder session; F8/A2 story read deferred; no in-report
-   graduation (A12 unchanged).
-2. `A-pf-108`/`A-pf-125` — V7 re-triage / post-beta map work; F decision (`D-pf-251`).
-3. Publish gate (`B-pf-001`/`B-pf-002`) — founder-owned; tag/publish only on explicit founder go.
-4. Pre-existing docs drift (found by the M3 panel, **not** introduced here; fix before publish):
-   `README.md:43` still shows `gh release download v0.2.0-beta.1` (unpublished; only `v0.1.0` is
-   tagged), `docs/roadmap.md:71` still says js-ts "merge pending founder approval", and
-   `docs/cross-platform-verification.md:72` still expects `(metrics schema 1.3)`.
-
-## Uncommitted files
-
-```
-(none — `a636080` is the last evidence commit; this verdict record is the final docs commit)
-```
-
-## Commits (this session)
-- `978a623` — docs(evidence): M3 full CI gate on main at 2c01c17 (fmt/clippy/test/deny/semantic green)
-- `c84a3b2` — docs(evidence): story gate re-run at 978a623 (PASS; 1,089 tests, 304/304, scale PASS)
-- `a705c3c` — docs(merge-train): M3 close — v0.4.0 finalization, EOL state, plan done
-- `a636080` — docs(evidence): M3 post-close verification at a705c3c
-- final verdict commit (this commit) — docs(merge-train): record the APPROVED M3 panel verdicts
-
-**Resume in a fresh session:** the merge train is closed on `main` at v0.4.0; next work is `A-pf-133`
-(story packaging) or the founder-gated publish path. No push/tag has been made.
+- The final story gate transcript is at `89c7123`; the last code change (`2eeca42`) is report-only and
+  the full gate at `db29612` covers it. If a literal final-tree `sim/gate.sh` is required, re-run it.
+- The VISION record predates the JS-off summary/stop text (`2eeca42`); the 1440/3072 JS-on visuals are
+  unchanged. Re-read the JS-off story frames if the vision gate is interpreted as covering the text.
+- The requirements family has no final APPROVE after the last text fix; do not claim H1 signed off
+  until Q1/Q2 return.
