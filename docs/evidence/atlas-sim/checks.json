@@ -1117,7 +1117,7 @@
     },
     {
       "check": "cjson: S3 trust keyframe",
-      "detail": "149729 bytes",
+      "detail": "149698 bytes",
       "ok": true
     },
     {
@@ -1242,7 +1242,7 @@
     },
     {
       "check": "cjson: play advances the clock",
-      "detail": "353",
+      "detail": "351",
       "ok": true
     },
     {
@@ -1377,7 +1377,7 @@
     },
     {
       "check": "no-forward-path: state keyframe",
-      "detail": "68739 bytes",
+      "detail": "68741 bytes",
       "ok": true
     },
     {
