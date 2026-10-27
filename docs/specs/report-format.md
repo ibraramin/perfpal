@@ -141,7 +141,9 @@ ADR-0014. Do not ship a fetch-based report.
 ## 6. Resolution and display scaling
 
 **Shipped behaviour (H2).** The report is responsive by default. `body` uses a fluid max width
-(`min(100%, 100vw)`) and fluid padding; `#map` keeps its full-bleed band with fluid gutters; the
+(`min(100%, 100vw)`) and fluid padding; `#map` keeps its full-bleed band with fluid gutters
+anchored to the page body (never `100vw`), so a classic scrollbar cannot create a horizontal
+overflow; the
 Atlas canvas stays `width:100%` with the preserved `868`-wide viewBox; the four Atlas chart blocks
 fill their grid; and the map/story chrome uses a `clamp()` type ramp anchored so **1440 px renders
 the H1 sizes** and **3072 px caps at 1.5×**. The always-on Atlas story is full-width too: `.page`,

@@ -1366,6 +1366,17 @@ fn report_width_changes_only_the_layout_surface() {
 // ---------------------------------------------------------------------------
 
 #[test]
+fn report_full_bleed_uses_a_scrollbar_safe_gutter() {
+    let html = render_html(&base_doc(), &[]);
+    assert!(html.contains("--page-gutter:clamp(1rem,calc(var(--report-max)*0.016),2.5rem)"));
+    assert!(html.contains("margin:0 calc(-1*var(--page-gutter,1rem))"));
+    assert!(
+        !html.contains("calc(50% - 50vw)"),
+        "a 100vw breakout reintroduces the classic-scrollbar horizontal overflow"
+    );
+}
+
+#[test]
 fn enhancement_script_contains_no_banned_apis() {
     let mut doc = base_doc();
     doc.files = vec![file_entry("b.c", 30), file_entry("a.c", 10)];

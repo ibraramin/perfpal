@@ -177,6 +177,26 @@ def check_interactive(browser, url: str) -> dict:
             if final["kind"] != "summary":
                 fail(f"{key}: final beat is not the summary: {final}")
 
+            # Classic-scrollbar stress: shrink the root by a nominal 15 px
+            # scrollbar and prove the full-bleed band follows the body, not
+            # the viewport (the old `50vw` breakout overflowed here).
+            page.add_style_tag(content="html{width:calc(100% - 15px)}")
+            page.wait_for_timeout(100)
+            stress = page.evaluate(
+                """() => ({
+                  body_width: document.body.getBoundingClientRect().width,
+                  map_width: document.querySelector('#map').getBoundingClientRect().width,
+                  scroll_width: document.documentElement.scrollWidth,
+                  client_width: document.documentElement.clientWidth,
+                })"""
+            )
+            state["scrollbar_stress"] = stress
+            if stress["map_width"] > stress["body_width"] + 1:
+                fail(
+                    f"{key}: full-bleed band ignores the body width under a classic scrollbar "
+                    f"(map {stress['map_width']} > body {stress['body_width']})"
+                )
+
             out[key] = state
             page.close()
     return out

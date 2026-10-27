@@ -81,7 +81,7 @@ const STATIC_CSS: &str = r#".atlas-svg{background:#fbf9f4}
 /// First-page chrome + graph CSS. Every selector is scoped to `#map` so the
 /// warm band never touches the white global report; the brief keeps its own
 /// scoped styles. Sans chrome, mono identifiers/figures.
-const ANIMATION_CSS: &str = r#"#map{box-sizing:border-box;background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--atlas-fs-8:clamp(8px,calc(4.4704px + .0024512*var(--report-max,100vw)),12px);--atlas-fs-8-5:clamp(8.5px,calc(4.7498px + .0026044*var(--report-max,100vw)),12.75px);--atlas-fs-9:clamp(9px,calc(5.0292px + .0027576*var(--report-max,100vw)),13.5px);--atlas-fs-9-5:clamp(9.5px,calc(5.3086px + .0029108*var(--report-max,100vw)),14.25px);--atlas-fs-10:clamp(10px,calc(5.588px + .003064*var(--report-max,100vw)),15px);--atlas-fs-11:clamp(11px,calc(6.1468px + .0033704*var(--report-max,100vw)),16.5px);--atlas-fs-12:clamp(12px,calc(6.7056px + .0036768*var(--report-max,100vw)),18px);--atlas-fs-21:clamp(21px,calc(11.7348px + .0064344*var(--report-max,100vw)),31.5px);margin:0 calc(50% - 50vw);padding:8px clamp(12px,calc((var(--report-max,100vw) - 1408px)/2),96px);border-radius:0}
+const ANIMATION_CSS: &str = r#"#map{box-sizing:border-box;background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--atlas-fs-8:clamp(8px,calc(4.4704px + .0024512*var(--report-max,100vw)),12px);--atlas-fs-8-5:clamp(8.5px,calc(4.7498px + .0026044*var(--report-max,100vw)),12.75px);--atlas-fs-9:clamp(9px,calc(5.0292px + .0027576*var(--report-max,100vw)),13.5px);--atlas-fs-9-5:clamp(9.5px,calc(5.3086px + .0029108*var(--report-max,100vw)),14.25px);--atlas-fs-10:clamp(10px,calc(5.588px + .003064*var(--report-max,100vw)),15px);--atlas-fs-11:clamp(11px,calc(6.1468px + .0033704*var(--report-max,100vw)),16.5px);--atlas-fs-12:clamp(12px,calc(6.7056px + .0036768*var(--report-max,100vw)),18px);--atlas-fs-21:clamp(21px,calc(11.7348px + .0064344*var(--report-max,100vw)),31.5px);margin:0 calc(-1*var(--page-gutter,1rem));padding:8px clamp(12px,calc((var(--report-max,100vw) - 1408px)/2),96px);border-radius:0}
 #map .atlas-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 #map .atlas-masthead{height:58px;box-sizing:border-box;display:flex;align-items:center;gap:14px;border-bottom:1px solid #d6d0c4}
 #map .atlas-brand{flex:0 0 244px;min-width:0}
@@ -263,7 +263,7 @@ body[data-report-width="1440"] #map .atlas-rail{flex:0 0 min(530px,34%);width:au
 body[data-report-width="1920"] #map .atlas-stage,body[data-report-width="2560"] #map .atlas-stage,body[data-report-width="3072"] #map .atlas-stage{flex-direction:column;align-items:stretch}
 body[data-report-width="1920"] #map #atlas-canvas,body[data-report-width="1920"] #map .atlas-rail,body[data-report-width="2560"] #map #atlas-canvas,body[data-report-width="2560"] #map .atlas-rail,body[data-report-width="3072"] #map #atlas-canvas,body[data-report-width="3072"] #map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}
 body[data-report-width="1920"] #map .atlas-rail-cards,body[data-report-width="2560"] #map .atlas-rail-cards,body[data-report-width="3072"] #map .atlas-rail-cards{grid-template-columns:repeat(4,minmax(0,1fr))}
-body[data-report-width]:not([data-report-width="auto"]) #map{margin-left:0;margin-right:0}"#;
+"#;
 
 // ---------------------------------------------------------------------------
 // Geometry

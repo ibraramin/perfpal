@@ -1784,8 +1784,8 @@ fn html_head(out: &mut String, doc: &MetricsDocument, width: ReportWidth) {
     out.push_str("<style>\n:root{--report-max:");
     out.push_str(width.css_max_width());
     out.push_str(
-        "}\n\
-         body{font-family:monospace,monospace;max-width:min(100%,var(--report-max));box-sizing:border-box;margin:2rem auto;padding:0 clamp(1rem,calc(var(--report-max)*0.016),2.5rem);color:#111;background:#fff}\n\
+        ";--page-gutter:clamp(1rem,calc(var(--report-max)*0.016),2.5rem)}\n\
+         body{font-family:monospace,monospace;max-width:min(100%,var(--report-max));box-sizing:border-box;margin:2rem auto;padding:0 var(--page-gutter);color:#111;background:#fff}\n\
          .table-scroll{overflow-x:auto;max-width:100%}\n\
          table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
          th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
