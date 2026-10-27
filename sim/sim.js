@@ -1415,6 +1415,11 @@
     $('#inspector-close').addEventListener('click', closeInspector);
 
     document.addEventListener('keydown', (event) => {
+      // Escape always closes the inspector, even when a control has focus.
+      if (event.key === 'Escape') {
+        closeInspector();
+        return;
+      }
       // In-report embedding (ADR-0014): only the focused story may consume
       // transport keys. The standalone player has no #atlas-story wrapper and
       // keeps the original page-wide shortcuts.
@@ -1435,8 +1440,6 @@
       } else if (event.key === 'Home') {
         event.preventDefault();
         reset();
-      } else if (event.key === 'Escape') {
-        closeInspector();
       } else if (SPEEDS[event.key]) {
         state.speed = SPEEDS[event.key];
         const select = $('#speed');
