@@ -155,3 +155,53 @@
 - `sim/index.html` · `sim/sim.js` · `sim/sim.css` · `sim/from-layout.py` · `sim/verify.py` · `sim/gate.sh`
 - `docs/evidence/atlas-sim/GATE.txt` · `docs/evidence/merge-m3/gate.txt`
 - Oracle counter-case: `ses_e83041a08ffeySV4Bsj8K42tul` (recorded in Context).
+
+## Addendum (2026-10-27) — H1 implementation record
+
+This addendum records what shipped in H1. It narrows, but does not weaken, the Decision contract.
+
+1. **`--story` semantics (Decision 1).** The story is always embedded. `--story` now only decides
+   whether `atlas-layout.json` is written; it must change no shared artifact. F6a asserts that with a
+   full artifact-set comparison (metrics masked for `scan.started_at` / `duration_ms` / `root_path`).
+2. **Data/integrity channel (Decision 4).** The Rust projection lives in
+   `src/reporter/atlas_story.rs` (`StoryBundle`, `build(doc, root)`); `render_html` builds the pure
+   bundle (`root = None`, named empty flow/purpose stubs) and the CLI builds the full bundle once.
+   The projection replaces `sim/from-layout.py` at runtime; the Python remains the evidence/prototype
+   generator. No new dependency: the `source` block carries **FNV-1a 64-bit** fingerprints
+   (`layoutFingerprint`, `metricsContentFingerprint`), not SHA-256. F6c checks both are 16 hex and
+   that the payload totals match the document.
+3. **Player reuse and the prototype (Decision 3).** `sim/sim.js` is the fixed `STORY_SCRIPT` and is
+   network-free (no `fetch`/XHR/`http://`/`eval`/`Function`). The standalone prototype supplies its
+   data through a small inline HTTP adapter in `sim/index.html` (the 3k scale harness copies only
+   `index.html`, `sim.css`, `sim.js`, so a separate loader file would 404). The report supplies an
+   inline JSON block and never fetches. `sim/sim.report.css` is generated from `sim/sim.css` by
+   `sim/scope-story-css.py` and scoped under `#atlas-story`; the standalone stylesheet is unchanged.
+4. **Keyboard scoping (Decision 6).** Transport keys (Space/arrows/Home/1–4) are handled only while
+   focus is inside `#atlas-story`; the rest of the report keeps normal scrolling/keys. The standalone
+   player retains page-wide shortcuts.
+5. **S4 whole-repo detail (Decision 9).** In-report, the player's S4 panels (scenes, profile queue,
+   trust accounting) are a **closed `<details>`** with an accessible summary; opening it restores the
+   full 1,191 px panel. Content is preserved, but the default story height is 996 px (canvas 718 px)
+   instead of 2,134 px. The standalone player keeps the section expanded. The report's own cards /
+   actions / noise blocks remain the primary surfaces; `profile-queue.html` stays the canonical
+   complete KV3 list.
+6. **Measured budget (Decision 8).** 1440×900, headless Brave, `file://`, median of 3, at
+   `c57ce8b` + H1 story:
+
+   | Fixture | `report.html` | Ceiling | FCP | FCP ceiling |
+   |---|---|---|---|---|
+   | hyperfine (`c516152`) | **334,062 B** | 393,216 B | **148 ms** | 300 ms |
+   | cJSON (`6d9f244`) | **264,311 B** | 327,680 B | **128 ms** | 300 ms |
+   | 3k fixture | **509,913 B** | 524,288 B | **132 ms** | 400 ms |
+
+   All within budget. Runtime smoke: `window.__sim.ready === true`, 19 nodes at hyperfine, final
+   beat reachable, **zero XHR/fetch**, no console errors, `scrollWidth == clientWidth` at 1280 and
+   1440. The pure `render_html` golden path also renders (2 nodes, no errors).
+7. **Page height (Decision 9).** At 1440: document **18,841 px** (map 3,821 + story 996 + explorer
+   8,999 + components/files/findings). At 3072: **20,739 px** (map 5,764 + story 996). With the S4
+   details open, add 1,138 px. The A8 first-page fold (answer bottom 427 px at 1440; 416 px at 3072)
+   is unchanged; the story is below the map. No horizontal scroll at 1280/1440/3072.
+8. **Residual / follow-up.** The story section is 1,400 px wide at 3072 while the hero canvas is
+   full-bleed 2,880 px; H2 owns the responsive width/type ramp. The player's S4 disclosure is a
+   report-only presentation difference from the standalone prototype. No schema, dependency,
+   `layout_version` or `flow_version` change.

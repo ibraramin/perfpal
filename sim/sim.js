@@ -8,7 +8,29 @@
 (() => {
   'use strict';
 
-  const SVG = 'http://www.w3.org/2000/svg';
+  const stageHost = document.getElementById('stage') || document.getElementById('story-stage-host');
+  const stageSource = stageHost && stageHost.tagName.toLowerCase() === 'svg'
+    ? stageHost
+    : document.querySelector('svg');
+  const SVG = stageSource ? stageSource.namespaceURI : undefined;
+
+  function createStage(host) {
+    const node = document.createElementNS(SVG, 'svg');
+    node.setAttribute('id', 'stage');
+    node.setAttribute('viewBox', '0 0 1400 718');
+    node.setAttribute('role', 'group');
+    node.setAttribute('aria-label', 'Entry-flow map with interactive file nodes');
+    host.append(node);
+    return node;
+  }
+
+  const stage = stageHost && stageHost.tagName.toLowerCase() === 'svg'
+    ? stageHost
+    : createStage(stageHost);
+
+  const inline = document.getElementById('perfpal-atlas-story-data');
+  if (inline) window.__PERFPAL_STORY__ = JSON.parse(inline.textContent);
+
   const DURATION = {
     boot: 1600,
     enter: 2200,
@@ -43,6 +65,7 @@
   };
 
   const dom = { nodes: new Map(), edges: [], edgeLabels: [], nodeTop: new Map() };
+  let source = {};
   let frame = null;
   let lastTick = 0;
 
@@ -101,7 +124,7 @@
 
   /* ---------------------------------------------------------------- beats */
 
-  function loopFunction(node) {
+  function advanceLoop(node) {
     const functions = [...node.functions]
       .filter((fn) => !fn.module && (fn.maxLoopDepth > 0 || fn.unknownTripLoops > 0))
       .sort((a, b) => b.cost - a.cost || a.line - b.line);
@@ -307,7 +330,7 @@
         focus: { node: node.id, edge: previous ? `${previous}->${node.id}` : null },
       });
 
-      const loop = loopFunction(node);
+      const loop = advanceLoop(node);
       if (loop) {
         beats.push({
           kind: 'loop',
@@ -706,7 +729,6 @@
 
   function renderGraph() {
     const data = state.data;
-    const stage = $('#stage');
     stage.replaceChildren();
     dom.nodes.clear();
     dom.edges = [];
@@ -1325,9 +1347,11 @@
   async function loadCase(id) {
     pause();
     const entry = state.cases.find((candidate) => candidate.id === id) || state.cases[0];
-    const response = await fetch(entry.file);
-    if (!response.ok) throw new Error(`could not load ${entry.file} (${response.status})`);
-    const data = await response.json();
+    if (!entry) throw new Error('no story case is available to load');
+    const data = source.cases
+      ? source.cases[entry.id]
+      : await source.loadCase(entry.file);
+    if (!data) throw new Error(`no story data for ${entry.id}`);
 
     state.caseId = entry.id;
     state.data = data;
@@ -1390,6 +1414,11 @@
     $('#inspector-close').addEventListener('click', closeInspector);
 
     document.addEventListener('keydown', (event) => {
+      // In-report embedding (ADR-0014): only the focused story may consume
+      // transport keys. The standalone player has no #atlas-story wrapper and
+      // keeps the original page-wide shortcuts.
+      const storyRoot = document.getElementById('atlas-story');
+      if (storyRoot && !storyRoot.contains(document.activeElement)) return;
       const tag = (event.target.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
       if (event.key === ' ') {
@@ -1423,9 +1452,14 @@
     state.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     wire();
     try {
-      const response = await fetch('data-index.json');
-      if (!response.ok) throw new Error(`could not load data-index.json (${response.status})`);
-      const index = await response.json();
+      source = window.__PERFPAL_STORY__ || {};
+      if (!source.index && typeof source.loadIndex !== 'function') {
+        throw new Error('no story data source: expected inline story data or a loader');
+      }
+      const index = source.index || await source.loadIndex();
+      if (!index || !Array.isArray(index.cases) || index.cases.length === 0) {
+        throw new Error('story index is missing or empty');
+      }
       state.cases = index.cases;
       fillCases(state.cases);
       await loadCase(state.cases[0].id);

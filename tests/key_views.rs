@@ -262,11 +262,12 @@ fn doc() -> MetricsDocument {
 
 fn map_section(html: &str) -> &str {
     // `#map` now nests the canvas/brief/drill sections, so the section ends
-    // where the Explorer section begins, not at the first `</section>`.
+    // where the sibling `#atlas-story` section begins (ADR-0014), not at the
+    // first `</section>`.
     let start = html.find("<section id=\"map\">").expect("#map");
     let end = html[start..]
-        .find("<section id=\"explorer\">")
-        .expect("#explorer after map");
+        .find("<section id=\"atlas-story\"")
+        .expect("#atlas-story after map");
     &html[start..start + end]
 }
 
@@ -327,6 +328,20 @@ fn atlas_page_orders_canvas_brief_blocks_then_explorer() {
     // No workspace figure / component table / chart stems in #map.
     assert!(!map.contains("data-chart="));
     assert!(!map.contains("Component index"));
+
+    // ADR-0014: the story section is a sibling after #map and before #explorer.
+    let story = html
+        .find("<section id=\"atlas-story\"")
+        .expect("#atlas-story present");
+    let explorer_start = html.find("<section id=\"explorer\">").expect("#explorer");
+    assert!(
+        html.find("<section id=\"map\">").expect("#map") < story && story < explorer_start,
+        "story must sit between #map and #explorer"
+    );
+    assert!(
+        html.contains("data-atlas-block=\"story\""),
+        "story block marker missing"
+    );
 
     let explorer = explorer_section(&html);
     for stem in [

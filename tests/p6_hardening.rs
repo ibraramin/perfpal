@@ -576,9 +576,11 @@ fn regenerate_goldens() {
             tree.tag
         );
         assert!(
-            html_text.matches("<script>").count() == 1
-                && html_text.matches("</script>").count() == 1,
-            "report.html (tree '{}') must contain exactly one fixed enhancement script block",
+            html_text.matches("<script").count() == 3
+                && html_text.matches("<script>").count() == 1
+                && html_text.matches("</script>").count() == 3,
+            "report.html (tree '{}') must contain the three ADR-0014 script elements \
+             (one bare fixed enhancement script + story script + inline JSON data)",
             tree.tag
         );
         // findings-detail.md carries the per-finding Location/Message lines

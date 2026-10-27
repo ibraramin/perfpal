@@ -147,6 +147,23 @@
   </div>
 </div>
 
+<!-- Prototype-only HTTP data source, inlined on purpose: the 3k scale harness
+     copies only index.html/sim.css/sim.js into its temporary site. The report
+     (ADR-0014) uses inline JSON and its fixed script has no fetch at all. -->
+<script>
+window.__PERFPAL_STORY__ = {
+  loadIndex: async () => {
+    const response = await fetch('data-index.json');
+    if (!response.ok) throw new Error(`could not load data-index.json (${response.status})`);
+    return response.json();
+  },
+  loadCase: async (file) => {
+    const response = await fetch(file);
+    if (!response.ok) throw new Error(`could not load ${file} (${response.status})`);
+    return response.json();
+  },
+};
+</script>
 <script src="sim.js"></script>
 </body>
 </html>

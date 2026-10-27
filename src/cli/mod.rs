@@ -243,11 +243,19 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // digraph), so consumers can rely on its presence.
     let charts = crate::charts::render(&document);
     let chart_names: Vec<String> = charts.iter().map(|(name, _)| name.clone()).collect();
+    // ADR-0014: build the story bundle ONCE (layout JSON + player payload,
+    // including the story-only flow/README probes) and thread it into the
+    // report. `--story` only decides whether `layout_json` is written; it must
+    // change no shared artifact.
+    let story = crate::reporter::atlas_story::build(
+        &document,
+        Some(std::path::Path::new(&document.scan.root_path)),
+    );
     let report = crate::reporter::render_report(&document, &chart_names);
     // Static self-contained HTML sibling of report.md (Option B slice 1,
     // LINKED variant — zero JavaScript): pure function of the same
     // `(document, chart_names)` pair, so findings stay byte-identical.
-    let html = crate::reporter::render_html(&document, &chart_names);
+    let html = crate::reporter::render_html_with_story(&document, &chart_names, &story);
     // C-split detail artifacts: the uncapped per-finding detail promoted out
     // of the bounded human files — pure functions of `document` alone (no
     // chart input, no provenance surfaces), so findings stay byte-identical.
@@ -291,10 +299,7 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         Artifact::text("charts/graph.dot", dot),
     ];
     if args.story {
-        artifacts.push(Artifact::text(
-            "atlas-layout.json",
-            crate::reporter::atlas_layout_json(&document),
-        ));
+        artifacts.push(Artifact::text("atlas-layout.json", story.layout_json));
     }
     for (name, bytes) in &charts {
         artifacts.push(Artifact {

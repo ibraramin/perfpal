@@ -12,9 +12,11 @@ use perfpal::reporter::{render_atlas_q2_html, render_atlas_weight_html, render_h
 
 fn map_body(html: &str) -> &str {
     let start = html.find("<section id=\"map\">").expect("#map");
+    // The story is a sibling after `#map` (ADR-0014), so the chart surface
+    // ends there, not at the later Explorer section.
     let end = html
-        .find("<section id=\"explorer\">")
-        .expect("#explorer after map");
+        .find("<section id=\"atlas-story\"")
+        .expect("#atlas-story after map");
     &html[start..end]
 }
 

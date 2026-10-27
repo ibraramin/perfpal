@@ -11,14 +11,15 @@ mod atlas_fixtures;
 use atlas_fixtures::states;
 use perfpal::reporter::render_html;
 
-/// Slice `#map` up to the Explorer section (the canvas nests its own
-/// `</section>`, so the first close tag is not the map boundary).
+/// Slice `#map` up to the sibling `#atlas-story` section (ADR-0014; the
+/// canvas nests its own `</section>`, so the first close tag is not the map
+/// boundary).
 fn map_body(html: &str) -> &str {
     let start = html.find("<section id=\"map\">").expect("#map");
     let end = html
-        .find("<section id=\"explorer\">")
-        .expect("#explorer after map");
-    assert!(start < end, "#map must precede #explorer");
+        .find("<section id=\"atlas-story\"")
+        .expect("#atlas-story after map");
+    assert!(start < end, "#map must precede #atlas-story");
     &html[start..end]
 }
 
@@ -91,6 +92,16 @@ fn atlas_states_render_same_stack() {
                 "{name}: restored block {restored} missing"
             );
         }
+        // ADR-0014: the story is a sibling immediately after the map.
+        assert!(
+            html.contains("data-atlas-block=\"story\""),
+            "{name}: #atlas-story missing"
+        );
+        let story = html
+            .find("<section id=\"atlas-story\"")
+            .expect("story after map");
+        let map_start = html.find("<section id=\"map\">").expect("#map");
+        assert!(map_start < story, "{name}: story must follow the map");
         // One structural caveat and one unit definition on the whole map.
         assert_eq!(
             map.matches("class=\"atlas-structural-caption\"").count(),

@@ -602,21 +602,29 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
     assert!(!html.contains("<li><a href=\"#architecture\">Architecture</a></li>"));
     assert!(html.contains("<a href=\"findings-detail.html\">Findings detail</a>"));
 
-    // Nav → #map → #explorer, exactly one #map.
+    // Nav → #map → #atlas-story → #explorer, exactly one #map.
     let nav = html.find("</nav>").expect("nav close");
     let map = html.find("<section id=\"map\">").expect("#map");
+    let story = html
+        .find("<section id=\"atlas-story\"")
+        .expect("#atlas-story");
     let explorer = html.find("<section id=\"explorer\">").expect("#explorer");
     assert!(
-        nav < map && map < explorer,
-        "map/explorer section order wrong"
+        nav < map && map < story && story < explorer,
+        "map/story/explorer section order wrong"
     );
     assert_eq!(html.matches("<section id=\"map\">").count(), 1);
+    assert_eq!(
+        html.matches("<section id=\"atlas-story\"").count(),
+        1,
+        "#atlas-story must appear exactly once"
+    );
 
     // #map opens with the canvas, then the answer line (A8 amended).
     let map_start = html.find("<section id=\"map\">").expect("#map body");
     let map_end = html[map_start..]
-        .find("<section id=\"explorer\">")
-        .expect("#explorer after map");
+        .find("<section id=\"atlas-story\"")
+        .expect("#atlas-story after map");
     let map_body = &html[map_start..map_start + map_end];
     assert!(
         map_body.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
@@ -712,7 +720,10 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         "#files row lacks the parent component-page link:\n{files_section}"
     );
 
-    // Exactly one fixed enhancement script; no new external references.
+    // Exactly three script elements (ADR-0014): one bare fixed enhancement
+    // script plus the story script and inline data block; no new external
+    // references.
+    assert_eq!(html.matches("<script").count(), 3);
     assert_eq!(html.matches("<script>").count(), 1);
     assert_eq!(detail.matches("<script>").count(), 1);
     assert!(!html.contains("http://") && !html.contains("https://"));

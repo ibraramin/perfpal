@@ -233,22 +233,75 @@ fn hostile_path_and_message_are_fully_escaped() {
 // 3. Fixed enhancement script + LINKED (not inline) charts (slice 2)
 // ---------------------------------------------------------------------------
 
-/// Extract the single inline `<script>` block body (between `<script>\n` and
-/// `\n</script>`), asserting there is exactly one script block.
+/// One `<script ...>` element split from the page.
+struct ScriptBlock<'a> {
+    tag: &'a str,
+    body: &'a str,
+}
+
+/// Extract every `<script ...>…</script>` element in document order.
+fn scripts(html: &str) -> Vec<ScriptBlock<'_>> {
+    let mut blocks = Vec::new();
+    let mut rest = html;
+    while let Some(start) = rest.find("<script") {
+        let element = &rest[start..];
+        let open_end = element.find('>').expect("script open tag terminated");
+        let body_start = start + open_end + 1;
+        let body_end = rest[body_start..]
+            .find("</script>")
+            .expect("script close tag")
+            + body_start;
+        blocks.push(ScriptBlock {
+            tag: &rest[start..start + open_end + 1],
+            body: &rest[body_start..body_end],
+        });
+        rest = &rest[body_end + "</script>".len()..];
+    }
+    blocks
+}
+
+/// The single fixed enhancement block used by the detail/drill pages.
 fn script_body(html: &str) -> &str {
+    let blocks = scripts(html);
+    assert_eq!(blocks.len(), 1, "exactly one inline script block expected");
+    blocks[0].body.trim_matches('\n')
+}
+
+/// The report's unchanged REPORT_SCRIPT, selected by body identity among the
+/// three ADR-0014 script elements.
+fn report_script_body(html: &str) -> &str {
+    let blocks = scripts(html);
     assert_eq!(
-        html.matches("<script>").count(),
-        1,
-        "exactly one inline script block expected"
+        blocks.len(),
+        3,
+        "report.html must carry exactly three script elements"
     );
+    let matching: Vec<&ScriptBlock<'_>> = blocks
+        .iter()
+        .filter(|block| block.body.trim_matches('\n') == report_script())
+        .collect();
     assert_eq!(
-        html.matches("</script>").count(),
+        matching.len(),
         1,
-        "exactly one inline script close expected"
+        "exactly one REPORT_SCRIPT block expected"
     );
-    let from = html.find("<script>").unwrap() + "<script>".len();
-    let to = html.find("</script>").unwrap();
-    html[from..to].trim_matches('\n')
+    matching[0].body.trim_matches('\n')
+}
+
+fn story_script(html: &str) -> &str {
+    scripts(html)
+        .into_iter()
+        .find(|block| block.tag.contains("id=\"atlas-story-script\""))
+        .map(|block| block.body)
+        .expect("atlas-story-script block")
+}
+
+fn story_data(html: &str) -> &str {
+    scripts(html)
+        .into_iter()
+        .find(|block| block.tag.contains("type=\"application/json\""))
+        .map(|block| block.body)
+        .expect("inline story data block")
 }
 
 #[test]
@@ -267,10 +320,80 @@ fn fixed_script_and_linked_chart_references() {
     ];
     let html = render_html(&doc, &charts);
 
-    // Exactly one inline script block, byte-identical to the fixed source
-    // (deterministic output — no timestamps/ids/counters in generated code).
-    assert_eq!(script_body(&html), report_script());
+    // ADR-0014 (amended A12): exactly three script elements — the unchanged
+    // REPORT_SCRIPT, one fixed story script, and one inline JSON data block.
+    assert_eq!(report_script_body(&html), report_script());
     assert!(report_script().lines().count() < 60);
+    let blocks = scripts(&html);
+    assert_eq!(blocks.len(), 3, "exactly three script elements");
+    assert_eq!(
+        blocks
+            .iter()
+            .filter(|block| block.tag == "<script>")
+            .count(),
+        1,
+        "exactly one bare REPORT_SCRIPT element"
+    );
+    assert_eq!(
+        blocks
+            .iter()
+            .filter(|block| block.tag.contains("id=\"atlas-story-script\""))
+            .count(),
+        1,
+        "exactly one fixed story script"
+    );
+    assert_eq!(
+        blocks
+            .iter()
+            .filter(|block| {
+                block.tag.contains("type=\"application/json\"")
+                    && block.tag.contains("id=\"perfpal-atlas-story-data\"")
+            })
+            .count(),
+        1,
+        "exactly one inline story data block"
+    );
+    let story_script = story_script(&html);
+    assert!(!story_script.trim().is_empty(), "story script is empty");
+    for banned in [
+        "</script",
+        "fetch(",
+        "http://",
+        "https://",
+        "eval(",
+        "Function(",
+    ] {
+        assert!(
+            !story_script.contains(banned),
+            "banned string {banned:?} present in the story script"
+        );
+    }
+    let data: serde_json::Value =
+        serde_json::from_str(story_data(&html)).expect("inline story JSON parses");
+    assert_eq!(data["index"]["cases"][0]["id"], "scan");
+    let payload = &data["cases"]["scan"];
+    for key in [
+        "case", "source", "meta", "trust", "nodes", "edges", "state", "trace",
+    ] {
+        assert!(payload.get(key).is_some(), "payload key {key} missing");
+    }
+    let fingerprint = payload["source"]["layoutFingerprint"]
+        .as_str()
+        .expect("layoutFingerprint string");
+    assert_eq!(fingerprint.len(), 16);
+    assert!(fingerprint.chars().all(|c| c.is_ascii_hexdigit()));
+    let metrics_fingerprint = payload["source"]["metricsContentFingerprint"]
+        .as_str()
+        .expect("metricsContentFingerprint string");
+    assert_eq!(metrics_fingerprint.len(), 16);
+    assert!(metrics_fingerprint.chars().all(|c| c.is_ascii_hexdigit()));
+    // Story placement: after #map, before #explorer.
+    let map = html.find("<section id=\"map\">").expect("#map");
+    let story = html
+        .find("<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\">")
+        .expect("#atlas-story");
+    let explorer = html.find("<section id=\"explorer\">").expect("#explorer");
+    assert!(map < story && story < explorer, "story placement wrong");
     // No libraries, no vendoring, no external references.
     assert!(!html.contains("http://"));
     assert!(!html.contains("https://"));
@@ -1146,7 +1269,7 @@ fn double_scan_report_html_byte_identical_unmasked() {
     );
     let text = String::from_utf8(first).expect("report.html is UTF-8");
     // Slice-2 fixed script block present and byte-identical to the source.
-    assert_eq!(script_body(&text), report_script());
+    assert_eq!(report_script_body(&text), report_script());
     assert!(text.ends_with('\n'));
     assert!(!text.contains(&target), "absolute scan root leaked");
     let detail_text = String::from_utf8(first_detail_html).expect("detail HTML is UTF-8");
@@ -1178,10 +1301,12 @@ fn enhancement_script_contains_no_banned_apis() {
         "layer-bands.svg".to_string(),
     ];
     let html = render_html(&doc, &charts);
-    let script = script_body(&html);
+    let script = report_script_body(&html);
+    let story = story_script(&html);
+    let executable = format!("{script}\n{story}");
 
-    // Hard JS safety rules: none of these may appear in the emitted page
-    // (script or markup).
+    // Hard JS safety rules scoped to EXECUTABLE scripts (ADR-0014: JSON data
+    // content is not code).
     for banned in [
         "Date(",
         "random(",
@@ -1197,8 +1322,8 @@ fn enhancement_script_contains_no_banned_apis() {
         "document.write",
     ] {
         assert!(
-            !html.contains(banned),
-            "banned API {banned:?} present in report.html"
+            !executable.contains(banned),
+            "banned API {banned:?} present in an executable script"
         );
     }
     // No inline event-handler ATTRIBUTES anywhere in the template

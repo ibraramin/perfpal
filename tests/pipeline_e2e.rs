@@ -4,6 +4,7 @@
 //! contract (§8.2), the report-directory layout (output-contract §2), and
 //! run-to-run byte determinism modulo provenance fields.
 
+use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -34,6 +35,37 @@ fn argv(args: &[&str]) -> Vec<std::ffi::OsString> {
     std::iter::once(std::ffi::OsString::from("perfpal"))
         .chain(args.iter().map(OsString::from))
         .collect()
+}
+
+/// Every file under `root`, keyed by forward-slash relative path.
+fn artifact_bytes(root: &Path) -> BTreeMap<String, Vec<u8>> {
+    fn walk(base: &Path, dir: &Path, out: &mut BTreeMap<String, Vec<u8>>) {
+        for entry in fs::read_dir(dir).expect("artifact directory readable") {
+            let entry = entry.expect("artifact entry readable");
+            let path = entry.path();
+            if path.is_dir() {
+                walk(base, &path, out);
+            } else {
+                let rel = path
+                    .strip_prefix(base)
+                    .expect("artifact under root")
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                out.insert(rel, fs::read(&path).expect("artifact readable"));
+            }
+        }
+    }
+    let mut out = BTreeMap::new();
+    walk(root, root, &mut out);
+    out
+}
+
+/// Extract the inline story JSON block's body from `report.html`.
+fn inline_story_json(html: &str) -> &str {
+    let open = "<script type=\"application/json\" id=\"perfpal-atlas-story-data\">";
+    let start = html.find(open).expect("inline story data block") + open.len();
+    let end = html[start..].find("</script>").expect("data close") + start;
+    &html[start..end]
 }
 
 /// Whether libclang can actually be loaded in this environment. Feature
@@ -486,8 +518,9 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     assert_eq!(dot1, dot2, "graph.dot not byte-stable across runs");
 }
 
-/// `--story` is additive: it emits `atlas-layout.json` while `metrics.json`
-/// and `report.html` stay byte-identical to the non-story run.
+/// ADR-0014 F6a: `--story` changes NO shared artifact — `report.html`,
+/// `metrics.json` (after provenance masking) and every other emitted file are
+/// byte-identical with and without the flag; only `atlas-layout.json` appears.
 #[test]
 fn story_flag_emits_atlas_layout_only_when_requested() {
     let plain = temp_dir("story-off").join("perfpal-report");
@@ -516,18 +549,49 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
         "atlas-layout.json missing with --story"
     );
 
-    let plain_metrics = fs::read_to_string(plain.join("metrics.json")).expect("plain metrics");
-    let story_metrics = fs::read_to_string(story.join("metrics.json")).expect("story metrics");
-    assert_eq!(
-        common::mask_metrics_provenance(&plain_metrics),
-        common::mask_metrics_provenance(&story_metrics),
-        "metrics.json changed beyond provenance when --story was passed"
+    // F6a: complete artifact-set comparison. The only allowed differences are
+    // the extra layout file and metrics.json provenance (masked).
+    let plain_artifacts = artifact_bytes(&plain);
+    let story_artifacts = artifact_bytes(&story);
+    assert!(
+        !plain_artifacts.contains_key("atlas-layout.json"),
+        "story-off run unexpectedly emitted atlas-layout.json"
     );
-    let plain_html = fs::read(plain.join("report.html")).expect("plain report");
-    let story_html = fs::read(story.join("report.html")).expect("story report");
+    assert!(
+        story_artifacts.contains_key("atlas-layout.json"),
+        "story-on run missing atlas-layout.json"
+    );
+    for (name, expected) in &plain_artifacts {
+        let actual = story_artifacts
+            .get(name)
+            .unwrap_or_else(|| panic!("{name} missing from the --story run"));
+        if name == "metrics.json" {
+            let expected = String::from_utf8(expected.clone()).expect("metrics UTF-8");
+            let actual = String::from_utf8(actual.clone()).expect("metrics UTF-8");
+            assert_eq!(
+                common::mask_metrics_provenance(&expected),
+                common::mask_metrics_provenance(&actual),
+                "metrics.json changed beyond provenance when --story was passed"
+            );
+        } else if name == "report.md" {
+            let expected = String::from_utf8(expected.clone()).expect("report.md UTF-8");
+            let actual = String::from_utf8(actual.clone()).expect("report.md UTF-8");
+            assert_eq!(
+                common::mask_report_provenance(&expected),
+                common::mask_report_provenance(&actual),
+                "report.md changed beyond provenance when --story was passed"
+            );
+        } else {
+            assert_eq!(
+                expected, actual,
+                "{name} changed when --story was passed (F6a)"
+            );
+        }
+    }
     assert_eq!(
-        story_html, plain_html,
-        "report.html changed when --story was passed"
+        story_artifacts.len(),
+        plain_artifacts.len() + 1,
+        "--story must add only atlas-layout.json"
     );
 
     let raw = fs::read_to_string(story.join("atlas-layout.json")).expect("layout JSON");
@@ -574,8 +638,61 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
     assert!(production_ranked >= candidate_total);
     assert!(candidate_total >= shown);
 
+    // F6c: the inline story data parses, matches the emitted layout, and the
+    // story section is present in the always-on report.
+    let story_metrics = fs::read_to_string(story.join("metrics.json")).expect("story metrics");
+    let story_html_text = fs::read_to_string(story.join("report.html")).expect("story report.html");
+    assert!(
+        story_html_text.contains(
+            "<section id=\"atlas-story\" class=\"atlas-story\" data-atlas-block=\"story\">"
+        ),
+        "inline story section missing from report.html"
+    );
+    assert_eq!(
+        story_html_text.matches("<script").count(),
+        3,
+        "report.html must carry exactly three script elements (ADR-0014)"
+    );
+    let inline: serde_json::Value = serde_json::from_str(inline_story_json(&story_html_text))
+        .expect("inline story JSON parses");
+    assert_eq!(inline["index"]["cases"][0]["id"], "scan");
+    let payload = &inline["cases"]["scan"];
     let metrics_doc: serde_json::Value =
         serde_json::from_str(&story_metrics).expect("story metrics parses");
+    let findings_total = metrics_doc["findings"]
+        .as_array()
+        .expect("metrics findings array")
+        .len() as u64;
+    assert_eq!(
+        payload["meta"]["findingsTotal"].as_u64(),
+        Some(findings_total),
+        "story findings total must match metrics.json"
+    );
+    assert_eq!(
+        payload["nodes"].as_array().expect("payload nodes").len(),
+        layout["nodes"].as_array().expect("layout nodes").len(),
+        "story nodes must mirror the emitted layout"
+    );
+    assert_eq!(
+        payload["trace"].as_array().expect("payload trace").len(),
+        layout["stages"].as_array().expect("layout stages").len(),
+        "story trace must mirror the emitted layout stages"
+    );
+    assert_eq!(
+        payload["source"]["layoutVersion"], layout["layout_version"],
+        "story source layout version"
+    );
+    for key in ["layoutFingerprint", "metricsContentFingerprint"] {
+        let value = payload["source"][key]
+            .as_str()
+            .unwrap_or_else(|| panic!("story source {key}"));
+        assert_eq!(value.len(), 16, "story source {key} length");
+        assert!(
+            value.chars().all(|c| c.is_ascii_hexdigit()),
+            "story source {key} must be hex"
+        );
+    }
+
     let function_ids: Vec<&str> = metrics_doc["stats"]["functions"]
         .as_array()
         .expect("stats.functions array")
@@ -855,6 +972,28 @@ fn atlas_layout_json_is_byte_identical_on_double_scan() {
     assert_eq!(
         bytes_a, bytes_b,
         "atlas-layout.json not byte-stable across scans"
+    );
+
+    // F6b: two independent scans produce byte-identical report.html INCLUDING
+    // the inline story data and the fixed story script.
+    let html_a = fs::read(first.join("report.html")).expect("first report");
+    let html_b = fs::read(second.join("report.html")).expect("second report");
+    assert_eq!(
+        html_a, html_b,
+        "report.html (with the story) not byte-stable across scans"
+    );
+    let html_text = String::from_utf8(html_a).expect("report.html UTF-8");
+    let inline: serde_json::Value =
+        serde_json::from_str(inline_story_json(&html_text)).expect("inline JSON parses");
+    assert!(
+        inline["cases"]["scan"]["source"]["layoutFingerprint"]
+            .as_str()
+            .is_some_and(|value| value.len() == 16),
+        "inline story fingerprint missing"
+    );
+    assert!(
+        html_text.contains("data-atlas-block=\"story\""),
+        "story section missing from the double-render page"
     );
 }
 

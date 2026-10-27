@@ -35,6 +35,8 @@ pub mod atlas_purpose;
 pub mod atlas_queue;
 pub mod atlas_render;
 pub mod atlas_scenes;
+pub mod atlas_story;
+pub mod atlas_story_render;
 pub mod views;
 
 pub use atlas_brief::{render_atlas_q2_html, render_atlas_weight_html};
@@ -529,22 +531,35 @@ pub fn escape_html(input: &str) -> String {
     out
 }
 
-/// Render the full `report.html` content (Option B slice 2: slice-1 LINKED
-/// page plus a small fixed enhancement script).
+/// Render the full `report.html` content for tests and pure callers.
 ///
-/// A static self-contained page with ONE inline `<script>` block
-/// ([`REPORT_SCRIPT`], fixed source, no libraries): it references
-/// `charts/*.svg` via relative `<img src>`/`<a href>` links, so the HTML
-/// stays small on big repos while remaining fully offline within the report
-/// directory. Pure function of `(doc, emitted_charts)` — LF newlines,
-/// trailing newline, byte-deterministic with NO provenance surfaces at all
-/// (no `started_at`, no `duration_ms`, no `root_path`; header carries only
-/// `schema_version`, tool version, file/finding counts).
+/// Builds the story bundle with no filesystem probes (`root = None`) and
+/// delegates to [`render_html_with_story`]. The CLI builds the real bundle once
+/// (with the scan-root probes) and calls the `_with_story` form, so the
+/// expensive story-only probes never run twice and this entry point stays a
+/// pure function of `(doc, emitted_charts)`.
+#[must_use]
+pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
+    let story = atlas_story::build(doc, None);
+    render_html_with_story(doc, emitted_charts, &story)
+}
+
+/// Render the full `report.html` content with an already-built story bundle.
+///
+/// A static self-contained page with exactly three script elements
+/// ([`REPORT_SCRIPT`] plus the fixed story script and the inline story data
+/// block, ADR-0014): it references `charts/*.svg` via relative `<img src>`/`<a
+/// href>` links, so the HTML stays small on big repos while remaining fully
+/// offline within the report directory. Pure function of
+/// `(doc, emitted_charts, story)` — LF newlines, trailing newline,
+/// byte-deterministic with NO provenance surfaces at all (no `started_at`, no
+/// `duration_ms`, no `root_path`; header carries only `schema_version`, tool
+/// version, file/finding counts).
 ///
 /// Contents: header, the Perfpal Atlas `#map` page (chrome + fluid full-width
 /// canvas + rail + four progressive charts, ADR-0009; the seven branch brief
 /// blocks are restored around main's rail and charts by plan `polish-report`
-/// H1), the Explorer chart links,
+/// H1), the always-on `#atlas-story` section, the Explorer chart links,
 /// component index (top-10 rank, prefix, metrics + detail-page links, with an
 /// honest `showing top … of M` note), file drill-down (top files by
 /// degree/cost + their top-10 finding_id lists linking into
@@ -555,7 +570,11 @@ pub fn escape_html(input: &str) -> String {
 /// `(rank, slug)`, file slugs, and sanitized finding ids (finding-row ids
 /// live in the detail artifact).
 #[must_use]
-pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
+pub fn render_html_with_story(
+    doc: &MetricsDocument,
+    emitted_charts: &[String],
+    story: &atlas_story::StoryBundle,
+) -> String {
     let mut out = String::new();
     html_head(&mut out, doc);
     // Report-only breadcrumb (inside the shared header, right after the h1):
@@ -564,6 +583,9 @@ pub fn render_html(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
     html_header(&mut out, doc, true);
     html_nav(&mut out);
     html_map(&mut out, doc, emitted_charts);
+    // ADR-0014: the story is always present, immediately after `#map` and
+    // before `#explorer` (H4 moves Explorer out of the main flow later).
+    out.push_str(&atlas_story_render::render_story_section(doc, story));
     html_architecture(&mut out, doc, emitted_charts);
     html_components(&mut out, doc, emitted_charts);
     html_files(&mut out, doc, emitted_charts);
@@ -1999,45 +2021,7 @@ fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) 
 /// [`html_map`]. Only emitted when `--story` is passed.
 #[must_use]
 pub fn atlas_layout_json(doc: &MetricsDocument) -> String {
-    let view = atlas::build_atlas_view(doc);
-    let start_actions = atlas_brief::start_actions(doc);
-    // The story covers only the drawn file slice: findings_included is the sum
-    // of the per-node counts (many findings live on undrawn files), while
-    // findings_total stays the full scan total.
-    let findings_included = view
-        .nodes
-        .iter()
-        .map(|node| node.findings.hot + node.findings.warn + node.findings.info)
-        .sum();
-    let findings_total = doc.findings.len();
-    // Story-only P3 probe: parse just the drawn files for signatures. Normal
-    // scans never reach this function, so they pay nothing.
-    let flow = crate::analysis::flow::build(
-        std::path::Path::new(&doc.scan.root_path),
-        view.nodes.iter().map(|node| node.path.clone()),
-    );
-    // Story-only P6 probe: the scan-root README's first prose paragraph, with
-    // the existing entry line as the structural fallback.
-    let purpose = atlas_purpose::read(
-        std::path::Path::new(&doc.scan.root_path),
-        &atlas_render::strip_entry_line(&view),
-    );
-    // Story-only P7 probe: the whole-repo KV3 queue projected from the
-    // authoritative complete-profile-queue ordering (no second ranking).
-    let profile = atlas_queue::build(doc);
-    // Story-only P8 probe: directory scenes over every source file, derived
-    // from the same view the canvas draws.
-    let scenes = atlas_scenes::build(doc, &view);
-    atlas_layout::to_json(
-        &view,
-        &start_actions,
-        findings_included,
-        findings_total,
-        Some(&flow),
-        Some(&purpose),
-        Some(&profile),
-        Some(&scenes),
-    )
+    atlas_story::build(doc, Some(std::path::Path::new(&doc.scan.root_path))).layout_json
 }
 
 /// Component index: rank, prefix, metrics + link to the

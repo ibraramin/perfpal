@@ -7,9 +7,11 @@ use perfpal::reporter::{render_html, report_script};
 
 fn map_body(html: &str) -> &str {
     let start = html.find("<section id=\"map\">").expect("#map");
+    // The story is a sibling immediately after `#map` (ADR-0014), so the map
+    // fragment ends there — not at the later Explorer section.
     let end = html
-        .find("<section id=\"explorer\">")
-        .expect("#explorer after map");
+        .find("<section id=\"atlas-story\"")
+        .expect("#atlas-story after map");
     &html[start..end]
 }
 
@@ -135,14 +137,38 @@ fn atlas_map_has_one_caveat_and_one_median_definition() {
 fn atlas_adds_no_new_script() {
     for (name, doc) in states() {
         let html = render_html(&doc, &[]);
+        // ADR-0014 amended A12: exactly three script elements in the report —
+        // the unchanged REPORT_SCRIPT, the fixed story script, and the inline
+        // JSON data block. None of them comes from the Atlas map fragments.
         assert_eq!(
             html.to_ascii_lowercase().matches("<script").count(),
+            3,
+            "{name}: report.html must carry exactly three script elements"
+        );
+        assert_eq!(
+            html.matches("<script>").count(),
             1,
-            "{name}: report.html must keep exactly one script block"
+            "{name}: exactly one bare REPORT_SCRIPT element"
         );
         assert!(
             html.contains(report_script()),
-            "{name}: the one script must be the fixed REPORT_SCRIPT"
+            "{name}: the bare script must be the fixed REPORT_SCRIPT"
+        );
+        assert!(
+            html.contains("id=\"perfpal-atlas-story-data\""),
+            "{name}: inline story data block missing"
+        );
+        assert!(
+            html.contains("id=\"atlas-story-script\""),
+            "{name}: fixed story script missing"
+        );
+        assert!(
+            html.contains("data-atlas-block=\"story\""),
+            "{name}: story section missing"
+        );
+        assert!(
+            !html.to_ascii_lowercase().contains("<script src"),
+            "{name}: no external script source is allowed"
         );
         let map = map_body(&html);
         assert!(!map.contains("<script"), "{name}: Atlas adds a script");
