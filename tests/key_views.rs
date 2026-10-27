@@ -298,12 +298,26 @@ fn atlas_page_orders_canvas_brief_blocks_then_explorer() {
         assert!(position > last, "{block} block out of order");
         last = position;
     }
-    // The retired text-wall blocks and the inline drills are gone; the drills
-    // are standalone artifacts linked from the charts.
-    for retired in ["answer", "actions", "cards", "noise", "links"] {
+    // The seven branch blocks are restored additively; the inline drills stay
+    // out (they are standalone artifacts linked from the charts).
+    let answer = map.find("id=\"atlas-answer\"").expect("answer block");
+    assert!(answer < canvas, "answer block must precede the canvas");
+    for block in [
+        "answer",
+        "weight",
+        "weight-chart",
+        "blast",
+        "blast-chart",
+        "file-chart",
+        "coverage",
+        "actions",
+        "cards",
+        "noise",
+        "links",
+    ] {
         assert!(
-            !map.contains(&format!("data-atlas-block=\"{retired}\"")),
-            "retired block {retired} must not render in #map"
+            map.contains(&format!("data-atlas-block=\"{block}\"")),
+            "missing restored block {block}"
         );
     }
     assert!(!map.contains("id=\"atlas-drill-q2\""));

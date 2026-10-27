@@ -45,7 +45,18 @@ fn chart<'a>(map: &'a str, name: &str) -> &'a str {
 
 #[test]
 fn atlas_states_render_same_stack() {
-    let expected = ["weight-chart", "blast-chart", "file-chart", "coverage"];
+    let expected = [
+        "weight",
+        "weight-chart",
+        "blast",
+        "blast-chart",
+        "file-chart",
+        "coverage",
+        "actions",
+        "cards",
+        "noise",
+        "links",
+    ];
     for (name, doc) in states() {
         let html = render_html(&doc, &[]);
         let map = map_body(&html);
@@ -53,7 +64,7 @@ fn atlas_states_render_same_stack() {
             map.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
             "{name}: #map must open with the first-page chrome"
         );
-        assert_eq!(block_order(map), expected, "{name}: chart block stack");
+        assert_eq!(block_order(map), expected, "{name}: block stack");
         for marker in [
             "id=\"atlas-canvas\"",
             "id=\"atlas-brief\"",
@@ -62,8 +73,8 @@ fn atlas_states_render_same_stack() {
             assert!(map.contains(marker), "{name}: missing {marker}");
         }
         assert!(
-            !map.contains("id=\"atlas-answer\""),
-            "{name}: the retired answer block must not return"
+            map.contains("id=\"atlas-answer\""),
+            "{name}: the restored answer block must render"
         );
         assert!(
             !map.contains("id=\"atlas-drill-"),
@@ -73,11 +84,11 @@ fn atlas_states_render_same_stack() {
         let canvas = map.find("id=\"atlas-canvas\"").expect("canvas");
         let charts = map.find("id=\"atlas-charts\"").expect("charts");
         assert!(canvas < charts, "{name}: canvas must precede the charts");
-        // The retired wall's block names must not appear.
-        for retired in ["answer", "actions", "cards", "noise", "links"] {
+        // Every restored branch block renders in every state.
+        for restored in ["answer", "actions", "cards", "noise", "links"] {
             assert!(
-                !map.contains(&format!("data-atlas-block=\"{retired}\"")),
-                "{name}: retired block {retired} must not return"
+                map.contains(&format!("data-atlas-block=\"{restored}\"")),
+                "{name}: restored block {restored} missing"
             );
         }
         // One structural caveat and one unit definition on the whole map.

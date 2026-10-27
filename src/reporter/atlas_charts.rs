@@ -1,10 +1,13 @@
-//! Atlas below-graph progressive charts (plan `atlas-build` step 12).
+//! Atlas below-graph progressive charts (plan `atlas-build` step 12; restored
+//! by plan `polish-report` H1).
 //!
-//! Four designed blocks replace the retired seven-block text wall:
-//! weight (production-first share), blast radius, file detail, and one
-//! coverage/links line. The canvas + detail rail above stay untouched; every
-//! chart is state-unconditional (a named stub replaces absent data), emits
-//! **no** script/handler/network reference, and uses the canonical
+//! The four designed blocks stay: weight (production-first share), blast
+//! radius, file detail, and one coverage/links line. H1 restores the branch
+//! `weight` / `blast` share-and-coverage prose immediately before each chart,
+//! and the report page adds the remaining restored blocks around this grid.
+//! The canvas + detail rail above stay untouched; every chart is
+//! state-unconditional (a named stub replaces absent data), emits **no**
+//! script/handler/network reference, and uses the canonical
 //! [`crate::reporter::atlas_metrics`] formatters for every measured string.
 //!
 //! Determinism: bars use tenths geometry (`format_fixed_point`/`round_half_up`),
@@ -16,7 +19,7 @@ use std::collections::BTreeSet;
 use crate::reporter::atlas::{AtlasFile, AtlasView};
 use crate::reporter::atlas_brief::{
     FunctionAnchors, dominant_finding_anchor, file_cost_anchor, file_link_anchor,
-    function_display_name, function_link_anchor, sanitize_atlas_text,
+    function_display_name, function_link_anchor, render_blast, render_weight, sanitize_atlas_text,
 };
 use crate::reporter::atlas_metrics::{
     NO_ENTRY, NO_PRODUCTION_COST, NO_SCANNED_COST, NO_SOURCE_FUNCTIONS, format_call_degree,
@@ -28,7 +31,9 @@ use crate::reporter::{
 };
 use crate::schema::{MetricsDocument, format_fixed_point, round_half_up};
 
-/// Render `#atlas-brief`: the four designed below-graph blocks.
+/// Render `#atlas-brief`: the four designed below-graph blocks (compatibility
+/// wrapper; the report page composes the grid with the restored sibling
+/// blocks itself so it can keep `links` last).
 ///
 /// `doc` is only used for the shared deterministic anchor maps (file /
 /// function / finding) so chart links resolve to the same rows as the rail
@@ -37,12 +42,24 @@ use crate::schema::{MetricsDocument, format_fixed_point, round_half_up};
 pub fn render_charts(view: &AtlasView, doc: &MetricsDocument) -> String {
     let mut out = String::new();
     out.push_str("<section id=\"atlas-brief\" class=\"atlas-brief\">\n");
+    out.push_str(&render_chart_grid(view, doc));
+    out.push_str("</section>\n");
+    out
+}
+
+/// Render only the `#atlas-charts` grid, with the restored `weight` and
+/// `blast` prose immediately before their respective charts.
+#[must_use]
+pub fn render_chart_grid(view: &AtlasView, doc: &MetricsDocument) -> String {
+    let mut out = String::new();
     out.push_str("<div id=\"atlas-charts\" class=\"atlas-charts\">\n");
+    out.push_str(&render_weight(view));
     render_weight_chart(&mut out, view);
+    out.push_str(&render_blast(view));
     render_blast_chart(&mut out, view);
     render_file_chart(&mut out, view, doc);
     render_coverage(&mut out);
-    out.push_str("</div>\n</section>\n");
+    out.push_str("</div>\n");
     out
 }
 

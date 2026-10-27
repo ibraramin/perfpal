@@ -179,9 +179,9 @@ fn hostile_path_and_message_are_fully_escaped() {
     f.finding_id = format!("PERF-C-STR-003:{hostile_path}:7:9");
     doc.findings = vec![f];
 
-    // C-split: the human page carries the hostile path (drill-down +
-    // exemplar finding_id) but NOT the message; the full message lives in
-    // the detail artifact. Both pages must escape.
+    // The human page carries the hostile path (drill-down + exemplar
+    // finding_id) and, since H1, the finding message in the restored action
+    // block. Both pages must escape.
     let html = render_html(&doc, &[]);
     let detail = render_findings_detail_html(&doc);
 
@@ -217,11 +217,11 @@ fn hostile_path_and_message_are_fully_escaped() {
         assert!(page.ends_with('\n'), "trailing newline missing in {name}");
         assert!(!page.ends_with("\n\n"), "double trailing newline in {name}");
     }
-    // C-split: the human page carries the path but not the finding message;
-    // the full rationale lives in the detail artifact only.
+    // The restored action block carries the finding message on the human page;
+    // it must be escaped, never raw and never executable.
     assert!(
-        !html.contains("&lt;script&gt;"),
-        "the finding message is drill-only after the step-12 restructure"
+        html.contains("&lt;script&gt;"),
+        "escaped finding message missing from report.html"
     );
     assert!(
         detail.contains("&lt;script&gt;"),

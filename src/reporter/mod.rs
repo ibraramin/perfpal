@@ -541,9 +541,10 @@ pub fn escape_html(input: &str) -> String {
 /// (no `started_at`, no `duration_ms`, no `root_path`; header carries only
 /// `schema_version`, tool version, file/finding counts).
 ///
-/// Contents: header, the Perfpal Atlas `#map` page (chrome + 868px canvas +
-/// 530px rail + four progressive charts, ADR-0009; the retired seven-block
-/// brief lives in the step-<12 history), the Explorer chart links,
+/// Contents: header, the Perfpal Atlas `#map` page (chrome + fluid full-width
+/// canvas + rail + four progressive charts, ADR-0009; the seven branch brief
+/// blocks are restored around main's rail and charts by plan `polish-report`
+/// H1), the Explorer chart links,
 /// component index (top-10 rank, prefix, metrics + detail-page links, with an
 /// honest `showing top … of M` note), file drill-down (top files by
 /// degree/cost + their top-10 finding_id lists linking into
@@ -1961,25 +1962,35 @@ fn push_chart_figure(out: &mut String, stem: &str, caption: &str) {
 }
 
 /// `#map` — the Perfpal Atlas page (ADR-0009; `map-intelligibility` A8
-/// amended for this page).
+/// amended by plan `polish-report` H1).
 ///
-/// First content: the masthead + key-metrics strip and the canvas/rail stage.
-/// Below it, [`atlas_charts::render_charts`] adds the four progressive,
-/// designed charts plus one coverage/links line. The retired seven-block text
-/// wall and the inline Q2/weight drills no longer live on `#map`; the
-/// complete lists stay in `findings-detail.html` / `profile-queue.html` and
-/// the drills moved to `atlas-weight.html` / `atlas-q2.html`.
-fn html_map(out: &mut String, doc: &MetricsDocument, _emitted_charts: &[String]) {
+/// Composition: the first-page chrome (masthead + key-metrics strip), the
+/// restored answer line (after the chrome, before the canvas stage so it stays
+/// in the first scroll), the full-width canvas/rail stage, then one
+/// `#atlas-brief` holding the four designed charts — with the restored
+/// `weight` / `blast` prose immediately before their charts — followed by the
+/// restored `actions`, `cards`, `noise` and `links` blocks (`links` last).
+/// The complete lists stay in `findings-detail.html` / `profile-queue.html`
+/// and the drills stay standalone in `atlas-weight.html` / `atlas-q2.html`.
+fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
     let view = atlas::build_atlas_view(doc);
     let start_actions = atlas_brief::start_actions(doc);
     let rail = atlas_brief::render_rail(&view, doc);
+    let answer_html = atlas_brief::render_answer(&view, doc);
     out.push_str("<section id=\"map\">\n");
     out.push_str(&atlas_render::render_canvas_html_with_actions_and_rail(
         &view,
         &start_actions,
         &rail,
+        &answer_html,
     ));
-    out.push_str(&atlas_charts::render_charts(&view, doc));
+    out.push_str("<section id=\"atlas-brief\" class=\"atlas-brief\">\n");
+    out.push_str(&atlas_charts::render_chart_grid(&view, doc));
+    out.push_str(&atlas_brief::render_actions(&view, doc));
+    out.push_str(&atlas_brief::render_cards(&view, doc));
+    out.push_str(&atlas_brief::render_noise(&view));
+    out.push_str(&atlas_brief::render_links(&view, doc, emitted_charts));
+    out.push_str("</section>\n");
     out.push_str("</section>\n");
 }
 

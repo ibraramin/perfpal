@@ -50,21 +50,34 @@ fn charts_are_state_unconditional_and_table_free() {
         let map = map_body(&html);
         assert_eq!(
             chart_blocks(map),
-            ["weight-chart", "blast-chart", "file-chart", "coverage"],
-            "{name}: chart stack"
+            [
+                "weight",
+                "weight-chart",
+                "blast",
+                "blast-chart",
+                "file-chart",
+                "coverage",
+                "actions",
+                "cards",
+                "noise",
+                "links",
+            ],
+            "{name}: block stack"
         );
         let brief = &map[charts_start(map)..];
         assert!(
             !brief.contains("<table"),
             "{name}: designed charts must not be text tables"
         );
+        for restored in ["actions", "cards", "noise", "links"] {
+            assert!(
+                brief.contains(&format!("data-atlas-block=\"{restored}\"")),
+                "{name}: restored block {restored} missing"
+            );
+        }
         assert!(
-            !brief.contains("data-atlas-block=\"answer\"")
-                && !brief.contains("data-atlas-block=\"actions\"")
-                && !brief.contains("data-atlas-block=\"cards\"")
-                && !brief.contains("data-atlas-block=\"noise\"")
-                && !brief.contains("data-atlas-block=\"links\""),
-            "{name}: the retired seven-block wall must not return"
+            map.contains("data-atlas-block=\"answer\"") && map.contains("id=\"atlas-answer\""),
+            "{name}: the restored answer block must render"
         );
         assert_eq!(
             brief.matches("id=\"atlas-charts\"").count(),

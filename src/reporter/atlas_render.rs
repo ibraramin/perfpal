@@ -81,7 +81,7 @@ const STATIC_CSS: &str = r#".atlas-svg{background:#fbf9f4}
 /// First-page chrome + graph CSS. Every selector is scoped to `#map` so the
 /// warm band never touches the white global report; the brief keeps its own
 /// scoped styles. Sans chrome, mono identifiers/figures.
-const ANIMATION_CSS: &str = r#"#map{background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0 -1rem;padding:8px 1rem;border-radius:0}
+const ANIMATION_CSS: &str = r#"#map{box-sizing:border-box;background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0 calc(50% - 50vw);padding:8px clamp(12px,calc((100vw - 1408px)/2),96px);border-radius:0}
 #map .atlas-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 #map .atlas-masthead{height:58px;box-sizing:border-box;display:flex;align-items:center;gap:14px;border-bottom:1px solid #d6d0c4}
 #map .atlas-brand{flex:0 0 244px;min-width:0}
@@ -123,9 +123,9 @@ const ANIMATION_CSS: &str = r#"#map{background:#f4f1ea;color:#202b35;font-family
 #map .atlas-footer{padding:5px 8px 2px;font-size:9px;line-height:1.35;color:#6f6a61;font-variant-numeric:tabular-nums}
 #map .atlas-footer .atlas-mono{color:#202b35}
 #map .atlas-footer-part{white-space:nowrap}
-#map .atlas-stage{display:flex;gap:10px;align-items:flex-start;justify-content:center}
-#map #atlas-canvas{flex:0 0 868px;max-width:868px;min-width:0}
-#map .atlas-rail{flex:1 1 0;min-width:0;max-width:530px;color:#202b35}
+#map .atlas-stage{display:flex;gap:10px;align-items:flex-start;justify-content:center;width:100%}
+#map #atlas-canvas{flex:1 1 auto;min-width:0;width:100%;max-width:none}
+#map .atlas-rail{flex:0 0 530px;min-width:0;max-width:530px;color:#202b35}
 #map .atlas-rail-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 1px 5px;border-bottom:1px solid #d6d0c4;font-size:8.5px;font-weight:800;letter-spacing:.11em;color:#6f6a61;text-transform:uppercase}
 #map .atlas-rail-title span{font-weight:600;letter-spacing:0;text-transform:none;color:#6f6a61}
 #map .atlas-rail-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
@@ -192,10 +192,51 @@ const ANIMATION_CSS: &str = r#"#map{background:#f4f1ea;color:#202b35;font-family
 #map .atlas-links{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:9px}
 #map .atlas-links a{color:#7c2d12;font-weight:650;text-decoration:none}
 #map .atlas-links a:hover{text-decoration:underline}
+#map .atlas-block{max-width:1408px;margin:10px auto 0;background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;padding:9px 12px 10px;color:#202b35}
+#map .atlas-charts>.atlas-block{margin:0}
+#map .atlas-block h3{font-size:12px;font-weight:800;margin:0 0 3px;letter-spacing:-.005em}
+#map .atlas-block h4{font-size:8.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6f6a61;margin:8px 0 3px}
+#map .atlas-answer-line{margin:2px 0 0;font-size:10px;line-height:1.45;color:#202b35;overflow-wrap:anywhere}
+#map .atlas-answer-line code,#map .atlas-action code,#map .atlas-card code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9.5px}
+#map .atlas-caveat{display:block;margin-top:4px;color:#6f6a61;font-size:9px}
+#map .atlas-fn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#3f4952;font-size:9.5px}
+#map .atlas-rank{font-weight:800;margin-right:5px;color:#c2410c;font-variant-numeric:tabular-nums}
+#map .atlas-action-list{margin:5px 0 0;padding-left:1.3rem}
+#map .atlas-action{margin:0 0 6px;font-size:9.5px;line-height:1.4;overflow-wrap:anywhere}
+#map .atlas-loc{color:#202b35;text-decoration:none}
+#map .atlas-loc:hover{text-decoration:underline}
+#map .atlas-badge{display:inline-block;border:1px solid #b8b2a7;border-radius:3px;padding:0 3px;margin-left:3px;font-size:8.5px;color:#3c4650;background:#fffdf8;white-space:nowrap}
+#map .atlas-class{display:inline-block;border:1px solid #b8b2a7;border-radius:3px;padding:0 3px;font-size:8.5px;color:#3f6d6a;white-space:nowrap}
+#map .atlas-class.nonprod{color:#7c2d12;border-style:dashed}
+#map .atlas-anchor,#map .atlas-share,#map .atlas-caption,#map .atlas-counts,#map .atlas-trip,#map .atlas-note{color:#6f6a61;font-size:9px}
+#map .atlas-anchor{margin-top:2px;font-variant-numeric:tabular-nums}
+#map .atlas-share{font-variant-numeric:tabular-nums}
+#map .atlas-trip{margin-top:2px}
+#map .atlas-note{margin-left:4px;color:#8a5a2b}
+#map .atlas-why{margin-top:3px;color:#3f4952;font-size:9px;line-height:1.4}
+#map .atlas-more{margin:6px 0 0;font-size:9px}
+#map .atlas-more a{color:#7c2d12;font-weight:650;text-decoration:none}
+#map .atlas-counts{margin:6px 0 0}
+#map .atlas-weight-list,#map .atlas-dependent-list,#map .atlas-fn-list,#map .atlas-drill-links{margin:4px 0 0;padding-left:1.3rem;font-size:9.5px;line-height:1.4}
+#map .atlas-nonprod{margin:5px 0 0;padding:3px 7px;border-left:3px solid #9a3412;background:#f7f4ed;font-size:9px;color:#3c4650}
+#map .atlas-blast-line{font-size:11px;font-weight:750;margin:2px 0 4px}
+#map .atlas-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#202b35;overflow-wrap:anywhere}
+#map .atlas-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:8px;margin-top:6px}
+#map .atlas-card{min-width:0;border:1px solid #d8d2c6;border-radius:4px;background:#fffdf8;padding:6px 8px 7px}
+#map .atlas-card h4{margin:0 0 3px;font-size:10px;font-weight:750;letter-spacing:0;text-transform:none;color:#202b35}
+#map .atlas-dominant{margin:3px 0;color:#8a5a2b;font-size:9px;font-weight:650;line-height:1.35}
+#map .atlas-card p{margin:2px 0}
+#map .atlas-card a{color:#7c2d12;text-decoration:none}
+#map .atlas-card a:hover{text-decoration:underline}
+#map .atlas-drill-links li{margin:1px 0}
+#map .atlas-drill-links a{color:#7c2d12;font-weight:650;text-decoration:none}
+#map .atlas-drill-links a:hover{text-decoration:underline}
 @media (max-width:900px){#map .atlas-bar-columns{grid-template-columns:1fr}}
 @media print{#map .atlas-charts{break-inside:avoid}}
-@media (max-width:1359px){#map .atlas-stage{flex-direction:column;align-items:center}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:868px;max-width:100%}}
+@media (max-width:1359px){#map .atlas-stage{flex-direction:column;align-items:stretch}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}}
+@media (min-width:1360px) and (max-width:1599px){#map .atlas-stage{flex-direction:row;align-items:flex-start}#map #atlas-canvas{flex:1 1 auto;width:100%;max-width:none}#map .atlas-rail{flex:0 0 min(530px,34vw);max-width:none}}
 @media (min-width:1360px) and (max-width:1439px){#map .atlas-rail-name{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}}
+@media (min-width:1600px){#map .atlas-stage{flex-direction:column;align-items:stretch}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}#map .atlas-rail-cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media print{#map .atlas-stage{display:block}#map .atlas-rail{width:auto;max-width:none;margin-top:8px}}
 @keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
 @keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
@@ -1558,22 +1599,27 @@ fn render_page_chrome(
 }
 
 /// HTML fragment for `report.html#map`: first-page chrome (masthead +
-/// key-metrics strip), then the animated SVG canvas and its one footer. The
-/// chrome carries exactly one scoped `<style>` and no script; the brief is a
-/// sibling rendered after this fragment.
+/// key-metrics strip), the restored answer line, then the animated SVG canvas
+/// and its one footer. The chrome carries exactly one scoped `<style>` and no
+/// script; the remaining brief blocks are siblings rendered after this
+/// fragment.
 #[must_use]
 pub fn render_canvas_html_with_actions(view: &AtlasView, start_actions: &[StartAction]) -> String {
-    render_canvas_html_with_actions_and_rail(view, start_actions, "")
+    render_canvas_html_with_actions_and_rail(view, start_actions, "", "")
 }
 
-/// Same first-page shell with an optional per-file detail rail appended inside
-/// the `atlas-stage` row, after the canvas section. The rail is empty in the
-/// standalone/test wrappers.
+/// Same first-page shell with an optional answer line and per-file detail rail.
+///
+/// `answer_html` is emitted after the page chrome and **before** the
+/// `.atlas-stage`, so the answer survives the first scroll (A8). `rail_html`
+/// is appended inside the stage row after the canvas section. Both are empty in
+/// the standalone/test wrappers.
 #[must_use]
 pub fn render_canvas_html_with_actions_and_rail(
     view: &AtlasView,
     start_actions: &[StartAction],
     rail_html: &str,
+    answer_html: &str,
 ) -> String {
     let entry_line = strip_entry_line(view);
     let hottest_line = hottest_line(view);
@@ -1616,6 +1662,12 @@ pub fn render_canvas_html_with_actions_and_rail(
         &unit_line,
         &start_chips,
     ));
+    if !answer_html.is_empty() {
+        out.push_str(answer_html);
+        if !answer_html.ends_with('\n') {
+            out.push('\n');
+        }
+    }
     out.push_str("<div class=\"atlas-stage\">\n");
     out.push_str("<section id=\"atlas-canvas\" class=\"atlas-canvas\">\n");
     out.push_str("<div class=\"atlas-graph\">\n");

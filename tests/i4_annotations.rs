@@ -625,16 +625,25 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
     let canvas = map_body.find("id=\"atlas-canvas\"").expect("canvas");
     let charts = map_body.find("id=\"atlas-charts\"").expect("charts");
     assert!(canvas < charts, "charts must follow the canvas");
-    for block in ["weight-chart", "blast-chart", "file-chart", "coverage"] {
+    for block in [
+        "weight",
+        "weight-chart",
+        "blast",
+        "blast-chart",
+        "file-chart",
+        "coverage",
+        "actions",
+        "cards",
+        "noise",
+        "links",
+    ] {
         assert!(
             map_body.contains(&format!("data-atlas-block=\"{block}\"")),
-            "missing Atlas chart {block}"
+            "missing Atlas block {block}"
         );
     }
-    assert!(
-        !map_body.contains("id=\"atlas-answer\""),
-        "the retired answer block must not return"
-    );
+    let answer = map_body.find("id=\"atlas-answer\"").expect("answer block");
+    assert!(answer < canvas, "the answer block must precede the canvas");
     assert!(!map_body.contains("data-chart=\"layer-workspace\""));
     assert!(!map_body.contains(FINDING_LEGEND));
 

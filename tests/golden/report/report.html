@@ -81,7 +81,7 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </nav>
 <section id="map">
 <div class="atlas-page-chrome">
-<style>#map{background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0 -1rem;padding:8px 1rem;border-radius:0}
+<style>#map{box-sizing:border-box;background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0 calc(50% - 50vw);padding:8px clamp(12px,calc((100vw - 1408px)/2),96px);border-radius:0}
 #map .atlas-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 #map .atlas-masthead{height:58px;box-sizing:border-box;display:flex;align-items:center;gap:14px;border-bottom:1px solid #d6d0c4}
 #map .atlas-brand{flex:0 0 244px;min-width:0}
@@ -123,9 +123,9 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 #map .atlas-footer{padding:5px 8px 2px;font-size:9px;line-height:1.35;color:#6f6a61;font-variant-numeric:tabular-nums}
 #map .atlas-footer .atlas-mono{color:#202b35}
 #map .atlas-footer-part{white-space:nowrap}
-#map .atlas-stage{display:flex;gap:10px;align-items:flex-start;justify-content:center}
-#map #atlas-canvas{flex:0 0 868px;max-width:868px;min-width:0}
-#map .atlas-rail{flex:1 1 0;min-width:0;max-width:530px;color:#202b35}
+#map .atlas-stage{display:flex;gap:10px;align-items:flex-start;justify-content:center;width:100%}
+#map #atlas-canvas{flex:1 1 auto;min-width:0;width:100%;max-width:none}
+#map .atlas-rail{flex:0 0 530px;min-width:0;max-width:530px;color:#202b35}
 #map .atlas-rail-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 1px 5px;border-bottom:1px solid #d6d0c4;font-size:8.5px;font-weight:800;letter-spacing:.11em;color:#6f6a61;text-transform:uppercase}
 #map .atlas-rail-title span{font-weight:600;letter-spacing:0;text-transform:none;color:#6f6a61}
 #map .atlas-rail-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
@@ -192,10 +192,51 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 #map .atlas-links{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:9px}
 #map .atlas-links a{color:#7c2d12;font-weight:650;text-decoration:none}
 #map .atlas-links a:hover{text-decoration:underline}
+#map .atlas-block{max-width:1408px;margin:10px auto 0;background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;padding:9px 12px 10px;color:#202b35}
+#map .atlas-charts>.atlas-block{margin:0}
+#map .atlas-block h3{font-size:12px;font-weight:800;margin:0 0 3px;letter-spacing:-.005em}
+#map .atlas-block h4{font-size:8.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6f6a61;margin:8px 0 3px}
+#map .atlas-answer-line{margin:2px 0 0;font-size:10px;line-height:1.45;color:#202b35;overflow-wrap:anywhere}
+#map .atlas-answer-line code,#map .atlas-action code,#map .atlas-card code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9.5px}
+#map .atlas-caveat{display:block;margin-top:4px;color:#6f6a61;font-size:9px}
+#map .atlas-fn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#3f4952;font-size:9.5px}
+#map .atlas-rank{font-weight:800;margin-right:5px;color:#c2410c;font-variant-numeric:tabular-nums}
+#map .atlas-action-list{margin:5px 0 0;padding-left:1.3rem}
+#map .atlas-action{margin:0 0 6px;font-size:9.5px;line-height:1.4;overflow-wrap:anywhere}
+#map .atlas-loc{color:#202b35;text-decoration:none}
+#map .atlas-loc:hover{text-decoration:underline}
+#map .atlas-badge{display:inline-block;border:1px solid #b8b2a7;border-radius:3px;padding:0 3px;margin-left:3px;font-size:8.5px;color:#3c4650;background:#fffdf8;white-space:nowrap}
+#map .atlas-class{display:inline-block;border:1px solid #b8b2a7;border-radius:3px;padding:0 3px;font-size:8.5px;color:#3f6d6a;white-space:nowrap}
+#map .atlas-class.nonprod{color:#7c2d12;border-style:dashed}
+#map .atlas-anchor,#map .atlas-share,#map .atlas-caption,#map .atlas-counts,#map .atlas-trip,#map .atlas-note{color:#6f6a61;font-size:9px}
+#map .atlas-anchor{margin-top:2px;font-variant-numeric:tabular-nums}
+#map .atlas-share{font-variant-numeric:tabular-nums}
+#map .atlas-trip{margin-top:2px}
+#map .atlas-note{margin-left:4px;color:#8a5a2b}
+#map .atlas-why{margin-top:3px;color:#3f4952;font-size:9px;line-height:1.4}
+#map .atlas-more{margin:6px 0 0;font-size:9px}
+#map .atlas-more a{color:#7c2d12;font-weight:650;text-decoration:none}
+#map .atlas-counts{margin:6px 0 0}
+#map .atlas-weight-list,#map .atlas-dependent-list,#map .atlas-fn-list,#map .atlas-drill-links{margin:4px 0 0;padding-left:1.3rem;font-size:9.5px;line-height:1.4}
+#map .atlas-nonprod{margin:5px 0 0;padding:3px 7px;border-left:3px solid #9a3412;background:#f7f4ed;font-size:9px;color:#3c4650}
+#map .atlas-blast-line{font-size:11px;font-weight:750;margin:2px 0 4px}
+#map .atlas-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#202b35;overflow-wrap:anywhere}
+#map .atlas-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:8px;margin-top:6px}
+#map .atlas-card{min-width:0;border:1px solid #d8d2c6;border-radius:4px;background:#fffdf8;padding:6px 8px 7px}
+#map .atlas-card h4{margin:0 0 3px;font-size:10px;font-weight:750;letter-spacing:0;text-transform:none;color:#202b35}
+#map .atlas-dominant{margin:3px 0;color:#8a5a2b;font-size:9px;font-weight:650;line-height:1.35}
+#map .atlas-card p{margin:2px 0}
+#map .atlas-card a{color:#7c2d12;text-decoration:none}
+#map .atlas-card a:hover{text-decoration:underline}
+#map .atlas-drill-links li{margin:1px 0}
+#map .atlas-drill-links a{color:#7c2d12;font-weight:650;text-decoration:none}
+#map .atlas-drill-links a:hover{text-decoration:underline}
 @media (max-width:900px){#map .atlas-bar-columns{grid-template-columns:1fr}}
 @media print{#map .atlas-charts{break-inside:avoid}}
-@media (max-width:1359px){#map .atlas-stage{flex-direction:column;align-items:center}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:868px;max-width:100%}}
+@media (max-width:1359px){#map .atlas-stage{flex-direction:column;align-items:stretch}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}}
+@media (min-width:1360px) and (max-width:1599px){#map .atlas-stage{flex-direction:row;align-items:flex-start}#map #atlas-canvas{flex:1 1 auto;width:100%;max-width:none}#map .atlas-rail{flex:0 0 min(530px,34vw);max-width:none}}
 @media (min-width:1360px) and (max-width:1439px){#map .atlas-rail-name{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}}
+@media (min-width:1600px){#map .atlas-stage{flex-direction:column;align-items:stretch}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}#map .atlas-rail-cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media print{#map .atlas-stage{display:block}#map .atlas-rail{width:auto;max-width:none;margin-top:8px}}
 @keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
 @keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
@@ -246,6 +287,10 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </div>
 </div>
 </div>
+<div class="atlas-block" data-atlas-block="answer" id="atlas-answer">
+<h3>What to open first</h3>
+<p class="atlas-answer-line"><strong>ENTRY · production main · confidence HIGH · 0 alternatives</strong>. Elected because the scan found a production main. The largest static cost is src/main.c (file total 155 static cost units (v2) · 22× median function · top 50% of files). Open first: <a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21"><code>src/main.c:34</code></a> <span class="atlas-fn">process</span> — Heap allocation inside loop (HOT · HIGH). <span class="atlas-caveat">Caveat: the drawn edges are structural; see the Atlas legend for units and edge confidence.</span></p>
+</div>
 <div class="atlas-stage">
 <section id="atlas-canvas" class="atlas-canvas">
 <div class="atlas-graph">
@@ -277,6 +322,19 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </div>
 <section id="atlas-brief" class="atlas-brief">
 <div id="atlas-charts" class="atlas-charts">
+<div class="atlas-block" data-atlas-block="weight" id="atlas-weight">
+<h3>Where is the mass? — share of scanned static cost</h3>
+<p class="atlas-caption">Production files first; non-production cost is counted in the labelled band, never dropped.</p>
+<ol class="atlas-weight-list">
+<li><span class="atlas-path">src/main.c</span> <span class="atlas-share">98% of scanned static cost</span></li>
+<li><span class="atlas-path">src/util.c</span> <span class="atlas-share">1.9% of scanned static cost</span></li>
+</ol>
+<ul class="atlas-weight-list">
+<li><span class="atlas-path">src</span> <span class="atlas-share">100% of scanned static cost · 2 files</span></li>
+</ul>
+<p class="atlas-caption">Component shares include every member file (including non-production members); component groups are approximate prefix groups.</p>
+<p class="atlas-nonprod">non-production (test/bench/other) = 0.0% of scanned static cost (0 files)</p>
+</div>
 <div class="atlas-chart" data-atlas-block="weight-chart">
 <h3>Where is the mass?</h3>
 <p class="atlas-chart-caption">share of scanned static cost · production first · bar = cost relative to the largest item in each column · share printed</p>
@@ -298,6 +356,14 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 </div>
 <p class="atlas-chart-caption">Production class includes unreached production files (flagged in the file chart below). Component shares include every member file (including non-production members); component groups are approximate prefix groups.</p>
 <p class="atlas-band">non-production (test/bench/other) = 0% of scanned static cost (0 files)</p>
+</div>
+<div class="atlas-block" data-atlas-block="blast" id="atlas-blast">
+<h3>What breaks if I touch it? — blast radius</h3>
+<p class="atlas-blast-line">no resolved dependents · target <span class="atlas-path">src/main.c</span></p>
+<p>0 caller files · 1 callee files (structural)</p>
+<p class="atlas-caption">2 of 2 include edges resolved · 0/2 unresolved includes</p>
+<p><a href="atlas-q2.html">Full dependent list and Q2 reverse drill</a></p>
+<p class="atlas-caption">Callers and callees are structural; see the Atlas legend for edge confidence.</p>
 </div>
 <div class="atlas-chart" data-atlas-block="blast-chart">
 <h3>What breaks if I touch it?</h3>
@@ -338,6 +404,77 @@ nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
 <a href="agent-actions.json">agent actions</a>
 </nav>
 </div>
+</div>
+<div class="atlas-block" data-atlas-block="actions" id="atlas-actions">
+<h3>Start here — ranked actions (production first)</h3>
+<ol class="atlas-action-list">
+<li class="atlas-action"><span class="atlas-rank">#1</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21"><code>src/main.c:34</code></a> <span class="atlas-fn">process</span> <span class="atlas-rule">Heap allocation inside loop</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 25% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates static cost; hoisting or buffer reuse is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#2</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-37-9"><code>src/main.c:37</code></a> <span class="atlas-fn">process</span> <span class="atlas-rule">Deallocation inside loop</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 25% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#3</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-73-15"><code>src/main.c:73</code></a> <span class="atlas-fn">grow</span> <span class="atlas-rule">Heap allocation inside loop</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">13 static cost units (v2) · 1.9× median function · top 33% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates static cost; hoisting or buffer reuse is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#4</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-52-9"><code>src/main.c:52</code></a> <span class="atlas-fn">join</span> <span class="atlas-rule">String accumulation in loop</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">7 static cost units (v2) · 1.0× median function · top 67% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">&#39;strcat&#39; accumulates into &#39;out&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</div></li>
+<li class="atlas-action"><span class="atlas-rank">#5</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-ALLOC-003-src-main-c-73-15"><code>src/main.c:73</code></a> <span class="atlas-fn">grow</span> <span class="atlas-rule">Realloc linear growth in loop</span><span class="atlas-badge">HOT · MEDIUM</span><span class="atlas-class">production</span> <span class="atlas-note">same location as #3</span><div class="atlas-anchor">13 static cost units (v2) · 1.9× median function · top 33% of functions</div>
+<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
+<div class="atlas-why">&#39;realloc&#39; grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization</div></li>
+</ol>
+<p class="atlas-counts">showing 5 of 14 ranked actions (production-first) · 0 non-production files demoted · 1 component-level finding in the full list</p>
+<p class="atlas-more"><a href="findings-detail.html#ranked-actions">Complete ranked action list — 14 actions (production-first)</a></p>
+</div>
+<div class="atlas-block" data-atlas-block="cards" id="atlas-cards">
+<h3>File cards — what is inside the top files</h3>
+<div class="atlas-cards">
+<article class="atlas-card">
+<h4><span class="atlas-path">src/main.c</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 155 static cost units (v2) · 22× median function · top 50% of files</p>
+<p class="atlas-share">98% of scanned static cost</p>
+<p class="atlas-dominant">Dominant finding: <code>PERF-C-ALLOC-001</code> HOT ×2 — Heap allocation inside loop</p>
+<ol class="atlas-fn-list">
+<li><code>src/main.c:84</code> <span class="atlas-fn">dispatch</span> <span class="atlas-anchor">57 static cost units (v2) · 8.1× median function · top 8% of functions</span></li>
+<li><code>src/main.c:57</code> <span class="atlas-fn">deep_sum</span> <span class="atlas-anchor">27 static cost units (v2) · 3.9× median function · top 17% of functions</span></li>
+<li><code>src/main.c:31</code> <span class="atlas-fn">process</span> <span class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 25% of functions</span></li>
+</ol>
+<p><a href="atlas-weight.html#atlas-file-src-main-c">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+<article class="atlas-card">
+<h4><span class="atlas-path">src/util.c</span> <span class="atlas-class">production</span></h4>
+<p class="atlas-anchor">file total 3 static cost units (v2) · 0.4× median function · top 100% of files</p>
+<p class="atlas-share">1.9% of scanned static cost</p>
+<p class="atlas-dominant">no findings on this file</p>
+<ol class="atlas-fn-list">
+<li><code>src/util.c:8</code> <span class="atlas-fn">util_init</span> <span class="atlas-anchor">3 static cost units (v2) · 0.4× median function · top 92% of functions</span></li>
+</ol>
+<p><a href="atlas-weight.html#atlas-file-src-util-c">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
+</article>
+</div>
+<p class="atlas-counts">showing top 2 of 2 source files (production-first)</p>
+</div>
+<div class="atlas-block" data-atlas-block="noise" id="atlas-noise">
+<h3>Noise and confidence</h3>
+<p>parse 3 ok / 0 partial / 0 failed</p>
+<p>0/2 unresolved includes · 2 of 2 include edges resolved</p>
+<p>0 MEDIUM / 1 LOW structural edges</p>
+<p>0 files demoted · 2 of 2 reachable files shown · 0 aggregated · 1 of 1 file pairs drawn</p>
+<p>0 production + 0 non-production of 2 source files unreached</p>
+<p>1 of 3 scanned files have no functions · 0 source files partial or failed</p>
+<p class="atlas-caption">Edge confidence and the cost unit are defined once, in the Atlas legend; static cost is not ground truth.</p>
+</div>
+<div class="atlas-block" data-atlas-block="links" id="atlas-links">
+<h3>Drills</h3>
+<ul class="atlas-drill-links">
+<li><a href="findings-detail.html#ranked-actions">Complete ranked action list</a> — 14 actions (production-first)</li>
+<li><a href="profile-queue.html">Complete profile queue</a> — 12 functions ranked by static cost</li>
+<li><a href="atlas-q2.html">Q2 reverse drill</a> — dependents and structural callers/callees for src/main.c</li>
+<li><a href="atlas-weight.html">Weight detail</a> — 2 source files and 1 component by share</li>
+<li>Component pages (schema component index): <a href="charts/component-01-src.svg">src</a> (#1)</li>
+<li><a href="#explorer">Explorer</a> — legacy static chart stems</li>
+</ul>
 </div>
 </section>
 </section>
