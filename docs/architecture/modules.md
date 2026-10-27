@@ -260,6 +260,7 @@ Owned here per output-contract §6. `metrics.json` remains the machine contract;
 | `<path>` | positional | `.` | scan target (directory or single file) |
 | `-o`, `--output` | directory | `perfpal-report` | report directory; internal layout fixed by output-contract §2 |
 | `--force` | — | off | allow replacing an existing directory that contains no `metrics.json` (safety-guard override) |
+| `--report-width` | `auto\|1280\|1440\|1920\|2560\|3072` | `auto` | layout-only width hint for `report.html`; changes only its CSS plus the `data-report-width` layout marker (never data or other artifacts) |
 | `--version` | — | — | print `perfpal <version> (metrics schema <schema_version>)`, exit 0 |
 | `-h`, `--help` | — | — | usage text, exit 0 |
 

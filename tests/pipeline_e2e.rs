@@ -904,6 +904,96 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
     }
 }
 
+/// H2: `--report-width` is layout-only — it changes `report.html` bytes and
+/// nothing else. Provenance-bearing artifacts are compared after masking.
+#[test]
+fn report_width_changes_only_report_html() {
+    let auto = temp_dir("width-auto").join("perfpal-report");
+    let fixed = temp_dir("width-1920").join("perfpal-report");
+    let target = fixture_root().to_string_lossy().into_owned();
+
+    let auto_code = run_with(argv(&[
+        "--output",
+        auto.to_string_lossy().as_ref(),
+        &target,
+    ]));
+    let fixed_code = run_with(argv(&[
+        "--output",
+        fixed.to_string_lossy().as_ref(),
+        "--report-width",
+        "1920",
+        &target,
+    ]));
+    assert_eq!(auto_code, 0);
+    assert_eq!(fixed_code, 0);
+
+    let auto_artifacts = artifact_bytes(&auto);
+    let fixed_artifacts = artifact_bytes(&fixed);
+    assert_eq!(
+        auto_artifacts.keys().collect::<Vec<_>>(),
+        fixed_artifacts.keys().collect::<Vec<_>>(),
+        "artifact set changed with --report-width"
+    );
+
+    let mut differing = Vec::new();
+    for (name, expected) in &auto_artifacts {
+        let actual = &fixed_artifacts[name];
+        if expected == actual {
+            continue;
+        }
+        match name.as_str() {
+            "metrics.json" => {
+                let expected = std::str::from_utf8(expected).expect("metrics UTF-8");
+                let actual = std::str::from_utf8(actual).expect("metrics UTF-8");
+                assert_eq!(
+                    common::mask_metrics_provenance(expected),
+                    common::mask_metrics_provenance(actual),
+                    "metrics.json changed beyond provenance with --report-width"
+                );
+            }
+            "report.md" => {
+                let expected = std::str::from_utf8(expected).expect("report.md UTF-8");
+                let actual = std::str::from_utf8(actual).expect("report.md UTF-8");
+                assert_eq!(
+                    common::mask_report_provenance(expected),
+                    common::mask_report_provenance(actual),
+                    "report.md changed beyond provenance with --report-width"
+                );
+            }
+            other => differing.push(other.to_string()),
+        }
+    }
+    assert_eq!(
+        differing,
+        vec!["report.html".to_string()],
+        "--report-width may change only report.html"
+    );
+    assert_ne!(
+        auto_artifacts["report.html"], fixed_artifacts["report.html"],
+        "--report-width must actually change the report layout"
+    );
+
+    let auto_html = std::str::from_utf8(&auto_artifacts["report.html"]).expect("auto HTML");
+    let fixed_html = std::str::from_utf8(&fixed_artifacts["report.html"]).expect("fixed HTML");
+    assert!(
+        fixed_html.contains("--report-max:1920px"),
+        "--report-width 1920 must reach the page CSS"
+    );
+    assert!(fixed_html.contains("data-report-width=\"1920\""));
+    assert_eq!(
+        fixed_html.matches("<script").count(),
+        3,
+        "report.html must still carry exactly three script elements"
+    );
+    assert_eq!(
+        inline_story_json(fixed_html),
+        inline_story_json(auto_html),
+        "the inline story payload must not depend on --report-width"
+    );
+    assert!(!auto.join("atlas-layout.json").exists());
+    assert!(!fixed.join("atlas-layout.json").exists());
+}
+
 /// S4/P6: the story-only purpose block reads the scan-root README, and adding
 /// it changes nothing outside `atlas-layout.json` (F6).
 #[test]

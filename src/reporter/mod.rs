@@ -531,6 +531,79 @@ pub fn escape_html(input: &str) -> String {
     out
 }
 
+/// Layout-width hint for `report.html`.
+///
+/// The hint is **layout-only**: it changes the page's CSS custom property
+/// (`--report-max`) and the `data-report-width` body attribute. It never
+/// changes metrics data, the inline story payload, scripts, chart SVGs, or any
+/// other artifact.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReportWidth {
+    /// Fluid page: the design width follows the viewport (default).
+    Auto,
+    /// Pinned 1280px design width.
+    W1280,
+    /// Pinned 1440px design width.
+    W1440,
+    /// Pinned 1920px design width.
+    W1920,
+    /// Pinned 2560px design width.
+    W2560,
+    /// Pinned 3072px design width.
+    W3072,
+}
+
+impl ReportWidth {
+    /// Human-readable list of accepted values (used in parse errors and help).
+    pub const VALID_VALUES: &'static str = "auto, 1280, 1440, 1920, 2560, 3072";
+
+    /// Parse a `--report-width` value. Accepts exactly [`Self::VALID_VALUES`].
+    ///
+    /// # Errors
+    /// Returns a message naming the invalid value and the accepted values.
+    pub fn parse(value: &str) -> Result<Self, String> {
+        match value {
+            "auto" => Ok(Self::Auto),
+            "1280" => Ok(Self::W1280),
+            "1440" => Ok(Self::W1440),
+            "1920" => Ok(Self::W1920),
+            "2560" => Ok(Self::W2560),
+            "3072" => Ok(Self::W3072),
+            other => Err(format!(
+                "invalid report width {other:?}; valid values: {}",
+                Self::VALID_VALUES
+            )),
+        }
+    }
+
+    /// The `--report-max` CSS value for this hint.
+    #[must_use]
+    pub fn css_max_width(self) -> &'static str {
+        match self {
+            Self::Auto => "100vw",
+            Self::W1280 => "1280px",
+            Self::W1440 => "1440px",
+            Self::W1920 => "1920px",
+            Self::W2560 => "2560px",
+            Self::W3072 => "3072px",
+        }
+    }
+
+    /// `data-report-width` marker: the exact hint token (`auto`, `1280`, …).
+    /// Pinned tokens drive the design-width breakpoint and type-ramp overrides
+    /// in the Atlas CSS.
+    fn body_marker(self) -> &'static str {
+        match self {
+            Self::Auto => "auto",
+            Self::W1280 => "1280",
+            Self::W1440 => "1440",
+            Self::W1920 => "1920",
+            Self::W2560 => "2560",
+            Self::W3072 => "3072",
+        }
+    }
+}
+
 /// Render the full `report.html` content for tests and pure callers.
 ///
 /// Builds the story bundle with no filesystem probes (`root = None`) and
@@ -575,8 +648,23 @@ pub fn render_html_with_story(
     emitted_charts: &[String],
     story: &atlas_story::StoryBundle,
 ) -> String {
+    render_html_with_story_at_width(doc, emitted_charts, story, ReportWidth::Auto)
+}
+
+/// [`render_html_with_story`] with an explicit layout-width hint.
+///
+/// The width is a layout-only knob (see [`ReportWidth`]): the emitted page's
+/// metrics/story data, scripts, chart links, and every other artifact stay
+/// byte-identical across widths.
+#[must_use]
+pub fn render_html_with_story_at_width(
+    doc: &MetricsDocument,
+    emitted_charts: &[String],
+    story: &atlas_story::StoryBundle,
+    width: ReportWidth,
+) -> String {
     let mut out = String::new();
-    html_head(&mut out, doc);
+    html_head(&mut out, doc, width);
     // Report-only breadcrumb (inside the shared header, right after the h1):
     // findings-detail.html calls the same header WITHOUT it, keeping that
     // artifact's bytes a hard contract.
@@ -1635,8 +1723,9 @@ fn render_appendix_c(out: &mut String, doc: &MetricsDocument) {
 // ---------------------------------------------------------------------------
 
 /// Emit the document head: doctype, charset, title, and a minimal inline
-/// `<style>` block (static text — no external resources; the only script is
-/// the fixed [`REPORT_SCRIPT`] block appended in `html_footer`).
+/// `<style>` block (static text — no external resources; the only scripts are
+/// the amended A12 set (ADR-0014): the fixed [`REPORT_SCRIPT`] appended in
+/// `html_footer`, the fixed story script, and the inline story JSON block).
 /// Scoped key-view CSS (map-intelligibility V4). Shared by the report page
 /// and the detail/profile pages. No `text-overflow: ellipsis` anywhere on
 /// key-view text: labels wrap instead of truncating.
@@ -1677,7 +1766,7 @@ const KEY_VIEW_CSS: &str = "\
          .kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}\n\
          @media print{.kv-row,.kv-brow{break-inside:avoid}}\n";
 
-fn html_head(out: &mut String, doc: &MetricsDocument) {
+fn html_head(out: &mut String, doc: &MetricsDocument, width: ReportWidth) {
     out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
     out.push_str("<meta charset=\"utf-8\">\n");
     out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
@@ -1688,9 +1777,15 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
         "<title>Perfpal Report — schema {}</title>\n",
         escape_html(&doc.schema_version),
     ));
+    // `--report-max` is the ONLY width-dependent surface in this page: the
+    // body is fluid by default (100vw) and pinned by an explicit
+    // `--report-width` hint. The `data-report-width` marker lets the Atlas
+    // band drop its full-bleed margins inside a fixed page.
+    out.push_str("<style>\n:root{--report-max:");
+    out.push_str(width.css_max_width());
     out.push_str(
-        "<style>\n\
-         body{font-family:monospace,monospace;max-width:90rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
+        "}\n\
+         body{font-family:monospace,monospace;max-width:min(100%,var(--report-max));box-sizing:border-box;margin:2rem auto;padding:0 clamp(1rem,calc(var(--report-max)*0.016),2.5rem);color:#111;background:#fff}\n\
          .table-scroll{overflow-x:auto;max-width:100%}\n\
          table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
          th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
@@ -1701,7 +1796,8 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
          figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}\n\
          figcaption{margin-top:.5rem}\n\
          img{max-width:100%;height:auto}\n\
-         figure.pz img{max-width:none;touch-action:none}\n\
+         figure img{display:block;margin:0 auto}\n\
+         figure.pz img{max-width:100%;touch-action:none}\n\
          #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
          #filter-bar{margin:.5rem 0}\n\
          nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
@@ -1711,7 +1807,10 @@ fn html_head(out: &mut String, doc: &MetricsDocument) {
          #findings details[open]>summary::before{transform:rotate(90deg)}\n",
     );
     out.push_str(KEY_VIEW_CSS);
-    out.push_str("         </style>\n</head>\n<body>\n");
+    out.push_str(&format!(
+        "         </style>\n</head>\n<body data-report-width=\"{}\">\n",
+        width.body_marker()
+    ));
 }
 
 /// Header: schema version + tool version + file/finding counts ONLY — never
@@ -2343,10 +2442,10 @@ fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("</section>\n");
 }
 
-/// Detail-page head: same markup as [`html_head`] (doctype, charset,
+/// Detail-page head: same markup shape as [`html_head`] (doctype, charset,
 /// viewport, empty favicon, inline `<style>`), titled for the findings
-/// detail artifact. It keeps the 72rem body width: the 90rem width on the
-/// report page exists for the Atlas canvas, while this page and the
+/// detail artifact. It keeps the 72rem body width: the report page is fluid
+/// (and may be pinned by `--report-width`), while this page and the
 /// profile-queue page intentionally stay at 72rem for dense tables.
 fn html_detail_head(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
@@ -3071,6 +3170,49 @@ mod tests {
         assert_eq!(format_fixed_point(-2.675, 2), "-2.68");
         // Negative-zero guarantee: "-0.00" must never leak.
         assert_eq!(format_fixed_point(-0.001, 2), "0.00");
+    }
+
+    #[test]
+    fn report_width_parses_documented_values() {
+        for (raw, expected) in [
+            ("auto", ReportWidth::Auto),
+            ("1280", ReportWidth::W1280),
+            ("1440", ReportWidth::W1440),
+            ("1920", ReportWidth::W1920),
+            ("2560", ReportWidth::W2560),
+            ("3072", ReportWidth::W3072),
+        ] {
+            assert_eq!(ReportWidth::parse(raw), Ok(expected), "value {raw:?}");
+        }
+    }
+
+    #[test]
+    fn report_width_rejects_invalid_values_and_names_the_valid_set() {
+        for invalid in ["1000", "", "AUTO", "1280px", "auto "] {
+            let err = ReportWidth::parse(invalid).expect_err("must reject");
+            assert!(err.contains(invalid), "error must name {invalid:?}: {err}");
+            for valid in ["auto", "1280", "1440", "1920", "2560", "3072"] {
+                assert!(err.contains(valid), "error must list {valid:?}: {err}");
+            }
+        }
+    }
+
+    #[test]
+    fn report_width_css_maps_to_the_expected_property() {
+        assert_eq!(ReportWidth::Auto.css_max_width(), "100vw");
+        assert_eq!(ReportWidth::W1280.css_max_width(), "1280px");
+        assert_eq!(ReportWidth::W1440.css_max_width(), "1440px");
+        assert_eq!(ReportWidth::W1920.css_max_width(), "1920px");
+        assert_eq!(ReportWidth::W2560.css_max_width(), "2560px");
+        assert_eq!(ReportWidth::W3072.css_max_width(), "3072px");
+        // The body marker carries the exact token so the CSS breakpoint and
+        // type-ramp overrides can key on the pinned design width.
+        assert_eq!(ReportWidth::Auto.body_marker(), "auto");
+        assert_eq!(ReportWidth::W1280.body_marker(), "1280");
+        assert_eq!(ReportWidth::W1440.body_marker(), "1440");
+        assert_eq!(ReportWidth::W1920.body_marker(), "1920");
+        assert_eq!(ReportWidth::W2560.body_marker(), "2560");
+        assert_eq!(ReportWidth::W3072.body_marker(), "3072");
     }
 
     /// Completeness lock (plans `rust-backend` R3 D1 + `python-backend` W3 +

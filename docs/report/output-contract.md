@@ -62,8 +62,14 @@ Layout rules:
   final frame, JS-off fallback to the static canvas plus a `<noscript>` beat narrative. The amended
   A12 contract allows exactly three script elements (the unchanged fixed `REPORT_SCRIPT`, the fixed
   `STORY_SCRIPT`, the inline JSON block); `--story` only emits `atlas-layout.json` and changes no
-  shared artifact. The page links `atlas-weight.html`, `atlas-q2.html`, the complete action/profile
-  drills, and the LLM-facing `agent-report.md` / `agent-actions.json`. Contract:
+  shared artifact. The page is responsive by default (fluid 1280→3072; full-width canvas and
+  story; `clamp()` type ramp anchored at 1440), and `--report-width
+  <auto|1280|1440|1920|2560|3072>` pins a design width as a layout-only hint — it changes only
+  `report.html` (its CSS and the `data-report-width` layout marker), never data, scripts or any
+  other artifact. Legacy linked SVG figures scale
+  down but are not upscaled past their intrinsic width. The page links `atlas-weight.html`,
+  `atlas-q2.html`, the complete action/profile drills, and the LLM-facing `agent-report.md` /
+  `agent-actions.json`. Contract:
   `docs/specs/atlas-layout.md`, `docs/specs/atlas-metrics.md`, `docs/specs/atlas-feature.md`,
   `docs/adr/ADR-0014-in-report-atlas-story.md`.
 

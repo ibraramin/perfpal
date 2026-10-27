@@ -125,7 +125,7 @@ charts stay as additions; they must not replace a branch block.
 embedded** in `report.html`; ADR-0012 Decision 5 is superseded. The amended A12 script contract is
 exactly three elements: the unchanged fixed `REPORT_SCRIPT`, one fixed `STORY_SCRIPT`, and one
 inline `<script type="application/json">` data block. The player is self-contained (no fetch/HTTP,
-no eval/`Function`, no timers/randomness, no `innerHTML`), scoped under `#atlas-story`, starts at
+no eval/`Function`, no `setTimeout`/`setInterval`, no randomness, no `innerHTML`), scoped under `#atlas-story`, starts at
 the final frame under reduced motion, prints the final frame, and works from `file://`. The JS-off
 fallback is the complete static Atlas canvas (canonical final frame) plus a `<noscript>` beat
 narrative and drill links — no second SVG, no raster. The story payload is projected once in Rust
@@ -140,37 +140,51 @@ ADR-0014. Do not ship a fetch-based report.
 
 ## 6. Resolution and display scaling
 
-**Current defect:** the report is laid out for a fixed width — `SVG_W = 1400`, `PAGE_GRAPH_W = 868`,
-`#atlas-canvas { flex: 0 0 868px; max-width: 868px }`, `body { max-width: 90rem }`, charts
-`max-width: 1408px`, and 8–10 px type. All output is vector (no raster in `report.html`), so this is
-a **layout/legibility** problem, not blur: on a 3072×1920 display the page caps at 1440 px and the
-canvas at 868 px, so most of the screen is empty and the type reads small at 100%.
+**Shipped behaviour (H2).** The report is responsive by default. `body` uses a fluid max width
+(`min(100%, 100vw)`) and fluid padding; `#map` keeps its full-bleed band with fluid gutters; the
+Atlas canvas stays `width:100%` with the preserved `868`-wide viewBox; the four Atlas chart blocks
+fill their grid; and the map/story chrome uses a `clamp()` type ramp anchored so **1440 px renders
+the H1 sizes** and **3072 px caps at 1.5×**. The always-on Atlas story is full-width too: `.page`,
+`.story-head` and `.canvas-shell` follow the page width, and the story canvas keeps its
+`1400/718` aspect ratio. Linked SVG figures (the legacy Explorer stems) scale down with
+`max-width:100%` but are **not upscaled past their intrinsic width** and are centred — upscaling
+them would turn the page into a multi-thousand-pixel vertical stretch without adding information.
 
-**Policy:**
-- **Default = responsive.** `body` uses a fluid max width; the Atlas canvas is `width:100%` with its
-  `viewBox` preserved; chart figures scale to their container; type uses a fluid scale (`clamp()`).
-  The report fills 1280 → 3072 px without re-layout code.
-- **Optional fixed width.** Add `--report-width <px>` (accepted values: `auto` (default), `1280`,
-  `1440`, `1920`, `2560`, `3072`) for users who want a fixed design width. This is a render hint, not
-  a scan setting; it changes only the layout constants, never the data.
-- **No scan-machine resolution detection as the default.** A report is a static file opened later,
-  possibly on another machine; baking the scanning display's resolution would be wrong more often
-  than right. If the founder wants a "match my display" convenience, it must be an explicit flag
-  (e.g. `--report-width auto` stays responsive; a future `--report-width=native` is a separate
-  decision).
-- **High-DPI:** vector output is DPR-independent; keep it that way (no rasterization of charts, no
-  `image-rendering` hacks). Any future raster asset must ship at 2× or be replaced by vector.
-- **Page height:** the A8/page-height budget is evaluated at each supported width; a wider layout must
-  not simply stretch — density targets are re-baselined with evidence.
-- **Acceptance:** render and review at 1280, 1440, 1920, 2560, 3072 CSS px and at DPR 1 and 2;
-  `@vision` sign-off at 1440 and 3072; no horizontal scroll at 1280; no clipped SVG labels.
+**Optional fixed width.** `--report-width <auto|1280|1440|1920|2560|3072>` (default `auto`) is a
+public, layout-only render hint. It changes only `report.html` CSS: the `--report-max` design width
+and the `data-report-width` breakpoint marker. Pinned widths use their own design width for the
+type ramp, the rail placement (1280 stacked, 1440 beside, ≥1920 below) and the gutter. Data, the
+inline story payload, scripts and every other artifact stay byte-identical. It is not a scan
+setting and never detects the scanning machine's display.
+
+**No scan-machine resolution detection as the default.** A report is a static file opened later,
+possibly on another machine; baking the scanning display's resolution would be wrong more often
+than right. A future "match my display" convenience would be an explicit separate decision.
+
+**High-DPI.** All output is vector; charts and the canvas stay DPR-independent (no rasterization,
+no `image-rendering` hacks). Acceptance runs at DPR 1 and 2.
+
+**Page height (A8 re-baseline, 2026-10-28).** The first-page fold target is unchanged: the answer
+line must end above the fold at every supported width (measured bottom: 427 px at 1280/1440,
+436 px at 3072). The document-height budget is re-baselined with evidence on the hyperfine fixture:
+16,927 px at 1440 and 21,241 px at 3072 (H1: 18,747 / 20,646); the story section is 1,029 px at
+1440 and 1,875 px at 3072 (full-width canvas). The 1440 height is lower than H1 because the
+legacy Explorer pan/zoom figures now downscale to their figure (no internal overflow); the 3072
+growth is the full-width story canvas. Wider layouts grow with content, not by stretching legacy
+figures; cJSON and the 3k fixture are recorded in
+`docs/evidence/polish-report/H2/PAGE-HEIGHT.md`.
+
+**Acceptance.** Render and review at 1280, 1440, 1920, 2560 and 3072 CSS px at DPR 1 and 2:
+no horizontal scroll (especially 1280), the Atlas SVG fills its container, no clipped SVG labels,
+the story boots to the final summary beat, and the JS-off fallback keeps every static node visible.
+`@vision` signs off at 1440 and 3072.
 
 ## 7. Invariants (must not break)
 
 - Schema stays 1.8 unless a deliberate contract change is approved (prefer none).
 - A12 as amended (ADR-0014): exactly three script elements in `report.html` — the unchanged fixed
   `REPORT_SCRIPT`, the fixed `STORY_SCRIPT`, and one inline `application/json` data block; no
-  fetch/HTTP, no eval/`Function`, no timers/randomness; story data inline; JS-disabled static
+  fetch/HTTP, no eval/`Function`, no `setTimeout`/`setInterval`, no randomness; story data inline; JS-disabled static
   fallback (canonical canvas + `<noscript>` narrative); `--story` changes no shared artifact.
 - No network/external assets; no telemetry.
 - Byte-determinism: repeated runs are byte-identical on deterministic surfaces.
@@ -192,7 +206,7 @@ canvas at 868 px, so most of the screen is empty and the type reads small at 100
    clippy/tests, story gate (`sim/gate.sh`), golden regeneration.
 7. Vision: `@vision` APPROVED at 1440 and 3072 before any formatting claim is considered done.
 
-## 9. Open decisions (H1)
+## 9. Open decisions (H1/H2)
 
 - **Decided (founder, 2026-10-27; ADR-0014): include the interactive story in-report, always
   embedded.** `--story` is layout-artifact-only and must not change shared artifacts. The fallback
@@ -203,5 +217,10 @@ canvas at 868 px, so most of the screen is empty and the type reads small at 100
   and below it at ≥1600 px (stacked below 1360). Recorded in ADR-0014 and the vision evidence.
 - Keep or drop `findings-detail.md` (needs a named consumer).
 - Keep or drop the shipped schema copy.
-- Whether `--report-width` is exposed in v0.4.x or documented as an internal render hint.
-- Exact A8/page-height target at 3072.
+- **Decided (founder, 2026-10-28):** `--report-width` is public in v0.4.x — documented in
+  `--help`, the README CLI table and output-contract §2; the accepted values are
+  `auto|1280|1440|1920|2560|3072`. It is layout-only and changes no shared artifact.
+- **Decided (H2, 2026-10-28):** the A8 first-page fold stays "answer line above the fold" (measured
+  ≤ 436 px at every width); the document-height budget is re-baselined per fixture at 3072 with
+  evidence (`docs/evidence/polish-report/H2/PAGE-HEIGHT.md`), and legacy linked SVG figures are not
+  upscaled.

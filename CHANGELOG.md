@@ -26,6 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   suite, semantic feature gate, `sim/gate.sh` 304/304 and 3k scale 44/44). Vision: 1440/3072
   PASS-WITH-NITS, JS-off PASS; review panel **APPROVED** (R1/R2/Q1/Q2 + fresh R3).
 
+- **Responsive report scale (polish-report H2).** `report.html` is fluid from 1280 to 3072 CSS px
+  by default: the body/page use a fluid max width, the Atlas canvas keeps its viewBox with
+  `width:100%`, the charts and figures fill their containers, and the map/story type ramps with
+  `clamp()` anchored so 1440 px renders the H1 sizes. The Atlas story page/canvas is full-width.
+  New public `--report-width <auto|1280|1440|1920|2560|3072>` pins a design width as a layout-only
+  hint: only `report.html` (its CSS and the `data-report-width` layout marker) changes; metrics, story payload, scripts (A12: three) and every
+  other artifact stay byte-identical. The A8/page-height budget is re-baselined at each supported
+  width with evidence (`docs/evidence/polish-report/H2/`); vector output stays DPR-independent.
+
 ### Pending
 - **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002
   `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` before any tag.

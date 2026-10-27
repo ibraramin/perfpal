@@ -34,6 +34,31 @@ pub const STORY_SCRIPT: &str = include_str!("../../sim/sim.js");
 /// The scoped story stylesheet (generated from `sim/sim.css`).
 const STORY_CSS: &str = include_str!("../../sim/sim.report.css");
 
+/// Report-only fluid overrides layered AFTER [`STORY_CSS`] (same `<style>`
+/// element — no extra script). `sim/sim.css` / `sim/sim.report.css` are
+/// generated sources and stay untouched.
+///
+/// Type sizes use the same anchored `clamp()` ramp as the map, keyed on
+/// `--report-max` (not the viewport): at a 1440px design width each value
+/// equals the stylesheet's current px size, and the ceiling is 1.5× at 3072px.
+/// A pinned `--report-width` therefore keeps the pinned page's type sizes even
+/// on a wider monitor. The story stage's SVG text is untouched — SVG user
+/// units already scale with the viewBox.
+const STORY_FLUID_CSS: &str = r#"#atlas-story{--story-fs-8:clamp(8px,calc(4.4704px + .0024512*var(--report-max,100vw)),12px);--story-fs-8-2:clamp(8.2px,calc(4.58216px + .00251248*var(--report-max,100vw)),12.3px);--story-fs-8-5:clamp(8.5px,calc(4.7498px + .0026044*var(--report-max,100vw)),12.75px);--story-fs-9:clamp(9px,calc(5.0292px + .0027576*var(--report-max,100vw)),13.5px);--story-fs-9-5:clamp(9.5px,calc(5.3086px + .0029108*var(--report-max,100vw)),14.25px);--story-fs-12:clamp(12px,calc(6.7056px + .0036768*var(--report-max,100vw)),18px);--story-fs-16:clamp(16px,calc(8.9408px + .0049024*var(--report-max,100vw)),24px)}
+#atlas-story .page{max-width:min(100%,var(--report-max,100vw));height:auto;min-height:0}
+#atlas-story .canvas-shell{max-width:100%;flex:0 0 auto;aspect-ratio:1400/718;height:auto;min-height:0}
+#atlas-story .story-head{max-width:min(100%,var(--report-max,100vw))}
+#atlas-story .kicker,#atlas-story .story-kicker{font-size:var(--story-fs-8)}
+#atlas-story .subline{font-size:var(--story-fs-8-5)}
+#atlas-story .story-sub{font-size:var(--story-fs-9)}
+#atlas-story .transport-btn,#atlas-story #speed,#atlas-story #beat-label{font-size:var(--story-fs-9-5)}
+#atlas-story #case-select{font-size:var(--story-fs-9)}
+#atlas-story .key-label{font-size:var(--story-fs-8)}
+#atlas-story .key-defs,#atlas-story .legend{font-size:var(--story-fs-8-2)}
+#atlas-story .narration-title{font-size:var(--story-fs-12)}
+#atlas-story .story-head h2{font-size:var(--story-fs-16)}
+#atlas-story details.s4-detail>summary.s4-summary{font-size:var(--story-fs-9)}"#;
+
 /// The inline data block's `id`.
 pub const STORY_DATA_TAG: &str = "perfpal-atlas-story-data";
 
@@ -59,6 +84,7 @@ pub fn render_story_section(doc: &MetricsDocument, bundle: &StoryBundle) -> Stri
     out.push_str("<noscript><style>#atlas-story .page,#atlas-story #s4-detail{display:none!important}</style></noscript>\n");
     out.push_str("<style>\n");
     out.push_str(STORY_CSS);
+    out.push_str(STORY_FLUID_CSS);
     out.push_str("</style>\n");
     out.push_str(STORY_SHELL);
     out.push_str(&narrative);
@@ -334,6 +360,10 @@ fn debug_assert_story_script_safe() {
     );
     debug_assert!(!STORY_SCRIPT.contains("eval("), "story script evals");
     debug_assert!(!STORY_CSS.contains("</style"), "story CSS closes its tag");
+    debug_assert!(
+        !STORY_FLUID_CSS.contains("</style"),
+        "story override CSS closes its tag"
+    );
     debug_assert!(!STORY_CSS.contains("http://"), "story CSS has an HTTP URL");
     debug_assert!(
         !STORY_CSS.contains("https://"),
@@ -413,7 +443,16 @@ mod tests {
                 !STORY_CSS.contains(banned),
                 "banned string {banned:?} in the scoped story CSS"
             );
+            assert!(
+                !STORY_FLUID_CSS.contains(banned),
+                "banned string {banned:?} in the fluid override CSS"
+            );
         }
+        // The report-only override keeps the story page and canvas fluid and
+        // leaves the generated stylesheet alone.
+        assert!(STORY_FLUID_CSS.contains("#atlas-story .page{max-width:min(100%,var(--report-max"));
+        assert!(STORY_FLUID_CSS.contains("#atlas-story .canvas-shell{max-width:100%"));
+        assert!(!STORY_FLUID_CSS.contains("<script"));
     }
 
     #[test]

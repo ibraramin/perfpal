@@ -18,8 +18,9 @@ use perfpal::analyzer::{Confidence, Severity};
 use perfpal::cli::run_with;
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
 use perfpal::reporter::{
-    escape_html, render_atlas_q2_html, render_atlas_weight_html, render_findings_detail_html,
-    render_html, render_profile_queue_html, report_script,
+    ReportWidth, atlas_story, escape_html, render_atlas_q2_html, render_atlas_weight_html,
+    render_findings_detail_html, render_html, render_html_with_story_at_width,
+    render_profile_queue_html, report_script,
 };
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, FunctionStats, MetricsDocument,
@@ -1278,6 +1279,86 @@ fn double_scan_report_html_byte_identical_unmasked() {
         !detail_text.contains(&target),
         "absolute scan root leaked into detail"
     );
+}
+
+// ---------------------------------------------------------------------------
+// 6b. `--report-width` is a layout-only knob
+// ---------------------------------------------------------------------------
+
+/// Drop every `<style>…</style>` element so only non-CSS markup remains.
+fn without_style_blocks(html: &str) -> String {
+    let mut out = String::new();
+    let mut rest = html;
+    while let Some(open) = rest.find("<style>") {
+        out.push_str(&rest[..open]);
+        let after = &rest[open..];
+        let close = after.find("</style>").expect("style close") + "</style>".len();
+        rest = &after[close..];
+    }
+    out.push_str(rest);
+    out
+}
+
+#[test]
+fn report_width_changes_only_the_layout_surface() {
+    let mut doc = base_doc();
+    doc.components = Some(vec![component(1, "src")]);
+    let charts = vec![
+        "include-graph.svg".to_string(),
+        "layer-workspace.svg".to_string(),
+    ];
+    let story = atlas_story::build(&doc, None);
+
+    let auto = render_html_with_story_at_width(&doc, &charts, &story, ReportWidth::Auto);
+    assert_eq!(
+        auto,
+        render_html(&doc, &charts),
+        "Auto must equal render_html"
+    );
+    assert!(auto.contains("--report-max:100vw"));
+    assert!(auto.contains("<body data-report-width=\"auto\">"));
+    let auto_payload = story_data(&auto).to_string();
+    let auto_scripts = scripts(&auto).len();
+    let auto_svgs = auto.matches("<svg").count();
+    let auto_markup = without_style_blocks(&auto);
+
+    for (width, marker, css) in [
+        (ReportWidth::W1280, "1280", "1280px"),
+        (ReportWidth::W1440, "1440", "1440px"),
+        (ReportWidth::W1920, "1920", "1920px"),
+        (ReportWidth::W2560, "2560", "2560px"),
+        (ReportWidth::W3072, "3072", "3072px"),
+    ] {
+        let html = render_html_with_story_at_width(&doc, &charts, &story, width);
+        assert!(
+            html.contains(&format!("--report-max:{css}")),
+            "expected --report-max:{css} for {width:?}"
+        );
+        assert!(
+            html.contains(&format!("<body data-report-width=\"{marker}\">")),
+            "expected exact marker data-report-width=\"{marker}\" for {width:?}"
+        );
+        assert_eq!(html.matches("<script").count(), 3, "A12: three scripts");
+        assert_eq!(scripts(&html).len(), auto_scripts);
+        assert_eq!(html.matches("<svg").count(), auto_svgs, "no extra SVG");
+        assert_eq!(
+            story_data(&html),
+            auto_payload.as_str(),
+            "story data changed"
+        );
+        assert_eq!(story_script(&html), story_script(&auto));
+        assert_eq!(report_script_body(&html), report_script());
+        // Non-style markup is identical: only the CSS custom property and the
+        // body width marker may differ.
+        let normalized = without_style_blocks(&html).replace(
+            &format!("data-report-width=\"{marker}\""),
+            "data-report-width=\"auto\"",
+        );
+        assert_eq!(
+            normalized, auto_markup,
+            "width {css} changed markup outside the layout surface"
+        );
+    }
 }
 
 // ---------------------------------------------------------------------------

@@ -30,6 +30,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use clap::Parser;
 
 use crate::aggregator::Provenance;
+use crate::reporter::ReportWidth;
 use crate::writer::Artifact;
 
 /// `--version` payload (modules.md §8.1): `perfpal <version> (metrics schema
@@ -76,6 +77,17 @@ pub struct Args {
     /// Also emit `atlas-layout.json`: the Atlas story geometry the SVG draws.
     #[arg(long)]
     pub story: bool,
+    /// Layout width hint for `report.html`: auto (default), 1280, 1440, 1920,
+    /// 2560, or 3072. Changes layout only — never data, scripts, or other
+    /// artifacts.
+    #[arg(
+        long,
+        value_name = "WIDTH",
+        default_value = "auto",
+        value_parser = ReportWidth::parse,
+        help = "Layout width hint for report.html: auto (default), 1280, 1440, 1920, 2560, or 3072. Changes layout only."
+    )]
+    pub report_width: ReportWidth,
 }
 
 /// Stage failures mapped to exit codes (modules.md §8.2). Constructed only
@@ -255,7 +267,12 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // Static self-contained HTML sibling of report.md (Option B slice 1,
     // LINKED variant — zero JavaScript): pure function of the same
     // `(document, chart_names)` pair, so findings stay byte-identical.
-    let html = crate::reporter::render_html_with_story(&document, &chart_names, &story);
+    let html = crate::reporter::render_html_with_story_at_width(
+        &document,
+        &chart_names,
+        &story,
+        args.report_width,
+    );
     // C-split detail artifacts: the uncapped per-finding detail promoted out
     // of the bounded human files — pure functions of `document` alone (no
     // chart input, no provenance surfaces), so findings stay byte-identical.
@@ -435,6 +452,55 @@ mod tests {
                 env!("CARGO_PKG_VERSION"),
                 crate::schema::SCHEMA_VERSION
             )
+        );
+    }
+
+    #[test]
+    fn report_width_flag_accepts_documented_values_and_defaults_to_auto() {
+        let default =
+            <Args as clap::Parser>::try_parse_from(["perfpal", "src"]).expect("default args parse");
+        assert_eq!(default.report_width, ReportWidth::Auto);
+
+        for (raw, expected) in [
+            ("auto", ReportWidth::Auto),
+            ("1280", ReportWidth::W1280),
+            ("1440", ReportWidth::W1440),
+            ("1920", ReportWidth::W1920),
+            ("2560", ReportWidth::W2560),
+            ("3072", ReportWidth::W3072),
+        ] {
+            let args =
+                <Args as clap::Parser>::try_parse_from(["perfpal", "--report-width", raw, "src"])
+                    .unwrap_or_else(|err| panic!("{raw:?} should parse: {err}"));
+            assert_eq!(args.report_width, expected, "value {raw:?}");
+        }
+    }
+
+    #[test]
+    fn report_width_flag_rejects_unknown_values_as_usage_errors() {
+        let err =
+            <Args as clap::Parser>::try_parse_from(["perfpal", "--report-width", "1000", "src"])
+                .expect_err("1000 is not a documented width");
+        assert_eq!(err.kind(), clap::error::ErrorKind::ValueValidation);
+        let rendered = err.to_string();
+        assert!(
+            rendered.contains("1000"),
+            "error must name the value: {rendered}"
+        );
+        assert!(
+            rendered.contains("auto"),
+            "error must list the valid values: {rendered}"
+        );
+    }
+
+    #[test]
+    fn help_names_the_report_width_flag() {
+        use clap::CommandFactory;
+        let long = Args::command().render_long_help().to_string();
+        assert!(long.contains("--report-width"), "help must name the flag");
+        assert!(
+            long.contains("Changes layout only"),
+            "help must state the layout-only contract"
         );
     }
 
