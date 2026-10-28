@@ -1,13 +1,16 @@
-    Blocking waiting for file lock on package cache
-    Blocking waiting for file lock on package cache
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
      Running tests/artifact_matrix.rs (target/debug/deps/artifact_matrix-e6f5075a7923df3d)
 
-running 4 tests
+running 6 tests
 test one_owner_per_uniqueness_class_and_format ... ok
+error: invalid value '9999' for '--report-width <WIDTH>': invalid report width "9999"; valid values: auto, 1280, 1440, 1920, 2560, 3072
+
+For more information, try '--help'.
+test invalid_report_width_exits_one ... ok
 test matrix_matches_emitted_artifact_set_exactly ... ok
 test caps_are_disclosed_in_every_consumer ... ok
 test every_relative_link_resolves_and_no_md_detail_reference_survives ... ok
+test story_geometry_is_opt_in_only ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
