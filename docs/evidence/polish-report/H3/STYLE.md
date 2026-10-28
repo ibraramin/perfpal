@@ -1,4 +1,4 @@
-# H3 style contract — 2026-10-28 @ `8544706`
+# H3 style contract — 2026-10-28 @ `fbda69b`
 
 **Scope.** One formatting contract across `report.md`, `agent-report.md`, `profile-queue.md` and the
 HTML pages, with the Atlas warm-paper design as the visual reference. Implemented as shared helpers,

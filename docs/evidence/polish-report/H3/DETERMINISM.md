@@ -38,6 +38,6 @@ its double-run check is unmasked; `report.md` / `profile-queue.md` keep the exis
 `gate.txt` — `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test --locked`,
 `cargo deny check licenses`, semantic clippy, and `PERFPAL_SEMANTIC_TESTS=1 cargo test`:
 **all six exit 0**; 1,125 default + 1,127 semantic = **2,252 passed / 0 failed / 2 ignored**.
-This gate runs at the final H3 code commit (`8544706`, see `gate.txt` header) and re-runs the
+This gate runs at the final H3 code commit (`fbda69b`, see `gate.txt` header) and re-runs the
 determinism suites listed above at that commit.
 Story gate `story-gate.txt`: **304/304 + 3k 44/44, verdict PASS, worktree_dirty_zero**.

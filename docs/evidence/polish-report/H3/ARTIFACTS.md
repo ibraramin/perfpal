@@ -1,4 +1,4 @@
-# H3 artifact matrix and consumer checks — 2026-10-28 @ `8544706`
+# H3 artifact matrix and consumer checks — 2026-10-28 @ `fbda69b`
 
 **Scope.** One role per emitted artifact; no artifact without a named consumer; no two human
 artifacts carry the same complete list. The **default fixed set is 9 files** plus the two Atlas drill
