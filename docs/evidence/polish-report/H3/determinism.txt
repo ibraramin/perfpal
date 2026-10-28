@@ -15,23 +15,24 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
      Running tests/findings_detail_split.rs (target/debug/deps/findings_detail_split-5ebf69647b6d85ba)
 
-running 7 tests
-test detail_html_contains_every_finding_row ... ok
+running 8 tests
 test human_report_md_carries_zero_per_finding_rows ... ok
+test detail_html_contains_every_finding_row ... ok
 test detail_artifacts_double_render_byte_identical_without_provenance ... ok
-test empty_scan_renders_no_findings_everywhere ... ok
+test empty_scan_report_links_resolve_into_detail_page ... ok
 test human_report_html_carries_zero_per_finding_rows ... ok
+test empty_scan_renders_no_findings_everywhere ... ok
 test every_human_link_resolves_to_a_detail_anchor ... ok
 test pipeline_detail_counts_match_metrics_and_human_stays_bounded ... ok
 
-test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
      Running tests/p4_determinism.rs (target/debug/deps/p4_determinism-243cbc1c4dc7a53a)
 
 running 1 test
 test double_run_all_artifacts_byte_equal_modulo_provenance ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
      Running tests/pipeline_e2e.rs (target/debug/deps/pipeline_e2e-4507f1ac8d2de06d)
 
@@ -63,19 +64,19 @@ Perfpal 0.4.0 — pre-release EVALUATION build.
 Provided for noncommercial evaluation only; NOT for commercial or production use.
 Terms: see EULA.md and LICENSE (PolyForm Strict 1.0.0).
 Privacy: no telemetry, no network access, no data collection — see PRIVACY.md.
+test unreadable_target_maps_to_usage_exit_1 ... ok
 perfpal 0.4.0 (metrics schema 1.8)
 test help_and_version_exit_zero ... ok
-test unreadable_target_maps_to_usage_exit_1 ... ok
-test story_flow_signatures_join_metrics_function_ids ... ok
 test story_flow_calls_and_edge_labels_are_story_only ... ok
-test story_purpose_reads_root_readme_and_stays_story_only ... ok
+test story_flow_signatures_join_metrics_function_ids ... ok
 test story_flow_io_effects_are_story_only_and_conservative ... ok
 test unwritable_output_target_maps_to_output_exit_2 ... ok
+test story_purpose_reads_root_readme_and_stays_story_only ... ok
+test safety_guard_refusal_maps_to_output_exit_2 ... ok
 test atlas_layout_json_is_byte_identical_on_double_scan ... ok
 test report_width_changes_only_report_html ... ok
-test safety_guard_refusal_maps_to_output_exit_2 ... ok
-test story_flag_emits_atlas_layout_only_when_requested ... ok
 test full_pipeline_writes_valid_report_and_is_deterministic ... ok
+test story_flag_emits_atlas_layout_only_when_requested ... ok
 
-test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
 

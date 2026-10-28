@@ -1,5 +1,6 @@
-# H3 report acceptance (final) — 2026-10-28T13:30:03Z · tree 36277ae + H3 working tree
-# $ python3 sim/report_check.py /var/tmp/opencode/h3-final/hyperfine/report.html
+# H3 report acceptance (final) — 2026-10-28T15:04:27Z · code fbda69b · tree 5c8483bf25b50d530630930b42b6363c437faeb4
+# renders generated from the committed tree (working tree dirty only under docs/evidence)
+# $ python3 sim/report_check.py /var/tmp/opencode/h3-close/hyperfine/report.html
 {
   "widths": {
     "1280@1": {
@@ -673,7 +674,7 @@ PASS: report acceptance checks
 command exit=0
 
 # pinned variant: --report-width 1440
-# $ python3 sim/report_check.py /var/tmp/opencode/h3-final/pinned/report.html
+# $ python3 sim/report_check.py /var/tmp/opencode/h3-close/pinned/report.html
 {
   "widths": {
     "1280@1": {

@@ -6,10 +6,10 @@ test empty_states_are_named_stubs ... ok
 test hostile_input_is_neutralized_everywhere ... ok
 test heading_order_report_md ... ok
 test heading_order_profile_and_agent_markdown ... ok
-test tables_are_rectangular_and_all_text_is_lf_with_trailing_newline ... ok
-test js_off_map_forces_the_final_frame_and_ranked_actions_wrap ... ok
 test heading_order_html_pages ... ok
+test js_off_map_forces_the_final_frame_and_ranked_actions_wrap ... ok
+test tables_are_rectangular_and_all_text_is_lf_with_trailing_newline ... ok
 test shared_warm_paper_shell_and_no_external_assets ... ok
 
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 

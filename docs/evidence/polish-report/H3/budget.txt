@@ -1,29 +1,29 @@
-# H3 report budget (final) — 2026-10-28T13:30:48Z · tree 36277ae + H3 working tree
+# H3 report budget (final) — 2026-10-28T15:04:27Z · code fbda69b · tree 5c8483bf25b50d530630930b42b6363c437faeb4
 # $ python3 sim/report_budget.py <report.html> --ceiling-bytes N --ceiling-fcp-ms N
 
 ## hyperfine
 {
-  "commit": "36277ae7e41ab6b2afcd269aeebcdea154d804f3",
-  "report": "/var/tmp/opencode/h3-final/hyperfine/report.html",
-  "bytes": 338050,
+  "commit": "fbda69ba633242a99b2ecc929d6d3ebeb699a6f2",
+  "report": "/var/tmp/opencode/h3-close/hyperfine/report.html",
+  "bytes": 338091,
   "ceiling_bytes": 393216,
   "ceiling_fcp_ms": 300,
   "widths": {
     "1440": {
       "runs": [
-        136.0,
-        116.0,
-        124.0
+        164.0,
+        120.0,
+        140.0
       ],
-      "median": 124.0,
+      "median": 140.0,
       "ceiling_fcp_ms": 300,
       "pass": true
     },
     "3072": {
       "runs": [
-        128.0,
+        160.0,
         132.0,
-        132.0
+        128.0
       ],
       "median": 132.0,
       "ceiling_fcp_ms": 300,
@@ -36,29 +36,29 @@ exit=0
 
 ## cjson
 {
-  "commit": "36277ae7e41ab6b2afcd269aeebcdea154d804f3",
-  "report": "/var/tmp/opencode/h3-final/cjson/report.html",
-  "bytes": 269313,
+  "commit": "fbda69ba633242a99b2ecc929d6d3ebeb699a6f2",
+  "report": "/var/tmp/opencode/h3-close/cjson/report.html",
+  "bytes": 269354,
   "ceiling_bytes": 327680,
   "ceiling_fcp_ms": 300,
   "widths": {
     "1440": {
       "runs": [
-        144.0,
-        112.0,
-        112.0
+        148.0,
+        140.0,
+        144.0
       ],
-      "median": 112.0,
+      "median": 144.0,
       "ceiling_fcp_ms": 300,
       "pass": true
     },
     "3072": {
       "runs": [
-        148.0,
-        136.0,
-        128.0
+        180.0,
+        144.0,
+        144.0
       ],
-      "median": 136.0,
+      "median": 144.0,
       "ceiling_fcp_ms": 300,
       "pass": true
     }
@@ -69,29 +69,29 @@ exit=0
 
 ## 3k
 {
-  "commit": "36277ae7e41ab6b2afcd269aeebcdea154d804f3",
-  "report": "/var/tmp/opencode/h3-final/3k/report.html",
-  "bytes": 514788,
+  "commit": "fbda69ba633242a99b2ecc929d6d3ebeb699a6f2",
+  "report": "/var/tmp/opencode/h3-close/3k/report.html",
+  "bytes": 514829,
   "ceiling_bytes": 524288,
   "ceiling_fcp_ms": 400,
   "widths": {
     "1440": {
       "runs": [
-        140.0,
-        128.0,
-        112.0
+        156.0,
+        144.0,
+        156.0
       ],
-      "median": 128.0,
+      "median": 156.0,
       "ceiling_fcp_ms": 400,
       "pass": true
     },
     "3072": {
       "runs": [
-        132.0,
-        132.0,
+        148.0,
+        148.0,
         128.0
       ],
-      "median": 132.0,
+      "median": 148.0,
       "ceiling_fcp_ms": 400,
       "pass": true
     }

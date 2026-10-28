@@ -1,12 +1,12 @@
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running tests/artifact_matrix.rs (target/debug/deps/artifact_matrix-e6f5075a7923df3d)
 
 running 6 tests
-test one_owner_per_uniqueness_class_and_format ... ok
 error: invalid value '9999' for '--report-width <WIDTH>': invalid report width "9999"; valid values: auto, 1280, 1440, 1920, 2560, 3072
 
 For more information, try '--help'.
 test invalid_report_width_exits_one ... ok
+test one_owner_per_uniqueness_class_and_format ... ok
 test matrix_matches_emitted_artifact_set_exactly ... ok
 test caps_are_disclosed_in_every_consumer ... ok
 test every_relative_link_resolves_and_no_md_detail_reference_survives ... ok

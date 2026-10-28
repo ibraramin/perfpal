@@ -1,4 +1,4 @@
-# H3 determinism and golden regeneration — 2026-10-28 @ `c5ded97`
+# H3 determinism and golden regeneration — 2026-10-28 @ final H3 code (see `gate.txt` header)
 
 ## Byte-determinism
 
@@ -9,7 +9,7 @@
 | Double-run all TS artifacts | `tests/determinism_ts.rs` | passed |
 | Detail artifacts identical across provenance changes (HTML) | `tests/findings_detail_split.rs` | passed |
 | Full pipeline double-run + artifact set (incl. `--report-width` purity) | `tests/pipeline_e2e.rs` | passed |
-| Focused determinism batch | `determinism.txt` | 23/23 passed |
+| Focused determinism batch | `determinism.txt` | 24/24 passed |
 | No `preserve_order` / no set iteration | unchanged; `cargo test --locked` | passed |
 
 `findings-detail.html` carries no provenance by construction (schema/file/finding counts only), so
@@ -37,5 +37,7 @@ its double-run check is unmasked; `report.md` / `profile-queue.md` keep the exis
 
 `gate.txt` — `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test --locked`,
 `cargo deny check licenses`, semantic clippy, and `PERFPAL_SEMANTIC_TESTS=1 cargo test`:
-**all six exit 0**; 1,124 default + 1,126 semantic = **2,250 passed / 0 failed / 2 ignored**.
+**all six exit 0**; 1,125 default + 1,127 semantic = **2,252 passed / 0 failed / 2 ignored**.
+This gate runs at the final H3 code commit (`8544706`, see `gate.txt` header) and re-runs the
+determinism suites listed above at that commit.
 Story gate `story-gate.txt`: **304/304 + 3k 44/44, verdict PASS, worktree_dirty_zero**.

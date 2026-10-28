@@ -31,6 +31,12 @@ not per-renderer copies.
   `profile-queue.html` and the Atlas drills carry **zero** scripts, and no page has a filter bar
   (`#filter-bar` / `filter-label` / `filter-clear` are gone; `data-path` / `data-prefix` remain only
   as stable row keys).
+- **Drill heading scale / density exception:** `atlas-weight.html` and `atlas-q2.html` carry
+  `<h1>Perfpal Atlas</h1>` + `<h2>Weight detail</h2>` / `<h2>Blast drill</h2>` on the shared heading
+  scale (h1 1.6rem, h2 1.15rem with the top rule), sharing the warm-paper palette. Their 10px drill
+  body density is kept as a documented exception.
+- **JS-off Pause:** the `<noscript>` final-frame rule also hides the inert Pause control, so the
+  static capture shows no enabled-looking dead control.
 
 ## Evidence
 
@@ -44,16 +50,16 @@ not per-renderer copies.
 | JS-off final frame + ranked-action wrap | `js_off_map_forces_the_final_frame_and_ranked_actions_wrap` | passed |
 | Focused suite | `cargo test --locked --test style_contract` → `style-contract.txt` | 8/8 passed |
 | H2 acceptance preserved (5 widths × DPR 1/2 + JS-off, auto + pinned 1440) | `sim/report_check.py` → `report-check.txt` | PASS, exit 0 |
-| Size/FCP budget preserved | `sim/report_budget.py` → `budget.txt` | hyperfine 338,050 B/124–132 ms; cJSON 269,313/112–136; 3k 514,788/128–132 — PASS |
+| Size/FCP budget preserved | `sim/report_budget.py` → `budget.txt` | hyperfine 338,091 B/140–132 ms; cJSON 269,354/144–144; 3k 514,829/156–148 — PASS |
 | Story gate (304/304 + 3k 44/44, clean tree) | `docs/evidence/atlas-sim/GATE.txt` → `story-gate.txt` | PASS |
 | Vision gate | `VISION.md` | **PASS** (JS-off closed; detail wrap verified) |
 
 ## Measured deltas vs H2
 
-- `report.html`: 338,100 → 338,050 B on hyperfine (−50 B: filter UI/script removed, noscript
-  final-frame rule added), still under the 384 KiB ceiling; cJSON 269,363 → 269,313; 3k
-  514,838 → 514,788 (9,500 B / 1.8% headroom).
+- `report.html`: 338,100 → 338,091 B on hyperfine (−9 B: filter UI/script removed, noscript
+  final-frame rule + Pause hiding added), still under the 384 KiB ceiling; cJSON 269,363 → 269,354;
+  3k 514,838 → 514,829 (9,459 B / 1.8% headroom).
 - `agent-report.md`: +2 B per rendered action row from the `findings-detail.html` anchor rename
-  (fixtures +18..+50 B; synthetic 77,710 → 77,763 B), no ranking/wording change; §12 pins updated.
+  (fixtures +18..+50 B; synthetic 77,713 → 77,763 B), no ranking/wording change; §12 pins updated.
 - `report.md`: Appendix C removed, §4 pointer added, §1 link corrected to “all N ranked actions
   (M findings)”; no per-finding rows.
