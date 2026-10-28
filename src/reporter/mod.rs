@@ -636,7 +636,7 @@ pub fn render_html_with_story_at_width(
     // Report-only breadcrumb (inside the shared header, right after the h1):
     // findings-detail.html calls the same header WITHOUT it, keeping that
     // artifact's bytes a hard contract.
-    html_header(&mut out, doc, true);
+    html_header(&mut out, doc, true, "Perfpal Report");
     html_nav(&mut out);
     html_map(&mut out, doc, emitted_charts);
     // ADR-0014: the story is always present, immediately after `#map` and
@@ -689,8 +689,8 @@ pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String
 
 /// Render the standalone `findings-detail.html` artifact (C-split promotion
 /// of [`html_findings_table`]/[`html_finding_row`] — called VERBATIM, never
-/// reimplemented — inside a standalone page reusing the existing
-/// head/style/table markup and the fixed [`REPORT_SCRIPT`] enhancement).
+/// reimplemented — inside a standalone, script-free page reusing the shared
+/// warm-paper head/style/table markup).
 ///
 /// Per-rule sections in the pinned [`group_findings_by_rule`] order, each
 /// with a `rule-<rule_id>` anchor plus that rule's rows in the shared full
@@ -703,7 +703,7 @@ pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String
 pub fn render_findings_detail_html(doc: &MetricsDocument) -> String {
     let mut out = String::new();
     html_detail_head(&mut out, doc);
-    html_header(&mut out, doc, false);
+    html_header(&mut out, doc, false, "Perfpal Findings Detail");
     html_detail_nav(&mut out);
     html_detail_findings(&mut out, doc);
     html_footer(&mut out, false);
@@ -812,8 +812,8 @@ pub fn render_profile_queue(doc: &MetricsDocument) -> String {
 }
 
 /// Render the standalone `profile-queue.html` artifact (mirrors the
-/// findings-detail page structure: shared warm-paper shell, the fixed
-/// enhancement script, one deterministic table).
+/// findings-detail page structure: shared warm-paper shell, script-free, one
+/// deterministic table).
 #[must_use]
 pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
     let mut out = String::new();
@@ -1515,10 +1515,6 @@ fn render_appendix_b(out: &mut String, semantic: bool) {
 // HTML renderer helpers (Option B slice 2: LINKED variant + fixed script)
 // ---------------------------------------------------------------------------
 
-/// Report-page CSS: verified fluid/pinned width contract (`--report-max` +
-/// `--page-gutter`), the dense findings table, figure zoom, and the
-/// details/summary affordances. Layered on top of the shared warm-paper
-/// shell emitted by [`html_page_head`].
 /// Shared `#findings` table sizing (report + detail pages; one source so the
 /// two dense-table page shells cannot drift).
 const FINDINGS_TABLE_CSS: &str = "\
@@ -1560,7 +1556,7 @@ fn html_head(out: &mut String, doc: &MetricsDocument, width: ReportWidth) {
     );
 }
 
-fn html_header(out: &mut String, doc: &MetricsDocument, breadcrumb: bool) {
+fn html_header(out: &mut String, doc: &MetricsDocument, breadcrumb: bool, title: &str) {
     let hot = findings_of_severity(doc, Severity::Hot).len();
     let warn_count = doc
         .findings
@@ -1572,7 +1568,7 @@ fn html_header(out: &mut String, doc: &MetricsDocument, breadcrumb: bool) {
         .iter()
         .filter(|f| f.severity == Severity::Info)
         .count();
-    out.push_str("<header>\n<h1>Perfpal Report</h1>\n");
+    out.push_str(&format!("<header>\n<h1>{}</h1>\n", escape_html(title)));
     if breadcrumb {
         html_breadcrumb(out);
     }
@@ -1851,7 +1847,7 @@ fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) 
     out.push_str(
         "<noscript><style>#map #atlas-canvas *{animation:none!important;\
          opacity:1!important;transform:none!important;stroke-dashoffset:0!important}\
-         </style></noscript>\n",
+         #map .atlas-pause{display:none!important}</style></noscript>\n",
     );
     out.push_str("</section>\n");
 }
@@ -2139,6 +2135,11 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
 /// section id is reused so the shared shell and anchor contract stay stable.
 fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<section id=\"findings\">\n<h2>Findings detail</h2>\n");
+    // `#ranked-actions` is a cross-artifact link target from the Atlas
+    // actions/links/charts/story, so it MUST exist on EVERY scan (including
+    // the empty scan, where `html_ranked_actions` emits its own stub).
+    let (_, anchors) = finding_anchor_assignments(doc);
+    html_ranked_actions(out, doc, &anchors);
     if doc.findings.is_empty() {
         out.push_str("<p>No findings.</p>\n</section>\n");
         return;
@@ -2155,8 +2156,6 @@ fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
         info_count,
     ));
     out.push_str("<p><a href=\"report.html\">Back to report.html</a>.</p>\n");
-    let (_, anchors) = finding_anchor_assignments(doc);
-    html_ranked_actions(out, doc, &anchors);
     for group in &groups {
         let group_anchor = format!("rule-{}", group.rule_id);
         out.push_str(&format!(

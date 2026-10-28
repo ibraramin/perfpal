@@ -483,6 +483,18 @@ fn one_owner_per_uniqueness_class_and_format() {
         exact_owners("schema-mirror", "json"),
         ["metrics.schema.v1.8.json"]
     );
+
+    // No duplicate (uniqueness, format) pair anywhere in the matrix.
+    let mut seen: BTreeSet<(&str, &str)> = BTreeSet::new();
+    for row in MATRIX {
+        assert!(
+            seen.insert((row.uniqueness, row.format)),
+            "duplicate (uniqueness, format) pair: ({}, {}) at {}",
+            row.uniqueness,
+            row.format,
+            row.file
+        );
+    }
 }
 
 // ---------------------------------------------------------------------------

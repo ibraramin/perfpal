@@ -78,6 +78,18 @@
 - **Style unification is a rendering change.** It does not change data, rank keys, caps or
   `metrics.json`; it does require a formatting snapshot test so future edits cannot fork the shell.
 
+## Amendment (2026-10-28, H3 close-out)
+
+- **ADR-0010's click-to-filter description is superseded.** The shipped `REPORT_SCRIPT` is
+  pan/zoom only; after the C-split `report.html` has no per-finding rows and
+  `findings-detail.html` has no file/component rows, so the filter UI was removed. `report.html`
+  keeps pan/zoom + story (three scripts); `findings-detail.html`, `profile-queue.html` and the
+  Atlas drills are script-free. ADR-0010 is left unchanged as the decision record.
+- **Atlas drill headings join the style contract.** `atlas-weight.html` and `atlas-q2.html` now
+  carry `<h1>Perfpal Atlas</h1>` + `<h2>Weight detail</h2>` / `<h2>Blast drill</h2>` on the shared
+  heading scale (h1 1.6rem, h2 1.15rem with top rule) and palette; their 10px drill body density
+  remains a documented exception.
+
 ## Weakest assumption
 
 **The removal is safe because the project is pre-beta and no published consumer exists.** The

@@ -195,7 +195,13 @@ fn heading_order_profile_and_agent_markdown() {
 #[test]
 fn heading_order_html_pages() {
     let out = run_pipeline("headings-html");
-    for name in ["report.html", "findings-detail.html", "profile-queue.html"] {
+    for name in [
+        "report.html",
+        "findings-detail.html",
+        "profile-queue.html",
+        "atlas-weight.html",
+        "atlas-q2.html",
+    ] {
         let html = fs::read_to_string(out.join(name)).expect("page reads");
         assert_html_hierarchy(&html, name);
     }
@@ -239,7 +245,13 @@ fn monospace_selector_allowed(selector: &str) -> bool {
 #[test]
 fn shared_warm_paper_shell_and_no_external_assets() {
     let out = run_pipeline("shell");
-    for name in ["report.html", "findings-detail.html", "profile-queue.html"] {
+    for name in [
+        "report.html",
+        "findings-detail.html",
+        "profile-queue.html",
+        "atlas-weight.html",
+        "atlas-q2.html",
+    ] {
         let html = fs::read_to_string(out.join(name)).expect("page reads");
         for color in PALETTE {
             assert!(html.contains(color), "{name}: missing palette {color}");
@@ -713,6 +725,10 @@ fn js_off_map_forces_the_final_frame_and_ranked_actions_wrap() {
         "report.html must carry the JS-off final-frame rule"
     );
     assert!(
+        report.contains("#map .atlas-pause{display:none!important}"),
+        "JS-off final-frame block must hide the inert pause control"
+    );
+    assert!(
         report
             .matches("<noscript><style>#map #atlas-canvas")
             .count()
@@ -726,8 +742,13 @@ fn js_off_map_forces_the_final_frame_and_ranked_actions_wrap() {
         detail.contains("#ranked-actions td.wrap"),
         "the detail page must scope the wrap rule to #ranked-actions"
     );
+    let ranked_start = detail
+        .find("id=\"ranked-actions\"")
+        .expect("ranked-actions");
+    let ranked = &detail[ranked_start..];
+    let ranked = &ranked[..ranked.find("</section>").expect("ranked close")];
     assert!(
-        detail.contains("<td class=\"wrap\">") && detail.contains("Complete ranked action list"),
-        "ranked-action cells must carry the wrap class"
+        ranked.contains("<td class=\"wrap\">"),
+        "ranked-action cells must carry the wrap class (scoped to #ranked-actions)"
     );
 }

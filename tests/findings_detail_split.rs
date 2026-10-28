@@ -244,8 +244,39 @@ fn empty_scan_renders_no_findings_everywhere() {
     let html = render_html(&doc, &[]);
     assert!(section(&html, "<section id=\"findings\">", "</section>").contains("No findings."));
     let detail_html = render_findings_detail_html(&doc);
+    assert!(detail_html.contains("<p>No findings.</p>"));
+    // #ranked-actions is a cross-artifact target even on an empty scan.
+    assert!(detail_html.contains("id=\"ranked-actions\""));
     assert!(
-        section(&detail_html, "<section id=\"findings\">", "</section>").contains("No findings.")
+        section(
+            &detail_html,
+            "<section id=\"ranked-actions\">",
+            "</section>"
+        )
+        .contains("No function-granularity actions.")
+    );
+}
+
+#[test]
+fn empty_scan_report_links_resolve_into_detail_page() {
+    let mut doc = multi_doc();
+    doc.findings = vec![];
+    let html = render_html(&doc, &[]);
+    let detail = render_findings_detail_html(&doc);
+    let detail_ids = collect_ids(&detail);
+    let mut checked = 0;
+    for href in collect_hrefs(&html) {
+        if let Some(target) = href.strip_prefix("findings-detail.html#") {
+            checked += 1;
+            assert!(
+                detail_ids.iter().any(|id| id == target),
+                "empty report link {href} has no matching id in findings-detail.html"
+            );
+        }
+    }
+    assert!(
+        checked > 0,
+        "empty report.html must still link into findings-detail.html"
     );
 }
 

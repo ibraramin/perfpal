@@ -1402,6 +1402,10 @@ fn drill_page(title: &str, crumb: &str, body: &str) -> String {
     out.push_str("<style>");
     out.push_str(&drill_page_css());
     out.push_str("</style>\n</head>\n<body>\n");
+    out.push_str(&format!(
+        "<header class=\"atlas-drill-header\"><h1>Perfpal Atlas</h1><h2>{}</h2></header>\n",
+        escape_html(crumb)
+    ));
     out.push_str("<nav class=\"atlas-breadcrumb\" aria-label=\"Breadcrumb\">");
     out.push_str("<a href=\"report.html#map\">Atlas map</a>");
     out.push_str("<span aria-hidden=\"true\"> / </span>");
@@ -1427,6 +1431,9 @@ a{{color:{accent}}}\
 .atlas-breadcrumb{{padding:10px 16px;border-bottom:1px solid {rule};font-size:9px;font-weight:650;color:{muted}}}\
 .atlas-breadcrumb a{{color:{ink};text-decoration:none}}\
 .atlas-breadcrumb a:hover{{text-decoration:underline}}\
+.atlas-drill-header{{max-width:72rem;margin:0 auto;padding:10px 16px 0}}\
+.atlas-drill-header h1{{font-size:1.6rem;font-weight:800;margin:0 0 4px;color:{ink}}}\n\
+.atlas-drill-header h2{{font-size:1.15rem;font-weight:800;margin:0 0 8px;padding-top:6px;border-top:1px solid {rule};color:{ink}}}\n\
 .atlas-drill-page{{max-width:72rem;margin:0 auto;padding:12px 16px 28px}}\
 .atlas-drill{{border-top:1px solid {rule};padding:10px 0 4px}}\
 .atlas-drill h3{{font-size:14px;font-weight:800;margin:0 0 6px}}\

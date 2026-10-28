@@ -30,20 +30,26 @@ standalone prototype player in `sim/` (evidence/reference only).
 ## 2. Artifact roles (binding matrix)
 
 One row per emitted filename; the matrix is the source of truth for "who opens this, and what do
-they do with it". An artifact without a consumer is deleted, not kept.
+they do with it". An artifact without a consumer is deleted, not kept. `tests/artifact_matrix.rs`
+and `docs/evidence/polish-report/H3/ARTIFACTS.md` are the executable mirror of this table.
 
-| Artifact | Audience | Consumer / action | Unique role | Cap | Canonical? |
-|---|---|---|---|---|---|
-| `metrics.json` | tools / LLM / downstream | parsed and validated by tooling | the only data source; every rendering is derived from it | none | **yes** |
-| `agent-actions.json` | agents / tools | machine action execution and inspection | complete action list (uncapped) + profile top 100 (`profile_queue_cap`) | actions uncapped; profile 100 | complete action list |
-| `agent-report.md` | LLM / human triage | read without loading the full report | bounded digest: top 25 actions, per-rule rollup, top 25 profile rows, limits | 25 / 25 / 100 | no (digest) |
-| `report.md` | human | read the narrative + Atlas summary, follow links | narrative report + Atlas summary + methodology; **no full findings appendix** | summary caps named | no |
-| `report.html` | human | map-first browsing; pan/zoom on the legacy linked figures | designed Atlas-first page + always-on story (self-contained; fixed report script + fixed story script + inline JSON data) | summary caps named | no |
-| `findings-detail.html` | human | opened from `report.md` §4 / `#ranked-actions` for the complete ranked list and per-finding rows; no filter | **canonical complete human detail**: ranked actions + all findings, complete static list | none | human detail |
-| `profile-queue.{md,html}` | human | complete KV3 drill from the key views | complete KV3 function list (cost-ranked, honest badges) | none | KV3 detail |
-| `atlas-weight.html`, `atlas-q2.html` | human | drill from the Atlas charts | drill pages: complete per-metric weight / blast-radius detail | complete per metric | no |
-| `charts/*.svg` | human / diff | visual overview; never parsed | deterministic chart stems (workspace/file/entry/coupling/hot/bands/findings/component-*), `graph.dot` | top-50 / named | chart data |
-| `metrics.schema.v1.8.json` | tools | offline validation without the repo | shipped schema copy; discovered by mapping `schema_version` → filename | n/a | mirrors `src/schema/` |
+| Artifact | Audience | Consumer | Action | Unique role | Cap | Canonical |
+|---|---|---|---|---|---|---|
+| `metrics.json` | tools / LLM / downstream | downstream tools / LLM planners | parse and validate; treat as the source of truth | canonical scan record (schema 1.8) | none | **yes** |
+| `metrics.schema.v1.8.json` | tooling | JSON-schema validators | validate `metrics.json` offline without the repo | bundled schema mirror, discovered by `schema_version` → filename | n/a | mirror |
+| `report.md` | human | terminal / Markdown reader | read the narrative and follow links to the detail | bounded narrative + Atlas summary; no full findings appendix | summary caps named | no |
+| `report.html` | human | browser | browse the Atlas map; pan/zoom the legacy figures; follow drills | designed Atlas-first page + always-on story | summary caps named | no |
+| `findings-detail.html` | human | browser, opened from `report.md` §4 / `#ranked-actions` | read the complete ranked list and every finding row (static; no filter) | canonical complete human detail | none | human detail |
+| `profile-queue.md` | human | terminal / diffing | read or diff the complete KV3 list | complete KV3 function list (Markdown) | none | KV3 detail (md) |
+| `profile-queue.html` | human | browser | scan the complete KV3 list | complete KV3 function list (HTML) | none | KV3 detail (html) |
+| `atlas-weight.html` | human | browser, from the weight chart | read the complete weight detail | complete weight drill | complete per metric | no |
+| `atlas-q2.html` | human | browser, from the blast chart | read the reverse/blast and DSM detail | complete blast-radius drill | complete per metric | no |
+| `agent-report.md` | LLM / agent | LLM or agent triage | read the top 25 actions, rule rollup and top 25 profile rows | bounded digest | 25 / 25 / 100 | no (digest) |
+| `agent-actions.json` | agents / tools | agents / tooling | load the complete action list; profile top 100 | complete machine action contract | actions uncapped; profile 100 | complete action list |
+| `charts/graph.dot` | tooling | Graphviz / graph tools | render or diff the graph | deterministic DOT export | n/a | graph export |
+| `charts/*.svg` | human / diff | browser / visual diff | view the overview and map charts; never parse | deterministic overview/map chart stems | top-50 / named | chart data |
+| `charts/component-*.svg` | human | browser, from the component index | read one per-component map | capped per-component detail page | top-50 | chart data |
+| `atlas-layout.json` (opt-in, `--story`) | tooling / story consumer | `sim/` reference player + external story consumers | overlay/project the run story | story geometry (canvas, flow, purpose, profile, scenes) | `layout_version` 1 | no |
 
 Rules:
 - `report.md` Appendix C (full findings) is **removed**; §4 instead carries
@@ -88,12 +94,16 @@ One style contract, shared by every Markdown/HTML artifact (implemented H3, 2026
   artifact title, H2 numbered top-level sections, H3 subsections, H4 row labels; no skipped levels,
   and no heading-shaped content generated from user data — escape or fence it); tabular numerals
   for counts and costs.
+- **Drill heading scale / density exception.** `atlas-weight.html` and `atlas-q2.html` carry
+  `<h1>Perfpal Atlas</h1>` plus `<h2>Weight detail</h2>` / `<h2>Blast drill</h2>` on the shared
+  heading scale (h1 1.6rem, h2 1.15rem with the top rule). Their drill body keeps the 10px density
+  as a documented exception to the report-family base size.
 - **One HTML shell.** `report.html`, `findings-detail.html` and `profile-queue.html` share one
   head/style/header/table markup; detail pages do not fork the report's CSS. Only `report.html`
   carries the fixed `REPORT_SCRIPT` (pan/zoom on the legacy linked figures); `findings-detail.html`,
   `profile-queue.html` and the Atlas drill pages are script-free, and no page carries a filter bar.
-  The Atlas drill pages (`atlas-weight.html`, `atlas-q2.html`) consume the same palette constants
-  and type rules but keep their drill-specific markup and CSS.
+  The Atlas drill pages (`atlas-weight.html`, `atlas-q2.html`) share the palette and heading scale
+  but keep their drill-specific markup and dense body CSS.
 - **Escaping:** every interpolated path/title/message passes the shared escaper
   (`escape_md`/`escape_html` — no per-artifact escaper). Markdown renderers structure-escape
   backticks/pipes/headings and flatten CR/LF/TAB to `\r`/`\n`/`\t`; agent-report code-span values
@@ -108,9 +118,12 @@ One style contract, shared by every Markdown/HTML artifact (implemented H3, 2026
   paths, `#anchors`, no trailing punctuation).
 - **Empty states:** every artifact renders a named stub (e.g. `no findings recorded`), never a blank
   section or a broken table. `profile-queue.md` gains the `## Complete cost-ranked list` section and
-  renders `No functions recorded.` when the queue is empty.
-- **Section order:** fixed per artifact and asserted by tests. Markdown and HTML siblings render the
-  same sections in the same order.
+  renders `No functions recorded.` when the queue is empty. `findings-detail.html` always emits the
+  `#ranked-actions` section; on an empty scan it renders `No function-granularity actions.` there,
+  so `report.html`'s ranked-actions links always resolve.
+- **Section order:** fixed per artifact and asserted by tests. The MD/HTML parity rule applies to
+  `profile-queue.md` / `profile-queue.html`; `report.md` and `report.html` each follow their own
+  fixed order (the Atlas composition is H4).
 - **Determinism:** no clock, no random, no set iteration; sorted traversals; byte-identical output for
   the same inputs on repeated runs (the existing determinism suite is the arbiter).
 - **Style-contract test:** `tests/style_contract.rs` asserts the heading order per artifact,
@@ -233,8 +246,9 @@ the story boots to the final summary beat, and the JS-off fallback keeps every s
 1. Artifact matrix (`tests/artifact_matrix.rs`): every emitted filename has a role entry; one owner
    per content class/format; no two artifacts carry the same complete list; every cap is printed and
    named in `data_quality.caps`; every link consumer resolves to an emitted artifact.
-2. Style contract (`tests/style_contract.rs`): heading order per artifact, hostile-input escaping,
-   and the table/link/empty-state contract.
+2. Style contract (`tests/style_contract.rs`): heading order per artifact (including the drill
+   `<h1>`/`<h2>` scale and the 10px drill-body exception), hostile-input escaping, and the
+   table/link/empty-state contract (including the empty-scan `#ranked-actions` stub).
 3. Atlas composition: answer line → map → ranked actions → components/files/findings order asserted;
    `#explorer` absent from `report.html`; `explorer.html` exists and links back.
 4. Resolution: render at the five widths above; assert no horizontal overflow at 1280, canvas fills

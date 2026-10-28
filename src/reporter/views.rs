@@ -2,7 +2,7 @@
 //!
 //! Pure functions over a finished [`MetricsDocument`]: no I/O, no clock, no
 //! hashing. Every ordering has a total deterministic tie-break so
-//! `report.md`, `report.html`, `findings-detail.*` and `profile-queue.*` all
+//! `report.md`, `report.html`, `findings-detail.html` and `profile-queue.*` all
 //! derive the exact same rows from the same document.
 //!
 //! The three locked slots (V2, `docs/specs/map-intelligibility.md`):
