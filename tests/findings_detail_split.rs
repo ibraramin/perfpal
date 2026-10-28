@@ -1,16 +1,16 @@
 //! C-split locks (founder-approved full-artifact split): the uncapped
-//! per-finding detail lives in the `findings-detail.md` /
-//! `findings-detail.html` artifacts — promoted VERBATIM from
-//! `render_findings_full_detail` and `html_findings_table`/`html_finding_row`
-//! — while the human `report.md` / `report.html` stay bounded (groups +
-//! links only) at any scale.
+//! per-finding detail lives in the canonical `findings-detail.html` artifact
+//! — promoted VERBATIM from `html_findings_table`/`html_finding_row` — while
+//! the human `report.md` / `report.html` stay bounded (groups + links only)
+//! at any scale. `findings-detail.md` is gone (H3 artifact consolidation).
 //!
 //! Locked here:
-//! 1. Detail artifacts contain EVERY finding (counts match `metrics.json`).
-//! 2. Human files contain ZERO per-finding rows (group rows + links only).
+//! 1. The detail artifact contains EVERY finding (counts match `metrics.json`).
+//! 2. Human files contain ZERO per-finding rows (group rows + links only) and
+//!    `report.md` §4 ends with the single `findings-detail.html` pointer.
 //! 3. Every human → detail link resolves (detail anchors exist).
-//! 4. Double-render byte-identical (no provenance surfaces in either
-//!    artifact), including a full-pipeline double-scan proof.
+//! 4. Double-render byte-identical for the HTML detail (no provenance
+//!    surfaces), including a full-pipeline double-scan proof.
 
 use std::collections::BTreeMap;
 use std::ffi::OsString;
@@ -22,15 +22,13 @@ use perfpal::analyzer::{Confidence, Severity};
 use perfpal::cli::run_with;
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
 use perfpal::reporter::{
-    render_atlas_q2_html, render_atlas_weight_html, render_findings_detail,
-    render_findings_detail_html, render_html, render_report,
+    render_atlas_q2_html, render_atlas_weight_html, render_findings_detail_html, render_html,
+    render_report,
 };
 use perfpal::schema::{
     FileEntry, FindingEntry, MetricsDocument, ParseHealthEntry, ParseHealthSummary, ScanInfo,
     StatsSection, ToolInfo,
 };
-
-mod common;
 
 // ---------------------------------------------------------------------------
 // Local document builders (mirroring tests/reporter_render.rs)
@@ -161,29 +159,6 @@ fn collect_hrefs(html: &str) -> Vec<String> {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn detail_md_contains_every_finding() {
-    let doc = multi_doc();
-    let detail = render_findings_detail(&doc);
-    // One #### header per finding, honest header agreeing with §4.
-    assert_eq!(
-        detail.matches("#### ").count(),
-        doc.findings.len(),
-        "findings-detail.md must render every finding:\n{detail}"
-    );
-    assert!(detail.contains("3 of 3 total findings."));
-    for f in &doc.findings {
-        let escaped = f.finding_id.replace('-', "\\-").replace('.', "\\.");
-        assert!(
-            detail.contains(&format!("(`{escaped}`)")),
-            "{} missing from findings-detail.md:\n{detail}",
-            f.finding_id
-        );
-    }
-    assert!(detail.starts_with("# Perfpal Findings Detail\n"));
-    assert!(detail.ends_with('\n') && !detail.contains('\r'));
-}
-
-#[test]
 fn detail_html_contains_every_finding_row() {
     let doc = multi_doc();
     let detail = render_findings_detail_html(&doc);
@@ -225,8 +200,14 @@ fn human_report_md_carries_zero_per_finding_rows() {
     assert!(sec4_plain.contains("| `PERF-C-ALLOC-001` | 2 | 2 | 0 | 0 |"));
     assert!(sec4_plain.contains("| `PERF-C-STR-002` | 1 | 0 | 1 | 0 |"));
     assert!(sec4_plain.contains("2 rules: 3 of 3 total findings"));
-    // …and Appendix C links the detail artifact instead.
-    assert!(report.contains("[findings-detail.md](findings-detail.md)"));
+    // …and §4 closes with the canonical HTML detail pointer instead.
+    assert!(
+        report.contains(
+            "All 3 of 3 findings: [findings-detail.html](findings-detail.html) — complete ranked action list and per-finding detail (2 rules)."
+        ),
+        "§4 must carry the full disclosure pointer:\n{report}"
+    );
+    assert!(!report.contains("findings-detail.md"));
 }
 
 #[test]
@@ -259,9 +240,7 @@ fn empty_scan_renders_no_findings_everywhere() {
     let report = render_report(&doc, &[]);
     assert!(report.contains("No findings."));
     assert_eq!(report.matches("#### ").count(), 0);
-    let detail = render_findings_detail(&doc);
-    assert!(detail.contains("No findings."));
-    assert_eq!(detail.matches("#### ").count(), 0);
+    assert!(!report.contains("findings-detail.html"));
     let html = render_html(&doc, &[]);
     assert!(section(&html, "<section id=\"findings\">", "</section>").contains("No findings."));
     let detail_html = render_findings_detail_html(&doc);
@@ -352,11 +331,6 @@ fn detail_artifacts_double_render_byte_identical_without_provenance() {
     doc_b.scan.root_path = "/other/b/tree".to_string();
 
     assert_eq!(
-        render_findings_detail(&doc_a),
-        render_findings_detail(&doc_b),
-        "findings-detail.md must be byte-identical across provenance changes"
-    );
-    assert_eq!(
         render_findings_detail_html(&doc_a),
         render_findings_detail_html(&doc_b),
         "findings-detail.html must be byte-identical across provenance changes"
@@ -367,7 +341,6 @@ fn detail_artifacts_double_render_byte_identical_without_provenance() {
         "/machine/a/checkout",
         "/other/b/tree",
     ] {
-        assert!(!render_findings_detail(&doc_a).contains(needle));
         assert!(!render_findings_detail_html(&doc_a).contains(needle));
     }
 }
@@ -415,13 +388,13 @@ fn pipeline_detail_counts_match_metrics_and_human_stays_bounded() {
     let metrics: serde_json::Value = serde_json::from_str(&metrics_raw).expect("metrics parses");
     let finding_count = metrics["findings"].as_array().expect("findings[]").len();
 
-    // Detail artifacts contain every finding.
-    let detail_md = fs::read_to_string(out.join("findings-detail.md")).expect("detail md");
-    assert_eq!(
-        detail_md.matches("#### ").count(),
-        finding_count,
-        "findings-detail.md must render every metrics.json finding"
+    // The Markdown detail artifact is gone (H3 consolidation).
+    assert!(
+        !out.join("findings-detail.md").exists(),
+        "findings-detail.md must not be emitted"
     );
+
+    // The canonical HTML detail contains every finding row.
     let detail_html = fs::read_to_string(out.join("findings-detail.html")).expect("detail html");
     assert_eq!(
         detail_html.matches("<tr id=\"finding-").count(),
@@ -429,27 +402,23 @@ fn pipeline_detail_counts_match_metrics_and_human_stays_bounded() {
         "findings-detail.html must render every metrics.json finding row"
     );
 
-    // Human files stay bounded: zero per-finding rows.
+    // Human files stay bounded: zero per-finding rows, one §4 pointer.
     let report = fs::read_to_string(out.join("report.md")).expect("report.md");
     assert_eq!(report.matches("#### ").count(), 0);
+    assert!(
+        report.contains(&format!(
+            "All {finding_count} of {finding_count} findings: [findings-detail.html](findings-detail.html)"
+        )),
+        "report.md §4 must carry the full-disclosure pointer"
+    );
     let html = fs::read_to_string(out.join("report.html")).expect("report.html");
     let findings = section(&html, "<section id=\"findings\">", "</section>");
     assert_eq!(findings.matches("<tr id=\"finding-").count(), 0);
 
-    // Double-scan: both detail artifacts byte-identical UNMASKED.
-    let md1 = fs::read(out.join("findings-detail.md")).expect("detail md bytes");
+    // Double-scan: the HTML detail is byte-identical UNMASKED (no provenance).
     let html1 = fs::read(out.join("findings-detail.html")).expect("detail html bytes");
     assert_eq!(run_with(argv(&out_str, &target)), 0);
-    assert_eq!(md1, fs::read(out.join("findings-detail.md")).unwrap());
     assert_eq!(html1, fs::read(out.join("findings-detail.html")).unwrap());
-
-    // Masked determinism via the shared helpers (provenance no-ops here).
-    assert_eq!(
-        common::mask_report_provenance(&String::from_utf8_lossy(&md1)),
-        common::mask_report_provenance(
-            &fs::read_to_string(out.join("findings-detail.md")).unwrap()
-        )
-    );
 }
 
 fn section<'a>(html: &'a str, start: &str, end: &str) -> &'a str {

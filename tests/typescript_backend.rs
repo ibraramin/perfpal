@@ -648,7 +648,6 @@ fn two_typescript_scans_are_byte_identical_modulo_provenance() {
         "metrics.json",
         "report.md",
         "report.html",
-        "findings-detail.md",
         "findings-detail.html",
         "profile-queue.md",
         "profile-queue.html",

@@ -9,25 +9,25 @@
 
 Ranked: production code first, then severity, then confidence, then static cost.
 
-1. **Heap allocation inside loop** ([`PERF\-C\-ALLOC\-001:src/main\.c:27:21`](findings-detail.md#finding-PERF-C-ALLOC-001-src-main-c-27-21)) — `src/main\.c:27` · function `c\_loop` · hot · HIGH · production
+1. **Heap allocation inside loop** ([`PERF\-C\-ALLOC\-001:src/main\.c:27:21`](findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-27-21)) — `src/main\.c:27` · function `c\_loop` · hot · HIGH · production
    - Cost: `15 static cost units (v2) · 5.0× median · top 50%`
    - Why: per\-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization
-2. **Deallocation inside loop** ([`PERF\-C\-ALLOC\-002:src/main\.c:29:9`](findings-detail.md#finding-PERF-C-ALLOC-002-src-main-c-29-9)) — `src/main\.c:29` · function `c\_loop` · hot · HIGH · production
+2. **Deallocation inside loop** ([`PERF\-C\-ALLOC\-002:src/main\.c:29:9`](findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-29-9)) — `src/main\.c:29` · function `c\_loop` · hot · HIGH · production
    - Cost: `15 static cost units (v2) · 5.0× median · top 50%`
    - Why: deallocation via 'free' at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization
-3. **String accumulation in loop** ([`PERF\-C\-STR\-001:src/main\.c:28:9`](findings-detail.md#finding-PERF-C-STR-001-src-main-c-28-9)) — `src/main\.c:28` · function `c\_loop` · hot · HIGH · production
+3. **String accumulation in loop** ([`PERF\-C\-STR\-001:src/main\.c:28:9`](findings-detail.html#finding-PERF-C-STR-001-src-main-c-28-9)) — `src/main\.c:28` · function `c\_loop` · hot · HIGH · production
    - Cost: `15 static cost units (v2) · 5.0× median · top 50%`
    - Why: 'strcat' accumulates into 'acc' at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization
-4. **Growable\-buffer additive growth in loop \(Rust\)** ([`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`](findings-detail.md#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9)) — `src/lib\.rs:20` · function `build` · hot · MEDIUM · production
+4. **Growable\-buffer additive growth in loop \(Rust\)** ([`PERF\-RS\-ALLOC\-003:src/lib\.rs:20:9`](findings-detail.html#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9)) — `src/lib\.rs:20` · function `build` · hot · MEDIUM · production
    - Cost: `20 static cost units (v2) · 6.7× median · top 25%`
    - Why: 'out\.reserve' grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization
-5. **Length query recomputed in loop \(Rust\)** ([`PERF\-RS\-STR\-002:src/lib\.rs:22:17`](findings-detail.md#finding-PERF-RS-STR-002-src-lib-rs-22-17)) — `src/lib\.rs:22` · function `build` · warn · HIGH · production
+5. **Length query recomputed in loop \(Rust\)** ([`PERF\-RS\-STR\-002:src/lib\.rs:22:17`](findings-detail.html#finding-PERF-RS-STR-002-src-lib-rs-22-17)) — `src/lib\.rs:22` · function `build` · warn · HIGH · production
    - Cost: `20 static cost units (v2) · 6.7× median · top 25%`
    - Why: 's\.len' recomputes the length of 's' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
 
 showing top 5 of 9 actions
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 9 findings (production-first).
+[Complete ranked list](findings-detail.html#ranked-actions) — all 9 ranked actions (9 findings, production-first).
 
 0 non-production files demoted · 0 component-level findings in Explorer.
 
@@ -121,6 +121,8 @@ Distribution — max\_loop\_depth:
 | `PERF\-RS\-MEM\-001` | 1 | 0 | 1 | 0 | size\_of passed as an element count \(Rust\) (`PERF\-RS\-MEM\-001:src/lib\.rs:25:22`) — `src/lib\.rs:25:22` |
 | `PERF\-C\-ARCH\-003` | 1 | 0 | 0 | 1 | Cross\-file call coupling (`PERF\-C\-ARCH\-003:src/main\.c:32:12`) — `src/main\.c:32:12` |
 
+All 9 of 9 findings: [findings-detail.html](findings-detail.html) — complete ranked action list and per-finding detail (8 rules).
+
 ## 5. Explorer
 [Dependency graph — internal #include, mod/use dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
@@ -163,8 +165,3 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 **Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
 Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
 For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.8.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.
-
-## Appendix C. All findings (full detail)
-9 of 9 total findings.
-
-Full per-finding detail has moved to [findings-detail.md](findings-detail.md) (8 rules, same 9 of 9 total).

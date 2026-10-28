@@ -33,6 +33,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use perfpal::analyzer::analyze;
 use perfpal::cli::run_with;
+#[cfg(not(feature = "semantic-clang"))]
+use perfpal::reporter::report_script;
 
 mod common;
 
@@ -111,17 +113,15 @@ fn fixture_root() -> PathBuf {
 }
 
 /// Run-varying-masked artifacts under comparison. metrics.json, report.md,
-/// findings-detail.md, report.html and findings-detail.html are compared as
-/// masked text; schema + SVGs + graph.dot carry no provenance and are
-/// compared byte-exact (verified by `regenerate_goldens`). The two Atlas
-/// pages (`atlas-q2.html`, `atlas-weight.html`) are in the fixed set too and
-/// are compared byte-exact: regeneration asserts they carry no provenance
-/// (no year-like RFC3339 fragment, no absolute fixture path). report.html and
-/// findings-detail.html carry no provenance by construction (schema/file/
-/// finding counts only), so their masks are the absolute-root substitution
-/// plus the Wave B1 resolved-ARCH-003 row neutralizer (see
-/// common::mask_golden_html_semantic). findings-detail.md masks exactly like
-/// report.md (provenance surfaces + absolute root + ARCH-003 block strip).
+/// report.html and findings-detail.html are compared as masked text; schema,
+/// SVGs, and graph.dot carry no provenance and are compared byte-exact
+/// (verified by `regenerate_goldens`). The two Atlas pages (`atlas-q2.html`,
+/// `atlas-weight.html`) are in the fixed set too and are compared byte-exact:
+/// regeneration asserts they carry no provenance (no year-like RFC3339
+/// fragment, no absolute fixture path). report.html and findings-detail.html
+/// carry no provenance by construction (schema/file/finding counts only), so
+/// their masks are the absolute-root substitution plus the Wave B1
+/// resolved-ARCH-003 row neutralizer (see common::mask_golden_html_semantic).
 ///
 /// Default-build only: committed goldens are produced by the syntactic
 /// (default) build; under `semantic-clang` the resolved-edge tier changes
@@ -129,12 +129,11 @@ fn fixture_root() -> PathBuf {
 /// semantic tier is covered by `tests/resolver_health.rs` and the
 /// double-run determinism suites instead.
 #[cfg(not(feature = "semantic-clang"))]
-const GOLDEN_ARTIFACTS: [&str; 19] = [
+const GOLDEN_ARTIFACTS: [&str; 18] = [
     "metrics.json",
     "metrics.schema.v1.8.json",
     "report.md",
     "report.html",
-    "findings-detail.md",
     "findings-detail.html",
     "atlas-q2.html",
     "atlas-weight.html",
@@ -463,16 +462,12 @@ fn regenerate_goldens() {
         )
         .expect("write masked report.html");
 
-        // Mask findings-detail.md in place (same masker as report.md:
-        // provenance surfaces + every root-path occurrence + the Wave B1
-        // ARCH-003 full-detail block strip, which lives HERE post-split).
-        let detail_md_raw =
-            fs::read_to_string(golden.join("findings-detail.md")).expect("findings-detail.md");
-        fs::write(
-            golden.join("findings-detail.md"),
-            common::mask_golden_report(&detail_md_raw, &fixture.to_string_lossy()),
-        )
-        .expect("write masked findings-detail.md");
+        // H3 consolidation: the Markdown detail artifact is no longer emitted;
+        // remove any stale copy left in an older golden tree.
+        let stale_detail_md = golden.join("findings-detail.md");
+        if stale_detail_md.exists() {
+            fs::remove_file(&stale_detail_md).expect("remove stale findings-detail.md");
+        }
 
         // Mask findings-detail.html in place (absolute-root substitution
         // only — the template carries no provenance surfaces, same as
@@ -583,31 +578,38 @@ fn regenerate_goldens() {
              (one bare fixed enhancement script + story script + inline JSON data)",
             tree.tag
         );
-        // findings-detail.md carries the per-finding Location/Message lines
-        // that embed the scan root on trees with absolute-path findings —
-        // the masker must have replaced it (same sentinel as report.md).
-        // findings-detail.html is provenance-free outright (same bar as
-        // report.html) plus exactly one fixed enhancement script block.
-        let detail_md_text =
-            fs::read_to_string(golden.join("findings-detail.md")).expect("findings-detail.md");
-        assert!(
-            !detail_md_text.contains(&root_str),
-            "findings-detail.md (tree '{}') must not leak the absolute scan root",
-            tree.tag
-        );
-        let detail_html_text =
-            fs::read_to_string(golden.join("findings-detail.html")).expect("findings-detail.html");
-        assert!(
-            !detail_html_text.contains("2026-") && !detail_html_text.contains(&root_str),
-            "findings-detail.html (tree '{}') must be provenance-free to be committed masked-only",
-            tree.tag
-        );
-        assert!(
-            detail_html_text.matches("<script>").count() == 1
-                && detail_html_text.matches("</script>").count() == 1,
-            "findings-detail.html (tree '{}') must contain exactly one fixed enhancement script block",
-            tree.tag
-        );
+        // Detail + profile-queue pages carry exactly the one fixed
+        // enhancement block (filter bar stays live); the Atlas drills are
+        // script-free.
+        let fixed_block = format!("<script>\n{}\n</script>", report_script());
+        for name in ["findings-detail.html", "profile-queue.html"] {
+            let text = fs::read_to_string(golden.join(name)).expect("page");
+            assert!(
+                !text.contains("2026-") && !text.contains(&root_str),
+                "{name} (tree '{}') must be provenance-free to be committed masked-only",
+                tree.tag
+            );
+            assert_eq!(
+                text.matches("<script").count(),
+                1,
+                "{name} (tree '{}') must carry exactly one fixed script",
+                tree.tag
+            );
+            assert!(
+                text.contains(&fixed_block),
+                "{name} (tree '{}') must carry the fixed REPORT_SCRIPT body verbatim",
+                tree.tag
+            );
+        }
+        for name in ["atlas-weight.html", "atlas-q2.html"] {
+            let text = fs::read_to_string(golden.join(name)).expect("drill page");
+            assert_eq!(
+                text.matches("<script").count(),
+                0,
+                "{name} (tree '{}') must be script-free",
+                tree.tag
+            );
+        }
         // The snapshot tempdir (when any) is removed by `_snapshot_guard`'s
         // drop — even on panic — so no manual cleanup belongs here.
     }
@@ -676,12 +678,6 @@ fn report_matches_committed_goldens() {
                     // trees that emit no resolved `PERF-C-ARCH-003`.
                     common::mask_golden_html_semantic(&actual)
                         == common::mask_golden_html_semantic(&expected)
-                }
-                "findings-detail.md" => {
-                    let actual = String::from_utf8(actual).expect("findings-detail.md is UTF-8");
-                    let expected = String::from_utf8(expected).expect("golden is UTF-8");
-                    common::mask_golden_report(&actual, &root_str)
-                        == common::mask_golden_report(&expected, &root_str)
                 }
                 "findings-detail.html" => {
                     let actual = String::from_utf8(actual).expect("findings-detail.html is UTF-8");

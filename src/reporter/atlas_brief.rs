@@ -28,6 +28,7 @@ use crate::reporter::atlas_metrics::{
     format_severity_confidence, format_share, format_trip_provenance, format_unresolved_includes,
 };
 use crate::reporter::atlas_render::mid_ellipsis;
+use crate::reporter::format::{ACCENT, HEAD, INK, MUTED, PAPER, RULE, ZEBRA};
 use crate::reporter::views::{self, CostScale, ScaleOrdering, scale_of};
 use crate::reporter::{
     escape_html, file_anchor_map, finding_anchor_assignments, function_anchor_map,
@@ -1399,7 +1400,7 @@ fn drill_page(title: &str, crumb: &str, body: &str) -> String {
     out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
     out.push_str(&format!("<title>{}</title>\n", escape_html(title)));
     out.push_str("<style>");
-    out.push_str(DRILL_PAGE_CSS);
+    out.push_str(&drill_page_css());
     out.push_str("</style>\n</head>\n<body>\n");
     out.push_str("<nav class=\"atlas-breadcrumb\" aria-label=\"Breadcrumb\">");
     out.push_str("<a href=\"report.html#map\">Atlas map</a>");
@@ -1415,26 +1416,39 @@ fn drill_page(title: &str, crumb: &str, body: &str) -> String {
 // Drill CSS (warm Atlas tokens; deterministic, print-safe; no script/network)
 // ---------------------------------------------------------------------------
 
-const DRILL_PAGE_CSS: &str = "\
-*{box-sizing:border-box}\
-body{margin:0;background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;font-size:10px;line-height:1.45}\
-a{color:#7c2d12}\
-.atlas-breadcrumb{padding:10px 16px;border-bottom:1px solid #d6d0c4;font-size:9px;font-weight:650;color:#6f6a61}\
-.atlas-breadcrumb a{color:#202b35;text-decoration:none}\
-.atlas-breadcrumb a:hover{text-decoration:underline}\
-.atlas-drill-page{max-width:72rem;margin:0 auto;padding:12px 16px 28px}\
-.atlas-drill{border-top:1px solid #d6d0c4;padding:10px 0 4px}\
-.atlas-drill h3{font-size:14px;font-weight:800;margin:0 0 6px}\
-.atlas-drill h4{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6f6a61;margin:12px 0 4px}\
-.atlas-mono,.atlas-path,.atlas-drill code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}\
-.atlas-caption{color:#6f6a61;font-size:9px}\
-.atlas-table-scroll{overflow-x:auto;max-width:100%}\
-.atlas-drill table{border-collapse:collapse;width:100%;margin:6px 0;font-size:9px}\
-.atlas-drill th,.atlas-drill td{border:1px solid #d6d0c4;padding:3px 6px;text-align:left;vertical-align:top}\
-.atlas-drill th{background:#ece8df;font-size:9px;font-weight:800}\
-.atlas-drill tbody tr:nth-child(even){background:#fbf9f4}\
-.atlas-drill p{margin:4px 0}\
-";
+/// Warm Atlas palette applied to the standalone drill pages. Every color
+/// comes from the shared palette constants, so the warm paper look is
+/// defined exactly once (report-family shell + drill pages).
+fn drill_page_css() -> String {
+    format!(
+        "*{{box-sizing:border-box}}\
+body{{margin:0;background:{paper};color:{ink};font-family:ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;font-size:10px;line-height:1.45}}\
+a{{color:{accent}}}\
+.atlas-breadcrumb{{padding:10px 16px;border-bottom:1px solid {rule};font-size:9px;font-weight:650;color:{muted}}}\
+.atlas-breadcrumb a{{color:{ink};text-decoration:none}}\
+.atlas-breadcrumb a:hover{{text-decoration:underline}}\
+.atlas-drill-page{{max-width:72rem;margin:0 auto;padding:12px 16px 28px}}\
+.atlas-drill{{border-top:1px solid {rule};padding:10px 0 4px}}\
+.atlas-drill h3{{font-size:14px;font-weight:800;margin:0 0 6px}}\
+.atlas-drill h4{{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:{muted};margin:12px 0 4px}}\
+.atlas-mono,.atlas-path,.atlas-drill code{{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}}\
+.atlas-caption{{color:{muted};font-size:9px}}\
+.atlas-table-scroll{{overflow-x:auto;max-width:100%}}\
+.atlas-drill table{{border-collapse:collapse;width:100%;margin:6px 0;font-size:9px}}\
+.atlas-drill th,.atlas-drill td{{border:1px solid {rule};padding:3px 6px;text-align:left;vertical-align:top}}\
+.atlas-drill th{{background:{head};font-size:9px;font-weight:800}}\
+.atlas-drill tbody tr:nth-child(even){{background:{zebra}}}\
+.atlas-drill p{{margin:4px 0}}\
+",
+        paper = PAPER,
+        ink = INK,
+        accent = ACCENT,
+        rule = RULE,
+        muted = MUTED,
+        head = HEAD,
+        zebra = ZEBRA,
+    )
+}
 
 // ---------------------------------------------------------------------------
 // Unit tests

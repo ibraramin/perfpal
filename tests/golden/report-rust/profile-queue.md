@@ -2,6 +2,8 @@
 
 40 functions ranked by static cost — candidates, confirm with a profiler.
 
+## Complete cost-ranked list
+
 | rank | function | location | path class | cost | notes |
 |---:|---|---|---|---|---|
 | 1 | `grid\_checksum` | `src/03\_deep\_nesting\.rs:15` | production | 25 static cost units (v2) · 3.6× median · top 5% | unknown\-trip ×3 — estimate incomplete |

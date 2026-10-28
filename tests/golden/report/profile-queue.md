@@ -2,6 +2,8 @@
 
 12 functions ranked by static cost — candidates, confirm with a profiler.
 
+## Complete cost-ranked list
+
 | rank | function | location | path class | cost | notes |
 |---:|---|---|---|---|---|
 | 1 | `dispatch` | `src/main\.c:84` | production | 57 static cost units (v2) · 8.1× median · top 8% | unknown\-trip ×2 — estimate incomplete |

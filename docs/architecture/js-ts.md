@@ -186,7 +186,7 @@ already carries the v1.7 → v1.8 delta entry.
 | 13 | `.github/workflows/ci.yml:17-48` | `check` job | no edit (Cargo compiles grammars) |
 | 14 | `.github/workflows/ci.yml:85-105` | `license-audit` | no edit (MIT already allowed) |
 | 15 | `.github/workflows/release.yml:81-240` | build + SBOM | no edit; new crates appear automatically |
-| 16 | `tests/determinism_js.rs`, `tests/determinism_ts.rs` (new) | no JS/TS double-run suite today | B2/B3 add masked double-run suites covering `metrics.json` (masked), `report.md`, `report.html`, `findings-detail.*`, `profile-queue.*`, `charts/*`, and the bundled schema artifact |
+| 16 | `tests/determinism_js.rs`, `tests/determinism_ts.rs` (new) | no JS/TS double-run suite today | B2/B3 add masked double-run suites covering `metrics.json` (masked), `report.md`, `report.html`, `findings-detail.html`, `profile-queue.*`, `charts/*`, and the bundled schema artifact |
 
 Reference harnesses to copy: `tests/python_grammar_link.rs`, `tests/examples_python_coverage.rs`,
 `tests/python_negative_fixtures.rs`, `tests/fixtures/precision/python/`, `tests/benchmark/corpus.rs`.

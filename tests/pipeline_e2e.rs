@@ -316,11 +316,11 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     // --- Derived artifacts: report.md + detail artifacts + charts/ --------
     let report_path = out.join("report.md");
     assert!(report_path.is_file(), "report.md missing");
-    // C-split: the uncapped per-finding detail rides alongside the bounded
-    // human files through the same CLI artifact pipe.
+    // C-split (H3): the uncapped per-finding detail rides alongside the
+    // bounded human files as HTML only; the Markdown detail is gone.
     assert!(
-        out.join("findings-detail.md").is_file(),
-        "findings-detail.md missing"
+        !out.join("findings-detail.md").exists(),
+        "findings-detail.md must not be emitted"
     );
     assert!(
         out.join("findings-detail.html").is_file(),
@@ -334,9 +334,10 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
         "report.md must carry zero per-finding detail rows"
     );
     assert!(
-        report1.contains("[findings-detail.md](findings-detail.md)"),
-        "report.md Appendix C must link the detail artifact"
+        report1.contains("[findings-detail.html](findings-detail.html)"),
+        "report.md §4 must link the canonical detail artifact"
     );
+    assert!(!report1.contains("findings-detail.md"));
 
     // Section headings present, in the fixed §5 template order.
     let headings = [
@@ -454,7 +455,7 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
     // C-split detail artifacts: snapshot run-1 bytes for the UNMASKED
     // byte-identity check after the swap-path second run below.
     let mut detail_bytes1 = std::collections::BTreeMap::new();
-    for name in ["findings-detail.md", "findings-detail.html", "report.html"] {
+    for name in ["findings-detail.html", "report.html"] {
         detail_bytes1.insert(
             name.to_string(),
             fs::read(out.join(name)).unwrap_or_else(|_| panic!("{name} missing after run 1")),
@@ -490,19 +491,19 @@ fn full_pipeline_writes_valid_report_and_is_deterministic() {
 
     // C-split detail artifacts: byte-identical UNMASKED across runs (no
     // provenance surfaces — relative paths only).
-    for name in ["findings-detail.md", "findings-detail.html", "report.html"] {
+    for name in ["findings-detail.html", "report.html"] {
         let bytes2 = fs::read(out.join(name)).expect("detail artifact readable");
         assert_eq!(
             detail_bytes1[name], bytes2,
             "{name} not byte-stable across runs"
         );
     }
-    let detail_md1 = String::from_utf8(detail_bytes1["findings-detail.md"].clone())
-        .expect("findings-detail.md is UTF-8");
+    let detail_html1 = String::from_utf8(detail_bytes1["findings-detail.html"].clone())
+        .expect("findings-detail.html is UTF-8");
     assert_eq!(
-        detail_md1.matches("#### ").count(),
+        detail_html1.matches("<tr id=\"finding-").count(),
         doc1["findings"].as_array().unwrap().len(),
-        "findings-detail.md must render every finding"
+        "findings-detail.html must render every finding row"
     );
 
     // SVGs + DOT: byte-identical UNMASKED across runs (no provenance inside).

@@ -29,27 +29,38 @@ standalone prototype player in `sim/` (evidence/reference only).
 
 ## 2. Artifact roles (binding matrix)
 
-| Artifact | Audience | Role | Cap | Canonical? |
-|---|---|---|---|---|
-| `metrics.json` | tools / LLM / downstream | canonical scan record (schema 1.8) | none | **yes** |
-| `agent-actions.json` | agents / tools | complete machine action list + profile top 100 (`profile_queue_cap`) | actions uncapped; profile 100 | complete action list |
-| `agent-report.md` | LLM / human triage | bounded digest: top 25 actions, per-rule rollup, top 25 profile rows, limits | 25 / 25 / 100 | no (digest) |
-| `report.md` | human | narrative report + Atlas summary + methodology; **no full findings appendix** | summary caps named | no |
-| `report.html` | human | designed Atlas-first page + always-on story (self-contained; fixed report script + fixed story script + inline JSON data) | summary caps named | no |
-| `findings-detail.html` | human | **canonical complete human detail**: ranked actions + all findings, filterable | none | human detail |
-| `findings-detail.md` | human / diffing | optional plain-text mirror; keep only while a consumer exists | none | no |
-| `profile-queue.{md,html}` | human | complete KV3 function list (cost-ranked, honest badges) | none | KV3 detail |
-| `atlas-weight.html`, `atlas-q2.html` | human | drill pages linked from the Atlas charts | complete per metric | no |
-| `charts/*.svg` | human / diff | deterministic chart stems (workspace/file/entry/coupling/hot/bands/findings/component-*), `graph.dot` | top-50 / named | chart data |
-| `metrics.schema.v1.8.json` | tools | shipped schema copy for validation | n/a | mirrors `src/schema/` |
+One row per emitted filename; the matrix is the source of truth for "who opens this, and what do
+they do with it". An artifact without a consumer is deleted, not kept.
+
+| Artifact | Audience | Consumer / action | Unique role | Cap | Canonical? |
+|---|---|---|---|---|---|
+| `metrics.json` | tools / LLM / downstream | parsed and validated by tooling | the only data source; every rendering is derived from it | none | **yes** |
+| `agent-actions.json` | agents / tools | machine action execution and inspection | complete action list (uncapped) + profile top 100 (`profile_queue_cap`) | actions uncapped; profile 100 | complete action list |
+| `agent-report.md` | LLM / human triage | read without loading the full report | bounded digest: top 25 actions, per-rule rollup, top 25 profile rows, limits | 25 / 25 / 100 | no (digest) |
+| `report.md` | human | read the narrative + Atlas summary, follow links | narrative report + Atlas summary + methodology; **no full findings appendix** | summary caps named | no |
+| `report.html` | human | map-first browsing; click-to-filter | designed Atlas-first page + always-on story (self-contained; fixed report script + fixed story script + inline JSON data) | summary caps named | no |
+| `findings-detail.html` | human | opened from `report.md` §4 / `#ranked-actions` for the complete ranked list and per-finding rows; filter | **canonical complete human detail**: ranked actions + all findings, filterable via the fixed `REPORT_SCRIPT` | none | human detail |
+| `profile-queue.{md,html}` | human | complete KV3 drill from the key views | complete KV3 function list (cost-ranked, honest badges) | none | KV3 detail |
+| `atlas-weight.html`, `atlas-q2.html` | human | drill from the Atlas charts | drill pages: complete per-metric weight / blast-radius detail | complete per metric | no |
+| `charts/*.svg` | human / diff | visual overview; never parsed | deterministic chart stems (workspace/file/entry/coupling/hot/bands/findings/component-*), `graph.dot` | top-50 / named | chart data |
+| `metrics.schema.v1.8.json` | tools | offline validation without the repo | shipped schema copy; discovered by mapping `schema_version` → filename | n/a | mirrors `src/schema/` |
 
 Rules:
-- `report.md` Appendix C (full findings) is **removed**; it links `findings-detail` instead.
-- `findings-detail.md` is kept only if a concrete consumer (e.g. text-only diffing) is named in S1;
-  otherwise it is dropped. HTML is the canonical human detail.
-- The schema copy stays only if the output contract requires it (validation without the repo).
-- MD/HTML pairs are intentional format variants of the same content — they must be generated from the
-  same section model, never hand-written twice.
+- `report.md` Appendix C (full findings) is **removed**; §4 instead carries
+  `All <N> of <M> findings: [findings-detail.html](findings-detail.html) — complete ranked action
+  list and per-finding detail (<R> rules).` Section order is 1..5, Appendix A, Appendix B.
+- `findings-detail.md` is **dropped** (decided H3, 2026-10-28): no concrete consumer for a Markdown
+  mirror was ever named, so the `.md` duplicate is not emitted. `findings-detail.html` is the
+  canonical complete human detail; the fixed artifact set is **9 files** (output-contract §2).
+- The schema copy is **kept** (decided H3): contractually required — an offline consumer validates
+  `metrics.json` without the Perfpal repo, and discovery maps `schema_version` to the filename
+  (`"1.8"` ⇒ `metrics.schema.v1.8.json`).
+- The 25-action / 25-profile caps are unchanged (ratified D1, `docs/specs/agent-report.md:27`); every
+  capped view prints `N of M` and names the cap in `data_quality.caps`. `agent-actions.json` remains
+  the complete machine contract.
+- Remaining MD/HTML pairs (`report.{md,html}`, `profile-queue.{md,html}`) are intentional format
+  variants of the same content — they must be generated from the same section model, never
+  hand-written twice. `findings-detail.html` is HTML-only by decision.
 
 ## 3. Rank keys and caps
 
@@ -65,23 +76,45 @@ Rules:
 
 ## 4. Formatting contract
 
-All human artifacts share one style token set:
+One style contract, shared by every Markdown/HTML artifact (implemented H3, 2026-10-28):
 
-- **Heading scale:** H1 artifact title; H2 numbered top-level sections; H3 subsections; H4 row labels.
-  No skipped levels; no heading-shaped content generated from user data (escape or fence it).
-- **Typography:** Atlas warm-paper palette for HTML; monospace only for code/paths; tabular numerals
-  for counts and costs. A single type scale, defined once in a shared CSS/const block.
-- **Escaping:** every interpolated path/title/message passes the shared escaper. Markdown renderers
-  structure-escape backticks/pipes/headings; HTML renderers escape `&<>"'`. Quoted analyzer provenance
-  is verbatim in JSON, escaped in Markdown/HTML.
+- **Palette (one palette, one token source for the shell).** HTML artifacts use the Atlas warm-paper
+  tokens only — paper `#f4f1ea`, ink `#202b35`, muted `#6f6a61`, rule `#d6d0c4`, card `#fffdf8`,
+  accent `#7c2d12`, table head `#ece8df`, zebra `#fbf9f4`. The report-family shell declares them once
+  as constants and CSS custom properties (`src/reporter/format.rs`), and the Atlas drill pages consume
+  those constants; the Atlas `#map` renderer's CSS/SVG embeds the same literal values in its own
+  block. There is no second palette or alternate value for any token.
+- **Typography:** sans-serif body; monospace reserved for code and paths; one heading scale (H1
+  artifact title, H2 numbered top-level sections, H3 subsections, H4 row labels; no skipped levels,
+  and no heading-shaped content generated from user data — escape or fence it); tabular numerals
+  for counts and costs.
+- **One HTML shell.** `report.html`, `findings-detail.html` and `profile-queue.html` share one
+  head/style/header/table markup; detail pages do not fork the report's CSS and carry exactly one
+  fixed `REPORT_SCRIPT` (the filter/pan-zoom enhancement). The Atlas drill pages
+  (`atlas-weight.html`, `atlas-q2.html`) consume the same palette constants and type rules but keep
+  their drill-specific markup and CSS, and remain script-free.
+- **Escaping:** every interpolated path/title/message passes the shared escaper
+  (`escape_md`/`escape_html` — no per-artifact escaper). Markdown renderers structure-escape
+  backticks/pipes/headings and flatten CR/LF/TAB to `\r`/`\n`/`\t`; agent-report code-span values
+  neutralize `<script` / `</script` to `&lt;script` / `&lt;/script`, while `report.md` /
+  `profile-queue.md` backslash-escape `<` / `>`. A hostile scanned value therefore cannot inject a
+  line, section or executable script tag anywhere in a Markdown artifact; HTML renderers escape
+  `&<>"'`.
+  Quoted analyzer provenance is verbatim in JSON, escaped in Markdown/HTML (JSON keeps the original
+  bytes).
 - **Tables:** same column conventions (rank, location, class, cost/why), same alignment, same
-  `N of M` header note. Links use one style (relative paths, `#anchors`, no trailing punctuation).
+  `<table>`/`<thead>` markup in HTML, same `N of M` header note. Links use one style (relative
+  paths, `#anchors`, no trailing punctuation).
 - **Empty states:** every artifact renders a named stub (e.g. `no findings recorded`), never a blank
-  section or a broken table.
+  section or a broken table. `profile-queue.md` gains the `## Complete cost-ranked list` section and
+  renders `No functions recorded.` when the queue is empty.
 - **Section order:** fixed per artifact and asserted by tests. Markdown and HTML siblings render the
   same sections in the same order.
 - **Determinism:** no clock, no random, no set iteration; sorted traversals; byte-identical output for
   the same inputs on repeated runs (the existing determinism suite is the arbiter).
+- **Style-contract test:** `tests/style_contract.rs` asserts the heading order per artifact,
+  hostile-input escaping, and the table/link/empty-state contract; `tests/artifact_matrix.rs`
+  asserts the role matrix, one owner per content class/format, cap disclosures and link consumers.
 
 ## 5. Atlas composition (report.html)
 
@@ -196,9 +229,11 @@ the story boots to the final summary beat, and the JS-off fallback keeps every s
 
 ## 8. Acceptance tests
 
-1. Artifact matrix test: every emitted filename has a role entry; no two artifacts carry the same
-   complete list; every cap is printed and named in `data_quality.caps`.
-2. Formatting snapshot: heading scale/section order/escaping asserted per artifact.
+1. Artifact matrix (`tests/artifact_matrix.rs`): every emitted filename has a role entry; one owner
+   per content class/format; no two artifacts carry the same complete list; every cap is printed and
+   named in `data_quality.caps`; every link consumer resolves to an emitted artifact.
+2. Style contract (`tests/style_contract.rs`): heading order per artifact, hostile-input escaping,
+   and the table/link/empty-state contract.
 3. Atlas composition: answer line → map → ranked actions → components/files/findings order asserted;
    `#explorer` absent from `report.html`; `explorer.html` exists and links back.
 4. Resolution: render at the five widths above; assert no horizontal overflow at 1280, canvas fills
@@ -208,7 +243,7 @@ the story boots to the final summary beat, and the JS-off fallback keeps every s
    clippy/tests, story gate (`sim/gate.sh`), golden regeneration.
 7. Vision: `@vision` APPROVED at 1440 and 3072 before any formatting claim is considered done.
 
-## 9. Open decisions (H1/H2)
+## 9. Open decisions (H1/H2/H3)
 
 - **Decided (founder, 2026-10-27; ADR-0014): include the interactive story in-report, always
   embedded.** `--story` is layout-artifact-only and must not change shared artifacts. The fallback
@@ -217,8 +252,13 @@ the story boots to the final summary beat, and the JS-off fallback keeps every s
   keep the separate pages plus a prominent links block** (`answer`/`links` blocks link them).
 - **Decided (H1, 2026-10-27):** the canvas is full-width; the detail rail sits beside it at 1440 px
   and below it at ≥1600 px (stacked below 1360). Recorded in ADR-0014 and the vision evidence.
-- Keep or drop `findings-detail.md` (needs a named consumer).
-- Keep or drop the shipped schema copy.
+- **Decided (H3, 2026-10-28): drop `findings-detail.md`.** No named consumer existed for a Markdown
+  mirror; `findings-detail.html` is the canonical complete human detail (ADR-0015).
+- **Decided (H3, 2026-10-28): keep the shipped schema copy.** Contractually required for validation
+  without the repo, and for `schema_version` → filename discovery.
+- **Decided (H3, 2026-10-28): one warm-paper style contract for all human artifacts.** The shared
+  HTML shell uses the Atlas palette and typography (§4); the `.md` artifacts share the same heading
+  scale, escaping helpers, table/link conventions and named empty-state stubs.
 - **Decided (founder, 2026-10-28):** `--report-width` is public in v0.4.x — documented in
   `--help`, the README CLI table and output-contract §2; the accepted values are
   `auto|1280|1440|1920|2560|3072`. It is layout-only and changes no shared artifact.

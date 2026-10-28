@@ -2,6 +2,8 @@
 
 48 functions ranked by static cost — candidates, confirm with a profiler.
 
+## Complete cost-ranked list
+
 | rank | function | location | path class | cost | notes |
 |---:|---|---|---|---|---|
 | 1 | `smallWindow` | `06\_membership\_scan\.js:19` | production | 19 static cost units (v2) · 9.5× median · top 2% | known trip ×4 — verify it actually runs |

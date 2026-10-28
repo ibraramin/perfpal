@@ -12,7 +12,7 @@
 //! - `report.html`, `findings-detail.html`, `profile-queue.html`, every
 //!   `charts/*` artifact and the bundled `metrics.schema.v1.8.json` —
 //!   byte-identical UNMASKED (no provenance by construction);
-//! - `findings-detail.md` / `profile-queue.md` — equal after the same
+//! - `profile-queue.md` — equal after the same
 //!   provenance mask (defensive: they carry no provenance today);
 //! - the artifact SET (rel paths) is identical across runs.
 //!
@@ -132,7 +132,7 @@ fn double_run_all_ts_artifacts_byte_equal_modulo_provenance() {
                     "metrics.json diverged beyond provenance"
                 );
             }
-            "report.md" | "findings-detail.md" | "profile-queue.md" => {
+            "report.md" | "profile-queue.md" => {
                 assert_eq!(
                     common::mask_report_provenance(&text(bytes1, name)),
                     common::mask_report_provenance(&text(bytes2, name)),
@@ -157,7 +157,6 @@ fn double_run_all_ts_artifacts_byte_equal_modulo_provenance() {
         "metrics.schema.v1.8.json",
         "report.md",
         "report.html",
-        "findings-detail.md",
         "findings-detail.html",
         "profile-queue.md",
         "profile-queue.html",

@@ -37,6 +37,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The full-bleed band is anchored to the page body (not `100vw`), so a classic scrollbar cannot
   create a horizontal overflow.
 
+### Changed
+- **Unified artifact formatting and style contract (polish-report H3).** Every Markdown/HTML
+  artifact now shares one style source: the Atlas warm-paper palette (`#f4f1ea` paper, `#202b35`
+  ink, `#6f6a61` muted, `#d6d0c4` rule, `#fffdf8` card, `#7c2d12` accent, `#ece8df` table head,
+  `#fbf9f4` zebra), sans-serif body, monospace only for code/paths, one heading scale, tabular
+  numerals, and unified table/link/empty-state markup through the shared `escape_md`/`escape_html`
+  helpers, one report-family HTML shell, and one shared palette (the Atlas drill pages reuse the
+  palette constants while keeping their drill-specific markup). Markdown rendering now also flattens
+  CR/LF/TAB, agent-report code-span values neutralize `<script` tokens to `&lt;script`, and the other
+  Markdown artifacts escape `<`/`>`. `profile-queue.md` gains the `## Complete cost-ranked list`
+  section and the `No functions recorded.` stub. Locked by `tests/artifact_matrix.rs` and
+  `tests/style_contract.rs`. No schema change; byte-determinism unchanged.
+
+### Removed
+- **`findings-detail.md` (pre-beta artifact consolidation).** The Markdown mirror is removed;
+  `findings-detail.html` is the canonical complete human detail (ranked actions + all findings,
+  filterable). No named consumer existed for the `.md` mirror. The fixed artifact set drops from 10
+  to 9 files; the pre-beta status permits the removal because no published v1.x consumer exists.
+  `agent-actions.json` stays complete, `profile-queue.{md,html}` stays the distinct KV3 list, the
+  schema copy stays, and all 25 caps / `N of M` disclosures are unchanged. See ADR-0015 and
+  `docs/report/output-contract.md`.
+- **`report.md` Appendix C.** Removed entirely; §4 now carries
+  `All <N> of <M> findings: [findings-detail.html](findings-detail.html) — complete ranked action
+  list and per-finding detail (<R> rules).` Section order is 1..5, Appendix A, Appendix B.
+
 ### Pending
 - **Publish gate (founder-owned):** B-pf-001 real contact address for EULA/PRIVACY; B-pf-002
   `MINISIGN_SECRET_KEY`/`MINISIGN_PASSWORD` before any tag.

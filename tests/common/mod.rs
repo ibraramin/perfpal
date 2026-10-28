@@ -374,38 +374,33 @@ pub fn mask_golden_semantic(masked_metrics: &str) -> String {
 pub fn markdown_escaped(input: &str) -> String {
     let mut out = String::with_capacity(input.len() + 8);
     for c in input.chars() {
-        if MD_ESCAPE_CHARS.contains(&c) {
-            out.push('\\');
+        match c {
+            '\r' => out.push_str("\\r"),
+            '\n' => out.push_str("\\n"),
+            '\t' => out.push_str("\\t"),
+            _ => {
+                if MD_ESCAPE_CHARS.contains(&c) {
+                    out.push('\\');
+                }
+                out.push(c);
+            }
         }
-        out.push(c);
     }
     out
 }
 
-/// Golden human-`report.md` AND `findings-detail.md` masking (shared: the
-/// detail artifact carries the Appendix C content post-split): the
-/// [`mask_report_provenance`] surfaces (`started <RFC3339>`, `duration <n>
-/// ms`) PLUS every literal occurrence of the absolute scan `root` →
-/// `"<ROOT>"` (the header blockquote and the §2 "Scan root" line are the
-/// only surfaces, per the §5 template) PLUS the Markdown-ESCAPED form of
-/// the root (the reporter runs every embedded path through `escape_md`, so
-/// e.g. `…/e2e-mixed` appears as `…/e2e\-mixed`) PLUS the Wave B1 ARCH-003
-/// full-detail block strip: a `semantic-clang` feature build legitimately
-/// renders the resolved finding (MEDIUM/semantic/resolved evidence) at a
-/// DIFFERENT full-detail position (the detail artifact) than the default
-/// build's name-based block, so string-level normalization cannot restore
-/// order — the whole block (header `#### Cross\-file call coupling` through
-/// the next blank line, or the next `#### ` finding header defensively) is
-/// dropped on BOTH sides. The header
-/// terminator is explicit (`"#### "` with the trailing space, pushed back
-/// onto the output) IN ADDITION to the blank-line rule — a future evidence
-/// line containing a blank line ends the skip at that blank line exactly as
-/// before, and only a real finding header (never a `#`-starting evidence
-/// line) can end it otherwise, so neither over-stripping nor under-stripping
-/// is possible.
-/// ARCH-003 full-detail rendering stays locked by arch_fixtures.rs +
-/// pipeline_e2e.rs (name-based) and tests/resolver_health.rs (resolved
-/// variant).
+/// Golden `report.md` masking: the [`mask_report_provenance`] surfaces
+/// (`started <RFC3339>`, `duration <n> ms`) PLUS every literal occurrence of
+/// the absolute scan `root` → `"<ROOT>"` (the header blockquote and the §2
+/// "Scan root" line are the only surfaces, per the §5 template) PLUS the
+/// Markdown-ESCAPED form of the root (the reporter runs every embedded path
+/// through `escape_md`, so e.g. `…/e2e-mixed` appears as `…/e2e\-mixed`).
+///
+/// H3 consolidation: `report.md` is now the only Markdown artifact masked
+/// here (`findings-detail.md` is no longer emitted), and it carries no
+/// find-finding detail blocks, so no block stripping is needed. The legacy
+/// ARCH-003 strip loop is retained as a defensive no-op for older trees.
+///
 /// Backslash→slash normalization is applied to the SEARCH PATH ONLY (never
 /// to the document, which legitimately contains Markdown escapes), so the
 /// comparison is separator-agnostic.
@@ -440,9 +435,8 @@ pub fn mask_golden_report(raw: &str, root: &str) -> String {
         }
         kept.push(line);
     }
-    // Trailing-newline normalization (group-and-fold follow-up): the strip
-    // can leave a separator blank line at EOF (the stripped block is now the
-    // LAST Appendix C block on some trees), while `lines()` swallows a lone
+    // Trailing-newline normalization (defensive): the legacy strip can leave
+    // a separator blank line at EOF, while `lines()` swallows a lone
     // trailing newline — so without this the masker is not idempotent and
     // regen output disagrees with re-masked goldens by one `\n`. Drop blank
     // lines the strip leaves at EOF, then restore exactly one trailing

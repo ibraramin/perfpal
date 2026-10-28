@@ -276,7 +276,6 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // C-split detail artifacts: the uncapped per-finding detail promoted out
     // of the bounded human files — pure functions of `document` alone (no
     // chart input, no provenance surfaces), so findings stay byte-identical.
-    let detail_md = crate::reporter::render_findings_detail(&document);
     let detail_html = crate::reporter::render_findings_detail_html(&document);
     // V4 profile queue: the complete cost-ranked function list (drill
     // companion to KV3), a pure function of `document` with no provenance.
@@ -305,7 +304,6 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
         ),
         Artifact::text("report.md", report),
         Artifact::text("report.html", html),
-        Artifact::text("findings-detail.md", detail_md),
         Artifact::text("findings-detail.html", detail_html),
         Artifact::text("profile-queue.md", profile_md),
         Artifact::text("profile-queue.html", profile_html),

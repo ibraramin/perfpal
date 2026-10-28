@@ -261,13 +261,6 @@ fn scripts(html: &str) -> Vec<ScriptBlock<'_>> {
     blocks
 }
 
-/// The single fixed enhancement block used by the detail/drill pages.
-fn script_body(html: &str) -> &str {
-    let blocks = scripts(html);
-    assert_eq!(blocks.len(), 1, "exactly one inline script block expected");
-    blocks[0].body.trim_matches('\n')
-}
-
 /// The report's unchanged REPORT_SCRIPT, selected by body identity among the
 /// three ADR-0014 script elements.
 fn report_script_body(html: &str) -> &str {
@@ -1248,12 +1241,9 @@ fn double_scan_report_html_byte_identical_unmasked() {
     let first = fs::read(out.join("report.html")).expect("report.html emitted");
     let first_detail_html =
         fs::read(out.join("findings-detail.html")).expect("findings-detail.html emitted");
-    let first_detail_md =
-        fs::read(out.join("findings-detail.md")).expect("findings-detail.md emitted");
     assert_eq!(run_with(argv(&out_str, &target)), 0);
     let second = fs::read(out.join("report.html")).expect("report.html emitted");
     let second_detail_html = fs::read(out.join("findings-detail.html")).expect("detail emitted");
-    let second_detail_md = fs::read(out.join("findings-detail.md")).expect("detail md emitted");
 
     assert_eq!(
         first, second,
@@ -1264,17 +1254,21 @@ fn double_scan_report_html_byte_identical_unmasked() {
         first_detail_html, second_detail_html,
         "findings-detail.html diverged between scans (must be byte-identical UNMASKED)"
     );
-    assert_eq!(
-        first_detail_md, second_detail_md,
-        "findings-detail.md diverged between scans (must be byte-identical UNMASKED)"
-    );
     let text = String::from_utf8(first).expect("report.html is UTF-8");
     // Slice-2 fixed script block present and byte-identical to the source.
     assert_eq!(report_script_body(&text), report_script());
     assert!(text.ends_with('\n'));
     assert!(!text.contains(&target), "absolute scan root leaked");
     let detail_text = String::from_utf8(first_detail_html).expect("detail HTML is UTF-8");
-    assert_eq!(script_body(&detail_text), report_script());
+    assert_eq!(
+        detail_text.matches("<script").count(),
+        1,
+        "findings-detail.html must carry exactly one fixed script"
+    );
+    assert!(
+        detail_text.contains(report_script()),
+        "findings-detail.html must keep REPORT_SCRIPT (filterable contract)"
+    );
     assert!(
         !detail_text.contains(&target),
         "absolute scan root leaked into detail"

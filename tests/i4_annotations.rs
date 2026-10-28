@@ -18,7 +18,7 @@ use perfpal::charts::layers::{
 };
 use perfpal::charts::{self, FINDING_LEGEND, FindingIndex};
 use perfpal::ir::{IncludeCounts, IncludeForm, LocCounts, ParseStatus, ResolverTier, Span};
-use perfpal::reporter::{render_findings_detail, render_findings_detail_html, render_html};
+use perfpal::reporter::{render_findings_detail_html, render_html};
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, GraphNode, GraphsSection,
     IncludeEdgeDto, IncludeGraph, MetricsDocument, ParseHealthEntry, ScanInfo, StatsSection,
@@ -627,7 +627,7 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
         .expect("#atlas-story after map");
     let map_body = &html[map_start..map_start + map_end];
     assert!(
-        map_body.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
+        map_body.starts_with("<section id=\"map\">\n<h2 class=\"sr-only\">Atlas map</h2>\n<div class=\"atlas-page-chrome\""),
         "#map must open with the Atlas first-page chrome"
     );
     let canvas = map_body.find("id=\"atlas-canvas\"").expect("canvas");
@@ -725,7 +725,7 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
     // references.
     assert_eq!(html.matches("<script").count(), 3);
     assert_eq!(html.matches("<script>").count(), 1);
-    assert_eq!(detail.matches("<script>").count(), 1);
+    assert_eq!(detail.matches("<script").count(), 1);
     assert!(!html.contains("http://") && !html.contains("https://"));
     assert!(!detail.contains("http://") && !detail.contains("https://"));
 }
@@ -734,13 +734,10 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
 fn detail_artifacts_keep_no_new_drill_markup() {
     let doc = annotated_doc();
     let html = render_findings_detail_html(&doc);
-    let md = render_findings_detail(&doc);
     assert_eq!(html, render_findings_detail_html(&doc));
-    assert_eq!(md, render_findings_detail(&doc));
     assert!(!html.contains("class=\"breadcrumb\""));
     assert!(!html.contains("<section id=\"map\">"));
     assert!(!html.contains(FINDING_LEGEND));
-    assert!(!md.contains(FINDING_LEGEND));
     // Per-finding rows still live here (the human page carries none).
     assert!(html.contains("<tr id=\"finding-"));
 }

@@ -9,25 +9,25 @@
 
 Ranked: production code first, then severity, then confidence, then static cost.
 
-1. **Expensive I/O call inside loop** ([`PERF\-PY\-LOOP\-002:04\_stdio\_churn\.py:8:14`](findings-detail.md#finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14)) — `04\_stdio\_churn\.py:8` · function `read\_each` · warn · MEDIUM · production
+1. **Expensive I/O call inside loop** ([`PERF\-PY\-LOOP\-002:04\_stdio\_churn\.py:8:14`](findings-detail.html#finding-PERF-PY-LOOP-002-04-stdio-churn-py-8-14)) — `04\_stdio\_churn\.py:8` · function `read\_each` · warn · MEDIUM · production
    - Cost: `11 static cost units (v2) · 2.8× median · top 10%`
    - Why: 'open' acquires a file/network/subprocess handle every iteration at loop depth 1 — setup dominates the loop; hoisting the handle out of the loop is a candidate optimization
-2. **Linear index scan of a list inside loop** ([`PERF\-PY\-LOOP\-007:07\_membership\_scan\.py:19:18`](findings-detail.md#finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18)) — `07\_membership\_scan\.py:19` · function `index\_scan` · warn · MEDIUM · production
+2. **Linear index scan of a list inside loop** ([`PERF\-PY\-LOOP\-007:07\_membership\_scan\.py:19:18`](findings-detail.html#finding-PERF-PY-LOOP-007-07-membership-scan-py-19-18)) — `07\_membership\_scan\.py:19` · function `index\_scan` · warn · MEDIUM · production
    - Cost: `11 static cost units (v2) · 2.8× median · top 12%`
    - Why: list 'data' is indexed by loop variable 'i' at depth 1 — CPython's list subscript is O\(1\) per access, but a scan over the whole list re\-walks it per outer iteration \(O\(n²\)\); iterating directly, using \`enumerate\`, or building a set/dict lookup is a candidate optimization
-3. **Linear list scan inside loop** ([`PERF\-PY\-LOOP\-007:07\_membership\_scan\.py:9:12`](findings-detail.md#finding-PERF-PY-LOOP-007-07-membership-scan-py-9-12)) — `07\_membership\_scan\.py:9` · function `contains\_any` · warn · MEDIUM · production
+3. **Linear list scan inside loop** ([`PERF\-PY\-LOOP\-007:07\_membership\_scan\.py:9:12`](findings-detail.html#finding-PERF-PY-LOOP-007-07-membership-scan-py-9-12)) — `07\_membership\_scan\.py:9` · function `contains\_any` · warn · MEDIUM · production
    - Cost: `10 static cost units (v2) · 2.5× median · top 15%`
    - Why: list 'table' is tested with 'in' inside a loop at depth 1 — CPython's list membership is an O\(n\) linear scan, so re\-testing per outer iteration is O\(n²\); building a set/dict lookup or iterating directly is a candidate optimization
-4. **Superlinear list accumulation in loop** ([`PERF\-PY\-ALLOC\-003:10\_comprehension\.py:12:9`](findings-detail.md#finding-PERF-PY-ALLOC-003-10-comprehension-py-12-9)) — `10\_comprehension\.py:12` · function `transform\_all` · warn · MEDIUM · production
+4. **Superlinear list accumulation in loop** ([`PERF\-PY\-ALLOC\-003:10\_comprehension\.py:12:9`](findings-detail.html#finding-PERF-PY-ALLOC-003-10-comprehension-py-12-9)) — `10\_comprehension\.py:12` · function `transform\_all` · warn · MEDIUM · production
    - Cost: `8 static cost units (v2) · 2.0× median · top 19%`
    - Why: list 'out' is grown with 'append' inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list\_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization
-5. **Superlinear list accumulation in loop** ([`PERF\-PY\-ALLOC\-003:10\_comprehension\.py:21:9`](findings-detail.md#finding-PERF-PY-ALLOC-003-10-comprehension-py-21-9)) — `10\_comprehension\.py:21` · function `accumulate\_multi` · warn · MEDIUM · production
+5. **Superlinear list accumulation in loop** ([`PERF\-PY\-ALLOC\-003:10\_comprehension\.py:21:9`](findings-detail.html#finding-PERF-PY-ALLOC-003-10-comprehension-py-21-9)) — `10\_comprehension\.py:21` · function `accumulate\_multi` · warn · MEDIUM · production
    - Cost: `8 static cost units (v2) · 2.0× median · top 18%`
    - Why: list 'out' is grown with 'append' inside the loop at depth 1 without being rebuilt there — the container accumulates across iterations, so list\_resize growth plus any scan over it makes the loop superlinear; accumulating into a local or using a comprehension is a candidate optimization
 
 showing top 5 of 28 actions
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 28 findings (production-first).
+[Complete ranked list](findings-detail.html#ranked-actions) — all 28 ranked actions (29 findings, production-first).
 
 0 non-production files demoted · 1 component-level finding in Explorer.
 
@@ -144,6 +144,8 @@ Distribution — max\_loop\_depth:
 | `PERF\-PY\-PANDAS\-001` | 1 | 0 | 0 | 1 | Row\-wise pandas iteration (`PERF\-PY\-PANDAS\-001:13\_pandas\.py:9:19`) — `13\_pandas\.py:9:19` |
 | `PERF\-PY\-PANDAS\-002` | 1 | 0 | 0 | 1 | \`concat\`/\`append\` in loop (`PERF\-PY\-PANDAS\-002:13\_pandas\.py:18:15`) — `13\_pandas\.py:18:15` |
 
+All 29 of 29 findings: [findings-detail.html](findings-detail.html) — complete ranked action list and per-finding detail (22 rules).
+
 ## 5. Explorer
 [Dependency graph — internal import dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
@@ -202,8 +204,3 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 **Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
 Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
 For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.8.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.
-
-## Appendix C. All findings (full detail)
-29 of 29 total findings.
-
-Full per-finding detail has moved to [findings-detail.md](findings-detail.md) (22 rules, same 29 of 29 total).

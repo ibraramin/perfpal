@@ -326,7 +326,7 @@ Reuse `function_cost_v2` exactly; only the loop/trip extraction is language-spec
 - **Determinism:** masked double-run byte equality on the JS and TS corpora via dedicated suites —
   `tests/determinism_js.rs` (B2) and `tests/determinism_ts.rs` (B3), both reusing the repo's provenance
   maskers. Each suite compares the full artifact set: `metrics.json` (provenance masked), `report.md`,
-  `report.html`, `findings-detail.md/.html`, `profile-queue.md/.html`, `charts/*`, and the bundled schema
+  `report.html`, `findings-detail.html`, `profile-queue.md/.html`, `charts/*`, and the bundled schema
   artifact. `.length`/ordering checks on every new visitor; a golden tree alone is not a double-run.
 - **B4 locks:** `tests/javascript_backend.rs` gains the real-parse negative
   `str_001_real_parse_ignores_a_string_plus_nested_in_a_call` (the `s = f(s + "x")` assignment arm stays

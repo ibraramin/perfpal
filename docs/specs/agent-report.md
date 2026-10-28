@@ -26,9 +26,9 @@ without loading the full human report.
 |---|---|---|
 | **D1** | `agent-report.md` is a **bounded fixed skeleton** (top 25 actions in full detail, per-rule rollup, top 25 profile rows). `agent-actions.json` carries the **complete** action list. | An inline complete index reaches ~170k tokens on a 7.5k-finding scan and cannot be loaded. Completeness lives in the machine contract, never silently: every cap is printed with `N of M`. |
 | **D2** | Fix hints live in a **C-owned table** (`AGENT_FIX_HINTS`) in the new module, locked against the 78-rule catalog. | Zero edits to the A-owned `mod.rs`/`HEURISTIC_CATALOG_V1`; the lock test still makes drift impossible. |
-| **D3** | The agent artifacts **omit clock provenance** (`scan.started_at`, `scan.duration_ms`). | Two runs of the **same command** are byte-identical with **no normalization**. `scan.root_path` is the verbatim CLI argument (the shipped `findings-detail.*` omits it entirely), so a different invocation path is a different input by design, not a determinism failure. |
+| **D3** | The agent artifacts **omit clock provenance** (`scan.started_at`, `scan.duration_ms`). | Two runs of the **same command** are byte-identical with **no normalization**. `scan.root_path` is the verbatim CLI argument (the shipped `findings-detail.html` omits it entirely), so a different invocation path is a different input by design, not a determinism failure. |
 | **D4** | Artifact names are **`agent-report.md`** and **`agent-actions.json`**, always emitted, no flag. | Founder-approved names (research Q3); discoverable without a UX flag. |
-| **D5** | The rank keys are the **shipped key-view keys** (KV1 for actions, KV3 for the profile queue), not a new scoring model. | `agent-report.md`, `report.md`, `findings-detail.md` and `profile-queue.md` must never disagree about order. No new weights under this contract version. |
+| **D5** | The rank keys are the **shipped key-view keys** (KV1 for actions, KV3 for the profile queue), not a new scoring model. | `agent-report.md`, `report.md`, `findings-detail.html` and `profile-queue.md` must never disagree about order. No new weights under this contract version. |
 | **D6** | Numbers reuse the **shipped key-view strings** (`views.rs` anchors: no thousands separators, `× median` ratio rule, `top P%`). | Cross-artifact parity beats a formatter consolidation. The Atlas separator rule is an Atlas-surface rule; C follows a future single-formatter contract bump. |
 | **D7** | `why`, `title` and `evidence` are **verbatim in `agent-actions.json`**; the Markdown renders them **structure-escaped** (§9.9; a backtick becomes `ˋ`).  The forbidden-time-claim scan applies to **C-authored strings** (headers, data-quality lines, caveats, fix hints), not to quoted analyzer provenance. | Traceability stays in the machine contract; the MD must not let a crafted path or message forge a heading, close a code span or inject HTML. The shipped `message` strings are provenance, not promises the renderer makes. |
 | **D8** | An **evidence-only, non-normative reproducer** (`docs/evidence/agent-report/sample/derive_sample.py`) is permitted. | Founder-ratified 2026-10-24 after the Q1 review flagged the brief's "no code" clause: it is never shipped, lives only in C's evidence directory, and exists to prove the committed sample is reproducible. Production code remains C2-only. |
@@ -245,7 +245,7 @@ showing top {min(25, complete_action_count)} of {complete_action_count} actions
 - why: {message}
 - evidence: `{k}={v} · …`                                    (sorted keys; omit line when empty)
 - fix: {fix_hint}                                            (or "no curated hint for this rule yet")
-- anchor: `findings-detail.md#{detail_anchor}` · `{action_id}`
+- anchor: `findings-detail.html#{detail_anchor}` · `{action_id}`
 
 {only when complete_action_count > 25} showing the top 25 of {complete_action_count} actions; the complete list is `agent-actions.json`.
 
@@ -301,7 +301,7 @@ Rules:
   rendered correctly but may exceed the target, and the JSON remains authoritative. Measured as
   `md.len()` in bytes in C2's test.
 - **No HTML, no SVG, no charts, no embedded data blobs.**
-- **Anchor links are relative** (`findings-detail.md#…`) so the directory stays portable.
+- **Anchor links are relative** (`findings-detail.html#…`) so the directory stays portable.
 - **Escaping:** every interpolated value passes §9.9 before it enters the MD; JSON keeps the raw value.
 
 ## 8. Fix hints
@@ -436,11 +436,16 @@ Rules:
    `function.name`, `title`, `why`, evidence keys/values, `action_id`, `rule_id`, `path_class`,
    `schema_version`, `tool.name`, `tool.version`) is rendered single-line and
    structure-safe before interpolation.
-   - **Always:** `\r`/`\n`/`\t` → the two-character escapes `\r`/`\n`/`\t`; every backtick → `ˋ`
-     (U+02CB MODIFIER LETTER GRAVE ACCENT). **Backslash does not escape a backtick inside a CommonMark
-     code span** — a `` \` `` still terminates the span — so the character itself is substituted. The
-     substitution is lossy by design; the JSON keeps the original.
-   - **Inside a code span** (path, id, name, evidence): `<`/`>` stay literal — the span is inert.
+   - **Always (H3 hardening):** `\r`/`\n`/`\t` → the two-character escapes `\r`/`\n`/`\t` in every
+     scanner-controlled value (code spans, prose and table cells), so a hostile filename cannot inject a
+     line, a section or a heading; every backtick → `ˋ` (U+02CB MODIFIER LETTER GRAVE ACCENT).
+     **Backslash does not escape a backtick inside a CommonMark code span** — a `` \` `` still terminates
+     the span — so the character itself is substituted. The substitution is lossy by design; the JSON
+     keeps the original bytes.
+   - **Inside a code span** (path, id, name, evidence): `<`/`>` stay literal — the span is inert — but
+     `<script` / `</script` sequences are still neutralized to `&lt;script` / `&lt;/script` (H3
+     hardening). No raw script token can appear in `agent-report.md`, even from a crafted path or
+     evidence value.
    - **Prose fields** (`title`, `why`): `<` → `&lt;`, `>` → `&gt;` (no raw HTML can be injected).
     - **Table cells only:** `\` → `\\`, then `|` → `\|` (a cell ending in an unescaped backslash would
       otherwise swallow the delimiter).
@@ -515,6 +520,12 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
     (2026-10-27, v0.3.0):** the 11 JS rules grew the synthetic envelope to 77,713 B (4,207 B / 5.1%
     headroom); the version-string move shortened each committed-fixture pin by 7 B — `report` 13,462 ·
     `report-mixed` 8,882 · `report-python` 26,882 · `report-rust` 25,841.
+  - **H3 re-measure (2026-10-28, v0.4.0):** the only renderer change is the detail-anchor line,
+    `findings-detail.md#…` → `findings-detail.html#…` — **+2 B per rendered action row**, no ranking or
+    wording change. Deltas: `report` 14 rows (+28 B), `report-mixed` 9 (+18), `report-python` 25
+    (+50), `report-rust` 25 (+50), synthetic 25 (+50). Pins: `report` 13,490 B · `report-mixed` 8,900 ·
+    `report-python` 26,932 · `report-rust` 25,891 · synthetic **77,763 B** (headroom
+    81,920 − 77,763 = **4,157 B**, 5.1% of the budget).
   - the three external scans (`~/Opencode/perfpal-test/out-{cJSON,hyperfine,bat}`) are an **optional
     manual check** (`PERFPAL_EXTERNAL_SCANS=1 cargo test --locked --test agent_report -- --nocapture`),
     not part of the required gate. A fresh checkout or CI therefore gates on the committed fixtures,
@@ -539,7 +550,7 @@ omitted: a zero is printed as zero, an absent source as its stub or `null`.
   Track-A holdouts are **not** used.
 - **Tasks:** two per fixture (N = 6): (T1) "apply the top-ranked action"; (T2) "apply one action from the
   top 3, your choice". The agent sees only the repo + `agent-report.md` (no `metrics.json`, no
-  `report.md`, no `findings-detail.*`).
+  `report.md`, no `findings-detail.html`).
 - **Metrics (definitions):** *top-1 hit* = T1's edited file matches the rank-1 action's `path`;
   *top-3 hit* = T2's edited file matches one of ranks 1–3; *hallucination rate* = unsupported cited
   claims ÷ all cited claims in the final message (a cited claim is unsupported when its `path:line`,

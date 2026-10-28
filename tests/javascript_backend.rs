@@ -1001,7 +1001,6 @@ fn two_js_scans_are_byte_identical_modulo_provenance() {
         "metrics.json",
         "report.md",
         "report.html",
-        "findings-detail.md",
         "findings-detail.html",
         "profile-queue.md",
         "profile-queue.html",
@@ -1170,10 +1169,10 @@ fn str_001_real_parse_ignores_a_string_plus_nested_in_a_call() {
         doc["files"][0]["parse_health"]["error_node_count"], 0,
         "fixture must have zero error nodes: {doc:?}"
     );
-    let detail = fs::read_to_string(out.join("findings-detail.md"))
-        .expect("findings-detail.md must be emitted");
+    let detail = fs::read_to_string(out.join("findings-detail.html"))
+        .expect("findings-detail.html must be emitted");
     assert!(
-        detail.contains("| `runDirect` |"),
+        detail.contains(">runDirect<"),
         "finding must be attributed to runDirect:\n{detail}"
     );
 

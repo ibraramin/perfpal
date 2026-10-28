@@ -9,25 +9,25 @@
 
 Ranked: production code first, then severity, then confidence, then static cost.
 
-1. **Linear membership scan inside loop** ([`PERF\-JS\-LOOP\-007:06\_membership\_scan\.js:8:9`](findings-detail.md#finding-PERF-JS-LOOP-007-06-membership-scan-js-8-9)) — `06\_membership\_scan\.js:8` · function `intersect` · warn · MEDIUM · production
+1. **Linear membership scan inside loop** ([`PERF\-JS\-LOOP\-007:06\_membership\_scan\.js:8:9`](findings-detail.html#finding-PERF-JS-LOOP-007-06-membership-scan-js-8-9)) — `06\_membership\_scan\.js:8` · function `intersect` · warn · MEDIUM · production
    - Cost: `13 static cost units (v2) · 6.5× median · top 17%`
    - Why: 'seen\.includes' scans the collection linearly on every iteration at loop depth 1 — the nested linear scan makes the loop O\(n²\); building a \`Set\`/\`Map\` once and doing a keyed lookup is a candidate optimization\. Accepted FP class: small \(\< 16\) collections
-2. **\`await\` inside a loop** ([`PERF\-JS\-ASYNC\-001:07\_async\_await\.js:11:19`](findings-detail.md#finding-PERF-JS-ASYNC-001-07-async-await-js-11-19)) — `07\_async\_await\.js:11` · function `loadAll` · warn · MEDIUM · production
+2. **\`await\` inside a loop** ([`PERF\-JS\-ASYNC\-001:07\_async\_await\.js:11:19`](findings-detail.html#finding-PERF-JS-ASYNC-001-07-async-await-js-11-19)) — `07\_async\_await\.js:11` · function `loadAll` · warn · MEDIUM · production
    - Cost: `11 static cost units (v2) · 5.5× median · top 19%`
    - Why: an \`await\` runs inside a loop at depth 1 — awaiting each item sequentially serialises one microtask round\-trip per iteration; collecting the promises and awaiting \`Promise\.all\(items\.map\(\.\.\.\)\)\` is a candidate optimization\. Accepted FP class: deliberately sequential work \(rate limiting, ordering\)
-3. **Synchronous blocking I/O inside loop** ([`PERF\-JS\-LOOP\-002:05\_sync\_io\_loop\.js:9:17`](findings-detail.md#finding-PERF-JS-LOOP-002-05-sync-io-loop-js-9-17)) — `05\_sync\_io\_loop\.js:9` · function `loadAll` · warn · MEDIUM · production
+3. **Synchronous blocking I/O inside loop** ([`PERF\-JS\-LOOP\-002:05\_sync\_io\_loop\.js:9:17`](findings-detail.html#finding-PERF-JS-LOOP-002-05-sync-io-loop-js-9-17)) — `05\_sync\_io\_loop\.js:9` · function `loadAll` · warn · MEDIUM · production
    - Cost: `10 static cost units (v2) · 5.0× median · top 23%`
    - Why: synchronous 'readFileSync' runs inside a loop at depth 1 — each iteration performs a blocking syscall/serialization on the single event\-loop thread; batching the work, using the async API \(\`fs/promises\`, async \`exec\`\), or making one call outside the loop is a candidate optimization\. Accepted FP class: a startup\-only loop
-4. **String accumulation with \`\+=\` inside loop** ([`PERF\-JS\-STR\-001:03\_string\_build\.js:8:5`](findings-detail.md#finding-PERF-JS-STR-001-03-string-build-js-8-5)) — `03\_string\_build\.js:8` · function `render` · warn · MEDIUM · production
+4. **String accumulation with \`\+=\` inside loop** ([`PERF\-JS\-STR\-001:03\_string\_build\.js:8:5`](findings-detail.html#finding-PERF-JS-STR-001-03-string-build-js-8-5)) — `03\_string\_build\.js:8` · function `render` · warn · MEDIUM · production
    - Cost: `7 static cost units (v2) · 3.5× median · top 27%`
    - Why: 'out' accumulates a string with '\+=' or 'out = out \+ \.\.\.' inside a loop at depth 1 — this builds a cons\-string chain; V8 ropes mitigate short chains, but flattening the rope at first use is linear and repeated concatenation is quadratic; collecting parts into an array and joining once \(\`parts\.join\(""\)\`\) is a candidate optimization\. Accepted FP class: a tiny bounded loop \(\< 8 iterations\)
-5. **Synchronous blocking call inside \`async\` function** ([`PERF\-JS\-ASYNC\-002:08\_async\_blocking\.js:7:10`](findings-detail.md#finding-PERF-JS-ASYNC-002-08-async-blocking-js-7-10)) — `08\_async\_blocking\.js:7` · function `readConfig` · warn · MEDIUM · production
+5. **Synchronous blocking call inside \`async\` function** ([`PERF\-JS\-ASYNC\-002:08\_async\_blocking\.js:7:10`](findings-detail.html#finding-PERF-JS-ASYNC-002-08-async-blocking-js-7-10)) — `08\_async\_blocking\.js:7` · function `readConfig` · warn · MEDIUM · production
    - Cost: `1 static cost units (v2) · 0.5× median · top 79%`
    - Why: synchronous 'readFileSync' is called inside an \`async\` function — the blocking call stalls the single event\-loop thread for every concurrent task; using the async equivalent \(\`fs/promises\`, async \`exec\`/\`spawn\`\) is a candidate optimization\. Accepted FP class: a CLI single\-shot path
 
 showing top 5 of 11 actions
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 11 findings (production-first).
+[Complete ranked list](findings-detail.html#ranked-actions) — all 11 ranked actions (11 findings, production-first).
 
 0 non-production files demoted · 0 component-level findings in Explorer.
 
@@ -134,6 +134,8 @@ Distribution — max\_loop\_depth:
 | `PERF\-JS\-LOOP\-001` | 1 | 0 | 0 | 1 | Nested loop depth ≥ 2 (`PERF\-JS\-LOOP\-001:04\_deep\_nesting\.js:7:5`) — `04\_deep\_nesting\.js:7:5` |
 | `PERF\-JS\-TYPE\-001` | 1 | 0 | 0 | 1 | \`delete\` on an object property (`PERF\-JS\-TYPE\-001:12\_delete\.js:6:3`) — `12\_delete\.js:6:3` |
 
+All 11 of 11 findings: [findings-detail.html](findings-detail.html) — complete ranked action list and per-finding detail (11 rules).
+
 ## 5. Explorer
 [Dependency graph — internal import/require dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
@@ -179,8 +181,3 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 **Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
 Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
 For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.8.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.
-
-## Appendix C. All findings (full detail)
-11 of 11 total findings.
-
-Full per-finding detail has moved to [findings-detail.md](findings-detail.md) (11 rules, same 11 of 11 total).

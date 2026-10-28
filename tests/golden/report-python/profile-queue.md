@@ -2,6 +2,8 @@
 
 68 functions ranked by static cost — candidates, confirm with a profiler.
 
+## Complete cost-ranked list
+
 | rank | function | location | path class | cost | notes |
 |---:|---|---|---|---|---|
 | 1 | `triple\_nested` | `03\_deep\_nesting\.py:4` | production | 25 static cost units (v2) · 6.3× median · top 3% | unknown\-trip ×3 — estimate incomplete |

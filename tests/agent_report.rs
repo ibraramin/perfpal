@@ -496,7 +496,6 @@ fn agent_report_emitted_artifact_set() {
         "metrics.schema.v1.8.json",
         "report.md",
         "report.html",
-        "findings-detail.md",
         "findings-detail.html",
         "profile-queue.md",
         "profile-queue.html",

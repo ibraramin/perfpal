@@ -276,8 +276,8 @@ pub fn run_suite() {
     println!("`scan.started_at`, `scan.duration_ms`, `scan.root_path` by textual value");
     println!("substitution (no JSON re-serialization; the producer's exact key order and byte");
     println!("layout are preserved); report.md masks ONLY the header `started`/`duration`");
-    println!("instants and the absolute scan root (findings-detail.md masks the same way).");
-    println!("The detail findings blocks, report.html, charts/*.svg");
+    println!("instants and the absolute scan root.");
+    println!("report.html, charts/*.svg");
     println!("and the bundled schema are compared byte-exact (nothing stripped or reordered).");
     println!("\n## Overall verdict\n");
     println!("PASS — all measured per-rule precision/recall meet or exceed the baseline,");
@@ -744,7 +744,6 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
         "metrics.json",
         "report.md",
         "report.html",
-        "findings-detail.md",
         "findings-detail.html",
         SCHEMA_ARTIFACT_NAME,
     ] {
@@ -783,17 +782,6 @@ fn assert_byte_stable(out1: &Path, out2: &Path, scan: &Path) -> bool {
                 )
             }
             "report.md" => {
-                let t1 = String::from_utf8_lossy(bytes1).into_owned();
-                let t2 = String::from_utf8_lossy(bytes2).into_owned();
-                let root = scan.to_string_lossy();
-                (
-                    mask_report_strict(&t1, &root).into_bytes(),
-                    mask_report_strict(&t2, &root).into_bytes(),
-                )
-            }
-            // C-split: findings-detail.md masks like report.md (provenance
-            // no-op — no header surfaces — plus absolute-root substitution).
-            "findings-detail.md" => {
                 let t1 = String::from_utf8_lossy(bytes1).into_owned();
                 let t2 = String::from_utf8_lossy(bytes2).into_owned();
                 let root = scan.to_string_lossy();

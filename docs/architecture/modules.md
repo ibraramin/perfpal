@@ -121,7 +121,7 @@ Each module lists Consumes / Produces / Responsibilities / Non-goals.
 ### 3.6 `reporter` — human-readable rendering
 
 - **Consumes:** the final document.
-- **Produces:** `report.md` bytes.
+- **Produces:** the human-facing artifact bytes (`report.md`, `report.html`, `findings-detail.html`, `profile-queue.md`/`.html`, `atlas-weight.html`, `atlas-q2.html`) and the LLM-facing `agent-report.md` / `agent-actions.json`.
 - **Responsibilities:** render the fixed section template (output-contract §5); cite findings by exact `finding_id`; escape all embedded paths/titles/messages (Markdown-injection rule); apply optional-field `n/a`/omit rules; Appendix A descriptions from the built-in catalog (frozen v1).
 - **Non-goals:** reading source, IR, or scanner state; inventing aggregations beyond the template.
 
@@ -134,7 +134,7 @@ Each module lists Consumes / Produces / Responsibilities / Non-goals.
 
 ### 3.8 `writer` — atomic output management
 
-- **Consumes:** staged artifact bytes (`metrics.json`, bundled schema copy, `report.md`, `charts/*.svg`).
+- **Consumes:** staged artifact bytes — the 9 fixed files (`metrics.json`, bundled schema copy, `report.md`, `report.html`, `findings-detail.html`, `profile-queue.md`, `profile-queue.html`, `agent-report.md`, `agent-actions.json`), the two Atlas drill pages (`atlas-weight.html`, `atlas-q2.html`), `charts/graph.dot` and the chart set.
 - **Produces:** the report directory, per output-contract §2.
 - **Responsibilities:** build in a temporary sibling directory; swap via rename-aside-then-swap; safety guard (refuse replacing a directory that lacks `metrics.json` unless forced); remove stale temp directories from crashed runs on the next successful run; enforce encoding (UTF-8, LF, trailing newline).
 - **Failure behavior:** any upstream failure aborts before the swap — the previous complete report survives intact; interrupted runs never leave half-written reports.

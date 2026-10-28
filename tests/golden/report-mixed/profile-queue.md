@@ -2,6 +2,8 @@
 
 4 functions ranked by static cost — candidates, confirm with a profiler.
 
+## Complete cost-ranked list
+
 | rank | function | location | path class | cost | notes |
 |---:|---|---|---|---|---|
 | 1 | `build` | `src/lib\.rs:15` | production | 20 static cost units (v2) · 6.7× median · top 25% | unknown\-trip ×1 — estimate incomplete |

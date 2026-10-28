@@ -62,7 +62,7 @@ fn atlas_states_render_same_stack() {
         let html = render_html(&doc, &[]);
         let map = map_body(&html);
         assert!(
-            map.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
+            map.starts_with("<section id=\"map\">\n<h2 class=\"sr-only\">Atlas map</h2>\n<div class=\"atlas-page-chrome\""),
             "{name}: #map must open with the first-page chrome"
         );
         assert_eq!(block_order(map), expected, "{name}: block stack");

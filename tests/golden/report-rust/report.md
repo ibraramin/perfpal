@@ -9,25 +9,25 @@
 
 Ranked: production code first, then severity, then confidence, then static cost.
 
-1. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:34:5`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5)) — `src/01\_alloc\_churn\.rs:34` · function `build\_row\_labels` · hot · HIGH · production
+1. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:34:5`](findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-34-5)) — `src/01\_alloc\_churn\.rs:34` · function `build\_row\_labels` · hot · HIGH · production
    - Cost: `22 static cost units (v2) · 3.1× median · top 8%`
    - Why: loop performs 3 per\-iteration allocation\(s\) \(format, to\_string, vec\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
-2. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/06\_memory\_ops\.rs:27:9`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-06-memory-ops-rs-27-9)) — `src/06\_memory\_ops\.rs:27` · function `duplicate\_rows` · hot · HIGH · production
+2. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/06\_memory\_ops\.rs:27:9`](findings-detail.html#finding-PERF-RS-ALLOC-001-src-06-memory-ops-rs-27-9)) — `src/06\_memory\_ops\.rs:27` · function `duplicate\_rows` · hot · HIGH · production
    - Cost: `22 static cost units (v2) · 3.1× median · top 10%`
    - Why: loop performs 1 per\-iteration allocation\(s\) \(to\_vec\) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
-3. **Deallocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-002:src/01\_alloc\_churn\.rs:39:9`](findings-detail.md#finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9)) — `src/01\_alloc\_churn\.rs:39` · function `build\_row\_labels` · hot · HIGH · production
+3. **Deallocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-002:src/01\_alloc\_churn\.rs:39:9`](findings-detail.html#finding-PERF-RS-ALLOC-002-src-01-alloc-churn-rs-39-9)) — `src/01\_alloc\_churn\.rs:39` · function `build\_row\_labels` · hot · HIGH · production
    - Cost: `22 static cost units (v2) · 3.1× median · top 8%`
    - Why: deallocation via 'drop' at loop depth 1 — repeated drop\-per\-iteration teardown; hoisting the drop or restructuring value ownership is a candidate optimization
-4. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:58:9`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9)) — `src/01\_alloc\_churn\.rs:58` · function `grid\_reset` · hot · HIGH · production
+4. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/01\_alloc\_churn\.rs:58:9`](findings-detail.html#finding-PERF-RS-ALLOC-001-src-01-alloc-churn-rs-58-9)) — `src/01\_alloc\_churn\.rs:58` · function `grid\_reset` · hot · HIGH · production
    - Cost: `19 static cost units (v2) · 2.7× median · top 13%`
    - Why: loop performs 1 per\-iteration allocation\(s\) \(vec\) at loop depth 2 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
-5. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/02\_string\_building\.rs:41:5`](findings-detail.md#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5)) — `src/02\_string\_building\.rs:41` · function `len\_with\_reassignment` · hot · HIGH · production
+5. **Heap allocation inside loop \(Rust\)** ([`PERF\-RS\-ALLOC\-001:src/02\_string\_building\.rs:41:5`](findings-detail.html#finding-PERF-RS-ALLOC-001-src-02-string-building-rs-41-5)) — `src/02\_string\_building\.rs:41` · function `len\_with\_reassignment` · hot · HIGH · production
    - Cost: `14 static cost units (v2) · 2.0× median · top 18%`
    - Why: loop performs 1 per\-iteration allocation\(s\) \(format\) at loop depth 1 — allocator churn dominates runtime; hoisting the allocation or reusing a buffer is a candidate optimization
 
 showing top 5 of 31 actions
 
-[Complete ranked list](findings-detail.md#ranked-actions) — all 31 findings (production-first).
+[Complete ranked list](findings-detail.html#ranked-actions) — all 31 ranked actions (32 findings, production-first).
 
 0 non-production files demoted · 1 component-level finding in Explorer.
 
@@ -144,6 +144,8 @@ Distribution — max\_loop\_depth:
 | `PERF\-RS\-LOOP\-008` | 1 | 0 | 0 | 1 | Member\-chain dereference in innermost loop \(Rust\) (`PERF\-RS\-LOOP\-008:src/08\_globals\_and\_chains\.rs:59:17`) — `src/08\_globals\_and\_chains\.rs:59:17` |
 | `PERF\-RS\-TYPE\-002` | 1 | 0 | 0 | 1 | Struct field ordering \(padding candidate, Rust\) (`PERF\-RS\-TYPE\-002:src/07\_struct\_by\_value\.rs:26:1`) — `src/07\_struct\_by\_value\.rs:26:1` |
 
+All 32 of 32 findings: [findings-detail.html](findings-detail.html) — complete ranked action list and per-finding detail (22 rules).
+
 ## 5. Explorer
 [Dependency graph — internal mod/use dependencies between scanned files.](charts/include-graph.svg)
 [File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).](charts/layer-file.svg)
@@ -200,8 +202,3 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 **Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
 Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
 For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.8.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.
-
-## Appendix C. All findings (full detail)
-32 of 32 total findings.
-
-Full per-finding detail has moved to [findings-detail.md](findings-detail.md) (22 rules, same 32 of 32 total).

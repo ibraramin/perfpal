@@ -37,6 +37,7 @@ pub mod atlas_render;
 pub mod atlas_scenes;
 pub mod atlas_story;
 pub mod atlas_story_render;
+mod format;
 pub mod views;
 
 pub use atlas_brief::{render_atlas_q2_html, render_atlas_weight_html};
@@ -47,6 +48,9 @@ use crate::analyzer::{Confidence, Severity};
 use crate::ir::ResolverTier;
 use crate::schema::{DistributionEntry, FindingEntry, MetricsDocument, format_fixed_point};
 
+use format::html_page_head;
+pub use format::{MD_ESCAPE_CHARS, escape_html, escape_md};
+
 // ---------------------------------------------------------------------------
 // Pinned constants
 // ---------------------------------------------------------------------------
@@ -56,20 +60,10 @@ use crate::schema::{DistributionEntry, FindingEntry, MetricsDocument, format_fix
 /// finding-link lists stay bounded at any scale. Same `take(10)` precedent
 /// as the §3 top-files table and the `#files` drill-down. Full component and
 /// finding data stays in `metrics.json` (machine source of truth) and the
-/// uncapped `findings-detail.*` artifacts — the caps only bound the human
+/// uncapped `findings-detail.html` artifact — the caps only bound the human
 /// pages, with honest `showing top … of M` / `…+N more` counts so a cap can
 /// never silently drop rows without breaking the header.
 const HUMAN_CAP: usize = 10;
-
-/// Pinned Markdown metacharacter escape set (output-contract §2 paths rule).
-/// Every char here is backslash-escaped wherever document-derived text is
-/// embedded. `|` inclusion makes table cells safe without a second pass.
-///
-/// `pub` (not private) so the integration-test harness imports this single
-/// source of truth instead of hand-mirroring it.
-pub const MD_ESCAPE_CHARS: &[char] = &[
-    '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '<', '>', '&',
-];
 
 /// Heuristic catalog (read-code-first transcription of
 /// docs/heuristics/catalog-v1.md §3 + §4 titles and one-line "Detects"
@@ -505,32 +499,6 @@ pub(crate) const HEURISTIC_CATALOG_V1: &[(&str, &str, &str)] = &[
 // Entry point
 // ---------------------------------------------------------------------------
 
-/// Escape HTML special characters (`& < > " '`) for safe embedding in
-/// element text and double-quoted attribute values (output-contract §2
-/// paths rule, HTML counterpart of [`escape_md`]).
-///
-/// Single pass over chars — `&` is escaped first by construction (match arms
-/// emit `&amp;` literally, never re-scanned), so `&` cannot be re-escaped.
-/// Every interpolated path/title/message/id/symbol in [`render_html`] goes
-/// through this function; chart filenames and captions are charset-pinned
-/// static text (output-contract §3 kebab-case) and bypass it by construction,
-/// exactly like [`escape_md`] bypasses chart names in [`render_report`].
-#[must_use]
-pub fn escape_html(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
-    for c in input.chars() {
-        match c {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '>' => out.push_str("&gt;"),
-            '"' => out.push_str("&quot;"),
-            '\'' => out.push_str("&#39;"),
-            _ => out.push(c),
-        }
-    }
-    out
-}
-
 /// Layout-width hint for `report.html`.
 ///
 /// The hint is **layout-only**: it changes the page's CSS custom property
@@ -698,8 +666,8 @@ pub fn render_html_with_story_at_width(
 /// modulo `scan.started_at` / `scan.duration_ms`.
 ///
 /// Human-scale bound (C-split): `report.md` carries NO per-finding rows —
-/// the uncapped detail lives in the `findings-detail.md` artifact
-/// ([`render_findings_detail`]); Appendix C is a link stub only.
+/// the uncapped detail lives in the `findings-detail.html` artifact. §4 ends
+/// with one plain-language pointer to it.
 #[must_use]
 pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String {
     let mut out = String::new();
@@ -711,40 +679,7 @@ pub fn render_report(doc: &MetricsDocument, emitted_charts: &[String]) -> String
     render_architecture(&mut out, doc, emitted_charts);
     render_appendix_a(&mut out, doc);
     render_appendix_b(&mut out, semantic_tier_active(doc));
-    render_appendix_c(&mut out, doc);
     // Exactly one trailing newline (output-contract §2 encoding rule).
-    while out.ends_with('\n') {
-        out.pop();
-    }
-    out.push('\n');
-    out
-}
-
-/// Render the standalone `findings-detail.md` artifact (C-split promotion
-/// of [`render_findings_full_detail` — called VERBATIM, never reimplemented).
-///
-/// Bounded-human companion to [`render_report`]: the full uncapped
-/// per-finding detail in the legacy total order (stable severity partition
-/// hot→warn→info; document order within a group). Pure function of `doc` —
-/// LF newlines, trailing newline, byte-deterministic with NO provenance
-/// surfaces at all (no `started_at`, no `duration_ms`, no `root_path`), so
-/// double-render output is byte-identical UNMASKED.
-#[must_use]
-pub fn render_findings_detail(doc: &MetricsDocument) -> String {
-    let mut out = String::new();
-    out.push_str("# Perfpal Findings Detail\n");
-    if doc.findings.is_empty() {
-        out.push_str("\nNo findings.\n");
-    } else {
-        out.push_str(&format!(
-            "\n{} of {} total {}.\n\n",
-            doc.findings.len(),
-            doc.findings.len(),
-            views::plural_word(doc.findings.len(), "finding", "findings"),
-        ));
-        render_ranked_actions_md(&mut out, doc);
-        render_findings_full_detail(&mut out, doc);
-    }
     while out.ends_with('\n') {
         out.pop();
     }
@@ -777,47 +712,6 @@ pub fn render_findings_detail_html(doc: &MetricsDocument) -> String {
     }
     out.push('\n');
     out
-}
-
-/// New top section of `findings-detail.md`: every function-granularity
-/// finding in KV1 order. The legacy full-detail sections below are kept
-/// verbatim; the explicit `<a id="ranked-actions">` anchor is the stable
-/// cross-artifact target.
-fn render_ranked_actions_md(out: &mut String, doc: &MetricsDocument) {
-    out.push_str("## Complete ranked action list (KV1 order)\n\n");
-    out.push_str("<a id=\"ranked-actions\"></a>\n\n");
-    let actions = views::complete_actions(doc);
-    if actions.is_empty() {
-        out.push_str("No function-granularity actions.\n\n");
-        return;
-    }
-    let anchors = finding_anchor_assignments(doc).1;
-    out.push_str("| rank | finding | title | location | function | severity | confidence | path class | cost anchor |\n");
-    out.push_str("|---:|---|---|---|---|---|---|---|---|\n");
-    for row in actions {
-        let finding = &doc.findings[row.finding_index];
-        let location = format!("{}:{}", finding.path, finding.span.start_line);
-        let function = row
-            .function
-            .as_deref()
-            .map_or_else(|| "—".to_string(), |name| format!("`{}`", escape_md(name)));
-        out.push_str(&format!(
-            "| {} | [`{}`](#{}) | {} | `{}` | {} | {} | {} | {} | {} |\n",
-            row.rank,
-            escape_md(&finding.finding_id),
-            &anchors[row.finding_index],
-            escape_md(&finding.title),
-            escape_md(&location),
-            function,
-            severity_token(finding.severity),
-            confidence_token(finding.confidence),
-            escape_md(&row.path_class),
-            row.cost_anchor
-                .as_deref()
-                .map_or_else(|| "—".to_string(), escape_md),
-        ));
-    }
-    out.push('\n');
 }
 
 /// Ranked-action table emitted at the top of `findings-detail.html`.
@@ -869,13 +763,16 @@ pub fn render_profile_queue(doc: &MetricsDocument) -> String {
         "{} ranked by static cost — candidates, confirm with a profiler.\n\n",
         views::plural(rows.len(), "function"),
     ));
+    out.push_str("## Complete cost-ranked list\n");
     if rows.is_empty() {
+        out.push_str("\nNo functions recorded.\n");
         while out.ends_with('\n') {
             out.pop();
         }
         out.push('\n');
         return out;
     }
+    out.push('\n');
     out.push_str("| rank | function | location | path class | cost | notes |\n");
     out.push_str("|---:|---|---|---|---|---|\n");
     for row in &rows {
@@ -915,8 +812,8 @@ pub fn render_profile_queue(doc: &MetricsDocument) -> String {
 }
 
 /// Render the standalone `profile-queue.html` artifact (mirrors the
-/// findings-detail page structure: shared head/style, fixed script, one
-/// deterministic table).
+/// findings-detail page structure: shared warm-paper shell, the fixed
+/// enhancement script, one deterministic table).
 #[must_use]
 pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
     let mut out = String::new();
@@ -1000,29 +897,15 @@ pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
     out
 }
 
-/// Profile-queue head: findings-detail markup/title with the key-view CSS.
+/// Profile-queue head: the shared warm-paper shell at the fixed 72rem
+/// detail width (dense table page).
 fn html_profile_head(out: &mut String, doc: &MetricsDocument) {
-    out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
-    out.push_str("<meta charset=\"utf-8\">\n");
-    out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
-    out.push_str("<link rel=\"icon\" href=\"data:,\">\n");
-    out.push_str(&format!(
-        "<title>Perfpal Profile Queue — schema {}</title>\n",
-        escape_html(&doc.schema_version),
-    ));
-    out.push_str(
-        "<style>\n\
-         body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
-         .table-scroll{overflow-x:auto;max-width:100%}\n\
-         table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
-         th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
-         th{background:#eee}\n\
-         #profile-queue tbody td{white-space:nowrap}\n\
-         #profile-queue td.wrap,#profile-queue th{white-space:normal;overflow-wrap:anywhere}\n\
-         nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n",
-    );
-    out.push_str(KEY_VIEW_CSS);
-    out.push_str("         </style>\n</head>\n<body>\n");
+    let title = format!("Perfpal Profile Queue — schema {}", doc.schema_version);
+    let page_css = "\
+body{max-width:72rem;margin:2rem auto;padding:0 1rem}\n\
+#profile-queue tbody td{white-space:nowrap}\n\
+#profile-queue td.wrap,#profile-queue th{white-space:normal;overflow-wrap:anywhere}\n";
+    html_page_head(out, &title, page_css, "");
 }
 
 // ---------------------------------------------------------------------------
@@ -1094,7 +977,7 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
                 .get(&(finding.path.clone(), finding.span.start_line))
                 .copied();
             out.push_str(&format!(
-                "{}. **{}**{} ([`{}`](findings-detail.md#{})) — `{}`",
+                "{}. **{}**{} ([`{}`](findings-detail.html#{})) — `{}`",
                 row.rank,
                 escape_md(&finding.title),
                 same_as.map_or_else(String::new, |prior| format!(" (same location as #{prior})")),
@@ -1120,10 +1003,11 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
             out.push_str(&format!("   - Why: {}\n", escape_md(&finding.message)));
         }
         out.push_str(&format!(
-            "\nshowing top {} of {} actions\n\n[Complete ranked list](findings-detail.md#ranked-actions) — all {} findings (production-first).\n\n",
+            "\nshowing top {} of {} actions\n\n[Complete ranked list](findings-detail.html#ranked-actions) — all {} ranked actions ({} findings, production-first).\n\n",
             kv1.rows.len(),
             kv1.total_actions,
             kv1.total_actions,
+            doc.findings.len(),
         ));
         out.push_str(&format!(
             "{} demoted · {} in Explorer.\n\n",
@@ -1340,10 +1224,9 @@ fn render_findings(out: &mut String, doc: &MetricsDocument) {
     // rule with an honest "R rules: N of M total" header (N always equals M
     // today — every finding is represented via its rule group — so a future
     // cap cannot silently drop rows without breaking the header). The
-    // uncapped per-finding detail lives in the `findings-detail.md`
-    // artifact ([`render_findings_detail`] → [`render_findings_full_detail`]);
-    // the exemplar cites the exact finding_id so it cross-references the
-    // detail artifact mechanically.
+    // uncapped per-finding detail lives in the `findings-detail.html`
+    // artifact; §4 closes with one plain-language pointer carrying the full
+    // disclosure.
     let groups = group_findings_by_rule(doc);
     let (hot_count, warn_count, info_count) = severity_counts(doc);
     out.push_str(&format!(
@@ -1359,7 +1242,7 @@ fn render_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("|---|---:|---:|---:|---:|---|\n");
     for group in &groups {
         // Exemplar: first member in finding_id order (deterministic); cited
-        // by exact finding_id so it cross-references Appendix C mechanically.
+        // by exact finding_id so it cross-references the detail artifact.
         // The trailing location is the unambiguous three-part
         // `path:start_line:start_col` (matching the HTML row location cell) —
         // never a range: the second number is a column, not an end line.
@@ -1378,83 +1261,17 @@ fn render_findings(out: &mut String, doc: &MetricsDocument) {
             exemplar.span.start_col,
         ));
     }
+    // One plain-language pointer carries the full disclosure: the table above
+    // is rule-grouped, while every finding has a row in the detail artifact.
     out.push('\n');
-}
-
-/// The UNCAPPED per-finding detail renderer, kept as a SEPARATE function by
-/// design (group-and-fold seam): §4 above summarizes, this renders every
-/// finding in full. The future option-C artifact split promotes THIS function
-/// into its own artifact — do not delete it, inline it into §4, or render a
-/// second copy of its rows anywhere else in `report.md`.
-///
-/// Ordering (legacy total order, preserved verbatim): stable severity
-/// partition hot→warn→info; WITHIN a group document order is preserved
-/// EXACTLY (the analyzer already emits the total order
-/// severity→confidence→rule_id→path→start_line→start_col — do NOT re-sort).
-fn render_findings_full_detail(out: &mut String, doc: &MetricsDocument) {
-    // Stable severity partition hot→warn→info; WITHIN a group document order
-    // is preserved EXACTLY (the analyzer already emits the total order
-    // severity→confidence→rule_id→path→start_line→start_col — do NOT re-sort).
-    let ordered: Vec<usize> = [Severity::Hot, Severity::Warn, Severity::Info]
-        .into_iter()
-        .flat_map(|severity| {
-            doc.findings
-                .iter()
-                .enumerate()
-                .filter(move |(_, finding)| finding.severity == severity)
-                .map(|(index, _)| index)
-        })
-        .collect();
-    let anchors = finding_anchor_assignments(doc).1;
-
-    for index in ordered {
-        let f = &doc.findings[index];
-        out.push_str(&format!(
-            "<a id=\"{}\"></a>\n#### {}  (`{}`)\n",
-            &anchors[index],
-            escape_md(&f.title),
-            escape_md(&f.finding_id),
-        ));
-        match &f.symbol {
-            Some(symbol) => out.push_str(&format!(
-                "- Location: `{}:{}` ({})\n",
-                escape_md(&f.path),
-                f.span.start_line,
-                escape_md(symbol),
-            )),
-            None => out.push_str(&format!(
-                "- Location: `{}:{}`\n",
-                escape_md(&f.path),
-                f.span.start_line,
-            )),
-        }
-        out.push_str(&format!("- Message: {}\n", escape_md(&f.message)));
-        out.push_str(&format!(
-            "- Confidence: {} · Severity: {} · Resolver tier: {}\n",
-            confidence_token(f.confidence),
-            severity_token(f.severity),
-            resolver_tier_token(f.resolver_tier),
-        ));
-        let mut flags: Vec<&str> = Vec::new();
-        if f.macro_suspect {
-            flags.push("macro_suspect");
-        }
-        if f.error_node_overlap {
-            flags.push("error_node_overlap");
-        }
-        if !flags.is_empty() {
-            out.push_str(&format!("- Flags: {}\n", flags.join(", ")));
-        }
-        if !f.evidence.is_empty() {
-            let pairs: Vec<String> = f
-                .evidence
-                .iter()
-                .map(|(k, v)| format!("{}={}", escape_md(k), escape_md(v)))
-                .collect();
-            out.push_str(&format!("- Evidence: {}\n", pairs.join(", ")));
-        }
-        out.push('\n');
-    }
+    out.push_str(&format!(
+        "All {} of {} findings: [findings-detail.html](findings-detail.html) — \
+         complete ranked action list and per-finding detail ({} rules).\n",
+        doc.findings.len(),
+        doc.findings.len(),
+        groups.len(),
+    ));
+    out.push('\n');
 }
 
 fn render_architecture(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) {
@@ -1693,129 +1510,49 @@ fn render_appendix_b(out: &mut String, semantic: bool) {
     ));
 }
 
-/// Appendix C (C-split): link stub ONLY — the UNCAPPED per-finding detail
-/// lives in the `findings-detail.md` artifact
-/// ([`render_findings_detail`] → [`render_findings_full_detail`]). The
-/// honest header ties the count back to §4 (`N of M total` — both sides
-/// always agree today) so a future row cap cannot silently drop rows
-/// without breaking the header. `report.md` carries zero per-finding rows
-/// by construction (locked by `tests/findings_detail_split.rs`).
-fn render_appendix_c(out: &mut String, doc: &MetricsDocument) {
-    out.push_str("## Appendix C. All findings (full detail)\n");
-    if doc.findings.is_empty() {
-        out.push_str("No findings.\n\n");
-        return;
-    }
-    let groups = group_findings_by_rule(doc);
-    out.push_str(&format!(
-        "{} of {} total findings.\n\nFull per-finding detail has moved to \
-         [findings-detail.md](findings-detail.md) ({} rules, same {} of {} total).\n\n",
-        doc.findings.len(),
-        doc.findings.len(),
-        groups.len(),
-        doc.findings.len(),
-        doc.findings.len(),
-    ));
-}
-
 // ---------------------------------------------------------------------------
 // HTML renderer helpers (Option B slice 2: LINKED variant + fixed script)
 // ---------------------------------------------------------------------------
 
-/// Emit the document head: doctype, charset, title, and a minimal inline
-/// `<style>` block (static text — no external resources; the only scripts are
-/// the amended A12 set (ADR-0014): the fixed [`REPORT_SCRIPT`] appended in
-/// `html_footer`, the fixed story script, and the inline story JSON block).
-/// Scoped key-view CSS (map-intelligibility V4). Shared by the report page
-/// and the detail/profile pages. No `text-overflow: ellipsis` anywhere on
-/// key-view text: labels wrap instead of truncating.
-const KEY_VIEW_CSS: &str = "\
-         .kv{margin:1.25rem 0 1.75rem}\n\
-         .kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}\n\
-         .kv-action{margin:.15rem 0 .75rem;color:#444}\n\
-         .kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}\n\
-         .kv-row{display:grid;grid-template-columns:3.5rem 1fr;gap:.75rem;padding:.55rem 0;border-top:1px solid #ccc}\n\
-         .kv-rank{font-size:1.5rem;font-weight:700;line-height:1}\n\
-         .kv-line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem}\n\
-         .kv-loc,.kv-fn{font-family:monospace,monospace;overflow-wrap:anywhere;word-break:break-word;white-space:normal}\n\
-         .kv-loc{font-weight:700;color:#111;text-decoration:none}\n\
-         .kv-loc:hover{text-decoration:underline}\n\
-         .kv-title{font-weight:600}\n\
-         .kv-key{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}\n\
-         .kv-note{margin-left:.4rem;font-size:.78rem;color:#4a5568}\n\
-         .kv-caption{margin:.1rem 0 .6rem;color:#333;font-size:.85rem}\n\
-         .kv-badge,.kv-class,.kv-dem{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 .3rem;border:1px solid #999;border-radius:.2rem;white-space:normal;overflow-wrap:anywhere}\n\
-         .kv-class.nonprod{background:#f3e8ff;border-color:#9f7aea}\n\
-         .sev-hot{background:#fff5f5;border-color:#e53e3e;color:#9b2c2c}\n\
-         .sev-warn{background:#fffaf0;border-color:#dd6b20;color:#975a16}\n\
-         .sev-info{background:#f7fafc;border-color:#a0aec0;color:#2d3748}\n\
-         .kv-dem{background:#edf2f7;border-color:#a0aec0;color:#2d3748;margin-left:.35rem}\n\
-         .kv-anchor,.kv-value{font-family:monospace,monospace;font-size:.8rem;color:#333;overflow-wrap:anywhere;white-space:normal;line-height:1.35}\n\
-         .kv-why{margin-top:.2rem;overflow-wrap:anywhere;white-space:normal}\n\
-         .kv-counts{margin:.45rem 0 0;color:#444;font-size:.85rem}\n\
-         .kv-more{margin:.5rem 0 .2rem;font-weight:600}\n\
-         .kv-bars{max-width:100%}\n\
-         .kv-brow{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(4rem,1fr) minmax(12rem,24rem);gap:.7rem;align-items:center;padding:.35rem 0;border-top:1px solid #ccc}\n\
-         .kv-brow:last-child{border-bottom:1px solid #999}\n\
-         .kv-blabel{overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-width:0}\n\
-         .kv-track{background:#edf2f7;border-radius:.15rem;height:1.1rem;width:100%;max-width:100%}\n\
-         .kv-fill{background:#2b6cb0;height:1.1rem;border-radius:.15rem;min-width:0;max-width:100%}\n\
-         .kv-fill.demoted{background:#a0aec0}\n\
-         .kv-demoted .kv-blabel,.kv-demoted .kv-value{opacity:.6}\n\
-         .kv-badge.trip{background:#fffaf0;border-color:#dd6b20;color:#975a16;margin-top:.2rem}\n\
-         .kv-badge.known{background:#f0fff4;border-color:#38a169;color:#22543d;margin-top:.2rem}\n\
-         @media print{.kv-row,.kv-brow{break-inside:avoid}}\n";
+/// Report-page CSS: verified fluid/pinned width contract (`--report-max` +
+/// `--page-gutter`), the dense findings table, figure zoom, and the
+/// details/summary affordances. Layered on top of the shared warm-paper
+/// shell emitted by [`html_page_head`].
+const REPORT_PAGE_CSS: &str = "\
+#findings table{min-width:72rem}\n\
+#findings tbody td{white-space:nowrap}\n\
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
+figure img{display:block;margin:0 auto}\n\
+figure.pz img{max-width:100%;touch-action:none}\n\
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
+#filter-bar{margin:.5rem 0}\n\
+#findings summary{cursor:pointer;list-style:none}\n\
+#findings summary::-webkit-details-marker{display:none}\n\
+#findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
+#findings details[open]>summary::before{transform:rotate(90deg)}\n";
 
+/// Emit the report-page head through the shared warm-paper shell. The only
+/// width-dependent surfaces are `--report-max` and the `data-report-width`
+/// body marker: the body is fluid by default (100vw) and pinned by an
+/// explicit `--report-width` hint. The marker lets the Atlas band drop its
+/// full-bleed margins inside a fixed page.
 fn html_head(out: &mut String, doc: &MetricsDocument, width: ReportWidth) {
-    out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
-    out.push_str("<meta charset=\"utf-8\">\n");
-    out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
-    // Inline empty data-URI favicon: kills the /favicon.ico 404 console error
-    // with zero bytes fetched (no network, fully offline).
-    out.push_str("<link rel=\"icon\" href=\"data:,\">\n");
-    out.push_str(&format!(
-        "<title>Perfpal Report — schema {}</title>\n",
-        escape_html(&doc.schema_version),
-    ));
-    // `--report-max` is the ONLY width-dependent surface in this page: the
-    // body is fluid by default (100vw) and pinned by an explicit
-    // `--report-width` hint. The `data-report-width` marker lets the Atlas
-    // band drop its full-bleed margins inside a fixed page.
-    out.push_str("<style>\n:root{--report-max:");
-    out.push_str(width.css_max_width());
-    out.push_str(
-        ";--page-gutter:clamp(1rem,calc(var(--report-max)*0.016),2.5rem)}\n\
-         body{font-family:monospace,monospace;max-width:min(100%,var(--report-max));box-sizing:border-box;margin:2rem auto;padding:0 var(--page-gutter);color:#111;background:#fff}\n\
-         .table-scroll{overflow-x:auto;max-width:100%}\n\
-         table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
-         th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
-         th{background:#eee}\n\
-         #findings table{min-width:72rem}\n\
-         #findings tbody td{white-space:nowrap}\n\
-         #findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
-         figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}\n\
-         figcaption{margin-top:.5rem}\n\
-         img{max-width:100%;height:auto}\n\
-         figure img{display:block;margin:0 auto}\n\
-         figure.pz img{max-width:100%;touch-action:none}\n\
-         #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
-         #filter-bar{margin:.5rem 0}\n\
-         nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
-         #findings summary{cursor:pointer;list-style:none}\n\
-         #findings summary::-webkit-details-marker{display:none}\n\
-         #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
-         #findings details[open]>summary::before{transform:rotate(90deg)}\n",
+    let title = format!("Perfpal Report — schema {}", doc.schema_version);
+    let page_css = format!(
+        ":root{{--report-max:{};--page-gutter:clamp(1rem,calc(var(--report-max)*0.016),2.5rem)}}\n\
+         body{{max-width:min(100%,var(--report-max));box-sizing:border-box;margin:2rem auto;padding:0 var(--page-gutter)}}\n\
+         {}",
+        width.css_max_width(),
+        REPORT_PAGE_CSS,
     );
-    out.push_str(KEY_VIEW_CSS);
-    out.push_str(&format!(
-        "         </style>\n</head>\n<body data-report-width=\"{}\">\n",
-        width.body_marker()
-    ));
+    html_page_head(
+        out,
+        &title,
+        &page_css,
+        &format!(" data-report-width=\"{}\"", width.body_marker()),
+    );
 }
 
-/// Header: schema version + tool version + file/finding counts ONLY — never
-/// `started_at`, `duration_ms`, or `root_path` (no provenance surfaces, so
-/// double-scan output is byte-identical UNMASKED).
 fn html_header(out: &mut String, doc: &MetricsDocument, breadcrumb: bool) {
     let hot = findings_of_severity(doc, Severity::Hot).len();
     let warn_count = doc
@@ -2099,6 +1836,9 @@ fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) 
     let rail = atlas_brief::render_rail(&view, doc);
     let answer_html = atlas_brief::render_answer(&view, doc);
     out.push_str("<section id=\"map\">\n");
+    // Screen-reader-only section heading: keeps the document outline
+    // h1 → h2 → h3 (the Atlas chrome's own blocks start at h3).
+    out.push_str("<h2 class=\"sr-only\">Atlas map</h2>\n");
     out.push_str(&atlas_render::render_canvas_html_with_actions_and_rail(
         &view,
         &start_actions,
@@ -2442,44 +2182,24 @@ fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("</section>\n");
 }
 
-/// Detail-page head: same markup shape as [`html_head`] (doctype, charset,
-/// viewport, empty favicon, inline `<style>`), titled for the findings
-/// detail artifact. It keeps the 72rem body width: the report page is fluid
-/// (and may be pinned by `--report-width`), while this page and the
-/// profile-queue page intentionally stay at 72rem for dense tables.
+/// Detail-page head: the shared warm-paper shell at the fixed 72rem detail
+/// width (the report page is fluid and may be pinned by `--report-width`,
+/// while this page and the profile-queue page stay dense at 72rem).
 fn html_detail_head(out: &mut String, doc: &MetricsDocument) {
-    out.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
-    out.push_str("<meta charset=\"utf-8\">\n");
-    out.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
-    out.push_str("<link rel=\"icon\" href=\"data:,\">\n");
-    out.push_str(&format!(
-        "<title>Perfpal Findings Detail — schema {}</title>\n",
-        escape_html(&doc.schema_version),
-    ));
-    out.push_str(
-        "<style>\n\
-         body{font-family:monospace,monospace;max-width:72rem;margin:2rem auto;padding:0 1rem;color:#111;background:#fff}\n\
-         .table-scroll{overflow-x:auto;max-width:100%}\n\
-         table{border-collapse:collapse;width:100%;margin:1rem 0}\n\
-         th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}\n\
-         th{background:#eee}\n\
-         #findings table{min-width:72rem}\n\
-         #findings tbody td{white-space:nowrap}\n\
-         #findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
-         figure{border:1px solid #999;padding:.5rem;margin:1rem 0;max-width:100%;overflow-x:auto}\n\
-         figcaption{margin-top:.5rem}\n\
-         img{max-width:100%;height:auto}\n\
-         figure.pz img{max-width:none;touch-action:none}\n\
-         #files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
-         #filter-bar{margin:.5rem 0}\n\
-         nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}\n\
-         #findings summary{cursor:pointer;list-style:none}\n\
-         #findings summary::-webkit-details-marker{display:none}\n\
-         #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
-         #findings details[open]>summary::before{transform:rotate(90deg)}\n",
-    );
-    out.push_str(KEY_VIEW_CSS);
-    out.push_str("         </style>\n</head>\n<body>\n");
+    let title = format!("Perfpal Findings Detail — schema {}", doc.schema_version);
+    let page_css = "\
+body{max-width:72rem;margin:2rem auto;padding:0 1rem}\n\
+#findings table{min-width:72rem}\n\
+#findings tbody td{white-space:nowrap}\n\
+#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
+figure.pz img{max-width:none;touch-action:none}\n\
+#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
+#filter-bar{margin:.5rem 0}\n\
+#findings summary{cursor:pointer;list-style:none}\n\
+#findings summary::-webkit-details-marker{display:none}\n\
+#findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
+#findings details[open]>summary::before{transform:rotate(90deg)}\n";
+    html_page_head(out, &title, page_css, "");
 }
 
 /// Full findings-table renderer, kept as a SEPARATE function by design
@@ -2614,7 +2334,9 @@ fn html_footer(out: &mut String) {
     );
     // Slice-2 enhancement script: fixed source (REPORT_SCRIPT), exactly one
     // block, bound via addEventListener only. Content is static text — no
-    // document data is interpolated into the script.
+    // document data is interpolated into the script. The detail and
+    // profile-queue pages keep the same fixed block so their filter bar and
+    // pan/zoom controls stay live (report-format §2 filterable contract).
     out.push_str("<script>\n");
     out.push_str(REPORT_SCRIPT);
     out.push_str("\n</script>\n</body>\n</html>\n");
@@ -3070,19 +2792,6 @@ fn dependency_paragraph(languages: &[String], escape: impl Fn(&str) -> String) -
 /// only — the hooked index builds its own link text).
 fn detail_caption() -> String {
     "Component detail — per-file hot-path map.".to_string()
-}
-
-/// Escape Markdown metacharacters with the PINNED set [`MD_ESCAPE_CHARS`].
-/// Applied to every embedded path, title, message, id, symbol, and caption.
-fn escape_md(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
-    for c in input.chars() {
-        if MD_ESCAPE_CHARS.contains(&c) {
-            out.push('\\');
-        }
-        out.push(c);
-    }
-    out
 }
 
 fn severity_token(severity: Severity) -> &'static str {

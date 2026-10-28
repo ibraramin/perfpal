@@ -19,6 +19,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Severity};
 use crate::ir::{LocCounts, ResolverTier};
 use crate::reporter::finding_anchor_assignments;
+use crate::reporter::format::{md_cell, md_code, md_text};
 use crate::reporter::views::{
     self, CostScale, Kv1Row, Kv3Row, complete_actions, complete_profile_queue,
 };
@@ -837,48 +838,6 @@ pub fn render_actions_json(doc: &MetricsDocument) -> String {
 }
 
 // ---------------------------------------------------------------------------
-// Markdown escaping (§9.9)
-// ---------------------------------------------------------------------------
-
-/// Single-line, structure-safe rendering: CR/LF/TAB become two-character
-/// escapes and every backtick becomes U+02CB (a backslash does not escape a
-/// backtick inside a CommonMark code span). Lossy by design; JSON keeps the
-/// original bytes.
-fn md_single_line(text: &str) -> String {
-    let mut out = String::with_capacity(text.len());
-    for ch in text.chars() {
-        match ch {
-            '\r' => out.push_str("\\r"),
-            '\n' => out.push_str("\\n"),
-            '\t' => out.push_str("\\t"),
-            '`' => out.push('\u{02cb}'),
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-
-/// Code-span value (path, id, name, evidence): single-line; `<`/`>` stay
-/// literal because the span is inert.
-fn md_code(text: &str) -> String {
-    md_single_line(text)
-}
-
-/// Prose value (`title`, `why`): single-line plus HTML neutralization.
-fn md_text(text: &str) -> String {
-    md_single_line(text)
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-}
-
-/// Table cell: prose rendering plus column-separator escaping.
-fn md_cell(text: &str) -> String {
-    // Backslash FIRST: otherwise an input `\|` becomes `\\|`, leaving the
-    // pipe live as a table-column separator.
-    md_text(text).replace('\\', "\\\\").replace('|', "\\|")
-}
-
-// ---------------------------------------------------------------------------
 // Markdown renderer (§7)
 // ---------------------------------------------------------------------------
 
@@ -1034,7 +993,7 @@ pub fn render_markdown(doc: &MetricsDocument) -> String {
             fix_hint(&finding.rule_id).unwrap_or(STUB_NO_HINT)
         ));
         lines.push(format!(
-            "- anchor: `findings-detail.md#{}` · `{}`",
+            "- anchor: `findings-detail.html#{}` · `{}`",
             prepared.anchors[row.finding_index],
             md_code(&finding.finding_id)
         ));
@@ -2198,22 +2157,21 @@ mod tests {
             "the backtick is substituted at every rendering site"
         );
 
-        // The path's `<script>` is literal but inert inside its code span:
-        // every occurrence on an MD line has an odd number of backticks before
-        // it (meaning it sits inside an inline code span, §9.9).
-        let mut raw_path_script_lines = 0;
-        for line in markdown.lines().filter(|line| line.contains("<script>")) {
-            raw_path_script_lines += 1;
-            for (index, _) in line.match_indices("<script>") {
-                let backticks_before = line[..index].matches('`').count();
-                assert_eq!(
-                    backticks_before % 2,
-                    1,
-                    "path <script> must stay inside a code span: {line:?}"
-                );
-            }
-        }
-        assert_eq!(raw_path_script_lines, 4, "path HTML on four detail lines");
+        // H3 hardening: hostile `<script>` never appears raw anywhere in the
+        // Markdown — code-span values are neutralized too (4 path sites plus
+        // the prose title/message).
+        assert!(
+            !markdown.contains("<script>"),
+            "no raw HTML token anywhere in agent-report.md"
+        );
+        assert!(
+            !markdown.contains("<script"),
+            "no raw script token anywhere in agent-report.md"
+        );
+        assert!(
+            markdown.matches("&lt;script").count() >= 4,
+            "every hostile script occurrence is neutralized"
+        );
 
         // Prose (`title`, `why`) is HTML-neutralised.
         for prefix in ["- what:", "- why:"] {
@@ -2736,10 +2694,10 @@ mod tests {
         // Exact pins: intentional renderer changes must update this table and
         // spec §12 (the pinned sizes are part of the measured contract).
         let pinned = [
-            ("tests/golden/report/metrics.json", 13_462usize),
-            ("tests/golden/report-mixed/metrics.json", 8_882),
-            ("tests/golden/report-python/metrics.json", 26_882),
-            ("tests/golden/report-rust/metrics.json", 25_841),
+            ("tests/golden/report/metrics.json", 13_490usize),
+            ("tests/golden/report-mixed/metrics.json", 8_900),
+            ("tests/golden/report-python/metrics.json", 26_932),
+            ("tests/golden/report-rust/metrics.json", 25_891),
         ];
         for (relative, expected) in pinned {
             let doc = load_metrics(relative);
@@ -2814,7 +2772,7 @@ mod tests {
         );
         assert_eq!(
             markdown.len(),
-            77_713,
+            77_763,
             "intentional renderer changes must update this table and spec §12: synthetic"
         );
         assert!(

@@ -31,7 +31,7 @@ showing top 9 of 9 actions
 - why: per-iteration heap allocation via 'malloc' at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization
 - evidence: `alloc_site_index=2 · callee=malloc · loop_depth=1`
 - fix: Hoist the allocation out of the loop, reuse a buffer across iterations, or reserve once before the loop.
-- anchor: `findings-detail.md#finding-PERF-C-ALLOC-001-src-main-c-27-21` · `PERF-C-ALLOC-001:src/main.c:27:21`
+- anchor: `findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-27-21` · `PERF-C-ALLOC-001:src/main.c:27:21`
 
 ### 2. PERF-C-ALLOC-002 · `src/main.c:29` · hot/HIGH · production
 - what: Deallocation inside loop
@@ -39,7 +39,7 @@ showing top 9 of 9 actions
 - why: deallocation via 'free' at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization
 - evidence: `alloc_cooccurrence=true · callee=free · loop_depth=1`
 - fix: Move the free outside the loop or reuse a single allocation per iteration instead of freeing each pass.
-- anchor: `findings-detail.md#finding-PERF-C-ALLOC-002-src-main-c-29-9` · `PERF-C-ALLOC-002:src/main.c:29:9`
+- anchor: `findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-29-9` · `PERF-C-ALLOC-002:src/main.c:29:9`
 
 ### 3. PERF-C-STR-001 · `src/main.c:28` · hot/HIGH · production
 - what: String accumulation in loop
@@ -47,7 +47,7 @@ showing top 9 of 9 actions
 - why: 'strcat' accumulates into 'acc' at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization
 - evidence: `callee=strcat · dest=acc · loop_depth=1`
 - fix: Track the destination length and append with bounded writes instead of rescanning the string each pass.
-- anchor: `findings-detail.md#finding-PERF-C-STR-001-src-main-c-28-9` · `PERF-C-STR-001:src/main.c:28:9`
+- anchor: `findings-detail.html#finding-PERF-C-STR-001-src-main-c-28-9` · `PERF-C-STR-001:src/main.c:28:9`
 
 ### 4. PERF-RS-ALLOC-003 · `src/lib.rs:20` · hot/MEDIUM · production
 - what: Growable-buffer additive growth in loop (Rust)
@@ -55,7 +55,7 @@ showing top 9 of 9 actions
 - why: 'out.reserve' grows a buffer by addition inside a loop at depth 1 — each reserve may reallocate and copy the whole buffer; reserving a larger capacity once up front is a candidate optimization
 - evidence: `callee=out.reserve · growth=additive · loop_depth=1`
 - fix: Reserve capacity once before the loop, or grow it multiplicatively, instead of reserving per pass.
-- anchor: `findings-detail.md#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9` · `PERF-RS-ALLOC-003:src/lib.rs:20:9`
+- anchor: `findings-detail.html#finding-PERF-RS-ALLOC-003-src-lib-rs-20-9` · `PERF-RS-ALLOC-003:src/lib.rs:20:9`
 
 ### 5. PERF-RS-STR-002 · `src/lib.rs:22` · warn/HIGH · production
 - what: Length query recomputed in loop (Rust)
@@ -63,7 +63,7 @@ showing top 9 of 9 actions
 - why: 's.len' recomputes the length of 's' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
 - evidence: `identifier=s · loop_depth=1`
 - fix: Compute len, is_empty, or capacity once before the loop and reuse the value.
-- anchor: `findings-detail.md#finding-PERF-RS-STR-002-src-lib-rs-22-17` · `PERF-RS-STR-002:src/lib.rs:22:17`
+- anchor: `findings-detail.html#finding-PERF-RS-STR-002-src-lib-rs-22-17` · `PERF-RS-STR-002:src/lib.rs:22:17`
 
 ### 6. PERF-RS-STR-002 · `src/lib.rs:23` · warn/HIGH · production
 - what: Length query recomputed in loop (Rust)
@@ -71,7 +71,7 @@ showing top 9 of 9 actions
 - why: 'tmp.len' recomputes the length of 'tmp' at loop depth 1 without an assignment to it inside the loop; hoisting the length before the loop is a candidate optimization
 - evidence: `identifier=tmp · loop_depth=1`
 - fix: Compute len, is_empty, or capacity once before the loop and reuse the value.
-- anchor: `findings-detail.md#finding-PERF-RS-STR-002-src-lib-rs-23-17` · `PERF-RS-STR-002:src/lib.rs:23:17`
+- anchor: `findings-detail.html#finding-PERF-RS-STR-002-src-lib-rs-23-17` · `PERF-RS-STR-002:src/lib.rs:23:17`
 
 ### 7. PERF-C-STR-003 · `src/main.c:28` · warn/HIGH · production
 - what: Unbounded string operation
@@ -79,7 +79,7 @@ showing top 9 of 9 actions
 - why: unbounded operation via 'strcat' — a bounded variant or explicit length tracking is a candidate optimization
 - evidence: `callee=strcat`
 - fix: Bound every copy with an explicit destination size (snprintf/strlcpy) and pre-size the buffer once.
-- anchor: `findings-detail.md#finding-PERF-C-STR-003-src-main-c-28-9` · `PERF-C-STR-003:src/main.c:28:9`
+- anchor: `findings-detail.html#finding-PERF-C-STR-003-src-main-c-28-9` · `PERF-C-STR-003:src/main.c:28:9`
 
 ### 8. PERF-RS-MEM-001 · `src/lib.rs:25` · warn/MEDIUM · production
 - what: size_of passed as an element count (Rust)
@@ -87,7 +87,7 @@ showing top 9 of 9 actions
 - why: 'Vec::with_capacity' receives a ˋsize_ofˋ byte count where an element COUNT is expected — that over-reserves by a factor of the element size; passing the element count is a candidate optimization
 - evidence: `callee=Vec::with_capacity · misuse=size_of_as_element_count`
 - fix: Divide the byte count by size_of::<T>() when passing it as an element count.
-- anchor: `findings-detail.md#finding-PERF-RS-MEM-001-src-lib-rs-25-22` · `PERF-RS-MEM-001:src/lib.rs:25:22`
+- anchor: `findings-detail.html#finding-PERF-RS-MEM-001-src-lib-rs-25-22` · `PERF-RS-MEM-001:src/lib.rs:25:22`
 
 ### 9. PERF-C-ARCH-003 · `src/main.c:32` · info/LOW · production
 - what: Cross-file call coupling
@@ -95,7 +95,7 @@ showing top 9 of 9 actions
 - why: call to 'util_init' matches a definition in 'src/util.c' by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization
 - evidence: `callee_name=util_init · matched_path=src/util.c`
 - fix: Confirm the coupled edge with a semantic check, then narrow the interface or pass the dependency in.
-- anchor: `findings-detail.md#finding-PERF-C-ARCH-003-src-main-c-32-12` · `PERF-C-ARCH-003:src/main.c:32:12`
+- anchor: `findings-detail.html#finding-PERF-C-ARCH-003-src-main-c-32-12` · `PERF-C-ARCH-003:src/main.c:32:12`
 
 ## Action index by rule
 

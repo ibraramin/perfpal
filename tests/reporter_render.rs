@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use perfpal::analyzer::{Confidence, Severity};
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
-use perfpal::reporter::{render_findings_detail, render_report};
+use perfpal::reporter::{render_findings_detail_html, render_report};
 use perfpal::schema::{
     ComponentEntry, ComponentMetrics, FileEntry, FindingEntry, MetricsDocument, ParseHealthEntry,
     ParseHealthSummary, ScanInfo, StatsSection, ToolInfo,
@@ -178,7 +178,6 @@ fn sections_present_in_fixed_order() {
         "## 5. Explorer",
         "## Appendix A. Heuristic reference",
         "## Appendix B. How to read this report",
-        "## Appendix C. All findings (full detail)",
     ];
     let mut cursor = 0;
     for heading in headings {
@@ -191,15 +190,21 @@ fn sections_present_in_fixed_order() {
     // Encoding contract: LF newlines, trailing newline.
     assert!(report.ends_with('\n'));
     assert!(!report.contains("\r"));
-    // C-split: report.md carries zero per-finding rows — Appendix C is a
-    // link stub into the findings-detail.md artifact.
+    // C-split: report.md carries zero per-finding rows; §4 ends with the
+    // single canonical HTML-detail pointer. Appendix C is gone.
     assert!(
         !report.contains("#### "),
         "report.md must not render per-finding detail rows"
     );
     assert!(
-        report.contains("[findings-detail.md](findings-detail.md)"),
-        "Appendix C stub must link the detail artifact"
+        !report.contains("## Appendix C."),
+        "Appendix C must be removed from report.md"
+    );
+    assert!(
+        report.contains(
+            "All 1 of 1 findings: [findings-detail.html](findings-detail.html) — complete ranked action list and per-finding detail (1 rules)."
+        ),
+        "§4 must point at the canonical HTML detail:\n{report}"
     );
 }
 
@@ -251,7 +256,7 @@ fn per_language_totals_render_in_codebase_statistics_not_provenance() {
 // ---------------------------------------------------------------------------
 // 3. Findings §4 is group-and-fold: ONE row per firing rule in the pinned
 // group order (severity-rank → count-desc → rule_id-asc); full detail lives
-// uncapped in Appendix C.
+// uncapped in findings-detail.html.
 // ---------------------------------------------------------------------------
 
 #[test]
@@ -301,7 +306,7 @@ fn findings_section4_groups_by_rule_in_pinned_group_order() {
     assert!(sec4_plain.contains("| `PERF-C-CALL-001` | 3 | 0 | 0 | 3 |"));
 
     // §4 carries NO per-finding detail headers — those live in the
-    // findings-detail.md artifact.
+    // findings-detail.html artifact.
     assert!(
         !sec4.contains("#### "),
         "§4 must not render per-finding detail:\n{sec4}"
@@ -370,7 +375,7 @@ fn group_exemplar_location_renders_unambiguous_path_line_col() {
 }
 
 #[test]
-fn group_counts_sum_to_total_and_match_appendix_c() {
+fn group_counts_sum_to_total_and_match_detail_html() {
     let mut doc = base_doc();
     doc.findings = vec![
         finding("PERF-C-CALL-001", Severity::Info, Confidence::High, "z.c"),
@@ -401,22 +406,17 @@ fn group_counts_sum_to_total_and_match_appendix_c() {
     assert_eq!(row_sum, 6, "group counts must sum to total:\n{sec4}");
     assert!(sec4.contains("5 rules: 6 of 6 total findings"));
 
-    // C-split: report.md Appendix C is a link stub (zero rows); the uncapped
-    // per-finding detail lives in findings-detail.md — one #### per finding.
-    let appendix_c = section(&report, "## Appendix C.", "## Appendix B.");
+    // C-split: §4 is groups only and points at the canonical detail; the
+    // detail page carries one row per finding (identical count).
+    assert_eq!(sec4.matches("#### ").count(), 0);
+    assert!(sec4.contains("All 6 of 6 findings: [findings-detail.html](findings-detail.html)"));
+    let detail = render_findings_detail_html(&doc);
     assert_eq!(
-        appendix_c.matches("#### ").count(),
-        0,
-        "Appendix C stub must carry zero detail rows:\n{appendix_c}"
-    );
-    assert!(appendix_c.contains("[findings-detail.md](findings-detail.md)"));
-    let detail = render_findings_detail(&doc);
-    assert_eq!(
-        detail.matches("#### ").count(),
+        detail.matches("<tr id=\"finding-").count(),
         6,
-        "findings-detail.md must render every finding:\n{detail}"
+        "findings-detail.html must render every finding row:\n{detail}"
     );
-    assert!(detail.contains("6 of 6 total findings."));
+    assert!(detail.contains("6 of 6 total findings ("));
     for id in [
         "PERF-C-ALLOC-001:a.c:7:9",
         "PERF-C-LOOP-002:b.c:7:9",
@@ -425,17 +425,16 @@ fn group_counts_sum_to_total_and_match_appendix_c() {
         "PERF-C-CALL-002:n.c:7:9",
         "PERF-C-CALL-001:z.c:7:9",
     ] {
-        let escaped = id.replace('-', "\\-").replace('.', "\\.");
         assert!(
-            detail.contains(&format!("(`{escaped}`)")),
-            "{id} missing from findings-detail.md:\n{detail}"
+            detail.contains(&perfpal::reporter::escape_html(id)),
+            "{id} missing from findings-detail.html:\n{detail}"
         );
     }
 }
 
 #[test]
 fn grouped_output_is_deterministic_regardless_of_input_order() {
-    // Same findings, shuffled document order ⇒ identical §4 + Appendix C.
+    // Same findings, shuffled document order ⇒ identical §4 + detail HTML.
     let findings_a = vec![
         finding("PERF-C-CALL-001", Severity::Info, Confidence::High, "z.c"),
         finding("PERF-C-ALLOC-001", Severity::Hot, Confidence::High, "a.c"),
@@ -456,44 +455,33 @@ fn grouped_output_is_deterministic_regardless_of_input_order() {
         sec4_a, sec4_b,
         "§4 must be byte-identical regardless of input order"
     );
-    // C-split: Appendix C is a link stub (identical — no rows to order);
-    // the findings-detail.md artifact preserves the legacy document-order
-    // total order, so it legitimately differs — but the SORTED citation
-    // multiset must agree.
-    let app_a = section(&report_a, "## Appendix C.", "## Appendix B.");
-    let app_b = section(&report_b, "## Appendix C.", "## Appendix B.");
-    assert_eq!(app_a, app_b, "Appendix C stub must be order-independent");
-    let detail_a = render_findings_detail(&doc_a);
-    let detail_b = render_findings_detail(&doc_b);
-    let mut cites_a: Vec<&str> = detail_a
-        .match_indices("(`PERF")
-        .map(|(i, _)| &detail_a[i..i + 32])
-        .collect();
-    let mut cites_b: Vec<&str> = detail_b
-        .match_indices("(`PERF")
-        .map(|(i, _)| &detail_b[i..i + 32])
-        .collect();
-    cites_a.sort_unstable();
-    cites_b.sort_unstable();
-    assert_eq!(cites_a, cites_b, "findings-detail.md citation sets differ");
+    // C-split: the HTML detail is grouped by rule and rows are emitted in
+    // finding_id order, so it is byte-identical regardless of input order.
+    let detail_a = render_findings_detail_html(&doc_a);
+    let detail_b = render_findings_detail_html(&doc_b);
+    assert_eq!(
+        detail_a, detail_b,
+        "findings-detail.html must be order-independent"
+    );
+    assert!(!sec4_a.contains("## Appendix C."));
 }
 
 #[test]
-fn empty_findings_render_no_findings_in_section4_and_appendix_c() {
+fn empty_findings_render_no_findings_in_section4_and_detail_html() {
     let mut doc = base_doc();
     doc.findings = vec![];
     let report = render_report(&doc, &[]);
     let findings_section = section(&report, "## 4. Findings", "## 5. Explorer");
     assert_eq!(findings_section.trim(), "## 4. Findings\n\nNo findings.");
-    let appendix_c = section(&report, "## Appendix C.", "## Appendix B.");
     assert!(
-        appendix_c.contains("No findings."),
-        "Appendix C must handle the empty scan:\n{appendix_c}"
+        !report.contains("findings-detail.html"),
+        "empty scan must not emit a detail pointer"
     );
-    let detail = render_findings_detail(&doc);
+    assert!(!report.contains("## Appendix C."));
+    let detail = render_findings_detail_html(&doc);
     assert!(
         detail.contains("No findings."),
-        "findings-detail.md must handle the empty scan:\n{detail}"
+        "findings-detail.html must handle the empty scan:\n{detail}"
     );
 }
 
@@ -520,25 +508,31 @@ fn flags_and_evidence_clauses_appear_only_when_applicable() {
             "clean.c",
         ),
     ];
-    // C-split: per-finding clauses live in findings-detail.md, not report.md.
-    let detail = render_findings_detail(&doc);
+    // C-split: per-finding clauses live in findings-detail.html, not report.md.
+    let detail = render_findings_detail_html(&doc);
 
-    let flagged_section = &detail[detail.find("#### ").unwrap()..];
-    assert!(flagged_section.contains("- Flags: macro_suspect, error_node_overlap"));
-    // Evidence keys are escape_md'd too (`_` → `\_`).
-    assert!(flagged_section.contains(r"- Evidence: loop\_depth=3"));
-    assert!(flagged_section.contains(r"- Location: `flagged\.c:7` (worker)"));
+    let flagged_section = row_for(&detail, "flagged.c");
+    assert!(flagged_section.contains(">macro_suspect, error_node_overlap<"));
+    assert!(flagged_section.contains(">loop_depth=3<"));
+    assert!(flagged_section.contains(">worker<"));
+    assert!(flagged_section.contains(">flagged.c:7:9<"));
 
-    let clean_start = flagged_section
-        .find(r"clean\.c")
-        .expect("second finding present");
-    let clean_section = &flagged_section[clean_start..];
-    assert!(!clean_section.contains("- Flags:"));
-    assert!(!clean_section.contains("- Evidence:"));
-    assert!(
-        !clean_section.contains("(symbol)"),
-        "no phantom symbol clause"
-    );
+    let clean_section = row_for(&detail, "clean.c");
+    assert!(!clean_section.contains("macro_suspect"));
+    assert!(!clean_section.contains("loop_depth"));
+    assert!(clean_section.contains(">none<"));
+    assert!(clean_section.contains(">clean.c:7:9<"));
+}
+
+/// Slice the single `<tr …>` row whose `data-path` matches.
+fn row_for<'a>(html: &'a str, path: &str) -> &'a str {
+    let needle = format!("data-path=\"{path}\"");
+    let start = html
+        .find(&needle)
+        .unwrap_or_else(|| panic!("row for {path} missing"));
+    let start = html[..start].rfind("<tr ").expect("row start");
+    let end = html[start..].find("</tr>").expect("row end") + start + 5;
+    &html[start..end]
 }
 
 #[test]

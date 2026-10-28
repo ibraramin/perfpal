@@ -288,7 +288,7 @@ fn atlas_page_orders_canvas_brief_blocks_then_explorer() {
     let html = render_html(&doc, &names);
     let map = map_section(&html);
     assert!(
-        map.starts_with("<section id=\"map\">\n<div class=\"atlas-page-chrome\""),
+        map.starts_with("<section id=\"map\">\n<h2 class=\"sr-only\">Atlas map</h2>\n<div class=\"atlas-page-chrome\""),
         "the first-page chrome (masthead + key-metrics strip) must open #map"
     );
     let canvas = map.find("<section id=\"atlas-canvas\"").expect("canvas");
