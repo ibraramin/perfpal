@@ -1,0 +1,101 @@
+# H3 report budget — 2026-10-28T12:18:57Z (dirty worktree, pre-commit)
+# $ python3 sim/report_budget.py <report.html> --ceiling-bytes N --ceiling-fcp-ms N
+
+## hyperfine
+{
+  "commit": "36803fd640ab9c4a010b5c1c7c4c58379ab6e773",
+  "report": "/var/tmp/opencode/h3-20261028/hyperfine/report.html",
+  "bytes": 339271,
+  "ceiling_bytes": 393216,
+  "ceiling_fcp_ms": 300,
+  "widths": {
+    "1440": {
+      "runs": [
+        144.0,
+        128.0,
+        112.0
+      ],
+      "median": 128.0,
+      "ceiling_fcp_ms": 300,
+      "pass": true
+    },
+    "3072": {
+      "runs": [
+        132.0,
+        116.0,
+        136.0
+      ],
+      "median": 132.0,
+      "ceiling_fcp_ms": 300,
+      "pass": true
+    }
+  },
+  "verdict": "PASS"
+}
+exit=0
+
+## cjson
+{
+  "commit": "36803fd640ab9c4a010b5c1c7c4c58379ab6e773",
+  "report": "/var/tmp/opencode/h3-20261028/cjson/report.html",
+  "bytes": 270534,
+  "ceiling_bytes": 327680,
+  "ceiling_fcp_ms": 300,
+  "widths": {
+    "1440": {
+      "runs": [
+        144.0,
+        116.0,
+        176.0
+      ],
+      "median": 144.0,
+      "ceiling_fcp_ms": 300,
+      "pass": true
+    },
+    "3072": {
+      "runs": [
+        168.0,
+        152.0,
+        140.0
+      ],
+      "median": 152.0,
+      "ceiling_fcp_ms": 300,
+      "pass": true
+    }
+  },
+  "verdict": "PASS"
+}
+exit=0
+
+## 3k
+{
+  "commit": "36803fd640ab9c4a010b5c1c7c4c58379ab6e773",
+  "report": "/var/tmp/opencode/h3-20261028/3k/report.html",
+  "bytes": 516009,
+  "ceiling_bytes": 524288,
+  "ceiling_fcp_ms": 400,
+  "widths": {
+    "1440": {
+      "runs": [
+        148.0,
+        124.0,
+        124.0
+      ],
+      "median": 124.0,
+      "ceiling_fcp_ms": 400,
+      "pass": true
+    },
+    "3072": {
+      "runs": [
+        152.0,
+        136.0,
+        132.0
+      ],
+      "median": 136.0,
+      "ceiling_fcp_ms": 400,
+      "pass": true
+    }
+  },
+  "verdict": "PASS"
+}
+exit=0

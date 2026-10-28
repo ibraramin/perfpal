@@ -1,0 +1,13 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/artifact_matrix.rs (target/debug/deps/artifact_matrix-e6f5075a7923df3d)
+
+running 4 tests
+test one_owner_per_uniqueness_class_and_format ... ok
+test matrix_matches_emitted_artifact_set_exactly ... ok
+test caps_are_disclosed_in_every_consumer ... ok
+test every_relative_link_resolves_and_no_md_detail_reference_survives ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+

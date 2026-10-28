@@ -3,22 +3,23 @@
 Date: 2026-10-28
 Worktree: /home/shafin/Opencode/Perfpal
 Branch: main
-Commit at run: 4d401db (fix(report): keep the full-bleed band scrollbar-safe)
-Git tree: ff86047fb2c622b81638e5066d4cff7dc1b56490
+Commit at run: c5ded97 (refactor(report): consolidate artifacts and unify formatting)
+Git tree: 7449cde7a4000b96bad3e2e2ace7e37fe9888b57
 Dirty paths at run (excluding docs/evidence/atlas-sim/): 0
 Note: this transcript is committed separately; commits after the one above add only docs/evidence, docs/state or docs records.
 Fixtures: hyperfine c516152 · cJSON 6d9f244
 
 ## 1. Build, format, lint, tests
 $ cargo build --locked --offline
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.03s
 exit=0
 
 $ cargo fmt --all -- --check
 exit=0
 
 $ cargo clippy --locked --all-targets -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+    Checking perfpal v0.4.0 (/home/shafin/Opencode/Perfpal)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.92s
 exit=0
 
 $ cargo test --locked
@@ -34,6 +35,8 @@ running 5 tests
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 12 tests
 test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+running 4 tests
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 running 10 tests
 test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
 running 1 test
@@ -41,35 +44,35 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 9 tests
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
 running 5 tests
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
 running 2 tests
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 running 1 test
 test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.02s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.15s
 running 25 tests
 test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 running 3 tests
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
 running 1 test
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+running 1 test
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
-running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 running 9 tests
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
-running 8 tests
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+running 7 tests
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 running 4 tests
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 2 tests
@@ -77,13 +80,13 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 7 tests
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 running 7 tests
-test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 running 8 tests
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 running 9 tests
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 running 3 tests
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 running 3 tests
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 running 11 tests
@@ -91,7 +94,7 @@ test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fin
 running 8 tests
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 running 22 tests
-test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
 running 2 tests
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 1 test
@@ -99,17 +102,17 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 3 tests
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 running 1 test
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
 running 4 tests
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.45s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
 running 13 tests
-test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
 running 1 test
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
 running 8 tests
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 running 2 tests
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 50 tests
@@ -117,11 +120,11 @@ test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fin
 running 21 tests
 test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
 running 25 tests
-test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 running 3 tests
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 5 tests
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 running 13 tests
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 8 tests
@@ -144,8 +147,10 @@ running 6 tests
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 running 6 tests
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+running 7 tests
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 running 19 tests
-test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
 running 4 tests
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 running 4 tests
@@ -178,8 +183,8 @@ exit=0
 $ perfpal hyperfine --story (second independent scan)
 exit=0
 report.html (story off vs on):
-a051a8bd208663b9a7e1cc8824d3dab4f05e11f1fb53bcf526b2a3026f606fb3  /var/tmp/opencode/gate-off/hyperfine/report.html
-a051a8bd208663b9a7e1cc8824d3dab4f05e11f1fb53bcf526b2a3026f606fb3  /var/tmp/opencode/gate-on/hyperfine/report.html
+d760ea4f274f89bfc2628ff803f3d36e40baf56aaa4ff20d4179923d6b0cc5f2  /var/tmp/opencode/gate-off/hyperfine/report.html
+d760ea4f274f89bfc2628ff803f3d36e40baf56aaa4ff20d4179923d6b0cc5f2  /var/tmp/opencode/gate-on/hyperfine/report.html
 assert=pass report_identical
 atlas-layout.json (two independent scans):
 b0884d5fb18a3686c12c26c30c89f3a2a8ffad50610165a1b97cd9705c3f6d9e  /var/tmp/opencode/gate-on/hyperfine/atlas-layout.json
@@ -201,8 +206,8 @@ exit=0
 $ perfpal cJSON --story (second independent scan)
 exit=0
 report.html (story off vs on):
-add96d85091bc9a0526be05fa7d6963a09d9d541cb4a37329f491ce36a20e7c5  /var/tmp/opencode/gate-off/cJSON/report.html
-add96d85091bc9a0526be05fa7d6963a09d9d541cb4a37329f491ce36a20e7c5  /var/tmp/opencode/gate-on/cJSON/report.html
+97dc738261057c0f5ae57b8b79cff6c8452c65957e970d95a8655439ae54eb64  /var/tmp/opencode/gate-off/cJSON/report.html
+97dc738261057c0f5ae57b8b79cff6c8452c65957e970d95a8655439ae54eb64  /var/tmp/opencode/gate-on/cJSON/report.html
 assert=pass report_identical
 atlas-layout.json (two independent scans):
 3951ccbe0450830695a29c5f2e67e9b220dec08f9ec576092ba8234e622d5da6  /var/tmp/opencode/gate-on/cJSON/atlas-layout.json
@@ -257,15 +262,15 @@ assert=pass fixture
 assert=pass binary_present
   built current binary · exit 0
 assert=pass scan_off
-  5.26s · exit 0
+  4.70s · exit 0
 assert=pass scan_on
-  5.21s · exit 0
+  4.72s · exit 0
 assert=pass scan_on2
-  4.94s · exit 0
+  4.67s · exit 0
 assert=pass scan_times_recorded
-  off=5.26s on=5.21s on2=4.94s story_delta=-0.05s
+  off=4.70s on=4.72s on2=4.67s story_delta=+0.02s
 assert=pass F6_report_identical
-  off=14fa442236cbd712 on=14fa442236cbd712
+  off=3e31ebbc46a07692 on=3e31ebbc46a07692
 assert=pass F6_metrics_content_equal
   masked scan.duration_ms/started_at/root_path
 assert=pass F5_layout_identical
@@ -277,12 +282,12 @@ assert=pass F5_projection_identical
 assert=pass F7_page_bytes
   465,858 bytes (budget 5,000,000) · index.html=7,750 · sim.css=24,176 · sim.js=59,945 · data-3k.json=373,839 · data-index.json=148
 assert=pass server_ready
-  http://127.0.0.1:39381/
-first_frame[1]=1674ms
-first_frame[2]=332ms
-first_frame[3]=340ms
+  http://127.0.0.1:39101/
+first_frame[1]=1610ms
+first_frame[2]=343ms
+first_frame[3]=389ms
 assert=pass F7_first_frame
-  loads=[1674, 332, 340]ms · max=1674ms (budget 2000ms)
+  loads=[1610, 343, 389]ms · max=1610ms (budget 2000ms)
 assert=pass ready_true
 assert=pass F5_page_dom_identical
   hash=ab7521d0408380d3
@@ -329,7 +334,7 @@ assert=pass F7_no_hscroll_1280
 assert=pass F7_s4_detail_1280
   {'visible': True, 'scenes': 24, 'queue': 12}
 assert=pass F7_scale_1280_png
-  122512 bytes
+  122518 bytes
 assert=pass F4_data_honesty
 assert=pass F4_final_honesty
 assert=pass F4_purpose_readme
@@ -342,7 +347,7 @@ assert=pass no_external_requests
 assert=pass no_console_errors
 assert=pass no_page_errors
 detail: scenes=24/32 omitted=8/816 source_files=3000 queue=12/2730 ranked=3001
-summary: page_bytes=465,858 first_frame_max_ms=1674 scans=off=5.26s on=5.21s on2=4.94s F2-F6=[F2=pass, F3=pass, F4=pass, F5=pass, F6=pass] failed=0
+summary: page_bytes=465,858 first_frame_max_ms=1610 scans=off=4.70s on=4.72s on2=4.67s F2-F6=[F2=pass, F3=pass, F4=pass, F5=pass, F6=pass] failed=0
 F8 deferred: founder A2 session; not claimed
 
 asserts=44/44 passed · failed=0
