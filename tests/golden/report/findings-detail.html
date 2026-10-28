@@ -32,9 +32,8 @@ body{max-width:72rem;margin:2rem auto;padding:0 1rem}
 #findings table{min-width:72rem}
 #findings tbody td{white-space:nowrap}
 #findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
+#ranked-actions td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:10rem;max-width:28rem}
 figure.pz img{max-width:none;touch-action:none}
-#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}
-#filter-bar{margin:.5rem 0}
 #findings summary{cursor:pointer;list-style:none}
 #findings summary::-webkit-details-marker{display:none}
 #findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
@@ -89,7 +88,6 @@ figure.pz img{max-width:none;touch-action:none}
 </nav>
 <section id="findings">
 <h2>Findings detail</h2>
-<div id="filter-bar"><span id="filter-label">all findings</span> <button id="filter-clear" type="button" hidden>clear</button></div>
 <p>13 rules: 15 of 15 total findings (7 hot, 6 warn, 2 info).</p>
 <p><a href="report.html">Back to report.html</a>.</p>
 <section id="ranked-actions">
@@ -98,20 +96,20 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>rank</th><th>finding_id</th><th>title</th><th>location</th><th>function</th><th>severity</th><th>confidence</th><th>path class</th><th>cost anchor</th></tr></thead>
 <tbody>
-<tr><td>1</td><td><a href="#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001:src/main.c:34:21</a></td><td>Heap allocation inside loop</td><td>src/main.c:34</td><td>process</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">14 static cost units (v2) · 2.0× median · top 25%</td></tr>
-<tr><td>2</td><td><a href="#finding-PERF-C-ALLOC-002-src-main-c-37-9">PERF-C-ALLOC-002:src/main.c:37:9</a></td><td>Deallocation inside loop</td><td>src/main.c:37</td><td>process</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">14 static cost units (v2) · 2.0× median · top 25%</td></tr>
-<tr><td>3</td><td><a href="#finding-PERF-C-ALLOC-001-src-main-c-73-15">PERF-C-ALLOC-001:src/main.c:73:15</a></td><td>Heap allocation inside loop</td><td>src/main.c:73</td><td>grow</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">13 static cost units (v2) · 1.9× median · top 33%</td></tr>
-<tr><td>4</td><td><a href="#finding-PERF-C-STR-001-src-main-c-52-9">PERF-C-STR-001:src/main.c:52:9</a></td><td>String accumulation in loop</td><td>src/main.c:52</td><td>join</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.0× median · top 67%</td></tr>
-<tr><td>5</td><td><a href="#finding-PERF-C-ALLOC-003-src-main-c-73-15">PERF-C-ALLOC-003:src/main.c:73:15</a></td><td>Realloc linear growth in loop</td><td>src/main.c:73</td><td>grow</td><td>hot</td><td>MEDIUM</td><td>production</td><td class="wrap">13 static cost units (v2) · 1.9× median · top 33%</td></tr>
-<tr><td>6</td><td><a href="#finding-PERF-C-LOOP-002-src-main-c-80-9">PERF-C-LOOP-002:src/main.c:80:9</a></td><td>Expensive setup or I/O call inside loop</td><td>src/main.c:80</td><td>report</td><td>hot</td><td>MEDIUM</td><td>production</td><td class="wrap">9 static cost units (v2) · 1.3× median · top 50%</td></tr>
-<tr><td>7</td><td><a href="#finding-PERF-C-CALL-002-src-main-c-84-1">PERF-C-CALL-002:src/main.c:84:1</a></td><td>High cyclomatic complexity</td><td>src/main.c:84</td><td>dispatch</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">57 static cost units (v2) · 8.1× median · top 8%</td></tr>
-<tr><td>8</td><td><a href="#finding-PERF-C-LOOP-001-src-main-c-61-13">PERF-C-LOOP-001:src/main.c:61:13</a></td><td>Deeply nested loops</td><td>src/main.c:61</td><td>deep_sum</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">27 static cost units (v2) · 3.9× median · top 17%</td></tr>
-<tr><td>9</td><td><a href="#finding-PERF-C-ALLOC-002-src-main-c-44-9">PERF-C-ALLOC-002:src/main.c:44:9</a></td><td>Deallocation inside loop</td><td>src/main.c:44</td><td>drain</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.0× median · top 58%</td></tr>
-<tr><td>10</td><td><a href="#finding-PERF-C-STR-003-src-main-c-52-9">PERF-C-STR-003:src/main.c:52:9</a></td><td>Unbounded string operation</td><td>src/main.c:52</td><td>join</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.0× median · top 67%</td></tr>
-<tr><td>11</td><td><a href="#finding-PERF-C-MEM-001-src-main-c-118-19">PERF-C-MEM-001:src/main.c:118:19</a></td><td>sizeof misuse in allocation argument</td><td>src/main.c:118</td><td>clone_row</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">5 static cost units (v2) · 0.7× median · top 75%</td></tr>
-<tr><td>12</td><td><a href="#finding-PERF-C-TYPE-001-src-main-c-113-1">PERF-C-TYPE-001:src/main.c:113:1</a></td><td>Large struct passed by value</td><td>src/main.c:113</td><td>weigh</td><td>warn</td><td>LOW</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.1× median · top 100%</td></tr>
-<tr><td>13</td><td><a href="#finding-PERF-C-LOOP-004-src-main-c-62-24">PERF-C-LOOP-004:src/main.c:62:24</a></td><td>Variable-divisor division in innermost loop</td><td>src/main.c:62</td><td>deep_sum</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">27 static cost units (v2) · 3.9× median · top 17%</td></tr>
-<tr><td>14</td><td><a href="#finding-PERF-C-ARCH-003-src-main-c-127-20">PERF-C-ARCH-003:src/main.c:127:20</a></td><td>Cross-file call coupling</td><td>src/main.c:127</td><td>main</td><td>info</td><td>LOW</td><td>production</td><td class="wrap">11 static cost units (v2) · 1.6× median · top 42%</td></tr>
+<tr><td>1</td><td><a href="#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001:src/main.c:34:21</a></td><td class="wrap">Heap allocation inside loop</td><td class="wrap">src/main.c:34</td><td class="wrap">process</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">14 static cost units (v2) · 2.0× median · top 25%</td></tr>
+<tr><td>2</td><td><a href="#finding-PERF-C-ALLOC-002-src-main-c-37-9">PERF-C-ALLOC-002:src/main.c:37:9</a></td><td class="wrap">Deallocation inside loop</td><td class="wrap">src/main.c:37</td><td class="wrap">process</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">14 static cost units (v2) · 2.0× median · top 25%</td></tr>
+<tr><td>3</td><td><a href="#finding-PERF-C-ALLOC-001-src-main-c-73-15">PERF-C-ALLOC-001:src/main.c:73:15</a></td><td class="wrap">Heap allocation inside loop</td><td class="wrap">src/main.c:73</td><td class="wrap">grow</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">13 static cost units (v2) · 1.9× median · top 33%</td></tr>
+<tr><td>4</td><td><a href="#finding-PERF-C-STR-001-src-main-c-52-9">PERF-C-STR-001:src/main.c:52:9</a></td><td class="wrap">String accumulation in loop</td><td class="wrap">src/main.c:52</td><td class="wrap">join</td><td>hot</td><td>HIGH</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.0× median · top 67%</td></tr>
+<tr><td>5</td><td><a href="#finding-PERF-C-ALLOC-003-src-main-c-73-15">PERF-C-ALLOC-003:src/main.c:73:15</a></td><td class="wrap">Realloc linear growth in loop</td><td class="wrap">src/main.c:73</td><td class="wrap">grow</td><td>hot</td><td>MEDIUM</td><td>production</td><td class="wrap">13 static cost units (v2) · 1.9× median · top 33%</td></tr>
+<tr><td>6</td><td><a href="#finding-PERF-C-LOOP-002-src-main-c-80-9">PERF-C-LOOP-002:src/main.c:80:9</a></td><td class="wrap">Expensive setup or I/O call inside loop</td><td class="wrap">src/main.c:80</td><td class="wrap">report</td><td>hot</td><td>MEDIUM</td><td>production</td><td class="wrap">9 static cost units (v2) · 1.3× median · top 50%</td></tr>
+<tr><td>7</td><td><a href="#finding-PERF-C-CALL-002-src-main-c-84-1">PERF-C-CALL-002:src/main.c:84:1</a></td><td class="wrap">High cyclomatic complexity</td><td class="wrap">src/main.c:84</td><td class="wrap">dispatch</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">57 static cost units (v2) · 8.1× median · top 8%</td></tr>
+<tr><td>8</td><td><a href="#finding-PERF-C-LOOP-001-src-main-c-61-13">PERF-C-LOOP-001:src/main.c:61:13</a></td><td class="wrap">Deeply nested loops</td><td class="wrap">src/main.c:61</td><td class="wrap">deep_sum</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">27 static cost units (v2) · 3.9× median · top 17%</td></tr>
+<tr><td>9</td><td><a href="#finding-PERF-C-ALLOC-002-src-main-c-44-9">PERF-C-ALLOC-002:src/main.c:44:9</a></td><td class="wrap">Deallocation inside loop</td><td class="wrap">src/main.c:44</td><td class="wrap">drain</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.0× median · top 58%</td></tr>
+<tr><td>10</td><td><a href="#finding-PERF-C-STR-003-src-main-c-52-9">PERF-C-STR-003:src/main.c:52:9</a></td><td class="wrap">Unbounded string operation</td><td class="wrap">src/main.c:52</td><td class="wrap">join</td><td>warn</td><td>HIGH</td><td>production</td><td class="wrap">7 static cost units (v2) · 1.0× median · top 67%</td></tr>
+<tr><td>11</td><td><a href="#finding-PERF-C-MEM-001-src-main-c-118-19">PERF-C-MEM-001:src/main.c:118:19</a></td><td class="wrap">sizeof misuse in allocation argument</td><td class="wrap">src/main.c:118</td><td class="wrap">clone_row</td><td>warn</td><td>MEDIUM</td><td>production</td><td class="wrap">5 static cost units (v2) · 0.7× median · top 75%</td></tr>
+<tr><td>12</td><td><a href="#finding-PERF-C-TYPE-001-src-main-c-113-1">PERF-C-TYPE-001:src/main.c:113:1</a></td><td class="wrap">Large struct passed by value</td><td class="wrap">src/main.c:113</td><td class="wrap">weigh</td><td>warn</td><td>LOW</td><td>production</td><td class="wrap">1 static cost units (v2) · 0.1× median · top 100%</td></tr>
+<tr><td>13</td><td><a href="#finding-PERF-C-LOOP-004-src-main-c-62-24">PERF-C-LOOP-004:src/main.c:62:24</a></td><td class="wrap">Variable-divisor division in innermost loop</td><td class="wrap">src/main.c:62</td><td class="wrap">deep_sum</td><td>info</td><td>MEDIUM</td><td>production</td><td class="wrap">27 static cost units (v2) · 3.9× median · top 17%</td></tr>
+<tr><td>14</td><td><a href="#finding-PERF-C-ARCH-003-src-main-c-127-20">PERF-C-ARCH-003:src/main.c:127:20</a></td><td class="wrap">Cross-file call coupling</td><td class="wrap">src/main.c:127</td><td class="wrap">main</td><td>info</td><td>LOW</td><td>production</td><td class="wrap">11 static cost units (v2) · 1.6× median · top 42%</td></tr>
 </tbody>
 </table>
 </div>
@@ -122,8 +120,8 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-ALLOC-001-src-main-c-34-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:34:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:34:21</td><td>process</td><td class="wrap">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ALLOC-001-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:73:15</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td class="wrap">per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=realloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-001-src-main-c-34-21" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:34:21</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:34:21</td><td class="wrap">process</td><td class="wrap">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=malloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-001-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-001:src/main.c:73:15</td><td>PERF-C-ALLOC-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:73:15</td><td class="wrap">grow</td><td class="wrap">per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates runtime; hoisting or buffer reuse is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=realloc, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -134,8 +132,8 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-ALLOC-002-src-main-c-37-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:37:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:37:9</td><td>process</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
-<tr id="finding-PERF-C-ALLOC-002-src-main-c-44-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:44:9</td><td>PERF-C-ALLOC-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:44:9</td><td>drain</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-002-src-main-c-37-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:37:9</td><td>PERF-C-ALLOC-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:37:9</td><td class="wrap">process</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">alloc_cooccurrence=true, callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-002-src-main-c-44-9" data-path="src/main.c"><td>PERF-C-ALLOC-002:src/main.c:44:9</td><td>PERF-C-ALLOC-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:44:9</td><td class="wrap">drain</td><td class="wrap">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</td><td class="wrap">callee=free, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -146,7 +144,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-ALLOC-003-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-003:src/main.c:73:15</td><td>PERF-C-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:73:15</td><td>grow</td><td class="wrap">&#39;realloc&#39; grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=realloc, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ALLOC-003-src-main-c-73-15" data-path="src/main.c"><td>PERF-C-ALLOC-003:src/main.c:73:15</td><td>PERF-C-ALLOC-003</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:73:15</td><td class="wrap">grow</td><td class="wrap">&#39;realloc&#39; grows by addition inside a loop at depth 1 — each growth copies the whole buffer; doubling the capacity instead of adding a fixed amount is a candidate optimization</td><td class="wrap">alloc_site_index=1, callee=realloc, growth=additive, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -157,7 +155,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-ARCH-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-ARCH-002:src/main.c:84:1</td><td>PERF-C-ARCH-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td class="wrap">directory &#39;src&#39; aggregates complexity 42 across 12 function(s) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization</td><td class="wrap">alloc_site_density=39.2156862745098, complexity_sum=42, function_count=12, max_loop_depth=3, path_prefix=src</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ARCH-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-ARCH-002:src/main.c:84:1</td><td>PERF-C-ARCH-002</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td class="wrap">dispatch</td><td class="wrap">directory &#39;src&#39; aggregates complexity 42 across 12 function(s) — the hottest component in this scan; splitting or simplifying its hottest functions is a candidate optimization</td><td class="wrap">alloc_site_density=39.2156862745098, complexity_sum=42, function_count=12, max_loop_depth=3, path_prefix=src</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -168,7 +166,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-LOOP-002-src-main-c-80-9" data-path="src/main.c"><td>PERF-C-LOOP-002:src/main.c:80:9</td><td>PERF-C-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:80:9</td><td>report</td><td class="wrap">&#39;printf&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td class="wrap">callee=printf, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-LOOP-002-src-main-c-80-9" data-path="src/main.c"><td>PERF-C-LOOP-002:src/main.c:80:9</td><td>PERF-C-LOOP-002</td><td>hot</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:80:9</td><td class="wrap">report</td><td class="wrap">&#39;printf&#39; runs every iteration at loop depth 1 — hoisting the call out of the loop or batching its work is a candidate optimization</td><td class="wrap">callee=printf, conditional_guarded=false, io_kind=hoistable, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -179,7 +177,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-STR-001-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:52:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td class="wrap">&#39;strcat&#39; accumulates into &#39;out&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td class="wrap">callee=strcat, dest=out, loop_depth=1</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-STR-001-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-001:src/main.c:52:9</td><td>PERF-C-STR-001</td><td>hot</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td class="wrap">join</td><td class="wrap">&#39;strcat&#39; accumulates into &#39;out&#39; at loop depth 1 — each call rescans the destination from the start; tracking the running length or sizing the buffer up front is a candidate optimization</td><td class="wrap">callee=strcat, dest=out, loop_depth=1</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -190,7 +188,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-CALL-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-CALL-002:src/main.c:84:1</td><td>PERF-C-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td>dispatch</td><td class="wrap">&#39;dispatch&#39; branches 23 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td class="wrap">complexity=23, function=dispatch, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
+<tr id="finding-PERF-C-CALL-002-src-main-c-84-1" data-path="src/main.c"><td>PERF-C-CALL-002:src/main.c:84:1</td><td>PERF-C-CALL-002</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:84:1</td><td class="wrap">dispatch</td><td class="wrap">&#39;dispatch&#39; branches 23 ways (threshold 15) — complex control flow hides hot paths and resists testing; extracting helpers or table-driving the dispatch is a candidate optimization</td><td class="wrap">complexity=23, function=dispatch, threshold=15</td><td>min_complexity=15</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -201,7 +199,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-LOOP-001-src-main-c-61-13" data-path="src/main.c"><td>PERF-C-LOOP-001:src/main.c:61:13</td><td>PERF-C-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:61:13</td><td>deep_sum</td><td class="wrap">loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or adding early exits is a candidate optimization</td><td class="wrap">max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
+<tr id="finding-PERF-C-LOOP-001-src-main-c-61-13" data-path="src/main.c"><td>PERF-C-LOOP-001:src/main.c:61:13</td><td>PERF-C-LOOP-001</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:61:13</td><td class="wrap">deep_sum</td><td class="wrap">loops nest 3 deep here (chain reaches depth 3) — flattening the nesting or adding early exits is a candidate optimization</td><td class="wrap">max_depth=3, nest_depth=3</td><td>min_nesting_depth=3</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -212,7 +210,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-MEM-001-src-main-c-118-19" data-path="src/main.c"><td>PERF-C-MEM-001:src/main.c:118:19</td><td>PERF-C-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:118:19</td><td>clone_row</td><td class="wrap">&#39;malloc&#39; size argument carries a sizeof misuse shape (pointer_param_sizeof) — the allocated byte count likely does not match the element type; sizing by the pointee type is a candidate fix</td><td class="wrap">callee=malloc, misuse=pointer_param_sizeof</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-MEM-001-src-main-c-118-19" data-path="src/main.c"><td>PERF-C-MEM-001:src/main.c:118:19</td><td>PERF-C-MEM-001</td><td>warn</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:118:19</td><td class="wrap">clone_row</td><td class="wrap">&#39;malloc&#39; size argument carries a sizeof misuse shape (pointer_param_sizeof) — the allocated byte count likely does not match the element type; sizing by the pointee type is a candidate fix</td><td class="wrap">callee=malloc, misuse=pointer_param_sizeof</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -223,7 +221,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-STR-003-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:52:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td>join</td><td class="wrap">unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td class="wrap">callee=strcat</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-STR-003-src-main-c-52-9" data-path="src/main.c"><td>PERF-C-STR-003:src/main.c:52:9</td><td>PERF-C-STR-003</td><td>warn</td><td>HIGH</td><td>syntactic</td><td>src/main.c:52:9</td><td class="wrap">join</td><td class="wrap">unbounded operation via &#39;strcat&#39; — a bounded variant or explicit length tracking is a candidate optimization</td><td class="wrap">callee=strcat</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -234,7 +232,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-TYPE-001-src-main-c-113-1" data-path="src/main.c"><td>PERF-C-TYPE-001:src/main.c:113:1</td><td>PERF-C-TYPE-001</td><td>warn</td><td>LOW</td><td>syntactic</td><td>src/main.c:113:1</td><td>weigh</td><td class="wrap">parameters &#39;struct Big b&#39; (struct &#39;Big&#39;, ~48 bytes) are copied by value on every call under the LP64 estimate — passing pointers or taking the structs by reference is a candidate optimization</td><td class="wrap">estimated_sizes=48, params=struct Big b, structs=Big, threshold=32</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-TYPE-001-src-main-c-113-1" data-path="src/main.c"><td>PERF-C-TYPE-001:src/main.c:113:1</td><td>PERF-C-TYPE-001</td><td>warn</td><td>LOW</td><td>syntactic</td><td>src/main.c:113:1</td><td class="wrap">weigh</td><td class="wrap">parameters &#39;struct Big b&#39; (struct &#39;Big&#39;, ~48 bytes) are copied by value on every call under the LP64 estimate — passing pointers or taking the structs by reference is a candidate optimization</td><td class="wrap">estimated_sizes=48, params=struct Big b, structs=Big, threshold=32</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -245,7 +243,7 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-ARCH-003-src-main-c-127-20" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:127:20</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:127:20</td><td>main</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-ARCH-003-src-main-c-127-20" data-path="src/main.c"><td>PERF-C-ARCH-003:src/main.c:127:20</td><td>PERF-C-ARCH-003</td><td>info</td><td>LOW</td><td>syntactic</td><td>src/main.c:127:20</td><td class="wrap">main</td><td class="wrap">call to &#39;util_init&#39; matches a definition in &#39;src/util.c&#39; by name only — LOW-confidence hypothesis pending semantic resolution; confirming the match (or co-locating hot callees) is a candidate optimization</td><td class="wrap">callee_name=util_init, matched_path=src/util.c</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
@@ -256,49 +254,14 @@ figure.pz img{max-width:none;touch-action:none}
 <table>
 <thead><tr><th>finding_id</th><th>rule</th><th>severity</th><th>confidence</th><th>resolver</th><th>location</th><th>symbol</th><th>message</th><th>evidence</th><th>threshold</th><th>flags</th></tr></thead>
 <tbody>
-<tr id="finding-PERF-C-LOOP-004-src-main-c-62-24" data-path="src/main.c"><td>PERF-C-LOOP-004:src/main.c:62:24</td><td>PERF-C-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:62:24</td><td>deep_sum</td><td class="wrap">&#39;/&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td class="wrap">divisor=d, divisor_kind=identifier, op=/</td><td>n/a</td><td>none</td></tr>
+<tr id="finding-PERF-C-LOOP-004-src-main-c-62-24" data-path="src/main.c"><td>PERF-C-LOOP-004:src/main.c:62:24</td><td>PERF-C-LOOP-004</td><td>info</td><td>MEDIUM</td><td>syntactic</td><td>src/main.c:62:24</td><td class="wrap">deep_sum</td><td class="wrap">&#39;/&#39; by a non-constant divisor executes in the innermost loop — real integer division runs per iteration; hoisting loop-invariant divisors or precomputing reciprocals is a candidate optimization</td><td class="wrap">divisor=d, divisor_kind=identifier, op=/</td><td>n/a</td><td>none</td></tr>
 </tbody>
 </table>
 </div>
 </section>
 </section>
 <footer>
-<p>Generated offline — no network access. Interactive enhancements (pan/zoom, click-to-filter) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+<p>Generated offline — no network access. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
 </footer>
-<script>
-(function(){
-"use strict";
-function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
-function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
-function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
-function enhance(fig){
-var img=fig.querySelector("img");if(!img){return;}
-var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
-var drag=null;
-img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
-img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
-img.addEventListener("pointerup",function(){drag=null;});
-img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
-var bar=document.createElement("div");
-bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
-bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
-bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
-fig.appendChild(bar);
-}
-function boot(){
-var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
-var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
-var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
-if(!label||!clear||rows.length===0){return;}
-function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
-function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
-clear.addEventListener("click",reset);
-function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
-wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
-wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
-}
-if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
-})
-</script>
 </body>
 </html>

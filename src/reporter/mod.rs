@@ -647,7 +647,7 @@ pub fn render_html_with_story_at_width(
     html_files(&mut out, doc, emitted_charts);
     html_findings(&mut out, doc);
     html_appendix_a(&mut out, doc);
-    html_footer(&mut out);
+    html_footer(&mut out, true);
     // Exactly one trailing newline (output-contract §2 encoding rule; the
     // writer normalizes anyway).
     while out.ends_with('\n') {
@@ -706,7 +706,7 @@ pub fn render_findings_detail_html(doc: &MetricsDocument) -> String {
     html_header(&mut out, doc, false);
     html_detail_nav(&mut out);
     html_detail_findings(&mut out, doc);
-    html_footer(&mut out);
+    html_footer(&mut out, false);
     while out.ends_with('\n') {
         out.pop();
     }
@@ -734,7 +734,7 @@ fn html_ranked_actions(out: &mut String, doc: &MetricsDocument, anchors: &[Strin
         let location = format!("{}:{}", finding.path, finding.span.start_line);
         out.push_str(&format!(
             "<tr><td>{rank}</td><td><a href=\"#{anchor}\">{id}</a></td>\
-             <td>{title}</td><td>{location}</td><td>{function}</td>\
+             <td class=\"wrap\">{title}</td><td class=\"wrap\">{location}</td><td class=\"wrap\">{function}</td>\
              <td>{severity}</td><td>{confidence}</td><td>{class}</td>\
              <td class=\"wrap\">{cost}</td></tr>\n",
             rank = row.rank,
@@ -889,7 +889,7 @@ pub fn render_profile_queue_html(doc: &MetricsDocument) -> String {
         out.push_str("</tbody>\n</table>\n</div>\n");
     }
     out.push_str("</section>\n");
-    html_footer(&mut out);
+    html_footer(&mut out, false);
     while out.ends_with('\n') {
         out.pop();
     }
@@ -904,7 +904,8 @@ fn html_profile_head(out: &mut String, doc: &MetricsDocument) {
     let page_css = "\
 body{max-width:72rem;margin:2rem auto;padding:0 1rem}\n\
 #profile-queue tbody td{white-space:nowrap}\n\
-#profile-queue td.wrap,#profile-queue th{white-space:normal;overflow-wrap:anywhere}\n";
+#profile-queue td.wrap,#profile-queue th{white-space:normal;overflow-wrap:anywhere}\n\
+#profile-queue th:first-child,#profile-queue td:first-child{width:3.5rem;white-space:nowrap}\n";
     html_page_head(out, &title, page_css, "");
 }
 
@@ -1518,14 +1519,19 @@ fn render_appendix_b(out: &mut String, semantic: bool) {
 /// `--page-gutter`), the dense findings table, figure zoom, and the
 /// details/summary affordances. Layered on top of the shared warm-paper
 /// shell emitted by [`html_page_head`].
-const REPORT_PAGE_CSS: &str = "\
+/// Shared `#findings` table sizing (report + detail pages; one source so the
+/// two dense-table page shells cannot drift).
+const FINDINGS_TABLE_CSS: &str = "\
 #findings table{min-width:72rem}\n\
 #findings tbody td{white-space:nowrap}\n\
 #findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
+#ranked-actions td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:10rem;max-width:28rem}\n";
+
+/// Report-only page CSS (findings table sizing comes from
+/// [`FINDINGS_TABLE_CSS`]).
+const REPORT_PAGE_CSS: &str = "\
 figure img{display:block;margin:0 auto}\n\
 figure.pz img{max-width:100%;touch-action:none}\n\
-#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
-#filter-bar{margin:.5rem 0}\n\
 #findings summary{cursor:pointer;list-style:none}\n\
 #findings summary::-webkit-details-marker{display:none}\n\
 #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
@@ -1541,8 +1547,9 @@ fn html_head(out: &mut String, doc: &MetricsDocument, width: ReportWidth) {
     let page_css = format!(
         ":root{{--report-max:{};--page-gutter:clamp(1rem,calc(var(--report-max)*0.016),2.5rem)}}\n\
          body{{max-width:min(100%,var(--report-max));box-sizing:border-box;margin:2rem auto;padding:0 var(--page-gutter)}}\n\
-         {}",
+         {}{}",
         width.css_max_width(),
+        FINDINGS_TABLE_CSS,
         REPORT_PAGE_CSS,
     );
     html_page_head(
@@ -1632,55 +1639,36 @@ fn html_detail_nav(out: &mut String) {
     );
 }
 
-/// Fixed inline enhancement script (Option B slice 2): hand-rolled
-/// pan/zoom for `figure.pz` chart figures (drag + wheel + buttons via CSS
-/// transforms over the existing linked `<img>` — the SVGs are never inlined
-/// or duplicated) and click-to-filter for the findings table (pure DOM hide
-/// via `hidden` over already-rendered rows, no re-fetch, no network).
+/// Fixed inline enhancement script: hand-rolled pan/zoom for `figure.pz`
+/// chart figures (drag + wheel + buttons via CSS transforms over the existing
+/// linked `<img>` — the SVGs are never inlined or duplicated).
 ///
 /// Byte-determinism: this source is a FIXED string constant — no timestamps,
-/// ids, or counters in the generated code. Every interpolated document value
-/// is escaped at RENDER time via [`escape_html`]; the script itself only
-/// reads `data-*` attributes and writes `textContent`/`hidden`/style (never
-/// `innerHTML`/`outerHTML`, `insertAdjacentHTML`, `document.write`, `eval` /
-/// `Function(`, string-arg timers, `fetch`/`XHR`, `Date`, or `random`). Row
-/// click-to-filter ignores clicks originating inside an inner `a[href]`
-/// (bubbling guard — following a drill-down/detail link never also filters).
-/// All handlers bind via `addEventListener` (no inline `on*=` attributes),
-/// and the page is fully usable with JS disabled (all rows present; the
-/// script only enhances).
+/// ids, or counters in the generated code. The script only reads/writes local
+/// DOM style, binds via `addEventListener` (no inline `on*=` attributes), and
+/// is fully usable with JS disabled (the figures stay plain linked images).
+/// No network, no `innerHTML`/`eval`/timers/`Date`/`random`.
 const REPORT_SCRIPT: &str = r##"(function(){
-"use strict";
-function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
-function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
-function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
-function enhance(fig){
-var img=fig.querySelector("img");if(!img){return;}
-var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
-var drag=null;
-img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
-img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
-img.addEventListener("pointerup",function(){drag=null;});
-img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
-var bar=document.createElement("div");
-bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
-bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
-bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
-fig.appendChild(bar);
-}
-function boot(){
-var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}
-var rows=Array.prototype.slice.call(document.querySelectorAll("#findings tbody tr"));
-var label=document.getElementById("filter-label");var clear=document.getElementById("filter-clear");
-if(!label||!clear||rows.length===0){return;}
-function reset(){for(var i=0;i<rows.length;i++){rows[i].hidden=false;}label.textContent="all findings";clear.hidden=true;}
-function show(kind,value,match){var n=0;for(var i=0;i<rows.length;i++){var ok=match(rows[i]);rows[i].hidden=!ok;if(ok){n++;}}label.textContent="filter: "+kind+" "+value+" ("+n+" of "+rows.length+")";clear.hidden=false;}
-clear.addEventListener("click",reset);
-function wire(list,kind,match){for(var i=0;i<list.length;i++){(function(tr){tr.addEventListener("click",function(e){if(e&&e.target&&e.target.closest&&e.target.closest("a[href]")){return;}var v=tr.getAttribute(kind)||"";show(kind==="data-path"?"file":"component",v,function(r){return match(r,v);});});})(list[i]);}}
-wire(document.querySelectorAll("#files tbody tr[data-path]"),"data-path",function(r,v){return r.getAttribute("data-path")===v;});
-wire(document.querySelectorAll("#components tbody tr[data-prefix]"),"data-prefix",function(r,v){var p=r.getAttribute("data-path")||"";return p===v||v==="."||p.indexOf(v+"/")===0;});
-}
-if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+ "use strict";
+ function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
+ function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
+ function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
+ function enhance(fig){
+ var img=fig.querySelector("img");if(!img){return;}
+ var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
+ var drag=null;
+ img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
+ img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
+ img.addEventListener("pointerup",function(){drag=null;});
+ img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
+ var bar=document.createElement("div");
+ bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
+ bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
+ bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
+ fig.appendChild(bar);
+ }
+ function boot(){var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}}
+ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
 })"##;
 
 /// Byte-exact accessor for the fixed enhancement script (slice-2 golden and
@@ -1852,6 +1840,19 @@ fn html_map(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]) 
     out.push_str(&atlas_brief::render_noise(&view));
     out.push_str(&atlas_brief::render_links(&view, doc, emitted_charts));
     out.push_str("</section>\n");
+    // JS-off static fallback: the reveal animations start columns at
+    // `opacity:0` with a 1.2s+ delay (`atlas-column-reveal ... both`), so a
+    // scripting-disabled browser would show an empty scaffold until the
+    // animation finishes. Force the canonical final frame immediately — the
+    // same rule the reduced-motion/print fallbacks already use — so the
+    // static map is readable with JS disabled from the first paint. The
+    // block trails the section content so the first-page chrome order is
+    // unchanged; the style is global.
+    out.push_str(
+        "<noscript><style>#map #atlas-canvas *{animation:none!important;\
+         opacity:1!important;transform:none!important;stroke-dashoffset:0!important}\
+         </style></noscript>\n",
+    );
     out.push_str("</section>\n");
 }
 
@@ -2082,10 +2083,6 @@ fn html_files(out: &mut String, doc: &MetricsDocument, emitted_charts: &[String]
 /// map the detail page uses, so every exemplar href resolves there.
 fn html_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<section id=\"findings\">\n<h2>Findings</h2>\n");
-    out.push_str(
-        "<div id=\"filter-bar\"><span id=\"filter-label\">all findings</span> \
-         <button id=\"filter-clear\" type=\"button\" hidden>clear</button></div>\n",
-    );
     if doc.findings.is_empty() {
         out.push_str("<p>No findings.</p>\n</section>\n");
         return;
@@ -2139,14 +2136,9 @@ fn html_findings(out: &mut String, doc: &MetricsDocument) {
 /// (promoted VERBATIM — this is the C-split seam). Finding-row anchors come
 /// from the SAME [`finding_anchor_assignments`] map as `report.html`, so
 /// every `findings-detail.html#…` link resolves here. The `#findings`
-/// section id + `filter-bar` controls are reused verbatim so the fixed
-/// [`REPORT_SCRIPT`] click-to-filter keeps working on this page.
+/// section id is reused so the shared shell and anchor contract stay stable.
 fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
     out.push_str("<section id=\"findings\">\n<h2>Findings detail</h2>\n");
-    out.push_str(
-        "<div id=\"filter-bar\"><span id=\"filter-label\">all findings</span> \
-         <button id=\"filter-clear\" type=\"button\" hidden>clear</button></div>\n",
-    );
     if doc.findings.is_empty() {
         out.push_str("<p>No findings.</p>\n</section>\n");
         return;
@@ -2185,21 +2177,20 @@ fn html_detail_findings(out: &mut String, doc: &MetricsDocument) {
 /// Detail-page head: the shared warm-paper shell at the fixed 72rem detail
 /// width (the report page is fluid and may be pinned by `--report-width`,
 /// while this page and the profile-queue page stay dense at 72rem).
-fn html_detail_head(out: &mut String, doc: &MetricsDocument) {
-    let title = format!("Perfpal Findings Detail — schema {}", doc.schema_version);
-    let page_css = "\
-body{max-width:72rem;margin:2rem auto;padding:0 1rem}\n\
-#findings table{min-width:72rem}\n\
-#findings tbody td{white-space:nowrap}\n\
-#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}\n\
+const DETAIL_PAGE_CSS: &str = "\
 figure.pz img{max-width:none;touch-action:none}\n\
-#files tbody tr[data-path],#components tbody tr[data-prefix]{cursor:pointer}\n\
-#filter-bar{margin:.5rem 0}\n\
 #findings summary{cursor:pointer;list-style:none}\n\
 #findings summary::-webkit-details-marker{display:none}\n\
 #findings summary::before{content:\"▸\";display:inline-block;margin-right:.35em}\n\
 #findings details[open]>summary::before{transform:rotate(90deg)}\n";
-    html_page_head(out, &title, page_css, "");
+
+fn html_detail_head(out: &mut String, doc: &MetricsDocument) {
+    let title = format!("Perfpal Findings Detail — schema {}", doc.schema_version);
+    let page_css = format!(
+        "body{{max-width:72rem;margin:2rem auto;padding:0 1rem}}\n{}{}",
+        FINDINGS_TABLE_CSS, DETAIL_PAGE_CSS,
+    );
+    html_page_head(out, &title, &page_css, "");
 }
 
 /// Full findings-table renderer, kept as a SEPARATE function by design
@@ -2257,7 +2248,7 @@ fn html_finding_row(out: &mut String, f: &FindingEntry, anchor: &str) {
     out.push_str(&format!(
         "<tr id=\"{anchor}\" data-path=\"{data_path}\"><td>{id}</td><td>{rule}</td><td>{severity}</td>\
          <td>{confidence}</td><td>{resolver}</td>\
-         <td>{path}:{line}:{col}</td><td>{symbol}</td><td class=\"wrap\">{message}</td>\
+         <td>{path}:{line}:{col}</td><td class=\"wrap\">{symbol}</td><td class=\"wrap\">{message}</td>\
          <td class=\"wrap\">{evidence}</td><td>{threshold}</td><td>{flags}</td></tr>\n",
         anchor = escape_html(anchor),
         data_path = escape_html(&f.path),
@@ -2326,20 +2317,25 @@ fn html_appendix_a(out: &mut String, doc: &MetricsDocument) {
     out.push_str("</tbody>\n</table>\n</div>\n</section>\n");
 }
 
-fn html_footer(out: &mut String) {
+fn html_footer(out: &mut String, with_script: bool) {
+    out.push_str("<footer>\n<p>Generated offline — no network access.");
+    if with_script {
+        out.push_str(" Interactive enhancements (pan/zoom) run locally with no network.");
+    }
     out.push_str(
-        "<footer>\n<p>Generated offline — no network access. Interactive \
-         enhancements (pan/zoom, click-to-filter) run locally with no network. \
-         Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>\n</footer>\n",
+        " Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>\n</footer>\n",
     );
     // Slice-2 enhancement script: fixed source (REPORT_SCRIPT), exactly one
     // block, bound via addEventListener only. Content is static text — no
-    // document data is interpolated into the script. The detail and
-    // profile-queue pages keep the same fixed block so their filter bar and
-    // pan/zoom controls stay live (report-format §2 filterable contract).
-    out.push_str("<script>\n");
-    out.push_str(REPORT_SCRIPT);
-    out.push_str("\n</script>\n</body>\n</html>\n");
+    // document data is interpolated into the script. Only report.html carries
+    // it now (dead findings-filter UI was removed with the C-split); detail,
+    // profile-queue, and drill pages are script-free.
+    if with_script {
+        out.push_str("<script>\n");
+        out.push_str(REPORT_SCRIPT);
+        out.push_str("\n</script>\n");
+    }
+    out.push_str("</body>\n</html>\n");
 }
 
 /// Incident-edge degree of one file: resolved include edges touching `path`

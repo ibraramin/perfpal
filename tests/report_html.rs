@@ -1,5 +1,5 @@
 //! `report.html` locks (Option B slice 2: slice-1 LINKED page + one fixed
-//! enhancement script — pan/zoom + click-to-filter, no libraries).
+//! enhancement script — pan/zoom only, no libraries).
 //!
 //! The HTML artifact is a pure function of `(doc, emitted_charts)` with NO
 //! provenance surfaces (no `started_at` / `duration_ms` / `root_path`), so
@@ -1262,12 +1262,8 @@ fn double_scan_report_html_byte_identical_unmasked() {
     let detail_text = String::from_utf8(first_detail_html).expect("detail HTML is UTF-8");
     assert_eq!(
         detail_text.matches("<script").count(),
-        1,
-        "findings-detail.html must carry exactly one fixed script"
-    );
-    assert!(
-        detail_text.contains(report_script()),
-        "findings-detail.html must keep REPORT_SCRIPT (filterable contract)"
+        0,
+        "findings-detail.html is script-free"
     );
     assert!(
         !detail_text.contains(&target),
@@ -1435,11 +1431,11 @@ fn enhancement_script_contains_no_banned_apis() {
 }
 
 // ---------------------------------------------------------------------------
-// 12. Slice-2 locks: click-to-filter controls + DOM hooks present
+// 12. Post-C-split locks: the dead findings-filter affordance is gone
 // ---------------------------------------------------------------------------
 
 #[test]
-fn click_to_filter_controls_and_hooks_present() {
+fn dead_findings_filter_affordance_is_removed() {
     let mut doc = base_doc();
     doc.files = vec![file_entry("b.c", 30), file_entry("a.c", 10)];
     doc.scan.file_count = 2;
@@ -1449,29 +1445,36 @@ fn click_to_filter_controls_and_hooks_present() {
     ];
     doc.components = Some(vec![component(1, "src")]);
     let html = render_html(&doc, &["include-graph.svg".to_string()]);
-
-    // Visible filter bar with a reset control (hidden until a filter applies)
-    // on BOTH pages (the detail page reuses the bar so click-to-filter keeps
-    // working over its rows).
     let detail = render_findings_detail_html(&doc);
+
     for (page, name) in [(&html, "report.html"), (&detail, "detail")] {
+        for needle in ["filter-bar", "filter-label", "filter-clear"] {
+            assert!(
+                !page.contains(needle),
+                "{name}: dead filter control {needle} still present"
+            );
+        }
+    }
+
+    // The fixed script is pan/zoom only: no findings-filter code survives.
+    let script = report_script();
+    for needle in [
+        "filter",
+        "wire(",
+        "#findings",
+        "rows=Array",
+        "data-path",
+        "data-prefix",
+    ] {
         assert!(
-            page.contains("<div id=\"filter-bar\">"),
-            "filter bar missing in {name}"
-        );
-        assert!(
-            page.contains("<span id=\"filter-label\">all findings</span>"),
-            "filter label missing in {name}"
-        );
-        assert!(
-            page.contains("<button id=\"filter-clear\" type=\"button\" hidden>clear</button>"),
-            "filter clear missing in {name}"
+            !script.contains(needle),
+            "REPORT_SCRIPT still contains dead filter code {needle:?}"
         );
     }
-    // Detail findings rows carry the filter key (escaped at render time).
+
+    // Stable row keys survive (used by tests/anchors), but are not click keys.
     assert!(detail.contains("data-path=\"a.c\""));
     assert!(detail.contains("data-path=\"b.c\""));
-    // File + component rows carry the click-source keys.
     let files = section(&html, "<section id=\"files\">", "</section>");
     assert!(files.contains("data-path=\"a.c\""));
     let comps = section(&html, "<section id=\"components\">", "</section>");
@@ -1516,13 +1519,13 @@ fn all_content_present_without_javascript() {
         3,
         "every finding must render statically in the detail page (no-JS degradation)"
     );
-    // No row is hidden by default — filtering only ever hides at runtime
-    // (the single static `hidden` is the clear-button reset control).
+    // No row is hidden by default; the filter UI (and its hidden reset
+    // control) is gone post-C-split.
     for (page_section, name) in [(&report_findings, "report"), (&table, "detail")] {
         assert_eq!(
             page_section.matches("hidden").count(),
-            1,
-            "only the filter-clear button may carry `hidden` statically in {name}"
+            0,
+            "{name}: no static hidden rows/controls"
         );
     }
     let files = section(&html, "<section id=\"files\">", "</section>");
@@ -1653,8 +1656,8 @@ fn findings_fold_into_per_rule_details_with_honest_summary() {
     // No row hidden by default; groups fold via <details>, not `hidden`.
     assert_eq!(
         findings.matches("hidden").count(),
-        1,
-        "only the filter-clear button may carry `hidden` statically"
+        0,
+        "no static hidden rows/controls"
     );
 }
 

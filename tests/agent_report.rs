@@ -7,7 +7,7 @@
 //!   skeleton with named stubs;
 //! - every `detail_anchor` resolves inside `findings-detail.html`;
 //! - no `<script>`/network token in either artifact;
-//! - the emitted artifact set (the ten fixed files + `charts/graph.dot`);
+//! - the emitted artifact set (nine fixed files including `charts/graph.dot`);
 //! - the committed C1 sample is reproduced by the wired CLI;
 //! - A's step-12 human-page link resolves to both artifacts;
 //! - the ≤ 80 KB budget on the committed goldens (the three external

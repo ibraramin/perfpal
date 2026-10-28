@@ -37,7 +37,8 @@
 ## Decision
 
 1. **Remove `findings-detail.md`.** `findings-detail.html` is the canonical complete human detail
-   (ranked actions + every finding, filterable). The fixed artifact set becomes **9 files**:
+   (ranked actions + every finding, complete and static — no script, no filter bar). The fixed
+   artifact set becomes **9 files**:
    `metrics.json`, `metrics.schema.v1.8.json`, `report.md`, `report.html`, `findings-detail.html`,
    `profile-queue.md`, `profile-queue.html`, `agent-report.md`, `agent-actions.json` — plus the two
    Atlas drill pages, `charts/graph.dot` and the chart set.

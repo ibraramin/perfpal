@@ -18,7 +18,7 @@ only carrier of information: everything visible mid-animation is visible in the 
 - **No new JavaScript in the Atlas canvas/SVG/animation artifacts.** The Atlas canvas/SVG/animation artifacts contain no `<script>` and no
   event handlers. Animation is CSS keyframes and/or SVG SMIL only. The static SVG remains the
   canonical chart artifact. The report ships the unchanged fixed enhancement script
-  (`REPORT_SCRIPT`, pan/zoom/filter; fixed source, no interpolated data, no network) plus, per
+  (`REPORT_SCRIPT`, pan/zoom; fixed source, no interpolated data, no network) plus, per
   `ADR-0014`, one fixed `STORY_SCRIPT` and one inline `application/json` data block for the
   always-on Atlas story; the story player is outside the animation clause, and no new animation is
   added to the report beyond that player.
@@ -89,6 +89,7 @@ Animation is presentation only: the canvas is readable with animation disabled, 
 answer exists only mid-animation. The metric contract (`docs/specs/atlas-metrics.md`) applies to
 every frame: no time units, units + anchors present, one measured encoding (cost). ADR-0010 records
 the ADR-0002 amendment for the shipped renderer. The report ships the unchanged fixed
-`REPORT_SCRIPT` enhancement (pan/zoom + click-to-filter) plus, per ADR-0014, the fixed
+`REPORT_SCRIPT` enhancement (pan/zoom only; the C-split report page has no per-finding rows to
+filter) plus, per ADR-0014, the fixed
 `STORY_SCRIPT` and inline JSON data block for the always-on Atlas story; none of that is animation,
 and no new animation is added for the Atlas.

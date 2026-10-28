@@ -12,7 +12,6 @@ use perfpal::analyzer::{Confidence, Severity};
 use perfpal::cli::run_with;
 use perfpal::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverTier, Span};
 use perfpal::reporter::agent_report::{render_actions_json, render_markdown};
-use perfpal::reporter::report_script;
 use perfpal::reporter::{
     render_findings_detail_html, render_html, render_profile_queue, render_profile_queue_html,
     render_report,
@@ -273,36 +272,28 @@ fn shared_warm_paper_shell_and_no_external_assets() {
         }
     }
 
-    // Script policy: report keeps the A12 three; detail + profile-queue keep
-    // exactly one fixed enhancement block (filterable contract); drill pages
-    // are script-free. No page may load an external script.
+    // Script policy: report keeps the A12 three; detail, profile-queue, and
+    // drill pages are script-free (the dead findings-filter UI was removed).
     let report_html = fs::read_to_string(out.join("report.html")).expect("report.html");
     assert_eq!(report_html.matches("<script").count(), 3);
     assert_eq!(report_html.matches("</script>").count(), 3);
-    for name in ["findings-detail.html", "profile-queue.html"] {
+    for name in [
+        "findings-detail.html",
+        "profile-queue.html",
+        "atlas-weight.html",
+        "atlas-q2.html",
+    ] {
         let html = fs::read_to_string(out.join(name)).expect("page reads");
-        let blocks = script_blocks(&html);
-        assert_eq!(blocks.len(), 1, "{name}: one fixed script block");
-        assert_eq!(
-            blocks[0].1.trim_matches('\n'),
-            report_script().trim_matches('\n'),
-            "{name}: script body must be the fixed REPORT_SCRIPT"
-        );
-        assert!(
-            !blocks[0].0.contains("src="),
-            "{name}: script must be inline"
-        );
-    }
-    let detail_html = fs::read_to_string(out.join("findings-detail.html")).expect("detail");
-    for id in ["id=\"filter-bar\"", "id=\"filter-clear\""] {
-        assert!(
-            detail_html.contains(id),
-            "findings-detail.html: missing {id} (filterable contract)"
-        );
-    }
-    for name in ["atlas-weight.html", "atlas-q2.html"] {
-        let html = fs::read_to_string(out.join(name)).expect("drill page");
         assert_eq!(html.matches("<script").count(), 0, "{name}: script-free");
+    }
+    for name in ["report.html", "findings-detail.html", "profile-queue.html"] {
+        let html = fs::read_to_string(out.join(name)).expect("page");
+        for needle in ["filter-bar", "filter-label", "filter-clear"] {
+            assert!(
+                !html.contains(needle),
+                "{name}: dead filter control {needle} present"
+            );
+        }
     }
     for name in [
         "report.html",
@@ -322,24 +313,6 @@ fn shared_warm_paper_shell_and_no_external_assets() {
             "{name}: remote script/image found"
         );
     }
-}
-
-/// `(opening_tag, body)` for each inline script element.
-fn script_blocks(html: &str) -> Vec<(&str, &str)> {
-    let mut blocks = Vec::new();
-    let mut rest = html;
-    while let Some(i) = rest.find("<script") {
-        let tail = &rest[i..];
-        let tag_end = tail.find('>').expect("script tag close") + 1;
-        let body_start = i + tag_end;
-        let body_end = html[body_start..]
-            .find("</script>")
-            .expect("script body close")
-            + body_start;
-        blocks.push((&html[i..body_start], &html[body_start..body_end]));
-        rest = &html[body_end + "</script>".len()..];
-    }
-    blocks
 }
 
 // ---------------------------------------------------------------------------
@@ -519,6 +492,14 @@ fn hostile_input_is_neutralized_everywhere() {
         !profile.contains("\n## BOOM"),
         "profile-queue.md line injection"
     );
+    // The profile table DOES render the hostile function name: it must be
+    // escaped and stay on one physical line.
+    let profile_row = profile
+        .lines()
+        .find(|line| line.starts_with("| 1 |"))
+        .expect("hostile profile row");
+    assert!(profile_row.contains("\\<script\\>"));
+    assert!(!profile_row.contains("\n"));
 
     let agent = render_markdown(&doc);
     assert!(
@@ -543,6 +524,13 @@ fn hostile_input_is_neutralized_everywhere() {
             "{name}: executable script injection"
         );
     }
+    // The hostile function name is escaped in the profile HTML too.
+    let profile_row_start = profile_html.find("<tr id=").expect("profile row");
+    let profile_row = &profile_html[profile_row_start..];
+    let profile_row = &profile_row[..profile_row.find("</tr>").expect("row close")];
+    assert!(profile_row.contains("&lt;script&gt;"));
+    assert!(!profile_row.contains("<script>"));
+
     // The hostile finding row keeps its 11 columns.
     let row_start = detail.find("<tr id=\"finding-").expect("finding row");
     let row = &detail[row_start..];
@@ -709,4 +697,37 @@ fn tables_are_rectangular_and_all_text_is_lf_with_trailing_newline() {
             }
         }
     }
+}
+
+#[test]
+fn js_off_map_forces_the_final_frame_and_ranked_actions_wrap() {
+    let out = run_pipeline("js-off-final-frame");
+    let report = fs::read_to_string(out.join("report.html")).expect("report.html");
+    // The reveal animations start columns at opacity 0 with a delay; the
+    // JS-off fallback must force the canonical final frame immediately.
+    assert!(
+        report.contains(
+            "<noscript><style>#map #atlas-canvas *{animation:none!important;\
+             opacity:1!important;transform:none!important;stroke-dashoffset:0!important}"
+        ),
+        "report.html must carry the JS-off final-frame rule"
+    );
+    assert!(
+        report
+            .matches("<noscript><style>#map #atlas-canvas")
+            .count()
+            == 1,
+        "exactly one map final-frame noscript block"
+    );
+    // The ranked-action table lives in #ranked-actions (not #findings), so the
+    // wrap rule must be scoped there too or long function names clip.
+    let detail = fs::read_to_string(out.join("findings-detail.html")).expect("detail html");
+    assert!(
+        detail.contains("#ranked-actions td.wrap"),
+        "the detail page must scope the wrap rule to #ranked-actions"
+    );
+    assert!(
+        detail.contains("<td class=\"wrap\">") && detail.contains("Complete ranked action list"),
+        "ranked-action cells must carry the wrap class"
+    );
 }

@@ -470,7 +470,7 @@ def md_report(env, doc):
             lines.append(f"- evidence: `{ev}`")
         lines.append(f"- fix: {action['fix_hint'] or 'no curated hint for this rule yet'}")
         lines.append(
-            f"- anchor: `findings-detail.md#{action['detail_anchor']}` · "
+            f"- anchor: `findings-detail.html#{action['detail_anchor']}` · "
             f"`{md_code(action['action_id'])}`"
         )
         lines.append("")

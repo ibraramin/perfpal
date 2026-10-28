@@ -33,9 +33,11 @@ struct Row {
     format: &'static str,
     audience: &'static str,
     consumer: &'static str,
+    action: &'static str,
     role: &'static str,
     uniqueness: &'static str,
     canonical: bool,
+    opt_in: bool,
     kind: Kind,
 }
 
@@ -45,6 +47,8 @@ const MATRIX: &[Row] = &[
         format: "json",
         audience: "machine",
         consumer: "downstream tools / LLM planners",
+        action: "validate, diff, or feed downstream analysis",
+        opt_in: false,
         role: "canonical metrics and IR (source of truth)",
         uniqueness: "canonical-metrics",
         canonical: true,
@@ -55,6 +59,8 @@ const MATRIX: &[Row] = &[
         format: "json",
         audience: "tooling",
         consumer: "JSON-schema validators",
+        action: "validate metrics.json against the bundled schema",
+        opt_in: false,
         role: "bundled schema mirror",
         uniqueness: "schema-mirror",
         canonical: true,
@@ -65,6 +71,8 @@ const MATRIX: &[Row] = &[
         format: "md",
         audience: "human",
         consumer: "terminal / Markdown viewer",
+        action: "read the ranked summary in a terminal/editor",
+        opt_in: false,
         role: "bounded narrative report and rankings",
         uniqueness: "human-report",
         canonical: false,
@@ -75,6 +83,8 @@ const MATRIX: &[Row] = &[
         format: "html",
         audience: "human",
         consumer: "browser",
+        action: "open the visual Atlas map and story in a browser",
+        opt_in: false,
         role: "Atlas map, story, and bounded findings",
         uniqueness: "human-report-html",
         canonical: false,
@@ -85,6 +95,8 @@ const MATRIX: &[Row] = &[
         format: "html",
         audience: "human",
         consumer: "browser drill-down",
+        action: "inspect every finding row and its anchors",
+        opt_in: false,
         role: "COMPLETE per-finding detail (canonical human detail)",
         uniqueness: "complete-findings",
         canonical: true,
@@ -95,6 +107,8 @@ const MATRIX: &[Row] = &[
         format: "md",
         audience: "human",
         consumer: "terminal / Markdown viewer",
+        action: "read the complete cost-ranked queue",
+        opt_in: false,
         role: "complete cost-ranked profile queue",
         uniqueness: "complete-profile",
         canonical: false,
@@ -105,6 +119,8 @@ const MATRIX: &[Row] = &[
         format: "html",
         audience: "human",
         consumer: "browser",
+        action: "browse the complete cost-ranked queue",
+        opt_in: false,
         role: "complete cost-ranked profile queue",
         uniqueness: "complete-profile",
         canonical: false,
@@ -115,8 +131,10 @@ const MATRIX: &[Row] = &[
         format: "html",
         audience: "human",
         consumer: "browser",
+        action: "drill into per-file weight and cost",
+        opt_in: false,
         role: "Atlas weight drill page",
-        uniqueness: "atlas-drill",
+        uniqueness: "atlas-drill-weight",
         canonical: false,
         kind: Kind::Exact,
     },
@@ -125,8 +143,10 @@ const MATRIX: &[Row] = &[
         format: "html",
         audience: "human",
         consumer: "browser",
+        action: "drill into reverse dependencies (Q2)",
+        opt_in: false,
         role: "Atlas reverse (Q2) drill page",
-        uniqueness: "atlas-drill",
+        uniqueness: "atlas-drill-q2",
         canonical: false,
         kind: Kind::Exact,
     },
@@ -135,6 +155,8 @@ const MATRIX: &[Row] = &[
         format: "md",
         audience: "LLM / agent",
         consumer: "LLM triage",
+        action: "triage quickly as an LLM or agent",
+        opt_in: false,
         role: "bounded agent digest",
         uniqueness: "digest",
         canonical: false,
@@ -145,9 +167,23 @@ const MATRIX: &[Row] = &[
         format: "json",
         audience: "LLM / agent",
         consumer: "agent action executor",
+        action: "execute or iterate the complete action list",
+        opt_in: false,
         role: "COMPLETE machine action list",
         uniqueness: "complete-actions",
         canonical: true,
+        kind: Kind::Exact,
+    },
+    Row {
+        file: "atlas-layout.json",
+        format: "json",
+        audience: "tooling / story consumer",
+        consumer: "sim reference player + external story consumers",
+        action: "overlay/project the run story",
+        role: "story canvas geometry projection",
+        uniqueness: "story-geometry",
+        canonical: false,
+        opt_in: true,
         kind: Kind::Exact,
     },
     Row {
@@ -155,6 +191,8 @@ const MATRIX: &[Row] = &[
         format: "dot",
         audience: "tooling",
         consumer: "Graphviz / graph tools",
+        action: "render or analyse the graph externally",
+        opt_in: false,
         role: "deterministic graph export",
         uniqueness: "graph-export",
         canonical: false,
@@ -165,6 +203,8 @@ const MATRIX: &[Row] = &[
         format: "svg",
         audience: "human",
         consumer: "browser",
+        action: "view a chart layer in a browser",
+        opt_in: false,
         role: "overview charts and Atlas map layers",
         uniqueness: "chart-overview",
         canonical: false,
@@ -175,6 +215,8 @@ const MATRIX: &[Row] = &[
         format: "svg",
         audience: "human",
         consumer: "browser",
+        action: "drill into one component page",
+        opt_in: false,
         role: "per-component drill detail",
         uniqueness: "chart-component",
         canonical: false,
@@ -232,6 +274,22 @@ fn run_pipeline(tag: &str) -> PathBuf {
     .into_iter()
     .collect();
     assert_eq!(run_with(argv), 0, "pipeline run must succeed");
+    out
+}
+
+fn run_pipeline_story(tag: &str) -> PathBuf {
+    let root = temp_dir(tag);
+    let out = root.join("perfpal-report");
+    let argv: Vec<OsString> = [
+        OsString::from("perfpal"),
+        OsString::from("--story"),
+        OsString::from("--output"),
+        out.clone().into_os_string(),
+        fixture_root().into_os_string(),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(run_with(argv), 0, "story pipeline run must succeed");
     out
 }
 
@@ -295,14 +353,23 @@ fn matrix_matches_emitted_artifact_set_exactly() {
             "emitted artifact {name} has no matrix class"
         );
     }
-    // Every matrix row is emitted (patterns must match at least one file).
-    for row in MATRIX {
+    // Every non-opt-in matrix row is emitted (patterns must match at least
+    // one file); opt-in rows are covered by the --story test below.
+    for row in MATRIX.iter().filter(|r| !r.opt_in) {
         let present = match row.kind {
             Kind::Exact => emitted.contains(row.file),
             Kind::OverviewChart => emitted.iter().any(|n| is_overview_chart(n)),
             Kind::ComponentChart => emitted.iter().any(|n| is_component_chart(n)),
         };
         assert!(present, "matrix row {} is not emitted", row.file);
+    }
+    // Default run excludes every opt-in row.
+    for row in MATRIX.iter().filter(|r| r.opt_in) {
+        assert!(
+            !emitted.contains(row.file),
+            "opt-in row {} emitted without its flag",
+            row.file
+        );
     }
     // H3: the Markdown detail artifact is gone and has no matrix row.
     assert!(!emitted.contains("findings-detail.md"));
@@ -330,10 +397,57 @@ fn matrix_matches_emitted_artifact_set_exactly() {
     for row in MATRIX {
         assert!(!row.audience.is_empty(), "{} needs an audience", row.file);
         assert!(!row.consumer.is_empty(), "{} needs a consumer", row.file);
+        assert!(!row.action.is_empty(), "{} needs an action", row.file);
         assert!(!row.role.is_empty());
         assert!(!row.uniqueness.is_empty());
         assert!(!row.format.is_empty());
     }
+}
+
+#[test]
+fn story_geometry_is_opt_in_only() {
+    let default_out = run_pipeline("no-story");
+    let default_set = emitted_files(&default_out);
+    assert!(!default_set.contains("atlas-layout.json"));
+
+    let story_out = run_pipeline_story("story");
+    let story_set = emitted_files(&story_out);
+    assert!(story_set.contains("atlas-layout.json"));
+
+    // --story adds exactly the layout artifact (plus nothing else).
+    let mut expected = default_set;
+    expected.insert("atlas-layout.json".to_string());
+    assert_eq!(
+        story_set, expected,
+        "--story must add only atlas-layout.json"
+    );
+
+    let row = MATRIX
+        .iter()
+        .find(|r| r.file == "atlas-layout.json")
+        .expect("atlas-layout.json matrix row");
+    assert!(row.opt_in, "layout row must be opt-in");
+    assert_eq!(row.uniqueness, "story-geometry");
+    assert!(!row.canonical);
+    assert!(!row.action.is_empty());
+    assert_eq!(exact_rows("atlas-layout.json"), 1);
+}
+
+#[test]
+fn invalid_report_width_exits_one() {
+    let root = temp_dir("bad-width");
+    let out = root.join("perfpal-report");
+    let argv: Vec<OsString> = [
+        OsString::from("perfpal"),
+        OsString::from("--report-width"),
+        OsString::from("9999"),
+        OsString::from("--output"),
+        out.into_os_string(),
+        fixture_root().into_os_string(),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(run_with(argv), 1, "invalid --report-width must exit 1");
 }
 
 // ---------------------------------------------------------------------------

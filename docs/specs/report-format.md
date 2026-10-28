@@ -38,8 +38,8 @@ they do with it". An artifact without a consumer is deleted, not kept.
 | `agent-actions.json` | agents / tools | machine action execution and inspection | complete action list (uncapped) + profile top 100 (`profile_queue_cap`) | actions uncapped; profile 100 | complete action list |
 | `agent-report.md` | LLM / human triage | read without loading the full report | bounded digest: top 25 actions, per-rule rollup, top 25 profile rows, limits | 25 / 25 / 100 | no (digest) |
 | `report.md` | human | read the narrative + Atlas summary, follow links | narrative report + Atlas summary + methodology; **no full findings appendix** | summary caps named | no |
-| `report.html` | human | map-first browsing; click-to-filter | designed Atlas-first page + always-on story (self-contained; fixed report script + fixed story script + inline JSON data) | summary caps named | no |
-| `findings-detail.html` | human | opened from `report.md` §4 / `#ranked-actions` for the complete ranked list and per-finding rows; filter | **canonical complete human detail**: ranked actions + all findings, filterable via the fixed `REPORT_SCRIPT` | none | human detail |
+| `report.html` | human | map-first browsing; pan/zoom on the legacy linked figures | designed Atlas-first page + always-on story (self-contained; fixed report script + fixed story script + inline JSON data) | summary caps named | no |
+| `findings-detail.html` | human | opened from `report.md` §4 / `#ranked-actions` for the complete ranked list and per-finding rows; no filter | **canonical complete human detail**: ranked actions + all findings, complete static list | none | human detail |
 | `profile-queue.{md,html}` | human | complete KV3 drill from the key views | complete KV3 function list (cost-ranked, honest badges) | none | KV3 detail |
 | `atlas-weight.html`, `atlas-q2.html` | human | drill from the Atlas charts | drill pages: complete per-metric weight / blast-radius detail | complete per metric | no |
 | `charts/*.svg` | human / diff | visual overview; never parsed | deterministic chart stems (workspace/file/entry/coupling/hot/bands/findings/component-*), `graph.dot` | top-50 / named | chart data |
@@ -89,10 +89,11 @@ One style contract, shared by every Markdown/HTML artifact (implemented H3, 2026
   and no heading-shaped content generated from user data — escape or fence it); tabular numerals
   for counts and costs.
 - **One HTML shell.** `report.html`, `findings-detail.html` and `profile-queue.html` share one
-  head/style/header/table markup; detail pages do not fork the report's CSS and carry exactly one
-  fixed `REPORT_SCRIPT` (the filter/pan-zoom enhancement). The Atlas drill pages
-  (`atlas-weight.html`, `atlas-q2.html`) consume the same palette constants and type rules but keep
-  their drill-specific markup and CSS, and remain script-free.
+  head/style/header/table markup; detail pages do not fork the report's CSS. Only `report.html`
+  carries the fixed `REPORT_SCRIPT` (pan/zoom on the legacy linked figures); `findings-detail.html`,
+  `profile-queue.html` and the Atlas drill pages are script-free, and no page carries a filter bar.
+  The Atlas drill pages (`atlas-weight.html`, `atlas-q2.html`) consume the same palette constants
+  and type rules but keep their drill-specific markup and CSS.
 - **Escaping:** every interpolated path/title/message passes the shared escaper
   (`escape_md`/`escape_html` — no per-artifact escaper). Markdown renderers structure-escape
   backticks/pipes/headings and flatten CR/LF/TAB to `\r`/`\n`/`\t`; agent-report code-span values

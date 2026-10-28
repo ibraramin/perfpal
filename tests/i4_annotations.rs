@@ -725,7 +725,7 @@ fn report_breadcrumb_and_map_drill_path_resolve() {
     // references.
     assert_eq!(html.matches("<script").count(), 3);
     assert_eq!(html.matches("<script>").count(), 1);
-    assert_eq!(detail.matches("<script").count(), 1);
+    assert_eq!(detail.matches("<script").count(), 0);
     assert!(!html.contains("http://") && !html.contains("https://"));
     assert!(!detail.contains("http://") && !detail.contains("https://"));
 }

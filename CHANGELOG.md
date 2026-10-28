@@ -49,11 +49,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Markdown artifacts escape `<`/`>`. `profile-queue.md` gains the `## Complete cost-ranked list`
   section and the `No functions recorded.` stub. Locked by `tests/artifact_matrix.rs` and
   `tests/style_contract.rs`. No schema change; byte-determinism unchanged.
+- **Dead click-to-filter UI removed (polish-report H3).** The C-split leaves `report.html` with no
+  per-finding rows and `findings-detail.html` with no file/component rows, so the filter had nothing
+  to act on. `#filter-bar` / `filter-label` / `filter-clear` and the filter half of
+  `REPORT_SCRIPT` are removed. `report.html` keeps pan/zoom plus the always-on story (exactly three
+  A12 scripts); `findings-detail.html`, `profile-queue.html` and the Atlas drills are script-free.
+  Rows keep `data-path` / `data-prefix` only as stable keys, not click keys.
 
 ### Removed
 - **`findings-detail.md` (pre-beta artifact consolidation).** The Markdown mirror is removed;
   `findings-detail.html` is the canonical complete human detail (ranked actions + all findings,
-  filterable). No named consumer existed for the `.md` mirror. The fixed artifact set drops from 10
+  complete and static — no script, no filter bar). No named consumer existed for the `.md` mirror.
+  The fixed artifact set drops from 10
   to 9 files; the pre-beta status permits the removal because no published v1.x consumer exists.
   `agent-actions.json` stays complete, `profile-queue.{md,html}` stays the distinct KV3 list, the
   schema copy stays, and all 25 caps / `N of M` disclosures are unchanged. See ADR-0015 and

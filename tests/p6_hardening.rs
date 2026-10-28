@@ -33,9 +33,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use perfpal::analyzer::analyze;
 use perfpal::cli::run_with;
-#[cfg(not(feature = "semantic-clang"))]
-use perfpal::reporter::report_script;
-
 mod common;
 
 /// One (fixture → committed golden) pair under lock. R5 Wave 2 generalized
@@ -485,7 +482,7 @@ fn regenerate_goldens() {
         // both carry the scan root as CLI provenance BY DESIGN (the MD header
         // prints it verbatim; the JSON records `root_path`) — so they cannot be
         // masked into a stable golden, and they are deliberately NOT part of
-        // the fixed 19-artifact GOLDEN_ARTIFACTS set. Adding them would mint
+        // the fixed 18-artifact GOLDEN_ARTIFACTS set. Adding them would mint
         // ~75 KB of new goldens that duplicate an existing lock: their shape
         // and bytes are already pinned by `docs/evidence/agent-report/sample/*`
         // (byte parity) and `tests/agent_report.rs` (emission, determinism,
@@ -578,31 +575,20 @@ fn regenerate_goldens() {
              (one bare fixed enhancement script + story script + inline JSON data)",
             tree.tag
         );
-        // Detail + profile-queue pages carry exactly the one fixed
-        // enhancement block (filter bar stays live); the Atlas drills are
-        // script-free.
-        let fixed_block = format!("<script>\n{}\n</script>", report_script());
-        for name in ["findings-detail.html", "profile-queue.html"] {
+        // Detail, profile-queue, and Atlas drill pages are script-free; the
+        // report is the only page carrying the fixed enhancement block.
+        for name in [
+            "findings-detail.html",
+            "profile-queue.html",
+            "atlas-weight.html",
+            "atlas-q2.html",
+        ] {
             let text = fs::read_to_string(golden.join(name)).expect("page");
             assert!(
                 !text.contains("2026-") && !text.contains(&root_str),
                 "{name} (tree '{}') must be provenance-free to be committed masked-only",
                 tree.tag
             );
-            assert_eq!(
-                text.matches("<script").count(),
-                1,
-                "{name} (tree '{}') must carry exactly one fixed script",
-                tree.tag
-            );
-            assert!(
-                text.contains(&fixed_block),
-                "{name} (tree '{}') must carry the fixed REPORT_SCRIPT body verbatim",
-                tree.tag
-            );
-        }
-        for name in ["atlas-weight.html", "atlas-q2.html"] {
-            let text = fs::read_to_string(golden.join(name)).expect("drill page");
             assert_eq!(
                 text.matches("<script").count(),
                 0,
