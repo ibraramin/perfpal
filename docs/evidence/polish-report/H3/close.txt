@@ -1,0 +1,38 @@
+# H3 close snapshot — 2026-10-28
+
+**Code:** `fbda69b` — `fix(report): close H3 empty-scan links and drill headings`
+**Evidence:** `c88d1a6` (final gate/acceptance/budget/vision) · `9da33a9` (story gate)
+**HEAD at snapshot:** `9da33a9`
+**`git status --porcelain`:** (empty)
+**`git tag --points-at HEAD`:** (empty)
+**No push, no tag.**
+
+## H3 burst commits
+
+```
+9da33a9 test(report): record the H3 story gate at fbda69b
+c88d1a6 test(report): pin final H3 evidence at fbda69b
+fbda69b fix(report): close H3 empty-scan links and drill headings
+9895702 test(report): record the H3 story gate at 8544706
+dad9467 test(report): record final H3 gate, acceptance, budget and vision evidence
+8544706 fix(report): remove the dead findings filter and finish H3 contracts
+36277ae test(report): record H3 artifact, style, determinism and gate evidence
+c5ded97 refactor(report): consolidate artifacts and unify formatting
+```
+
+## Gate summary
+
+| Gate | Evidence | Result |
+|---|---|---|
+| Full gate | `gate.txt` @`fbda69b` | fmt/clippy/test/deny/semantic clippy/semantic test all EXIT=0; **2,252 passed** (1,125 default + 1,127 semantic), 0 failed, 2 ignored |
+| Story gate | `story-gate.txt` (HEAD `9da33a9`, code `fbda69b`) | **304/304 + 3k 44/44**, `worktree_dirty_zero`, verdict **PASS** |
+| Acceptance | `report-check.txt` @`fbda69b` + tree hash | 5 widths × DPR 1/2 interactive + JS-off, auto and pinned 1440; **PASS** |
+| Budget | `budget.txt` @`fbda69b` + tree hash | hyperfine 338,091 B, cJSON 269,354, 3k 514,829 — **PASS** |
+| Artifact matrix | `artifact-matrix.txt` | **6/6** |
+| Style contract | `style-contract.txt` | **8/8** |
+| Determinism | `determinism.txt` | **24/24** |
+| Vision | `VISION.md` | **PASS** (JS-off canvas 19/19 nodes; drills; detail H1) |
+| Clean/tag | this file | tree clean; tag empty; no push/tag |
+
+The story-gate transcript header names HEAD `9da33a9`; the code tree is `fbda69b` and `9da33a9`
+adds evidence only (the transcript's own note says post-run commits add only docs/evidence/state).
