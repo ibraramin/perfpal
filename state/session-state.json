@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "goal": "Build Perfpal, a static-analysis tool that extracts performance-relevant heuristics from codebases, renders insightful visual bottleneck maps, and emits LLM-consumable quantifiable metrics to enable AI-driven optimization.",
-  "current_phase": "polish-report H2 DONE 2026-10-28; panel R1/R2/Q1/Q2/R3 APPROVED; H3 next; no push/tag.",
+  "current_phase": "polish-report H3 CLOSED 2026-10-28; panel R1/R2/Q1/Q2/R3 APPROVED; H4 next; no push/tag.",
   "stage": "dev",
   "north_star_ref": "docs/NORTH-STAR.md",
   "sessions_since_alignment_audit": 2,
@@ -31,6 +31,11 @@
       "id": "D-pf-279",
       "status": "live",
       "title": "POLISH-REPORT H2 CLOSED 2026-10-28: code 4d401db; evidence 1df5286; panel R1/R2/Q1/Q2/R3 APPROVED. Responsive 1280-3072 body/canvas/charts/story + public layout-only --report-width; scrollbar-safe full-bleed band. Full gate 1,111/1,113 EXIT=0; story gate 304/304 + 3k 44/44 PASS; budgets hyperfine 338,100 B/120-128 ms, cJSON 269,363/128-132, 3k 514,838/124-132; A8 doc 16,927/21,241, story 1,029/1,875, answer bottom <=436; vision APPROVED-WITH-NITS; six goldens report.html only; schema 1.8/no deps/no push/tag; H3 next."
+    },
+    {
+      "id": "D-pf-280",
+      "status": "live",
+      "title": "POLISH-REPORT H3 CLOSED 2026-10-28: code fbda69b; evidence c88d1a6/9da33a9/11676ba; panel R1/R2/Q1/Q2/R3 APPROVED after 3 rounds. Artifact set 9 files + opt-in atlas-layout + drills/charts (findings-detail.md dropped, Appendix C removed, §4 pointer); shared warm-paper shell + format module; dead filter UI removed (report pan/zoom only, 3 scripts; detail/profile/drills 0); JS-off final-frame noscript (19/19 nodes) + Pause hidden; drill h1/h2; empty-scan #ranked-actions stub. Full gate 2,252 (1,125+1,127)/0/2; story gate 304/304 + 3k 44/44; acceptance+budget PASS (338,091/269,354/514,829); vision PASS; schema 1.8/no deps/no push/tag; H4 next."
     }
   ],
   "open_risks": [
@@ -63,6 +68,18 @@
       "status": "open",
       "severity": "high",
       "title": "Atlas ratified 2026-10-23 (ADR-0009/0010 Accepted). A2 passed 2026-10-24 (D-pf-257). Structural LOW/MEDIUM edges on the hero canvas remain the main honesty risk (option A reversal trigger live); F undecided; A1b open."
+    },
+    {
+      "id": "R-pf-109",
+      "status": "open",
+      "severity": "low",
+      "title": "H3 non-blocking visual nits deferred: findings-detail trailing column after confidence clips at the table edge (pre-existing horizontal scroll); weight drill H2 echoes the first section title; report-top capture is mid-animation. No functional impact."
+    },
+    {
+      "id": "R-pf-110",
+      "status": "open",
+      "severity": "low",
+      "title": "3k report.html is 514,829 B against the 524,288 B ceiling (9,459 B / 1.8% headroom); any further report.html growth needs a budget check."
     }
   ],
   "blocked_by": [
@@ -116,7 +133,7 @@
     {
       "id": "A-pf-134",
       "status": "active",
-      "action": "polish-report H3-H5: H2 closed 2026-10-28; H3 artifact consolidation/formatting, H4 explorer.html final composition, H5 finalize; one session per plan step."
+      "action": "polish-report H4-H5: H3 closed 2026-10-28 (code fbda69b); H4 explorer.html final composition, H5 finalize; one session per plan step."
     }
   ],
   "last_updated": "2026-10-28"

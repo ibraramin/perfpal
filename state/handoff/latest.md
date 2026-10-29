@@ -1,66 +1,72 @@
-# Handoff — polish-report H2 CLOSED; H3 next (`main` @ close commit; 2026-10-28)
+# Handoff — polish-report H3 CLOSED; H4 next (`main` @ close commit; 2026-10-28)
 
-**Objective:** complete H2 of `polish-report` — responsive scale from 1280 to 3072 CSS px with a
-public layout-only `--report-width` hint, cross-width/DPR acceptance, scrollbar-safe full bleed,
-and an evidence-backed A8/page-height re-baseline, while keeping the H1 Atlas/parity/story
-contract, byte-determinism and A12.
-**Status:** **H2 CLOSED**. Panel **R1/R2/Q1/Q2 + fresh R3 APPROVED** (round 3 after the
-classic-scrollbar fix). Code **4d401db**; evidence **1df5286**; schema **1.8**; no new deps.
+**Objective:** complete H3 of `polish-report` — one artifact role matrix, remove the duplicate
+full-findings rendering, and enforce one warm-paper formatting contract across the human artifacts,
+without a schema bump or an H2 layout regression.
+**Status:** **H3 CLOSED**. Panel **R1/R2/Q1/Q2/R3 APPROVED** (final round). Code **fbda69b**;
+evidence **c88d1a6**, **9da33a9**, **11676ba**; schema **1.8**; no new deps.
 **No push, no tag.**
-**Plan/phase:** `polish-report` H2 · next: H3 artifact consolidation/formatting (plan line 29).
+**Plan/phase:** `polish-report` H3 · next: H4 `report.html` final composition (plan line 30).
 
 ## Delivered
 
-- **Responsive scale:** fluid body/page with `--page-gutter`, full-bleed `#map` anchored to the
-  body (not `100vw`, so classic scrollbars cannot overflow), canvas `width:100%` with preserved
-  viewBox, Atlas charts/figures fluid, legacy Explorer figures downscaled but never upscaled, and
-  a `clamp()` type ramp anchored at 1440 (1.5× ceiling at 3072). Story `.page`/`.canvas-shell`
-  full-width, content-driven (`min-height:0`).
-- **Public `--report-width <auto|1280|1440|1920|2560|3072>`** (default `auto`): layout-only; only
-  `report.html` (CSS + `data-report-width` marker) changes; values pinned in CLI help/README/
-  modules/output-contract; invalid values exit 1.
-- **Acceptance:** `sim/report_check.py` covers 5 widths × DPR 1/2 interactive + JS-off (auto and
-  pinned 1440), canvas fill, no clipped labels, story final, zero network/console errors, and a
-  15 px classic-scrollbar stress (`map == body`).
-- **Budget:** `sim/report_budget.py --widths` covers 1440/3072 for hyperfine, cJSON and 3k.
-- **Goldens:** six report.html regenerated; no other golden artifact changed.
-- **Docs:** spec §6/§9 (resolved decisions, A8 re-baseline), output-contract §2, README CLI,
-  modules §8.1, CHANGELOG; evidence under `docs/evidence/polish-report/H2/`.
+- **Role matrix (9-file set).** `findings-detail.md` dropped (no consumer); `findings-detail.html`
+  is the canonical complete human detail; `agent-actions.json` stays complete; `profile-queue.*`
+  stays the distinct KV3 list; the schema copy stays (offline validation + discovery); the 25 caps
+  and every `N of M` disclosure are intact. `atlas-layout.json` is the documented opt-in story
+  artifact. `tests/artifact_matrix.rs` is the executable mirror (6/6), including a `--story`
+  emission test and an end-to-end invalid `--report-width` exit-1 test.
+- **Appendix C removed.** `report.md` §4 ends with
+  `All <N> of <M> findings: [findings-detail.html](findings-detail.html) — complete ranked action
+  list and per-finding detail (<R> rules).`; §1 says “all N ranked actions (M findings)”.
+- **One style contract.** `src/reporter/format.rs` owns the escapers + Markdown helpers; one
+  warm-paper shell (`html_page_head` + shared tokens/CSS) serves report/detail/profile; the Atlas
+  drills share the palette/heading scale. Sans body, mono code, one heading scale, tabular numerals,
+  unified tables/links/empty states. `profile-queue.md` gains `## Complete cost-ranked list` +
+  `No functions recorded.`
+- **Dead filter removed.** The C-split made click-to-filter impossible; the filter bar/controls/
+  script are gone. `report.html` keeps 3 scripts (pan/zoom + story + inline JSON); detail/profile/
+  drills are script-free.
+- **JS-off final frame.** A `<noscript><style>` block forces `animation:none; opacity:1;
+  transform:none; stroke-dashoffset:0` on `#map #atlas-canvas *` and hides the inert Pause, so the
+  static map paints all 19 nodes immediately.
+- **Drills/detail.** Drill pages gain `<h1>Perfpal Atlas</h1>` + `<h2>Weight detail|Blast drill</h2>`
+  on the shared heading scale (10px density exception); `findings-detail.html` shows its own H1;
+  empty scans always emit the `#ranked-actions` stub so report links resolve.
+- **Goldens:** 18 artifacts across six trees regenerated; the detail-md artifact is gone.
 
 ## Verification (claim → evidence → result)
 
 | Claim | Evidence | Result |
 |---|---|---|
-| Full gate | `docs/evidence/polish-report/H2/gate.txt` @4d401db | fmt/clippy/test **1,111**/deny/semantic clippy/semantic test **1,113** all EXIT=0 |
-| Story gate | `docs/evidence/atlas-sim/GATE.txt` @4d401db | 304/304, 3k 44/44, `worktree_dirty_zero`, verdict **PASS** |
-| Report acceptance | `docs/evidence/polish-report/H2/report-check.txt` @4d401db | 5×2 interactive + 5×2 JS-off, auto + pinned; no hscroll; canvas fill; no clipped labels; story final; 19/19 JS-off; stress map==body |
-| Budget | `docs/evidence/polish-report/H2/budget.txt` @4d401db | hyperfine 338,100 B/120–128 ms; cJSON 269,363/128–132; 3k 514,838/124–132 — PASS |
-| A8/page height | `docs/evidence/polish-report/H2/PAGE-HEIGHT.md` @4d401db | doc 16,927 @1440 / 21,241 @3072; story 1,029/1,875; answer bottom ≤436 |
-| Vision | `docs/evidence/polish-report/H2/VISION.md` @4d401db | 1440/3072/JS-off **APPROVED-WITH-NITS**; H1 nits resolved |
-| Panel | `docs/evidence/polish-report/H2/PANEL.md` | R1/R2/Q1/Q2/R3 **APPROVED** |
-| Clean/tag | `docs/evidence/polish-report/H2/close.txt` | tree clean; tag empty; no push/tag |
+| Full gate | `docs/evidence/polish-report/H3/gate.txt` @`fbda69b` | fmt/clippy/test/deny/semantic clippy/semantic test **all EXIT=0**; **2,252 passed** (1,125 default + 1,127 semantic), 0 failed, 2 ignored |
+| Story gate | `…/story-gate.txt` (HEAD `9da33a9`, code `fbda69b`) | **304/304 + 3k 44/44**, `worktree_dirty_zero`, verdict **PASS** |
+| Acceptance | `…/report-check.txt` @`fbda69b` + tree hash | 5 widths × DPR 1/2 interactive + JS-off, auto + pinned 1440; no hscroll/canvas fill/no clipped labels/story final; **PASS** |
+| Budget | `…/budget.txt` @`fbda69b` + tree hash | hyperfine 338,091 B; cJSON 269,354; 3k 514,829 (9,459 B / 1.8% headroom) — **PASS** |
+| Artifact matrix | `…/artifact-matrix.txt` | **6/6** |
+| Style contract | `…/style-contract.txt` | **8/8** |
+| Determinism | `…/determinism.txt` | **24/24** |
+| Vision | `…/VISION.md` | **PASS** (JS-off 19/19 nodes; drills; detail H1) |
+| Clean/tag | `…/close.txt` + final check | tree clean; no tag; no push |
 
-## Panel / close notes
+## Panel / deferred nits
 
-- R3 caught a real classic-scrollbar overflow that the overlay-scrollbar test browser hid:
-  `#map{margin:0 calc(50% - 50vw)}` exceeded the client width by 15 px. Fixed at `4d401db` with a
-  body-anchored gutter, a static regression test, and a runtime 15 px-shrink stress; R3 then
-  independently reproduced the old failure and the fixed state.
-- Accepted non-blocking nits: 1440 Explorer fitted labels ~6 px (`.pz` zoom is the escape);
-  full-width body copy; letterboxed story artwork; inert `Pause` in JS-off; PAGE-HEIGHT raw JSON is
-  under `/var/tmp` (the committed Markdown table is the evidence).
+- Round 1 found the dead filter UI, a missing `atlas-layout.json` matrix row, and missing vision
+  evidence; round 2 found empty-scan dead `#ranked-actions` links and drills outside the heading
+  scale. All fixed and re-verified.
+- Deferred (non-blocking, in state as **R-pf-109**/**R-pf-110**): the findings-detail trailing column
+  after `confidence` clips at the table edge (pre-existing horizontal scroll); the weight drill H2
+  echoes its first section title; 3k report headroom is 1.8%.
 
 ## Next
 
-1. **H3 — artifact consolidation + formatting** (separate session; plan line 29): role matrix,
-   `report.md` Appendix C duplication, one canonical human detail rendering, style contract across
-   Markdown/HTML artifacts; update output-contract §2 and goldens; no schema change.
-2. **H4** `report.html` final composition (`#explorer` → `explorer.html`, order, A8 re-baseline);
-   **H5** finalize (full gate, story gate, docs, state, EOL).
-3. **Post-beta map/ranking:** F treemap (D-pf-251), memchr fold (D-pf-256), map-build/A1b recall.
+1. **H4 — `report.html` final composition** (separate session; plan line 30): move `#explorer` to
+   `explorer.html`, final order, A8 re-baseline if composition changes; founder vision gate.
+2. **H5 — finalize:** full gate, story gate, docs (README/output-contract/specs/CHANGELOG), state/EOL.
+3. **Post-beta:** F treemap (D-pf-251), memchr fold (D-pf-256), map-build/A1b recall.
 4. **Publish gate (founder-owned):** B-pf-001 contact + B-pf-002 minisign secrets; no push/tag until
    cleared.
 
 ## Uncommitted files / state
 
-None at the H2 close; code `4d401db`; evidence `1df5286`; **no push/tag**.
+State/handoff/activeContext only at this close commit; **no push/tag**.
