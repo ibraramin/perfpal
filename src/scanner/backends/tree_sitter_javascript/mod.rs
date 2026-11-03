@@ -191,6 +191,7 @@ pub(crate) fn extract_with(dialect: &Dialect, path: &str, source: &[u8]) -> Extr
         structs,
         macros: Vec::new(),
         functions,
+        dead_regions: Vec::new(),
     }
 }
 
@@ -218,6 +219,7 @@ fn failed_extraction(path: &str, token: &str) -> Extraction {
         structs: Vec::new(),
         macros: Vec::new(),
         functions: Vec::new(),
+        dead_regions: Vec::new(),
     }
 }
 

@@ -43,11 +43,14 @@ mod path_class;
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::analysis::io_table;
 use crate::analyzer::{CrossFileCallEdge, Finding, cross_file_call_edges};
 use crate::graph::{break_cycles, topo_layers};
 use crate::ir::{
     CalleeKind, FunctionParseHealth, FunctionRecord, IncludeForm, LoopNode, ParseStatus,
+    RUST_ALLOC_FAMILY,
 };
+use crate::scanner::backends::tree_sitter_c::ALLOC_FAMILY;
 use crate::scanner::{FileUnit, FunctionUnit, SUPPORTED_LANGUAGES};
 use crate::schema::{
     self, CallEdge, CallGraphSection, ComponentEntry, ComponentMetrics, DistributionEntry,
@@ -238,14 +241,17 @@ fn function_stats(
     entries: &BTreeMap<String, (String, String)>,
     reachable: &BTreeSet<String>,
 ) -> Vec<schema::FunctionStats> {
-    let mut records: Vec<(bool, &FunctionUnit, &crate::ir::ParseHealth)> = units
+    let c_defined_names: BTreeSet<String> = units
+        .iter()
+        .filter(|u| u.file.language == "c")
+        .flat_map(|u| u.functions.iter().map(|f| f.record.name.clone()))
+        .collect();
+    let mut records: Vec<(bool, &FunctionUnit, &FileUnit)> = units
         .iter()
         .flat_map(|u| {
             let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python")
                 || is_js_family(&u.file.language);
-            u.functions
-                .iter()
-                .map(move |f| (entry_scoped, f, &u.parse_health))
+            u.functions.iter().map(move |f| (entry_scoped, f, u))
         })
         .collect();
     records.sort_by(|a, b| {
@@ -257,8 +263,10 @@ fn function_stats(
     });
     records
         .into_iter()
-        .map(|(entry_scoped, function_unit, file_health)| {
+        .map(|(entry_scoped, function_unit, file_unit)| {
             let r = &function_unit.record;
+            let (alloc_sites_in_loops, io_site_count, io_sites_in_loops, resource_sites) =
+                resource_action_fields(function_unit, file_unit, &c_defined_names);
             let call = shape.get(&r.id).copied().unwrap_or_default();
             let (function_cost_v2, unknown_trip_loops) =
                 function_cost_v2(r, call, &function_unit.loops);
@@ -285,12 +293,16 @@ fn function_stats(
                 // aggregator-owned (they need file-level context).
                 loop_count: Some(r.loop_count),
                 loop_body_loc: loop_body_loc_from_loops(&function_unit.loops),
-                parse_health: function_parse_health(Some(file_health), r.span).map(|health| {
-                    schema::FunctionParseHealth {
+                parse_health: function_parse_health(Some(&file_unit.parse_health), r.span).map(
+                    |health| schema::FunctionParseHealth {
                         status: health.status,
                         overlapping_error_regions: health.overlapping_error_regions,
-                    }
-                }),
+                    },
+                ),
+                alloc_sites_in_loops,
+                io_site_count,
+                io_sites_in_loops,
+                resource_sites,
                 alloc_site_count: r.alloc_site_count,
                 length_lines: r.length_lines,
                 // v1.4 step 2: whole-program call-shape (computed above —
@@ -325,6 +337,125 @@ fn function_stats(
             }
         })
         .collect()
+}
+
+/// v1.9 structural suite: resource-action fields (§§2.1-2.2, 4.3-4.6).
+///
+/// Aggregator-owned because the site list needs the whole file set (C bare-name
+/// shadowing) and the language/table choice; the backends stay unchanged.
+/// Returned as `(alloc_sites_in_loops, io_site_count, io_sites_in_loops,
+/// resource_sites)`.
+fn resource_action_fields(
+    function_unit: &FunctionUnit,
+    file_unit: &FileUnit,
+    c_defined_names: &BTreeSet<String>,
+) -> (
+    Option<u32>,
+    Option<u32>,
+    Option<u32>,
+    Vec<schema::ResourceSite>,
+) {
+    let language = file_unit.file.language.as_str();
+    let alloc_supported = matches!(language, "c" | "rust");
+    let io_language = resource_language(language);
+    let mut alloc_in_loops = 0u32;
+    let mut io_site_count = 0u32;
+    let mut io_sites_in_loops = 0u32;
+    let mut sites: Vec<(usize, schema::ResourceSite)> = Vec::new();
+
+    for (index, call) in function_unit.calls.iter().enumerate() {
+        let depth = call.meta.in_loop_depth;
+        let is_alloc = if language == "c" {
+            call.callee_kind == CalleeKind::Direct
+                && ALLOC_FAMILY.contains(&call.callee_name.as_str())
+        } else if language == "rust" {
+            RUST_ALLOC_FAMILY.matches_site(
+                call.callee_path.as_deref(),
+                &call.callee_name,
+                call.is_macro,
+            )
+        } else {
+            false
+        };
+        let is_io = io_table::is_external_io(language, call, c_defined_names);
+
+        if is_io {
+            io_site_count = io_site_count.saturating_add(1);
+            if depth >= 1 {
+                io_sites_in_loops = io_sites_in_loops.saturating_add(1);
+            }
+        }
+        if is_alloc && depth >= 1 {
+            alloc_in_loops = alloc_in_loops.saturating_add(1);
+        }
+        if depth < 1 {
+            continue;
+        }
+
+        let cfg_gated = if language == "c" {
+            Some(
+                file_unit
+                    .dead_regions
+                    .iter()
+                    .any(|region| region.contains_span(&call.meta.span)),
+            )
+        } else {
+            // Rust/Python/JS/TS have no compile-time config model in v1:
+            // honest `null`, never `false`.
+            None
+        };
+        let site = |kind: &str| schema::ResourceSite {
+            kind: kind.to_string(),
+            line: call.meta.span.start_line,
+            column: call.meta.span.start_col,
+            loop_depth: depth,
+            cfg_gated,
+            language: io_language.to_string(),
+        };
+        if is_alloc {
+            sites.push((index, site("alloc")));
+        }
+        if is_io {
+            sites.push((index, site("io")));
+        }
+    }
+
+    // Total order: (line, column, kind, language), traversal index last.
+    sites.sort_by(|(left_index, left), (right_index, right)| {
+        left.line
+            .cmp(&right.line)
+            .then(left.column.cmp(&right.column))
+            .then(left.kind.cmp(&right.kind))
+            .then(left.language.cmp(&right.language))
+            .then(left_index.cmp(right_index))
+    });
+
+    debug_assert!(alloc_in_loops <= function_unit.record.alloc_site_count);
+    debug_assert!(io_sites_in_loops <= io_site_count);
+    debug_assert_eq!(
+        sites.len(),
+        usize::try_from(alloc_in_loops.saturating_add(io_sites_in_loops)).unwrap_or(usize::MAX),
+        "resource_sites length must equal the in-loop alloc + I/O counts"
+    );
+
+    (
+        alloc_supported.then_some(alloc_in_loops),
+        Some(io_site_count),
+        Some(io_sites_in_loops),
+        sites.into_iter().map(|(_, site)| site).collect(),
+    )
+}
+
+/// Schema `resource_sites[].language` for a file language token.
+fn resource_language(language: &str) -> &'static str {
+    match language {
+        "c" => "c",
+        "rust" => "rust",
+        "python" => "python",
+        "js" => "javascript",
+        "ts" | "tsx" => "typescript",
+        _ => "typescript",
+    }
 }
 
 /// v1.9 structural suite: union length (distinct source lines) of every loop
@@ -2853,6 +2984,10 @@ mod tests {
             loop_count: None,
             loop_body_loc: None,
             parse_health: None,
+            alloc_sites_in_loops: None,
+            io_site_count: None,
+            io_sites_in_loops: None,
+            resource_sites: Vec::new(),
             alloc_site_count: 0,
             length_lines: 3,
             call_fanout: None,

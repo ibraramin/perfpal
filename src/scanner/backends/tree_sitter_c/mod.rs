@@ -65,6 +65,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
             structs: Vec::new(),
             macros: Vec::new(),
             functions: Vec::new(),
+            dead_regions: Vec::new(),
         };
     };
 
@@ -170,6 +171,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
         structs,
         macros,
         functions,
+        dead_regions,
     }
 }
 

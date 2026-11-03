@@ -77,9 +77,54 @@ fn v1_9_is_additive_without_growing_required_lists() {
         0
     );
 
-    // The three new function fields are NOT required (additive contract).
+    // Stage 2 resource-action fields: integer >= 0 / array of closed-shape
+    // site objects.
+    assert_eq!(fn_props["alloc_sites_in_loops"]["type"], "integer");
+    assert_eq!(fn_props["alloc_sites_in_loops"]["minimum"], 0);
+    assert_eq!(fn_props["io_site_count"]["type"], "integer");
+    assert_eq!(fn_props["io_sites_in_loops"]["type"], "integer");
+    let sites = &fn_props["resource_sites"];
+    assert_eq!(sites["type"], "array");
+    let site = &sites["items"];
+    assert_eq!(
+        site["required"],
+        serde_json::json!([
+            "kind",
+            "line",
+            "column",
+            "loop_depth",
+            "cfg_gated",
+            "language"
+        ])
+    );
+    assert_eq!(site["additionalProperties"], serde_json::json!(false));
+    assert_eq!(
+        site["properties"]["kind"]["enum"],
+        serde_json::json!(["alloc", "io"])
+    );
+    assert_eq!(site["properties"]["line"]["minimum"], 1);
+    assert_eq!(site["properties"]["column"]["minimum"], 0);
+    assert_eq!(site["properties"]["loop_depth"]["minimum"], 1);
+    assert_eq!(
+        site["properties"]["cfg_gated"]["type"],
+        serde_json::json!(["boolean", "null"])
+    );
+    assert_eq!(
+        site["properties"]["language"]["enum"],
+        serde_json::json!(["c", "rust", "python", "javascript", "typescript"])
+    );
+
+    // The new function fields are NOT required (additive contract).
     let required = &v19["properties"]["stats"]["properties"]["functions"]["items"]["required"];
-    for new_field in ["loop_count", "loop_body_loc", "parse_health"] {
+    for new_field in [
+        "loop_count",
+        "loop_body_loc",
+        "parse_health",
+        "alloc_sites_in_loops",
+        "io_site_count",
+        "io_sites_in_loops",
+        "resource_sites",
+    ] {
         assert!(
             !required
                 .as_array()
@@ -183,7 +228,28 @@ fn v1_9_fields_validate_when_present() {
                 "loop_count": 1,
                 "loop_body_loc": 2,
                 "parse_health": { "status": "partial", "overlapping_error_regions": 1 },
-                "alloc_site_count": 0,
+                "alloc_sites_in_loops": 1,
+                "io_site_count": 2,
+                "io_sites_in_loops": 1,
+                "resource_sites": [
+                    {
+                        "kind": "alloc",
+                        "line": 2,
+                        "column": 4,
+                        "loop_depth": 1,
+                        "cfg_gated": true,
+                        "language": "c"
+                    },
+                    {
+                        "kind": "io",
+                        "line": 3,
+                        "column": 4,
+                        "loop_depth": 1,
+                        "cfg_gated": null,
+                        "language": "rust"
+                    }
+                ],
+                "alloc_site_count": 1,
                 "length_lines": 4
             }]
         },

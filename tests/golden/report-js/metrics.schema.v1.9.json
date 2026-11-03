@@ -165,6 +165,26 @@
                   "status": { "enum": ["ok", "partial", "failed"] },
                   "overlapping_error_regions": { "type": "integer", "minimum": 0 }
                 }
+              },
+              "alloc_sites_in_loops": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.9: allocation sites whose innermost enclosing loop depth is >= 1. C/Rust only; omitted for Python/JS/TS." },
+              "io_site_count": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.9: external-I/O call sites (file/stdio/net). Computed for all five languages; 0 is a real value." },
+              "io_sites_in_loops": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.9: external-I/O sites whose innermost enclosing loop depth is >= 1. Omitted only when the language I/O table is not computable." },
+              "resource_sites": {
+                "type": "array",
+                "description": "ADDITIVE v1.9: one record per in-loop allocation (C/Rust) or external-I/O site, sorted by (line, column, kind, language) with traversal order as the final tie-break. Omitted when empty.",
+                "items": {
+                  "type": "object",
+                  "required": ["kind", "line", "column", "loop_depth", "cfg_gated", "language"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": { "enum": ["alloc", "io"] },
+                    "line": { "type": "integer", "minimum": 1 },
+                    "column": { "type": "integer", "minimum": 0 },
+                    "loop_depth": { "type": "integer", "minimum": 1 },
+                    "cfg_gated": { "type": ["boolean", "null"], "description": "C only: true when fully inside a provably-dead #if 0 region, false otherwise. Rust/Python/JS/TS: null (not computed), never coerced to false." },
+                    "language": { "enum": ["c", "rust", "python", "javascript", "typescript"] }
+                  }
+                }
               }
             }
           }

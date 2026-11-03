@@ -269,6 +269,7 @@ pub(crate) mod test_support {
             structs: Vec::new(),
             macros: Vec::new(),
             functions,
+            dead_regions: Vec::new(),
         }
     }
 

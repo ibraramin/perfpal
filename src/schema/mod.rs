@@ -237,6 +237,26 @@ pub struct FunctionParseHealth {
     pub overlapping_error_regions: u32,
 }
 
+/// One in-loop resource-action site (schema 1.9, structural suite v1 §2.2).
+/// Emitted only for allocation (C/Rust) or external-I/O sites whose innermost
+/// enclosing loop depth is ≥ 1. `cfg_gated` is a real three-state value:
+/// `Some(true)`/`Some(false)` for C, and `None` for every other language
+/// (serialized `null`, never omitted and never coerced to `false`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ResourceSite {
+    /// `alloc` (C/Rust only) or `io` (all five languages).
+    pub kind: String,
+    /// 1-based line from the IR span.
+    pub line: u32,
+    /// 0-based column from the IR span.
+    pub column: u32,
+    /// Innermost enclosing loop depth; always ≥ 1.
+    pub loop_depth: u32,
+    pub cfg_gated: Option<bool>,
+    /// `c`, `rust`, `python`, `javascript`, or `typescript`.
+    pub language: String,
+}
+
 /// `stats` — baseline measurements, always emitted, never findings.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StatsSection {
@@ -279,6 +299,25 @@ pub struct FunctionStats {
     /// health; omitted when the producer has no file health.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parse_health: Option<FunctionParseHealth>,
+    /// ADDITIVE v1.9 (structural suite v1 §2.1): count of allocation sites
+    /// whose innermost enclosing loop depth is ≥ 1. C/Rust only; omitted for
+    /// Python/JS/TS (not computable there).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alloc_sites_in_loops: Option<u32>,
+    /// ADDITIVE v1.9: count of external-I/O call sites (file/stdio/net).
+    /// Computed for all five languages; `0` is a real value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub io_site_count: Option<u32>,
+    /// ADDITIVE v1.9: external-I/O sites at loop depth ≥ 1. Omitted together
+    /// with [`FunctionStats::io_site_count`] only if the language table is not
+    /// computable (it is for all five languages today).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub io_sites_in_loops: Option<u32>,
+    /// ADDITIVE v1.9: one record per in-loop alloc/I-O site, sorted by
+    /// `(line, column, kind, language)` with traversal order as the final
+    /// tie-break. Omitted when empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resource_sites: Vec<ResourceSite>,
     pub alloc_site_count: u32,
     pub length_lines: u32,
     /// ADDITIVE v1.4 (plan `divergence-revamp` step 1, specs
@@ -785,6 +824,10 @@ mod tests {
                     loop_count: None,
                     loop_body_loc: None,
                     parse_health: None,
+                    alloc_sites_in_loops: None,
+                    io_site_count: None,
+                    io_sites_in_loops: None,
+                    resource_sites: Vec::new(),
                     alloc_site_count: 1,
                     length_lines: 6,
                     // v1.4 skeleton: uncomputed instrument fields stay None

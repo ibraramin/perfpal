@@ -118,6 +118,16 @@ impl Span {
         let other_end = (other.end_line, other.end_col);
         self_start <= other_end && other_start <= self_end
     }
+
+    /// True when `other` lies entirely inside this span (inclusive line/column
+    /// extents). Used for the C dead-config region gate: a site is
+    /// `cfg_gated` only when its whole extent is inside a provably-dead
+    /// `#if 0` region.
+    #[must_use]
+    pub fn contains_span(&self, other: &Span) -> bool {
+        (self.start_line, self.start_col) <= (other.start_line, other.start_col)
+            && (other.end_line, other.end_col) <= (self.end_line, self.end_col)
+    }
 }
 
 /// Engine-native point: 0-based row, 0-based BYTE column within the row.

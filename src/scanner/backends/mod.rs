@@ -19,7 +19,7 @@ pub mod tree_sitter_python;
 pub mod tree_sitter_rust;
 pub mod tree_sitter_typescript;
 
-use crate::ir::{FileRecord, GlobalVar, IncludeEdge, MacroEvent, ParseHealth, StructDef};
+use crate::ir::{FileRecord, GlobalVar, IncludeEdge, MacroEvent, ParseHealth, Span, StructDef};
 use crate::scanner::FunctionUnit;
 
 /// Everything one source file yields across the IR boundary.
@@ -35,4 +35,7 @@ pub struct Extraction {
     pub structs: Vec<StructDef>,
     pub macros: Vec<MacroEvent>,
     pub functions: Vec<FunctionUnit>,
+    /// ADDITIVE v1.9: provably-dead configuration regions (C `#if 0` /
+    /// `#if (0)`); empty for every other backend.
+    pub dead_regions: Vec<Span>,
 }

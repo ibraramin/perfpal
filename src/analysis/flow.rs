@@ -8,7 +8,7 @@
 //! `stats.functions[].id` (the canonical IR identity `path#name#line:col`).
 //!
 //! S3 adds the P2 I/O effects (`flow.io[]`): a fixed, versioned call-name table
-//! ([`IO_TABLE_VERSION`] = 1) classifies call sites in the drawn files as a
+//! ([`IO_TABLE_VERSION`] = 2) classifies call sites in the drawn files as a
 //! `read`/`write` effect on `file`/`env`/`net`/`stdio`. A `literal` target is
 //! recorded only when the designated argument is a **plain string literal**
 //! (`string_literal` / `raw_string_literal`); values built by formatting,
@@ -183,7 +183,7 @@ struct LocalType {
 /// artifact does not carry the number, so the constant is the merge-contract
 /// marker (tests assert it).
 #[allow(dead_code)]
-pub(crate) const IO_TABLE_VERSION: u8 = 1;
+pub(crate) const IO_TABLE_VERSION: u8 = 2;
 
 /// Longest recorded literal target (characters). Longer values are display-
 /// capped with `...`; this is a display bound, not a runtime value.
@@ -223,6 +223,10 @@ struct IoRule {
     /// True for bare C names: skip when a drawn file defines the same name
     /// (a user wrapper must never be classified by name alone).
     bare: bool,
+    /// True only for Rust stdio macros (`println!`, `write!`, …). The flow
+    /// projection blocks macro calls anyway; the structural-suite classifier
+    /// uses this flag to require `CallEvent::is_macro`.
+    macro_only: bool,
 }
 
 impl OpRule {
@@ -316,104 +320,128 @@ fn numeric_flag_token(token: &str) -> bool {
 #[rustfmt::skip]
 const IO_RULES: &[IoRule] = &[
     // --- C: files (paths / fd) -------------------------------------------
-    IoRule { name: "fopen", op: OpRule::Mode(1), target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "freopen", op: OpRule::Mode(1), target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "open", op: OpRule::Flags(1), target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "openat", op: OpRule::Flags(2), target: "file", literal_arg: Some(1), bare: true },
-    IoRule { name: "creat", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "read", op: OpRule::Read, target: "file", literal_arg: None, bare: true },
-    IoRule { name: "pread", op: OpRule::Read, target: "file", literal_arg: None, bare: true },
-    IoRule { name: "write", op: OpRule::Write, target: "file", literal_arg: None, bare: true },
-    IoRule { name: "pwrite", op: OpRule::Write, target: "file", literal_arg: None, bare: true },
-    IoRule { name: "stat", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "lstat", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "access", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "unlink", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "remove", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true },
-    IoRule { name: "rename", op: OpRule::Write, target: "file", literal_arg: None, bare: true },
+    IoRule { name: "fopen", op: OpRule::Mode(1), target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "freopen", op: OpRule::Mode(1), target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "open", op: OpRule::Flags(1), target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "openat", op: OpRule::Flags(2), target: "file", literal_arg: Some(1), bare: true, macro_only: false },
+    IoRule { name: "creat", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "read", op: OpRule::Read, target: "file", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "pread", op: OpRule::Read, target: "file", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "write", op: OpRule::Write, target: "file", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "pwrite", op: OpRule::Write, target: "file", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "stat", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "lstat", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "access", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "unlink", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "remove", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "rename", op: OpRule::Write, target: "file", literal_arg: None, bare: true, macro_only: false },
     // --- C: stdio streams (no path literal) ------------------------------
-    IoRule { name: "fread", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "fwrite", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "fgets", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "fputs", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "puts", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "printf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "fprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "vprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "vfprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "putchar", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "scanf", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "fscanf", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
-    IoRule { name: "getchar", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true },
+    IoRule { name: "fread", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "fwrite", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "fgets", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "fputs", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "puts", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "printf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "fprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "vprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "vfprintf", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "putchar", op: OpRule::Write, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "scanf", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "fscanf", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "getchar", op: OpRule::Read, target: "stdio", literal_arg: None, bare: true, macro_only: false },
     // --- C: environment and network --------------------------------------
-    IoRule { name: "getenv", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: true },
-    IoRule { name: "setenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true },
-    IoRule { name: "putenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true },
-    IoRule { name: "unsetenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true },
-    IoRule { name: "connect", op: OpRule::Write, target: "net", literal_arg: None, bare: true },
-    IoRule { name: "send", op: OpRule::Write, target: "net", literal_arg: None, bare: true },
-    IoRule { name: "sendto", op: OpRule::Write, target: "net", literal_arg: None, bare: true },
-    IoRule { name: "recv", op: OpRule::Read, target: "net", literal_arg: None, bare: true },
-    IoRule { name: "recvfrom", op: OpRule::Read, target: "net", literal_arg: None, bare: true },
+    IoRule { name: "getenv", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "setenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "putenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "unsetenv", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: true, macro_only: false },
+    IoRule { name: "connect", op: OpRule::Write, target: "net", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "send", op: OpRule::Write, target: "net", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "sendto", op: OpRule::Write, target: "net", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "recv", op: OpRule::Read, target: "net", literal_arg: None, bare: true, macro_only: false },
+    IoRule { name: "recvfrom", op: OpRule::Read, target: "net", literal_arg: None, bare: true, macro_only: false },
     // --- Rust: files (exact written paths; never a bare `read`) ----------
-    IoRule { name: "File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::read", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::read", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::read_to_string", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::read_to_string", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::read_dir", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::read_dir", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::symlink_metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::symlink_metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::write", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::write", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::create_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::create_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::create_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::create_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::remove_file", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::remove_file", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::remove_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::remove_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::fs::rename", op: OpRule::Write, target: "file", literal_arg: None, bare: false },
-    IoRule { name: "fs::rename", op: OpRule::Write, target: "file", literal_arg: None, bare: false },
-    IoRule { name: "std::fs::copy", op: OpRule::Both, target: "file", literal_arg: None, bare: false },
-    IoRule { name: "fs::copy", op: OpRule::Both, target: "file", literal_arg: None, bare: false },
-    IoRule { name: "std::fs::hard_link", op: OpRule::Write, target: "file", literal_arg: None, bare: false },
-    IoRule { name: "fs::hard_link", op: OpRule::Write, target: "file", literal_arg: None, bare: false },
-    IoRule { name: "std::fs::set_permissions", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
-    IoRule { name: "fs::set_permissions", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false },
+    IoRule { name: "File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::File::open", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::File::create", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::read", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::read", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::read_to_string", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::read_to_string", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::read_dir", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::read_dir", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::symlink_metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::symlink_metadata", op: OpRule::Read, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::write", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::write", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::create_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::create_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::create_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::create_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::remove_file", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::remove_file", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::remove_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::remove_dir", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::remove_dir_all", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::fs::rename", op: OpRule::Write, target: "file", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "fs::rename", op: OpRule::Write, target: "file", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "std::fs::copy", op: OpRule::Both, target: "file", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "fs::copy", op: OpRule::Both, target: "file", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "std::fs::hard_link", op: OpRule::Write, target: "file", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "fs::hard_link", op: OpRule::Write, target: "file", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "std::fs::set_permissions", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "fs::set_permissions", op: OpRule::Write, target: "file", literal_arg: Some(0), bare: false, macro_only: false },
     // --- Rust: environment and network -----------------------------------
-    IoRule { name: "std::env::var", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "env::var", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::env::var_os", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "env::var_os", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::env::vars", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "env::vars", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "std::env::args", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "env::args", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "std::env::args_os", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "env::args_os", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "std::env::current_dir", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "env::current_dir", op: OpRule::Read, target: "env", literal_arg: None, bare: false },
-    IoRule { name: "std::env::set_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "env::set_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::env::remove_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "env::remove_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false },
-    IoRule { name: "TcpStream::connect", op: OpRule::Write, target: "net", literal_arg: Some(0), bare: false },
-    IoRule { name: "std::net::TcpStream::connect", op: OpRule::Write, target: "net", literal_arg: Some(0), bare: false },
-    IoRule { name: "reqwest::get", op: OpRule::Read, target: "net", literal_arg: Some(0), bare: false },
-    IoRule { name: "reqwest::blocking::get", op: OpRule::Read, target: "net", literal_arg: Some(0), bare: false },
+    IoRule { name: "std::env::var", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "env::var", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::env::var_os", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "env::var_os", op: OpRule::Read, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::env::vars", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "env::vars", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "std::env::args", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "env::args", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "std::env::args_os", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "env::args_os", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "std::env::current_dir", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "env::current_dir", op: OpRule::Read, target: "env", literal_arg: None, bare: false, macro_only: false },
+    IoRule { name: "std::env::set_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "env::set_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::env::remove_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "env::remove_var", op: OpRule::Write, target: "env", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "TcpStream::connect", op: OpRule::Write, target: "net", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "std::net::TcpStream::connect", op: OpRule::Write, target: "net", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "reqwest::get", op: OpRule::Read, target: "net", literal_arg: Some(0), bare: false, macro_only: false },
+    IoRule { name: "reqwest::blocking::get", op: OpRule::Read, target: "net", literal_arg: Some(0), bare: false, macro_only: false },
+    // --- Rust: stdio macros (structural suite v1; documented heuristic) ---
+    // `write!`/`writeln!` can target a file, but the v1 fixture contract
+    // requires them as stdio; this is an accepted over-approximation.
+    IoRule { name: "println", op: OpRule::Write, target: "stdio", literal_arg: None, bare: false, macro_only: true },
+    IoRule { name: "print", op: OpRule::Write, target: "stdio", literal_arg: None, bare: false, macro_only: true },
+    IoRule { name: "eprintln", op: OpRule::Write, target: "stdio", literal_arg: None, bare: false, macro_only: true },
+    IoRule { name: "eprint", op: OpRule::Write, target: "stdio", literal_arg: None, bare: false, macro_only: true },
+    IoRule { name: "write", op: OpRule::Write, target: "stdio", literal_arg: None, bare: false, macro_only: true },
+    IoRule { name: "writeln", op: OpRule::Write, target: "stdio", literal_arg: None, bare: false, macro_only: true },
 ];
+
+/// Structural-suite v1 shared classifier: true when `name` is a fixed-table
+/// C/Rust I/O rule whose target is EXTERNAL (`file`, `stdio`, `net`).
+/// `env` rows are deliberately excluded (environment access is not external
+/// I/O for the resource-action construct). `is_macro` selects the Rust stdio
+/// macro rows only, so a plain function named `write` is never classified.
+#[must_use]
+pub(crate) fn matches_external_io_rule(name: &str, is_macro: bool, bare_c: bool) -> bool {
+    IO_RULES.iter().any(|rule| {
+        rule.macro_only == is_macro
+            && rule.bare == bare_c
+            && matches!(rule.target, "file" | "stdio" | "net")
+            && rule.name == name
+    })
+}
 
 /// One function signature, keyed by the canonical IR function id.
 #[derive(Debug, Serialize)]
@@ -538,7 +566,7 @@ pub(crate) fn build(root: &Path, drawn: impl IntoIterator<Item = String>) -> Flo
         // function is a local wrapper, not the library call; macros and
         // function-pointer values are blocked. No rule ⇒ no row.
         for rule in IO_RULES {
-            if raw.blocked || raw.callee != rule.name {
+            if rule.macro_only || raw.blocked || raw.callee != rule.name {
                 continue;
             }
             if rule.bare && (raw.language != Language::C || by_name.contains_key(rule.name)) {
@@ -2213,11 +2241,16 @@ mod tests {
 
     #[test]
     fn io_table_names_are_unique() {
-        let mut names: Vec<&str> = IO_RULES.iter().map(|rule| rule.name).collect();
+        // A name may appear twice only for the macro/non-macro split (e.g.
+        // C `write` vs Rust `write!`); the pair must still be unique.
+        let mut names: Vec<(&str, bool)> = IO_RULES
+            .iter()
+            .map(|rule| (rule.name, rule.macro_only))
+            .collect();
         names.sort_unstable();
         names.dedup();
         assert_eq!(names.len(), IO_RULES.len());
-        assert_eq!(IO_TABLE_VERSION, 1);
+        assert_eq!(IO_TABLE_VERSION, 2);
     }
 
     #[test]

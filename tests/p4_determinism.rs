@@ -239,3 +239,96 @@ int loops(int n) {
         f["loop_count"].as_u64().unwrap_or(0) > 0 && f["loop_body_loc"].as_u64().unwrap_or(0) > 0
     }));
 }
+
+/// Stage 2 (schema 1.9): in-loop resource sites must be byte-deterministic
+/// after provenance masking and keep the total `(line, column, kind,
+/// language)` order across runs.
+#[test]
+fn resource_sites_are_deterministic() {
+    let root = temp_dir("resources");
+    fs::write(
+        root.join("sites.c"),
+        "\
+int sites(int n) {
+    for (int i = 0; i < n; i++) {
+        malloc(4);
+        printf(\"x\");
+    }
+    return 0;
+}
+",
+    )
+    .expect("write C fixture");
+    fs::write(
+        root.join("sites.rs"),
+        "\
+fn sites(n: usize) {
+    for _ in 0..n {
+        let v = Vec::new();
+        println!(\"x\");
+    }
+}
+",
+    )
+    .expect("write Rust fixture");
+    fs::write(
+        root.join("sites.py"),
+        "\
+def sites(items):
+    for x in items:
+        print(x)
+",
+    )
+    .expect("write Python fixture");
+
+    let out = root.join("report");
+    let out_str = out.to_string_lossy().into_owned();
+    let target = root.to_string_lossy().into_owned();
+
+    assert_eq!(run_with(argv(&out_str, &target)), 0);
+    let run1 = collect_artifacts(&out);
+    assert_eq!(run_with(argv(&out_str, &target)), 0);
+    let run2 = collect_artifacts(&out);
+
+    let metrics1 = String::from_utf8(run1["metrics.json"].clone()).expect("metrics.json UTF-8");
+    let metrics2 = String::from_utf8(run2["metrics.json"].clone()).expect("metrics.json UTF-8");
+    assert_eq!(
+        common::mask_metrics_provenance(&metrics1),
+        common::mask_metrics_provenance(&metrics2),
+        "resource-site metrics diverged beyond provenance"
+    );
+    let report1 = String::from_utf8(run1["report.md"].clone()).expect("report.md UTF-8");
+    let report2 = String::from_utf8(run2["report.md"].clone()).expect("report.md UTF-8");
+    assert_eq!(
+        common::mask_report_provenance(&report1),
+        common::mask_report_provenance(&report2),
+        "report.md diverged beyond provenance"
+    );
+
+    let doc: serde_json::Value = serde_json::from_str(&metrics1).expect("metrics.json parses");
+    let mut total_sites = 0usize;
+    for f in doc["stats"]["functions"].as_array().expect("functions[]") {
+        let Some(sites) = f.get("resource_sites").and_then(|v| v.as_array()) else {
+            continue;
+        };
+        total_sites += sites.len();
+        let mut keys: Vec<(u64, u64, &str, &str)> = sites
+            .iter()
+            .map(|s| {
+                (
+                    s["line"].as_u64().unwrap(),
+                    s["column"].as_u64().unwrap(),
+                    s["kind"].as_str().unwrap(),
+                    s["language"].as_str().unwrap(),
+                )
+            })
+            .collect();
+        let original = keys.clone();
+        keys.sort();
+        assert_eq!(original, keys, "resource_sites order drifted");
+        let mut dedup = keys.clone();
+        dedup.dedup();
+        assert_eq!(dedup, keys, "duplicate resource-site sort key");
+    }
+    assert_eq!(total_sites, 5, "C alloc+io, Rust alloc+io, Python io");
+}

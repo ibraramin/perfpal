@@ -4,3 +4,4 @@
 //! (`--story` → `atlas-layout.json`); normal scans never reach this module.
 
 pub(crate) mod flow;
+pub(crate) mod io_table;

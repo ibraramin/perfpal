@@ -1104,6 +1104,7 @@ pub fn kitchen_units() -> Vec<FileUnit> {
                 recurse
             },
         ],
+        dead_regions: Vec::new(),
     }]
 }
 
@@ -1138,5 +1139,6 @@ pub fn helper_unit() -> FileUnit {
             Vec::new(),
             Vec::new(),
         )],
+        dead_regions: Vec::new(),
     }
 }

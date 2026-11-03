@@ -854,6 +854,7 @@ mod tests {
                 allocations: Vec::new(),
                 unaries: Vec::new(),
             }],
+            dead_regions: Vec::new(),
         }
     }
 

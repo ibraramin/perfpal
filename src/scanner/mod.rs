@@ -49,7 +49,7 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use crate::ir::{
-    FileRecord, GlobalVar, IncludeEdge, IncludeForm, MacroEvent, ParseHealth, ParseStatus,
+    FileRecord, GlobalVar, IncludeEdge, IncludeForm, MacroEvent, ParseHealth, ParseStatus, Span,
     StructDef,
 };
 
@@ -67,6 +67,13 @@ pub struct FileUnit {
     pub structs: Vec<StructDef>,
     pub macros: Vec<MacroEvent>,
     pub functions: Vec<FunctionUnit>,
+    /// ADDITIVE v1.9 (structural suite v1): provably-dead configuration
+    /// regions for this file. Only the C backend populates it (`#if 0` /
+    /// `#if (0)` preprocessor regions); every other backend leaves it empty.
+    /// The aggregator uses it for per-site `cfg_gated`; empty means "no dead
+    /// regions known", never a false claim about live code.
+    #[serde(default)]
+    pub dead_regions: Vec<Span>,
 }
 
 /// A function's record plus its attached event streams (ir-v1.md §3.3:
@@ -447,6 +454,7 @@ fn extract_unit(rel_path: &str, source: &[u8], lang: LanguageKind) -> FileUnit {
         structs: ex.structs,
         macros: ex.macros,
         functions: ex.functions,
+        dead_regions: ex.dead_regions,
     };
     // IR v1.4 STEP 2 (plan `divergence-revamp`): populate the three
     // source-local instrument fields (`idiom_hash`, `alloc_family`,

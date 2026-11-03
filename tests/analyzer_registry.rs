@@ -104,6 +104,7 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
             allocations: Vec::new(),
             unaries: Vec::new(),
         }],
+        dead_regions: Vec::new(),
     }
 }
 
@@ -313,6 +314,7 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
             allocations: Vec::new(),
             unaries: Vec::new(),
         }],
+        dead_regions: Vec::new(),
     }
 }
 

@@ -148,6 +148,7 @@ pub fn extract(path: &str, source: &[u8]) -> Extraction {
         structs,
         macros,
         functions,
+        dead_regions: Vec::new(),
     }
 }
 
@@ -175,6 +176,7 @@ fn failed_extraction(path: &str) -> Extraction {
         structs: Vec::new(),
         macros: Vec::new(),
         functions: Vec::new(),
+        dead_regions: Vec::new(),
     }
 }
 

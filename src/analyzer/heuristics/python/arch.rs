@@ -294,6 +294,7 @@ mod tests {
             structs: Vec::new(),
             macros: Vec::new(),
             functions,
+            dead_regions: Vec::new(),
         }
     }
 
