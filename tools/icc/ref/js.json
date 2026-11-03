@@ -1,0 +1,365 @@
+{
+  "language": "javascript",
+  "functions": [
+    {
+      "path": "examples-js/01_alloc_churn.js",
+      "name": "buildEnvelopes",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/01_alloc_churn.js",
+      "name": "buildIndexed",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/01_alloc_churn.js",
+      "name": "buildLabelled",
+      "start_line": 22,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 4,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/02_array_accumulation.js",
+      "name": "flatten",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/02_array_accumulation.js",
+      "name": "snapshotRows",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 4,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/02_array_accumulation.js",
+      "name": "merge",
+      "start_line": 22,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/03_string_build.js",
+      "name": "render",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/03_string_build.js",
+      "name": "tinyPrefix",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/03_string_build.js",
+      "name": "appendOnce",
+      "start_line": 21,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/03_string_build.js",
+      "name": "sumValues",
+      "start_line": 26,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/04_deep_nesting.js",
+      "name": "score",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 2,
+      "loop_body_loc": 5,
+      "max_loop_depth": 2
+    },
+    {
+      "path": "examples-js/04_deep_nesting.js",
+      "name": "scoreFlat",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/05_sync_io_loop.js",
+      "name": "loadAll",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/05_sync_io_loop.js",
+      "name": "loadOnce",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/06_membership_scan.js",
+      "name": "intersect",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 1,
+      "loop_body_loc": 5,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/06_membership_scan.js",
+      "name": "containsOnce",
+      "start_line": 15,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/06_membership_scan.js",
+      "name": "smallWindow",
+      "start_line": 19,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 1,
+      "loop_body_loc": 5,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/07_async_await.js",
+      "name": "fetchJson",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/07_async_await.js",
+      "name": "loadAll",
+      "start_line": 8,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/07_async_await.js",
+      "name": "loadOne",
+      "start_line": 16,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/08_async_blocking.js",
+      "name": "readConfig",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/08_async_blocking.js",
+      "name": "readConfigSync",
+      "start_line": 10,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/09_recursion.js",
+      "name": "descend",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/09_recursion.js",
+      "name": "countdown",
+      "start_line": 9,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/10_cycle_a.js",
+      "name": "format",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/11_cycle_b.js",
+      "name": "formatFromB",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/12_delete.js",
+      "name": "dropField",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/12_delete.js",
+      "name": "dropKey",
+      "start_line": 9,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/13_controls.js",
+      "name": "chunk",
+      "start_line": 7,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-js/13_controls.js",
+      "name": "summarize",
+      "start_line": 15,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/13_controls.js",
+      "name": "mergeDefaults",
+      "start_line": 19,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/14_commonjs.cjs",
+      "name": "basename",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-js/index.js",
+      "name": "boot",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "tools/icc/extra/extra.js",
+      "name": "jsNested",
+      "start_line": 1,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 2,
+      "loop_body_loc": 5,
+      "max_loop_depth": 2
+    },
+    {
+      "path": "tools/icc/extra/extra.js",
+      "name": "jsCallback",
+      "start_line": 11,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "tools/icc/extra/extra.js",
+      "name": "f",
+      "start_line": 13,
+      "start_col": 12,
+      "param_count": 0,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    }
+  ]
+}

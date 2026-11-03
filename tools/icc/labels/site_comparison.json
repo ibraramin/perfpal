@@ -1,0 +1,906 @@
+{
+  "note": "not blind: Perfpal reference for scoring only",
+  "dead_sites_included": 4,
+  "items": [
+    {
+      "id": "site-001",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "build_row_labels",
+      "line": 31,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-002",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "build_row_labels",
+      "line": 35,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-003",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "build_row_labels",
+      "line": 36,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-004",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "build_row_labels",
+      "line": 37,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-005",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "grow_one_at_a_time",
+      "line": 48,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-006",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "grow_one_at_a_time",
+      "line": 53,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-007",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "grid_reset",
+      "line": 66,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-008",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "grid_reset",
+      "line": 70,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-009",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "function": "grid_reset",
+      "line": 71,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-010",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "function": "append_all",
+      "line": 30,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-011",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "function": "append_all",
+      "line": 31,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-012",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "function": "scan_for_x",
+      "line": 41,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-013",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "function": "echo_stream",
+      "line": 77,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-014",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "function": "echo_stream",
+      "line": 78,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-015",
+      "language": "c",
+      "path": "examples/03_deep_nesting.c",
+      "function": "triple_nested",
+      "line": 43,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-016",
+      "language": "c",
+      "path": "examples/03_deep_nesting.c",
+      "function": "reduce_series",
+      "line": 58,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-017",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "function": "copy_charwise",
+      "line": 23,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-018",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "function": "copy_charwise",
+      "line": 24,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-019",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "function": "copy_blockwise",
+      "line": 34,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-020",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "function": "copy_blockwise",
+      "line": 35,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-021",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "function": "touch_many",
+      "line": 45,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-022",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "function": "touch_many",
+      "line": 47,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-023",
+      "language": "c",
+      "path": "tools/icc/extra/dead.c",
+      "function": "dead_sites",
+      "line": 6,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-024",
+      "language": "c",
+      "path": "tools/icc/extra/dead.c",
+      "function": "dead_sites",
+      "line": 7,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": false
+    },
+    {
+      "id": "site-025",
+      "language": "c",
+      "path": "tools/icc/extra/dead.c",
+      "function": "dead_sites",
+      "line": 11,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": true
+    },
+    {
+      "id": "site-026",
+      "language": "c",
+      "path": "tools/icc/extra/dead.c",
+      "function": "dead_sites",
+      "line": 12,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": true
+    },
+    {
+      "id": "site-027",
+      "language": "js",
+      "path": "examples-js/01_alloc_churn.js",
+      "function": "buildEnvelopes",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-028",
+      "language": "js",
+      "path": "examples-js/01_alloc_churn.js",
+      "function": "buildIndexed",
+      "line": 17,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-029",
+      "language": "js",
+      "path": "examples-js/01_alloc_churn.js",
+      "function": "buildLabelled",
+      "line": 27,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-030",
+      "language": "js",
+      "path": "examples-js/02_array_accumulation.js",
+      "function": "snapshotRows",
+      "line": 16,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-031",
+      "language": "js",
+      "path": "examples-js/02_array_accumulation.js",
+      "function": "snapshotRows",
+      "line": 17,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-032",
+      "language": "js",
+      "path": "examples-js/05_sync_io_loop.js",
+      "function": "loadAll",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-033",
+      "language": "js",
+      "path": "examples-js/05_sync_io_loop.js",
+      "function": "loadAll",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-034",
+      "language": "js",
+      "path": "examples-js/06_membership_scan.js",
+      "function": "intersect",
+      "line": 8,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-035",
+      "language": "js",
+      "path": "examples-js/06_membership_scan.js",
+      "function": "intersect",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-036",
+      "language": "js",
+      "path": "examples-js/06_membership_scan.js",
+      "function": "smallWindow",
+      "line": 22,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-037",
+      "language": "js",
+      "path": "examples-js/06_membership_scan.js",
+      "function": "smallWindow",
+      "line": 23,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-038",
+      "language": "js",
+      "path": "examples-js/07_async_await.js",
+      "function": "loadAll",
+      "line": 11,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-039",
+      "language": "js",
+      "path": "examples-js/07_async_await.js",
+      "function": "loadAll",
+      "line": 11,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-040",
+      "language": "js",
+      "path": "examples-js/13_controls.js",
+      "function": "chunk",
+      "line": 10,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-041",
+      "language": "js",
+      "path": "examples-js/13_controls.js",
+      "function": "chunk",
+      "line": 10,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-042",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "function": "loop_invariant_construction",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-043",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "function": "local_rebuild_is_benign",
+      "line": 33,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-044",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "function": "local_rebuild_is_benign",
+      "line": 34,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-045",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "function": "eager_materialise",
+      "line": 42,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-046",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "function": "eager_materialise",
+      "line": 42,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-047",
+      "language": "python",
+      "path": "examples-python/04_stdio_churn.py",
+      "function": "read_each",
+      "line": 8,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-048",
+      "language": "python",
+      "path": "examples-python/04_stdio_churn.py",
+      "function": "log_each",
+      "line": 18,
+      "perfpal_kind": "io",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-049",
+      "language": "python",
+      "path": "examples-python/06_memory_ops.py",
+      "function": "copy_each",
+      "line": 10,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-050",
+      "language": "python",
+      "path": "examples-python/07_membership_scan.py",
+      "function": "position_of",
+      "line": 28,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-051",
+      "language": "python",
+      "path": "examples-python/08_range_len.py",
+      "function": "positional_sum",
+      "line": 8,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-052",
+      "language": "python",
+      "path": "examples-python/08_range_len.py",
+      "function": "positional_sum",
+      "line": 8,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-053",
+      "language": "python",
+      "path": "examples-python/09_try_in_loop.py",
+      "function": "swallow",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-054",
+      "language": "python",
+      "path": "examples-python/10_comprehension.py",
+      "function": "transform_all",
+      "line": 12,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-055",
+      "language": "python",
+      "path": "examples-python/10_comprehension.py",
+      "function": "transform_all",
+      "line": 12,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-056",
+      "language": "python",
+      "path": "examples-python/10_comprehension.py",
+      "function": "accumulate_multi",
+      "line": 20,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-057",
+      "language": "python",
+      "path": "examples-python/10_comprehension.py",
+      "function": "accumulate_multi",
+      "line": 21,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-058",
+      "language": "python",
+      "path": "examples-python/11_executors.py",
+      "function": "fan_out",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-059",
+      "language": "python",
+      "path": "examples-python/11_executors.py",
+      "function": "fan_out",
+      "line": 10,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-060",
+      "language": "python",
+      "path": "examples-python/11_executors.py",
+      "function": "fan_out_once",
+      "line": 17,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-061",
+      "language": "python",
+      "path": "examples-python/12_io_n1.py",
+      "function": "fetch_each",
+      "line": 8,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-062",
+      "language": "python",
+      "path": "examples-python/13_pandas.py",
+      "function": "append_frames",
+      "line": 18,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-063",
+      "language": "python",
+      "path": "examples-python/14_async_blocking.py",
+      "function": "await_each",
+      "line": 27,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-064",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "function": "build_row_labels",
+      "line": 36,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-065",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "function": "build_row_labels",
+      "line": 38,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-066",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "function": "build_row_labels",
+      "line": 39,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-067",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "function": "grow_one_at_a_time",
+      "line": 49,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-068",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "function": "grow_one_at_a_time",
+      "line": 50,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-069",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "function": "grid_reset",
+      "line": 61,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-070",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "function": "accumulate",
+      "line": 22,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-071",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "function": "accumulate",
+      "line": 23,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-072",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "function": "scan_lengths",
+      "line": 31,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-073",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "function": "scan_lengths",
+      "line": 32,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-074",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "function": "len_with_reassignment",
+      "line": 43,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-075",
+      "language": "rust",
+      "path": "examples-rust/src/03_deep_nesting.rs",
+      "function": "grid_checksum",
+      "line": 21,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-076",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "function": "count_chars_per_iteration",
+      "line": 19,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-077",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "function": "emit_rows",
+      "line": 29,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-078",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "function": "emit_rows",
+      "line": 29,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-079",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "function": "consume_all",
+      "line": 37,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-080",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "function": "consume_all",
+      "line": 37,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-081",
+      "language": "rust",
+      "path": "examples-rust/src/06_memory_ops.rs",
+      "function": "duplicate_rows",
+      "line": 28,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-082",
+      "language": "rust",
+      "path": "examples-rust/src/06_memory_ops.rs",
+      "function": "duplicate_rows",
+      "line": 28,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-083",
+      "language": "rust",
+      "path": "examples-rust/src/06_memory_ops.rs",
+      "function": "duplicate_rows",
+      "line": 29,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-084",
+      "language": "rust",
+      "path": "examples-rust/src/06_memory_ops.rs",
+      "function": "duplicate_rows",
+      "line": 29,
+      "perfpal_kind": "alloc",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-085",
+      "language": "rust",
+      "path": "examples-rust/src/08_globals_and_chains.rs",
+      "function": "run_handlers",
+      "line": 41,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-086",
+      "language": "ts",
+      "path": "examples-ts/01_alloc_churn.ts",
+      "function": "buildEnvelopes",
+      "line": 14,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-087",
+      "language": "ts",
+      "path": "examples-ts/01_alloc_churn.ts",
+      "function": "buildIndexed",
+      "line": 22,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-088",
+      "language": "ts",
+      "path": "examples-ts/01_alloc_churn.ts",
+      "function": "buildLabelled",
+      "line": 32,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-089",
+      "language": "ts",
+      "path": "examples-ts/02_array_accumulation.ts",
+      "function": "snapshotRows",
+      "line": 16,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-090",
+      "language": "ts",
+      "path": "examples-ts/02_array_accumulation.ts",
+      "function": "snapshotRows",
+      "line": 17,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-091",
+      "language": "ts",
+      "path": "examples-ts/05_sync_io_loop.ts",
+      "function": "loadAll",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-092",
+      "language": "ts",
+      "path": "examples-ts/05_sync_io_loop.ts",
+      "function": "loadAll",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-093",
+      "language": "ts",
+      "path": "examples-ts/06_membership_scan.ts",
+      "function": "intersect",
+      "line": 8,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-094",
+      "language": "ts",
+      "path": "examples-ts/06_membership_scan.ts",
+      "function": "intersect",
+      "line": 9,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-095",
+      "language": "ts",
+      "path": "examples-ts/06_membership_scan.ts",
+      "function": "smallWindow",
+      "line": 22,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-096",
+      "language": "ts",
+      "path": "examples-ts/06_membership_scan.ts",
+      "function": "smallWindow",
+      "line": 23,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-097",
+      "language": "ts",
+      "path": "examples-ts/07_async_await.ts",
+      "function": "loadAll",
+      "line": 12,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-098",
+      "language": "ts",
+      "path": "examples-ts/07_async_await.ts",
+      "function": "loadAll",
+      "line": 12,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-099",
+      "language": "ts",
+      "path": "examples-ts/13_controls.ts",
+      "function": "chunk",
+      "line": 10,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    },
+    {
+      "id": "site-100",
+      "language": "ts",
+      "path": "examples-ts/13_controls.ts",
+      "function": "chunk",
+      "line": 10,
+      "perfpal_kind": "neither",
+      "perfpal_cfg_gated": null
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "rust_ref"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Independent syn-based reference parser for the Perfpal 0.5.0 Rust loop metrics"
+
+[dependencies]
+proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+syn = { version = "=2.0.119", features = ["full", "parsing", "printing", "visit"] }

@@ -1,0 +1,435 @@
+{
+  "language": "python",
+  "functions": [
+    {
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "loop_invariant_construction",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 2,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "hoisted_construction",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 0,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "superlinear_concat",
+      "start_line": 18,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "local_rebuild_is_benign",
+      "start_line": 27,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "eager_materialise",
+      "start_line": 38,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "materialise_outside_loop",
+      "start_line": 46,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/02_string_building.py",
+      "name": "build_string",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/02_string_building.py",
+      "name": "loop_invariant_prefix",
+      "start_line": 12,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/03_deep_nesting.py",
+      "name": "triple_nested",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 3,
+      "loop_count": 3,
+      "loop_body_loc": 4,
+      "max_loop_depth": 3
+    },
+    {
+      "path": "examples-python/03_deep_nesting.py",
+      "name": "double_nested",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 2,
+      "loop_body_loc": 2,
+      "max_loop_depth": 2
+    },
+    {
+      "path": "examples-python/04_stdio_churn.py",
+      "name": "read_each",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/04_stdio_churn.py",
+      "name": "log_each",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/05_recursion_complexity.py",
+      "name": "walk_down",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/05_recursion_complexity.py",
+      "name": "step_once",
+      "start_line": 11,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/05_recursion_complexity.py",
+      "name": "branchy",
+      "start_line": 16,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/05_recursion_complexity.py",
+      "name": "simple",
+      "start_line": 54,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/06_memory_ops.py",
+      "name": "copy_each",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/06_memory_ops.py",
+      "name": "copy_once",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/07_membership_scan.py",
+      "name": "contains_any",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 2,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/07_membership_scan.py",
+      "name": "index_scan",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 0,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/07_membership_scan.py",
+      "name": "position_of",
+      "start_line": 23,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/07_membership_scan.py",
+      "name": "set_membership",
+      "start_line": 32,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 2,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/08_range_len.py",
+      "name": "positional_sum",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 2,
+      "loop_body_loc": 2,
+      "max_loop_depth": 2
+    },
+    {
+      "path": "examples-python/08_range_len.py",
+      "name": "counter_sum",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/09_try_in_loop.py",
+      "name": "swallow",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 4,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/09_try_in_loop.py",
+      "name": "guarded",
+      "start_line": 15,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/10_comprehension.py",
+      "name": "transform",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/10_comprehension.py",
+      "name": "transform_all",
+      "start_line": 8,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/10_comprehension.py",
+      "name": "accumulate_multi",
+      "start_line": 16,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 2,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/11_executors.py",
+      "name": "fan_out",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 2,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/11_executors.py",
+      "name": "fan_out_once",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/12_io_n1.py",
+      "name": "fetch_each",
+      "start_line": 4,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/12_io_n1.py",
+      "name": "fetch_once",
+      "start_line": 12,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/13_pandas.py",
+      "name": "row_wise",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/13_pandas.py",
+      "name": "append_frames",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/13_pandas.py",
+      "name": "vectorised",
+      "start_line": 22,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/14_async_blocking.py",
+      "name": "fetch_blocking",
+      "start_line": 8,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/14_async_blocking.py",
+      "name": "pause",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 0,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/14_async_blocking.py",
+      "name": "fetch_sync",
+      "start_line": 18,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-python/14_async_blocking.py",
+      "name": "await_each",
+      "start_line": 23,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 1,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-python/14_async_blocking.py",
+      "name": "await_once",
+      "start_line": 31,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "tools/icc/extra/extra.py",
+      "name": "p_nested",
+      "start_line": 1,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 2,
+      "loop_body_loc": 2,
+      "max_loop_depth": 2
+    },
+    {
+      "path": "tools/icc/extra/extra.py",
+      "name": "p_comp",
+      "start_line": 9,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 2,
+      "loop_body_loc": 1,
+      "max_loop_depth": 2
+    }
+  ]
+}

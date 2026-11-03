@@ -1,0 +1,395 @@
+{
+  "language": "typescript",
+  "functions": [
+    {
+      "path": "examples-ts/01_alloc_churn.ts",
+      "name": "buildEnvelopes",
+      "start_line": 11,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/01_alloc_churn.ts",
+      "name": "buildIndexed",
+      "start_line": 19,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/01_alloc_churn.ts",
+      "name": "buildLabelled",
+      "start_line": 27,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 4,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/02_array_accumulation.ts",
+      "name": "flatten",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/02_array_accumulation.ts",
+      "name": "snapshotRows",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 4,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/02_array_accumulation.ts",
+      "name": "merge",
+      "start_line": 22,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/03_string_build.ts",
+      "name": "render",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/03_string_build.ts",
+      "name": "tinyPrefix",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/03_string_build.ts",
+      "name": "appendOnce",
+      "start_line": 21,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/03_string_build.ts",
+      "name": "sumValues",
+      "start_line": 26,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/04_deep_nesting.ts",
+      "name": "score",
+      "start_line": 7,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 2,
+      "loop_body_loc": 5,
+      "max_loop_depth": 2
+    },
+    {
+      "path": "examples-ts/04_deep_nesting.ts",
+      "name": "scoreFlat",
+      "start_line": 17,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/05_sync_io_loop.ts",
+      "name": "loadAll",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/05_sync_io_loop.ts",
+      "name": "loadOnce",
+      "start_line": 14,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/06_membership_scan.ts",
+      "name": "intersect",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 1,
+      "loop_body_loc": 5,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/06_membership_scan.ts",
+      "name": "containsOnce",
+      "start_line": 15,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/06_membership_scan.ts",
+      "name": "smallWindow",
+      "start_line": 19,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 1,
+      "loop_body_loc": 5,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/07_async_await.ts",
+      "name": "fetchJson",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/07_async_await.ts",
+      "name": "loadAll",
+      "start_line": 9,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/07_async_await.ts",
+      "name": "loadOne",
+      "start_line": 17,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/08_async_blocking.ts",
+      "name": "readConfig",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/08_async_blocking.ts",
+      "name": "readConfigSync",
+      "start_line": 10,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/09_recursion.ts",
+      "name": "descend",
+      "start_line": 9,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/09_recursion.ts",
+      "name": "countdown",
+      "start_line": 13,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/10_cycle_a.ts",
+      "name": "format",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/11_cycle_b.ts",
+      "name": "formatFromB",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/12_delete.ts",
+      "name": "dropField",
+      "start_line": 5,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/12_delete.ts",
+      "name": "dropKey",
+      "start_line": 9,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/13_controls.ts",
+      "name": "chunk",
+      "start_line": 7,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    },
+    {
+      "path": "examples-ts/13_controls.ts",
+      "name": "summarize",
+      "start_line": 15,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/13_controls.ts",
+      "name": "mergeDefaults",
+      "start_line": 19,
+      "start_col": 0,
+      "param_count": 2,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/14_types_only.ts",
+      "name": "parse",
+      "start_line": 26,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/14_types_only.ts",
+      "name": "<anonymous>",
+      "start_line": 45,
+      "start_col": 24,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/15_component.tsx",
+      "name": "Badge",
+      "start_line": 9,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/16_generic_arrow.tsx",
+      "name": "identity",
+      "start_line": 4,
+      "start_col": 24,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/16_generic_arrow.tsx",
+      "name": "identityBare",
+      "start_line": 6,
+      "start_col": 28,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "examples-ts/index.ts",
+      "name": "boot",
+      "start_line": 6,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 0,
+      "loop_body_loc": 0,
+      "max_loop_depth": 0
+    },
+    {
+      "path": "tools/icc/extra/extra.ts",
+      "name": "tsNested",
+      "start_line": 1,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 2,
+      "loop_body_loc": 5,
+      "max_loop_depth": 2
+    },
+    {
+      "path": "tools/icc/extra/extra.ts",
+      "name": "tsOf",
+      "start_line": 11,
+      "start_col": 0,
+      "param_count": 1,
+      "loop_count": 1,
+      "loop_body_loc": 3,
+      "max_loop_depth": 1
+    }
+  ]
+}

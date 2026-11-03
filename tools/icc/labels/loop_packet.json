@@ -1,0 +1,806 @@
+{
+  "count": 100,
+  "instruction": "label each function; see labels/README.md",
+  "items": [
+    {
+      "id": "loop-001",
+      "language": "js",
+      "path": "examples-js/01_alloc_churn.js",
+      "name": "buildEnvelopes",
+      "start_line": 6,
+      "source": "   6  export function buildEnvelopes(count) {\n   7    const envelopes = [];\n   8    for (let i = 0; i < count; i++) {\n   9      envelopes.push({ status: \"new\", retries: 0 }); // TP PERF-JS-ALLOC-001\n  10    }\n  11    return envelopes;\n  12  }"
+    },
+    {
+      "id": "loop-002",
+      "language": "js",
+      "path": "examples-js/01_alloc_churn.js",
+      "name": "buildIndexed",
+      "start_line": 14,
+      "source": "  14  export function buildIndexed(count) {\n  15    const points = [];\n  16    for (let i = 0; i < count; i++) {\n  17      points.push({ index: i }); // silent: depends on the induction variable\n  18    }\n  19    return points;\n  20  }"
+    },
+    {
+      "id": "loop-003",
+      "language": "js",
+      "path": "examples-js/01_alloc_churn.js",
+      "name": "buildLabelled",
+      "start_line": 22,
+      "source": "  22  export function buildLabelled(rows) {\n  23    const out = [];\n  24    let label = \"\";\n  25    for (const row of rows) {\n  26      label = row.label;\n  27      out.push({ label }); // silent: `label` is reassigned inside the loop\n  28    }\n  29    return out;\n  30  }"
+    },
+    {
+      "id": "loop-004",
+      "language": "js",
+      "path": "examples-js/02_array_accumulation.js",
+      "name": "flatten",
+      "start_line": 5,
+      "source": "   5  export function flatten(items) {\n   6    let acc = [];\n   7    for (const item of items) {\n   8      acc = [...acc, item]; // TP PERF-JS-ALLOC-003\n   9    }\n  10    return acc;\n  11  }"
+    },
+    {
+      "id": "loop-005",
+      "language": "js",
+      "path": "examples-js/02_array_accumulation.js",
+      "name": "snapshotRows",
+      "start_line": 13,
+      "source": "  13  export function snapshotRows(rows) {\n  14    const copies = [];\n  15    for (const row of rows) {\n  16      const view = rows.slice(); // silent: receiver is not reassigned\n  17      copies.push(view);\n  18    }\n  19    return copies;\n  20  }"
+    },
+    {
+      "id": "loop-006",
+      "language": "js",
+      "path": "examples-js/03_string_build.js",
+      "name": "render",
+      "start_line": 5,
+      "source": "   5  export function render(parts) {\n   6    let out = \"\";\n   7    for (const part of parts) {\n   8      out += `part:${part}`; // TP PERF-JS-STR-001\n   9    }\n  10    return out;\n  11  }"
+    },
+    {
+      "id": "loop-007",
+      "language": "js",
+      "path": "examples-js/03_string_build.js",
+      "name": "tinyPrefix",
+      "start_line": 13,
+      "source": "  13  export function tinyPrefix(items) {\n  14    let out = \"\";\n  15    for (let i = 0; i < 5; i++) {\n  16      out += `item:${items[i]}`; // silent: canonical trip count 5 < 8 (string RHS)\n  17    }\n  18    return out;\n  19  }"
+    },
+    {
+      "id": "loop-008",
+      "language": "js",
+      "path": "examples-js/03_string_build.js",
+      "name": "sumValues",
+      "start_line": 26,
+      "source": "  26  export function sumValues(values) {\n  27    let total = 0;\n  28    for (const value of values) {\n  29      total += value; // silent: numeric += is not a string build\n  30    }\n  31    return total;\n  32  }"
+    },
+    {
+      "id": "loop-009",
+      "language": "js",
+      "path": "examples-js/04_deep_nesting.js",
+      "name": "score",
+      "start_line": 4,
+      "source": "   4  export function score(matrix) {\n   5    let total = 0;\n   6    for (let row = 0; row < matrix.length; row++) {\n   7      for (let col = 0; col < matrix[row].length; col++) {\n   8        total = total + matrix[row][col]; // TP PERF-JS-LOOP-001\n   9      }\n  10    }\n  11    return total;\n  12  }"
+    },
+    {
+      "id": "loop-010",
+      "language": "js",
+      "path": "examples-js/04_deep_nesting.js",
+      "name": "scoreFlat",
+      "start_line": 14,
+      "source": "  14  export function scoreFlat(values) {\n  15    let total = 0;\n  16    for (let i = 0; i < values.length; i++) {\n  17      total = total + values[i]; // silent: loop depth stays at 1\n  18    }\n  19    return total;\n  20  }"
+    },
+    {
+      "id": "loop-011",
+      "language": "js",
+      "path": "examples-js/05_sync_io_loop.js",
+      "name": "loadAll",
+      "start_line": 6,
+      "source": "   6  export function loadAll(files) {\n   7    const chunks = [];\n   8    for (const file of files) {\n   9      chunks.push(readFileSync(file, \"utf8\")); // TP PERF-JS-LOOP-002\n  10    }\n  11    return chunks;\n  12  }"
+    },
+    {
+      "id": "loop-012",
+      "language": "js",
+      "path": "examples-js/06_membership_scan.js",
+      "name": "intersect",
+      "start_line": 5,
+      "source": "   5  export function intersect(ids, seen) {\n   6    const hits = [];\n   7    for (const id of ids) {\n   8      if (seen.includes(id)) { // TP PERF-JS-LOOP-007\n   9        hits.push(id);\n  10      }\n  11    }\n  12    return hits;\n  13  }"
+    },
+    {
+      "id": "loop-013",
+      "language": "js",
+      "path": "examples-js/06_membership_scan.js",
+      "name": "smallWindow",
+      "start_line": 19,
+      "source": "  19  export function smallWindow(ids, seen) {\n  20    const hits = [];\n  21    for (let i = 0; i < 4; i++) {\n  22      if (seen.includes(ids[i])) { // silent: canonical trip count 4 < 16\n  23        hits.push(ids[i]);\n  24      }\n  25    }\n  26    return hits;\n  27  }"
+    },
+    {
+      "id": "loop-014",
+      "language": "js",
+      "path": "examples-js/07_async_await.js",
+      "name": "loadAll",
+      "start_line": 8,
+      "source": "   8  export async function loadAll(urls) {\n   9    const payloads = [];\n  10    for (const url of urls) {\n  11      payloads.push(await fetchJson(url)); // TP PERF-JS-ASYNC-001\n  12    }\n  13    return payloads;\n  14  }"
+    },
+    {
+      "id": "loop-015",
+      "language": "js",
+      "path": "examples-js/13_controls.js",
+      "name": "chunk",
+      "start_line": 7,
+      "source": "   7  export function chunk(items, size) {\n   8    const chunks = [];\n   9    for (let i = 0; i < items.length; i = i + size) {\n  10      chunks.push(items.slice(i, i + size)); // silent: receiver is not reassigned\n  11    }\n  12    return chunks;\n  13  }"
+    },
+    {
+      "id": "loop-016",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "loop_invariant_construction",
+      "start_line": 5,
+      "source": "   5  def loop_invariant_construction(n):\n   6      for _ in range(n):\n   7          # TP PERF-PY-ALLOC-001 \u2014 `dict()` is constructed every iteration and\n   8          # its value is independent of the loop variable.\n   9          buf = dict()\n  10          del buf"
+    },
+    {
+      "id": "loop-017",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "superlinear_concat",
+      "start_line": 18,
+      "source": "  18  def superlinear_concat(items):\n  19      acc = []\n  20      # TP PERF-PY-ALLOC-003 \u2014 non-in-place `acc = acc + [item]` rebuilds the\n  21      # list each pass (O(n\u00b2) copying).\n  22      for item in items:\n  23          acc = acc + [item]\n  24      return acc"
+    },
+    {
+      "id": "loop-018",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "local_rebuild_is_benign",
+      "start_line": 27,
+      "source": "  27  def local_rebuild_is_benign(rows):\n  28      count = 0\n  29      for row in rows:\n  30          # CONTROL PERF-PY-ALLOC-003 \u2014 `tmp` is rebuilt inside the loop, so it\n  31          # never accumulates across iterations (the benign CTL-APPEND-LOCAL).\n  32          tmp = []\n  33          tmp.append(row)\n  34          count += len(tmp)\n  35      return count"
+    },
+    {
+      "id": "loop-019",
+      "language": "python",
+      "path": "examples-python/01_alloc_churn.py",
+      "name": "eager_materialise",
+      "start_line": 38,
+      "source": "  38  def eager_materialise(rows):\n  39      total = 0\n  40      # TP PERF-PY-ALLOC-004 \u2014 `list(row)` forces an eager O(n) copy each pass.\n  41      for row in rows:\n  42          total += len(list(row))\n  43      return total"
+    },
+    {
+      "id": "loop-020",
+      "language": "python",
+      "path": "examples-python/02_string_building.py",
+      "name": "build_string",
+      "start_line": 4,
+      "source": "   4  def build_string(pieces):\n   5      s = \"\"\n   6      # TP PERF-PY-STR-001 \u2014 `s += piece` accumulates across the loop.\n   7      for piece in pieces:\n   8          s += piece\n   9      return s"
+    },
+    {
+      "id": "loop-021",
+      "language": "python",
+      "path": "examples-python/02_string_building.py",
+      "name": "loop_invariant_prefix",
+      "start_line": 12,
+      "source": "  12  def loop_invariant_prefix(pieces):\n  13      prefix = \"[\"\n  14      last = \"\"\n  15      for piece in pieces:\n  16          # CONTROL PERF-PY-STR-001 \u2014 `prefix` is read, never rebound in the loop.\n  17          last = prefix + piece\n  18      return last"
+    },
+    {
+      "id": "loop-022",
+      "language": "python",
+      "path": "examples-python/03_deep_nesting.py",
+      "name": "triple_nested",
+      "start_line": 4,
+      "source": "   4  def triple_nested(a, b, c):\n   5      total = 0\n   6      for x in a:\n   7          for y in b:\n   8              # TP PERF-PY-LOOP-001 \u2014 this loop nests exactly 3 deep.\n   9              for z in c:\n  10                  total += x + y + z\n  11      return total"
+    },
+    {
+      "id": "loop-023",
+      "language": "python",
+      "path": "examples-python/03_deep_nesting.py",
+      "name": "double_nested",
+      "start_line": 14,
+      "source": "  14  def double_nested(a, b):\n  15      total = 0\n  16      # CONTROL PERF-PY-LOOP-001 \u2014 depth 2 is below the floor (needs exactly 3).\n  17      for x in a:\n  18          for y in b:\n  19              total += x + y\n  20      return total"
+    },
+    {
+      "id": "loop-024",
+      "language": "python",
+      "path": "examples-python/04_stdio_churn.py",
+      "name": "read_each",
+      "start_line": 4,
+      "source": "   4  def read_each(paths):\n   5      total = 0\n   6      # TP PERF-PY-LOOP-002 \u2014 `open(p)` performs file I/O every iteration.\n   7      for p in paths:\n   8          fh = open(p)\n   9          total += 1\n  10          del fh\n  11      return total"
+    },
+    {
+      "id": "loop-025",
+      "language": "python",
+      "path": "examples-python/04_stdio_churn.py",
+      "name": "log_each",
+      "start_line": 14,
+      "source": "  14  def log_each(rows):\n  15      for row in rows:\n  16          # CONTROL PERF-PY-LOOP-002 \u2014 `print` is deliberately outside the I/O\n  17          # family (72\u201383% of the C rule's raw hits).\n  18          print(row)"
+    },
+    {
+      "id": "loop-026",
+      "language": "python",
+      "path": "examples-python/06_memory_ops.py",
+      "name": "copy_each",
+      "start_line": 6,
+      "source": "   6  def copy_each(rows):\n   7      last = None\n   8      # TP PERF-PY-MEM-002 \u2014 `copy.deepcopy` clones a whole container each pass.\n   9      for row in rows:\n  10          last = copy.deepcopy(row)\n  11      return last"
+    },
+    {
+      "id": "loop-027",
+      "language": "python",
+      "path": "examples-python/07_membership_scan.py",
+      "name": "contains_any",
+      "start_line": 4,
+      "source": "   4  def contains_any(rows):\n   5      table = [1, 2, 3]\n   6      hits = 0\n   7      # TP PERF-PY-LOOP-007 \u2014 `r in table` is an O(n) list scan per outer pass.\n   8      for r in rows:\n   9          if r in table:\n  10              hits += 1\n  11      return hits"
+    },
+    {
+      "id": "loop-028",
+      "language": "python",
+      "path": "examples-python/07_membership_scan.py",
+      "name": "index_scan",
+      "start_line": 14,
+      "source": "  14  def index_scan():\n  15      data = [10, 20, 30]\n  16      total = 0\n  17      # TP PERF-PY-LOOP-007 \u2014 `data[i]` re-walks the list by position.\n  18      for i in range(3):\n  19          total += data[i]\n  20      return total"
+    },
+    {
+      "id": "loop-029",
+      "language": "python",
+      "path": "examples-python/07_membership_scan.py",
+      "name": "position_of",
+      "start_line": 23,
+      "source": "  23  def position_of(rows):\n  24      data = [10, 20, 30]\n  25      total = 0\n  26      # TP PERF-PY-LOOP-007 \u2014 `data.index(r)` is an O(n) scan per iteration.\n  27      for r in rows:\n  28          total += data.index(r)\n  29      return total"
+    },
+    {
+      "id": "loop-030",
+      "language": "python",
+      "path": "examples-python/07_membership_scan.py",
+      "name": "set_membership",
+      "start_line": 32,
+      "source": "  32  def set_membership(rows):\n  33      seen = {1, 2, 3}\n  34      for r in rows:\n  35          # CONTROL PERF-PY-LOOP-007 \u2014 set membership is O(1) and excluded.\n  36          if r in seen:\n  37              return True\n  38      return False"
+    },
+    {
+      "id": "loop-031",
+      "language": "python",
+      "path": "examples-python/08_range_len.py",
+      "name": "positional_sum",
+      "start_line": 4,
+      "source": "   4  def positional_sum(rows, seq):\n   5      total = 0\n   6      for _ in rows:\n   7          # TP PERF-PY-LOOP-003 \u2014 `range(len(seq))` re-runs `len` each pass.\n   8          for i in range(len(seq)):\n   9              total += i\n  10      return total"
+    },
+    {
+      "id": "loop-032",
+      "language": "python",
+      "path": "examples-python/08_range_len.py",
+      "name": "counter_sum",
+      "start_line": 13,
+      "source": "  13  def counter_sum(n):\n  14      total = 0\n  15      # CONTROL PERF-PY-LOOP-003 \u2014 `range(n)` over a counter is not positional.\n  16      for i in range(n):\n  17          total += i\n  18      return total"
+    },
+    {
+      "id": "loop-033",
+      "language": "python",
+      "path": "examples-python/09_try_in_loop.py",
+      "name": "swallow",
+      "start_line": 4,
+      "source": "   4  def swallow(rows):\n   5      ok = 0\n   6      for row in rows:\n   7          # TP PERF-PY-LOOP-009 \u2014 a `try` block inside the loop body.\n   8          try:\n   9              ok += int(row)\n  10          except ValueError:\n  11              pass\n  12      return ok"
+    },
+    {
+      "id": "loop-034",
+      "language": "python",
+      "path": "examples-python/10_comprehension.py",
+      "name": "transform_all",
+      "start_line": 8,
+      "source": "   8  def transform_all(rows):\n   9      out = []\n  10      # TP PERF-PY-COMPREHENSION-001 \u2014 the loop body is a single `append`.\n  11      for row in rows:\n  12          out.append(transform(row))\n  13      return out"
+    },
+    {
+      "id": "loop-035",
+      "language": "python",
+      "path": "examples-python/10_comprehension.py",
+      "name": "accumulate_multi",
+      "start_line": 16,
+      "source": "  16  def accumulate_multi(rows):\n  17      out = []\n  18      for row in rows:\n  19          # CONTROL PERF-PY-COMPREHENSION-001 \u2014 a multi-statement body is silent.\n  20          value = transform(row)\n  21          out.append(value)\n  22      return out"
+    },
+    {
+      "id": "loop-036",
+      "language": "python",
+      "path": "examples-python/11_executors.py",
+      "name": "fan_out",
+      "start_line": 6,
+      "source": "   6  def fan_out(tasks):\n   7      for task in tasks:\n   8          # TP PERF-PY-EXECUTOR-001 \u2014 a fresh executor every iteration.\n   9          with ThreadPoolExecutor() as pool:\n  10              pool.submit(task)"
+    },
+    {
+      "id": "loop-037",
+      "language": "python",
+      "path": "examples-python/11_executors.py",
+      "name": "fan_out_once",
+      "start_line": 13,
+      "source": "  13  def fan_out_once(tasks):\n  14      # CONTROL PERF-PY-EXECUTOR-001 \u2014 an executor created once is silent.\n  15      with ThreadPoolExecutor() as pool:\n  16          for task in tasks:\n  17              pool.submit(task)"
+    },
+    {
+      "id": "loop-038",
+      "language": "python",
+      "path": "examples-python/12_io_n1.py",
+      "name": "fetch_each",
+      "start_line": 4,
+      "source": "   4  def fetch_each(conn, ids):\n   5      last = None\n   6      # TP PERF-PY-N1-001 \u2014 one DB round-trip per iteration (N+1).\n   7      for i in ids:\n   8          last = conn.execute(i)\n   9      return last"
+    },
+    {
+      "id": "loop-039",
+      "language": "python",
+      "path": "examples-python/13_pandas.py",
+      "name": "row_wise",
+      "start_line": 6,
+      "source": "   6  def row_wise(df):\n   7      total = 0\n   8      # TP PERF-PY-PANDAS-001 \u2014 `iterrows` materialises a Series per row.\n   9      for _, row in df.iterrows():\n  10          total += row[\"x\"]\n  11      return total"
+    },
+    {
+      "id": "loop-040",
+      "language": "python",
+      "path": "examples-python/13_pandas.py",
+      "name": "append_frames",
+      "start_line": 14,
+      "source": "  14  def append_frames(frames):\n  15      out = None\n  16      # TP PERF-PY-PANDAS-002 \u2014 `pd.concat` rebuilds the frame every iteration.\n  17      for frame in frames:\n  18          out = pd.concat([out, frame])\n  19      return out"
+    },
+    {
+      "id": "loop-041",
+      "language": "python",
+      "path": "examples-python/14_async_blocking.py",
+      "name": "await_each",
+      "start_line": 23,
+      "source": "  23  async def await_each(urls):\n  24      last = None\n  25      # TP PERF-PY-ASYNC-002 \u2014 a sequential `await` inside a loop.\n  26      for url in urls:\n  27          last = await fetch_blocking(url)\n  28      return last"
+    },
+    {
+      "id": "loop-042",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "name": "build_row_labels",
+      "start_line": 32,
+      "source": "  32  pub fn build_row_labels(rows: usize) -> Vec<String> {\n  33      let mut labels: Vec<String> = Vec::new();\n  34      for i in 0..rows {\n  35          let scratch = format!(\"row-{i}\"); // ALLOC-001 (format! macro)\n  36          let owned = scratch.to_string(); // ALLOC-001 (to_string method)\n  37          let cell: Vec<u8> = vec![i as u8]; // ALLOC-001 (vec! macro)\n  38          labels.push(owned); // Vec::push (STR-001 documented FP class)\n  39          drop(cell); // ALLOC-002 (escalated: alloc co-occurrence)\n  40          println!(\"row {i}\"); // LOOP-002\n  41      }\n  42      labels\n  43  }"
+    },
+    {
+      "id": "loop-043",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "name": "grow_one_at_a_time",
+      "start_line": 46,
+      "source": "  46  pub fn grow_one_at_a_time(n: usize) -> Vec<u64> {\n  47      let mut buffer: Vec<u64> = Vec::new();\n  48      for i in 0..n {\n  49          buffer.reserve(1); // ALLOC-003\n  50          buffer.push(i as u64);\n  51      }\n  52      buffer\n  53  }"
+    },
+    {
+      "id": "loop-044",
+      "language": "rust",
+      "path": "examples-rust/src/01_alloc_churn.rs",
+      "name": "grid_reset",
+      "start_line": 56,
+      "source": "  56  pub fn grid_reset(grid: &mut [Vec<u8>], rows: usize, cols: usize, width: usize) {\n  57      for _r in 0..rows {\n  58          for c in 0..cols {\n  59              let mut cell = vec![0u8; width]; // ALLOC-001 (vec! macro)\n  60              let src = &grid[c];\n  61              cell.copy_from_slice(&src[..width]); // MEM-002 (innermost)\n  62              grid[c] = cell;\n  63          }\n  64      }\n  65  }"
+    },
+    {
+      "id": "loop-045",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "name": "accumulate",
+      "start_line": 20,
+      "source": "  20  pub fn accumulate(parts: &[&str], out: &mut String) {\n  21      for part in parts {\n  22          out.push_str(part); // retired STR-001: no finding\n  23          out.push(';'); // retired STR-001: no finding\n  24      }\n  25  }"
+    },
+    {
+      "id": "loop-046",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "name": "scan_lengths",
+      "start_line": 28,
+      "source": "  28  pub fn scan_lengths(words: &[String]) -> usize {\n  29      let joined = words.join(\" \");\n  30      let mut total = 0usize;\n  31      for _ in 0..words.len() {\n  32          total += joined.len(); // STR-002\n  33      }\n  34      total\n  35  }"
+    },
+    {
+      "id": "loop-047",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "name": "len_with_reassignment",
+      "start_line": 38,
+      "source": "  38  pub fn len_with_reassignment(n: usize) -> usize {\n  39      let mut s = String::new();\n  40      let mut total = 0usize;\n  41      for i in 0..n {\n  42          s = format!(\"{s}{i}\"); // assignment suppresses STR-002 below\n  43          total += s.len(); // control: STR-002 must NOT fire\n  44      }\n  45      total\n  46  }"
+    },
+    {
+      "id": "loop-048",
+      "language": "rust",
+      "path": "examples-rust/src/02_string_building.rs",
+      "name": "append_via_add_assign",
+      "start_line": 49,
+      "source": "  49  pub fn append_via_add_assign(parts: &[&str]) -> String {\n  50      let mut s = String::new();\n  51      for part in parts {\n  52          s += part; // retired STR-001: no CallEvent, no finding\n  53      }\n  54      s\n  55  }"
+    },
+    {
+      "id": "loop-049",
+      "language": "rust",
+      "path": "examples-rust/src/03_deep_nesting.rs",
+      "name": "grid_checksum",
+      "start_line": 15,
+      "source": "  15  pub fn grid_checksum(cube: &[u64], n: usize, divisor: u64) -> u64 {\n  16      let mut acc = 0u64;\n  17      for i in 0..n {\n  18          for j in 0..n {\n  19              for k in 0..n {\n  20                  let idx = (i * n + j) * n + k;\n  21                  acc = acc.wrapping_add(cube[idx]);\n  22                  acc = acc % divisor; // LOOP-004 (innermost, variable divisor)\n  23              }\n  24          }\n  25      }\n  26      acc\n  27  }"
+    },
+    {
+      "id": "loop-050",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "name": "count_chars_per_iteration",
+      "start_line": 16,
+      "source": "  16  pub fn count_chars_per_iteration(text: &str, n: usize) -> usize {\n  17      let mut total = 0usize;\n  18      for _ in 0..n {\n  19          text.chars(); // LOOP-003 (primary statement)\n  20          total += 1;\n  21      }\n  22      total\n  23  }"
+    },
+    {
+      "id": "loop-051",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "name": "emit_rows",
+      "start_line": 26,
+      "source": "  26  pub fn emit_rows(rows: &[String], sink: &mut dyn Write) {\n  27      for row in rows {\n  28          println!(\"{row}\"); // LOOP-002 (println! macro)\n  29          let _ = sink.write_all(row.as_bytes()); // LOOP-002 (write_all method)\n  30      }\n  31  }"
+    },
+    {
+      "id": "loop-052",
+      "language": "rust",
+      "path": "examples-rust/src/04_stdio_churn.rs",
+      "name": "consume_all",
+      "start_line": 35,
+      "source": "  35  pub fn consume_all(text: &str, out: &mut Vec<char>) {\n  36      for _ in 0..1 {\n  37          out.extend(text.chars()); // control: nested, not primary -> no LOOP-003\n  38      }\n  39  }"
+    },
+    {
+      "id": "loop-053",
+      "language": "rust",
+      "path": "examples-rust/src/06_memory_ops.rs",
+      "name": "duplicate_rows",
+      "start_line": 24,
+      "source": "  24  pub fn duplicate_rows(rows: &[Vec<u8>], repeats: usize) -> Vec<Vec<u8>> {\n  25      let mut out = Vec::new();\n  26      for _ in 0..repeats {\n  27          for row in rows {\n  28              out.push(row.clone()); // MEM-002 (clone, innermost)\n  29              out.extend(row.to_vec()); // MEM-002 (to_vec)\n  30          }\n  31      }\n  32      out\n  33  }"
+    },
+    {
+      "id": "loop-054",
+      "language": "rust",
+      "path": "examples-rust/src/08_globals_and_chains.rs",
+      "name": "run_handlers",
+      "start_line": 37,
+      "source": "  37  pub fn run_handlers(handlers: &[fn()], n: usize) {\n  38      let mut i = 0usize;\n  39      while i < n {\n  40          unsafe {\n  41              GLOBAL_ACC = GLOBAL_ACC.wrapping_add(1); // LOOP-005\n  42          }\n  43          handlers[i](); // LOOP-006 (index-expression callee => Indirect)\n  44          i += 1;\n  45      }\n  46  }"
+    },
+    {
+      "id": "loop-055",
+      "language": "rust",
+      "path": "examples-rust/src/08_globals_and_chains.rs",
+      "name": "call_directly",
+      "start_line": 49,
+      "source": "  49  pub fn call_directly(n: usize) {\n  50      for _ in 0..n {\n  51          direct_handler(); // control: Direct callee -> no LOOP-006\n  52      }\n  53  }"
+    },
+    {
+      "id": "loop-056",
+      "language": "rust",
+      "path": "examples-rust/src/08_globals_and_chains.rs",
+      "name": "read_depth",
+      "start_line": 56,
+      "source": "  56  pub fn read_depth(configs: &[Config], n: usize) -> u64 {\n  57      let mut total = 0u64;\n  58      for i in 0..n {\n  59          let d = configs[i].region.zone.depth; // LOOP-008 (index + members)\n  60          total += d;\n  61      }\n  62      total\n  63  }"
+    },
+    {
+      "id": "loop-057",
+      "language": "rust",
+      "path": "examples-rust/src/08_globals_and_chains.rs",
+      "name": "read_depth_member",
+      "start_line": 66,
+      "source": "  66  pub fn read_depth_member(cfg: &Config, n: usize) -> u64 {\n  67      let mut total = 0u64;\n  68      for _ in 0..n {\n  69          let d = cfg.region.zone.depth; // control: no subscript -> no LOOP-008\n  70          total += d;\n  71      }\n  72      total\n  73  }"
+    },
+    {
+      "id": "loop-058",
+      "language": "rust",
+      "path": "examples-rust/src/08_globals_and_chains.rs",
+      "name": "read_zone_ref",
+      "start_line": 76,
+      "source": "  76  pub fn read_zone_ref(cfg: &Config, n: usize) -> u64 {\n  77      let mut total = 0u64;\n  78      for _ in 0..n {\n  79          let zone = &cfg.region.zone; // control: chain depth 2 -> no LOOP-008\n  80          total += zone.depth;\n  81      }\n  82      total\n  83  }"
+    },
+    {
+      "id": "loop-059",
+      "language": "rust",
+      "path": "examples-rust/src/09_membership_scan.rs",
+      "name": "contains_nested",
+      "start_line": 13,
+      "source": "  13  pub fn contains_nested(table: &[u64], keys: &[u64]) -> bool {\n  14      for i in 0..keys.len() {\n  15          for j in 0..table.len() {\n  16              if table[j] == keys[i] {\n  17                  // LOOP-007 (depth 2, index is inner induction var)\n  18                  return true;\n  19              }\n  20          }\n  21      }\n  22      false\n  23  }"
+    },
+    {
+      "id": "loop-060",
+      "language": "rust",
+      "path": "examples-rust/src/09_membership_scan.rs",
+      "name": "first_match_shallow",
+      "start_line": 26,
+      "source": "  26  pub fn first_match_shallow(table: &[u64], key: u64) -> bool {\n  27      for j in 0..table.len() {\n  28          if table[j] == key {\n  29              // control: depth 1, below the LOOP-007 floor\n  30              return true;\n  31          }\n  32      }\n  33      false\n  34  }"
+    },
+    {
+      "id": "loop-061",
+      "language": "rust",
+      "path": "examples-rust/src/10_cross_file_and_arch.rs",
+      "name": "clamp_all",
+      "start_line": 40,
+      "source": "  40  pub fn clamp_all(values: &[i64], lo: i64, hi: i64) -> i64 {\n  41      let mut total = 0i64;\n  42      for value in values {\n  43          total += clamp_int(*value, lo, hi); // control: file-local -> no ARCH-003\n  44      }\n  45      total\n  46  }"
+    },
+    {
+      "id": "loop-062",
+      "language": "ts",
+      "path": "examples-ts/01_alloc_churn.ts",
+      "name": "buildEnvelopes",
+      "start_line": 11,
+      "source": "  11  export function buildEnvelopes(count: number): Envelope[] {\n  12    const envelopes: Envelope[] = [];\n  13    for (let i = 0; i < count; i++) {\n  14      envelopes.push({ status: \"new\", retries: 0 }); // TP PERF-JS-ALLOC-001\n  15    }\n  16    return envelopes;\n  17  }"
+    },
+    {
+      "id": "loop-063",
+      "language": "ts",
+      "path": "examples-ts/01_alloc_churn.ts",
+      "name": "buildIndexed",
+      "start_line": 19,
+      "source": "  19  export function buildIndexed(count: number): { index: number }[] {\n  20    const points: { index: number }[] = [];\n  21    for (let i = 0; i < count; i++) {\n  22      points.push({ index: i }); // silent: depends on the induction variable\n  23    }\n  24    return points;\n  25  }"
+    },
+    {
+      "id": "loop-064",
+      "language": "ts",
+      "path": "examples-ts/01_alloc_churn.ts",
+      "name": "buildLabelled",
+      "start_line": 27,
+      "source": "  27  export function buildLabelled(rows: { label: string }[]): { label: string }[] {\n  28    const out: { label: string }[] = [];\n  29    let label = \"\";\n  30    for (const row of rows) {\n  31      label = row.label;\n  32      out.push({ label }); // silent: `label` is reassigned inside the loop\n  33    }\n  34    return out;\n  35  }"
+    },
+    {
+      "id": "loop-065",
+      "language": "ts",
+      "path": "examples-ts/02_array_accumulation.ts",
+      "name": "flatten",
+      "start_line": 5,
+      "source": "   5  export function flatten<T>(items: readonly T[]): T[] {\n   6    let acc: T[] = [];\n   7    for (const item of items) {\n   8      acc = [...acc, item]; // TP PERF-JS-ALLOC-003\n   9    }\n  10    return acc;\n  11  }"
+    },
+    {
+      "id": "loop-066",
+      "language": "ts",
+      "path": "examples-ts/02_array_accumulation.ts",
+      "name": "snapshotRows",
+      "start_line": 13,
+      "source": "  13  export function snapshotRows(rows: string[][]): string[][] {\n  14    const copies: string[][] = [];\n  15    for (const row of rows) {\n  16      const view = rows.slice(); // silent: receiver is not reassigned\n  17      copies.push(view);\n  18    }\n  19    return copies;\n  20  }"
+    },
+    {
+      "id": "loop-067",
+      "language": "ts",
+      "path": "examples-ts/03_string_build.ts",
+      "name": "render",
+      "start_line": 5,
+      "source": "   5  export function render(parts: readonly string[]): string {\n   6    let out = \"\";\n   7    for (const part of parts) {\n   8      out += `part:${part}`; // TP PERF-JS-STR-001\n   9    }\n  10    return out;\n  11  }"
+    },
+    {
+      "id": "loop-068",
+      "language": "ts",
+      "path": "examples-ts/03_string_build.ts",
+      "name": "tinyPrefix",
+      "start_line": 13,
+      "source": "  13  export function tinyPrefix(items: readonly string[]): string {\n  14    let out = \"\";\n  15    for (let i = 0; i < 5; i++) {\n  16      out += `item:${items[i]}`; // silent: canonical trip count 5 < 8 (string RHS)\n  17    }\n  18    return out;\n  19  }"
+    },
+    {
+      "id": "loop-069",
+      "language": "ts",
+      "path": "examples-ts/03_string_build.ts",
+      "name": "sumValues",
+      "start_line": 26,
+      "source": "  26  export function sumValues(values: readonly number[]): number {\n  27    let total = 0;\n  28    for (const value of values) {\n  29      total += value; // silent: numeric += is not a string build\n  30    }\n  31    return total;\n  32  }"
+    },
+    {
+      "id": "loop-070",
+      "language": "ts",
+      "path": "examples-ts/04_deep_nesting.ts",
+      "name": "score",
+      "start_line": 7,
+      "source": "   7  export function score(matrix: Matrix): number {\n   8    let total = 0;\n   9    for (let row = 0; row < matrix.length; row++) {\n  10      for (let col = 0; col < matrix[row].length; col++) {\n  11        total = total + matrix[row][col]; // TP PERF-JS-LOOP-001\n  12      }\n  13    }\n  14    return total;\n  15  }"
+    },
+    {
+      "id": "loop-071",
+      "language": "ts",
+      "path": "examples-ts/04_deep_nesting.ts",
+      "name": "scoreFlat",
+      "start_line": 17,
+      "source": "  17  export function scoreFlat(values: readonly number[]): number {\n  18    let total = 0;\n  19    for (let i = 0; i < values.length; i++) {\n  20      total = total + values[i]; // silent: loop depth stays at 1\n  21    }\n  22    return total;\n  23  }"
+    },
+    {
+      "id": "loop-072",
+      "language": "ts",
+      "path": "examples-ts/05_sync_io_loop.ts",
+      "name": "loadAll",
+      "start_line": 6,
+      "source": "   6  export function loadAll(files: readonly string[]): string[] {\n   7    const chunks: string[] = [];\n   8    for (const file of files) {\n   9      chunks.push(readFileSync(file, \"utf8\")); // TP PERF-JS-LOOP-002\n  10    }\n  11    return chunks;\n  12  }"
+    },
+    {
+      "id": "loop-073",
+      "language": "ts",
+      "path": "examples-ts/06_membership_scan.ts",
+      "name": "intersect",
+      "start_line": 5,
+      "source": "   5  export function intersect(ids: readonly string[], seen: readonly string[]): string[] {\n   6    const hits: string[] = [];\n   7    for (const id of ids) {\n   8      if (seen.includes(id)) { // TP PERF-JS-LOOP-007\n   9        hits.push(id);\n  10      }\n  11    }\n  12    return hits;\n  13  }"
+    },
+    {
+      "id": "loop-074",
+      "language": "ts",
+      "path": "examples-ts/06_membership_scan.ts",
+      "name": "smallWindow",
+      "start_line": 19,
+      "source": "  19  export function smallWindow(ids: readonly string[], seen: readonly string[]): string[] {\n  20    const hits: string[] = [];\n  21    for (let i = 0; i < 4; i++) {\n  22      if (seen.includes(ids[i])) { // silent: canonical trip count 4 < 16\n  23        hits.push(ids[i]);\n  24      }\n  25    }\n  26    return hits;\n  27  }"
+    },
+    {
+      "id": "loop-075",
+      "language": "ts",
+      "path": "examples-ts/07_async_await.ts",
+      "name": "loadAll",
+      "start_line": 9,
+      "source": "   9  export async function loadAll(urls: readonly string[]): Promise<number[]> {\n  10    const payloads: number[] = [];\n  11    for (const url of urls) {\n  12      payloads.push(await fetchJson(url)); // TP PERF-JS-ASYNC-001\n  13    }\n  14    return payloads;\n  15  }"
+    },
+    {
+      "id": "loop-076",
+      "language": "ts",
+      "path": "examples-ts/13_controls.ts",
+      "name": "chunk",
+      "start_line": 7,
+      "source": "   7  export function chunk<T>(items: readonly T[], size: number): T[][] {\n   8    const chunks: T[][] = [];\n   9    for (let i = 0; i < items.length; i = i + size) {\n  10      chunks.push(items.slice(i, i + size)); // silent: receiver is not reassigned\n  11    }\n  12    return chunks;\n  13  }"
+    },
+    {
+      "id": "loop-077",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "name": "build_row_labels",
+      "start_line": 26,
+      "source": "  26  void build_row_labels(int rows)\n  27  {\n  28      int i;\n  29  \n  30      for (i = 0; i < rows; i++) {\n  31          char *scratch = malloc(LABEL_BYTES);          /* ALLOC-001 */\n  32          if (scratch == NULL) {\n  33              return;\n  34          }\n  35          sprintf(scratch, \"row-%d\", i);                /* STR-003 + LOOP-002 */\n  36          row_labels[i % MAX_ENTRIES] = strdup(scratch); /* ALLOC-001 */\n  37          free(scratch);                                /* ALLOC-002 */\n  38      }\n  39  }"
+    },
+    {
+      "id": "loop-078",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "name": "grow_one_at_a_time",
+      "start_line": 42,
+      "source": "  42  int *grow_one_at_a_time(int n)\n  43  {\n  44      int *buffer = NULL;\n  45      int i;\n  46  \n  47      for (i = 0; i < n; i++) {\n  48          buffer = realloc(buffer, (i + 1) * sizeof(int));   /* ALLOC-003 */\n  49          if (buffer == NULL) {\n  50              return NULL;\n  51          }\n  52          buffer[i] = i * 2;\n  53          printf(\"%d\\n\", buffer[i]);                          /* LOOP-002 */\n  54      }\n  55      return buffer;\n  56  }"
+    },
+    {
+      "id": "loop-079",
+      "language": "c",
+      "path": "examples/01_allocator_churn.c",
+      "name": "grid_reset",
+      "start_line": 59,
+      "source": "  59  void grid_reset(char **grid, int rows, int cols, int width)\n  60  {\n  61      int r;\n  62      int c;\n  63  \n  64      for (r = 0; r < rows; r++) {\n  65          for (c = 0; c < cols; c++) {\n  66              char *cell = calloc(1, (size_t)width);   /* ALLOC-001 */\n  67              if (cell == NULL) {\n  68                  continue;\n  69              }\n  70              memcpy(cell, grid[c], width);            /* MEM-002 (innermost) */\n  71              free(grid[c]);                           /* ALLOC-002 */\n  72              grid[c] = cell;\n  73          }\n  74      }\n  75  }"
+    },
+    {
+      "id": "loop-080",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "name": "append_all",
+      "start_line": 24,
+      "source": "  24  void append_all(const char **parts, int n)\n  25  {\n  26      int i;\n  27  \n  28      log_buffer[0] = '\\0';\n  29      for (i = 0; i < n; i++) {\n  30          strcat(log_buffer, parts[i]);       /* STR-001 + STR-003 */\n  31          printf(\"%s\\n\", log_buffer);         /* LOOP-002 */\n  32      }\n  33  }"
+    },
+    {
+      "id": "loop-081",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "name": "scan_for_x",
+      "start_line": 36,
+      "source": "  36  size_t scan_for_x(const char *text)\n  37  {\n  38      size_t i;\n  39      size_t hits = 0;\n  40  \n  41      for (i = 0; i < strlen(text); i++) {    /* STR-002 */\n  42          if (text[i] == 'x') {\n  43              hits++;\n  44          }\n  45      }\n  46      return hits;\n  47  }"
+    },
+    {
+      "id": "loop-082",
+      "language": "c",
+      "path": "examples/02_string_building.c",
+      "name": "echo_stream",
+      "start_line": 73,
+      "source": "  73  void echo_stream(FILE *in, FILE *out)\n  74  {\n  75      int ch;\n  76  \n  77      while ((ch = fgetc(in)) != EOF) {\n  78          putc(ch, out);         /* LOOP-003 */\n  79      }\n  80  }"
+    },
+    {
+      "id": "loop-083",
+      "language": "c",
+      "path": "examples/03_deep_nesting.c",
+      "name": "triple_nested",
+      "start_line": 30,
+      "source": "  30  void triple_nested(int n, int m, int k, int divisor)\n  31  {\n  32      int i;\n  33      int j;\n  34      int l;\n  35  \n  36      for (i = 0; i < n; i++) {\n  37          for (j = 0; j < m; j++) {\n  38              for (l = 0; l < k; l++) {\n  39                  int remainder = (i + j + l) % divisor;   /* LOOP-004 */\n  40                  int quotient = (i * l) / divisor;        /* LOOP-004 */\n  41                  checksum += remainder + quotient;        /* LOOP-005 */\n  42                  error_count = remainder == 0 ? 1 : 0;    /* LOOP-005 */\n  43                  printf(\"%d %d\\n\", remainder, quotient);  /* LOOP-002 */\n  44              }\n  45          }\n  46      }\n  47  }"
+    },
+    {
+      "id": "loop-084",
+      "language": "c",
+      "path": "examples/03_deep_nesting.c",
+      "name": "reduce_series",
+      "start_line": 50,
+      "source": "  50  long reduce_series(int n, int step, int modulus)\n  51  {\n  52      long acc = 0;\n  53      int i;\n  54  \n  55      for (i = 0; i < n; i++) {\n  56          acc += (i * step) % modulus;      /* LOOP-004 */\n  57          acc = acc / modulus;              /* LOOP-004 (binary form \u2014 compound\n  58                                             * assign (`/=`) is NOT modelled) */\n  59          last_value = acc;                 /* LOOP-005 */\n  60      }\n  61      return acc;\n  62  }"
+    },
+    {
+      "id": "loop-085",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "name": "copy_charwise",
+      "start_line": 19,
+      "source": "  19  void copy_charwise(FILE *in, FILE *out)\n  20  {\n  21      int ch;\n  22  \n  23      while ((ch = fgetc(in)) != EOF) {\n  24          putc(ch, out);                     /* LOOP-003 (primary statement) */\n  25      }\n  26  }"
+    },
+    {
+      "id": "loop-086",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "name": "copy_blockwise",
+      "start_line": 29,
+      "source": "  29  void copy_blockwise(FILE *in, FILE *out)\n  30  {\n  31      char chunk[4096];\n  32      size_t got;\n  33  \n  34      while ((got = fread(chunk, 1, sizeof chunk, in)) > 0) {\n  35          fwrite(chunk, 1, got, out);\n  36      }\n  37  }"
+    },
+    {
+      "id": "loop-087",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "name": "touch_many",
+      "start_line": 40,
+      "source": "  40  void touch_many(const char **names, int n)\n  41  {\n  42      int i;\n  43  \n  44      for (i = 0; i < n; i++) {\n  45          FILE *fp = fopen(names[i], \"w\");   /* LOOP-002 (hot) */\n  46          if (fp != NULL) {\n  47              fprintf(fp, \"%d\\n\", i);        /* LOOP-002 (guarded -> warn) */\n  48              fclose(fp);                    /* LOOP-002 (guarded -> warn) */\n  49          }\n  50      }\n  51  }"
+    },
+    {
+      "id": "loop-088",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "name": "strip_controls",
+      "start_line": 54,
+      "source": "  54  int strip_controls(FILE *fp)\n  55  {\n  56      int ch;\n  57      int kept = 0;\n  58  \n  59      while ((ch = getc(fp)) != EOF) {\n  60          if (ch < 32) {\n  61              continue;\n  62          }\n  63          fputc(ch, stdout);                 /* LOOP-003 */\n  64          kept++;\n  65      }\n  66      return kept;\n  67  }"
+    },
+    {
+      "id": "loop-089",
+      "language": "c",
+      "path": "examples/04_stdio_churn.c",
+      "name": "render_report",
+      "start_line": 70,
+      "source": "  70  void render_report(const char **rows, int n)\n  71  {\n  72      char line[256];\n  73      int i;\n  74  \n  75      for (i = 0; i < n; i++) {\n  76          sprintf(line, \"[%d] %s\", i, rows[i]);   /* STR-003 + LOOP-002 */\n  77          puts(line);\n  78      }\n  79  }"
+    },
+    {
+      "id": "loop-090",
+      "language": "c",
+      "path": "examples/05_recursion_complexity.c",
+      "name": "classify",
+      "start_line": 37,
+      "source": "  37  const char *classify(int code, int flags)\n  38  {\n  39      if (code < 0) {\n  40          return \"negative\";\n  41      }\n  42      if (code == 0) {\n  43          return \"zero\";\n  44      }\n  45      if (code < 10) {\n  46          return \"small\";\n  47      }\n  48      if (code < 20) {\n  49          return \"medium\";\n  50      }\n  51      if (code < 30) {\n  52          return \"large\";\n  53      }\n  54      if (code < 40) {\n  55          return \"extra-large\";\n  56      }\n  57      if (code < 50) {\n  58          return \"jumbo\";\n  59      }\n  60      if (code < 60) {\n  61          return \"huge\";\n  62      }\n  63      if (flags & 0x01) {\n  64          return \"flag-a\";\n  65      }\n  66      if (flags & 0x02) {\n  67          return \"flag-b\";\n  68      }\n  69      if (flags & 0x04) {\n  70          return \"flag-c\";\n  71      }\n  72      if (flags & 0x08) {\n  73          return \"flag-d\";\n  74      }\n  75      if (flags & 0x10) {\n  76          return \"flag-e\";\n  77      }\n  78      if (flags & 0x20) {\n  79          return \"flag-f\";\n  80      }\n  81      if (flags & 0x40) {\n  82          return \"flag-g\";\n  83      }\n  84      if (flags & 0x80) {\n  85          return \"flag-h\";\n  86      }\n  87      if (code > 1000 && flags == 0) {\n  88          return \"big-clean\";\n  89      }\n  90      if (code > 2000 || flags != 0) {\n  91          return \"big-dirty\";\n  92      }\n  93      while (code > 100) {\n  94          code -= 7;\n  95      }\n  96      switch (code % 5) {\n  97      case 0:\n  98          return \"r0\";\n  99      case 1:\n 100          return \"r1\";\n 101      case 2:\n 102          return \"r2\";\n 103      case 3:\n 104          return \"r3\";\n 105      default:\n 106          return \"r4\";\n 107      }\n 108  }"
+    },
+    {
+      "id": "loop-091",
+      "language": "c",
+      "path": "examples/05_recursion_complexity.c",
+      "name": "fib_iterative",
+      "start_line": 111,
+      "source": " 111  long fib_iterative(long n)\n 112  {\n 113      long a = 0;\n 114      long b = 1;\n 115      long i;\n 116  \n 117      for (i = 0; i < n; i++) {\n 118          long next = a + b;\n 119          a = b;\n 120          b = next;\n 121      }\n 122      return a;\n 123  }"
+    },
+    {
+      "id": "loop-092",
+      "language": "c",
+      "path": "examples/06_memory_misuse.c",
+      "name": "refill_cells",
+      "start_line": 44,
+      "source": "  44  void refill_cells(char **cells, int rows, int cols, size_t cell_size)\n  45  {\n  46      int r;\n  47      int c;\n  48  \n  49      for (r = 0; r < rows; r++) {\n  50          for (c = 0; c < cols; c++) {\n  51              memcpy(cells[c], cells[c + 1], cell_size);   /* MEM-002 (innermost) */\n  52              memmove(cells[c], cells[c + 1], cols * 2);   /* MEM-002 (innermost) */\n  53              memset(cells[c], 0, cell_size);              /* MEM-002 (innermost) */\n  54          }\n  55      }\n  56  }"
+    },
+    {
+      "id": "loop-093",
+      "language": "c",
+      "path": "examples/06_memory_misuse.c",
+      "name": "alloc_correct",
+      "start_line": 60,
+      "source": "  60  void alloc_correct(int count)\n  61  {\n  62      int *values = malloc((size_t)count * sizeof *values);\n  63      int i;\n  64  \n  65      if (values == NULL) {\n  66          return;\n  67      }\n  68      for (i = 0; i < count; i++) {\n  69          memset(values + i, 0, sizeof *values);\n  70      }\n  71      free(values);\n  72  }"
+    },
+    {
+      "id": "loop-094",
+      "language": "c",
+      "path": "examples/08_globals_and_chains.c",
+      "name": "dispatch_all",
+      "start_line": 42,
+      "source": "  42  void dispatch_all(struct Session *sessions, handler_fn *handlers, int n, int m)\n  43  {\n  44      int i;\n  45      int j;\n  46  \n  47      for (i = 0; i < n; i++) {\n  48          for (j = 0; j < m; j++) {\n  49              total += handlers[j](i);                     /* LOOP-006 + LOOP-005 */\n  50              cfg_depth = sessions[i].engine->ctx->depth;   /* LOOP-008 + LOOP-005 */\n  51              last_handler = j;                            /* LOOP-005 */\n  52              printf(\"%d %d\\n\", total, cfg_depth);         /* LOOP-002 */\n  53          }\n  54      }\n  55  }"
+    },
+    {
+      "id": "loop-095",
+      "language": "c",
+      "path": "examples/08_globals_and_chains.c",
+      "name": "fold_three_ways",
+      "start_line": 58,
+      "source": "  58  void fold_three_ways(int a, int b, int c, int step)\n  59  {\n  60      int i;\n  61      int j;\n  62      int k;\n  63  \n  64      for (i = 0; i < a; i++) {\n  65          for (j = 0; j < b; j++) {\n  66              for (k = 0; k < c; k++) {\n  67                  total += i * step;                 /* LOOP-005 */\n  68                  cfg_depth = k;                     /* LOOP-005 */\n  69              }\n  70          }\n  71      }\n  72  }"
+    },
+    {
+      "id": "loop-096",
+      "language": "c",
+      "path": "examples/08_globals_and_chains.c",
+      "name": "sum_direct",
+      "start_line": 75,
+      "source": "  75  int sum_direct(int n)\n  76  {\n  77      int acc = 0;\n  78      int i;\n  79  \n  80      for (i = 0; i < n; i++) {\n  81          acc += i;\n  82      }\n  83      return acc;\n  84  }"
+    },
+    {
+      "id": "loop-097",
+      "language": "c",
+      "path": "examples/09_membership_scan.c",
+      "name": "contains_any",
+      "start_line": 14,
+      "source": "  14  int contains_any(const int *haystack, int hlen, const int *needles, int nlen)\n  15  {\n  16      int i;\n  17      int j;\n  18      int hits = 0;\n  19  \n  20      for (i = 0; i < nlen; i++) {\n  21          for (j = 0; j < hlen; j++) {\n  22              if (haystack[j] == needles[i]) {    /* LOOP-007 */\n  23                  hits++;\n  24                  break;\n  25              }\n  26          }\n  27      }\n  28      return hits;\n  29  }"
+    },
+    {
+      "id": "loop-098",
+      "language": "c",
+      "path": "examples/09_membership_scan.c",
+      "name": "find_slot",
+      "start_line": 32,
+      "source": "  32  int find_slot(const int *table, int len, int key, int n)\n  33  {\n  34      int r;\n  35      int c;\n  36  \n  37      for (r = 0; r < n; r++) {\n  38          for (c = 0; c < len; c++) {\n  39              if (table[c] == key) {              /* LOOP-007 */\n  40                  return c;\n  41              }\n  42              if (table[c] < key) {               /* LOOP-007 */\n  43                  continue;\n  44              }\n  45          }\n  46      }\n  47      return -1;\n  48  }"
+    },
+    {
+      "id": "loop-099",
+      "language": "c",
+      "path": "examples/09_membership_scan.c",
+      "name": "scan_triple",
+      "start_line": 51,
+      "source": "  51  int scan_triple(const int *table, int len, int key, int bucket)\n  52  {\n  53      int r;\n  54      int c;\n  55      int d;\n  56      int found = 0;\n  57  \n  58      for (r = 0; r < bucket; r++) {\n  59          for (c = 0; c < len; c++) {\n  60              for (d = 0; d < len; d++) {\n  61                  if (table[d] == key) {          /* LOOP-007 */\n  62                      found++;\n  63                  }\n  64                  if ((table[d] % bucket) == r) { /* LOOP-007 + LOOP-004 */\n  65                      found++;\n  66                  }\n  67              }\n  68          }\n  69      }\n  70      return found;\n  71  }"
+    },
+    {
+      "id": "loop-100",
+      "language": "c",
+      "path": "examples/09_membership_scan.c",
+      "name": "scan_cstr",
+      "start_line": 75,
+      "source": "  75  int scan_cstr(const char *text, int len)\n  76  {\n  77      int i;\n  78      int j;\n  79  \n  80      for (i = 0; i < len; i++) {\n  81          for (j = 0; j < len; j++) {\n  82              if (text[j] == '\\0') {\n  83                  return j;\n  84              }\n  85          }\n  86      }\n  87      return -1;\n  88  }"
+    }
+  ]
+}

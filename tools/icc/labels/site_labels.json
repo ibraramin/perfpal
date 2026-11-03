@@ -1,0 +1,606 @@
+{
+  "annotator": "llm-blind",
+  "count": 100,
+  "items": [
+    {
+      "id": "site-001",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-002",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-003",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-004",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-005",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-006",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-007",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-008",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-009",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-010",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-011",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-012",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-013",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-014",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-015",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-016",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-017",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-018",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-019",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-020",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-021",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-022",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-023",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-024",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": false
+    },
+    {
+      "id": "site-025",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": true
+    },
+    {
+      "id": "site-026",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": true
+    },
+    {
+      "id": "site-027",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-028",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-029",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-030",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-031",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-032",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-033",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-034",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-035",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-036",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-037",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-038",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-039",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-040",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-041",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-042",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-043",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-044",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-045",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-046",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-047",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-048",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-049",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-050",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-051",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-052",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-053",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-054",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-055",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-056",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-057",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-058",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-059",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-060",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-061",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-062",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-063",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-064",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-065",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-066",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-067",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-068",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-069",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-070",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-071",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-072",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-073",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-074",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-075",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-076",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-077",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-078",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-079",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-080",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-081",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-082",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-083",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-084",
+      "is_alloc": true,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-085",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-086",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-087",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-088",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-089",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-090",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-091",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-092",
+      "is_alloc": false,
+      "is_external_io": true,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-093",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-094",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-095",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-096",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-097",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-098",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-099",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    },
+    {
+      "id": "site-100",
+      "is_alloc": false,
+      "is_external_io": false,
+      "cfg_gated_c": null
+    }
+  ]
+}

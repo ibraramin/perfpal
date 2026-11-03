@@ -1,0 +1,767 @@
+{
+  "freeze_ok": true,
+  "decision": {
+    "rule": "frozen prereg decision rule 4",
+    "primary": {
+      "loop_body_loc": "PASS",
+      "max_loop_depth": "PASS",
+      "alloc_sites_in_loops": "PASS",
+      "manual_loop": "PASS",
+      "cfg_gated_c": "PASS",
+      "io_sites_in_loops": "DROPPED"
+    },
+    "dropped_fields": [
+      "io_sites_in_loops"
+    ],
+    "drop_reason": "The 100-site blind audit found 9 external-I/O calls Perfpal missed (C fgetc/putc; JS/TS bare readFileSync; Rust write_all; Python DB/wrapper calls): recall 0.55. Per the frozen prereg decision rule 4, io_sites_in_loops is dropped from the confirmatory family; io_site_count remains descriptive only.",
+    "io_site_count": "descriptive only",
+    "manual_loop_python_icc": 0.757543,
+    "manual_loop_pooled_icc": 0.981214,
+    "freeze_ok": true
+  },
+  "sample": {
+    "total_functions": 200,
+    "requested_total": 200,
+    "counts": {
+      "c": {
+        "base_target": 38,
+        "base_selected": 38,
+        "selected": 42,
+        "loop_functions_selected": 29,
+        "no_loop_functions_selected": 13,
+        "available_real_functions": 42,
+        "extra_selected": 4,
+        "requested": 42,
+        "shortfall": 0
+      },
+      "rust": {
+        "base_target": 40,
+        "base_selected": 40,
+        "selected": 42,
+        "loop_functions_selected": 22,
+        "no_loop_functions_selected": 20,
+        "available_real_functions": 42,
+        "extra_selected": 2,
+        "requested": 42,
+        "shortfall": 0
+      },
+      "python": {
+        "base_target": 40,
+        "base_selected": 40,
+        "selected": 42,
+        "loop_functions_selected": 28,
+        "no_loop_functions_selected": 14,
+        "available_real_functions": 50,
+        "extra_selected": 2,
+        "requested": 42,
+        "shortfall": 0
+      },
+      "js": {
+        "base_target": 40,
+        "base_selected": 33,
+        "selected": 35,
+        "loop_functions_selected": 17,
+        "no_loop_functions_selected": 18,
+        "available_real_functions": 35,
+        "extra_selected": 2,
+        "requested": 35,
+        "shortfall": 0
+      },
+      "ts": {
+        "base_target": 42,
+        "base_selected": 37,
+        "selected": 39,
+        "loop_functions_selected": 17,
+        "no_loop_functions_selected": 22,
+        "available_real_functions": 39,
+        "extra_selected": 2,
+        "requested": 39,
+        "shortfall": 0
+      }
+    },
+    "extra": {
+      "tree": "tools/icc/extra",
+      "excluded_files": [
+        "tools/icc/extra/dead.c"
+      ],
+      "selected": 12
+    },
+    "note": "Exactly 200 functions: the deterministic 188-function base sample plus all 12 loop-bearing real functions under tools/icc/extra (dead.c excluded from the loop/alloc sample)."
+  },
+  "per_language": {
+    "c": {
+      "n_sample": 42,
+      "reference_present": true,
+      "matched_count": 42,
+      "fields": {
+        "loop_count": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "loop_body_loc": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "alloc_sites_in_loops": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "io_site_count": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "max_loop_depth": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "exact_agreement_percent": 100.0,
+          "mismatches": []
+        }
+      },
+      "unmatched_perfpal": [],
+      "unmatched_reference": [],
+      "dead_code_excluded": []
+    },
+    "rust": {
+      "n_sample": 42,
+      "reference_present": true,
+      "matched_count": 42,
+      "fields": {
+        "loop_count": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "loop_body_loc": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "alloc_sites_in_loops": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "io_site_count": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "max_loop_depth": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "exact_agreement_percent": 100.0,
+          "mismatches": []
+        }
+      },
+      "unmatched_perfpal": [],
+      "unmatched_reference": [],
+      "dead_code_excluded": []
+    },
+    "python": {
+      "n_sample": 42,
+      "reference_present": true,
+      "matched_count": 42,
+      "fields": {
+        "loop_count": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "loop_body_loc": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "alloc_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_site_count": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "max_loop_depth": {
+          "n": 42,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "exact_agreement_percent": 100.0,
+          "mismatches": []
+        }
+      },
+      "unmatched_perfpal": [],
+      "unmatched_reference": [
+        {
+          "path": "examples-python/14_async_blocking.py",
+          "name": "await_once",
+          "start_line": 31,
+          "reason": "not_selected_in_sample"
+        }
+      ],
+      "dead_code_excluded": []
+    },
+    "js": {
+      "n_sample": 35,
+      "reference_present": true,
+      "matched_count": 35,
+      "fields": {
+        "loop_count": {
+          "n": 35,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "loop_body_loc": {
+          "n": 35,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "alloc_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_site_count": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "max_loop_depth": {
+          "n": 35,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "exact_agreement_percent": 100.0,
+          "mismatches": []
+        }
+      },
+      "unmatched_perfpal": [],
+      "unmatched_reference": [
+        {
+          "path": "tools/icc/extra/extra.js",
+          "name": "jsCallback",
+          "start_line": 11,
+          "reason": "not_selected_in_sample"
+        }
+      ],
+      "dead_code_excluded": []
+    },
+    "ts": {
+      "n_sample": 39,
+      "reference_present": true,
+      "matched_count": 39,
+      "fields": {
+        "loop_count": {
+          "n": 39,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "loop_body_loc": {
+          "n": 39,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "alloc_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_site_count": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "io_sites_in_loops": {
+          "n": 0,
+          "mean_diff": null,
+          "mean_abs_diff": null,
+          "icc": null,
+          "icc_undefined_reason": "fewer than 2 subjects"
+        },
+        "max_loop_depth": {
+          "n": 39,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "exact_agreement_percent": 100.0,
+          "mismatches": []
+        }
+      },
+      "unmatched_perfpal": [],
+      "unmatched_reference": [],
+      "dead_code_excluded": []
+    }
+  },
+  "pooled": {
+    "matched_count": 200,
+    "fields": {
+      "loop_count": {
+        "n": 200,
+        "mean_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "icc": 1.0
+      },
+      "loop_body_loc": {
+        "n": 200,
+        "mean_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "icc": 1.0
+      },
+      "alloc_sites_in_loops": {
+        "n": 84,
+        "mean_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "icc": 1.0
+      },
+      "io_site_count": {
+        "n": 0,
+        "mean_diff": null,
+        "mean_abs_diff": null,
+        "icc": null,
+        "icc_undefined_reason": "fewer than 2 subjects"
+      },
+      "io_sites_in_loops": {
+        "n": 0,
+        "mean_diff": null,
+        "mean_abs_diff": null,
+        "icc": null,
+        "icc_undefined_reason": "fewer than 2 subjects"
+      },
+      "max_loop_depth": {
+        "n": 200,
+        "mean_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "exact_agreement_percent": 100.0,
+        "mismatches": []
+      }
+    }
+  },
+  "manual": {
+    "loop": {
+      "status": "evaluated",
+      "n": 100,
+      "missing_ids": [],
+      "per_language": {
+        "c": {
+          "n": 24,
+          "loop_count": {
+            "n": 24,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "icc": 1.0
+          },
+          "loop_body_loc": {
+            "n": 24,
+            "mean_diff": 0.083333,
+            "mean_abs_diff": 0.083333,
+            "icc": 0.990358
+          },
+          "max_loop_depth": {
+            "n": 24,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "exact_agreement_percent": 100.0,
+            "mismatches": []
+          }
+        },
+        "rust": {
+          "n": 20,
+          "loop_count": {
+            "n": 20,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "icc": 1.0
+          },
+          "loop_body_loc": {
+            "n": 20,
+            "mean_diff": 0.05,
+            "mean_abs_diff": 0.05,
+            "icc": 0.993526
+          },
+          "max_loop_depth": {
+            "n": 20,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "exact_agreement_percent": 100.0,
+            "mismatches": []
+          }
+        },
+        "python": {
+          "n": 26,
+          "loop_count": {
+            "n": 26,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "icc": 1.0
+          },
+          "loop_body_loc": {
+            "n": 26,
+            "mean_diff": -0.461538,
+            "mean_abs_diff": 0.461538,
+            "icc": 0.757543
+          },
+          "max_loop_depth": {
+            "n": 26,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "exact_agreement_percent": 100.0,
+            "mismatches": []
+          }
+        },
+        "js": {
+          "n": 15,
+          "loop_count": {
+            "n": 15,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "icc": 1.0
+          },
+          "loop_body_loc": {
+            "n": 15,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "icc": 1.0
+          },
+          "max_loop_depth": {
+            "n": 15,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "exact_agreement_percent": 100.0,
+            "mismatches": []
+          }
+        },
+        "ts": {
+          "n": 15,
+          "loop_count": {
+            "n": 15,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "icc": 1.0
+          },
+          "loop_body_loc": {
+            "n": 15,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "icc": 1.0
+          },
+          "max_loop_depth": {
+            "n": 15,
+            "mean_diff": 0.0,
+            "mean_abs_diff": 0.0,
+            "exact_agreement_percent": 100.0,
+            "mismatches": []
+          }
+        }
+      },
+      "pooled": {
+        "n": 100,
+        "loop_count": {
+          "n": 100,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "icc": 1.0
+        },
+        "loop_body_loc": {
+          "n": 100,
+          "mean_diff": -0.09,
+          "mean_abs_diff": 0.15,
+          "icc": 0.981214
+        },
+        "max_loop_depth": {
+          "n": 100,
+          "mean_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "exact_agreement_percent": 100.0,
+          "mismatches": []
+        }
+      },
+      "pass": true,
+      "reasons": [],
+      "note": "Python definitional note: the annotator excluded leading comments because they are not inside the tree-sitter body-node span; the spec's body-node definition is the locked one. Python passes at 0.7575, pooled at 0.9812."
+    },
+    "site": {
+      "status": "evaluated",
+      "n": 100,
+      "missing_ids": [],
+      "agreement": 0.89,
+      "note": "agreement is descriptive only; pass/fail uses per-field Cohen's kappa and ICC(2,1), never raw agreement alone",
+      "site_fields": {
+        "alloc_sites_in_loops": {
+          "field": "alloc_sites_in_loops",
+          "n": 100,
+          "observed_agreement": 0.98,
+          "kappa": 0.8779,
+          "icc": 0.878973,
+          "tp": 8,
+          "fp": 1,
+          "fn": 1,
+          "tn": 90,
+          "precision": 0.888889,
+          "recall": 0.888889,
+          "pass": true,
+          "threshold": 0.7,
+          "reasons": []
+        },
+        "io_sites_in_loops": {
+          "field": "io_sites_in_loops",
+          "n": 100,
+          "observed_agreement": 0.91,
+          "kappa": 0.661654,
+          "icc": 0.6639,
+          "tp": 11,
+          "fp": 0,
+          "fn": 9,
+          "tn": 80,
+          "precision": 1.0,
+          "recall": 0.55,
+          "pass": false,
+          "threshold": 0.7,
+          "reasons": [
+            "kappa=0.6616541353383458<0.7",
+            "icc=0.6639004149377586<0.7"
+          ]
+        },
+        "cfg_gated_c": {
+          "field": "cfg_gated_c",
+          "n": 15,
+          "observed_agreement": 1.0,
+          "kappa": 1.0,
+          "icc": 1.0,
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "tn": 13,
+          "precision": 1.0,
+          "recall": 1.0,
+          "pass": true,
+          "threshold": 0.7,
+          "reasons": []
+        }
+      },
+      "dropped_fields": [
+        "io_sites_in_loops"
+      ],
+      "drop_reason": "The 100-site blind audit found 9 external-I/O calls Perfpal missed (C fgetc/putc; JS/TS bare readFileSync; Rust write_all; Python DB/wrapper calls): recall 0.55. Per the frozen prereg decision rule 4, io_sites_in_loops is dropped from the confirmatory family; io_site_count remains descriptive only.",
+      "alloc": {
+        "field": "alloc_sites_in_loops",
+        "n": 100,
+        "observed_agreement": 0.98,
+        "kappa": 0.8779,
+        "icc": 0.878973,
+        "tp": 8,
+        "fp": 1,
+        "fn": 1,
+        "tn": 90,
+        "precision": 0.888889,
+        "recall": 0.888889,
+        "pass": true,
+        "threshold": 0.7,
+        "reasons": []
+      },
+      "io": {
+        "field": "io_sites_in_loops",
+        "n": 100,
+        "observed_agreement": 0.91,
+        "kappa": 0.661654,
+        "icc": 0.6639,
+        "tp": 11,
+        "fp": 0,
+        "fn": 9,
+        "tn": 80,
+        "precision": 1.0,
+        "recall": 0.55,
+        "pass": false,
+        "threshold": 0.7,
+        "reasons": [
+          "kappa=0.6616541353383458<0.7",
+          "icc=0.6639004149377586<0.7"
+        ]
+      },
+      "cfg_gated_c": {
+        "n": 15,
+        "observed_agreement": 1.0,
+        "kappa": 1.0,
+        "icc": 1.0,
+        "pass": true,
+        "reasons": []
+      },
+      "pass": true,
+      "reasons": [],
+      "cfg_kappa_pass": true
+    }
+  },
+  "gate": {
+    "loop_body_loc": {
+      "pass": true,
+      "threshold": 0.75,
+      "min_n": 10,
+      "offending_languages": [],
+      "per_language": {
+        "c": {
+          "pass": true,
+          "n": 42,
+          "icc": 1.0,
+          "reasons": []
+        },
+        "rust": {
+          "pass": true,
+          "n": 42,
+          "icc": 1.0,
+          "reasons": []
+        },
+        "python": {
+          "pass": true,
+          "n": 42,
+          "icc": 1.0,
+          "reasons": []
+        },
+        "js": {
+          "pass": true,
+          "n": 35,
+          "icc": 1.0,
+          "reasons": []
+        },
+        "ts": {
+          "pass": true,
+          "n": 39,
+          "icc": 1.0,
+          "reasons": []
+        }
+      },
+      "pooled_icc": 1.0
+    },
+    "max_loop_depth": {
+      "pass": true,
+      "threshold_percent": 99.0,
+      "offending_languages": [],
+      "per_language": {
+        "c": {
+          "pass": true,
+          "n": 42,
+          "exact_agreement_percent": 100.0,
+          "reasons": []
+        },
+        "rust": {
+          "pass": true,
+          "n": 42,
+          "exact_agreement_percent": 100.0,
+          "reasons": []
+        },
+        "python": {
+          "pass": true,
+          "n": 42,
+          "exact_agreement_percent": 100.0,
+          "reasons": []
+        },
+        "js": {
+          "pass": true,
+          "n": 35,
+          "exact_agreement_percent": 100.0,
+          "reasons": []
+        },
+        "ts": {
+          "pass": true,
+          "n": 39,
+          "exact_agreement_percent": 100.0,
+          "reasons": []
+        }
+      },
+      "pooled_exact_agreement_percent": 100.0
+    },
+    "alloc_sites_in_loops": {
+      "pass": true,
+      "threshold": 0.7,
+      "min_n": 10,
+      "offending_languages": [],
+      "per_language": {
+        "c": {
+          "pass": true,
+          "n": 42,
+          "icc": 1.0,
+          "reasons": []
+        },
+        "rust": {
+          "pass": true,
+          "n": 42,
+          "icc": 1.0,
+          "reasons": []
+        }
+      },
+      "pooled_icc": 1.0
+    },
+    "manual_loop": {
+      "pass": true,
+      "status": "evaluated",
+      "threshold": 0.75
+    },
+    "manual_site": {
+      "pass": true,
+      "status": "evaluated",
+      "threshold": 0.7,
+      "dropped_fields": [
+        "io_sites_in_loops"
+      ],
+      "cfg_kappa_threshold": 0.7
+    }
+  }
+}
