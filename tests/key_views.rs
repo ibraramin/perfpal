@@ -68,6 +68,9 @@ fn function(
         cyclomatic_complexity: 4,
         cognitive_complexity: 2,
         max_loop_depth: loops,
+        loop_count: None,
+        loop_body_loc: None,
+        parse_health: None,
         alloc_site_count: 0,
         length_lines: end - start + 1,
         call_fanout: Some(1),
@@ -197,7 +200,7 @@ fn doc() -> MetricsDocument {
         ),
     ];
     MetricsDocument {
-        schema_version: "1.8".to_string(),
+        schema_version: "1.9".to_string(),
         tool: ToolInfo {
             name: "perfpal".to_string(),
             version: "test".to_string(),

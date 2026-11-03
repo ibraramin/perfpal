@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.8.json",
-  "title": "Perfpal metrics.json schema v1.8",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.9.json",
+  "title": "Perfpal metrics.json schema v1.9",
   "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, JavaScript, Rust, Python, TypeScript). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
   "type": "object",
   "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
@@ -9,8 +9,8 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.8",
-      "description": "Schema version of this document (currently v1.8). MAJOR.MINOR: minor = additive-only changes; major = breaking."
+      "const": "1.9",
+      "description": "Schema version of this document (currently v1.9). MAJOR.MINOR: minor = additive-only changes; major = breaking."
     },
     "tool": {
       "type": "object",
@@ -153,7 +153,19 @@
               "function_cost_v2": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6 (map-build I2 cost-v2): per-iteration weighted cost computed by the aggregator from IR. Formula = v1 base (cyclomatic_complexity + cognitive_complexity + 2*max_loop_depth + 3*alloc_site_count + call_fanout + call_fanin + call_depth + 2 if is_recursive + 1 if error_path + 1 if alloc_family) plus, for every loop, min(trip_count, 1000000) * (1 + loop_depth) when the trip count is statically known (C canonical counted for-loops; Rust canonical literal ranges since I2b; Python canonical literal `range()` loops since I2c) or 1 * (1 + loop_depth) when unknown. Saturating u64 arithmetic. Omitted only for pre-I2/parser-free documents; heat consumers prefer it over the retained v1 function_cost." },
               "unknown_trip_loops": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6: number of loops in the function whose trip count is genuinely unknown (LoopNode.trip_count absent). Always emitted (0 for loop-free or fully counted functions). Python loops are known for canonical literal `range()` calls since I2c and honestly unknown otherwise (non-literal bounds, step != 1); C while/do-while and non-canonical for-loops, and Rust non-canonical ranges, are also unknown." },
               "trip_count_source": { "type": "string", "enum": ["literal", "partial", "unknown"], "description": "ADDITIVE v1.7 (map-intelligibility V4): provenance of the trip counts used by function_cost_v2 — literal (every loop has a canonical literal trip), partial (some do), unknown (loops but none literal). Omitted when the function has no loops." },
-              "known_trip_value": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.7: largest clamped literal trip multiplier used by function_cost_v2 — max of min(trip_count, 1000000) over the function's loops. Omitted when no loop has a literal trip." }
+              "known_trip_value": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.7: largest clamped literal trip multiplier used by function_cost_v2 — max of min(trip_count, 1000000) over the function's loops. Omitted when no loop has a literal trip." },
+              "loop_count": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.9 (structural suite v1): number of loop constructs lexically inside the function, counted by the same traversal as max_loop_depth. Invariant: loop_count >= 1 iff max_loop_depth >= 1. Optional: omitted by pre-1.9 producers." },
+              "loop_body_loc": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.9: number of distinct source lines covered by at least one loop body span (inclusive end_line - start_line + 1; nested bodies counted once via union). 0 for loop-free functions; omitted when any loop body span is unidentified." },
+              "parse_health": {
+                "type": "object",
+                "required": ["status", "overlapping_error_regions"],
+                "additionalProperties": false,
+                "description": "ADDITIVE v1.9: per-function parse quality derived from the file-level parse_health. status is never ok when the file failed; overlapping_error_regions counts file-level error regions intersecting the function span.",
+                "properties": {
+                  "status": { "enum": ["ok", "partial", "failed"] },
+                  "overlapping_error_regions": { "type": "integer", "minimum": 0 }
+                }
+              }
             }
           }
         },

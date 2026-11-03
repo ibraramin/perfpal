@@ -9,7 +9,7 @@
 //! maps. Version bumps follow metrics-json-v1 policy: minor = additive only,
 //! major = breaking.
 //!
-//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.8.json`
+//! Field fidelity is line-by-line against `docs/schema/metrics.schema.v1.9.json`
 //! (Draft 2020-12): a field absent from that schema's `required` list is
 //! `Option<T>` with `skip_serializing_if`, so optional sections are OMITTED,
 //! never emitted as `null` (metrics-json-v1.md §6: explicit nulls are not
@@ -50,7 +50,7 @@ use serde::Serialize;
 use crate::analyzer::{Confidence, Finding, Severity};
 use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverTier, Span};
 
-/// Schema version of emitted documents (metrics.schema.v1.8.json
+/// Schema version of emitted documents (metrics.schema.v1.9.json
 /// `properties.schema_version.const`). MAJOR.MINOR: minor = additive-only;
 /// major = breaking (metrics-json-v1.md §5).
 ///
@@ -100,20 +100,26 @@ use crate::ir::{IncludeCounts, LocCounts, ParseStatus, ResolverHealth, ResolverT
 /// admission, declared up front for B2/B3). No required list grew, no field
 /// was removed or retyped — every v1.7 document still validates once
 /// re-marked `"1.8"`.
-pub const SCHEMA_VERSION: &str = "1.8";
+///
+/// v1.8 → v1.9 (minor/additive, structural suite v1): three OPTIONAL
+/// function-level fields — `loop_count`, `loop_body_loc`, and the
+/// `parse_health` object (`status` + `overlapping_error_regions`). No
+/// required list grew, no field was removed or retyped — every v1.8 document
+/// still validates once re-marked `"1.9"`.
+pub const SCHEMA_VERSION: &str = "1.9";
 
 /// Bundled-schema artifact name (output-contract §3): FULL version always —
-/// `"1.8"` ⇒ `metrics.schema.v1.8.json`, never an elided `.0`. Kept as a
+/// `"1.9"` ⇒ `metrics.schema.v1.9.json`, never an elided `.0`. Kept as a
 /// literal next to [`SCHEMA_VERSION`]; the drift test below asserts the two
 /// stay in lockstep.
-pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.8.json";
+pub const SCHEMA_ARTIFACT_NAME: &str = "metrics.schema.v1.9.json";
 
 /// Canonical JSON Schema artifact, embedded at compile time (modules.md §3.5).
-/// Byte-copy of `docs/schema/metrics.schema.v1.8.json`; byte-equality with the
+/// Byte-copy of `docs/schema/metrics.schema.v1.9.json`; byte-equality with the
 /// docs copy is asserted by [`tests::embedded_schema_matches_docs_copy`] so
-/// the two cannot drift. The v1.7 + v1.6 + v1.5 + v1.4 + v1.3 + v1.2 + v1.1 +
-/// v1.0 docs copies are kept as history.
-pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.8.json");
+/// the two cannot drift. The v1.8 + v1.7 + v1.6 + v1.5 + v1.4 + v1.3 + v1.2 +
+/// v1.1 + v1.0 docs copies are kept as history.
+pub const EMBEDDED_SCHEMA: &str = include_str!("metrics.schema.v1.9.json");
 
 // ---------------------------------------------------------------------------
 // Document model — nine sections, field-for-field vs the canonical schema
@@ -223,6 +229,14 @@ pub struct ParseHealthEntry {
     pub resolver: Option<ResolverHealth>,
 }
 
+/// Per-function parse quality (schema 1.9, structural suite v1). Derived
+/// from the file-level [`ParseHealthEntry`]: see `aggregator::function_parse_health`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct FunctionParseHealth {
+    pub status: ParseStatus,
+    pub overlapping_error_regions: u32,
+}
+
 /// `stats` — baseline measurements, always emitted, never findings.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StatsSection {
@@ -252,6 +266,19 @@ pub struct FunctionStats {
     pub cyclomatic_complexity: u32,
     pub cognitive_complexity: u32,
     pub max_loop_depth: u32,
+    /// ADDITIVE v1.9 (structural suite v1): number of loop constructs inside
+    /// the function, counted by the same traversal as `max_loop_depth`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loop_count: Option<u32>,
+    /// ADDITIVE v1.9: union of distinct source lines covered by loop-body
+    /// spans (inclusive semantics; nested bodies once). `Some(0)` for
+    /// loop-free functions; omitted when any body span is unknown.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loop_body_loc: Option<u32>,
+    /// ADDITIVE v1.9: per-function parse quality derived from the file-level
+    /// health; omitted when the producer has no file health.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parse_health: Option<FunctionParseHealth>,
     pub alloc_site_count: u32,
     pub length_lines: u32,
     /// ADDITIVE v1.4 (plan `divergence-revamp` step 1, specs
@@ -675,11 +702,11 @@ mod tests {
     /// without the other fails here.
     #[test]
     fn embedded_schema_matches_docs_copy_byte_for_byte() {
-        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.8.json");
+        let docs_copy = include_str!("../../docs/schema/metrics.schema.v1.9.json");
         assert_eq!(
             EMBEDDED_SCHEMA, docs_copy,
-            "src/schema/metrics.schema.v1.8.json drifted from \
-             docs/schema/metrics.schema.v1.8.json — re-copy the canonical artifact"
+            "src/schema/metrics.schema.v1.9.json drifted from \
+             docs/schema/metrics.schema.v1.9.json — re-copy the canonical artifact"
         );
     }
 
@@ -755,6 +782,9 @@ mod tests {
                     cyclomatic_complexity: 2,
                     cognitive_complexity: 1,
                     max_loop_depth: 1,
+                    loop_count: None,
+                    loop_body_loc: None,
+                    parse_health: None,
                     alloc_site_count: 1,
                     length_lines: 6,
                     // v1.4 skeleton: uncomputed instrument fields stay None

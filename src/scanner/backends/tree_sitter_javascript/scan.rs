@@ -302,11 +302,16 @@ impl FuncScan<'_> {
         } else {
             None
         };
+        // v1.9 structural suite: the loop body node (grammar `body` field).
+        let body_span = node
+            .child_by_field_name("body")
+            .map(|b| ir_span(b, self.source));
         self.loops.push(LoopNode {
             kind,
             depth,
             induction_vars,
             span,
+            body_span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
             trip_count,

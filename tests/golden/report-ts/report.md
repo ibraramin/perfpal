@@ -1,5 +1,5 @@
 # Perfpal Report
-> schema_version 1\.8 · perfpal 0\.4\.0 · scanned <ROOT>
+> schema_version 1\.9 · perfpal 0\.5\.0 · scanned <ROOT>
 > started <MASKED> · duration <MASKED> ms · 17 files
 
 ## 1. Executive summary
@@ -59,7 +59,7 @@ showing top 5 of 54 functions
 1 startup function demoted · 39 no-loop functions demoted · 0 non-production files demoted.
 
 ## 2. Scan provenance & parse health
-- Tool: perfpal 0\.4\.0
+- Tool: perfpal 0\.5\.0
 - Scan root: `<ROOT>`
 - Files scanned: 17
 
@@ -180,4 +180,4 @@ Standing caveat: cross-file call edges are LOW confidence until a semantic resol
 **Severity** bands (`hot`, `warn`, `info`) rank expected runtime or architecture impact: review `hot` findings first, schedule `warn`, and treat `info` as context signal feeding aggregation.
 **Confidence** tiers (`HIGH`, `MEDIUM`, `LOW`) express the false-positive risk of the detection shape — pure-syntax detections are HIGH, shape heuristics with documented FP classes are MEDIUM, and approximations (size models, cross-file name matching) are LOW. Downgrade flags (`macro_suspect`, `error_node_overlap`) mark findings whose evidence quality is reduced; their confidence is capped at MEDIUM.
 Every finding is an **optimization candidate, never a certainty**: a candidate for human review, not a defect claim. Perfpal v1 runs on a purely syntactic tier (`resolver_tier: syntactic`) — no macro expansion, no type resolution.
-For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.8.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.
+For programmatic consumption, read `metrics.json` — the source of truth — and validate it against the bundled schema `metrics.schema.v1.9.json` shipped alongside it. Where this report and `metrics.json` ever disagree, `metrics.json` wins.

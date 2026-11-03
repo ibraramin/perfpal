@@ -160,6 +160,7 @@ fn loop_node(depth: u32, vars: &[&str], trip: Option<u64>, at: Span) -> LoopNode
         depth,
         induction_vars: vars.iter().map(|v| (*v).to_string()).collect(),
         span: at,
+        body_span: None,
         resolver_tier: ResolverTier::Syntactic,
         macro_origin: false,
         trip_count: trip,

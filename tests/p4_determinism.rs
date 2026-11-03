@@ -162,3 +162,80 @@ fn double_run_all_artifacts_byte_equal_modulo_provenance() {
         "fixture should emit all three v1 charts + five layered/map overviews + graph.dot + one page per component"
     );
 }
+
+/// Structural suite v1 (schema 1.9): a fixture with loops and a parse-error
+/// file must be byte-deterministic after provenance masking, and the function
+/// order must stay `path → start_line → start_col` across runs.
+#[test]
+fn structural_loops_and_parse_errors_are_deterministic() {
+    let root = temp_dir("structural");
+    fs::write(
+        root.join("loops.c"),
+        "\
+int loops(int n) {
+    int s = 0;
+    for (int i = 0; i < n; i++) {
+        while (s < i) { s++; }
+    }
+    for (int j = 0; j < 2; j++) { s += j; }
+    return s;
+}
+",
+    )
+    .expect("write C fixture");
+    fs::write(
+        root.join("broken.py"),
+        "def broken():\n    x = (\n    return 1\n",
+    )
+    .expect("write broken fixture");
+
+    let out = root.join("report");
+    let out_str = out.to_string_lossy().into_owned();
+    let target = root.to_string_lossy().into_owned();
+
+    assert_eq!(run_with(argv(&out_str, &target)), 0);
+    let run1 = collect_artifacts(&out);
+    assert_eq!(run_with(argv(&out_str, &target)), 0);
+    let run2 = collect_artifacts(&out);
+
+    assert_eq!(
+        run1.keys().collect::<Vec<_>>(),
+        run2.keys().collect::<Vec<_>>(),
+        "artifact set diverged"
+    );
+    let metrics1 = String::from_utf8(run1["metrics.json"].clone()).expect("metrics.json UTF-8");
+    let metrics2 = String::from_utf8(run2["metrics.json"].clone()).expect("metrics.json UTF-8");
+    assert_eq!(
+        common::mask_metrics_provenance(&metrics1),
+        common::mask_metrics_provenance(&metrics2),
+        "metrics.json diverged beyond provenance"
+    );
+    let report1 = String::from_utf8(run1["report.md"].clone()).expect("report.md UTF-8");
+    let report2 = String::from_utf8(run2["report.md"].clone()).expect("report.md UTF-8");
+    assert_eq!(
+        common::mask_report_provenance(&report1),
+        common::mask_report_provenance(&report2),
+        "report.md diverged beyond provenance"
+    );
+
+    // Function order is the documented `(path, start_line, start_col)` total
+    // order; field key order is fixed by the serde DTO (byte equality above).
+    let doc: serde_json::Value = serde_json::from_str(&metrics1).expect("metrics.json parses");
+    let functions = doc["stats"]["functions"].as_array().expect("functions[]");
+    let keys: Vec<(String, u64, u64)> = functions
+        .iter()
+        .map(|f| {
+            (
+                f["path"].as_str().expect("path").to_string(),
+                f["span"]["start_line"].as_u64().expect("start_line"),
+                f["span"]["start_col"].as_u64().expect("start_col"),
+            )
+        })
+        .collect();
+    let mut sorted = keys.clone();
+    sorted.sort();
+    assert_eq!(keys, sorted, "function order drifted from the contract");
+    assert!(functions.iter().any(|f| {
+        f["loop_count"].as_u64().unwrap_or(0) > 0 && f["loop_body_loc"].as_u64().unwrap_or(0) > 0
+    }));
+}

@@ -493,7 +493,7 @@ fn agent_report_emitted_artifact_set() {
     assert_eq!(run_scan(&manifest("tests/fixtures/e2e-mixed"), &out), 0);
     for name in [
         "metrics.json",
-        "metrics.schema.v1.8.json",
+        "metrics.schema.v1.9.json",
         "report.md",
         "report.html",
         "findings-detail.html",

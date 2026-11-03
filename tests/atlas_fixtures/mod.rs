@@ -79,6 +79,9 @@ fn function(
         cyclomatic_complexity: 1,
         cognitive_complexity: 0,
         max_loop_depth: 1,
+        loop_count: None,
+        loop_body_loc: None,
+        parse_health: None,
         alloc_site_count: 1,
         length_lines: 9,
         call_fanout: Some(0),
@@ -152,7 +155,7 @@ fn document(
     include_edges: Vec<IncludeEdgeDto>,
 ) -> MetricsDocument {
     MetricsDocument {
-        schema_version: "1.8".to_string(),
+        schema_version: "1.9".to_string(),
         tool: ToolInfo {
             name: "perfpal".to_string(),
             version: "test".to_string(),

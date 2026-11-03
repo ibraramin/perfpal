@@ -37,7 +37,7 @@ use crate::writer::Artifact;
 /// <schema_version>)`. clap renders `{name} {version}`, so this constant
 /// carries everything after the binary name. The suffix literal is locked to
 /// [`crate::schema::SCHEMA_VERSION`] by a unit test below.
-const VERSION_SUFFIX: &str = concat!(env!("CARGO_PKG_VERSION"), " (metrics schema ", "1.8", ")");
+const VERSION_SUFFIX: &str = concat!(env!("CARGO_PKG_VERSION"), " (metrics schema ", "1.9", ")");
 
 /// `--help` footer (plan `beta-release` B4): the beta evaluation terms are
 /// surfaced in help output only; `--version` stays byte-exact per modules.md §8.1.
@@ -440,7 +440,7 @@ mod tests {
     #[test]
     fn version_suffix_carries_schema_version() {
         assert!(
-            VERSION_SUFFIX.contains("(metrics schema 1.8)"),
+            VERSION_SUFFIX.contains("(metrics schema 1.9)"),
             "--version payload must name the metrics schema version"
         );
         assert_eq!(

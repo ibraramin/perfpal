@@ -213,6 +213,9 @@ pub(crate) mod test_support {
                 cyclomatic_complexity: 1,
                 cognitive_complexity: 0,
                 max_loop_depth: loops.iter().map(|l| l.depth).max().unwrap_or(0),
+                loop_count: u32::try_from(loops.len()).unwrap_or(u32::MAX),
+                loop_body_loc: None,
+                parse_health: None,
                 alloc_site_count: 0,
                 length_lines: span.end_line,
                 resolver_tier: ResolverTier::Syntactic,
@@ -386,6 +389,7 @@ pub(crate) mod test_support {
             depth,
             induction_vars: vars.iter().map(|v| (*v).to_string()).collect(),
             span,
+            body_span: None,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
             // Synthetic fixtures carry no iterable node, so the scanner's I2c

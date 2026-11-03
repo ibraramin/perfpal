@@ -281,11 +281,16 @@ impl FuncScan<'_> {
         } else {
             None
         };
+        // v1.9 structural suite: statement loops carry the grammar `body` node.
+        let body_span = node
+            .child_by_field_name("body")
+            .map(|b| ir_span(b, self.source));
         self.loops.push(LoopNode {
             kind,
             depth,
             induction_vars,
             span,
+            body_span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin: false,
             trip_count,
@@ -350,6 +355,12 @@ impl FuncScan<'_> {
                         depth,
                         induction_vars,
                         span: ir_span(*clause, self.source),
+                        // Comprehension body = the element-expression node; a
+                        // `for_in_clause` node carries the same element body
+                        // span (structural suite v1 §2.1). `None` when the
+                        // container has no element body (e.g. a stray clause),
+                        // so `loop_body_loc` is omitted rather than guessed.
+                        body_span: body.map(|b| ir_span(b, self.source)),
                         resolver_tier: ResolverTier::Syntactic,
                         macro_origin: false,
                         trip_count,

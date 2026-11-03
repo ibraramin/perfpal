@@ -718,6 +718,11 @@ fn function_unit(
         cyclomatic_complexity: scan.cyclomatic,
         cognitive_complexity: scan.cognitive,
         max_loop_depth: scan.max_loop_depth,
+        loop_count: u32::try_from(scan.loops.len()).unwrap_or(u32::MAX),
+        // Aggregator-owned (union of body spans), not backend-owned.
+        loop_body_loc: None,
+        // Aggregator-owned (file-level parse-health overlap), not backend-owned.
+        parse_health: None,
         alloc_site_count: scan.alloc_site_count,
         length_lines,
         resolver_tier: ResolverTier::default(),
@@ -844,6 +849,14 @@ impl<'a> FuncScan<'a> {
                 let kind = loop_kind(k).expect("matched loop kind");
                 self.enter_loop(node, kind);
             }
+            // Scope boundary (structural suite v1 bug fix): a nested
+            // `function_definition` (GCC nested-function extension) is its own
+            // record; its body's loops/events must not be attributed to the
+            // enclosing function. This mirrors `walk_file_level`, which already
+            // stops at every `function_definition`. Before this arm existed,
+            // `max_loop_depth` leaked nested loops into the outer record; with
+            // it, `loop_count` and `max_loop_depth` share one function scope.
+            "function_definition" => {}
             "binary_expression" => self.visit_binary(node),
             "call_expression" => {
                 self.emit_call(node);
@@ -893,6 +906,10 @@ impl<'a> FuncScan<'a> {
             None
         };
         let macro_origin = self.macro_origin_of(&span, "");
+        // v1.9 structural suite: the loop body node (grammar `body` field).
+        let body_span = node
+            .child_by_field_name("body")
+            .map(|b| ir_span(b, self.source));
         // Precision FP-class fix 1 producer: a `do_statement` whose
         // condition text is the literal `(0)` is the `do { ... } while(0)`
         // macro-wrapper idiom (single-shot body, not per-iteration churn).
@@ -911,6 +928,7 @@ impl<'a> FuncScan<'a> {
             depth,
             induction_vars,
             span,
+            body_span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
             trip_count,

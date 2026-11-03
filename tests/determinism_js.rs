@@ -10,7 +10,7 @@
 //! - `report.md` — equal after masking the same fields where they surface in
 //!   the header blockquote;
 //! - `report.html`, `findings-detail.html`, `profile-queue.html`, every
-//!   `charts/*` artifact and the bundled `metrics.schema.v1.8.json` —
+//!   `charts/*` artifact and the bundled `metrics.schema.v1.9.json` —
 //!   byte-identical UNMASKED (no provenance by construction);
 //! - `profile-queue.md` — equal after the same
 //!   provenance mask (defensive: they carry no provenance today);
@@ -154,7 +154,7 @@ fn double_run_all_js_artifacts_byte_equal_modulo_provenance() {
     // Non-vacuity: every artifact kind this suite claims to compare exists.
     for required in [
         "metrics.json",
-        "metrics.schema.v1.8.json",
+        "metrics.schema.v1.9.json",
         "report.md",
         "report.html",
         "findings-detail.html",

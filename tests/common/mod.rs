@@ -698,6 +698,7 @@ fn loop_node(kind: LoopKind, depth: u32, span: Span) -> LoopNode {
         depth,
         induction_vars: Vec::new(),
         span,
+        body_span: None,
         resolver_tier: ResolverTier::Syntactic,
         macro_origin: false,
         // Parser-free fixtures stay honest-unknown.
@@ -738,6 +739,9 @@ fn func(
             cyclomatic_complexity: 1,
             cognitive_complexity: 0,
             max_loop_depth: loops.iter().map(|l| l.depth).max().unwrap_or(0),
+            loop_count: u32::try_from(loops.len()).unwrap_or(u32::MAX),
+            loop_body_loc: None,
+            parse_health: None,
             alloc_site_count: 0,
             length_lines: span.end_line - span.start_line + 1,
             resolver_tier: ResolverTier::Syntactic,

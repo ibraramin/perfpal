@@ -707,6 +707,7 @@ mod tests {
                     depth: 1,
                     induction_vars: Vec::new(),
                     span: loop_span,
+                    body_span: None,
                     resolver_tier: ResolverTier::Syntactic,
                     macro_origin: false,
                     // Synthetic analyzer fixtures: trip counts stay honest-unknown.

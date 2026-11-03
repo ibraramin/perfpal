@@ -13,7 +13,6 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use perfpal::cli::run_with;
-use perfpal::schema;
 
 fn temp_dir(tag: &str) -> PathBuf {
     let nanos = SystemTime::now()
@@ -35,12 +34,14 @@ fn argv(args: &[&str]) -> Vec<OsString> {
 }
 
 #[test]
-fn version_and_artifact_name_are_1_8() {
-    assert_eq!(schema::SCHEMA_VERSION, "1.8");
-    assert_eq!(schema::SCHEMA_ARTIFACT_NAME, "metrics.schema.v1.8.json");
+fn v1_8_artifact_is_retained_as_history() {
+    let v18: serde_json::Value =
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.8.json"))
+            .expect("v1.8 schema parses");
+    assert_eq!(v18["properties"]["schema_version"]["const"], "1.8");
     assert_eq!(
-        schema::SCHEMA_ARTIFACT_NAME,
-        format!("metrics.schema.v{}.json", schema::SCHEMA_VERSION)
+        v18["$id"],
+        "https://perfpal.dev/schemas/metrics.schema.v1.8.json"
     );
 }
 
@@ -49,13 +50,13 @@ fn docs_and_embedded_v1_8_copies_are_byte_identical() {
     let docs = include_str!("../docs/schema/metrics.schema.v1.8.json");
     let src = include_str!("../src/schema/metrics.schema.v1.8.json");
     assert_eq!(docs, src, "src/schema v1.8 copy drifted from docs");
-    assert_eq!(schema::EMBEDDED_SCHEMA, docs, "embedded schema drifted");
 }
 
 #[test]
 fn v1_8_widens_language_enums_without_growing_required_lists() {
     let v18: serde_json::Value =
-        serde_json::from_str(schema::EMBEDDED_SCHEMA).expect("v1.8 schema parses");
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.8.json"))
+            .expect("v1.8 schema parses");
     let v17: serde_json::Value =
         serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.7.json"))
             .expect("v1.7 schema parses");
@@ -187,7 +188,8 @@ fn v1_7_document_re_marked_as_v1_8_still_validates() {
     doc["schema_version"] = serde_json::json!("1.8");
 
     let v18: serde_json::Value =
-        serde_json::from_str(schema::EMBEDDED_SCHEMA).expect("v1.8 schema parses");
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.8.json"))
+            .expect("v1.8 schema parses");
     assert_document_validates(&v18, &doc, "$");
 }
 
@@ -339,7 +341,7 @@ fn end_to_end_scan_emits_path_class_and_trip_provenance() {
 
     let raw = fs::read_to_string(out.join("metrics.json")).expect("metrics.json");
     let doc: serde_json::Value = serde_json::from_str(&raw).expect("metrics.json parses");
-    assert_eq!(doc["schema_version"], "1.8");
+    assert_eq!(doc["schema_version"], "1.9");
 
     let files = doc["files"].as_array().expect("files[]");
     assert!(!files.is_empty());

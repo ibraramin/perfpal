@@ -45,7 +45,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::analyzer::{CrossFileCallEdge, Finding, cross_file_call_edges};
 use crate::graph::{break_cycles, topo_layers};
-use crate::ir::{CalleeKind, FunctionRecord, IncludeForm};
+use crate::ir::{
+    CalleeKind, FunctionParseHealth, FunctionRecord, IncludeForm, LoopNode, ParseStatus,
+};
 use crate::scanner::{FileUnit, FunctionUnit, SUPPORTED_LANGUAGES};
 use crate::schema::{
     self, CallEdge, CallGraphSection, ComponentEntry, ComponentMetrics, DistributionEntry,
@@ -236,12 +238,14 @@ fn function_stats(
     entries: &BTreeMap<String, (String, String)>,
     reachable: &BTreeSet<String>,
 ) -> Vec<schema::FunctionStats> {
-    let mut records: Vec<(bool, &FunctionUnit)> = units
+    let mut records: Vec<(bool, &FunctionUnit, &crate::ir::ParseHealth)> = units
         .iter()
         .flat_map(|u| {
             let entry_scoped = matches!(u.file.language.as_str(), "c" | "rust" | "python")
                 || is_js_family(&u.file.language);
-            u.functions.iter().map(move |f| (entry_scoped, f))
+            u.functions
+                .iter()
+                .map(move |f| (entry_scoped, f, &u.parse_health))
         })
         .collect();
     records.sort_by(|a, b| {
@@ -253,7 +257,7 @@ fn function_stats(
     });
     records
         .into_iter()
-        .map(|(entry_scoped, function_unit)| {
+        .map(|(entry_scoped, function_unit, file_health)| {
             let r = &function_unit.record;
             let call = shape.get(&r.id).copied().unwrap_or_default();
             let (function_cost_v2, unknown_trip_loops) =
@@ -276,6 +280,17 @@ fn function_stats(
                 cyclomatic_complexity: r.cyclomatic_complexity,
                 cognitive_complexity: r.cognitive_complexity,
                 max_loop_depth: r.max_loop_depth,
+                // v1.9 structural suite: loop_count is backend-owned; the
+                // union-of-body-spans LOC and per-function parse health are
+                // aggregator-owned (they need file-level context).
+                loop_count: Some(r.loop_count),
+                loop_body_loc: loop_body_loc_from_loops(&function_unit.loops),
+                parse_health: function_parse_health(Some(file_health), r.span).map(|health| {
+                    schema::FunctionParseHealth {
+                        status: health.status,
+                        overlapping_error_regions: health.overlapping_error_regions,
+                    }
+                }),
                 alloc_site_count: r.alloc_site_count,
                 length_lines: r.length_lines,
                 // v1.4 step 2: whole-program call-shape (computed above —
@@ -310,6 +325,72 @@ fn function_stats(
             }
         })
         .collect()
+}
+
+/// v1.9 structural suite: union length (distinct source lines) of every loop
+/// **body** span in one function. Inclusive semantics `end_line - start_line
+/// + 1`; overlapping/adjacent intervals merge so nested bodies count once.
+///
+/// - no loops ⇒ `Some(0)`
+/// - every loop has an identified body node ⇒ `Some(loc)`
+/// - any loop body span is missing ⇒ `None` (omit `loop_body_loc`, never guess)
+fn loop_body_loc_from_loops(loops: &[LoopNode]) -> Option<u32> {
+    let mut intervals = Vec::with_capacity(loops.len());
+    for loop_node in loops {
+        let span = loop_node.body_span?;
+        intervals.push((span.start_line, span.end_line));
+    }
+    if intervals.is_empty() {
+        return Some(0);
+    }
+    intervals.sort_unstable();
+    let mut total = 0u32;
+    let (mut cur_start, mut cur_end) = intervals[0];
+    for &(start, end) in &intervals[1..] {
+        // Adjacent intervals ([1,2] + [3,4]) still form a contiguous run of
+        // distinct lines, so merging them yields the same union length.
+        if start <= cur_end.saturating_add(1) {
+            cur_end = cur_end.max(end);
+        } else {
+            total = total.saturating_add(cur_end - cur_start + 1);
+            cur_start = start;
+            cur_end = end;
+        }
+    }
+    total = total.saturating_add(cur_end - cur_start + 1);
+    Some(total)
+}
+
+/// v1.9 structural suite: derive a function's parse health from its file's
+/// parse health and span overlap (spec §4.5):
+///
+/// - file `failed` ⇒ every function `failed` (the count still reports the
+///   intersecting regions);
+/// - file `partial` + any overlapping region ⇒ `partial` with the region count;
+/// - file `partial` + no overlap ⇒ `ok`;
+/// - file `ok` ⇒ `ok`;
+/// - no file health ⇒ `None` (omitted).
+fn function_parse_health(
+    file: Option<&crate::ir::ParseHealth>,
+    span: crate::ir::Span,
+) -> Option<FunctionParseHealth> {
+    let file = file?;
+    let overlapping = u32::try_from(
+        file.error_regions
+            .iter()
+            .filter(|region| span.intersects(region))
+            .count(),
+    )
+    .unwrap_or(u32::MAX);
+    let status = match file.status {
+        ParseStatus::Failed => ParseStatus::Failed,
+        ParseStatus::Partial if overlapping > 0 => ParseStatus::Partial,
+        ParseStatus::Partial | ParseStatus::Ok => ParseStatus::Ok,
+    };
+    Some(FunctionParseHealth {
+        status,
+        overlapping_error_regions: overlapping,
+    })
 }
 
 /// Cost model v2 (plan `map-build` I2) — computed HERE because event-level
@@ -1716,6 +1797,7 @@ mod tests {
             depth,
             induction_vars: vec!["i".to_string()],
             span: Span::point(1, 1),
+            body_span: None,
             resolver_tier: crate::ir::ResolverTier::Syntactic,
             macro_origin: false,
             trip_count,
@@ -1748,6 +1830,7 @@ mod tests {
             depth: 1,
             induction_vars: Vec::new(),
             span: Span::point(1, 1),
+            body_span: None,
             resolver_tier: crate::ir::ResolverTier::Syntactic,
             macro_origin: false,
             trip_count,
@@ -1781,6 +1864,126 @@ mod tests {
             (Some(TRIP_LITERAL), Some(crate::ir::MAX_TRIP))
         );
         assert_eq!(crate::ir::MAX_TRIP, 1_000_000);
+    }
+
+    fn loop_with_body(start_line: u32, end_line: u32) -> crate::ir::LoopNode {
+        crate::ir::LoopNode {
+            kind: crate::ir::LoopKind::For,
+            depth: 1,
+            induction_vars: Vec::new(),
+            span: Span::point(start_line, 1),
+            body_span: Some(Span {
+                start_line,
+                start_col: 1,
+                end_line,
+                end_col: 1,
+            }),
+            resolver_tier: crate::ir::ResolverTier::Syntactic,
+            macro_origin: false,
+            trip_count: None,
+            condition_is_zero: false,
+        }
+    }
+
+    /// v1.9: `loop_body_loc` is the union of inclusive body-line intervals —
+    /// nested bodies count once, adjacent runs merge, and a missing body span
+    /// omits the field.
+    #[test]
+    fn loop_body_loc_unions_body_intervals() {
+        // No loops ⇒ 0 (not omitted).
+        assert_eq!(loop_body_loc_from_loops(&[]), Some(0));
+        // Single body [3, 5] ⇒ 3 lines.
+        assert_eq!(loop_body_loc_from_loops(&[loop_with_body(3, 5)]), Some(3));
+        // Nested [3, 9] + [5, 7] ⇒ union [3, 9] = 7, never 10.
+        assert_eq!(
+            loop_body_loc_from_loops(&[loop_with_body(3, 9), loop_with_body(5, 7)]),
+            Some(7)
+        );
+        // Disjoint [2, 3] + [7, 8] ⇒ 2 + 2 = 4.
+        assert_eq!(
+            loop_body_loc_from_loops(&[loop_with_body(2, 3), loop_with_body(7, 8)]),
+            Some(4)
+        );
+        // Adjacent [2, 3] + [4, 5] ⇒ contiguous 4 lines.
+        assert_eq!(
+            loop_body_loc_from_loops(&[loop_with_body(2, 3), loop_with_body(4, 5)]),
+            Some(4)
+        );
+        // One unidentified body ⇒ omitted, never a partial guess.
+        let mut missing = loop_with_body(2, 3);
+        missing.body_span = None;
+        assert_eq!(
+            loop_body_loc_from_loops(&[loop_with_body(1, 1), missing]),
+            None
+        );
+    }
+
+    /// v1.9: per-function parse health is derived from file status + overlap;
+    /// a failed file can never yield `ok`.
+    #[test]
+    fn function_parse_health_derives_from_file_health() {
+        let span = Span {
+            start_line: 10,
+            start_col: 1,
+            end_line: 20,
+            end_col: 1,
+        };
+        let region = Span {
+            start_line: 15,
+            start_col: 1,
+            end_line: 16,
+            end_col: 1,
+        };
+        let health = |status, regions: Vec<Span>| crate::ir::ParseHealth {
+            status,
+            error_regions: regions,
+            error_node_count: 0,
+            resolver: None,
+        };
+
+        // File ok ⇒ function ok, no overlap.
+        assert_eq!(
+            function_parse_health(Some(&health(ParseStatus::Ok, vec![])), span),
+            Some(crate::ir::FunctionParseHealth {
+                status: ParseStatus::Ok,
+                overlapping_error_regions: 0,
+            })
+        );
+        // File partial + overlap ⇒ partial with the intersecting count.
+        assert_eq!(
+            function_parse_health(
+                Some(&health(
+                    ParseStatus::Partial,
+                    vec![region, Span::point(1, 1)]
+                )),
+                span
+            ),
+            Some(crate::ir::FunctionParseHealth {
+                status: ParseStatus::Partial,
+                overlapping_error_regions: 1,
+            })
+        );
+        // File partial + no overlap ⇒ ok.
+        assert_eq!(
+            function_parse_health(
+                Some(&health(ParseStatus::Partial, vec![Span::point(1, 1)])),
+                span
+            ),
+            Some(crate::ir::FunctionParseHealth {
+                status: ParseStatus::Ok,
+                overlapping_error_regions: 0,
+            })
+        );
+        // File failed ⇒ every function failed, never ok.
+        assert_eq!(
+            function_parse_health(Some(&health(ParseStatus::Failed, vec![region])), span),
+            Some(crate::ir::FunctionParseHealth {
+                status: ParseStatus::Failed,
+                overlapping_error_regions: 1,
+            })
+        );
+        // No file health ⇒ omitted.
+        assert_eq!(function_parse_health(None, span), None);
     }
 
     fn quoted_edge(from: &str, to: Option<&str>, resolved: bool) -> IncludeEdge {
@@ -2647,6 +2850,9 @@ mod tests {
             cyclomatic_complexity: complexity,
             cognitive_complexity: 0,
             max_loop_depth: depth,
+            loop_count: None,
+            loop_body_loc: None,
+            parse_health: None,
             alloc_site_count: 0,
             length_lines: 3,
             call_fanout: None,

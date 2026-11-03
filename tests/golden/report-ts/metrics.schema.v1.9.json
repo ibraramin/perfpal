@@ -1,0 +1,382 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perfpal.dev/schemas/metrics.schema.v1.9.json",
+  "title": "Perfpal metrics.json schema v1.9",
+  "description": "Versioned, LLM-agnostic output of a Perfpal static scan (languages: C, JavaScript, Rust, Python, TypeScript). All findings are OPTIMIZATION CANDIDATES, never certainties. Consumers MUST tolerate unknown rule_ids gracefully; breaking changes bump the major version.",
+  "type": "object",
+  "required": ["schema_version", "tool", "scan", "files", "stats", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.9",
+      "description": "Schema version of this document (currently v1.9). MAJOR.MINOR: minor = additive-only changes; major = breaking."
+    },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "const": "perfpal" },
+        "version": { "type": "string", "description": "Semver of the perfpal binary that produced this report." }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "description": "Metadata about the scan run.",
+      "required": ["root_path", "started_at", "languages", "file_count"],
+      "additionalProperties": false,
+      "properties": {
+        "root_path": { "type": "string", "description": "Scanned repository root as given to the CLI." },
+        "started_at": { "type": "string", "format": "date-time" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "languages": {
+          "type": "array",
+          "items": { "enum": ["c", "js", "python", "rust", "ts", "tsx"] },
+          "minItems": 1,
+          "description": "Languages scanned — the sorted-unique set of files[].language (or the binary's supported set on a zero-file scan); widening is a minor-bump schema re-emission."
+        },
+        "file_count": { "type": "integer", "minimum": 0 },
+        "loc_total": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "code": { "type": "integer", "minimum": 0 },
+            "comment": { "type": "integer", "minimum": 0 },
+            "blank": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "parse_health_summary": {
+      "type": "object",
+      "description": "Aggregate parse quality. Findings inside failed/error regions are suppressed or downgraded (confidence cap MEDIUM).",
+      "required": ["ok", "partial", "failed"],
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "type": "integer", "minimum": 0 },
+        "partial": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "One record per scanned file (baseline stats, pillar 1a). No severity/confidence here by design.",
+      "items": {
+        "type": "object",
+        "required": ["path", "language", "loc", "function_count", "global_var_count", "include_counts", "parse_health"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "description": "Repo-relative POSIX path." },
+          "language": { "enum": ["c", "js", "python", "rust", "ts", "tsx"], "description": "Scanned file language (schema 1.8 admits c, js, python, rust, ts, and tsx); widening is a minor-bump schema re-emission." },
+          "loc": {
+            "type": "object",
+            "required": ["code", "comment", "blank"],
+            "additionalProperties": false,
+            "properties": {
+              "code": { "type": "integer", "minimum": 0 },
+              "comment": { "type": "integer", "minimum": 0 },
+              "blank": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "function_count": { "type": "integer", "minimum": 0 },
+          "global_var_count": { "type": "integer", "minimum": 0 },
+          "include_counts": {
+            "type": "object",
+            "required": ["quoted", "angle"],
+            "additionalProperties": false,
+            "properties": {
+              "quoted": { "type": "integer", "minimum": 0, "description": "Project includes (coupling-relevant)." },
+              "angle": { "type": "integer", "minimum": 0, "description": "System/external includes (excluded from coupling)." }
+            }
+          },
+          "parse_health": {
+            "type": "object",
+            "required": ["status", "error_node_count"],
+            "additionalProperties": false,
+            "properties": {
+              "status": { "enum": ["ok", "partial", "failed"] },
+              "error_regions": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/span" },
+                "description": "Unparseable regions; reported, never analyzed as fiction."
+              },
+              "error_node_count": { "type": "integer", "minimum": 0 },
+              "resolver": {
+                "enum": ["absent", "ok", "failed"],
+                "description": "Semantic-resolver outcome for this file (ADDITIVE v1.1; optional — omitted by producers without resolver support, so v1.0-style documents validate unchanged). absent = resolver disabled/unavailable; ok = libclang parsed the translation unit; failed = libclang reported a TU-level failure. Never deletes or degrades syntactic results."
+              }
+            }
+          },
+          "path_class": {
+            "type": "string",
+            "enum": ["production", "test", "example", "bench", "fixture", "generated", "vendor", "unknown"],
+            "description": "ADDITIVE v1.7 (map-intelligibility V4): deterministic production-first class of this file. The aggregator computes it for every scanned file; absent in hand-written/older documents means unknown (demoted files are counted, never dropped). Tooling rule: bench also covers scripts/, tools/, ci/ and .github/ (repo harness, not production source)."
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description": "Baseline measurements (catalog §2) — always emitted, never findings.",
+      "required": ["functions"],
+      "additionalProperties": false,
+      "properties": {
+        "functions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "path", "span", "param_count", "cyclomatic_complexity", "cognitive_complexity", "max_loop_depth", "alloc_site_count", "length_lines"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "description": "Stable IR identity: path#name#start_line:start_col." },
+              "name": { "type": "string" },
+              "path": { "type": "string" },
+              "span": { "$ref": "#/$defs/span" },
+              "param_count": { "type": "integer", "minimum": 0 },
+              "cyclomatic_complexity": { "type": "integer", "minimum": 1 },
+              "cognitive_complexity": { "type": "integer", "minimum": 0 },
+              "max_loop_depth": { "type": "integer", "minimum": 0 },
+              "alloc_site_count": { "type": "integer", "minimum": 0 },
+              "length_lines": { "type": "integer", "minimum": 0 },
+              "call_fanout": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4 (divergence-study instrument): per-function call-shape — distinct direct-callee count. Populated since IR v1.4 step 2 (whole-program resolved edges, intra-file included); omitted when uncomputed." },
+              "call_fanin": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — distinct caller count. Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "call_depth": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.4: per-function call-shape — longest-path layer index over the cycle-broken call DAG (0 = no in-graph callers). Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "is_recursive": { "type": "boolean", "description": "ADDITIVE v1.4: per-function call-shape — true when the function can reach itself statically (self-loop or directed cycle). Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "idiom_hash": { "type": "string", "description": "ADDITIVE v1.4: token-normalized idiom hash of the function body (comment-strip + whitespace-collapse, FNV-1a hex; clone/idiom-rate bucketing). Populated since IR v1.4 step 2; omitted when uncomputed." },
+              "error_path": { "type": "boolean", "description": "ADDITIVE v1.4: true when the function body contains an error-handling path (try/except, ?/Err-return, do-while(0), #if 0 / cfg(test) gating, error-branch free). Conservative clear-case detectors; populated since IR v1.4 step 2; omitted when uncomputed." },
+              "alloc_family": { "type": "string", "description": "ADDITIVE v1.4: dominant allocation family of the function — one of real_alloc (true heap allocation), empty_ctor (empty-container construction: String::new/Vec::new/map-set ::new, empty vec![], zero-arg container ctors), serialize (formatting/serialization-shaped: format!/to_string/collect, str(x)). Majority over alloc-family call sites, ties toward the lexicographically smallest tag; omitted when the function has no alloc sites." },
+              "cfg_gated": { "type": "boolean", "description": "ADDITIVE precision-gate flag (precision FP-class fix 2): true only when the function is defined inside a provably-dead configuration region (C #if 0 — the code never compiles). Omitted when uncomputed or live." },
+              "entry_kind": { "type": "string", "enum": ["main", "script", "handler", "lib-root", "unknown-entry"], "description": "ADDITIVE v1.5 (map-build I1a C + I1b Rust + I1c Python): entry kind of the function — main (C/Rust program entry, HIGH confidence), script (Python guarded <module> record with __name__ == __main__, HIGH), handler (*handler*/*callback*/*dispatch* name heuristic, MEDIUM), lib-root (exported function in a main-less, non-bin (C/Rust) or guard-less (Python, non-underscore def) file, MEDIUM), unknown-entry (honest stub when the per-language corpus yields zero entries, LOW). Omitted when the function is not an entry." },
+              "entry_confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"], "description": "ADDITIVE v1.5: entry confidence matching entry_kind — HIGH for main/script, MEDIUM for handler/lib-root, LOW for the unknown-entry stub. Omitted exactly when entry_kind is omitted." },
+              "reachable_from_entry": { "type": "boolean", "description": "ADDITIVE v1.5: true when the function is reachable from an entry of its own language over RESOLVED call edges only (semantic-fact-backed, MEDIUM or better — LOW-confidence name-based edges are excluded). Populated for every C/Rust/Python function." },
+              "function_cost_v2": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6 (map-build I2 cost-v2): per-iteration weighted cost computed by the aggregator from IR. Formula = v1 base (cyclomatic_complexity + cognitive_complexity + 2*max_loop_depth + 3*alloc_site_count + call_fanout + call_fanin + call_depth + 2 if is_recursive + 1 if error_path + 1 if alloc_family) plus, for every loop, min(trip_count, 1000000) * (1 + loop_depth) when the trip count is statically known (C canonical counted for-loops; Rust canonical literal ranges since I2b; Python canonical literal `range()` loops since I2c) or 1 * (1 + loop_depth) when unknown. Saturating u64 arithmetic. Omitted only for pre-I2/parser-free documents; heat consumers prefer it over the retained v1 function_cost." },
+              "unknown_trip_loops": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.6: number of loops in the function whose trip count is genuinely unknown (LoopNode.trip_count absent). Always emitted (0 for loop-free or fully counted functions). Python loops are known for canonical literal `range()` calls since I2c and honestly unknown otherwise (non-literal bounds, step != 1); C while/do-while and non-canonical for-loops, and Rust non-canonical ranges, are also unknown." },
+              "trip_count_source": { "type": "string", "enum": ["literal", "partial", "unknown"], "description": "ADDITIVE v1.7 (map-intelligibility V4): provenance of the trip counts used by function_cost_v2 — literal (every loop has a canonical literal trip), partial (some do), unknown (loops but none literal). Omitted when the function has no loops." },
+              "known_trip_value": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.7: largest clamped literal trip multiplier used by function_cost_v2 — max of min(trip_count, 1000000) over the function's loops. Omitted when no loop has a literal trip." },
+              "loop_count": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.9 (structural suite v1): number of loop constructs lexically inside the function, counted by the same traversal as max_loop_depth. Invariant: loop_count >= 1 iff max_loop_depth >= 1. Optional: omitted by pre-1.9 producers." },
+              "loop_body_loc": { "type": "integer", "minimum": 0, "description": "ADDITIVE v1.9: number of distinct source lines covered by at least one loop body span (inclusive end_line - start_line + 1; nested bodies counted once via union). 0 for loop-free functions; omitted when any loop body span is unidentified." },
+              "parse_health": {
+                "type": "object",
+                "required": ["status", "overlapping_error_regions"],
+                "additionalProperties": false,
+                "description": "ADDITIVE v1.9: per-function parse quality derived from the file-level parse_health. status is never ok when the file failed; overlapping_error_regions counts file-level error regions intersecting the function span.",
+                "properties": {
+                  "status": { "enum": ["ok", "partial", "failed"] },
+                  "overlapping_error_regions": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        },
+        "distributions": {
+          "type": "array",
+          "description": "Histograms over function-level stats (e.g. bucket '1-10' / metric 'length_lines').",
+          "items": {
+            "type": "object",
+            "required": ["metric", "bucket", "count"],
+            "additionalProperties": false,
+            "properties": {
+              "metric": { "type": "string", "description": "Function stat field name being distributed." },
+              "bucket": { "type": "string" },
+              "count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "Heuristic detections. Every finding is an optimization candidate with mandatory confidence and severity.",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "graphs": {
+      "type": "object",
+      "description": "Architecture-level structure feeding pillar-1b visualization and ARCH-* findings.",
+      "required": ["include_graph"],
+      "additionalProperties": false,
+      "properties": {
+        "include_graph": {
+          "type": "object",
+          "required": ["nodes", "edges"],
+          "additionalProperties": false,
+          "properties": {
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["path"],
+                "additionalProperties": false,
+                "properties": {
+                  "path": { "type": "string" }
+                }
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["from", "to", "form", "resolved"],
+                "additionalProperties": false,
+                "properties": {
+                  "from": { "type": "string" },
+                  "to": { "type": ["string", "null"], "description": "null when unresolvable — a finding (ARCH-001), not a failure." },
+                  "form": { "enum": ["quoted", "angle"] },
+                  "resolved": { "type": "boolean" },
+                  "span": { "$ref": "#/$defs/span", "description": "Location of the #include directive (report drill-down)." }
+                }
+              }
+            }
+          }
+        },
+        "call_graph": {
+          "type": "object",
+          "description": "Cross-file call edges only (intra-file edges omitted in v1). Name-based matching ⇒ edge confidence LOW until a semantic resolver exists.",
+          "required": ["edges"],
+          "additionalProperties": false,
+          "properties": {
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["from_function", "to_name", "from_path", "to_path", "confidence"],
+                "additionalProperties": false,
+                "properties": {
+                  "from_function": { "type": "string", "description": "Caller function id." },
+                  "to_name": { "type": "string", "description": "Callee name as written." },
+                  "from_path": { "type": "string" },
+                  "to_path": { "type": ["string", "null"], "description": "Best-match file or null when unresolved." },
+                  "confidence": {
+                    "oneOf": [
+                      { "const": "LOW" },
+                      { "const": "MEDIUM" },
+                      { "const": "HIGH" }
+                    ],
+                    "description": "ADDITIVE v1.1 widening from v1.0's const \"LOW\": name-based matching is LOW until the semantic resolver upgrades unambiguous edges (ADR-0001); v1.0 documents (all-LOW) still validate unchanged."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Hot-component aggregation (PERF-C-ARCH-002): directories/components ranked by aggregated metrics. Pure aggregation — no independent detection.",
+      "items": {
+        "type": "object",
+        "required": ["component_id", "path_prefix", "rank", "metrics"],
+        "additionalProperties": false,
+        "properties": {
+          "component_id": { "type": "string" },
+          "path_prefix": { "type": "string" },
+          "rank": { "type": "integer", "minimum": 1, "description": "1 = hottest." },
+          "metrics": {
+            "type": "object",
+            "required": ["complexity_sum", "alloc_site_density", "max_loop_depth", "finding_density"],
+            "additionalProperties": false,
+            "properties": {
+              "complexity_sum": { "type": "number" },
+              "alloc_site_density": { "type": "number", "description": "Alloc sites per KLOC." },
+              "max_loop_depth": { "type": "integer", "minimum": 0 },
+              "finding_density": { "type": "number", "description": "Findings per KLOC." }
+            }
+          },
+          "finding_count": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "description": "1-based lines and 1-based byte columns (IR convention, docs/architecture/ir-v1.md §2). end_line/end_col are INCLUSIVE — they point at the last byte of the match.",
+      "required": ["start_line", "start_col", "end_line", "end_col"],
+      "additionalProperties": false,
+      "properties": {
+        "start_line": { "type": "integer", "minimum": 1 },
+        "start_col": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "end_col": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "confidence": {
+      "enum": ["HIGH", "MEDIUM", "LOW"],
+      "description": "Catalog confidence model. Downgrades: macro origin or ERROR-node overlap caps at MEDIUM; cross-file name-based edges are LOW until a semantic resolver exists."
+    },
+    "severity": {
+      "enum": ["hot", "warn", "info"],
+      "description": "Prioritization hint, never a certainty claim. hot = likely dominant impact, review first; warn = measurable impact, schedule; info = context signal feeding aggregation."
+    },
+    "resolver_tier": {
+      "enum": ["syntactic", "semantic", "dynamic"],
+      "description": "Resolver tier that served this record (ADR-0001). MVP emits syntactic only."
+    },
+    "threshold": {
+      "type": "object",
+      "description": "Configurable threshold that fired, for reproducibility (e.g. LOOP-001 min_nesting_depth=3, CALL-002 min_complexity=15).",
+      "required": ["name", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": ["number", "string"] }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "finding_id", "rule_id", "title", "path", "span",
+        "confidence", "severity", "resolver_tier",
+        "macro_suspect", "error_node_overlap", "message"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "macro_suspect": { "const": true } }, "required": ["macro_suspect"] },
+          "then": { "properties": { "confidence": { "enum": ["MEDIUM", "LOW"] } } },
+          "description": "Macro origin caps confidence at MEDIUM (catalog §1 downgrade rules)."
+        },
+        {
+          "if": { "properties": { "error_node_overlap": { "const": true } }, "required": ["error_node_overlap"] },
+          "then": { "properties": { "confidence": { "enum": ["MEDIUM", "LOW"] } } },
+          "description": "Parse-error overlap caps confidence at MEDIUM (C11/C17 grammar-gap monitor)."
+        }
+      ],
+      "properties": {
+        "finding_id": {
+          "type": "string",
+          "pattern": "^PERF-[A-Z]+(-[A-Z]+)?-[0-9]{3}:.+:[0-9]+:[0-9]+$",
+          "description": "Deterministic composite: rule_id:path:start_line:start_col (column disambiguates two findings on one line). Parse by splitting from the RIGHT — paths may legally contain colons. Stable within one report for consumer dedupe."
+        },
+        "rule_id": {
+          "type": "string",
+          "pattern": "^PERF-[A-Z]+(-[A-Z]+)?-[0-9]{3}$",
+          "description": "Stable heuristic ID from docs/heuristics/catalog-v1.md. v1 catalog IDs (15 Tier-1 + 8 Tier-2): PERF-C-ALLOC-001, PERF-C-ALLOC-002, PERF-C-ALLOC-003, PERF-C-STR-001, PERF-C-STR-002, PERF-C-STR-003, PERF-C-LOOP-001, PERF-C-LOOP-002, PERF-C-LOOP-003, PERF-C-LOOP-004, PERF-C-LOOP-005, PERF-C-LOOP-006, PERF-C-LOOP-007, PERF-C-LOOP-008, PERF-C-CALL-001, PERF-C-CALL-002, PERF-C-ARCH-001, PERF-C-ARCH-002, PERF-C-ARCH-003, PERF-C-TYPE-001, PERF-C-TYPE-002, PERF-C-MEM-001, PERF-C-MEM-002. Pattern-based (not a closed enum) so new heuristics/languages arrive as minor bumps without breaking strict v1.x validation; consumers must ignore unknown rule_ids."
+        },
+        "title": { "type": "string", "description": "Human-readable heuristic name from the catalog." },
+        "path": { "type": "string", "description": "Repo-relative POSIX path of the matched location." },
+        "symbol": { "type": "string", "description": "Enclosing function/component name when applicable." },
+        "span": { "$ref": "#/$defs/span" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "severity": { "$ref": "#/$defs/severity" },
+        "resolver_tier": { "$ref": "#/$defs/resolver_tier" },
+        "macro_suspect": {
+          "type": "boolean",
+          "description": "True when any part of the matched span originates from a macro expansion; implies confidence ≤ MEDIUM."
+        },
+        "error_node_overlap": {
+          "type": "boolean",
+          "description": "True when the span intersects a parse-error region; implies confidence ≤ MEDIUM."
+        },
+        "threshold": { "$ref": "#/$defs/threshold" },
+        "message": { "type": "string", "description": "Human/LLM-readable explanation framed as optimization candidate, never certainty." },
+        "evidence": {
+          "type": "object",
+          "description": "Rule-specific machine-readable facts that triggered the finding (e.g. callee names, measured depth, co-occurring rule_ids). Keys vary per rule_id.",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

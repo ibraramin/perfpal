@@ -55,7 +55,7 @@ const MATRIX: &[Row] = &[
         kind: Kind::Exact,
     },
     Row {
-        file: "metrics.schema.v1.8.json",
+        file: "metrics.schema.v1.9.json",
         format: "json",
         audience: "tooling",
         consumer: "JSON-schema validators",
@@ -228,7 +228,7 @@ const MATRIX: &[Row] = &[
 /// SVG charts are covered by the two pattern rows.
 const FIXED_FILES: &[&str] = &[
     "metrics.json",
-    "metrics.schema.v1.8.json",
+    "metrics.schema.v1.9.json",
     "report.md",
     "report.html",
     "findings-detail.html",
@@ -387,7 +387,7 @@ fn matrix_matches_emitted_artifact_set_exactly() {
         canonical,
         [
             "metrics.json",
-            "metrics.schema.v1.8.json",
+            "metrics.schema.v1.9.json",
             "findings-detail.html",
             "agent-actions.json",
         ]
@@ -481,7 +481,7 @@ fn one_owner_per_uniqueness_class_and_format() {
     assert_eq!(exact_owners("digest", "md"), ["agent-report.md"]);
     assert_eq!(
         exact_owners("schema-mirror", "json"),
-        ["metrics.schema.v1.8.json"]
+        ["metrics.schema.v1.9.json"]
     );
 
     // No duplicate (uniqueness, format) pair anywhere in the matrix.

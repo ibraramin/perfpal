@@ -128,7 +128,7 @@ fn fixture_root() -> PathBuf {
 #[cfg(not(feature = "semantic-clang"))]
 const GOLDEN_ARTIFACTS: [&str; 18] = [
     "metrics.json",
-    "metrics.schema.v1.8.json",
+    "metrics.schema.v1.9.json",
     "report.md",
     "report.html",
     "findings-detail.html",
@@ -520,7 +520,7 @@ fn regenerate_goldens() {
             "charts/layer-bands.svg".to_string(),
             "charts/layer-findings.svg".to_string(),
             "charts/graph.dot".to_string(),
-            "metrics.schema.v1.8.json".to_string(),
+            "metrics.schema.v1.9.json".to_string(),
         ];
         let mut component_pages: Vec<String> = fs::read_dir(golden.join("charts"))
             .expect("charts dir")

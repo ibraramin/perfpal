@@ -958,6 +958,11 @@ fn function_unit(
         cyclomatic_complexity: scan.cyclomatic,
         cognitive_complexity: scan.cognitive,
         max_loop_depth: scan.max_loop_depth,
+        loop_count: u32::try_from(scan.loops.len()).unwrap_or(u32::MAX),
+        // Aggregator-owned (union of body spans), not backend-owned.
+        loop_body_loc: None,
+        // Aggregator-owned (file-level parse-health overlap), not backend-owned.
+        parse_health: None,
         // R3: Rust allocation-family call sites (qualified constructors,
         // method-only members, and `vec!`/`format!` macro invocations).
         alloc_site_count: scan.alloc_site_count,
@@ -1263,6 +1268,10 @@ impl FuncScan<'_> {
         self.cognitive += 1 + self.nesting;
         let span = ir_span(node, self.source);
         let macro_origin = self.macro_origin_of(&span, "");
+        // v1.9 structural suite: the loop body node (grammar `body` field).
+        let body_span = node
+            .child_by_field_name("body")
+            .map(|b| ir_span(b, self.source));
         let induction_vars = if kind == LoopKind::For {
             node.child_by_field_name("pattern")
                 .map(|p| pattern_identifiers(p, self.source))
@@ -1283,6 +1292,7 @@ impl FuncScan<'_> {
             depth,
             induction_vars,
             span,
+            body_span,
             resolver_tier: ResolverTier::Syntactic,
             macro_origin,
             trip_count,

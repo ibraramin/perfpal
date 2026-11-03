@@ -593,6 +593,11 @@ fn module_unit(root: Node<'_>, path: &str, source: &[u8]) -> FunctionUnit {
         cyclomatic_complexity: result.cyclomatic,
         cognitive_complexity: result.cognitive,
         max_loop_depth: result.max_loop_depth,
+        loop_count: u32::try_from(result.loops.len()).unwrap_or(u32::MAX),
+        // Aggregator-owned (union of body spans), not backend-owned.
+        loop_body_loc: None,
+        // Aggregator-owned (file-level parse-health overlap), not backend-owned.
+        parse_health: None,
         alloc_site_count: result.alloc_site_count,
         length_lines: span.end_line - span.start_line + 1,
         resolver_tier: ResolverTier::default(),
@@ -673,6 +678,11 @@ fn function_unit(node: Node<'_>, path: &str, source: &[u8], dialect: &Dialect) -
         cyclomatic_complexity: result.cyclomatic,
         cognitive_complexity: result.cognitive,
         max_loop_depth: result.max_loop_depth,
+        loop_count: u32::try_from(result.loops.len()).unwrap_or(u32::MAX),
+        // Aggregator-owned (union of body spans), not backend-owned.
+        loop_body_loc: None,
+        // Aggregator-owned (file-level parse-health overlap), not backend-owned.
+        parse_health: None,
         alloc_site_count: result.alloc_site_count,
         length_lines: span.end_line - span.start_line + 1,
         resolver_tier: ResolverTier::default(),

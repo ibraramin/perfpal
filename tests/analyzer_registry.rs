@@ -66,6 +66,9 @@ fn unit_with_malloc(path: &str, line: u32, loop_depth: u32) -> FileUnit {
                 cyclomatic_complexity: 1,
                 cognitive_complexity: 0,
                 max_loop_depth: loop_depth,
+                loop_count: u32::from(loop_depth > 0),
+                loop_body_loc: None,
+                parse_health: None,
                 alloc_site_count: 1,
                 length_lines: 1,
                 resolver_tier: ResolverTier::default(),
@@ -269,6 +272,12 @@ fn unit_with_fn(path: &str, func_name: &str, calls: Vec<CallEvent>) -> FileUnit 
                     .map(|c| c.meta.in_loop_depth)
                     .max()
                     .unwrap_or(0),
+                loop_count: u32::try_from(
+                    calls.iter().filter(|c| c.meta.in_loop_depth > 0).count(),
+                )
+                .unwrap_or(u32::MAX),
+                loop_body_loc: None,
+                parse_health: None,
                 alloc_site_count: 0,
                 length_lines: last_line + 10,
                 resolver_tier: ResolverTier::default(),

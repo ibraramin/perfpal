@@ -193,6 +193,17 @@ pub struct ParseHealth {
     pub resolver: Option<ResolverHealth>,
 }
 
+/// Per-function parse quality derived from the file-level [`ParseHealth`]
+/// (metrics schema 1.9, structural suite v1). `overlapping_error_regions` is
+/// the number of file-level `error_regions` whose extents intersect the
+/// function span — a region count, never a per-node count.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct FunctionParseHealth {
+    pub status: ParseStatus,
+    #[serde(default)]
+    pub overlapping_error_regions: u32,
+}
+
 /// Outcome of the semantic (libclang) resolver for one file (modules.md
 /// §4.3 resolver seam; ADR-0001 tier model). Serialized lowercase to match
 /// `ParseStatus` conventions.
@@ -455,6 +466,23 @@ pub struct FunctionRecord {
     /// Nesting-weighted variant of cyclomatic complexity.
     pub cognitive_complexity: u32,
     pub max_loop_depth: u32,
+    /// ADDITIVE v1.9 (structural suite v1): number of loop constructs lexically
+    /// inside this function record, counted by the SAME traversal that sets
+    /// [`FunctionRecord::max_loop_depth`]. Invariant: `loop_count >= 1` iff
+    /// `max_loop_depth >= 1`.
+    #[serde(default)]
+    pub loop_count: u32,
+    /// ADDITIVE v1.9: number of distinct source lines covered by at least one
+    /// loop **body** span (union of inclusive line intervals; nested bodies
+    /// counted once). `Some(0)` when the function has no loops. `None`
+    /// (omitted) when any loop body span could not be identified. Computed by
+    /// the aggregator from [`FunctionUnit::loops`], not by the backends.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loop_body_loc: Option<u32>,
+    /// ADDITIVE v1.9: per-function parse quality derived from the file-level
+    /// [`ParseHealth`]; `None` (omitted) when the file has no health record.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parse_health: Option<FunctionParseHealth>,
     /// malloc-family call sites in the body.
     pub alloc_site_count: u32,
     pub length_lines: u32,
@@ -1017,6 +1045,13 @@ pub struct LoopNode {
     /// Syntactic best-effort for-loop induction identifiers (feeds LOOP-007).
     pub induction_vars: Vec<String>,
     pub span: Span,
+    /// ADDITIVE v1.9 (structural suite v1): source span of the loop's **body**
+    /// node (the grammar's `body` field; for a Python comprehension clause,
+    /// the element-expression span). `None` when the backend cannot identify
+    /// a body node — consumers must then omit `loop_body_loc` rather than
+    /// guess. Header/condition nodes are never included.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body_span: Option<Span>,
     pub resolver_tier: ResolverTier,
     pub macro_origin: bool,
     /// ADDITIVE v1.6 (plan `map-build` I2/I2b/I2c): statically known trip count

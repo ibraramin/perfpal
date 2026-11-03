@@ -253,10 +253,10 @@ fn v1_8_bump_and_findings_validate_structurally() {
     // v1.8 is an additive minor bump: the version marker and bundled artifact
     // name advance together, and v1.7/v1.6/v1.5/v1.4 remain on disk as
     // retained history.
-    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.8");
+    assert_eq!(perfpal::schema::SCHEMA_VERSION, "1.9");
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
-        "metrics.schema.v1.8.json"
+        "metrics.schema.v1.9.json"
     );
     assert_eq!(
         perfpal::schema::SCHEMA_ARTIFACT_NAME,
@@ -265,9 +265,9 @@ fn v1_8_bump_and_findings_validate_structurally() {
     );
     // The canonical v1.8 docs artifact is present and active.
     let canonical: serde_json::Value =
-        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.8.json"))
+        serde_json::from_str(include_str!("../docs/schema/metrics.schema.v1.9.json"))
             .expect("canonical v1.8 schema parses");
-    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.8");
+    assert_eq!(canonical["properties"]["schema_version"]["const"], "1.9");
     // v1.7/v1.6/v1.5/v1.4 are retained as history — the bump did not
     // overwrite them.
     for retained in [
@@ -287,7 +287,7 @@ fn v1_8_bump_and_findings_validate_structurally() {
     // The active v1.8 artifact file IS emitted.
     assert!(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("docs/schema/metrics.schema.v1.8.json")
+            .join("docs/schema/metrics.schema.v1.9.json")
             .exists(),
         "the v1.8 artifact must be emitted by this bump"
     );
@@ -299,7 +299,7 @@ fn v1_8_bump_and_findings_validate_structurally() {
     fs::write(root.join("rs_src.rs"), LOCK_RS_SRC).expect("write rs_src.rs");
     let doc = run_pipeline_and_parse("schema-lock", &root);
 
-    assert_eq!(doc["schema_version"], "1.8", "v1.8 bump in effect");
+    assert_eq!(doc["schema_version"], "1.9", "v1.9 bump in effect");
 
     // files[].language within the v1.8 enum.
     let files = doc["files"].as_array().expect("files[] present");

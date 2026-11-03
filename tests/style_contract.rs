@@ -374,6 +374,9 @@ fn function_stats(path: &str, name: &str) -> FunctionStats {
         cyclomatic_complexity: 1,
         cognitive_complexity: 0,
         max_loop_depth: 0,
+        loop_count: None,
+        loop_body_loc: None,
+        parse_health: None,
         alloc_site_count: 0,
         length_lines: 1,
         call_fanout: None,
@@ -405,7 +408,7 @@ fn hostile_doc() -> MetricsDocument {
     let rule_id = "PERF-C-ALLOC-001";
     let path = HOSTILE.to_string();
     MetricsDocument {
-        schema_version: "1.8".to_string(),
+        schema_version: "1.9".to_string(),
         tool: ToolInfo {
             name: "perfpal".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
@@ -583,7 +586,7 @@ fn hostile_input_is_neutralized_everywhere() {
 
 fn empty_doc() -> MetricsDocument {
     MetricsDocument {
-        schema_version: "1.8".to_string(),
+        schema_version: "1.9".to_string(),
         tool: ToolInfo {
             name: "perfpal".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
