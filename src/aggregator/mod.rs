@@ -407,7 +407,9 @@ fn resource_action_fields(
         let site = |kind: &str| schema::ResourceSite {
             kind: kind.to_string(),
             line: call.meta.span.start_line,
-            column: call.meta.span.start_col,
+            // IR spans carry 1-based columns; the external site contract is
+            // 0-based, so subtract the one-based offset without underflowing.
+            column: call.meta.span.start_col.saturating_sub(1),
             loop_depth: depth,
             cfg_gated,
             language: io_language.to_string(),

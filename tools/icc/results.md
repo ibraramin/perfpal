@@ -109,7 +109,7 @@ Perfpal is the prediction and the manual labels are truth.
 
 | field | n | TP | FP | FN | TN | precision | recall | kappa | ICC | gate |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| alloc_sites_in_loops | 100 | 8 | 1 | 1 | 90 | 0.8889 | 0.8889 | 0.8779 | 0.8790 | pass |
+| alloc_sites_in_loops | 100 | 8 | 0 | 1 | 91 | 1.0000 | 0.8889 | 0.9357 | 0.9363 | pass |
 | io_sites_in_loops | 100 | 11 | 0 | 9 | 80 | 1.0000 | 0.5500 | 0.6617 | 0.6639 | DROPPED |
 | cfg_gated_c | 15 | 2 | 0 | 0 | 13 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | pass |
 
@@ -192,10 +192,12 @@ unique on both sides. Nothing is silently dropped.
 * The C reference counts direct calls to `malloc`, `calloc`,
   `realloc`, `aligned_alloc`, `strdup` at loop depth >= 1. It uses
   the clang AST and does not import Perfpal's allocation table.
-* Perfpal exposes line-level `resource_sites` only for C; non-C
-  site-comparison entries are therefore `neither`. Site agreement is
-  reported across all packet languages as specified, but only the C
-  portion has a line-level Perfpal reference.
+* Perfpal emits `resource_sites` for every language: allocation
+  sites for C/Rust and external-I/O sites for all five. Site
+  comparison entries are matched by `(path, line, 0-based column)`,
+  so two calls on one line are scored independently; a packet
+  candidate with no matching in-loop Perfpal site is `neither`.
+  `cfg_gated` remains C-only (`null` for non-C sites).
 * Manual-label packets are blind (no Perfpal values). The dead.c
   fixture contains only four call sites (two live, two `#if 0`), so
   the site packet includes four rather than ten dead.c candidates;

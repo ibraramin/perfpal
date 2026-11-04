@@ -179,7 +179,7 @@
                   "properties": {
                     "kind": { "enum": ["alloc", "io"] },
                     "line": { "type": "integer", "minimum": 1 },
-                    "column": { "type": "integer", "minimum": 0 },
+                    "column": { "type": "integer", "minimum": 0, "description": "0-based byte column of the call span start (the IR's 1-based start_col minus one); disambiguates multiple calls on one line." },
                     "loop_depth": { "type": "integer", "minimum": 1 },
                     "cfg_gated": { "type": ["boolean", "null"], "description": "C only: true when fully inside a provably-dead #if 0 region, false otherwise. Rust/Python/JS/TS: null (not computed), never coerced to false." },
                     "language": { "enum": ["c", "rust", "python", "javascript", "typescript"] }

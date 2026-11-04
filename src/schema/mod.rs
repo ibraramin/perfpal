@@ -248,7 +248,7 @@ pub struct ResourceSite {
     pub kind: String,
     /// 1-based line from the IR span.
     pub line: u32,
-    /// 0-based column from the IR span.
+    /// 0-based byte column (the IR's 1-based `start_col` minus one).
     pub column: u32,
     /// Innermost enclosing loop depth; always ≥ 1.
     pub loop_depth: u32,

@@ -1,7 +1,8 @@
 //! metrics.json schema 1.9 lock (structural suite v1).
 //!
-//! Locks the MINOR bump v1.8 → v1.9: the three new function-level fields
-//! (`loop_count`, `loop_body_loc`, `parse_health`) are OPTIONAL, every
+//! Locks the MINOR bump v1.8 → v1.9: the seven new function-level fields
+//! (`loop_count`, `loop_body_loc`, `parse_health`, `alloc_sites_in_loops`,
+//! `io_site_count`, `io_sites_in_loops`, `resource_sites`) are OPTIONAL, every
 //! `required` list is unchanged, both bundled copies are byte-identical, and a
 //! 1.8-shaped document re-marked `"1.9"` still validates structurally.
 

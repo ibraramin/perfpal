@@ -42,7 +42,8 @@ Save as `labels/loop_labels.json`. Use the packet `id` verbatim.
 
 Open `site_packet.json`. Each item is a call-like candidate inside a loop body.
 The `candidate` / `column` fields identify which call on a line is meant when a
-line contains more than one call. Label:
+line contains more than one call. `column` is a **0-based byte offset** into
+the source line (matching `metrics.json` `resource_sites[].column`). Label:
 
 ```json
 {
@@ -72,9 +73,12 @@ Save as `labels/site_labels.json`. Use the packet `id` verbatim.
   Cohen's kappa and ICC(2,1); gates require kappa and ICC >= 0.70. Raw
   agreement is descriptive only. The frozen prereg rule 4 drops
   `io_sites_in_loops` after the blind audit (recall 0.55); `io_site_count` is
-  descriptive. Perfpal exposes line-level `resource_sites` only for C,
-  so non-C comparison entries are `neither`; the aggregate agreement is
-  reported as specified, but only the C portion has a line-level reference.
+  descriptive. Perfpal emits `resource_sites` for every language: allocation
+  sites for C/Rust and external-I/O sites for all five. Comparison entries are
+  matched to packet items by `(path, line, 0-based column)`, so two calls on
+  the same line are scored independently; an entry with no matching in-loop
+  Perfpal site is `neither`. Only `cfg_gated` is C-specific (`null` for
+  non-C).
 
 If either label file is absent, the manual gates are reported as
 `manual labels pending` and do not fail the run; the independent-parser gates

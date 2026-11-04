@@ -3,9 +3,17 @@
 **Status:** FROZEN. **Date:** 2026-11-04. **Owner:** orchestrator.
 **Branch:** `feat/structural-0.5.0` (local only; no push).
 **Code commit:** `8d68209` (Stage 1 `e441fc1`, Stage 2 `fd77588`, ICC `8d68209`).
-**Tag:** `perfpal-v0.5.0-structural` (annotated, local).
+**Tag:** `perfpal-v0.5.0-structural` (annotated, local). The tag is moved by the
+orchestrator after this re-freeze.
 **Binary:** `target/release/perfpal` — `perfpal 0.5.0 (metrics schema 1.9)`.
-**Binary SHA-256:** `f254de14ec0d449a91b69bf0d7e3779b737f0d4f31abd07013103d506523c240`.
+**Binary SHA-256:** `b89d75027d8b238ad8febab1c8dc3a6687f0a4fd731c86b4e951257d84780ee0`.
+
+**Re-freeze note (2026-11-04):** re-frozen after R1 panel findings; no main
+scan; old binary/SHA `f254de14…c240` retired. Corrected the C `#if 0` dead-arm
+span (the live `#else` arm is no longer over-gated), the 0-based
+`resource_sites[].column` contract, and the ICC site matcher
+(`(path, line, 0-based column)`); `run_icc.py` now propagates a failed
+recomputation instead of trusting a stale `freeze_ok: true`.
 
 This is the study instrument for the five-language structural suite. No
 production code changes after the first main-study scan; a bug fix increments
@@ -36,19 +44,19 @@ function-level property; 1.8 documents validate unchanged.
 - `PY_IO_TABLE_VERSION = 1` (Python external-I/O table).
 - `JS_IO_TABLE_VERSION = 1` (JavaScript/TypeScript external-I/O table).
 
-## Verification (all exit 0, run at `8d68209`)
+## Verification (all exit 0, run at the re-freeze working tree on `8d68209`)
 
 | Gate | Command | Result |
 |---|---|---:|
 | Format | `cargo fmt --all -- --check` | 0 |
 | Clippy | `cargo clippy --locked --all-targets -- -D warnings` | 0 |
-| Tests | `cargo test --locked` | 0; **1,140 passed**, 0 failed |
+| Tests | `cargo test --locked` | 0; **1,142 passed**, 0 failed |
 | Licenses | `cargo deny check licenses` | 0; `licenses ok` |
 | Semantic clippy | `cargo clippy --locked --all-targets --features semantic-clang -- -D warnings` | 0 |
-| Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 0; **1,142 passed**, 0 failed |
+| Semantic tests | `PERFPAL_SEMANTIC_TESTS=1 cargo test --locked --features semantic-clang` | 0; **1,144 passed**, 0 failed |
 | Release build | `cargo build --release --locked` | 0 |
 | Version | `target/release/perfpal --version` | `perfpal 0.5.0 (metrics schema 1.9)` |
-| Binary hash | `sha256sum target/release/perfpal` | `f254de14…c240` |
+| Binary hash | `sha256sum target/release/perfpal` | `b89d7502…0ee0` |
 | Whitespace | `git diff --check` | 0 |
 | ICC harness | `python3 tools/icc/run_icc.py` | 0; `freeze_ok=true` |
 
@@ -67,9 +75,9 @@ ICC is arm-independent).
 | `loop_body_loc` ICC(2,1) | 200 | 1.0000 automated; 0.9812 pooled manual | PASS (>=0.75) |
 | `loop_body_loc` manual per language | 100 | C 0.9904, Rust 0.9935, Python 0.7575, JS 1.0000, TS 1.0000 | PASS (Python narrowly) |
 | `max_loop_depth` exact | 200 | 100% | PASS (>=99%) |
-| `alloc_sites_in_loops` ICC(2,1) | C 42 / Rust 42 | 1.0000 automated; manual kappa 0.8779 (precision/recall 0.889) | PASS (>=0.70) |
+| `alloc_sites_in_loops` ICC(2,1) | C 42 / Rust 42 | 1.0000 automated; manual kappa 0.9357 (precision 1.000 / recall 0.889; confusion TP 8 / FP 0 / FN 1 / TN 91) | PASS (>=0.70) |
 | `cfg_gated` (C sites) | 15 | kappa 1.0000 | PASS (>=0.70) |
-| `io_sites_in_loops` (blind site audit) | 100 | kappa 0.6617, ICC 0.6639; precision 1.00, recall 0.55 | **FAIL -> DROPPED** |
+| `io_sites_in_loops` (blind site audit) | 100 | kappa 0.6617, ICC 0.6639; precision 1.00, recall 0.55 (unchanged; still below 0.70) | **FAIL -> DROPPED** |
 
 ### Pre-registered decision: `io_sites_in_loops` is dropped
 

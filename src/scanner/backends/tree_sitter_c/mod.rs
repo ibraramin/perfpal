@@ -245,24 +245,53 @@ fn walk_file_level(node: Node<'_>, visit: &mut impl FnMut(Node<'_>)) {
     }
 }
 
-/// Precision FP-class fix 2 producer helper: spans of `preproc_if` regions
-/// whose condition constant-folds to false (`#if 0`, parenthesized `#if (0)`
-/// included) — provably-dead configuration regions. `#ifdef`/`#ifndef` and
-/// `#if <expr>` never qualify: those arms may be live.
+/// Precision FP-class fix 2 producer helper: spans of the **dead branch
+/// bodies** of `preproc_if` regions whose condition constant-folds to false
+/// (`#if 0`, parenthesized `#if (0)` included) — provably-dead configuration
+/// regions. `#ifdef`/`#ifndef` and `#if <expr>` never qualify: those arms may
+/// be live.
+///
+/// Only the `#if` arm's content nodes are recorded, never the whole
+/// `preproc_if` node: the `#else`/`#elif` alternative is live and must stay
+/// ungated. A nested `preproc_if` inside a dead arm is itself a content node,
+/// so its whole span (including any nested `#else`) is covered by the outer
+/// dead region; the walk then re-visits it and records its own dead arm too
+/// (harmless, spans are a set-like `Vec`).
 fn dead_config_regions(root: Node<'_>, source: &[u8]) -> Vec<Span> {
     let mut regions = Vec::new();
     let mut cursor = root.walk();
     walk(&mut cursor, &mut |node| {
-        if node.kind() == "preproc_if"
-            && node.child_by_field_name("condition").is_some_and(|c| {
-                let collapsed: String = text(c, source)
-                    .chars()
-                    .filter(|ch| !ch.is_whitespace())
-                    .collect();
-                collapsed == "0" || collapsed == "(0)"
-            })
-        {
-            regions.push(ir_span(node, source));
+        if node.kind() != "preproc_if" {
+            return;
+        }
+        let Some(condition) = node.child_by_field_name("condition") else {
+            return;
+        };
+        let collapsed: String = text(condition, source)
+            .chars()
+            .filter(|ch| !ch.is_whitespace())
+            .collect();
+        if collapsed != "0" && collapsed != "(0)" {
+            return;
+        }
+        // The `alternative` field is the `#else`/`#elif` subtree (live when
+        // the `#if` condition is false). Stop before it so only the `#if`
+        // arm is recorded.
+        let alternative = node.child_by_field_name("alternative").map(|n| n.id());
+        let mut children = node.walk();
+        if children.goto_first_child() {
+            loop {
+                let child = children.node();
+                if Some(child.id()) == alternative {
+                    break;
+                }
+                if child.is_named() && child.id() != condition.id() {
+                    regions.push(ir_span(child, source));
+                }
+                if !children.goto_next_sibling() {
+                    break;
+                }
+            }
         }
     });
     regions
@@ -852,12 +881,14 @@ impl<'a> FuncScan<'a> {
                 self.enter_loop(node, kind);
             }
             // Scope boundary (structural suite v1 bug fix): a nested
-            // `function_definition` (GCC nested-function extension) is its own
-            // record; its body's loops/events must not be attributed to the
-            // enclosing function. This mirrors `walk_file_level`, which already
-            // stops at every `function_definition`. Before this arm existed,
-            // `max_loop_depth` leaked nested loops into the outer record; with
-            // it, `loop_count` and `max_loop_depth` share one function scope.
+            // `function_definition` (GCC nested-function extension) is NOT
+            // emitted as its own record; it must nevertheless form a scope
+            // boundary here so its body's loops/events are not attributed to
+            // the enclosing function. This mirrors `walk_file_level`, which
+            // already stops at every `function_definition`. Before this arm
+            // existed, `max_loop_depth` leaked nested loops into the outer
+            // record; with it, `loop_count` and `max_loop_depth` share one
+            // function scope.
             "function_definition" => {}
             "binary_expression" => self.visit_binary(node),
             "call_expression" => {
@@ -2241,6 +2272,58 @@ int process(int n, char *buf) {
                 ("dead", Some(true)),
                 ("maybe", None),
                 ("mixed", None),
+            ]
+        );
+    }
+
+    /// The dead-region span must be the `#if` arm only: a live `#else`/`#elif`
+    /// arm is never gated. Also covers `#if (0)` and nested `#if 0` inside an
+    /// outer dead arm (the whole nested construct is dead there).
+    #[test]
+    fn if_zero_gates_only_the_dead_arm() {
+        let src = concat!(
+            "#if 0\n",
+            "int dead_if(void) { return 0; }\n",
+            "#else\n",
+            "int live_else(void) { return 1; }\n",
+            "#endif\n",
+            "#if (0)\n",
+            "int dead_paren(void) { return 2; }\n",
+            "#endif\n",
+            "#if 0\n",
+            "#if 0\n",
+            "int dead_nested(void) { return 3; }\n",
+            "#else\n",
+            "int dead_nested_else(void) { return 4; }\n",
+            "#endif\n",
+            "#endif\n",
+            "#if 0\n",
+            "int dead_elif_head(void) { return 5; }\n",
+            "#elif 1\n",
+            "int live_elif(void) { return 6; }\n",
+            "#else\n",
+            "int live_elif_else(void) { return 7; }\n",
+            "#endif\n",
+        );
+        let ex = extract("arms.c", src.as_bytes());
+        let flags: Vec<(&str, Option<bool>)> = ex
+            .functions
+            .iter()
+            .map(|f| (f.record.name.as_str(), f.record.cfg_gated))
+            .collect();
+        assert_eq!(
+            flags,
+            [
+                ("dead_if", Some(true)),
+                ("live_else", None),
+                ("dead_paren", Some(true)),
+                ("dead_nested", Some(true)),
+                // The nested `#else` is live relative to the nested `#if`,
+                // but the whole nested construct sits in the outer dead arm.
+                ("dead_nested_else", Some(true)),
+                ("dead_elif_head", Some(true)),
+                ("live_elif", None),
+                ("live_elif_else", None),
             ]
         );
     }

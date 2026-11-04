@@ -256,6 +256,15 @@ int sites(int n) {
     }
     return 0;
 }
+
+#if 0
+int dead_sites(int n) {
+    for (int i = 0; i < n; i++) {
+        malloc(8);
+    }
+    return 0;
+}
+#endif
 ",
     )
     .expect("write C fixture");
@@ -330,5 +339,20 @@ def sites(items):
         dedup.dedup();
         assert_eq!(dedup, keys, "duplicate resource-site sort key");
     }
-    assert_eq!(total_sites, 5, "C alloc+io, Rust alloc+io, Python io");
+    assert_eq!(
+        total_sites, 6,
+        "C alloc+io (live) + C dead alloc + Rust alloc+io + Python io"
+    );
+    // The `#if 0` fixture also proves the dead-arm gate is stable across runs.
+    let dead = doc["stats"]["functions"]
+        .as_array()
+        .expect("functions[]")
+        .iter()
+        .find(|f| f["name"] == "dead_sites")
+        .expect("dead_sites record");
+    assert_eq!(dead["cfg_gated"], true, "#if 0 function must be gated");
+    assert_eq!(
+        dead["resource_sites"][0]["cfg_gated"], true,
+        "#if 0 site must be gated"
+    );
 }

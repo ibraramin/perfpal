@@ -267,6 +267,13 @@ mod tests {
     }
 
     #[test]
+    fn io_table_versions_are_pinned() {
+        // Membership changes require a bump plus a fixture (module docs).
+        assert_eq!(PY_IO_TABLE_VERSION, 1);
+        assert_eq!(JS_IO_TABLE_VERSION, 1);
+    }
+
+    #[test]
     fn c_and_rust_reuse_the_flow_table() {
         let defined: BTreeSet<String> = ["printf".to_string()].into_iter().collect();
         assert!(!is_external_io("c", &call("printf", None, None), &defined));

@@ -69,6 +69,28 @@ def ensure_scans(
     return ok
 
 
+def resolve_exit(compute_code: int, results: dict | None) -> int:
+    """Resolve the harness exit code from the recomputation and its results.
+
+    A failed recomputation always wins: a stale ``results.json`` with
+    ``freeze_ok: true`` must never mask a nonzero ``compute_icc.py`` exit.
+    """
+    if compute_code != 0:
+        return compute_code
+    if results is None:
+        return compute_code
+    freeze_ok = results.get("freeze_ok")
+    if freeze_ok is True:
+        return 0
+    if freeze_ok is False:
+        return 1
+    # Labels absent: fall back to the independent-parser gates.
+    gate_pass = all(
+        gate.get("pass") is not False for gate in results["gate"].values()
+    )
+    return 0 if gate_pass else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     repo = default_repo()
     parser = argparse.ArgumentParser(description=__doc__)
@@ -144,20 +166,10 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     results_path = icc_dir / "results.json"
+    results = None
     if results_path.is_file():
         results = json.loads(results_path.read_text(encoding="utf-8"))
-        freeze_ok = results.get("freeze_ok")
-        if freeze_ok is True:
-            return 0
-        if freeze_ok is False:
-            return 1
-        # Labels absent: fall back to the independent-parser gates.
-        gate_pass = all(
-            gate.get("pass") is not False for gate in results["gate"].values()
-        )
-        if compute_code != 0 or not gate_pass:
-            return 1
-    return compute_code
+    return resolve_exit(compute_code, results)
 
 
 if __name__ == "__main__":

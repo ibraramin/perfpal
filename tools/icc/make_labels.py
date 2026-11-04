@@ -327,7 +327,9 @@ def candidates(
                     "path": rel_path,
                     "function": function,
                     "line": line_number,
-                    "column": column + 1,
+                    # 0-based byte column, matching metrics.json
+                    # resource_sites[].column.
+                    "column": column,
                     "candidate": name,
                     "source_line": lines[line_number - 1].strip(),
                     "context": numbered_source(lines, context_start, context_end),
@@ -366,8 +368,14 @@ def metrics_path_for(sample_path: str) -> str:
     return sample_path
 
 
-def perfpal_site_index(metrics_root: Path) -> dict[tuple[str, int], dict]:
-    index: dict[tuple[str, int], dict] = {}
+def perfpal_site_index(metrics_root: Path) -> dict[tuple[str, int, int], dict]:
+    """Index Perfpal resource sites by ``(path, line, 0-based column)``.
+
+    Column is part of the key so two calls on the same source line cannot
+    alias each other (the old ``(path, line)`` key produced false positives
+    such as site-083/084).
+    """
+    index: dict[tuple[str, int, int], dict] = {}
     docs = []
     for language in LANGUAGES:
         path = metrics_root / language / "metrics.json"
@@ -384,7 +392,7 @@ def perfpal_site_index(metrics_root: Path) -> dict[tuple[str, int], dict]:
             else:
                 rel = f"{TREE_BY_LANGUAGE[language]}/{flat}"
             for site in function.get("resource_sites", []) or []:
-                key = (rel, site.get("line"))
+                key = (rel, site.get("line"), site.get("column"))
                 current = index.get(key)
                 if current is None or site.get("kind") == "alloc":
                     index[key] = {
@@ -483,7 +491,7 @@ def build(repo: Path, sample: dict, metrics_root: Path, out_dir: Path) -> None:
     index = perfpal_site_index(metrics_root)
     comparison_items = []
     for item in site_items:
-        ref = index.get((item["path"], item["line"]))
+        ref = index.get((item["path"], item["line"], item["column"]))
         comparison_items.append(
             {
                 "id": item["id"],
@@ -491,6 +499,7 @@ def build(repo: Path, sample: dict, metrics_root: Path, out_dir: Path) -> None:
                 "path": item["path"],
                 "function": item["function"],
                 "line": item["line"],
+                "column": item["column"],
                 "perfpal_kind": ref["kind"] if ref else "neither",
                 "perfpal_cfg_gated": ref["cfg_gated"] if ref else None,
             }

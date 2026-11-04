@@ -360,6 +360,11 @@ def manual_loop_stats(sample: dict, labels_dir: Path) -> dict:
     }
 
 
+def site_key(item: dict) -> tuple:
+    """Stable site identity: (path, 1-based line, 0-based column)."""
+    return (item.get("path"), item.get("line"), item.get("column"))
+
+
 def manual_site_stats(labels_dir: Path) -> dict:
     labels = load_items(labels_dir / "site_labels.json")
     packet = load_items(labels_dir / "site_packet.json")
@@ -370,13 +375,13 @@ def manual_site_stats(labels_dir: Path) -> dict:
         return {"status": "pending", "reason": "site packet/comparison absent"}
 
     packet_by_id = {item["id"]: item for item in packet}
-    comparison_by_id = {item["id"]: item for item in comparison}
+    comparison_by_key = {site_key(item): item for item in comparison}
     pairs = []
     missing = []
     for label in labels:
         site_id = label.get("id")
         item = packet_by_id.get(site_id)
-        comp = comparison_by_id.get(site_id)
+        comp = comparison_by_key.get(site_key(item)) if item is not None else None
         if item is None or comp is None:
             missing.append(site_id)
             continue
@@ -1083,10 +1088,12 @@ def render_markdown(results: dict, repo: Path) -> str:
             "* The C reference counts direct calls to `malloc`, `calloc`,",
             "  `realloc`, `aligned_alloc`, `strdup` at loop depth >= 1. It uses",
             "  the clang AST and does not import Perfpal's allocation table.",
-            "* Perfpal exposes line-level `resource_sites` only for C; non-C",
-            "  site-comparison entries are therefore `neither`. Site agreement is",
-            "  reported across all packet languages as specified, but only the C",
-            "  portion has a line-level Perfpal reference.",
+            "* Perfpal emits `resource_sites` for every language: allocation",
+            "  sites for C/Rust and external-I/O sites for all five. Site",
+            "  comparison entries are matched by `(path, line, 0-based column)`,",
+            "  so two calls on one line are scored independently; a packet",
+            "  candidate with no matching in-loop Perfpal site is `neither`.",
+            "  `cfg_gated` remains C-only (`null` for non-C sites).",
             "* Manual-label packets are blind (no Perfpal values). The dead.c",
             "  fixture contains only four call sites (two live, two `#if 0`), so",
             "  the site packet includes four rather than ten dead.c candidates;",

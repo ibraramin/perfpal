@@ -52,6 +52,38 @@ int c_whole(int n) {
     return 0;
 }
 #endif
+
+#if 0
+int c_if0_dead(int n) {
+    for (int i = 0; i < n; i++) {
+        malloc(2);
+    }
+    return 0;
+}
+#else
+int c_else_live(int n) {
+    for (int i = 0; i < n; i++) {
+        malloc(3);
+    }
+    return 0;
+}
+#endif
+
+int c_columns(int n) {
+    for (int i = 0; i < n; i++) { malloc(4); printf(\"x\"); }
+    return 0;
+}
+
+int c_arm_sites(int n) {
+    for (int i = 0; i < n; i++) {
+#if 0
+        malloc(5);
+#else
+        malloc(6);
+#endif
+    }
+    return 0;
+}
 ";
 
 const RUST_SITES: &str = "\
@@ -245,8 +277,8 @@ fn resource_sites_and_cfg_gating_across_languages() {
         1,
         1,
         vec![
-            site("alloc", 8, 17, 2, Some(false), "c"),
-            site("io", 9, 13, 2, Some(false), "c"),
+            site("alloc", 8, 16, 2, Some(false), "c"),
+            site("io", 9, 12, 2, Some(false), "c"),
         ],
     );
     assert_function(
@@ -255,7 +287,7 @@ fn resource_sites_and_cfg_gating_across_languages() {
         Some(1),
         0,
         0,
-        vec![site("alloc", 18, 9, 1, Some(true), "c")],
+        vec![site("alloc", 18, 8, 1, Some(true), "c")],
     );
     assert_function(
         &doc,
@@ -263,7 +295,7 @@ fn resource_sites_and_cfg_gating_across_languages() {
         Some(0),
         1,
         1,
-        vec![site("io", 26, 9, 1, Some(false), "c")],
+        vec![site("io", 26, 8, 1, Some(false), "c")],
     );
     assert_function(
         &doc,
@@ -271,13 +303,74 @@ fn resource_sites_and_cfg_gating_across_languages() {
         Some(1),
         0,
         0,
-        vec![site("alloc", 34, 9, 1, Some(true), "c")],
+        vec![site("alloc", 34, 8, 1, Some(true), "c")],
     );
     let whole = function(&doc, "c_whole");
     assert_eq!(whole["cfg_gated"], true, "function wholly in #if 0");
     for s in whole["resource_sites"].as_array().unwrap() {
         assert_eq!(s["cfg_gated"], true, "C function gate implies every site");
     }
+
+    // `#if 0 ... #else ... #endif`: only the `#if` arm is provably dead. The
+    // live `#else` function must not be gated and its site must be `false`
+    // (the C three-state contract uses `Some(false)` for live C sites).
+    assert_function(
+        &doc,
+        "c_if0_dead",
+        Some(1),
+        0,
+        0,
+        vec![site("alloc", 43, 8, 1, Some(true), "c")],
+    );
+    let if0_dead = function(&doc, "c_if0_dead");
+    assert_eq!(if0_dead["cfg_gated"], true, "function in #if arm is dead");
+    assert_function(
+        &doc,
+        "c_else_live",
+        Some(1),
+        0,
+        0,
+        vec![site("alloc", 50, 8, 1, Some(false), "c")],
+    );
+    let else_live = function(&doc, "c_else_live");
+    assert!(
+        else_live.get("cfg_gated").is_none(),
+        "function in live #else arm must not be cfg_gated"
+    );
+
+    // 0-based column contract: two calls on one line land at distinct
+    // 0-based byte offsets (malloc=34, printf=45).
+    assert_function(
+        &doc,
+        "c_columns",
+        Some(1),
+        1,
+        1,
+        vec![
+            site("alloc", 57, 34, 1, Some(false), "c"),
+            site("io", 57, 45, 1, Some(false), "c"),
+        ],
+    );
+
+    // Same live function, both arms: the dead `#if 0` site is gated and the
+    // live `#else` site is not, so the two same-line-shape arms stay distinct
+    // per site while the enclosing function itself is not gated.
+    assert_function(
+        &doc,
+        "c_arm_sites",
+        Some(2),
+        0,
+        0,
+        vec![
+            site("alloc", 64, 8, 1, Some(true), "c"),
+            site("alloc", 66, 8, 1, Some(false), "c"),
+        ],
+    );
+    let arm_sites = function(&doc, "c_arm_sites");
+    assert!(
+        arm_sites.get("cfg_gated").is_none(),
+        "a live function containing a dead #if 0 arm is not function-gated"
+    );
 
     // Rust: alloc in loop + closure alloc + stdio macro; file I/O + write!
     // macro. Rust sites are null, never false.
@@ -288,9 +381,9 @@ fn resource_sites_and_cfg_gating_across_languages() {
         1,
         1,
         vec![
-            site("alloc", 3, 17, 1, None, "rust"),
-            site("io", 4, 9, 1, None, "rust"),
-            site("alloc", 5, 30, 1, None, "rust"),
+            site("alloc", 3, 16, 1, None, "rust"),
+            site("io", 4, 8, 1, None, "rust"),
+            site("alloc", 5, 29, 1, None, "rust"),
         ],
     );
     assert_function(
@@ -300,8 +393,8 @@ fn resource_sites_and_cfg_gating_across_languages() {
         2,
         2,
         vec![
-            site("io", 14, 9, 1, None, "rust"),
-            site("io", 15, 17, 1, None, "rust"),
+            site("io", 14, 8, 1, None, "rust"),
+            site("io", 15, 16, 1, None, "rust"),
         ],
     );
 
@@ -314,9 +407,9 @@ fn resource_sites_and_cfg_gating_across_languages() {
         3,
         3,
         vec![
-            site("io", 3, 13, 1, None, "python"),
-            site("io", 4, 9, 1, None, "python"),
-            site("io", 5, 16, 1, None, "python"),
+            site("io", 3, 12, 1, None, "python"),
+            site("io", 4, 8, 1, None, "python"),
+            site("io", 5, 15, 1, None, "python"),
         ],
     );
     assert_function(
@@ -325,7 +418,7 @@ fn resource_sites_and_cfg_gating_across_languages() {
         None,
         1,
         1,
-        vec![site("io", 12, 13, 2, None, "python")],
+        vec![site("io", 12, 12, 2, None, "python")],
     );
 
     // JavaScript: fs + console + documented stream receiver; `obj.write` is
@@ -338,9 +431,9 @@ fn resource_sites_and_cfg_gating_across_languages() {
         4,
         3,
         vec![
-            site("io", 3, 5, 1, None, "javascript"),
-            site("io", 4, 5, 1, None, "javascript"),
-            site("io", 7, 5, 1, None, "javascript"),
+            site("io", 3, 4, 1, None, "javascript"),
+            site("io", 4, 4, 1, None, "javascript"),
+            site("io", 7, 4, 1, None, "javascript"),
         ],
     );
 
@@ -352,8 +445,8 @@ fn resource_sites_and_cfg_gating_across_languages() {
         2,
         2,
         vec![
-            site("io", 3, 11, 1, None, "typescript"),
-            site("io", 4, 5, 1, None, "typescript"),
+            site("io", 3, 10, 1, None, "typescript"),
+            site("io", 4, 4, 1, None, "typescript"),
         ],
     );
 
