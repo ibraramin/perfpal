@@ -2,9 +2,10 @@
 
 **Status:** FROZEN. **Date:** 2026-11-04. **Owner:** orchestrator.
 **Branch:** `feat/structural-0.5.0` (local only; no push).
-**Code commit:** `8d68209` (Stage 1 `e441fc1`, Stage 2 `fd77588`, ICC `8d68209`).
-**Tag:** `perfpal-v0.5.0-structural` (annotated, local). The tag is moved by the
-orchestrator after this re-freeze.
+**Code commit:** `f53a882` (Stage 1 `e441fc1`, Stage 2 `fd77588`, ICC `8d68209`,
+R1 fixes `f53a882`; freeze doc commit follows).
+**Tag:** `perfpal-v0.5.0-structural` (annotated, local; points to the freeze-doc
+commit after the re-freeze).
 **Binary:** `target/release/perfpal` — `perfpal 0.5.0 (metrics schema 1.9)`.
 **Binary SHA-256:** `b89d75027d8b238ad8febab1c8dc3a6687f0a4fd731c86b4e951257d84780ee0`.
 
@@ -44,7 +45,7 @@ function-level property; 1.8 documents validate unchanged.
 - `PY_IO_TABLE_VERSION = 1` (Python external-I/O table).
 - `JS_IO_TABLE_VERSION = 1` (JavaScript/TypeScript external-I/O table).
 
-## Verification (all exit 0, run at the re-freeze working tree on `8d68209`)
+## Verification (all exit 0, run at the re-freeze code `f53a882`)
 
 | Gate | Command | Result |
 |---|---|---:|
