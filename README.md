@@ -9,13 +9,13 @@
 
 > **Pre-release `0.5.1`** · metrics schema `1.9` · noncommercial evaluation only. See [License & legal](#license--legal).
 
-<!-- ============================================================
-     BRAG VIDEO PLACEHOLDER — founder handles this personally.
-     Drop the embedded launch video / thumbnail here.
-     ============================================================ -->
 ### Launch film
 
-> _A short launch film will be embedded here._
+[![Perfpal launch film](docs/assets/brag.jpg)](docs/assets/brag.mp4)
+
+_An abstract radiograph of a codebase: one offline scan becomes a designed bottleneck map and a
+versioned metrics file. The heat map is illustrative; no runtime numbers are plotted._
+
 
 ### See it work
 
