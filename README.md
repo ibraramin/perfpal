@@ -109,7 +109,7 @@ perfpal-report/
     └── <chart-name>.svg
 ```
 
-**`report.html` is the Atlas sim, and only the Atlas sim** (v0.5.1): a warm-paper shell, one line of scan context, links to the other artifacts, and the fixed player. The player replays the inferred run from an inline `application/json` payload — no `fetch`, no `eval`, no HTTP, fully offline from `file://` — with a `<noscript>` narrative when JavaScript is off. It is static inference, never a runtime trace. The full map/charts/Explorer/Findings composition remains available in the library (`render_html_with_story_at_width`) and will be finalized in a later release.
+**`report.html` is the Atlas sim, and only the Atlas sim** (v0.5.1): a warm-paper shell, one line of scan context, links to the other artifacts, and the fixed player. The player replays the inferred run from an inline `application/json` payload — no `fetch`, no `eval`, no HTTP, fully offline from `file://` — with a `<noscript>` narrative when JavaScript is off. It is static inference, never a runtime trace. The full map, charts, Explorer and Findings composition remains available in the library through `render_html_with_story_at_width`.
 
 Tooling and LLM sessions should start at `metrics.json` (validate against the bundled schema copy) or `agent-report.md` / `agent-actions.json`; humans start at `report.html`. Never parse data out of the SVGs — they are advisory.
 
