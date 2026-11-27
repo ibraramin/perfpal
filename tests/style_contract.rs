@@ -284,11 +284,14 @@ fn shared_warm_paper_shell_and_no_external_assets() {
         }
     }
 
-    // Script policy: report keeps the A12 three; detail, profile-queue, and
-    // drill pages are script-free (the dead findings-filter UI was removed).
+    // Script policy: v0.5.1 narrows the CLI report.html to the sim-only page
+    // (inline story data + fixed story script = two); the pan/zoom
+    // REPORT_SCRIPT belongs only to the full composition. Detail,
+    // profile-queue, and drill pages stay script-free (the dead
+    // findings-filter UI was removed).
     let report_html = fs::read_to_string(out.join("report.html")).expect("report.html");
-    assert_eq!(report_html.matches("<script").count(), 3);
-    assert_eq!(report_html.matches("</script>").count(), 3);
+    assert_eq!(report_html.matches("<script").count(), 2);
+    assert_eq!(report_html.matches("</script>").count(), 2);
     for name in [
         "findings-detail.html",
         "profile-queue.html",
@@ -722,26 +725,32 @@ fn tables_are_rectangular_and_all_text_is_lf_with_trailing_newline() {
 fn js_off_map_forces_the_final_frame_and_ranked_actions_wrap() {
     let out = run_pipeline("js-off-final-frame");
     let report = fs::read_to_string(out.join("report.html")).expect("report.html");
-    // The reveal animations start columns at opacity 0 with a delay; the
-    // JS-off fallback must force the canonical final frame immediately.
+    // v0.5.1: the CLI report.html is the sim-only page — there is no static
+    // Atlas map whose final frame needs forcing. The JS-off fallback must
+    // still explain the player and route readers to the drill pages.
     assert!(
-        report.contains(
-            "<noscript><style>#map #atlas-canvas *{animation:none!important;\
-             opacity:1!important;transform:none!important;stroke-dashoffset:0!important}"
-        ),
-        "report.html must carry the JS-off final-frame rule"
+        report.contains("<noscript>"),
+        "sim-only report.html must carry a noscript fallback"
     );
     assert!(
-        report.contains("#map .atlas-pause{display:none!important}"),
-        "JS-off final-frame block must hide the inert pause control"
+        report.contains("The interactive run story needs JavaScript."),
+        "sim-only report.html must carry the JS-off narrative"
     );
     assert!(
-        report
-            .matches("<noscript><style>#map #atlas-canvas")
-            .count()
-            == 1,
-        "exactly one map final-frame noscript block"
+        report.contains("<section id=\"atlas-story\""),
+        "sim-only report.html must carry the #atlas-story section"
     );
+    for drill in [
+        "atlas-weight.html",
+        "atlas-q2.html",
+        "findings-detail.html#ranked-actions",
+        "profile-queue.html",
+    ] {
+        assert!(
+            report.contains(&format!("href=\"{drill}\"")),
+            "JS-off narrative must link {drill}"
+        );
+    }
     // The ranked-action table lives in #ranked-actions (not #findings), so the
     // wrap rule must be scoped there too or long function names clip.
     let detail = fs::read_to_string(out.join("findings-detail.html")).expect("detail html");

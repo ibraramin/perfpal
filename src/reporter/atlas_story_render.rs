@@ -3,18 +3,19 @@
 //! Every `report.html` carries exactly one `#atlas-story` section:
 //!
 //! 1. the player shell ported from `sim/index.html` (no external `<script src>`,
-//!    no load-error panel, and a `#story-stage-host` div in place of the static
-//!    stage `<svg>` so the report keeps exactly one static SVG — the Atlas
-//!    canvas);
-//! 2. a `<noscript>` narrative built from the same payload (the complete static
-//!    map above is the canonical final frame);
+//!    no load-error panel, and a `#story-stage-host` div in which the player
+//!    creates its stage SVG at runtime);
+//! 2. a `<noscript>` narrative built from the same payload;
 //! 3. one inline `<script type="application/json">` data block whose every
 //!    `<` is written as `\u003c`;
 //! 4. one fixed `<script id="atlas-story-script">` with [`STORY_SCRIPT`].
 //!
-//! Together with the unchanged [`crate::reporter::report_script`] block this is
-//! the amended A12 contract: exactly three script elements, no fetch/HTTP, no
-//! eval, offline from `file://`.
+//! The standalone sim shell is also used by the v0.5.1 CLI's sim-only
+//! `report.html`, which carries exactly two script elements (the inline data
+//! and the fixed player — no pan/zoom script). The full library composition
+//! additionally carries the unchanged [`crate::reporter::report_script`] block,
+//! for three scripts there (ADR-0014 as amended). Both variants are offline:
+//! no fetch/HTTP, no eval, `file://`-safe.
 //!
 //! The section is scoped under `#atlas-story` by `sim/sim.report.css`, which is
 //! generated from `sim/sim.css` by `sim/scope-story-css.py`. The stylesheet is
@@ -142,7 +143,7 @@ fn narrative(payload: &Value, doc: &MetricsDocument) -> String {
         .unwrap_or("no ranked action on the drawn slice");
 
     format!(
-        "<noscript>\n<p class=\"atlas-story-noscript\">The interactive run story needs JavaScript; the complete static Atlas map is above. Inferred run: entry <strong>{entry}</strong>, {stage_phrase} along <code>{path}</code>; {loop_phrase}; {io_phrase}; stop reason: {stop}; first action: <code>{action}</code>. Continue in <a href=\"atlas-weight.html\">the weight drill</a>, <a href=\"atlas-q2.html\">the Q2 reverse drill</a>, <a href=\"findings-detail.html#ranked-actions\">ranked actions</a>, or <a href=\"profile-queue.html\">the profile queue</a>.</p>\n</noscript>\n",
+        "<noscript>\n<p class=\"atlas-story-noscript\">The interactive run story needs JavaScript. Inferred run: entry <strong>{entry}</strong>, {stage_phrase} along <code>{path}</code>; {loop_phrase}; {io_phrase}; stop reason: {stop}; first action: <code>{action}</code>. Continue in <a href=\"atlas-weight.html\">the weight drill</a>, <a href=\"atlas-q2.html\">the Q2 reverse drill</a>, <a href=\"findings-detail.html#ranked-actions\">ranked actions</a>, or <a href=\"profile-queue.html\">the profile queue</a>.</p>\n</noscript>\n",
         entry = escape_html(&entry),
         stage_phrase = escape_html(&stage_phrase),
         path = escape_html(path),

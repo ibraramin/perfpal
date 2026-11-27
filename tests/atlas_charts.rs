@@ -278,8 +278,11 @@ fn standalone_drill_pages_are_script_free_and_link_back() {
         (render_atlas_q2_html(&doc), "Q2 reverse drill"),
     ] {
         assert!(page.starts_with("<!DOCTYPE html>"), "{title}: page shell");
+        // v0.5.1: stand-alone drill pages breadcrumb back to the sim-only
+        // report.html, whose story section id is `atlas-story` (no static
+        // `#map` figure remains on the CLI page).
         assert!(
-            page.contains("href=\"report.html#map\""),
+            page.contains("href=\"report.html#atlas-story\""),
             "{title}: back link"
         );
         assert!(!page.contains("<script"), "{title}: no script");

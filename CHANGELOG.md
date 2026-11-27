@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-11-27
+
+### Changed
+- **`report.html` is now the Atlas sim, and only the Atlas sim.** The CLI emits a deliberately
+  narrower page: warm-paper shell, one provenance-free scan line, links to the other artifacts,
+  and the always-on self-contained player. The previous map/charts/Explorer/Findings composition
+  is preserved unchanged as `render_html_with_story_at_width` for the audit contract and a later
+  finalization pass; all other report-directory artifacts are untouched. The player carries two
+  script elements (inline JSON data + fixed player), no pan/zoom script, and a JS-off narrative.
+- **Fixed the player's SVG namespace fallback in `sim/sim.js`.** The sim-only page has no static
+  map SVG to derive the namespace from, so the player now falls back to the SVG namespace constant
+  (built without a literal `http://` so the fixed-script safety guard still passes).
+- **Version is 0.5.1** (metrics schema stays 1.9); samples, goldens and release notes re-baselined.
+- **v0.5.1 release assets are checksum-only.** No minisign signature is shipped: the signing
+  gate was explicitly waived for this release and the repository secrets are not configured.
+  `SHA256SUMS` and per-file `.sha256` files remain. EULA/PRIVACY now carry a real contact address.
+
+### Added
+- A showcase GIF (`docs/assets/perfpal-demo.gif`) built from a real scan and real browser frames
+  of the player; the README leads with a launch-film placeholder, the GIF, then the technical contract.
+- The repository was made public for CV use.
+
 ## [Unreleased]
 
 ### Added

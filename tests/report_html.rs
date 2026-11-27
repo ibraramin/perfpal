@@ -1262,8 +1262,26 @@ fn double_scan_report_html_byte_identical_unmasked() {
         "findings-detail.html diverged between scans (must be byte-identical UNMASKED)"
     );
     let text = String::from_utf8(first).expect("report.html is UTF-8");
-    // Slice-2 fixed script block present and byte-identical to the source.
-    assert_eq!(report_script_body(&text), report_script());
+    // v0.5.1: the CLI report.html is the sim-only page — exactly the inline
+    // story data block and the fixed story script. REPORT_SCRIPT (pan/zoom)
+    // belongs only to the full composition, which has a static map figure.
+    let blocks = scripts(&text);
+    assert_eq!(
+        blocks.len(),
+        2,
+        "sim-only report.html must carry exactly two script elements"
+    );
+    assert!(
+        blocks
+            .iter()
+            .all(|block| block.body.trim_matches('\n') != report_script()),
+        "REPORT_SCRIPT must not appear in the sim-only report.html"
+    );
+    assert!(!story_data(&text).is_empty(), "inline story data missing");
+    assert!(
+        !story_script(&text).trim().is_empty(),
+        "story script missing"
+    );
     assert!(text.ends_with('\n'));
     assert!(!text.contains(&target), "absolute scan root leaked");
     let detail_text = String::from_utf8(first_detail_html).expect("detail HTML is UTF-8");

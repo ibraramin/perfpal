@@ -567,16 +567,22 @@ fn regenerate_goldens() {
             "report.html (tree '{}') must be provenance-free to be committed masked-only",
             tree.tag
         );
+        // v0.5.1: the committed report.html is the sim-only page — the inline
+        // story data block and the fixed story script. The pan/zoom
+        // REPORT_SCRIPT belongs only to the full composition (no static map
+        // figure here), so no bare <script> element may survive.
         assert!(
-            html_text.matches("<script").count() == 3
-                && html_text.matches("<script>").count() == 1
-                && html_text.matches("</script>").count() == 3,
-            "report.html (tree '{}') must contain the three ADR-0014 script elements \
-             (one bare fixed enhancement script + story script + inline JSON data)",
+            html_text.matches("<script").count() == 2
+                && html_text.matches("<script>").count() == 0
+                && html_text.matches("</script>").count() == 2
+                && html_text.contains("id=\"perfpal-atlas-story-data\"")
+                && html_text.contains("id=\"atlas-story-script\""),
+            "report.html (tree '{}') must contain the two sim-only script elements \
+             (inline JSON data + fixed story script), with no REPORT_SCRIPT",
             tree.tag
         );
         // Detail, profile-queue, and Atlas drill pages are script-free; the
-        // report is the only page carrying the fixed enhancement block.
+        // report is the only page carrying the two story scripts.
         for name in [
             "findings-detail.html",
             "profile-queue.html",

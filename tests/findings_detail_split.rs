@@ -442,9 +442,19 @@ fn pipeline_detail_counts_match_metrics_and_human_stays_bounded() {
         )),
         "report.md §4 must carry the full-disclosure pointer"
     );
+    // v0.5.1: the CLI-produced report.html is the deliberately narrower
+    // sim-only page. It carries the Atlas story player and no per-finding
+    // rows; the uncapped detail stays in findings-detail.html above.
     let html = fs::read_to_string(out.join("report.html")).expect("report.html");
-    let findings = section(&html, "<section id=\"findings\">", "</section>");
-    assert_eq!(findings.matches("<tr id=\"finding-").count(), 0);
+    assert!(
+        html.contains("<section id=\"atlas-story\""),
+        "sim-only report.html must carry the #atlas-story section"
+    );
+    assert_eq!(
+        html.matches("<tr id=\"finding-").count(),
+        0,
+        "sim-only report.html must carry zero per-finding rows"
+    );
 
     // Double-scan: the HTML detail is byte-identical UNMASKED (no provenance).
     let html1 = fs::read(out.join("findings-detail.html")).expect("detail html bytes");

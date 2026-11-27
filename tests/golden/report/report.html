@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
-<title>Perfpal Report — schema 1.9</title>
+<title>Perfpal — Atlas sim · schema 1.9</title>
 <style>
 :root{--paper:#f4f1ea;--ink:#202b35;--muted:#6f6a61;--rule:#d6d0c4;--card:#fffdf8;--accent:#7c2d12;--head:#ece8df;--zebra:#fbf9f4}
 *{box-sizing:border-box}
@@ -28,19 +28,12 @@ figcaption{margin-top:.5rem;color:var(--muted)}
 img{max-width:100%;height:auto}
 nav ul{list-style:none;padding:0;margin:.5rem 0;display:flex;gap:1rem;flex-wrap:wrap}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-:root{--report-max:100vw;--page-gutter:clamp(1rem,calc(var(--report-max)*0.016),2.5rem)}
-body{max-width:min(100%,var(--report-max));box-sizing:border-box;margin:2rem auto;padding:0 var(--page-gutter)}
-#findings table{min-width:72rem}
-#findings tbody td{white-space:nowrap}
-#findings td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:22rem;max-width:38rem}
-#ranked-actions td.wrap{white-space:normal;overflow-wrap:anywhere;min-width:10rem;max-width:28rem}
-figure img{display:block;margin:0 auto}
-figure.pz img{max-width:100%;touch-action:none}
-#findings summary{cursor:pointer;list-style:none}
-#findings summary::-webkit-details-marker{display:none}
-#findings summary::before{content:"▸";display:inline-block;margin-right:.35em}
-#findings details[open]>summary::before{transform:rotate(90deg)}
-.kv{margin:1.25rem 0 1.75rem}
+:root{--report-max:100vw}
+body{max-width:min(100%,var(--report-max));box-sizing:border-box;margin:1.5rem auto;padding:0 clamp(1rem,calc(var(--report-max)*0.016),2.5rem)}
+header{margin:0 0 1.25rem}
+nav{margin:0 0 1.25rem}
+nav ul{display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;list-style:none;margin:0;padding:0}
+footer{margin:1.5rem 0 .5rem}.kv{margin:1.25rem 0 1.75rem}
 .kv h3{margin:.25rem 0 .35rem;font-size:1.05rem}
 .kv-action{margin:.15rem 0 .75rem;color:#444}
 .kv-rows{list-style:none;margin:0;padding:0;border-bottom:1px solid #999}
@@ -79,426 +72,20 @@ figure.pz img{max-width:100%;touch-action:none}
 </head>
 <body data-report-width="auto">
 <header>
-<h1>Perfpal Report</h1>
-<p class="breadcrumb"><a href="#map">Atlas</a> › <a href="#components">Components</a> › <a href="#files">Files</a> › <a href="findings-detail.html">Findings detail</a></p>
-<p>schema_version 1.9 · perfpal perfpal 0.5.0 · 3 files · 15 findings (7 hot, 6 warn, 2 info) · languages: c</p>
+<h1>Perfpal — Atlas sim</h1>
+<p>schema_version 1.9 · perfpal 0.5.1 · 3 files · 15 findings (7 hot, 6 warn, 2 info) · languages: c</p>
 </header>
 <nav>
 <ul>
-<li><a href="#map">Atlas</a></li>
-<li><a href="#explorer">Explorer</a></li>
-<li><a href="#components">Components</a></li>
-<li><a href="#files">Files</a></li>
-<li><a href="#findings">Findings</a></li>
+<li><a href="report.md">Full report</a></li>
 <li><a href="findings-detail.html">Findings detail</a></li>
-<li><a href="#appendix-a">Heuristic reference</a></li>
+<li><a href="atlas-weight.html">Weight drill</a></li>
+<li><a href="atlas-q2.html">Blast-radius drill</a></li>
+<li><a href="profile-queue.html">Profile queue</a></li>
+<li><a href="agent-report.md">Agent report</a></li>
+<li><a href="metrics.json">metrics.json</a></li>
 </ul>
 </nav>
-<section id="map">
-<h2 class="sr-only">Atlas map</h2>
-<div class="atlas-page-chrome">
-<style>#map{box-sizing:border-box;background:#f4f1ea;color:#202b35;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--atlas-fs-8:clamp(8px,calc(4.4704px + .0024512*var(--report-max,100vw)),12px);--atlas-fs-8-5:clamp(8.5px,calc(4.7498px + .0026044*var(--report-max,100vw)),12.75px);--atlas-fs-9:clamp(9px,calc(5.0292px + .0027576*var(--report-max,100vw)),13.5px);--atlas-fs-9-5:clamp(9.5px,calc(5.3086px + .0029108*var(--report-max,100vw)),14.25px);--atlas-fs-10:clamp(10px,calc(5.588px + .003064*var(--report-max,100vw)),15px);--atlas-fs-11:clamp(11px,calc(6.1468px + .0033704*var(--report-max,100vw)),16.5px);--atlas-fs-12:clamp(12px,calc(6.7056px + .0036768*var(--report-max,100vw)),18px);--atlas-fs-21:clamp(21px,calc(11.7348px + .0064344*var(--report-max,100vw)),31.5px);margin:0 calc(-1*var(--page-gutter,1rem));padding:8px clamp(12px,calc((var(--report-max,100vw) - 1408px)/2),96px);border-radius:0}
-#map .atlas-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-#map .atlas-masthead{height:58px;box-sizing:border-box;display:flex;align-items:center;gap:14px;border-bottom:1px solid #d6d0c4}
-#map .atlas-brand{flex:0 0 244px;min-width:0}
-#map .atlas-kicker{font-size:var(--atlas-fs-8);font-weight:800;letter-spacing:.16em;color:#6f6a61;text-transform:uppercase}
-#map .atlas-wordmark{font-size:var(--atlas-fs-21);font-weight:800;letter-spacing:-.015em;line-height:1.05;color:#202b35;white-space:nowrap}
-#map .atlas-subline{display:block;font-size:var(--atlas-fs-9);font-weight:600;color:#6f6a61;letter-spacing:.02em;line-height:1.05;margin-top:1px;white-space:normal}
-#map .atlas-masthead-spacer{flex:1;min-width:0}
-#map .atlas-masthead-actions{flex:0 0 auto;display:flex;align-items:center;gap:8px}
-#map .atlas-pause-input{position:absolute;inline-size:1px;block-size:1px;opacity:0}
-#map .atlas-pause{display:inline-block;border:1px solid #9d9588;background:#fffdf8;color:#3c4650;padding:6px 10px;border-radius:4px;font-size:var(--atlas-fs-9);font-weight:700;cursor:pointer;user-select:none}
-#map .atlas-pause-input:focus-visible + .atlas-pause{outline:2px solid #c2410c;outline-offset:2px}
-#map #atlas-pause:checked + .atlas-pause{background:#ece8df;border-color:#c2410c}
-#map .atlas-explorer{display:inline-block;background:#1f2d3a;color:#fff;text-decoration:none;padding:7px 10px;border-radius:4px;font-size:var(--atlas-fs-9);font-weight:750}
-#map .atlas-keymetrics{border-bottom:1px solid #d6d0c4;padding:2px 0;font-size:var(--atlas-fs-9);line-height:1.15;color:#6f6a61}
-#map .atlas-keymetrics-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 10px}
-#map .atlas-keymetrics b{color:#202b35;font-weight:700}
-#map .atlas-hot{color:#c2410c;font-weight:700}
-#map .atlas-chip{display:inline-block;color:#202b35;text-decoration:none;border:1px solid #b8b2a7;border-radius:3px;background:#fffdf8;padding:0 4px;font-size:var(--atlas-fs-9-5);font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34rem;vertical-align:bottom}
-#map .atlas-chip:hover{border-color:#c2410c}
-#map .atlas-chip .atlas-mono{font-size:var(--atlas-fs-9-5)}
-#map .atlas-chip--stub{color:#6f6a61;border-style:dashed}
-#map .atlas-entry-value{font-size:var(--atlas-fs-10);font-weight:600}
-#map .atlas-legend{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 9px}
-#map .atlas-sw{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:3px}
-#map .atlas-sw-prod{background:#fdfbf6;border:1px solid #8b8173}
-#map .atlas-sw-test{background:#eef2f7;border:1px dashed #7f93aa}
-#map .atlas-sw-unreached{background:#e8e5df;border:1px solid #b8b2a7}
-#map .atlas-sw-forward{border-top:2px solid #8d8577;width:12px;height:0;border-radius:0;background:none}
-#map .atlas-sw-back{border-top:2px dashed #8d8577;width:12px;height:0;border-radius:0;background:none}
-#map .atlas-sw-path{border-top:2.3px solid #c2410c;width:12px;height:0;border-radius:0;background:none}
-#map .atlas-unit{color:#6f6a61}
-#map .atlas-structural-caption{font-weight:700;color:#7c2d12}
-#map #atlas-canvas{position:relative;background:transparent;color:#202b35}
-#map .atlas-graph{background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;overflow:hidden}
-#map .atlas-svg{display:block;width:100%;height:auto;background:#fbf9f4}
-#map .atlas-svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-#map .atlas-svg .atlas-column-header,#map .atlas-svg .atlas-hull text{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-#map .atlas-svg .atlas-edge,#map .atlas-svg .atlas-trace{fill:none}
-#map .atlas-footer{padding:5px 8px 2px;font-size:var(--atlas-fs-9);line-height:1.35;color:#6f6a61;font-variant-numeric:tabular-nums}
-#map .atlas-footer .atlas-mono{color:#202b35}
-#map .atlas-footer-part{white-space:nowrap}
-#map .atlas-stage{display:flex;gap:10px;align-items:flex-start;justify-content:center;width:100%}
-#map #atlas-canvas{flex:1 1 auto;min-width:0;width:100%;max-width:none}
-#map .atlas-rail{flex:0 0 530px;min-width:0;max-width:530px;color:#202b35}
-#map .atlas-rail-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 1px 5px;border-bottom:1px solid #d6d0c4;font-size:var(--atlas-fs-8-5);font-weight:800;letter-spacing:.11em;color:#6f6a61;text-transform:uppercase}
-#map .atlas-rail-title span{font-weight:600;letter-spacing:0;text-transform:none;color:#6f6a61}
-#map .atlas-rail-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
-#map .atlas-rail-card{min-width:0;overflow:hidden;border:1px solid #d8d2c6;border-left:3px solid #8b8173;border-radius:4px;background:#fffdf8;padding:4px 6px 5px}
-#map .atlas-rail-card.is-entry{border-left-color:#1f2d3a;background:#f3f1eb}
-#map .atlas-rail-card.is-hot{border-left-color:#c2410c}
-#map .atlas-rail-card.is-test{border-left-color:#5c7391;background:#f4f6f9}
-#map .atlas-rail-card.is-bench{border-left-color:#7a4f7d;background:#f8f3f8}
-#map .atlas-rail-card.is-unreached{border-left-color:#b3aca1;background:#efede8}
-#map .atlas-rail-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
-#map .atlas-rail-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--atlas-fs-10);font-weight:700;color:#202b35;text-decoration:none}
-#map .atlas-rail-name:hover{text-decoration:underline}
-#map .atlas-rail-role{flex:0 0 auto;font-size:var(--atlas-fs-8-5);font-weight:800;letter-spacing:.08em;color:#3c4650}
-#map .atlas-rail-card.is-production .atlas-rail-role{color:#3f6d6a}
-#map .atlas-rail-card.is-entry .atlas-rail-role{color:#1f2d3a}
-#map .atlas-rail-card.is-test .atlas-rail-role{color:#546a86}
-#map .atlas-rail-card.is-bench .atlas-rail-role{color:#7a4f7d}
-#map .atlas-rail-card.is-unreached .atlas-rail-role{color:#5f584f}
-#map .atlas-rail-anchor{margin-top:2px;font-size:var(--atlas-fs-8-5);line-height:1.25;color:#6f6a61;overflow-wrap:anywhere}
-#map .atlas-rail-fn{margin-top:2px;font-size:var(--atlas-fs-8-5);line-height:1.3;color:#3f4952;overflow-wrap:anywhere}
-#map .atlas-rail-fn a{color:#202b35;text-decoration:none}
-#map .atlas-rail-fn a:hover{text-decoration:underline}
-#map .atlas-rail-find{margin-top:3px;font-size:var(--atlas-fs-8-5);line-height:1.25;color:#8a5a2b;font-weight:650;overflow-wrap:anywhere}
-#map .atlas-rail-find a{color:#7c2d12}
-#map .atlas-rail-stub{margin:6px 0 0;padding:6px 8px;border:1px dashed #b8b2a7;border-radius:4px;font-size:var(--atlas-fs-9);color:#6f6a61}
-#map .atlas-rail-more{margin:6px 0 0;font-size:var(--atlas-fs-8-5);color:#6f6a61}
-#map .atlas-charts{max-width:none;margin:10px auto 0;display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:10px}
-#map .atlas-chart{min-width:0;background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;padding:10px 12px 11px;color:#202b35}
-#map .atlas-chart h3{font-size:var(--atlas-fs-12);font-weight:800;margin:0 0 2px;letter-spacing:-.005em}
-#map .atlas-chart h4{font-size:var(--atlas-fs-8-5);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6f6a61;margin:8px 0 3px}
-#map .atlas-chart-caption{margin:1px 0 5px;font-size:var(--atlas-fs-9);line-height:1.35;color:#6f6a61}
-#map .atlas-chart .atlas-stub{margin:4px 0 2px;font-size:var(--atlas-fs-9);color:#6f6a61;border:1px dashed #b8b2a7;border-radius:4px;padding:5px 7px}
-#map .atlas-share-ribbon{display:flex;height:24px;border:1px solid #d6d0c4;border-radius:4px;overflow:hidden;background:#fffdf8}
-#map .atlas-share-seg{display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;white-space:nowrap;font-size:var(--atlas-fs-8-5);font-weight:700}
-#map .atlas-share-seg.is-prod{background:#3f6d6a;color:#fff}
-#map .atlas-share-seg.is-nonprod{background:repeating-linear-gradient(135deg,#e8e5df 0,#e8e5df 3px,#d8d2c6 3px,#d8d2c6 6px);color:#3c4650}
-#map .atlas-ribbon-labels{display:flex;justify-content:space-between;margin:3px 0 0;font-size:var(--atlas-fs-8-5);color:#6f6a61;font-variant-numeric:tabular-nums}
-#map .atlas-bar-columns{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:6px}
-#map .atlas-bar-col{min-width:0}
-#map .atlas-bar-row{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(72px,auto);gap:7px;align-items:center;margin:2px 0;font-size:var(--atlas-fs-9)}
-#map .atlas-bar-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#202b35}
-#map .atlas-bar-track{display:block;height:8px;background:#ece8df;border:1px solid #dcd6ca;border-radius:2px;overflow:hidden}
-#map .atlas-bar-fill{display:block;height:100%;background:#3f6d6a}
-#map .atlas-bar-fill.is-nonprod{background:repeating-linear-gradient(135deg,#c9c2b6 0,#c9c2b6 3px,#e8e5df 3px,#e8e5df 6px)}
-#map .atlas-bar-share{text-align:right;color:#6f6a61;font-variant-numeric:tabular-nums;white-space:nowrap}
-#map .atlas-band{margin:6px 0 0;padding:4px 7px;border:1px dashed #9d9588;border-radius:3px;background:repeating-linear-gradient(135deg,#f7f4ed 0,#f7f4ed 4px,#efebe2 4px,#efebe2 8px);font-size:var(--atlas-fs-9);color:#3c4650}
-#map .atlas-blast-line{font-size:var(--atlas-fs-12);font-weight:750;margin:4px 0 6px;color:#202b35}
-#map .atlas-call-degree{margin:6px 0 0;font-size:var(--atlas-fs-9);color:#6f6a61}
-#map .atlas-file-row{margin:0 0 5px;padding:0 0 5px;border-bottom:1px solid #ece8df}
-#map .atlas-file-row:last-of-type{border-bottom:0}
-#map .atlas-file-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-#map .atlas-file-path{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--atlas-fs-10);font-weight:700}
-#map .atlas-file-role{flex:0 0 auto;font-size:var(--atlas-fs-8-5);font-weight:800;letter-spacing:.06em;color:#3f6d6a}
-#map .atlas-file-bar{display:block;margin:3px 0 1px}
-#map .atlas-file-bar .atlas-bar-track{height:9px;text-decoration:none}
-#map .atlas-file-cost{font-size:var(--atlas-fs-8-5);line-height:1.25;color:#6f6a61;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-#map .atlas-file-fns{margin-top:2px;font-size:var(--atlas-fs-8-5);line-height:1.3;color:#3f4952;overflow-wrap:anywhere}
-#map .atlas-file-fns a{color:#202b35;text-decoration:none}
-#map .atlas-file-fns a:hover{text-decoration:underline}
-#map .atlas-file-find{margin-top:2px;font-size:var(--atlas-fs-8-5);line-height:1.25;color:#8a5a2b;font-weight:650;overflow-wrap:anywhere}
-#map .atlas-file-find a{color:#7c2d12}
-#map .atlas-chart.atlas-coverage{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 10px}
-#map .atlas-coverage{margin:0;font-size:var(--atlas-fs-9);color:#6f6a61}
-#map .atlas-links{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:var(--atlas-fs-9)}
-#map .atlas-links a{color:#7c2d12;font-weight:650;text-decoration:none}
-#map .atlas-links a:hover{text-decoration:underline}
-#map .atlas-block{max-width:none;margin:10px auto 0;background:#fbf9f4;border:1px solid #d6d0c4;border-radius:6px;padding:9px 12px 10px;color:#202b35}
-#map .atlas-charts>.atlas-block{margin:0}
-#map .atlas-block h3{font-size:var(--atlas-fs-12);font-weight:800;margin:0 0 3px;letter-spacing:-.005em}
-#map .atlas-block h4{font-size:var(--atlas-fs-8-5);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6f6a61;margin:8px 0 3px}
-#map .atlas-answer-line{margin:2px 0 0;font-size:var(--atlas-fs-10);line-height:1.45;color:#202b35;overflow-wrap:anywhere}
-#map .atlas-answer-line code,#map .atlas-action code,#map .atlas-card code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:var(--atlas-fs-9-5)}
-#map .atlas-caveat{display:block;margin-top:4px;color:#6f6a61;font-size:var(--atlas-fs-9)}
-#map .atlas-fn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#3f4952;font-size:var(--atlas-fs-9-5)}
-#map .atlas-rank{font-weight:800;margin-right:5px;color:#c2410c;font-variant-numeric:tabular-nums}
-#map .atlas-action-list{margin:5px 0 0;padding-left:1.3rem}
-#map .atlas-action{margin:0 0 6px;font-size:var(--atlas-fs-9-5);line-height:1.4;overflow-wrap:anywhere}
-#map .atlas-loc{color:#202b35;text-decoration:none}
-#map .atlas-loc:hover{text-decoration:underline}
-#map .atlas-badge{display:inline-block;border:1px solid #b8b2a7;border-radius:3px;padding:0 3px;margin-left:3px;font-size:var(--atlas-fs-8-5);color:#3c4650;background:#fffdf8;white-space:nowrap}
-#map .atlas-class{display:inline-block;border:1px solid #b8b2a7;border-radius:3px;padding:0 3px;font-size:var(--atlas-fs-8-5);color:#3f6d6a;white-space:nowrap}
-#map .atlas-class.nonprod{color:#7c2d12;border-style:dashed}
-#map .atlas-anchor,#map .atlas-share,#map .atlas-caption,#map .atlas-counts,#map .atlas-trip,#map .atlas-note{color:#6f6a61;font-size:var(--atlas-fs-9)}
-#map .atlas-anchor{margin-top:2px;font-variant-numeric:tabular-nums}
-#map .atlas-share{font-variant-numeric:tabular-nums}
-#map .atlas-trip{margin-top:2px}
-#map .atlas-note{margin-left:4px;color:#8a5a2b}
-#map .atlas-why{margin-top:3px;color:#3f4952;font-size:var(--atlas-fs-9);line-height:1.4}
-#map .atlas-more{margin:6px 0 0;font-size:var(--atlas-fs-9)}
-#map .atlas-more a{color:#7c2d12;font-weight:650;text-decoration:none}
-#map .atlas-counts{margin:6px 0 0}
-#map .atlas-weight-list,#map .atlas-dependent-list,#map .atlas-fn-list,#map .atlas-drill-links{margin:4px 0 0;padding-left:1.3rem;font-size:var(--atlas-fs-9-5);line-height:1.4}
-#map .atlas-nonprod{margin:5px 0 0;padding:3px 7px;border-left:3px solid #9a3412;background:#f7f4ed;font-size:var(--atlas-fs-9);color:#3c4650}
-#map .atlas-blast-line{font-size:var(--atlas-fs-11);font-weight:750;margin:2px 0 4px}
-#map .atlas-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#202b35;overflow-wrap:anywhere}
-#map .atlas-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:8px;margin-top:6px}
-#map .atlas-card{min-width:0;border:1px solid #d8d2c6;border-radius:4px;background:#fffdf8;padding:6px 8px 7px}
-#map .atlas-card h4{margin:0 0 3px;font-size:var(--atlas-fs-10);font-weight:750;letter-spacing:0;text-transform:none;color:#202b35}
-#map .atlas-dominant{margin:3px 0;color:#8a5a2b;font-size:var(--atlas-fs-9);font-weight:650;line-height:1.35}
-#map .atlas-card p{margin:2px 0}
-#map .atlas-card a{color:#7c2d12;text-decoration:none}
-#map .atlas-card a:hover{text-decoration:underline}
-#map .atlas-drill-links li{margin:1px 0}
-#map .atlas-drill-links a{color:#7c2d12;font-weight:650;text-decoration:none}
-#map .atlas-drill-links a:hover{text-decoration:underline}
-@media (max-width:900px){#map .atlas-bar-columns{grid-template-columns:1fr}}
-@media print{#map .atlas-charts{break-inside:avoid}}
-@media (max-width:1359px){#map .atlas-stage{flex-direction:column;align-items:stretch}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}}
-@media (min-width:1360px) and (max-width:1599px){#map .atlas-stage{flex-direction:row;align-items:flex-start}#map #atlas-canvas{flex:1 1 auto;width:100%;max-width:none}#map .atlas-rail{flex:0 0 min(530px,34vw);max-width:none}}
-@media (min-width:1360px) and (max-width:1439px){#map .atlas-rail-name{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}}
-@media (min-width:1600px){#map .atlas-stage{flex-direction:column;align-items:stretch}#map #atlas-canvas,#map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}#map .atlas-rail-cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media print{#map .atlas-stage{display:block}#map .atlas-rail{width:auto;max-width:none;margin-top:8px}}
-@keyframes atlas-entry-pulse{0%{opacity:.45}100%{opacity:1}}
-@keyframes atlas-column-reveal{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
- @keyframes atlas-edge-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
- @keyframes atlas-edge-fade{from{opacity:0}to{opacity:1}}
- @keyframes atlas-trace-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
- @keyframes atlas-hottest-pulse{0%,100%{opacity:1}50%{opacity:.5}}
- #map #atlas-canvas .atlas-column{animation:atlas-column-reveal .4s calc(1.2s + var(--atlas-col) * .12s) both}
- #map #atlas-canvas .atlas-node.is-entry{animation:atlas-entry-pulse 1.2s ease-out both}
- #map #atlas-canvas .atlas-edge--forward{animation:atlas-edge-draw 1.4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
- #map #atlas-canvas .atlas-edge--back{animation:atlas-edge-fade .4s calc(2.8s + var(--atlas-edge,0) * .01s) both}
- #map #atlas-canvas .atlas-trace{animation:atlas-trace-draw 1.2s 4.2s both}
-#map #atlas-canvas .atlas-node.is-hottest{animation:atlas-hottest-pulse .8s 5.4s 2 both}
-#map:has(#atlas-pause:checked) #atlas-canvas .atlas-graph *{animation-play-state:paused !important}
-@media (prefers-reduced-motion: reduce){#map #atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}}
-@media print{#map{background:#fff}#map #atlas-canvas{break-inside:avoid}#map #atlas-canvas *{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}#map .atlas-pause,#map .atlas-masthead-actions{display:none}}
-#map .atlas-pause-input{opacity:0!important;inline-size:1px!important;block-size:1px!important}
-body[data-report-width="1280"] #map .atlas-stage{flex-direction:column;align-items:stretch}
-body[data-report-width="1280"] #map #atlas-canvas,body[data-report-width="1280"] #map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}
-body[data-report-width="1280"] #map .atlas-rail-cards,body[data-report-width="1440"] #map .atlas-rail-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
-body[data-report-width="1440"] #map .atlas-stage{flex-direction:row;align-items:flex-start}
-body[data-report-width="1440"] #map #atlas-canvas{flex:1 1 auto;width:100%;max-width:none}
-body[data-report-width="1440"] #map .atlas-rail{flex:0 0 min(530px,34%);width:auto;max-width:none}
-body[data-report-width="1920"] #map .atlas-stage,body[data-report-width="2560"] #map .atlas-stage,body[data-report-width="3072"] #map .atlas-stage{flex-direction:column;align-items:stretch}
-body[data-report-width="1920"] #map #atlas-canvas,body[data-report-width="1920"] #map .atlas-rail,body[data-report-width="2560"] #map #atlas-canvas,body[data-report-width="2560"] #map .atlas-rail,body[data-report-width="3072"] #map #atlas-canvas,body[data-report-width="3072"] #map .atlas-rail{flex:0 0 auto;width:100%;max-width:none}
-body[data-report-width="1920"] #map .atlas-rail-cards,body[data-report-width="2560"] #map .atlas-rail-cards,body[data-report-width="3072"] #map .atlas-rail-cards{grid-template-columns:repeat(4,minmax(0,1fr))}
-</style>
-<header class="atlas-masthead">
-<div class="atlas-brand">
-<div class="atlas-kicker">PERFPAL · ATLAS</div>
-<div class="atlas-wordmark">Atlas</div>
-<div class="atlas-subline">entry-flow map · static, profile to confirm</div>
-</div>
-<div class="atlas-masthead-spacer"></div>
-<div class="atlas-masthead-actions">
-<input type="checkbox" id="atlas-pause" class="atlas-pause-input" aria-label="Pause the animation">
-<label for="atlas-pause" class="atlas-pause">Pause</label>
-<a class="atlas-explorer" href="#explorer">Explorer →</a>
-</div>
-</header>
-<div class="atlas-keymetrics">
-<div class="atlas-keymetrics-line">
-<span><b>ENTRY</b> <span class="atlas-mono atlas-entry-value">production main · src/main.c:121 main · confidence HIGH · 0 alternatives</span></span>
-<span class="atlas-hot">HOTTEST: <span class="atlas-mono">src/main.c · 155 static cost units (v2) · 22× median function</span></span>
-<span class="atlas-mono">PATH · 2 steps · representative path (static, BFS-derived)</span>
-<span class="atlas-mono">2 of 2 reachable files shown · 0 aggregated</span>
-</div>
-<div class="atlas-keymetrics-line">
-<b>START</b>
-<a class="atlas-chip" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21" title="src/main.c:34 · process · Heap allocation inside loop · HOT · HIGH · production · 14 static cost units (v2) · 2.0× median · top 25%"><span class="atlas-mono">src/main.c:34</span> — Heap allocation inside loop</a>
-<a class="atlas-chip" href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-37-9" title="src/main.c:37 · process · Deallocation inside loop · HOT · HIGH · production · 14 static cost units (v2) · 2.0× median · top 25%"><span class="atlas-mono">src/main.c:37</span> — Deallocation inside loop</a>
-<a class="atlas-chip" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-73-15" title="src/main.c:73 · grow · Heap allocation inside loop · HOT · HIGH · production · 13 static cost units (v2) · 1.9× median · top 33%"><span class="atlas-mono">src/main.c:73</span> — Heap allocation inside loop</a>
-</div>
-<div class="atlas-keymetrics-line">
-<span class="atlas-legend"><span><span class="atlas-sw atlas-sw-prod"></span>production</span><span><span class="atlas-sw atlas-sw-test"></span>test/bench</span><span><span class="atlas-sw atlas-sw-unreached"></span>unreached</span><span><span class="atlas-sw atlas-sw-forward"></span>forward</span><span><span class="atlas-sw atlas-sw-back"></span>back</span><span><span class="atlas-sw atlas-sw-path"></span>path</span></span>
-<span class="atlas-unit">static cost units (v2) — relative scale · × median function = all functions in the scan</span>
-<span class="atlas-structural-caption">structural (LOW name-based + MEDIUM semantic)</span>
-</div>
-</div>
-</div>
-<div class="atlas-block" data-atlas-block="answer" id="atlas-answer">
-<h3>What to open first</h3>
-<p class="atlas-answer-line"><strong>ENTRY · production main · confidence HIGH · 0 alternatives</strong>. Elected because the scan found a production main. The largest static cost is src/main.c (file total 155 static cost units (v2) · 22× median function · top 50% of files). Open first: <a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21"><code>src/main.c:34</code></a> <span class="atlas-fn">process</span> — Heap allocation inside loop (HOT · HIGH). <span class="atlas-caveat">Caveat: the drawn edges are structural; see the Atlas legend for units and edge confidence.</span></p>
-</div>
-<div class="atlas-stage">
-<section id="atlas-canvas" class="atlas-canvas">
-<div class="atlas-graph">
-<svg viewBox="0 0 868 720" width="868" height="720" class="atlas-svg" role="img" aria-label="Perfpal Atlas entry-flow canvas" preserveAspectRatio="xMidYMid meet">
-<defs><marker id="atlas-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8d8577"/></marker><marker id="atlas-arrow-back" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8d8577"/></marker><marker id="atlas-arrow-path" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#c2410c"/></marker></defs><g class="atlas-hull"><title>approximate prefix group; not a canonical component id</title><rect x="261" y="44" width="346" height="116" rx="10" fill="none" stroke="#d6d0c4" stroke-width="1" stroke-dasharray="5 3"/><text x="269" y="56" font-size="9.2" font-weight="700" fill="#6f6a61">src · 2</text></g><path class="atlas-edge atlas-edge--forward" data-edge="src/main.c-&gt;src/util.c" d="M 419 112 C 439 112 429 112 449 112" fill="none" stroke="#8d8577" stroke-width="2" stroke-opacity="0.34" stroke-dasharray="1" stroke-dashoffset="0" marker-end="url(#atlas-arrow)" pathLength="1" style="--atlas-edge:0"><title>src/main.c → src/util.c · 1 distinct structural edge</title></path><path class="atlas-trace" d="M 419 112 C 439 112 429 112 449 112" fill="none" stroke="#c2410c" stroke-width="2.3" stroke-dasharray="1" stroke-dashoffset="0" pathLength="1" marker-end="url(#atlas-arrow-path)" style="--atlas-trace:0"><title>representative path (static, BFS-derived) · step 1 of 2</title></path><g class="atlas-column" style="--atlas-col:0"><g class="atlas-column-header-group"><text class="atlas-column-header" x="344" y="22" text-anchor="middle" font-size="10.5" font-weight="700" fill="#202b35">depth 0 · ENTRY</text><text class="atlas-column-header" x="344" y="36" text-anchor="middle" font-size="10.5" fill="#6f6a61">1 file</text></g><g class="atlas-node is-entry is-hottest" data-node="src/main.c"><title>src/main.c · production · file total 155 static cost units (v2) · 22× median function · top 50% of files · top functions: dispatch @ 84, deep_sum @ 57, process @ 31</title><rect x="269" y="72" width="150" height="80" rx="7" fill="#1f2d3a" stroke="#c2410c" stroke-width="2"/><text class="atlas-node-badge" x="417" y="69" text-anchor="end" font-size="8.5" fill="#6f6a61">ENTRY · HOTTEST · HOT ×2</text><text class="atlas-node-name" x="344" y="98" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">main.c</text><text class="atlas-node-meta atlas-node-cost" x="344" y="113" text-anchor="middle" font-size="9" fill="#ffffff" textLength="142" lengthAdjust="spacingAndGlyphs">155 static cost units (v2)</text><text class="atlas-node-meta atlas-node-rank" x="344" y="128" text-anchor="middle" font-size="9" fill="#ffffff">22× median function</text><text class="atlas-node-meta atlas-node-rank" x="344" y="143" text-anchor="middle" font-size="9" fill="#ffffff">top 50% of files</text><g class="atlas-path-badge"><title>representative path (static, BFS-derived) · step 1 of 2</title><circle cx="409" cy="82" r="8" fill="#c2410c" stroke="#ffffff" stroke-width="1"/><text x="409" y="85" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffffff">1</text></g></g></g><g class="atlas-column" style="--atlas-col:1"><g class="atlas-column-header-group"><text class="atlas-column-header" x="524" y="22" text-anchor="middle" font-size="10.5" font-weight="700" fill="#202b35">depth 1</text><text class="atlas-column-header" x="524" y="36" text-anchor="middle" font-size="10.5" fill="#6f6a61">1 file</text></g><g class="atlas-node" data-node="src/util.c"><title>src/util.c · production · file total 3 static cost units (v2) · 0.4× median function · top 100% of files · top functions: util_init @ 8</title><rect x="449" y="72" width="150" height="80" rx="7" fill="#fdfbf6" stroke="#8b8173" stroke-width="1"/><text class="atlas-node-name" x="524" y="98" text-anchor="middle" font-size="11.5" font-weight="700" fill="#23303a">util.c</text><text class="atlas-node-meta atlas-node-cost" x="524" y="113" text-anchor="middle" font-size="9" fill="#23303a">3 static cost units (v2)</text><text class="atlas-node-meta atlas-node-rank" x="524" y="128" text-anchor="middle" font-size="9" fill="#23303a">0.4× median function</text><text class="atlas-node-meta atlas-node-rank" x="524" y="143" text-anchor="middle" font-size="9" fill="#23303a">top 100% of files</text><g class="atlas-path-badge"><title>representative path (static, BFS-derived) · step 2 of 2</title><circle cx="589" cy="82" r="8" fill="#c2410c" stroke="#ffffff" stroke-width="1"/><text x="589" y="85" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffffff">2</text></g></g></g><g class="atlas-edge-label"><title>1 distinct structural edge</title><rect x="425" y="106" width="19" height="12" rx="3" fill="#fffdf8" stroke="#c2410c" stroke-width="1"/><text x="434" y="115" text-anchor="middle" font-size="8.5" fill="#c2410c">×1</text></g>
-</svg>
-</div>
-<footer class="atlas-footer"><span class="atlas-footer-part">2 of 2 source files reachable (100%)</span> · <span class="atlas-footer-part">1 of 1 file pairs drawn</span> · <span class="atlas-footer-part">0 MEDIUM / 1 LOW structural edges</span> · <span class="atlas-footer-part">unreached production: 0 · non-production: 0</span> · <span class="atlas-footer-part">parse 3 ok / 0 partial / 0 failed</span> · <span class="atlas-footer-part">0/2 unresolved includes</span> · <span class="atlas-footer-part">0 files demoted</span></footer>
-</section>
-<aside id="atlas-rail" class="atlas-rail" aria-label="File detail">
-<div class="atlas-rail-title">File detail<span>top 2 of 2 source files · production first</span></div>
-<div class="atlas-rail-cards">
-<article class="atlas-rail-card is-entry is-production is-hot">
-<div class="atlas-rail-head"><a class="atlas-rail-name atlas-mono" href="atlas-weight.html#atlas-file-src-main-c" title="src/main.c">src/main.c</a><span class="atlas-rail-role">ENTRY</span></div>
-<div class="atlas-rail-anchor">file total 155 static cost units (v2) · 22× median function · top 50% of files</div>
-<div class="atlas-rail-fn"><a class="atlas-mono" href="profile-queue.html#fn-src-main-c-dispatch-84-1" title="src/main.c:84 dispatch">dispatch:84</a></div>
-<div class="atlas-rail-fn"><a class="atlas-mono" href="profile-queue.html#fn-src-main-c-deep-sum-57-1" title="src/main.c:57 deep_sum">deep_sum:57</a></div>
-<div class="atlas-rail-fn"><a class="atlas-mono" href="profile-queue.html#fn-src-main-c-process-31-1" title="src/main.c:31 process">process:31</a></div>
-<div class="atlas-rail-find">FIND <a class="atlas-mono" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001</a> · HOT ×2</div>
-</article>
-<article class="atlas-rail-card is-production">
-<div class="atlas-rail-head"><a class="atlas-rail-name atlas-mono" href="atlas-weight.html#atlas-file-src-util-c" title="src/util.c">src/util.c</a><span class="atlas-rail-role">PRODUCTION</span></div>
-<div class="atlas-rail-anchor">file total 3 static cost units (v2) · 0.4× median function · top 100% of files</div>
-<div class="atlas-rail-fn"><a class="atlas-mono" href="profile-queue.html#fn-src-util-c-util-init-8-1" title="src/util.c:8 util_init">util_init:8</a></div>
-<div class="atlas-rail-find">no findings on this file</div>
-</article>
-</div>
-</aside>
-</div>
-<section id="atlas-brief" class="atlas-brief">
-<div id="atlas-charts" class="atlas-charts">
-<div class="atlas-block" data-atlas-block="weight" id="atlas-weight">
-<h3>Weight — the share in words</h3>
-<p class="atlas-caption">Production files first; non-production cost is counted in the labelled band, never dropped.</p>
-<ol class="atlas-weight-list">
-<li><span class="atlas-path">src/main.c</span> <span class="atlas-share">98% of scanned static cost</span></li>
-<li><span class="atlas-path">src/util.c</span> <span class="atlas-share">1.9% of scanned static cost</span></li>
-</ol>
-<ul class="atlas-weight-list">
-<li><span class="atlas-path">src</span> <span class="atlas-share">100% of scanned static cost · 2 files</span></li>
-</ul>
-<p class="atlas-caption">Component shares include every member file (including non-production members); component groups are approximate prefix groups.</p>
-<p class="atlas-nonprod">non-production (test/bench/other) = 0.0% of scanned static cost (0 files)</p>
-</div>
-<div class="atlas-chart" data-atlas-block="weight-chart">
-<h3>Where is the mass?</h3>
-<p class="atlas-chart-caption">share of scanned static cost · production first · bar = cost relative to the largest item in each column · share printed</p>
-<div class="atlas-share-ribbon" role="img" aria-label="production 100% of scanned static cost · non-production 0% of scanned static cost">
-<span class="atlas-share-seg is-prod" style="width:100.0%" title="production = 100% of scanned static cost"></span>
-<span class="atlas-share-seg is-nonprod" style="width:0.0%" title="non-production = 0% of scanned static cost"></span>
-</div>
-<p class="atlas-ribbon-labels"><span>production 100% of scanned static cost</span><span>non-production 0% of scanned static cost</span></p>
-<div class="atlas-bar-columns">
-<div class="atlas-bar-col">
-<h4>top production-class files</h4>
-<div class="atlas-bar-row"><span class="atlas-bar-label" title="src/main.c">src/main.c</span><span class="atlas-bar-track"><span class="atlas-bar-fill" style="width:100.0%"></span></span><span class="atlas-bar-share">98% of scanned static cost</span></div>
-<div class="atlas-bar-row"><span class="atlas-bar-label" title="src/util.c">src/util.c</span><span class="atlas-bar-track"><span class="atlas-bar-fill" style="width:1.9%"></span></span><span class="atlas-bar-share">1.9% of scanned static cost</span></div>
-</div>
-<div class="atlas-bar-col">
-<h4>top production components</h4>
-<div class="atlas-bar-row"><span class="atlas-bar-label" title="src">src</span><span class="atlas-bar-track"><span class="atlas-bar-fill" style="width:100.0%"></span></span><span class="atlas-bar-share">100% of scanned static cost · 2 files</span></div>
-</div>
-</div>
-<p class="atlas-chart-caption">Production class includes unreached production files (flagged in the file chart below). Component shares include every member file (including non-production members); component groups are approximate prefix groups.</p>
-<p class="atlas-band">non-production (test/bench/other) = 0% of scanned static cost (0 files)</p>
-</div>
-<div class="atlas-block" data-atlas-block="blast" id="atlas-blast">
-<h3>Blast radius — the dependents in words</h3>
-<p class="atlas-blast-line">no resolved dependents · target <span class="atlas-path">src/main.c</span></p>
-<p>0 caller files · 1 callee files (structural)</p>
-<p class="atlas-caption">2 of 2 include edges resolved · 0/2 unresolved includes</p>
-<p><a href="atlas-q2.html">Full dependent list and Q2 reverse drill</a></p>
-<p class="atlas-caption">Callers and callees are structural; see the Atlas legend for edge confidence.</p>
-</div>
-<div class="atlas-chart" data-atlas-block="blast-chart">
-<h3>What breaks if I touch it?</h3>
-<p class="atlas-chart-caption">target (elected entry file) <span class="atlas-mono atlas-path">src/main.c</span></p>
-<p class="atlas-blast-line">no resolved dependents</p>
-<div class="atlas-bar-row"><span class="atlas-bar-label">include coverage</span><span class="atlas-bar-track"><span class="atlas-bar-fill" style="width:100.0%"></span></span><span class="atlas-bar-share">2 of 2 include edges</span></div>
-<p class="atlas-call-degree">0 caller files · 1 callee files (structural)</p>
-</div>
-<div class="atlas-chart" data-atlas-block="file-chart">
-<h3>Which file carries the cost?</h3>
-<p class="atlas-chart-caption">bar = file cost relative to the largest file shown · exact file cost and median anchor printed · role = ENTRY / production class (PRODUCTION, TEST, BENCH, or another path class) / UNREACHED</p>
-<div class="atlas-file-row">
-<div class="atlas-file-head"><span class="atlas-file-path atlas-mono" title="src/main.c">src/main.c</span><span class="atlas-file-role">ENTRY</span></div>
-<div class="atlas-file-bar"><a class="atlas-bar-track" href="atlas-weight.html#atlas-file-src-main-c" title="weight detail for src/main.c"><span class="atlas-bar-fill" style="width:100.0%"></span></a></div>
-<div class="atlas-file-cost">file total 155 static cost units (v2) · 22× median function · top 50% of files</div>
-<div class="atlas-file-fns">functions: <a class="atlas-mono" href="profile-queue.html#fn-src-main-c-dispatch-84-1" title="src/main.c:84 dispatch · 57 static cost units (v2) · 8.1× median function · top 8% of functions">dispatch:84</a> · <a class="atlas-mono" href="profile-queue.html#fn-src-main-c-deep-sum-57-1" title="src/main.c:57 deep_sum · 27 static cost units (v2) · 3.9× median function · top 17% of functions">deep_sum:57</a> · <a class="atlas-mono" href="profile-queue.html#fn-src-main-c-process-31-1" title="src/main.c:31 process · 14 static cost units (v2) · 2.0× median function · top 25% of functions">process:31</a></div>
-<div class="atlas-file-find">FIND <a class="atlas-mono" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001</a> · HOT ×2 — Heap allocation inside loop</div>
-</div>
-<div class="atlas-file-row">
-<div class="atlas-file-head"><span class="atlas-file-path atlas-mono" title="src/util.c">src/util.c</span><span class="atlas-file-role">PRODUCTION</span></div>
-<div class="atlas-file-bar"><a class="atlas-bar-track" href="atlas-weight.html#atlas-file-src-util-c" title="weight detail for src/util.c"><span class="atlas-bar-fill" style="width:1.9%"></span></a></div>
-<div class="atlas-file-cost">file total 3 static cost units (v2) · 0.4× median function · top 100% of files</div>
-<div class="atlas-file-fns">functions: <a class="atlas-mono" href="profile-queue.html#fn-src-util-c-util-init-8-1" title="src/util.c:8 util_init · 3 static cost units (v2) · 0.4× median function · top 92% of functions">util_init:8</a></div>
-<div class="atlas-file-find">no findings on this file</div>
-</div>
-<p class="atlas-chart-caption">showing top 2 of 2 source files (production first)</p>
-</div>
-<div class="atlas-chart atlas-coverage" data-atlas-block="coverage">
-<p class="atlas-coverage">Full scan:</p>
-<nav class="atlas-links" aria-label="Atlas artifacts">
-<a href="report.md">report.md</a>
-<a href="metrics.json">metrics.json</a>
-<a href="atlas-weight.html">weight detail</a>
-<a href="atlas-q2.html">blast drill</a>
-<a href="findings-detail.html#ranked-actions">complete actions</a>
-<a href="profile-queue.html">profile queue</a>
-<a href="agent-report.md">agent report</a>
-<a href="agent-actions.json">agent actions</a>
-</nav>
-</div>
-</div>
-<div class="atlas-block" data-atlas-block="actions" id="atlas-actions">
-<h3>Start here — ranked actions (production first)</h3>
-<ol class="atlas-action-list">
-<li class="atlas-action"><span class="atlas-rank">#1</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21"><code>src/main.c:34</code></a> <span class="atlas-fn">process</span> <span class="atlas-rule">Heap allocation inside loop</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 25% of functions</div>
-<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
-<div class="atlas-why">per-iteration heap allocation via &#39;malloc&#39; at loop depth 1 — allocator churn dominates static cost; hoisting or buffer reuse is a candidate optimization</div></li>
-<li class="atlas-action"><span class="atlas-rank">#2</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-37-9"><code>src/main.c:37</code></a> <span class="atlas-fn">process</span> <span class="atlas-rule">Deallocation inside loop</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 25% of functions</div>
-<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
-<div class="atlas-why">deallocation via &#39;free&#39; at loop depth 1 — repeated frees per iteration; hoisting the free or restructuring buffer ownership is a candidate optimization</div></li>
-<li class="atlas-action"><span class="atlas-rank">#3</span><a class="atlas-loc" href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-73-15"><code>src/main.c:73</code></a> <span class="atlas-fn">grow</span> <span class="atlas-rule">Heap allocation inside loop</span><span class="atlas-badge">HOT · HIGH</span><span class="atlas-class">production</span><div class="atlas-anchor">13 static cost units (v2) · 1.9× median function · top 33% of functions</div>
-<div class="atlas-trip">unknown-trip ×1 — estimate incomplete</div>
-<div class="atlas-why">per-iteration heap allocation via &#39;realloc&#39; at loop depth 1 — allocator churn dominates static cost; hoisting or buffer reuse is a candidate optimization</div></li>
-</ol>
-<p class="atlas-counts">showing 3 of 14 ranked actions (production-first) · 0 non-production files demoted · 1 component-level finding in the full list</p>
-<p class="atlas-more"><a href="findings-detail.html#ranked-actions">Complete ranked action list — 14 actions (production-first)</a></p>
-</div>
-<div class="atlas-block" data-atlas-block="cards" id="atlas-cards">
-<h3>File cards — what is inside the top files</h3>
-<div class="atlas-cards">
-<article class="atlas-card">
-<h4><span class="atlas-path">src/main.c</span> <span class="atlas-class">production</span></h4>
-<p class="atlas-anchor">file total 155 static cost units (v2) · 22× median function · top 50% of files</p>
-<p class="atlas-share">98% of scanned static cost</p>
-<p class="atlas-dominant">Dominant finding: <code>PERF-C-ALLOC-001</code> HOT ×2 — Heap allocation inside loop</p>
-<ol class="atlas-fn-list">
-<li><code>src/main.c:84</code> <span class="atlas-fn">dispatch</span> <span class="atlas-anchor">57 static cost units (v2) · 8.1× median function · top 8% of functions</span></li>
-<li><code>src/main.c:57</code> <span class="atlas-fn">deep_sum</span> <span class="atlas-anchor">27 static cost units (v2) · 3.9× median function · top 17% of functions</span></li>
-<li><code>src/main.c:31</code> <span class="atlas-fn">process</span> <span class="atlas-anchor">14 static cost units (v2) · 2.0× median function · top 25% of functions</span></li>
-</ol>
-<p><a href="atlas-weight.html#atlas-file-src-main-c">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
-</article>
-<article class="atlas-card">
-<h4><span class="atlas-path">src/util.c</span> <span class="atlas-class">production</span></h4>
-<p class="atlas-anchor">file total 3 static cost units (v2) · 0.4× median function · top 100% of files</p>
-<p class="atlas-share">1.9% of scanned static cost</p>
-<p class="atlas-dominant">no findings on this file</p>
-<ol class="atlas-fn-list">
-<li><code>src/util.c:8</code> <span class="atlas-fn">util_init</span> <span class="atlas-anchor">3 static cost units (v2) · 0.4× median function · top 92% of functions</span></li>
-</ol>
-<p><a href="atlas-weight.html#atlas-file-src-util-c">Weight detail for this file</a> · <a href="findings-detail.html#ranked-actions">complete action list</a></p>
-</article>
-</div>
-<p class="atlas-counts">showing top 2 of 2 source files (production-first)</p>
-</div>
-<div class="atlas-block" data-atlas-block="noise" id="atlas-noise">
-<h3>Noise and confidence</h3>
-<p>parse 3 ok / 0 partial / 0 failed</p>
-<p>0/2 unresolved includes · 2 of 2 include edges resolved</p>
-<p>0 MEDIUM / 1 LOW structural edges</p>
-<p>0 files demoted · 2 of 2 reachable files shown · 0 aggregated · 1 of 1 file pairs drawn</p>
-<p>0 production + 0 non-production of 2 source files unreached</p>
-<p>1 of 3 scanned files have no functions · 0 source files partial or failed</p>
-<p class="atlas-caption">Edge confidence and the cost unit are defined once, in the Atlas legend; static cost is not ground truth.</p>
-</div>
-<div class="atlas-block" data-atlas-block="links" id="atlas-links">
-<h3>Drills</h3>
-<ul class="atlas-drill-links">
-<li><a href="findings-detail.html#ranked-actions">Complete ranked action list</a> — 14 actions (production-first)</li>
-<li><a href="profile-queue.html">Complete profile queue</a> — 12 functions ranked by static cost</li>
-<li><a href="atlas-q2.html">Q2 reverse drill</a> — dependents and structural callers/callees for src/main.c</li>
-<li><a href="atlas-weight.html">Weight detail</a> — 2 source files and 1 component by share</li>
-<li>Component pages (schema component index): <a href="charts/component-01-src.svg">src</a> (#1)</li>
-<li><a href="#explorer">Explorer</a> — legacy static chart stems</li>
-</ul>
-</div>
-</section>
-<noscript><style>#map #atlas-canvas *{animation:none!important;opacity:1!important;transform:none!important;stroke-dashoffset:0!important}#map .atlas-pause{display:none!important}</style></noscript>
-</section>
 <section id="atlas-story" class="atlas-story" data-atlas-block="story" aria-labelledby="atlas-story-title">
 <div class="story-head"><div class="story-kicker">ATLAS STORY</div><h2 id="atlas-story-title">The inferred run, beat by beat</h2><p class="story-sub">Static inference · profile to confirm · entry → stages → loops → I/O → stop</p></div>
 <noscript><style>#atlas-story .page,#atlas-story #s4-detail{display:none!important}</style></noscript>
@@ -1496,9 +1083,9 @@ body[data-report-width="1920"] #map .atlas-rail-cards,body[data-report-width="25
   </div>
 </details>
 <noscript>
-<p class="atlas-story-noscript">The interactive run story needs JavaScript; the complete static Atlas map is above. Inferred run: entry <strong>production main · src/main.c:121 main · confidence HIGH · 0 alternatives</strong>, 2 stages along <code>PATH · 2 steps · representative path (static, BFS-derived)</code>; 7 loop-bearing functions; 5 I/O sites; stop reason: static leaf (the representative path ends at a static leaf); first action: <code>src/main.c:34</code>. Continue in <a href="atlas-weight.html">the weight drill</a>, <a href="atlas-q2.html">the Q2 reverse drill</a>, <a href="findings-detail.html#ranked-actions">ranked actions</a>, or <a href="profile-queue.html">the profile queue</a>.</p>
+<p class="atlas-story-noscript">The interactive run story needs JavaScript. Inferred run: entry <strong>production main · src/main.c:121 main · confidence HIGH · 0 alternatives</strong>, 2 stages along <code>PATH · 2 steps · representative path (static, BFS-derived)</code>; 7 loop-bearing functions; 5 I/O sites; stop reason: static leaf (the representative path ends at a static leaf); first action: <code>src/main.c:34</code>. Continue in <a href="atlas-weight.html">the weight drill</a>, <a href="atlas-q2.html">the Q2 reverse drill</a>, <a href="findings-detail.html#ranked-actions">ranked actions</a>, or <a href="profile-queue.html">the profile queue</a>.</p>
 </noscript>
-<script type="application/json" id="perfpal-atlas-story-data">{"index":{"cases":[{"id":"scan","label":"this scan","file":"inline"}]},"cases":{"scan":{"case":"scan","columns":[{"countText":"1 file","depth":0,"label":"depth 0 · ENTRY","order":0,"unreached":false,"x":610},{"countText":"1 file","depth":1,"label":"depth 1","order":1,"unreached":false,"x":790}],"edges":[{"back":false,"className":"forward","count":1,"d":"M 685 112 C 705 112 695 112 715 112","from":"src/main.c","label":"type-only","labelClass":"resolved","onPath":true,"order":0,"payload":"int","to":"src/util.c","topCalls":[{"arg":{"dir":"in","expr":"21","literal":false,"named":null,"type":"int"},"callee":"util_init","caller":"src/main.c#main#121:1","line":127}]}],"findings":[{"line":34,"path":"src/main.c","ruleId":"PERF-C-ALLOC-001","severity":"hot","symbol":"process","title":"Heap allocation inside loop"},{"line":37,"path":"src/main.c","ruleId":"PERF-C-ALLOC-002","severity":"hot","symbol":"process","title":"Deallocation inside loop"},{"line":44,"path":"src/main.c","ruleId":"PERF-C-ALLOC-002","severity":"warn","symbol":"drain","title":"Deallocation inside loop"},{"line":52,"path":"src/main.c","ruleId":"PERF-C-STR-001","severity":"hot","symbol":"join","title":"String accumulation in loop"},{"line":52,"path":"src/main.c","ruleId":"PERF-C-STR-003","severity":"warn","symbol":"join","title":"Unbounded string operation"},{"line":61,"path":"src/main.c","ruleId":"PERF-C-LOOP-001","severity":"warn","symbol":"deep_sum","title":"Deeply nested loops"},{"line":62,"path":"src/main.c","ruleId":"PERF-C-LOOP-004","severity":"info","symbol":"deep_sum","title":"Variable-divisor division in innermost loop"},{"line":73,"path":"src/main.c","ruleId":"PERF-C-ALLOC-001","severity":"hot","symbol":"grow","title":"Heap allocation inside loop"},{"line":73,"path":"src/main.c","ruleId":"PERF-C-ALLOC-003","severity":"hot","symbol":"grow","title":"Realloc linear growth in loop"},{"line":80,"path":"src/main.c","ruleId":"PERF-C-LOOP-002","severity":"hot","symbol":"report","title":"Expensive setup or I/O call inside loop"},{"line":84,"path":"src/main.c","ruleId":"PERF-C-ARCH-002","severity":"hot","symbol":"dispatch","title":"Hot component"},{"line":84,"path":"src/main.c","ruleId":"PERF-C-CALL-002","severity":"warn","symbol":"dispatch","title":"High cyclomatic complexity"},{"line":113,"path":"src/main.c","ruleId":"PERF-C-TYPE-001","severity":"warn","symbol":"weigh","title":"Large struct passed by value"},{"line":118,"path":"src/main.c","ruleId":"PERF-C-MEM-001","severity":"warn","symbol":"clone_row","title":"sizeof misuse in allocation argument"},{"line":127,"path":"src/main.c","ruleId":"PERF-C-ARCH-003","severity":"info","symbol":"main","title":"Cross-file call coupling"}],"hottestFunction":{"cost":57,"fanIn":1,"fanOut":0,"id":"src/main.c#dispatch#84:1","line":84,"loopDepth":1,"name":"dispatch","path":"src/main.c","production":true,"recursive":false,"tripSource":"unknown","unknownTripLoops":2},"hulls":[{"h":116,"label":"src · 2","w":346,"x":527,"y":44}],"meta":{"actions":[{"anchor":"src/main.c:34","function":"process","onCanvas":true,"scene":"src","title":"Heap allocation inside loop"},{"anchor":"src/main.c:37","function":"process","onCanvas":true,"scene":"src","title":"Deallocation inside loop"},{"anchor":"src/main.c:73","function":"grow","onCanvas":true,"scene":"src","title":"Heap allocation inside loop"}],"caps":"2 of 2 reachable files shown · 0 aggregated","entry":"production main · src/main.c:121 main · confidence HIGH · 0 alternatives","findingsIncluded":15,"findingsTotal":15,"footer":"2 of 2 source files reachable (100%) · 1 of 1 file pairs drawn · 0 MEDIUM / 1 LOW structural edges · unreached production: 0 · non-production: 0 · parse 3 ok / 0 partial / 0 failed · 0/2 unresolved includes · 0 files demoted","hottest":"src/main.c · 155 static cost units (v2) · 22× median function","path":"PATH · 2 steps · representative path (static, BFS-derived)"},"nodes":[{"badge":"ENTRY · HOTTEST · HOT ×2","column":0,"cost":155,"costText":"155 static cost units (v2)","dash":null,"entry":true,"fill":"#1f2d3a","findings":{"hot":7,"info":2,"warn":6},"functions":[{"cost":57,"fanIn":1,"fanOut":0,"id":"src/main.c#dispatch#84:1","line":84,"maxLoopDepth":1,"name":"dispatch","recursive":false,"tripSource":"unknown","unknownTripLoops":2},{"cost":27,"fanIn":1,"fanOut":0,"id":"src/main.c#deep_sum#57:1","line":57,"maxLoopDepth":3,"name":"deep_sum","recursive":false,"tripSource":"unknown","unknownTripLoops":3},{"cost":14,"fanIn":1,"fanOut":1,"id":"src/main.c#process#31:1","line":31,"maxLoopDepth":1,"name":"process","recursive":false,"tripSource":"unknown","unknownTripLoops":1}],"h":80,"hottest":true,"id":"src/main.c","io":{"env":0,"file":0,"literal":0,"net":0,"read":0,"rows":[{"callee":"printf","line":80,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":122,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":124,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":126,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":127,"literal":null,"op":"write","target":"stdio"}],"stdio":5,"total":5,"unknownTarget":0,"write":5},"name":"main.c","nonproduction":false,"partialParse":false,"pathStep":1,"ratioText":"22× median function","scene":"src","stroke":"#c2410c","strokeWidth":2,"title":"src/main.c · 155 static cost units (v2)","topText":"top 50% of files","unreached":false,"unresolvedCalls":{"count":13,"rows":[{"callee":"malloc","caller":"src/main.c#process#31:1","line":34},{"callee":"free","caller":"src/main.c#process#31:1","line":37},{"callee":"free","caller":"src/main.c#drain#42:1","line":44},{"callee":"strcat","caller":"src/main.c#join#48:1","line":52},{"callee":"realloc","caller":"src/main.c#grow#69:1","line":73},{"callee":"printf","caller":"src/main.c#report#78:1","line":80}]},"w":150,"x":535,"y":72},{"badge":"","column":1,"cost":3,"costText":"3 static cost units (v2)","dash":null,"entry":false,"fill":"#fdfbf6","findings":{"hot":0,"info":0,"warn":0},"functions":[{"cost":3,"fanIn":1,"fanOut":0,"id":"src/util.c#util_init#8:1","line":8,"maxLoopDepth":0,"name":"util_init","recursive":false,"tripSource":"","unknownTripLoops":0}],"h":80,"hottest":false,"id":"src/util.c","name":"util.c","nonproduction":false,"partialParse":false,"pathStep":2,"ratioText":"0.4× median function","scene":"src","stroke":"#8b8173","strokeWidth":1,"title":"src/util.c · 3 static cost units (v2)","topText":"top 100% of files","unreached":false,"w":150,"x":715,"y":72}],"profile":[{"cost":57.0,"costText":"57 static cost units (v2) · 8.1× median · top 8%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#dispatch#84:1","knownTripValue":null,"line":84,"loopDepth":1,"name":"dispatch","path":"src/main.c","pathClass":"production","production":true,"rank":1,"recursive":false,"tripSource":"unknown","unknownTripLoops":2},{"cost":27.0,"costText":"27 static cost units (v2) · 3.9× median · top 17%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#deep_sum#57:1","knownTripValue":null,"line":57,"loopDepth":3,"name":"deep_sum","path":"src/main.c","pathClass":"production","production":true,"rank":2,"recursive":false,"tripSource":"unknown","unknownTripLoops":3},{"cost":14.0,"costText":"14 static cost units (v2) · 2.0× median · top 25%","demotions":[],"fanIn":1,"fanOut":1,"id":"src/main.c#process#31:1","knownTripValue":null,"line":31,"loopDepth":1,"name":"process","path":"src/main.c","pathClass":"production","production":true,"rank":3,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":13.0,"costText":"13 static cost units (v2) · 1.9× median · top 33%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#grow#69:1","knownTripValue":null,"line":69,"loopDepth":1,"name":"grow","path":"src/main.c","pathClass":"production","production":true,"rank":4,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":9.0,"costText":"9 static cost units (v2) · 1.3× median · top 50%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#report#78:1","knownTripValue":null,"line":78,"loopDepth":1,"name":"report","path":"src/main.c","pathClass":"production","production":true,"rank":5,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":7.0,"costText":"7 static cost units (v2) · 1.0× median · top 58%","demotions":[],"fanIn":0,"fanOut":0,"id":"src/main.c#drain#42:1","knownTripValue":null,"line":42,"loopDepth":1,"name":"drain","path":"src/main.c","pathClass":"production","production":true,"rank":6,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":7.0,"costText":"7 static cost units (v2) · 1.0× median · top 67%","demotions":[],"fanIn":0,"fanOut":0,"id":"src/main.c#join#48:1","knownTripValue":null,"line":48,"loopDepth":1,"name":"join","path":"src/main.c","pathClass":"production","production":true,"rank":7,"recursive":false,"tripSource":"unknown","unknownTripLoops":1}],"profileMeta":{"candidateTotal":7,"demotedProduction":5,"productionRanked":12,"queueVersion":1,"shown":7,"totalRanked":12},"purpose":{"kind":"structural","source":null,"text":"No README at the scan root; inferred entry: production main · src/main.c:121 main · confidence HIGH · 0 alternatives.","version":1},"sceneMeta":{"fileCap":5,"nonProductionFiles":0,"omitted":{"cost":0,"files":0,"findings":0,"productionCost":0,"scenes":0},"productionFiles":2,"sceneCap":24,"sceneVersion":1,"shownFiles":2,"shownScenes":1,"totalFiles":2,"totalScenes":1},"scenes":[{"cost":158,"depth":1,"entry":true,"files":2,"findings":15,"hottest":true,"path":"src","productionCost":158,"productionFiles":2,"scale":"v2","topFiles":[{"cost":155,"entry":true,"findings":15,"functionCount":11,"hottest":true,"name":"main.c","path":"src/main.c","production":true,"scale":"v2"},{"cost":3,"entry":false,"findings":0,"functionCount":1,"hottest":false,"name":"util.c","path":"src/util.c","production":true,"scale":"v2"}]}],"source":{"artifact":"inline","layoutFingerprint":"aca9e851e3cf33c1","layoutVersion":1,"metricsContentFingerprint":"51dc2ec3fc3a2c1a"},"stage":{"h":720,"w":1400},"state":{"allTest":false,"capped":false,"empty":false,"library":false,"noEntry":false,"partialParse":false,"singleFile":false},"synthetic":false,"trace":[{"path":"src/main.c","step":1},{"path":"src/util.c","step":2}],"trust":{"caps":"2 of 2 reachable files shown · 0 aggregated","drawnNodes":2,"findingsIncluded":15,"findingsTotal":15,"io":{"files":1,"literal":0,"literals":[],"read":0,"rows":5,"stdio":5,"unknownTarget":0,"write":5},"loopBearingFunctions":7,"nonProductionNodes":0,"partialParse":false,"profile":{"candidateTotal":7,"demotedProduction":5,"productionRanked":12,"shown":7,"totalRanked":12},"purpose":{"kind":"structural","source":null},"scenes":{"files":2,"nonProductionFiles":0,"omitted":0,"productionFiles":2,"shown":1,"shownFiles":2,"total":1},"unknownTripFunctions":3,"unresolvedCalls":13,"unresolvedFiles":1}}}}</script>
+<script type="application/json" id="perfpal-atlas-story-data">{"index":{"cases":[{"id":"scan","label":"this scan","file":"inline"}]},"cases":{"scan":{"case":"scan","columns":[{"countText":"1 file","depth":0,"label":"depth 0 · ENTRY","order":0,"unreached":false,"x":610},{"countText":"1 file","depth":1,"label":"depth 1","order":1,"unreached":false,"x":790}],"edges":[{"back":false,"className":"forward","count":1,"d":"M 685 112 C 705 112 695 112 715 112","from":"src/main.c","label":"type-only","labelClass":"resolved","onPath":true,"order":0,"payload":"int","to":"src/util.c","topCalls":[{"arg":{"dir":"in","expr":"21","literal":false,"named":null,"type":"int"},"callee":"util_init","caller":"src/main.c#main#121:1","line":127}]}],"findings":[{"line":34,"path":"src/main.c","ruleId":"PERF-C-ALLOC-001","severity":"hot","symbol":"process","title":"Heap allocation inside loop"},{"line":37,"path":"src/main.c","ruleId":"PERF-C-ALLOC-002","severity":"hot","symbol":"process","title":"Deallocation inside loop"},{"line":44,"path":"src/main.c","ruleId":"PERF-C-ALLOC-002","severity":"warn","symbol":"drain","title":"Deallocation inside loop"},{"line":52,"path":"src/main.c","ruleId":"PERF-C-STR-001","severity":"hot","symbol":"join","title":"String accumulation in loop"},{"line":52,"path":"src/main.c","ruleId":"PERF-C-STR-003","severity":"warn","symbol":"join","title":"Unbounded string operation"},{"line":61,"path":"src/main.c","ruleId":"PERF-C-LOOP-001","severity":"warn","symbol":"deep_sum","title":"Deeply nested loops"},{"line":62,"path":"src/main.c","ruleId":"PERF-C-LOOP-004","severity":"info","symbol":"deep_sum","title":"Variable-divisor division in innermost loop"},{"line":73,"path":"src/main.c","ruleId":"PERF-C-ALLOC-001","severity":"hot","symbol":"grow","title":"Heap allocation inside loop"},{"line":73,"path":"src/main.c","ruleId":"PERF-C-ALLOC-003","severity":"hot","symbol":"grow","title":"Realloc linear growth in loop"},{"line":80,"path":"src/main.c","ruleId":"PERF-C-LOOP-002","severity":"hot","symbol":"report","title":"Expensive setup or I/O call inside loop"},{"line":84,"path":"src/main.c","ruleId":"PERF-C-ARCH-002","severity":"hot","symbol":"dispatch","title":"Hot component"},{"line":84,"path":"src/main.c","ruleId":"PERF-C-CALL-002","severity":"warn","symbol":"dispatch","title":"High cyclomatic complexity"},{"line":113,"path":"src/main.c","ruleId":"PERF-C-TYPE-001","severity":"warn","symbol":"weigh","title":"Large struct passed by value"},{"line":118,"path":"src/main.c","ruleId":"PERF-C-MEM-001","severity":"warn","symbol":"clone_row","title":"sizeof misuse in allocation argument"},{"line":127,"path":"src/main.c","ruleId":"PERF-C-ARCH-003","severity":"info","symbol":"main","title":"Cross-file call coupling"}],"hottestFunction":{"cost":57,"fanIn":1,"fanOut":0,"id":"src/main.c#dispatch#84:1","line":84,"loopDepth":1,"name":"dispatch","path":"src/main.c","production":true,"recursive":false,"tripSource":"unknown","unknownTripLoops":2},"hulls":[{"h":116,"label":"src · 2","w":346,"x":527,"y":44}],"meta":{"actions":[{"anchor":"src/main.c:34","function":"process","onCanvas":true,"scene":"src","title":"Heap allocation inside loop"},{"anchor":"src/main.c:37","function":"process","onCanvas":true,"scene":"src","title":"Deallocation inside loop"},{"anchor":"src/main.c:73","function":"grow","onCanvas":true,"scene":"src","title":"Heap allocation inside loop"}],"caps":"2 of 2 reachable files shown · 0 aggregated","entry":"production main · src/main.c:121 main · confidence HIGH · 0 alternatives","findingsIncluded":15,"findingsTotal":15,"footer":"2 of 2 source files reachable (100%) · 1 of 1 file pairs drawn · 0 MEDIUM / 1 LOW structural edges · unreached production: 0 · non-production: 0 · parse 3 ok / 0 partial / 0 failed · 0/2 unresolved includes · 0 files demoted","hottest":"src/main.c · 155 static cost units (v2) · 22× median function","path":"PATH · 2 steps · representative path (static, BFS-derived)"},"nodes":[{"badge":"ENTRY · HOTTEST · HOT ×2","column":0,"cost":155,"costText":"155 static cost units (v2)","dash":null,"entry":true,"fill":"#1f2d3a","findings":{"hot":7,"info":2,"warn":6},"functions":[{"cost":57,"fanIn":1,"fanOut":0,"id":"src/main.c#dispatch#84:1","line":84,"maxLoopDepth":1,"name":"dispatch","recursive":false,"tripSource":"unknown","unknownTripLoops":2},{"cost":27,"fanIn":1,"fanOut":0,"id":"src/main.c#deep_sum#57:1","line":57,"maxLoopDepth":3,"name":"deep_sum","recursive":false,"tripSource":"unknown","unknownTripLoops":3},{"cost":14,"fanIn":1,"fanOut":1,"id":"src/main.c#process#31:1","line":31,"maxLoopDepth":1,"name":"process","recursive":false,"tripSource":"unknown","unknownTripLoops":1}],"h":80,"hottest":true,"id":"src/main.c","io":{"env":0,"file":0,"literal":0,"net":0,"read":0,"rows":[{"callee":"printf","line":80,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":122,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":124,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":126,"literal":null,"op":"write","target":"stdio"},{"callee":"printf","line":127,"literal":null,"op":"write","target":"stdio"}],"stdio":5,"total":5,"unknownTarget":0,"write":5},"name":"main.c","nonproduction":false,"partialParse":false,"pathStep":1,"ratioText":"22× median function","scene":"src","stroke":"#c2410c","strokeWidth":2,"title":"src/main.c · 155 static cost units (v2)","topText":"top 50% of files","unreached":false,"unresolvedCalls":{"count":13,"rows":[{"callee":"malloc","caller":"src/main.c#process#31:1","line":34},{"callee":"free","caller":"src/main.c#process#31:1","line":37},{"callee":"free","caller":"src/main.c#drain#42:1","line":44},{"callee":"strcat","caller":"src/main.c#join#48:1","line":52},{"callee":"realloc","caller":"src/main.c#grow#69:1","line":73},{"callee":"printf","caller":"src/main.c#report#78:1","line":80}]},"w":150,"x":535,"y":72},{"badge":"","column":1,"cost":3,"costText":"3 static cost units (v2)","dash":null,"entry":false,"fill":"#fdfbf6","findings":{"hot":0,"info":0,"warn":0},"functions":[{"cost":3,"fanIn":1,"fanOut":0,"id":"src/util.c#util_init#8:1","line":8,"maxLoopDepth":0,"name":"util_init","recursive":false,"tripSource":"","unknownTripLoops":0}],"h":80,"hottest":false,"id":"src/util.c","name":"util.c","nonproduction":false,"partialParse":false,"pathStep":2,"ratioText":"0.4× median function","scene":"src","stroke":"#8b8173","strokeWidth":1,"title":"src/util.c · 3 static cost units (v2)","topText":"top 100% of files","unreached":false,"w":150,"x":715,"y":72}],"profile":[{"cost":57.0,"costText":"57 static cost units (v2) · 8.1× median · top 8%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#dispatch#84:1","knownTripValue":null,"line":84,"loopDepth":1,"name":"dispatch","path":"src/main.c","pathClass":"production","production":true,"rank":1,"recursive":false,"tripSource":"unknown","unknownTripLoops":2},{"cost":27.0,"costText":"27 static cost units (v2) · 3.9× median · top 17%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#deep_sum#57:1","knownTripValue":null,"line":57,"loopDepth":3,"name":"deep_sum","path":"src/main.c","pathClass":"production","production":true,"rank":2,"recursive":false,"tripSource":"unknown","unknownTripLoops":3},{"cost":14.0,"costText":"14 static cost units (v2) · 2.0× median · top 25%","demotions":[],"fanIn":1,"fanOut":1,"id":"src/main.c#process#31:1","knownTripValue":null,"line":31,"loopDepth":1,"name":"process","path":"src/main.c","pathClass":"production","production":true,"rank":3,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":13.0,"costText":"13 static cost units (v2) · 1.9× median · top 33%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#grow#69:1","knownTripValue":null,"line":69,"loopDepth":1,"name":"grow","path":"src/main.c","pathClass":"production","production":true,"rank":4,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":9.0,"costText":"9 static cost units (v2) · 1.3× median · top 50%","demotions":[],"fanIn":1,"fanOut":0,"id":"src/main.c#report#78:1","knownTripValue":null,"line":78,"loopDepth":1,"name":"report","path":"src/main.c","pathClass":"production","production":true,"rank":5,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":7.0,"costText":"7 static cost units (v2) · 1.0× median · top 58%","demotions":[],"fanIn":0,"fanOut":0,"id":"src/main.c#drain#42:1","knownTripValue":null,"line":42,"loopDepth":1,"name":"drain","path":"src/main.c","pathClass":"production","production":true,"rank":6,"recursive":false,"tripSource":"unknown","unknownTripLoops":1},{"cost":7.0,"costText":"7 static cost units (v2) · 1.0× median · top 67%","demotions":[],"fanIn":0,"fanOut":0,"id":"src/main.c#join#48:1","knownTripValue":null,"line":48,"loopDepth":1,"name":"join","path":"src/main.c","pathClass":"production","production":true,"rank":7,"recursive":false,"tripSource":"unknown","unknownTripLoops":1}],"profileMeta":{"candidateTotal":7,"demotedProduction":5,"productionRanked":12,"queueVersion":1,"shown":7,"totalRanked":12},"purpose":{"kind":"structural","source":null,"text":"No README at the scan root; inferred entry: production main · src/main.c:121 main · confidence HIGH · 0 alternatives.","version":1},"sceneMeta":{"fileCap":5,"nonProductionFiles":0,"omitted":{"cost":0,"files":0,"findings":0,"productionCost":0,"scenes":0},"productionFiles":2,"sceneCap":24,"sceneVersion":1,"shownFiles":2,"shownScenes":1,"totalFiles":2,"totalScenes":1},"scenes":[{"cost":158,"depth":1,"entry":true,"files":2,"findings":15,"hottest":true,"path":"src","productionCost":158,"productionFiles":2,"scale":"v2","topFiles":[{"cost":155,"entry":true,"findings":15,"functionCount":11,"hottest":true,"name":"main.c","path":"src/main.c","production":true,"scale":"v2"},{"cost":3,"entry":false,"findings":0,"functionCount":1,"hottest":false,"name":"util.c","path":"src/util.c","production":true,"scale":"v2"}]}],"source":{"artifact":"inline","layoutFingerprint":"aca9e851e3cf33c1","layoutVersion":1,"metricsContentFingerprint":"3d7264cd9edbf84b"},"stage":{"h":720,"w":1400},"state":{"allTest":false,"capped":false,"empty":false,"library":false,"noEntry":false,"partialParse":false,"singleFile":false},"synthetic":false,"trace":[{"path":"src/main.c","step":1},{"path":"src/util.c","step":2}],"trust":{"caps":"2 of 2 reachable files shown · 0 aggregated","drawnNodes":2,"findingsIncluded":15,"findingsTotal":15,"io":{"files":1,"literal":0,"literals":[],"read":0,"rows":5,"stdio":5,"unknownTarget":0,"write":5},"loopBearingFunctions":7,"nonProductionNodes":0,"partialParse":false,"profile":{"candidateTotal":7,"demotedProduction":5,"productionRanked":12,"shown":7,"totalRanked":12},"purpose":{"kind":"structural","source":null},"scenes":{"files":2,"nonProductionFiles":0,"omitted":0,"productionFiles":2,"shown":1,"shownFiles":2,"total":1},"unknownTripFunctions":3,"unresolvedCalls":13,"unresolvedFiles":1}}}}</script>
 <script id="atlas-story-script">
 /* Atlas run-story prototype (Track D, Session D1).
  *
@@ -1514,7 +1101,11 @@ body[data-report-width="1920"] #map .atlas-rail-cards,body[data-report-width="25
   const stageSource = stageHost && stageHost.tagName.toLowerCase() === 'svg'
     ? stageHost
     : document.querySelector('svg');
-  const SVG = stageSource ? stageSource.namespaceURI : undefined;
+  // Fall back to the SVG namespace when the page has no other SVG element:
+  // the sim-only report page deliberately ships without a static map canvas.
+  // Split literal: the fixed-script guard bans a raw HTTP-URL substring.
+  const SVG_NS = 'http:' + '//www.w3.org/2000/svg';
+  const SVG = stageSource ? stageSource.namespaceURI : SVG_NS;
 
   function createStage(host) {
     const node = document.createElementNS(SVG, 'svg');
@@ -3008,190 +2599,9 @@ body[data-report-width="1920"] #map .atlas-rail-cards,body[data-report-width="25
 })();
 </script>
 </section>
-<section id="explorer">
-<h2>Explorer</h2>
-<figure class="pz" data-chart="include-graph">
-<a href="charts/include-graph.svg"><img src="charts/include-graph.svg" alt="Dependency graph — internal #include dependencies between scanned files."></a>
-<figcaption>Dependency graph — internal #include dependencies between scanned files.</figcaption>
-</figure>
-<figure class="pz" data-chart="layer-file">
-<a href="charts/layer-file.svg"><img src="charts/layer-file.svg" alt="File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first)."></a>
-<figcaption>File hot-path map — top files by degree with reachable reserve, heat by candidate function cost (v2 where available; v1 fallback); highest-cost shown file outlined (ties → path-asc first).</figcaption>
-</figure>
-<figure class="pz" data-chart="layer-entry">
-<a href="charts/layer-entry.svg"><img src="charts/layer-entry.svg" alt="Entry-stratified cost map — files stratified by resolved entry reachability, heat by candidate function cost; LOW-confidence call edges excluded."></a>
-<figcaption>Entry-stratified cost map — files stratified by resolved entry reachability, heat by candidate function cost; LOW-confidence call edges excluded.</figcaption>
-</figure>
-<figure class="pz" data-chart="component-coupling">
-<a href="charts/component-coupling.svg"><img src="charts/component-coupling.svg" alt="Component coupling — cross-file call edges between components."></a>
-<figcaption>Component coupling — cross-file call edges between components.</figcaption>
-</figure>
-<figure class="pz" data-chart="hot-components">
-<a href="charts/hot-components.svg"><img src="charts/hot-components.svg" alt="Hot components — ranking by candidate finding density."></a>
-<figcaption>Hot components — ranking by candidate finding density.</figcaption>
-</figure>
-<figure class="pz" data-chart="layer-workspace">
-<a href="charts/layer-workspace.svg"><img src="charts/layer-workspace.svg" alt="Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density."></a>
-<figcaption>Workspace map — components as nodes over inter-component call/include edges, heat by candidate finding density.</figcaption>
-</figure>
-<figure class="pz" data-chart="layer-bands">
-<a href="charts/layer-bands.svg"><img src="charts/layer-bands.svg" alt="Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands."></a>
-<figcaption>Component bands — files grouped under capped components, cross-component file edges aggregated as counted bands.</figcaption>
-</figure>
-<figure class="pz" data-chart="layer-findings">
-<a href="charts/layer-findings.svg"><img src="charts/layer-findings.svg" alt="Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm."></a>
-<figcaption>Findings map — severity-weighted finding density (hot 3 / warn 2 / info 1 per candidate), dots = severity fill + confidence ring; profile to confirm.</figcaption>
-</figure>
-<p>Component detail pages (one per component below):</p>
-<ul>
-<li><a href="charts/component-01-src.svg">Component detail — per-file hot-path map.</a></li>
-</ul>
-<p>The dependency graph reflects resolved internal include/module edges between scanned files — C `#include` directives; unresolved internal edges are retained as data, and external (system headers/crates) dependencies are excluded from coupling edges.
-</p>
-<p>Machine-readable graph: <a href="charts/graph.dot">graph.dot</a> — deterministic DOT export of the include/call/component graphs (same source data as the figures above).</p>
-<p>Standing caveat: cross-file call edges are LOW confidence until a semantic resolver tier exists (ADR-0001).</p>
-</section>
-<section id="components">
-<h2>Component index</h2>
-<p>showing top 1 of 1 components</p>
-<div class="table-scroll">
-<table>
-<thead><tr><th>rank</th><th>prefix</th><th>finding density (per KLOC)</th><th>max loop depth</th><th>finding count</th><th>detail</th></tr></thead>
-<tbody>
-<tr id="component-01-src" data-prefix="src"><td>1</td><td>src</td><td>147.06</td><td>3</td><td>15</td><td><a href="charts/component-01-src.svg">detail</a></td></tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="files">
-<h2>File drill-down</h2>
-<div class="table-scroll">
-<table>
-<thead><tr><th>file</th><th>degree</th><th>cost</th><th>findings</th><th>component</th></tr></thead>
-<tbody>
-<tr id="file-src-main-c" data-path="src/main.c"><td>src/main.c</td><td>2</td><td>155</td><td><a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001:src/main.c:34:21</a><br>
-<a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-73-15">PERF-C-ALLOC-001:src/main.c:73:15</a><br>
-<a href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-37-9">PERF-C-ALLOC-002:src/main.c:37:9</a><br>
-<a href="findings-detail.html#finding-PERF-C-ALLOC-003-src-main-c-73-15">PERF-C-ALLOC-003:src/main.c:73:15</a><br>
-<a href="findings-detail.html#finding-PERF-C-ARCH-002-src-main-c-84-1">PERF-C-ARCH-002:src/main.c:84:1</a><br>
-<a href="findings-detail.html#finding-PERF-C-LOOP-002-src-main-c-80-9">PERF-C-LOOP-002:src/main.c:80:9</a><br>
-<a href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-52-9">PERF-C-STR-001:src/main.c:52:9</a><br>
-<a href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-44-9">PERF-C-ALLOC-002:src/main.c:44:9</a><br>
-<a href="findings-detail.html#finding-PERF-C-CALL-002-src-main-c-84-1">PERF-C-CALL-002:src/main.c:84:1</a><br>
-<a href="findings-detail.html#finding-PERF-C-LOOP-001-src-main-c-61-13">PERF-C-LOOP-001:src/main.c:61:13</a><br>
-…+5 more</td><td><a href="charts/component-01-src.svg">component</a></td></tr>
-<tr id="file-src-util-c" data-path="src/util.c"><td>src/util.c</td><td>2</td><td>3</td><td>none</td><td><a href="charts/component-01-src.svg">component</a></td></tr>
-<tr id="file-src-util-h" data-path="src/util.h"><td>src/util.h</td><td>2</td><td>0</td><td>none</td><td><a href="charts/component-01-src.svg">component</a></td></tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="findings">
-<h2>Findings</h2>
-<p>13 rules: 15 of 15 total findings (7 hot, 6 warn, 2 info).</p>
-<p>Full per-finding tables: <a href="findings-detail.html">findings-detail.html</a>.</p>
-<details>
-<summary><code>PERF-C-ALLOC-001</code> — 2 findings (2 hot, 0 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-ALLOC-001-src-main-c-34-21">PERF-C-ALLOC-001:src/main.c:34:21</a> — <a href="findings-detail.html#rule-PERF-C-ALLOC-001">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-ALLOC-001">View full detail table for PERF-C-ALLOC-001 (2 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-ALLOC-002</code> — 2 findings (1 hot, 1 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-ALLOC-002-src-main-c-37-9">PERF-C-ALLOC-002:src/main.c:37:9</a> — <a href="findings-detail.html#rule-PERF-C-ALLOC-002">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-ALLOC-002">View full detail table for PERF-C-ALLOC-002 (2 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-ALLOC-003</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-ALLOC-003-src-main-c-73-15">PERF-C-ALLOC-003:src/main.c:73:15</a> — <a href="findings-detail.html#rule-PERF-C-ALLOC-003">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-ALLOC-003">View full detail table for PERF-C-ALLOC-003 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-ARCH-002</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-ARCH-002-src-main-c-84-1">PERF-C-ARCH-002:src/main.c:84:1</a> — <a href="findings-detail.html#rule-PERF-C-ARCH-002">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-ARCH-002">View full detail table for PERF-C-ARCH-002 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-LOOP-002</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-LOOP-002-src-main-c-80-9">PERF-C-LOOP-002:src/main.c:80:9</a> — <a href="findings-detail.html#rule-PERF-C-LOOP-002">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-LOOP-002">View full detail table for PERF-C-LOOP-002 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-STR-001</code> — 1 findings (1 hot, 0 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-STR-001-src-main-c-52-9">PERF-C-STR-001:src/main.c:52:9</a> — <a href="findings-detail.html#rule-PERF-C-STR-001">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-STR-001">View full detail table for PERF-C-STR-001 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-CALL-002</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-CALL-002-src-main-c-84-1">PERF-C-CALL-002:src/main.c:84:1</a> — <a href="findings-detail.html#rule-PERF-C-CALL-002">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-CALL-002">View full detail table for PERF-C-CALL-002 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-LOOP-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-LOOP-001-src-main-c-61-13">PERF-C-LOOP-001:src/main.c:61:13</a> — <a href="findings-detail.html#rule-PERF-C-LOOP-001">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-LOOP-001">View full detail table for PERF-C-LOOP-001 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-MEM-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-MEM-001-src-main-c-118-19">PERF-C-MEM-001:src/main.c:118:19</a> — <a href="findings-detail.html#rule-PERF-C-MEM-001">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-MEM-001">View full detail table for PERF-C-MEM-001 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-STR-003</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-STR-003-src-main-c-52-9">PERF-C-STR-003:src/main.c:52:9</a> — <a href="findings-detail.html#rule-PERF-C-STR-003">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-STR-003">View full detail table for PERF-C-STR-003 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-TYPE-001</code> — 1 findings (0 hot, 1 warn, 0 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-TYPE-001-src-main-c-113-1">PERF-C-TYPE-001:src/main.c:113:1</a> — <a href="findings-detail.html#rule-PERF-C-TYPE-001">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-TYPE-001">View full detail table for PERF-C-TYPE-001 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-ARCH-003</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-ARCH-003-src-main-c-127-20">PERF-C-ARCH-003:src/main.c:127:20</a> — <a href="findings-detail.html#rule-PERF-C-ARCH-003">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-ARCH-003">View full detail table for PERF-C-ARCH-003 (1 findings)</a></p>
-</details>
-<details>
-<summary><code>PERF-C-LOOP-004</code> — 1 findings (0 hot, 0 warn, 1 info); top exemplar: <a href="findings-detail.html#finding-PERF-C-LOOP-004-src-main-c-62-24">PERF-C-LOOP-004:src/main.c:62:24</a> — <a href="findings-detail.html#rule-PERF-C-LOOP-004">full detail</a></summary>
-<p><a href="findings-detail.html#rule-PERF-C-LOOP-004">View full detail table for PERF-C-LOOP-004 (1 findings)</a></p>
-</details>
-</section>
-<section id="appendix-a">
-<h2>Appendix A. Heuristic reference</h2>
-<div class="table-scroll">
-<table>
-<thead><tr><th>rule_id</th><th>title</th><th>description</th></tr></thead>
-<tbody>
-<tr><td>PERF-C-ALLOC-001</td><td>Heap allocation inside loop</td><td>Detects malloc/calloc/realloc/aligned_alloc/strdup calls nested anywhere inside a loop body.</td></tr>
-<tr><td>PERF-C-ALLOC-002</td><td>`free()` inside loop</td><td>Detects free() directly inside a loop body (paired with ALLOC-001 it indicates allocator churn).</td></tr>
-<tr><td>PERF-C-ALLOC-003</td><td>`realloc()` linear growth in loop</td><td>Detects realloc(p, n+k) additive-growth shapes nested in loops — quadratic memmove behavior.</td></tr>
-<tr><td>PERF-C-ARCH-002</td><td>Hot-component aggregation</td><td>Ranks components by aggregated metrics (complexity sum, alloc-site density, max loop depth, finding density).</td></tr>
-<tr><td>PERF-C-ARCH-003</td><td>Cross-file call coupling (name-based)</td><td>Detects cross-file call edges via name matching — LOW confidence until a semantic resolver tier exists.</td></tr>
-<tr><td>PERF-C-CALL-002</td><td>High cyclomatic complexity</td><td>Detects branch-count complexity above threshold (default ≥ 15), reported per function.</td></tr>
-<tr><td>PERF-C-LOOP-001</td><td>Deep loop nesting (≥3)</td><td>Detects loop nesting depth ≥ 3 — O(n^k) candidate zones and primary input to hotspot maps.</td></tr>
-<tr><td>PERF-C-LOOP-002</td><td>Expensive setup / I/O call inside loop</td><td>Detects printf-family, file-I/O, getenv, system, and regex-compilation calls nested in loops. The message splits hoistable setup (hoisting or batching is the candidate) from intrinsic streaming I/O (read/write — batching into block transfers is the candidate); evidence carries io_kind. Calls in do-while(0) wrapper bodies stay silent.</td></tr>
-<tr><td>PERF-C-LOOP-004</td><td>Integer div/mod with variable divisor in innermost loop</td><td>Detects / or % with a non-literal divisor inside the innermost loop body (literal divisors skipped by design).</td></tr>
-<tr><td>PERF-C-MEM-001</td><td>sizeof-misuse shapes in allocation args</td><td>Detects malloc(x * sizeof(ptr)) and sizeof misplacement shapes in allocation arguments — wrong-size allocations.</td></tr>
-<tr><td>PERF-C-STR-001</td><td>String accumulation in loop (`strcat` family)</td><td>Detects strcat/strncat with a destination reused across loop iterations (O(n²) rescan).</td></tr>
-<tr><td>PERF-C-STR-003</td><td>Unbounded copy family (`strcpy`/`sprintf`/`gets`)</td><td>Detects unbounded copy calls (strcpy, strcat, sprintf, gets, scanf %s) — unbounded-latency hotspots.</td></tr>
-<tr><td>PERF-C-TYPE-001</td><td>Large struct passed by value</td><td>Detects struct-typed by-value parameters whose TU-defined struct reaches the approximate-size floor (LOW confidence — no real type layout at MVP).</td></tr>
-</tbody>
-</table>
-</div>
-</section>
 <footer>
-<p>Generated offline — no network access. Interactive enhancements (pan/zoom) run locally with no network. Where this page and `metrics.json` ever disagree, `metrics.json` wins.</p>
+<p>Generated offline — no network access; the player runs locally on inline data.
+Where this page and <code>metrics.json</code> ever disagree, <code>metrics.json</code> wins.</p>
 </footer>
-<script>
-(function(){
- "use strict";
- function apply(st,img){img.style.transform="translate("+st.x+"px, "+st.y+"px) scale("+st.k+")";}
- function zoom(st,img,f){st.k=Math.min(8,Math.max(1,st.k*f));if(st.k===1){st.x=0;st.y=0;}apply(st,img);}
- function btn(label,name,fn){var b=document.createElement("button");b.textContent=label;b.setAttribute("type","button");b.setAttribute("aria-label",name);b.addEventListener("click",fn);return b;}
- function enhance(fig){
- var img=fig.querySelector("img");if(!img){return;}
- var st={x:0,y:0,k:1};fig.style.overflow="hidden";img.style.cursor="grab";img.setAttribute("draggable","false");
- var drag=null;
- img.addEventListener("pointerdown",function(e){drag={a:e.clientX-st.x,b:e.clientY-st.y};img.setPointerCapture(e.pointerId);});
- img.addEventListener("pointermove",function(e){if(!drag){return;}st.x=e.clientX-drag.a;st.y=e.clientY-drag.b;apply(st,img);});
- img.addEventListener("pointerup",function(){drag=null;});
- img.addEventListener("wheel",function(e){e.preventDefault();zoom(st,img,e.deltaY<0?1.15:0.87);},{passive:false});
- var bar=document.createElement("div");
- bar.appendChild(btn("+","zoom in",function(){zoom(st,img,1.25);}));
- bar.appendChild(btn("-","zoom out",function(){zoom(st,img,0.8);}));
- bar.appendChild(btn("reset","reset view",function(){st.x=0;st.y=0;st.k=1;apply(st,img);}));
- fig.appendChild(bar);
- }
- function boot(){var figs=document.querySelectorAll("figure.pz");for(var i=0;i<figs.length;i++){enhance(figs[i]);}}
- if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
-})
-</script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 # Perfpal Report
-> schema_version 1\.9 · perfpal 0\.5\.0 · scanned <ROOT>
+> schema_version 1\.9 · perfpal 0\.5\.1 · scanned <ROOT>
 > started <MASKED> · duration <MASKED> ms · 15 files
 
 ## 1. Executive summary
@@ -40,7 +40,7 @@ showing top 5 of 11 actions
 
 showing top 4 of 4 files with resolved dependents · 0 non-production files demoted
 
-Blast-radius bars: [report.html#map](report.html#map). resolved 4 of 4 include edges.
+Blast-radius bars: [atlas-q2.html](atlas-q2.html). resolved 4 of 4 include edges.
 
 ### Where might time plausibly go?
 
@@ -59,7 +59,7 @@ showing top 5 of 48 functions
 1 startup function demoted · 33 no-loop functions demoted · 0 non-production files demoted.
 
 ## 2. Scan provenance & parse health
-- Tool: perfpal 0\.5\.0
+- Tool: perfpal 0\.5\.1
 - Scan root: `<ROOT>`
 - Files scanned: 15
 

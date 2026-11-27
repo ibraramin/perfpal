@@ -985,7 +985,7 @@ fn render_weight_drill(
         "<p class=\"atlas-caption\">Component rows are approximate prefix groups; each share includes every member file, including non-production members.</p>\n",
     );
     out.push_str(
-        "<p><a href=\"report.html#explorer\">Explorer — legacy static chart stems</a> (the deferred treemap would live here).</p>\n",
+        "<p><a href=\"report.html#atlas-story\">Atlas sim — the inferred run</a> (the deferred treemap would live here).</p>\n",
     );
     out.push_str("</section>\n");
 }
@@ -1374,7 +1374,7 @@ fn is_word_byte(byte: u8) -> bool {
 // ---------------------------------------------------------------------------
 
 /// Standalone `atlas-weight.html`: the complete weight detail with a warm
-/// Atlas shell and a breadcrumb back to `report.html#map`.
+/// Atlas shell and a breadcrumb back to `report.html#atlas-story`.
 #[must_use]
 pub fn render_atlas_weight_html(doc: &MetricsDocument) -> String {
     let view = crate::reporter::atlas::build_atlas_view(doc);
@@ -1407,7 +1407,7 @@ fn drill_page(title: &str, crumb: &str, body: &str) -> String {
         escape_html(crumb)
     ));
     out.push_str("<nav class=\"atlas-breadcrumb\" aria-label=\"Breadcrumb\">");
-    out.push_str("<a href=\"report.html#map\">Atlas map</a>");
+    out.push_str("<a href=\"report.html#atlas-story\">Atlas sim</a>");
     out.push_str("<span aria-hidden=\"true\"> / </span>");
     out.push_str(&format!("<span>{}</span></nav>\n", escape_html(crumb)));
     out.push_str("<main class=\"atlas-drill-page\">\n");
@@ -1674,7 +1674,7 @@ mod tests {
         assert!(html.contains("Component DSM"));
         assert!(html.contains("<td>src</td><td>src</td>"));
         assert!(html.contains("1 caller files · 0 callee files (structural)"));
-        assert!(html.contains("href=\"report.html#map\""));
+        assert!(html.contains("href=\"report.html#atlas-story\""));
     }
 
     #[test]
@@ -1690,7 +1690,7 @@ mod tests {
         assert!(html.contains("tests/t.c"));
         assert!(html.contains("% of scanned static cost"));
         assert!(html.contains("<td>src</td>"));
-        assert!(html.contains("href=\"report.html#map\""));
+        assert!(html.contains("href=\"report.html#atlas-story\""));
     }
 
     #[test]

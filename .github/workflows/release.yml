@@ -24,14 +24,16 @@ name: release
 # steps also set `--remap-path-prefix` to rewrite build-machine source paths
 # (workspace + cargo registry) out of panic strings — hardening, NOT obfuscation.
 #
-# Integrity (plan `beta-release` B2): each target ships a per-file `.sha256`;
-# the `publish` job additionally builds an aggregate `SHA256SUMS` over the six
-# binaries, minisign-signs it (`SHA256SUMS.minisig`), and verifies that
-# signature against the committed `minisign.pub` before publishing. The signing
-# key lives in the `MINISIGN_SECRET_KEY` + `MINISIGN_PASSWORD` repository
-# secrets. GitHub artifact attestations are deliberately NOT used: they require
-# GitHub Enterprise Cloud on private repositories, and this repository stays
-# private (recorded decision, docs/roadmap.md M2).
+# Integrity (v0.5.1): each target ships a per-file `.sha256`, and the `publish`
+# job builds an aggregate `SHA256SUMS` over the six binaries. The aggregate is
+# CHECKSUM-ONLY — there is no minisign signature at v0.5.1 because the signing
+# secrets are not configured, and the founder explicitly waived the signing
+# gate for this release. Verify a download with `sha256sum -c` (per file or via
+# the aggregate). The original signed-manifest design is retained in history;
+# re-introducing it requires MINISIGN_SECRET_KEY + MINISIGN_PASSWORD to be set
+# and the verification step to be restored before a future tag. GitHub artifact
+# attestations are not used (they require GitHub Enterprise Cloud on private
+# repositories).
 #
 # Supply-chain composition (plan `beta-release` B3): the `sbom` job attaches an
 # SPDX 2.3 SBOM (`cargo-sbom`) and `THIRD-PARTY-NOTICES.md` (`cargo-about`) to
@@ -262,9 +264,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      # v4.4.0 — the minisign verification below needs the committed public key
-      # (`minisign.pub`); the checkout also supplies the git context that gh
-      # would otherwise resolve from a remote (GH_REPO stays belt-and-braces).
+      # v4.4.0 — supplies `docs/release-notes-header.md` and the git context
+      # that gh would otherwise resolve from a remote (GH_REPO is
+      # belt-and-braces).
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       # v4.3.0 — merges all per-target + sbom artifacts into one flat dist/
@@ -281,18 +283,8 @@ jobs:
           set -euo pipefail
           cp EULA.md PRIVACY.md LICENSE dist/
 
-      - name: Install minisign
-        # Version deliberately unpinned (founder decision): the apt package on
-        # ubuntu-latest (0.11-1) is used rather than a pinned prebuilt binary.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y minisign
-
-      # Build the aggregate integrity manifest and minisign-sign it.
-      - name: Build and sign SHA256SUMS
-        env:
-          MINISIGN_SECRET_KEY: ${{ secrets.MINISIGN_SECRET_KEY }}
-          MINISIGN_PASSWORD: ${{ secrets.MINISIGN_PASSWORD }}
+      # Build the aggregate integrity manifest (checksum-only at v0.5.1).
+      - name: Build SHA256SUMS
         run: |
           set -euo pipefail
           # The manifest covers the six shipped binaries only, so a user who
@@ -305,23 +297,11 @@ jobs:
             perfpal-aarch64-apple-darwin \
             perfpal-x86_64-pc-windows-msvc.exe > SHA256SUMS)
           (cd dist && sha256sum -c SHA256SUMS)
-          # The secret key is written with 0600 perms and the passphrase is fed
-          # on stdin — never via argv, which is world-visible in the process
-          # table.
-          umask 077
-          key="$RUNNER_TEMP/minisign.key"
-          trap 'rm -f "$key"' EXIT
-          printf '%s' "$MINISIGN_SECRET_KEY" > "$key"
-          printf '%s\n' "$MINISIGN_PASSWORD" | minisign -S -s "$key" \
-            -m dist/SHA256SUMS -x dist/SHA256SUMS.minisig \
-            -t "perfpal ${GITHUB_REF_NAME}"
 
-      # Defense-in-depth: re-verify the signature and every per-file checksum
-      # inside CI before publishing. Verifying against the committed public key
-      # also catches a mismatched/incorrect signing secret.
-      - name: Verify signature and checksums
+      # Defense-in-depth: verify every per-file checksum inside CI before
+      # publishing.
+      - name: Verify checksums
         run: |
-          minisign -Vm dist/SHA256SUMS -p minisign.pub
           (cd dist && sha256sum -c ./*.sha256)
 
       - name: Publish GitHub Release (pre-release, draft-safe)

@@ -267,12 +267,12 @@ fn run_pipeline(args: &Args) -> Result<RunSummary, PipelineError> {
     // Static self-contained HTML sibling of report.md (Option B slice 1,
     // LINKED variant — zero JavaScript): pure function of the same
     // `(document, chart_names)` pair, so findings stay byte-identical.
-    let html = crate::reporter::render_html_with_story_at_width(
-        &document,
-        &chart_names,
-        &story,
-        args.report_width,
-    );
+    // v0.5.1: the main report is the Atlas sim, and only the Atlas sim. The
+    // full map/charts/Explorer/Findings composition remains available through
+    // `render_html_with_story_at_width` for the audit contract and the later
+    // finalization pass; the other artifacts are unchanged and linked from
+    // the sim page's nav.
+    let html = crate::reporter::render_sim_report_at_width(&document, &story, args.report_width);
     // C-split detail artifacts: the uncapped per-finding detail promoted out
     // of the bounded human files — pure functions of `document` alone (no
     // chart input, no provenance surfaces), so findings stay byte-identical.

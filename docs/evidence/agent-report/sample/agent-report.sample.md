@@ -1,6 +1,6 @@
 # Perfpal Agent Report
 
-> contract 1 · schema 1.9 · perfpal 0.5.0 · scan root: `<ROOT>`
+> contract 1 · schema 1.9 · perfpal 0.5.1 · scan root: `<ROOT>`
 > 4 files · 4 functions · 9 findings · languages: c, rust
 
 ## How to use this report

@@ -421,14 +421,22 @@ fn agent_report_human_page_links_to_agent_report() {
     let out = out_dir("links");
     assert_eq!(run_scan(&manifest("tests/fixtures/e2e-mixed"), &out), 0);
     let html = read_artifact(&out, "report.html");
-    for href in ["agent-report.md", "agent-actions.json"] {
+    // v0.5.1 narrows the CLI report to the sim-only page: its artifact nav
+    // links the human agent report but deliberately omits the machine
+    // contract, which stays reachable from agent-report.md's own text.
+    assert!(
+        html.contains("href=\"agent-report.md\""),
+        "report.html must link agent-report.md (A's step-12 slot)"
+    );
+    let agent_md = read_artifact(&out, "agent-report.md");
+    assert!(
+        agent_md.contains("agent-actions.json"),
+        "agent-report.md must reference the machine contract"
+    );
+    for name in ["agent-report.md", "agent-actions.json"] {
         assert!(
-            html.contains(&format!("href=\"{href}\"")),
-            "report.html must link {href} (A's step-12 slot)"
-        );
-        assert!(
-            out.join(href).is_file(),
-            "the linked artifact {href} must exist in the same directory"
+            out.join(name).is_file(),
+            "the artifact {name} must exist in the same directory"
         );
     }
 }
@@ -552,8 +560,19 @@ fn agent_report_sample_matches_committed_contract() {
         );
         let actual = raw.replace(token, "<ROOT>");
         let expected = read_artifact(&manifest("docs/evidence/agent-report/sample"), committed);
+        // The tool version is a build-time constant (Cargo.toml), not a
+        // semantic field of the contract: the committed sample was captured
+        // at 0.5.0 and the built binary now reports CARGO_PKG_VERSION. Normalize
+        // both sides so this stays a stable content fixture across releases,
+        // whichever version the sample was captured with.
+        let version = env!("CARGO_PKG_VERSION");
+        let normalize = |text: String| {
+            text.replace("0.5.0", "<VERSION>")
+                .replace(version, "<VERSION>")
+        };
         assert_eq!(
-            actual, expected,
+            normalize(actual),
+            normalize(expected),
             "{emitted} drifted from the committed C1 sample ({committed})"
         );
     }

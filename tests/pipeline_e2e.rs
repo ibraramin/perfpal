@@ -649,10 +649,13 @@ fn story_flag_emits_atlas_layout_only_when_requested() {
         ),
         "inline story section missing from report.html"
     );
+    // v0.5.1: the CLI report.html is the sim-only page — exactly the two
+    // story scripts (inline JSON data + fixed story script); the pan/zoom
+    // REPORT_SCRIPT is not needed without a static map figure.
     assert_eq!(
         story_html_text.matches("<script").count(),
-        3,
-        "report.html must carry exactly three script elements (ADR-0014)"
+        2,
+        "report.html must carry exactly two script elements"
     );
     let inline: serde_json::Value = serde_json::from_str(inline_story_json(&story_html_text))
         .expect("inline story JSON parses");
@@ -983,8 +986,8 @@ fn report_width_changes_only_report_html() {
     assert!(fixed_html.contains("data-report-width=\"1920\""));
     assert_eq!(
         fixed_html.matches("<script").count(),
-        3,
-        "report.html must still carry exactly three script elements"
+        2,
+        "report.html must still carry exactly two script elements"
     );
     assert_eq!(
         inline_story_json(fixed_html),

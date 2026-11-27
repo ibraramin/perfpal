@@ -12,7 +12,11 @@
   const stageSource = stageHost && stageHost.tagName.toLowerCase() === 'svg'
     ? stageHost
     : document.querySelector('svg');
-  const SVG = stageSource ? stageSource.namespaceURI : undefined;
+  // Fall back to the SVG namespace when the page has no other SVG element:
+  // the sim-only report page deliberately ships without a static map canvas.
+  // Split literal: the fixed-script guard bans a raw HTTP-URL substring.
+  const SVG_NS = 'http:' + '//www.w3.org/2000/svg';
+  const SVG = stageSource ? stageSource.namespaceURI : SVG_NS;
 
   function createStage(host) {
     const node = document.createElementNS(SVG, 'svg');

@@ -1,45 +1,36 @@
 # Active Context
 
 ## Current Task
-**polish-report H3 CLOSED 2026-10-28.** The artifact contract is consolidated to a **9-file set**
-plus the opt-in `atlas-layout.json`, the two Atlas drill pages and the chart set: `findings-detail.md`
-is gone (no consumer), `findings-detail.html` is the canonical complete human detail, `report.md`
-Appendix C is replaced by a §4 complete-list pointer, `agent-actions.json` stays complete,
-`profile-queue.*` stays the distinct KV3 list, the schema copy stays, and the 25 caps/`N of M`
-disclosures are intact. One warm-paper style contract now spans the Markdown and HTML artifacts
-(shared escapers + shell, sans body, mono code, one heading scale, tabular numerals). The dead
-click-to-filter UI was removed; `report.html` keeps 3 scripts (pan/zoom + story + inline JSON),
-detail/profile/drills are script-free. The JS-off canvas paints 19/19 nodes via a `<noscript>`
-final-frame rule (Pause hidden); the drill pages gained h1/h2; empty scans always emit the
-`#ranked-actions` stub.
-Evidence: `docs/evidence/polish-report/H3/{gate.txt,report-check.txt,budget.txt,VISION.md,ARTIFACTS.md,STYLE.md,DETERMINISM.md,close.txt}`;
-code **fbda69b**, evidence **c88d1a6/9da33a9/11676ba**. Full gate **2,252 passed** (1,125 + 1,127),
-0 failed, 2 ignored; story gate **304/304 + 3k 44/44**; acceptance + budget **PASS**; vision **PASS**.
-Panel **R1/R2/Q1/Q2/R3 APPROVED**. **No push, no tag.**
+**v0.5.1 public-release prep (2026-11-27).** The founder explicitly waived the publish gate: the
+repository is now **PUBLIC**, and the release will be unsigned (checksum-only assets, no minisign
+secrets). Version is **0.5.1**, metrics schema stays **1.9**. The CLI's `report.html` now emits the
+**Atlas sim only** via `render_sim_report_at_width` (two scripts: inline JSON + fixed player); the
+previous full composition is preserved in `render_html_with_story_at_width` for the audit contract
+and a later finalization. `sim/sim.js` gained an SVG-namespace fallback so the player works when the
+page has no static map SVG. All other report artifacts are unchanged.
+
+CV-facing README leads with hero → brag-video placeholder (founder-owned) → showcase GIF
+(`docs/assets/perfpal-demo.gif`, real CLI scan + real player frames) → technical contract.
+EULA/PRIVACY contacts are real; `release.yml` publishes 18 unsigned assets; CHANGELOG `[0.5.1]`.
+
+Gates: fmt / clippy / `cargo test` / `cargo deny` / semantic feature gate all green; 6 golden trees
+regenerated; rendered sim page inspected via headless Chromium screenshots. **No commit, push, tag or
+GitHub release yet** — commit and tag are the next step after the review panel.
 
 ## Recent Decisions
-- **D-pf-280 (live, 2026-10-28):** H3 **CLOSED** — artifact matrix + one warm-paper style contract;
-  `findings-detail.md` dropped; Appendix C removed; shared format/shell helpers; dead filter UI
-  removed; JS-off final frame; drills/detail headings; goldens 18; gate 2,252; vision PASS.
-- **D-pf-279 (live):** H2 closed — responsive 1280–3072 + public layout-only `--report-width`.
-- **D-pf-278 (live):** H1 closed — Atlas parity + always-on story.
-- **ADR-0015** records the pre-beta artifact consolidation (findings-detail.md, Appendix C, style
-  contract); ADR-0014 remains the in-report story contract.
-- Archived decisions live in `state/archive/ledger.jsonl`.
+- **Founder waiver (2026-11-27):** publish gate B-pf-001/B-pf-002 waived; repo public; no minisign
+  signature at v0.5.1; checksum-only verification.
+- **D-pf-281:** v0.5.1 sim-only main report; full composition kept as a library function for later
+  finalization; `sim.js` namespace fix; version/sample/golden re-baseline.
+- Earlier: D-pf-280 (H3 closed), D-pf-279 (H2), D-pf-278 (H1), ADR-0014 (in-report story), ADR-0015.
 
 ## In Progress
-- Nothing in flight. H3 is closed on `main` at the evidence/state commits. **No push, no tag** — both
-  remain founder-gated.
+- Parallel review panel on the uncommitted v0.5.1 change set; then commit/push/tag/release.
 
 ## Next
-1. **polish-report H4 — `report.html` final composition:** move `#explorer` to `explorer.html`,
-   final order, A8/page-height re-baseline if composition changes; founder vision gate.
-2. **H5 — finalize:** full gate, story gate, docs (README/output-contract/specs/CHANGELOG), state/EOL.
-3. **Post-beta map/ranking:** F treemap (D-pf-251), memchr fold (D-pf-256), map-build/A1b recall.
-4. **Publish gate (founder-owned):** B-pf-001 contact + B-pf-002 minisign secrets; no push/tag until
-   cleared.
+1. Reconcile panel, commit, fast-forward `main`, push, tag `v0.5.1`, verify the release workflow.
+2. Founder inserts the launch film into the README placeholder.
+3. Later: `polish-report` H4/H5 finalization of the full composition; map/ranking follow-ups.
 
 ## Blockers
-- None for H3/H4. The publish gate remains founder-owned; H3 does not claim A2/ship.
-- Deferred H3 nits: R-pf-109 (detail trailing column overflow, weight drill H2 echo) and R-pf-110
-  (3k report headroom 1.8%) — non-blocking.
+- None for the release. The tag/release is pending only the commit+push step and review-panel sign-off.

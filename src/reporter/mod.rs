@@ -624,6 +624,12 @@ pub fn render_html_with_story(
 /// The width is a layout-only knob (see [`ReportWidth`]): the emitted page's
 /// metrics/story data, scripts, chart links, and every other artifact stay
 /// byte-identical across widths.
+///
+/// This is the FULL audit composition (header → map → story → Explorer →
+/// components/files/findings → heuristic reference). It is retained as the
+/// library entry point for the audit contract, the golden matrix and the
+/// later `polish-report` H4/H5 finalization. The v0.5.1 CLI emits the
+/// deliberately narrower [`render_sim_report_at_width`] page instead.
 #[must_use]
 pub fn render_html_with_story_at_width(
     doc: &MetricsDocument,
@@ -650,6 +656,70 @@ pub fn render_html_with_story_at_width(
     html_footer(&mut out, true);
     // Exactly one trailing newline (output-contract §2 encoding rule; the
     // writer normalizes anyway).
+    while out.ends_with('\n') {
+        out.pop();
+    }
+    out.push('\n');
+    out
+}
+
+/// Render the v0.5.1 main `report.html`: the Atlas sim, and only the Atlas sim.
+///
+/// The previous page mixed a key-metrics strip, a static canvas, four charts,
+/// the story, the Explorer, three indexes and a heuristic table into one
+/// document. That composition is preserved verbatim in
+/// [`render_html_with_story_at_width`] (and the golden matrix); this function
+/// is the deliberately small public surface: a warm-paper shell, one line of
+/// provenance-free scan context, links to the remaining artifacts, and the
+/// always-on self-contained Atlas sim player.
+///
+/// The player is byte-identical to the one embedded by the full composition
+/// (same `STORY_SCRIPT`, same inline payload, same scoped stylesheet). There
+/// is no pan/zoom script here because there is no static figure to enhance:
+/// the page carries exactly two script elements — the inline story data and
+/// the fixed player. Pure function of `(doc, story, width)`; no provenance
+/// surfaces, LF newlines, byte-deterministic.
+#[must_use]
+pub fn render_sim_report_at_width(
+    doc: &MetricsDocument,
+    story: &atlas_story::StoryBundle,
+    width: ReportWidth,
+) -> String {
+    let mut out = String::new();
+    let title = format!("Perfpal — Atlas sim · schema {}", doc.schema_version);
+    let page_css = format!(
+        ":root{{--report-max:{}}}\n\
+         body{{max-width:min(100%,var(--report-max));box-sizing:border-box;margin:1.5rem auto;padding:0 clamp(1rem,calc(var(--report-max)*0.016),2.5rem)}}\n\
+         header{{margin:0 0 1.25rem}}\n\
+         nav{{margin:0 0 1.25rem}}\n\
+         nav ul{{display:flex;flex-wrap:wrap;gap:.5rem 1.25rem;list-style:none;margin:0;padding:0}}\n\
+         footer{{margin:1.5rem 0 .5rem}}",
+        width.css_max_width(),
+    );
+    html_page_head(
+        &mut out,
+        &title,
+        &page_css,
+        &format!(" data-report-width=\"{}\"", width.body_marker()),
+    );
+    html_header(&mut out, doc, false, "Perfpal — Atlas sim");
+    out.push_str(
+        "<nav>\n<ul>\n\
+         <li><a href=\"report.md\">Full report</a></li>\n\
+         <li><a href=\"findings-detail.html\">Findings detail</a></li>\n\
+         <li><a href=\"atlas-weight.html\">Weight drill</a></li>\n\
+         <li><a href=\"atlas-q2.html\">Blast-radius drill</a></li>\n\
+         <li><a href=\"profile-queue.html\">Profile queue</a></li>\n\
+         <li><a href=\"agent-report.md\">Agent report</a></li>\n\
+         <li><a href=\"metrics.json\">metrics.json</a></li>\n\
+         </ul>\n</nav>\n",
+    );
+    out.push_str(&atlas_story_render::render_story_section(doc, story));
+    out.push_str(
+        "<footer>\n<p>Generated offline — no network access; the player runs locally on inline data.\n\
+         Where this page and <code>metrics.json</code> ever disagree, <code>metrics.json</code> wins.</p>\n\
+         </footer>\n</body>\n</html>\n",
+    );
     while out.ends_with('\n') {
         out.pop();
     }
@@ -1036,7 +1106,7 @@ fn render_executive_summary(out: &mut String, doc: &MetricsDocument) {
             ));
         }
         out.push_str(&format!(
-            "\nshowing top {} of {} files with resolved dependents · {} demoted\n\nBlast-radius bars: [report.html#map](report.html#map). resolved {} of {} include edges.\n\n",
+            "\nshowing top {} of {} files with resolved dependents · {} demoted\n\nBlast-radius bars: [atlas-q2.html](atlas-q2.html). resolved {} of {} include edges.\n\n",
             kv2.rows.len().min(5),
             kv2.total_with_dependents,
             views::plural(kv2.nonprod_file_count, "non-production file"),
@@ -1574,7 +1644,7 @@ fn html_header(out: &mut String, doc: &MetricsDocument, breadcrumb: bool, title:
     }
     out.push_str("<p>");
     out.push_str(&format!(
-        "schema_version {} · perfpal {} {} · {} files · {} findings ({} hot, {} warn, {} info)",
+        "schema_version {} · {} {} · {} files · {} findings ({} hot, {} warn, {} info)",
         escape_html(&doc.schema_version),
         escape_html(&doc.tool.name),
         escape_html(&doc.tool.version),
