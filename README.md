@@ -13,6 +13,8 @@
 
 [![Perfpal launch film](docs/assets/brag.jpg)](docs/assets/brag.mp4)
 
+https://github.com/user-attachments/assets/f72482c1-a9a0-490e-95a8-d92a9ff541f4
+
 _An abstract radiograph of a codebase: one offline scan becomes a designed bottleneck map and a
 versioned metrics file. The heat map is illustrative; no runtime numbers are plotted._
 
