@@ -14,8 +14,10 @@ CV-facing README leads with hero → brag-video placeholder (founder-owned) → 
 EULA/PRIVACY contacts are real; `release.yml` publishes 18 unsigned assets; CHANGELOG `[0.5.1]`.
 
 Gates: fmt / clippy / `cargo test` / `cargo deny` / semantic feature gate all green; 6 golden trees
-regenerated; rendered sim page inspected via headless Chromium screenshots. **No commit, push, tag or
-GitHub release yet** — commit and tag are the next step after the review panel.
+regenerated; rendered sim page inspected via headless Chromium screenshots. **Published:** `main`
+at `92552f3`, tag `v0.5.1`, GitHub pre-release with 18 unsigned assets (Linux + Windows among them),
+`v0.1.0` still "Latest". Review panel: R1/Q1 APPROVED; R2/Q2 failed upstream and the founder
+approved proceeding with the two approvals plus orchestrator-run gates.
 
 ## Recent Decisions
 - **Founder waiver (2026-11-27):** publish gate B-pf-001/B-pf-002 waived; repo public; no minisign
@@ -25,10 +27,10 @@ GitHub release yet** — commit and tag are the next step after the review panel
 - Earlier: D-pf-280 (H3 closed), D-pf-279 (H2), D-pf-278 (H1), ADR-0014 (in-report story), ADR-0015.
 
 ## In Progress
-- Parallel review panel on the uncommitted v0.5.1 change set; then commit/push/tag/release.
+- Nothing in flight; v0.5.1 is published. Founder still owns the README brag-video insertion.
 
 ## Next
-1. Reconcile panel, commit, fast-forward `main`, push, tag `v0.5.1`, verify the release workflow.
+1. Founder inserts the launch film into the README placeholder.
 2. Founder inserts the launch film into the README placeholder.
 3. Later: `polish-report` H4/H5 finalization of the full composition; map/ranking follow-ups.
 

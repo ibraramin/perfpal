@@ -1,9 +1,9 @@
 # Handoff — Perfpal v0.5.1 public-release prep
 
-**Date:** 2026-11-27 · **State:** v0.5.1 / metrics schema 1.9 · branch `feat/structural-0.5.0`
-(uncommitted work) · repository **PUBLIC** (`gh repo view` confirmed). The founder explicitly waived
-the publish gate for this release; B-pf-001 (contact) and B-pf-002 (minisign secrets) are closed by
-decision / by removing the signing step. **No commit, push, tag or GitHub release has been made yet.**
+**Date:** 2026-11-28 · **State:** v0.5.1 / metrics schema 1.9 · branch `main` at `92552f3`, clean ·
+repository **PUBLIC** · tag **`v0.5.1`** pushed · GitHub **pre-release published** with 18 unsigned
+assets. The founder explicitly waived the publish gate; B-pf-001 (contact) and B-pf-002 (minisign
+secrets) are closed by decision / by removing the signing step. `v0.1.0` remains "Latest".
 
 ## What changed
 - `src/reporter/mod.rs`: new `render_sim_report_at_width` — the CLI's `report.html` is now the Atlas
@@ -36,6 +36,10 @@ decision / by removing the signing step. **No commit, push, tag or GitHub releas
 | Sim renders correctly | headless Chromium at `file:///var/tmp/opencode/hyperfine-report/report.html`, screenshot inspected | no page errors; 19 SVG nodes; 16 beats; player visible — `/var/tmp/opencode/shots/hyperfine-sim.png`, `demo-sim-final.png` |
 | GIF | `docs/assets/perfpal-demo.gif`, 8 frames, frames inspected | 960×540, ~369 KB, real CLI + beats |
 | Repo public | `gh repo view ibraramin/perfpal --json visibility` | `PUBLIC` |
+| Committed + pushed | `git checkout main && git merge --ff-only feat/structural-0.5.0 && git push origin main` | `e0928b8..92552f3 main -> main` |
+| Tag pushed | `git tag -a v0.5.1 -m … 92552f3 && git push origin v0.5.1` | `* [new tag] v0.5.1 -> v0.5.1` |
+| Release published | `gh run watch 46048423774 --exit-status` | conclusion `success`; publish job ✓ |
+| Assets | `gh release view v0.5.1 --json assets` | 18 assets incl. `perfpal-x86_64-pc-windows-msvc.exe`, three Linux binaries + checksums, `SHA256SUMS`; draft=false, prerelease=true |
 
 ## Review panel
 R1 (correctness) **APPROVED**, Q1 (verbatim scope) **APPROVED**. R2 and Q2 were dispatched but failed
@@ -44,10 +48,7 @@ R1+Q1 plus orchestrator-run gates. All non-blocking R1 notes were fixed (duplica
 the header, stale module comments, namespace-split comment) and gates re-run green.
 
 ## Next
-1. Commit on the current branch.
-2. Fast-forward `main`, push `main`, create/push tag `v0.5.1`; confirm `release.yml` publishes the
-   unsigned 18-asset set for Linux + Windows (and the rest of the six-target matrix).
-3. Founder inserts the brag video into the README placeholder.
-4. Tool track: `polish-report` H4/H5 finalization of the full composition; map/ranking follow-ups.
+1. Founder inserts the brag video into the README placeholder.
+2. Tool track: `polish-report` H4/H5 finalization of the full composition; map/ranking follow-ups.
 
-**Uncommitted files:** all items in `git status` (58 modified + `docs/assets/`). No push, no tag.
+**Uncommitted files:** none at release time; this state/handoff refresh is a docs-only follow-up commit.
